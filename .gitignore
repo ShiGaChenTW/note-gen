@@ -105,3 +105,6 @@ docs/.vitepress/cache
 
 # Generated browser plugin worker
 /public/plugin-runtime.js
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+/graft/

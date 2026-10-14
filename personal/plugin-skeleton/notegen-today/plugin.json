@@ -1,0 +1,44 @@
+{
+  "manifestVersion": 1,
+  "id": "tw.scottchen.notegen-today",
+  "name": "NoteGen Today",
+  "description": "Command Center 今日工作區的 NoteGen 分身：需處理、今日錨點、Daily Note 面板、三顆動作鍵。",
+  "version": "0.1.0",
+  "apiVersion": "^0.1.0",
+  "minAppVersion": "0.1.0",
+  "platforms": ["desktop"],
+  "entry": "entry.js",
+  "activationEvents": ["onWorkspace:open", "onCommand:tw.scottchen.notegen-today.open"],
+  "permissions": {
+    "notes.list":   { "scope": "workspace-folder",  "description": "掃描 vault 任務與 Inbox 積壓" },
+    "notes.read":   { "scope": "workspace-folder",   "description": "讀取 daily note 與任務" },
+    "notes.write":  { "scope": "workspace-folder",   "description": "早晨啟動 / 整日復盤寫回 daily note" },
+    "notes.open":   { "scope": "workspace-folder",  "description": "開啟 daily note 與任務所在筆記" },
+    "notes.create": { "scope": "workspace-folder",  "description": "今日 daily note 不存在時建立" },
+    "records.read": { "scope": "application",       "description": "捕捉軌：NoteGen 記錄數" }
+  },
+  "contributes": {
+    "views": [
+      { "id": "tw.scottchen.notegen-today.main", "title": "今日", "location": "editor-tab", "icon": "layout-dashboard", "order": -100 }
+    ],
+    "commands": [
+      { "id": "tw.scottchen.notegen-today.open",      "title": "今日：開啟儀表板" },
+      { "id": "tw.scottchen.notegen-today.refresh",   "title": "今日：重新掃描" },
+      { "id": "tw.scottchen.notegen-today.openDaily", "title": "今日：開啟 Daily Note" },
+      { "id": "tw.scottchen.notegen-today.morning",   "title": "今日：早晨啟動" },
+      { "id": "tw.scottchen.notegen-today.review",    "title": "今日：整日復盤" },
+      { "id": "tw.scottchen.notegen-today.openTask",  "title": "今日：開啟任務所在筆記" }
+    ],
+    "settings": [
+      { "key": "tw.scottchen.notegen-today.dailyFolder",  "type": "workspace-folder", "scope": "workspace", "title": "Daily Note 資料夾", "default": "20 Journal/21 Daily" },
+      { "key": "tw.scottchen.notegen-today.inboxFolder",  "type": "workspace-folder", "scope": "workspace", "title": "Inbox 資料夾",      "default": "10 Inbox" },
+      { "key": "tw.scottchen.notegen-today.dailyPattern", "type": "string",           "scope": "workspace", "title": "Daily Note 檔名格式", "default": "YYYYMMDD" },
+      { "key": "tw.scottchen.notegen-today.staleDays",    "type": "number",           "scope": "workspace", "title": "Inbox 積壓天數",   "default": 3 }
+    ],
+    "statusBar": [
+      { "id": "tw.scottchen.notegen-today.attention", "alignment": "left", "priority": 20, "command": "tw.scottchen.notegen-today.open" }
+    ]
+  },
+  "author": { "name": "Scott Chen", "url": "https://github.com/ShiGaChenTW" },
+  "license": "MIT"
+}

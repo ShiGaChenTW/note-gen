@@ -1,0 +1,138 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8">
+<title>NoteGen Dashboard — baseline</title>
+<style>
+:root{
+  --housing:#161616;--panel:#202020;--panel-edge:rgba(255,255,255,.035);--well:#262626;--face:#343434;--face-hover:#303030;
+  --key-edge:transparent;--seam:#2f2f2f;--rule:#2f2f2f;--rule2:#3a3a3a;--tick:#6e6e6e;--ink:#dadada;--ink-h:#e6e6e6;--ink2:#9a9a9a;
+  --orange:#fbbd23;--orange-edge:#fbbd23;--plate-ink:#191919;--led:#4fb062;--led-edge:#4fb062;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--housing);color:var(--ink);font:13px/1.5 "Inter","Noto Sans CJK TC","PingFang TC",sans-serif;font-feature-settings:"tnum" 1;letter-spacing:-.005em;width:1280px;height:740px;padding:20px 24px;display:flex;flex-direction:column;gap:14px}
+.n{font-variant-numeric:tabular-nums lining-nums}
+header{display:grid;grid-template-columns:260px 1fr 320px;gap:16px;align-items:stretch}
+.well{background:var(--panel);border-radius:12px;padding:14px 16px 12px;box-shadow:0 0 0 1px var(--panel-edge)}
+.clock{display:flex;gap:14px;align-items:baseline}
+.clock-t{font-size:40px;font-weight:600;line-height:.9;letter-spacing:-.02em;color:var(--ink-h)}
+.clock-d{color:var(--ink2);font-size:12px;line-height:1.3}
+.mid{display:flex;flex-direction:column;justify-content:space-between}
+.wm{font-size:11px;font-weight:600;letter-spacing:.14em;color:var(--ink2)}
+.wm b{color:var(--ink)}
+.keys{display:flex;gap:10px;margin-top:10px}
+.key{width:32px;height:32px;border-radius:8px;background:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:var(--ink)}
+.key.on{background:#2b2b2b;color:var(--ink-h)}
+.keylbl{display:flex;gap:10px}
+.keylbl span{width:32px;text-align:center;font-size:10.5px;color:var(--ink2)}
+.leds{display:flex;flex-direction:column;gap:6px;justify-content:center}
+.lg{font-size:10.5px;color:var(--ink2);letter-spacing:.02em}
+.lt{display:flex;align-items:center;gap:8px;font-size:12px}
+.led{width:9px;height:9px;border-radius:50%;background:var(--led);box-shadow:inset 0 0 0 1px var(--led-edge)}
+.led.ring{background:transparent;box-shadow:inset 0 0 0 2px var(--led)}
+.led.off{background:transparent;box-shadow:inset 0 0 0 2px var(--tick)}
+.lo{width:9px;height:9px;border-radius:50%;background:var(--orange)}
+main{flex:1;display:grid;grid-template-columns:2fr 1fr;grid-template-rows:auto 1fr;gap:14px;min-height:0}
+.panel{background:var(--panel);border-radius:12px;padding:14px 20px 18px;min-width:0;box-shadow:0 0 0 1px var(--panel-edge)}
+.phead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+.phead h2{margin:0;font-size:14px;font-weight:600;color:var(--ink-h)}
+.phead .r{font-size:11px;color:var(--ink2)}
+.st{display:inline-flex;align-items:center;gap:6px;font-size:11px}
+.st.att{color:var(--ink)}
+.readouts{grid-column:1/3;display:grid;grid-template-columns:repeat(5,1fr);gap:0;padding:0;overflow:hidden}
+.ro{padding:14px 20px 16px;border-right:1px solid var(--seam)}
+.ro:last-child{border-right:0}
+.ro .lbl{font-size:10.5px;color:var(--ink2);letter-spacing:.02em;margin-bottom:6px}
+.ro .v{font-size:36px;font-weight:600;line-height:.9;letter-spacing:-.02em;color:var(--ink-h)}
+.ro .u{font-size:12px;color:var(--ink2);margin-left:6px}
+.ro .d{font-size:11px;color:var(--ink2);margin-top:8px;display:flex;gap:8px;align-items:center}
+.ro .d b{color:var(--ink-h);font-weight:500}
+.plate{background:rgba(251,189,35,.16);color:#fcd44f;font-size:10.5px;font-weight:500;border-radius:4px;padding:2px 8px 2px 7px;height:20px;display:inline-flex;align-items:center}
+.chart{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.bars{display:flex;align-items:flex-end;gap:6px;height:120px;border-bottom:1px solid var(--rule2);padding-bottom:0}
+.bar{flex:1;background:#3a3a3a;border-radius:3px 3px 0 0;position:relative}
+.bar.today{background:var(--orange)}
+.bar i{position:absolute;bottom:-18px;left:0;right:0;text-align:center;font-size:10px;color:var(--tick);font-style:normal}
+.bar b{position:absolute;top:-16px;left:0;right:0;text-align:center;font-size:10.5px;color:var(--ink2);font-weight:500}
+.sub{font-size:11px;color:var(--ink2);margin-top:26px}
+.tags{display:flex;flex-direction:column;gap:8px}
+.tag{display:grid;grid-template-columns:110px 1fr 36px;align-items:center;gap:10px;font-size:12px}
+.tag .trk{height:8px;background:var(--well);border-radius:2px;overflow:hidden}
+.tag .trk i{display:block;height:100%;background:#5a5a5a}
+.tag .trk i.hot{background:var(--orange)}
+.tag .c{text-align:right;color:var(--ink2)}
+dl{margin:0;display:grid;grid-template-columns:1fr auto;row-gap:7px;column-gap:16px;font-size:12px}
+dt{color:var(--ink2)}dd{margin:0;text-align:right}
+.list{display:flex;flex-direction:column;gap:6px;font-size:12px}
+.row{display:grid;grid-template-columns:52px 1fr auto;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid var(--seam)}
+.row .t{color:var(--ink2);font-size:11px}
+.row .k{font-size:10.5px;color:var(--ink2)}
+.actions{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.ak{height:36px;border-radius:8px;background:var(--face);display:flex;align-items:center;justify-content:center;gap:8px;font-size:12.5px;font-weight:500;color:var(--ink)}
+.ak.pri{background:var(--orange);color:#191919}
+.ak svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8}
+</style></head><body>
+<header>
+  <div class="well clock"><span class="clock-t n">17:32</span><span class="clock-d"><b class="n">2026-10-14</b><br>週三 · 第 42 週</span></div>
+  <div class="mid">
+    <div class="wm">NOTEGEN <b>USAGE</b> &nbsp;·&nbsp; workspace: 00_Inbox</div>
+    <div>
+      <div class="keys"><div class="key on">1</div><div class="key">2</div><div class="key">3</div><div class="key">4</div></div>
+      <div class="keylbl"><span>今日</span><span>趨勢</span><span>AI</span><span>庫存</span></div>
+    </div>
+  </div>
+  <div class="well leds">
+    <div class="lg">來源狀態</div>
+    <div class="lt"><i class="led"></i>工作區 · 已索引 <b class="n">&nbsp;312</b> 篇</div>
+    <div class="lt"><i class="led"></i>記錄資料庫 · <b class="n">&nbsp;1,084</b> 則</div>
+    <div class="lt"><i class="led ring"></i>向量索引 · 更新於 <span class="n">&nbsp;14 分鐘前</span></div>
+    <div class="lt"><i class="led off"></i>同步 · 未設定</div>
+  </div>
+</header>
+<main>
+  <section class="panel readouts">
+    <div class="ro"><div class="lbl">今日新增記錄</div><div><span class="v n">7</span><span class="u">則</span></div><div class="d">閃 <b class="n">4</b> · 截圖 <b class="n">2</b> · 連結 <b class="n">1</b></div></div>
+    <div class="ro"><div class="lbl">今日寫作</div><div><span class="v n">1,260</span><span class="u">字</span></div><div class="d">較 7 日均 <b class="n">+18%</b></div></div>
+    <div class="ro"><div class="lbl">AI 用量 · GPT6 Luna</div><div><span class="v n">3</span><span class="u">/ 200</span></div><div class="d"><span class="plate">額度充足</span></div></div>
+    <div class="ro"><div class="lbl">未整理記錄</div><div><span class="v n">23</span><span class="u">則</span></div><div class="d"><i class="lo"></i><b class="n">9</b> 則超過 3 天</div></div>
+    <div class="ro"><div class="lbl">筆記總數</div><div><span class="v n">312</span><span class="u">篇</span></div><div class="d">本週 <b class="n">+11</b></div></div>
+  </section>
+
+  <section class="panel">
+    <div class="phead"><h2>14 日趨勢</h2><span class="r">記錄數 · 每日</span></div>
+    <div class="chart">
+      <div>
+        <div class="bars">
+          <div class="bar" style="height:30%"><i>1</i></div><div class="bar" style="height:45%"><i>2</i></div><div class="bar" style="height:20%"><i>3</i></div><div class="bar" style="height:60%"><i>4</i></div><div class="bar" style="height:35%"><i>5</i></div><div class="bar" style="height:10%"><i>6</i></div><div class="bar" style="height:15%"><i>7</i></div><div class="bar" style="height:55%"><i>8</i></div><div class="bar" style="height:70%"><i>9</i></div><div class="bar" style="height:40%"><i>10</i></div><div class="bar" style="height:85%"><b>12</b><i>11</i></div><div class="bar" style="height:50%"><i>12</i></div><div class="bar" style="height:65%"><i>13</i></div><div class="bar today" style="height:48%"><b>7</b><i>14</i></div>
+        </div>
+        <div class="sub">7 日均 <b class="n">6.4</b> 則 · 最高 <b class="n">12</b>（10/11）· 琥珀色為今天</div>
+      </div>
+      <div class="tags">
+        <div class="tag"><span>#idea</span><span class="trk"><i class="hot" style="width:82%"></i></span><span class="c n">41</span></div>
+        <div class="tag"><span>#job-search</span><span class="trk"><i style="width:64%"></i></span><span class="c n">32</span></div>
+        <div class="tag"><span>#ai-pm</span><span class="trk"><i style="width:50%"></i></span><span class="c n">25</span></div>
+        <div class="tag"><span>#reading</span><span class="trk"><i style="width:36%"></i></span><span class="c n">18</span></div>
+        <div class="tag"><span>#fintech</span><span class="trk"><i style="width:22%"></i></span><span class="c n">11</span></div>
+        <div class="tag"><span>未標籤</span><span class="trk"><i style="width:18%"></i></span><span class="c n">9</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="phead"><h2>最近活動</h2><span class="r">筆記 · 記錄 · AI</span></div>
+    <div class="list">
+      <div class="row"><span class="t n">17:05</span><span>2026-10-14.md</span><span class="k">編輯</span></div>
+      <div class="row"><span class="t n">16:48</span><span>AI 整理 → SDLC 筆記</span><span class="k">AI</span></div>
+      <div class="row"><span class="t n">16:20</span><span>截圖：NoteGen 側欄</span><span class="k">記錄</span></div>
+      <div class="row"><span class="t n">15:12</span><span>Advanced Multi Column 使用手冊</span><span class="k">編輯</span></div>
+      <div class="row"><span class="t n">14:30</span><span>連結：codexu/note-gen</span><span class="k">記錄</span></div>
+      <div class="row"><span class="t n">09:02</span><span>晨間捕捉 ×4</span><span class="k">記錄</span></div>
+    </div>
+  </section>
+</main>
+<section class="actions">
+  <div class="ak pri">整理今日記錄 → 筆記</div>
+  <div class="ak">開啟今日筆記</div>
+  <div class="ak">新文字記錄</div>
+  <div class="ak">處理積壓 (9)</div>
+  <div class="ak">重建索引</div>
+  <div class="ak">開啟 Command Center</div>
+</section>
+</body></html>

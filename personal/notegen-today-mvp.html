@@ -1,0 +1,102 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><title>NoteGen Today</title>
+<style>
+:root{--shell:#161616;--card:#202020;--edge:rgba(255,255,255,.035);--raised:#262626;--active:#2b2b2b;--hover:#303030;--btn:#343434;--seam:#2f2f2f;--seam2:#3a3a3a;--ink:#dadada;--ink-h:#e6e6e6;--muted:#9a9a9a;--faint:#6e6e6e;--acc:#fbbd23;--acc-ink:#191919;--led:#4fb062}
+*{box-sizing:border-box}
+body{margin:0;background:var(--shell);color:var(--ink);font:13px/1.5 "Inter","Noto Sans CJK TC","PingFang TC",sans-serif;font-feature-settings:"tnum" 1;letter-spacing:-.005em;width:1280px;height:740px;padding:14px;display:flex;flex-direction:column;gap:14px}
+.n{font-variant-numeric:tabular-nums}
+.card{background:var(--card);border-radius:12px;box-shadow:0 0 0 1px var(--edge)}
+header{display:grid;grid-template-columns:250px 1fr;gap:14px}
+.clock{display:flex;gap:14px;align-items:baseline;padding:14px 18px 12px}
+.clock-t{font-size:40px;font-weight:600;line-height:.9;letter-spacing:-.02em;color:var(--ink-h)}
+.clock-d{color:var(--muted);font-size:12px;line-height:1.35}.clock-d b{color:var(--ink);font-weight:500}
+.att{padding:12px 18px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.att-h{display:flex;align-items:center;gap:12px}
+.plate{background:var(--acc);color:var(--acc-ink);font-size:11px;font-weight:600;border-radius:4px;padding:3px 9px;display:inline-flex;gap:6px;align-items:center}
+.att-h .lbl{font-size:11px;color:var(--muted)}
+.att-h .wm{margin-left:auto;font-size:11px;font-weight:600;letter-spacing:.14em;color:var(--muted)}.att-h .wm b{color:var(--ink)}
+.todo{display:flex;gap:8px;overflow:hidden;white-space:nowrap}
+.todo span{display:inline-flex;align-items:center;gap:6px;background:var(--raised);border-radius:6px;padding:4px 10px;font-size:12px}
+.todo span::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--acc)}
+.todo .more{background:transparent;color:var(--muted)}.todo .more::before{display:none}
+main{flex:1;display:grid;grid-template-columns:1fr 440px;gap:14px;min-height:0}
+.phead{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
+.phead h2{margin:0;font-size:14px;font-weight:600;color:var(--ink-h)}
+.phead .r{margin-left:auto;font-size:11px;color:var(--muted);display:flex;gap:14px;align-items:center}
+.phead .r b{color:var(--ink);font-weight:500}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--acc);margin-right:5px}
+.today{padding:14px 20px 16px;display:flex;flex-direction:column;min-height:0}
+.axis{flex:1;position:relative;border-radius:8px;background:var(--raised);overflow:hidden}
+.h{position:absolute;left:0;right:0;border-top:1px solid var(--seam2);display:flex}
+.h i{position:absolute;left:12px;top:-8px;font-size:10.5px;color:var(--faint);font-style:normal}
+.hh{position:absolute;left:0;right:0;border-top:1px dashed var(--seam)}
+.ev{position:absolute;left:56px;right:16px;background:var(--btn);border-left:2px solid var(--muted);border-radius:4px;padding:3px 10px;font-size:12px;display:flex;justify-content:space-between}
+.ev.anchor{border-left-color:var(--acc)}
+.ev small{color:var(--muted)}
+.now{position:absolute;left:0;right:0;border-top:2px solid var(--acc)}
+.now i{position:absolute;right:10px;top:-19px;background:var(--acc);color:var(--acc-ink);font-size:10.5px;font-weight:600;padding:1px 6px;border-radius:3px;font-style:normal}
+.side{display:flex;flex-direction:column;gap:14px;min-height:0}
+.dn{padding:14px 20px 16px;flex:1}
+.dn .file{font-size:11px;color:var(--faint)}
+.btn{height:30px;padding:0 12px;border-radius:8px;background:var(--btn);color:var(--ink);display:inline-flex;align-items:center;font-size:12px;font-weight:500}
+.tone{font-size:14px;color:var(--ink-h);padding:10px 0 12px;border-bottom:1px solid var(--seam)}
+.tone.empty{color:var(--faint)}
+dl{margin:0;display:grid;grid-template-columns:74px 1fr;row-gap:0}
+dt{font-size:11px;color:var(--muted);padding:9px 0;border-bottom:1px solid var(--seam)}
+dd{margin:0;padding:9px 0;border-bottom:1px solid var(--seam);font-size:12.5px;min-width:0}
+dd.empty{color:var(--faint)}
+dd .st{display:inline-flex;align-items:center;gap:6px}
+.led{width:8px;height:8px;border-radius:50%;background:var(--led)}.led.ring{background:transparent;box-shadow:inset 0 0 0 2px var(--faint)}
+.mit{display:flex;flex-direction:column;gap:3px}
+.mit span::before{content:"";display:inline-block;width:3px;height:10px;background:var(--acc);margin-right:8px;border-radius:1px;vertical-align:-1px}
+.mit span.p2::before{opacity:.55}
+.acts{padding:14px 20px 16px}
+.acts h3{margin:0 0 10px;font-size:11px;color:var(--muted);font-weight:500}
+.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.ak{height:36px;border-radius:8px;background:var(--btn);display:flex;align-items:center;justify-content:center;gap:8px;font-size:12.5px;font-weight:500}
+.ak.pri{background:var(--acc);color:var(--acc-ink)}
+.ak .led{width:7px;height:7px}
+</style></head><body>
+<header>
+  <div class="card clock"><span class="clock-t n">17:52</span><span class="clock-d"><b class="n">2026-10-14 週三</b><br>午安，Scott</span></div>
+  <div class="card att">
+    <div class="att-h"><span class="plate">▲ 需處理 <span class="n">13</span></span><span class="lbl">逾期 <b class="n" style="color:#dadada">4</b> · 今日 <b class="n" style="color:#dadada">9</b></span><span class="wm">NOTEGEN <b>TODAY</b> · 00_Inbox</span></div>
+    <div class="todo"><span>晨報抓取</span><span>Inbox</span><span>蒐集 Inbox 內 HelmDeck 相關素材</span><span>整理 color token 對照表</span><span>NoteGen 外掛 manifest</span><span class="more n">另 8 項</span></div>
+  </div>
+</header>
+<main>
+  <section class="card today">
+    <div class="phead"><h2>今日</h2><span class="r"><span><b class="n">16</b> 項未完成 · <b class="n">0</b> 完成</span><span><i class="dot"></i><b class="n">13</b> 需處理</span></span></div>
+    <div class="axis">
+      <div class="h" style="top:6%"><i>06</i></div><div class="hh" style="top:13%"></div>
+      <div class="h" style="top:20%"><i>08</i></div><div class="hh" style="top:27%"></div>
+      <div class="h" style="top:34%"><i>10</i></div><div class="hh" style="top:41%"></div>
+      <div class="h" style="top:48%"><i>12</i></div><div class="hh" style="top:55%"></div>
+      <div class="h" style="top:62%"><i>14</i></div><div class="hh" style="top:69%"></div>
+      <div class="h" style="top:76%"><i>16</i></div><div class="hh" style="top:83%"></div>
+      <div class="h" style="top:90%"><i>18</i></div>
+      <div class="ev anchor" style="top:21.5%;height:5%"><span>早晨啟動 · 看 daily note</span><small>08:00–08:40</small></div>
+      <div class="ev" style="top:36%;height:9%"><span>NoteGen 外掛規格討論</span><small>10:15–11:30 · 行事曆（經 Agent 寫入）</small></div>
+      <div class="ev anchor" style="top:63.5%;height:6%"><span>深工作：manifest + entry.js 骨架</span><small>14:00–15:00</small></div>
+      <div class="now" style="top:89%"><i class="n">17:52</i></div>
+    </div>
+  </section>
+  <div class="side">
+    <section class="card dn">
+      <div class="phead"><h2>Daily Note</h2><span class="file">20261014.md</span><span class="r"><span class="btn">開啟</span></span></div>
+      <div class="tone empty">一句話定調：尚未填寫</div>
+      <dl>
+        <dt>唯一要務</dt><dd class="empty">尚未填寫</dd>
+        <dt>三件 MIT</dt><dd class="mit"><span>完成 NoteGen baseline CSS v6.6</span><span class="p2">外掛功能保留表定案</span><span class="p2">示意圖收斂版</span></dd>
+        <dt>錨點時段</dt><dd><span class="n">08:00</span> 早晨啟動 <span style="color:#6e6e6e">· 已過</span><br><span class="n">14:00</span> 深工作</dd>
+        <dt>捕捉軌</dt><dd><b class="n">7</b> 則 <span style="color:#9a9a9a">閃 <span class="n">4</span> · 讀 <span class="n">2</span> · 任務 <span class="n">1</span></span></dd>
+        <dt>Inbox</dt><dd><span class="st"><i class="dot"></i><b class="n">77</b> 檔超過 3 天</span></dd>
+        <dt>沉澱</dt><dd><span class="st"><i class="led ring"></i><span style="color:#9a9a9a">晚間 · 尚未填寫</span></span></dd>
+      </dl>
+    </section>
+    <section class="card acts">
+      <h3>動作</h3>
+      <div class="grid"><div class="ak"><i class="led"></i>早晨啟動</div><div class="ak"><i class="led ring"></i>整日復盤</div><div class="ak pri">Daily Note</div></div>
+    </section>
+  </div>
+</main>
+</body></html>

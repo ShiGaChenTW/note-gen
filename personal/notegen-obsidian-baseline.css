@@ -1,0 +1,731 @@
+/* ============================================================
+   NoteGen — Obsidian 1.14 Baseline Look  (v6.16, source-verified)
+   File: notegen-obsidian-baseline.css
+   Created: 2026-10-14 15:15 | Modified: 2026-10-14 21:52
+   Source: Claude (Fable 5.1) — verified against note-gen @ 9859c6e (2026-10-11)
+   貼入位置：設定 → 一般 → 介面設定 → 自訂 CSS（整段取代）
+   原理：NoteGen 把自訂 CSS 永遠放在 <head> 最後，且所有顏色都走
+         hsl(var(--xxx))；所以直接覆寫 .dark 的 HSL 變數即可全域一致，
+         主題 JSON 可清空不用。
+   ============================================================ */
+
+/* ---------- 0. 全域色票（對應 globals.css 的 .dark 變數） ---------- */
+:root.dark, .dark {
+  --background: 0 0% 12.5%;            /* #202020 面板卡片（v6.4 略提亮，靠亮度差而非描邊分界） */
+  --foreground: 0 0% 85.5%;            /* #dadada 主文字 */
+  --card: 0 0% 14.9%;                  /* #262626 */
+  --card-foreground: 0 0% 85.5%;
+  --popover: 0 0% 14.9%;               /* 浮層 / 選單 */
+  --popover-foreground: 0 0% 85.5%;
+  --primary: 43 96% 56%;               /* #fbbd23 琥珀強調色（v6.6 取代紫）*/
+  --primary-foreground: 0 0% 9.8%;     /* #191919 琥珀上用深字 */
+  --secondary: 0 0% 20.4%;             /* #343434 按鈕底 */
+  --secondary-foreground: 0 0% 85.5%;
+  --third: 0 0% 16.9%;                 /* #2b2b2b 選中列 */
+  --third-foreground: 0 0% 90.2%;
+  --muted: 0 0% 14.9%;                 /* #262626 */
+  --muted-foreground: 0 0% 60.4%;      /* #9a9a9a 次要文字 */
+  --accent: 0 0% 18.8%;                /* #303030 hover 底（shadcn 的 accent = hover） */
+  --accent-foreground: 0 0% 90.2%;
+  --destructive: 3 72% 64%;            /* #e5665f */
+  --destructive-foreground: 0 0% 100%;
+  --border: 0 0% 18.4%;                /* #2f2f2f */
+  --input: 0 0% 22.7%;                 /* #3a3a3a */
+  --ring: 43 96% 56%;
+  --radius: 0.5rem;                    /* 8px；lg=8 md=6 sm=4 xl≈11 */
+
+  --sidebar-background: 0 0% 12.5%;
+  --sidebar-foreground: 0 0% 85.5%;
+  --sidebar-primary: 43 96% 56%;       /* 檔案列 active 左側 2px 指示條 */
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 0 0% 18.8%;        /* 檔案列 hover */
+  --sidebar-accent-foreground: 0 0% 90.2%;
+  --sidebar-border: 0 0% 18.4%;
+  --sidebar-ring: 43 96% 56%;
+
+  --scrollbar-thumb: 0 0% 22.7%;
+  --scrollbar-thumb-hover: 0 0% 29%;
+
+  /* 本檔自用 */
+  --ob-shell: #161616;                 /* 卡片之外的底色（v6.4 對齊 Obsidian：#161616 底 / #202020 卡） */
+  --ob-faint: #6e6e6e;
+  --ob-toggle-on: 132 38% 50%;         /* #4fb062 */
+  --ng-titlebar-h: 44px;               /* 原 36px */
+  --ng-statusbar-h: 30px;              /* 原 24px */
+  --ob-card-gap: 14px;                 /* v6.4 Obsidian 的卡片間距約 14–16px，分界靠留白 */
+}
+
+/* ---------- 1. 字體（app 用 inline style 設 --notegen-app-font-family，需 !important） ---------- */
+:root, :root.dark {
+  --notegen-app-font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif !important;
+}
+body { -webkit-font-smoothing: antialiased; letter-spacing: -0.005em; }
+code, kbd, pre, samp { font-family: "SF Mono", Menlo, ui-monospace, Consolas, monospace; }
+
+/* ---------- 2. 標題列（title-bar.tsx: h-[36px] fixed；layout.tsx: main.mt-9 h-[calc(100vh-36px)]） ---------- */
+div.fixed.top-0[data-tauri-drag-region] {
+  height: var(--ng-titlebar-h, 44px) !important;
+  background: var(--ob-shell, #161616) !important;
+  border-color: transparent !important;
+}
+main.mt-9 {
+  margin-top: var(--ng-titlebar-h, 44px) !important;
+  height: calc(100vh - var(--ng-titlebar-h, 44px)) !important;
+  background: var(--ob-shell, #161616) !important;
+}
+
+/* ---------- 3. 狀態列（main-status-bar.tsx: footer.h-6） ---------- */
+footer.h-6 {
+  height: var(--ng-statusbar-h, 30px) !important;
+  min-height: var(--ng-statusbar-h, 30px) !important;
+  padding: 0 10px !important;
+  gap: 12px !important;
+  font-size: 12px !important;
+  background: var(--ob-shell, #161616) !important;
+  border-color: transparent !important;
+}
+footer.h-6 > * { background: transparent !important; }
+footer.h-6 .bg-background { background: transparent !important; }
+footer.h-6 svg { width: 14px; height: 14px; }
+
+/* ---------- 4. 卡片式面板（resizable.tsx: data-slot；同時相容 react-resizable-panels 原生屬性） ---------- */
+main [data-slot="resizable-panel-group"],
+main [data-panel-group], main [data-panel-group-id], main [data-group] {
+  padding: var(--ob-card-gap, 14px) var(--ob-card-gap, 14px) calc(var(--ob-card-gap, 14px) * .6) !important;
+  gap: 0 !important;
+  background: var(--ob-shell, #161616) !important;
+  box-sizing: border-box;
+}
+/* 編輯器內部的分割群組不要再加內距 */
+main [data-slot="resizable-panel"] [data-slot="resizable-panel-group"],
+main [data-panel] [data-panel-group], main [data-panel-id] [data-panel-group-id] { padding: 0 !important; }
+
+main [data-slot="resizable-panel"],
+main [data-panel], main [data-panel-id] {
+  background: hsl(var(--background)) !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.035);
+}
+main [data-slot="resizable-panel"] [data-slot="resizable-panel"],
+main [data-panel] [data-panel], main [data-panel-id] [data-panel-id] {
+  border-radius: 0 !important; box-shadow: none !important;
+}
+
+/* 分隔條：resizable.tsx:95 是 w-px bg-border；撐成卡片間距、透明（v6.5 修正：v6 漏掉寬度） */
+main [data-slot="resizable-handle"],
+main [data-resize-handle], main [data-resize-handle-id], main [data-separator] {
+  width: var(--ob-card-gap, 14px) !important;
+  min-width: var(--ob-card-gap, 14px) !important;
+  flex: 0 0 var(--ob-card-gap, 14px) !important;
+  background: transparent !important;
+  border: none !important;
+}
+main [data-slot="resizable-handle"]::after,
+main [data-resize-handle]::after { background: transparent !important; }
+main [data-slot="resizable-handle"] > *,
+main [data-resize-handle] > * { opacity: 0; }
+main [data-slot="resizable-handle"]:hover > *,
+main [data-resize-handle]:hover > * { opacity: .5; }
+/* 編輯器內部分割群組的分隔條維持 1px */
+main [data-slot="resizable-panel"] [data-slot="resizable-handle"],
+main [data-panel] [data-resize-handle] {
+  width: 1px !important; min-width: 1px !important; flex: 0 0 1px !important;
+  background: hsl(var(--border)) !important;
+}
+
+/* 面板頂欄（left-sidebar / tab-bar / chat-header 皆為 h-12 border-b）：去線 */
+main .h-12.border-b { border-color: transparent !important; }
+/* 編輯器頁籤 active 指示條改用中性灰底 */
+main .h-12 .bg-primary.h-0\.5 { background: hsl(var(--muted-foreground) / .5) !important; }
+
+/* ---------- 5. 圖示鈕去框（ghost / icon buttons） ---------- */
+div.fixed.top-0[data-tauri-drag-region] button,
+main button[class*="ghost"],
+main button[class*="size-icon"],
+main button[class*="h-8"][class*="w-8"],
+footer.h-6 button,
+footer.h-6 [role="combobox"] {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: hsl(var(--muted-foreground)) !important;
+}
+div.fixed.top-0[data-tauri-drag-region] button:hover,
+main button[class*="ghost"]:hover,
+main button[class*="size-icon"]:hover,
+main button[class*="h-8"][class*="w-8"]:hover,
+footer.h-6 button:hover,
+footer.h-6 [role="combobox"]:hover {
+  background: hsl(var(--accent)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+/* ---------- 6. 聊天輸入框（chat-input.tsx: rounded-xl bg-background border） ---------- */
+main .group.rounded-xl.border.bg-background {
+  background: hsl(var(--card)) !important;
+  border-color: transparent !important;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.04);
+}
+
+/* ---------- 7. 內文排版（Tiptap；base 在 editor/markdown/style.css:86） ----------
+   v6.11：寬度與行高交還給 app 的「寫作版面」設定（editor-layout-styles.ts：
+   窄 max-w-2xl / 標準 3xl / 寬 5xl / 鋪滿 px-10；行高 1.5 / 1.7 / 1.9），CSS 不再覆寫。 */
+.tiptap-editor .ProseMirror {
+  padding-top: 32px !important;
+  padding-bottom: 120px !important;
+  font-size: 16px !important;
+  color: hsl(var(--foreground));
+  letter-spacing: 0;
+}
+.tiptap-editor .ProseMirror p.is-empty::before { color: var(--ob-faint, #6e6e6e) !important; }
+
+.ProseMirror h1, .ProseMirror h2, .ProseMirror h3,
+.ProseMirror h4, .ProseMirror h5, .ProseMirror h6 {
+  font-weight: 600; line-height: 1.25; margin: 1.5em 0 .5em;
+  color: hsl(var(--third-foreground)); border: none; letter-spacing: -0.01em;
+}
+.ProseMirror h1 { font-size: 1.5em; font-weight: 700; }
+.ProseMirror h2 { font-size: 1.3em; }
+.ProseMirror h3 { font-size: 1.15em; }
+.ProseMirror h4 { font-size: 1.05em; }
+.ProseMirror h5, .ProseMirror h6 { font-size: 1em; }
+.ProseMirror h6 { color: hsl(var(--muted-foreground)); }
+
+.ProseMirror strong { color: hsl(var(--third-foreground)); font-weight: 600; }
+.ProseMirror a { color: hsl(var(--primary)); text-decoration: none; }
+.ProseMirror a:hover { text-decoration: underline; }
+
+.ProseMirror ul, .ProseMirror ol { padding-left: 1.5em; margin: 0 0 1em; }
+.ProseMirror li::marker { color: hsl(var(--muted-foreground)); }
+.ProseMirror input[type="checkbox"] { accent-color: hsl(var(--primary)); }
+
+.ProseMirror blockquote {
+  margin: 1em 0; padding: 0 1em;
+  border-left: 2px solid hsl(var(--input));
+  color: hsl(var(--muted-foreground)); background: transparent;
+}
+.ProseMirror code:not(pre code) {
+  font-size: .875em; padding: .1em .35em; border-radius: 4px;
+  background: hsl(var(--card)); color: hsl(var(--foreground));
+}
+.ProseMirror pre { margin: 1em 0; border-radius: 8px; background: hsl(var(--card)); border: none; }
+.ProseMirror pre code { display: block; padding: 1em; font-size: .875em; line-height: 1.6; background: transparent; }
+
+.ProseMirror .tableWrapper { border-radius: 8px; overflow: hidden; margin: 1em 0; }
+.ProseMirror table { border-collapse: collapse; width: 100%; font-size: .9375em; background: hsl(var(--card)); }
+.ProseMirror th, .ProseMirror td { border: none; border-bottom: 1px solid hsl(var(--border)); padding: 8px 12px; }
+.ProseMirror th { font-weight: 600; color: hsl(var(--third-foreground)); background: #2e2e2e; }
+.ProseMirror tr:last-child td { border-bottom: none; }
+.ProseMirror hr { border: none; border-top: 1px solid hsl(var(--input)); margin: 2em 0; }
+.ProseMirror img { border-radius: 8px; max-width: 100%; }
+
+/* ---------- 8. 斜線指令選單（slash-menu.tsx:314 / :353 / :325 / :366 / :401） ---------- */
+[class*="max-h-72"][class*="w-[min(26rem"] {
+  background: hsl(var(--popover)) !important;
+  border: none !important;
+  border-radius: 12px !important;
+  box-shadow: 0 12px 32px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.06) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  padding: 6px !important;
+}
+[class*="max-h-72"][class*="grid-cols-[7.5rem"] { gap: 4px; }
+[class*="max-h-72"][class*="w-[min(26rem"] button[class*="bg-primary/10"] {
+  background: hsl(var(--third)) !important;
+  color: hsl(var(--third-foreground)) !important;
+}
+[class*="max-h-72"][class*="w-[min(26rem"] button[class*="text-primary"] { color: hsl(var(--third-foreground)) !important; }
+[class*="max-h-72"][class*="w-[min(26rem"] button[class*="hover:bg-muted"]:hover { background: hsl(var(--accent)) !important; }
+[class*="max-h-72"][class*="w-[min(26rem"] svg { color: hsl(var(--muted-foreground)); }
+[class*="max-h-72"][class*="w-[min(26rem"] button[class*="bg-primary/10"] svg { color: hsl(var(--third-foreground)); }
+
+/* ---------- 9. 控件 ---------- */
+[role="switch"][data-state="checked"] { background: hsl(var(--ob-toggle-on, 132 38% 50%)) !important; }
+[role="dialog"] { border: none !important; box-shadow: 0 16px 48px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.04); }
+[role="listbox"], [role="menu"], [data-slot="popover-content"], [data-slot="dropdown-menu-content"] {
+  border: none !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.05) !important;
+}
+
+/* ---------- 10. 焦點框（排除編輯器 / 輸入框） ---------- */
+.ProseMirror, .ProseMirror:focus, .ProseMirror:focus-visible,
+[contenteditable]:focus-visible, input:focus-visible, textarea:focus-visible {
+  outline: none !important; box-shadow: none !important;
+}
+main input:focus, main textarea:focus { border-color: hsl(var(--input)) !important; }
+
+/* ---------- 11. 按鈕配色（v6.1；三款擇一，預設 A） ---------- */
+/* 修正：chat-empty.tsx:140 快速開始卡片用 bg-primary-foreground 當底，
+   primary-foreground 是白色時會變成白卡。無論選哪款都套用這條。 */
+main .rounded-lg.border.bg-primary-foreground {
+  background: hsl(var(--card)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+main .rounded-lg.border.bg-primary-foreground:hover { border-color: hsl(var(--primary) / .6) !important; }
+
+/* ===== C. 琥珀：#fbbd23 底、深色字（預設，v6.6）===== */
+:root.dark, .dark {
+  --primary: 43 96% 56%;               /* #fbbd23 */
+  --primary-foreground: 0 0% 9.8%;     /* #191919 */
+  --secondary: 0 0% 20.4%;             /* #343434 secondary 按鈕底 */
+  --secondary-foreground: 0 0% 85.5%;
+  --ring: 43 96% 56%;
+  --sidebar-primary: 43 96% 56%;
+}
+/* 要換成 Command Center 的 Braun 橘 #e8641b：--primary: 22 82% 51%; --primary-foreground: 0 0% 9.8%; */
+
+/* ===== A. 中性亮灰：主鍵 #e6e6e6 底深字（備用）=====
+:root.dark, .dark {
+  --primary: 0 0% 90.2%;
+  --primary-foreground: 0 0% 9.8%;
+  --ring: 0 0% 60%;
+  --sidebar-primary: 0 0% 90.2%;
+}
+*/
+
+/* ===== B. 中性灰：全部按鈕灰底亮字，強調色只留焦點與連結 =====
+:root.dark, .dark {
+  --primary: 0 0% 25%;                 /* #404040 */
+  --primary-foreground: 0 0% 92%;      /* #ebebeb */
+  --secondary: 0 0% 18.8%;             /* #303030 */
+  --secondary-foreground: 0 0% 80%;
+  --ring: 43 96% 56%;
+}
+*/
+
+
+/* ---------- 12. 左欄頂欄收斂（v6.2；left-sidebar.tsx:78 + expandable-tabs.tsx:84-130） ----------
+   方案 B-1（預設）：文字分頁 + 2px 底線；方案 A（純圖示）保留於註解區。
+   右側動作鈕縮小變淡；搜尋框降一階成無框淡底；標籤列去卡片感。 */
+
+/* 12-1 分頁軌道：去框、去底、去內距 */
+main .h-12 .rounded-xl.border.bg-background {
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  gap: 2px !important;
+  border-radius: 0 !important;
+}
+/* 12-2 分頁按鈕 — 方案 B-1：文字分頁 + 底線（預設）
+   註：expandable-tabs.tsx:118 只在選中時才渲染 <span> 文字，未選中的分頁 DOM 裡沒有字，
+   所以用 ::after 依序補上三個固定分頁的名稱（外掛分頁維持圖示）。 */
+main .h-12 .rounded-xl > button {
+  height: 44px; padding: 0 10px !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: hsl(var(--muted-foreground)) !important;
+  opacity: 1 !important;
+  font-size: 13px; font-weight: 500;
+  position: relative;
+}
+main .h-12 .rounded-xl > button > span { display: none !important; }   /* 原本的展開文字 */
+main .h-12 .rounded-xl > button:nth-of-type(-n+3) > svg { display: none; }
+main .h-12 .rounded-xl > button:nth-of-type(1)::after { content: "筆記"; }
+main .h-12 .rounded-xl > button:nth-of-type(2)::after { content: "記錄"; }
+main .h-12 .rounded-xl > button:nth-of-type(3)::after { content: "畫布"; }
+main .h-12 .rounded-xl > button:hover { color: hsl(var(--foreground)) !important; }
+main .h-12 .rounded-xl > button.bg-muted {
+  color: hsl(var(--third-foreground)) !important;
+}
+main .h-12 .rounded-xl > button.bg-muted::before {              /* 2px 底線 */
+  content: ""; position: absolute; left: 10px; right: 10px; bottom: 0;
+  height: 2px; border-radius: 2px;
+  background: hsl(var(--foreground) / .7);                      /* 中性；要紫改 hsl(var(--primary)) */
+}
+main .h-12 .rounded-xl > .bg-border { display: none; }
+
+/* ---- 方案 A：純圖示分頁（備用；啟用時把這段註解拿掉並註解掉上方 B-1）----
+/ * 12-2 分頁按鈕：32×32 純圖示；隱藏展開文字與動畫位移 * /
+main .h-12 .rounded-xl > button {
+  width: 32px; height: 32px; padding: 0 !important;
+  justify-content: center;
+  border-radius: 8px !important;
+  color: hsl(var(--muted-foreground)) !important;
+  opacity: 1 !important;
+}
+main .h-12 .rounded-xl > button > span { display: none !important; }
+main .h-12 .rounded-xl > button:hover { background: hsl(var(--accent)) !important; color: hsl(var(--foreground)) !important; }
+main .h-12 .rounded-xl > button.bg-muted {
+  background: hsl(var(--third)) !important;          / * 選中：#2b2b2b 淡底 * /
+  color: hsl(var(--third-foreground)) !important;     / * 不用紫字 * /
+}
+main .h-12 .rounded-xl > .bg-border { display: none; } / * 分頁間的豎線 * /
+
+
+---- 方案 A 結束 ---- */
+
+/* 12-3 右側動作鈕：統一 28px、淡灰；最後一顆（⋮）維持 */
+main .h-12 > .grid button {
+  width: 28px; height: 28px;
+  color: hsl(var(--muted-foreground)) !important;
+}
+main .h-12 > .grid button svg { width: 15px; height: 15px; }
+main .h-12 > .grid button:hover { color: hsl(var(--foreground)) !important; }
+
+/* 12-4 頂欄本身：左右內距對齊搜尋框，高度 44 */
+main .h-12.border-b {
+  height: 44px !important;
+  padding: 0 10px !important;
+}
+
+/* 12-5 搜尋框：無框、淡底、較矮，和 Obsidian 的搜尋列一致 */
+main [data-slot="resizable-panel"] input[type="search"],
+main [data-slot="resizable-panel"] input[type="text"],
+main [data-slot="resizable-panel"] [role="searchbox"] {
+  height: 30px !important;
+  background: hsl(var(--card)) !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 6px !important;
+  font-size: 13px !important;
+}
+
+/* 12-6 標籤 / 分類列：去卡片底，只留 hover 與選中 */
+main [data-slot="resizable-panel"] .rounded-lg.bg-muted,
+main [data-slot="resizable-panel"] .rounded-md.bg-muted,
+main [data-slot="resizable-panel"] .rounded-lg.bg-secondary {
+  background: transparent !important;
+}
+main [data-slot="resizable-panel"] .rounded-lg.bg-muted:hover,
+main [data-slot="resizable-panel"] .rounded-lg.bg-secondary:hover { background: hsl(var(--accent)) !important; }
+
+/* ---------- 13. 對話框 / 記錄文本（v6.7；dialog.tsx data-slot、control-text.tsx:303-342） ---------- */
+/* 13-1 對話框容器：14px 圓角、卡片底、無 ring、較緊內距 */
+[data-slot="dialog-content"] {
+  background: hsl(var(--background)) !important;
+  border-radius: 14px !important;
+  padding: 18px 20px 16px !important;
+  gap: 12px !important;
+  box-shadow: 0 24px 64px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.05) !important;
+  --tw-ring-color: transparent !important;
+}
+[data-slot="dialog-overlay"] { background: rgba(0,0,0,.55) !important; }
+[data-slot="dialog-title"] { font-size: 15px !important; font-weight: 600 !important; color: hsl(var(--third-foreground)) !important; }
+[data-slot="dialog-description"] { display: none !important; }          /* 說明句改由 placeholder 承擔；想保留就刪這行 */
+[data-slot="dialog-close"] { color: hsl(var(--muted-foreground)) !important; top: 14px !important; right: 14px !important; }
+[data-slot="dialog-close"]:hover { background: hsl(var(--accent)) !important; color: hsl(var(--foreground)) !important; }
+
+/* 13-2 「保存到」區：藏標籤、下拉縮成 chip */
+[data-slot="dialog-content"] label[for="record-save-target"] { display: none !important; }
+[data-slot="dialog-content"] #record-save-target {
+  height: 26px !important; min-height: 26px !important;
+  width: auto !important; max-width: 220px !important;
+  padding: 0 10px !important;
+  border: none !important; border-radius: 7px !important;
+  background: hsl(var(--secondary)) !important;
+  font-size: 12px !important; color: hsl(var(--foreground)) !important;
+  box-shadow: none !important;
+}
+[data-slot="dialog-content"] #record-save-target::before {               /* 琥珀點 */
+  content: ""; width: 7px; height: 7px; border-radius: 50%; background: hsl(var(--primary)); margin-right: 2px; flex: 0 0 auto;
+}
+
+/* 13-3 輸入框：無框淡底、拉高、placeholder 淡 */
+[data-slot="dialog-content"] [data-slot="textarea"] {
+  min-height: 180px !important;
+  background: hsl(var(--card)) !important;
+  border: none !important; border-radius: 10px !important;
+  padding: 12px 14px !important;
+  font-size: 14px !important; line-height: 1.6 !important;
+  box-shadow: none !important;
+}
+[data-slot="dialog-content"] [data-slot="textarea"]:focus { box-shadow: inset 0 0 0 1px hsl(var(--input)) !important; }
+[data-slot="dialog-content"] [data-slot="textarea"]::placeholder { color: var(--ob-faint, #6e6e6e); }
+
+/* 13-4 底部列：去上線、勾選框改琥珀、字數變淡、主鍵琥珀 */
+[data-slot="dialog-footer"] { border-top: none !important; padding-top: 2px !important; margin: 0 !important; }
+[data-slot="dialog-footer"] label { font-size: 12px !important; color: hsl(var(--muted-foreground)) !important; }
+[data-slot="checkbox"] { border-color: hsl(var(--input)) !important; border-radius: 4px !important; }
+[data-slot="checkbox"][data-state="checked"] { background: hsl(var(--primary)) !important; border-color: hsl(var(--primary)) !important; color: hsl(var(--primary-foreground)) !important; }
+[data-slot="dialog-footer"] p { font-size: 11px !important; color: var(--ob-faint, #6e6e6e) !important; font-variant-numeric: tabular-nums; }
+[data-slot="dialog-footer"] button[type="submit"],
+[data-slot="dialog-footer"] [data-slot="button"]:not([class*="secondary"]):not([class*="ghost"]):not([class*="outline"]) {
+  height: 32px !important; padding: 0 16px !important; border-radius: 8px !important;
+  background: hsl(var(--primary)) !important; color: hsl(var(--primary-foreground)) !important; font-weight: 600 !important;
+}
+
+/* ---------- 13-5 對話框底部列補強（dialog.tsx:110 預設 -mx-4 bg-muted/50 border-t） ---------- */
+[data-slot="dialog-footer"] {
+  background: transparent !important;
+  margin: 0 !important;
+  padding: 2px 0 0 !important;
+  border-radius: 0 !important;
+}
+/* 單行輸入框（連結記錄等）：與 textarea 同一套無框淡底 */
+[data-slot="dialog-content"] [data-slot="input"],
+[data-slot="dialog-content"] input[type="text"],
+[data-slot="dialog-content"] input[type="url"] {
+  height: 40px !important;
+  background: hsl(var(--card)) !important;
+  border: none !important; border-radius: 10px !important;
+  padding: 0 14px !important; font-size: 14px !important;
+  box-shadow: none !important;
+}
+[data-slot="dialog-content"] [data-slot="input"]:focus,
+[data-slot="dialog-content"] input:focus { box-shadow: inset 0 0 0 1px hsl(var(--input)) !important; outline: none !important; }
+/* 主鍵 disabled：保留琥珀但降到 40%，不要變成土黃 */
+[data-slot="dialog-footer"] button[type="submit"]:disabled,
+[data-slot="dialog-footer"] [data-slot="button"]:disabled { opacity: .4 !important; background: hsl(var(--primary)) !important; color: hsl(var(--primary-foreground)) !important; }
+
+/* ---------- 14. 截圖畫面（control-scan.tsx:550-714）：黑底 → baseline 底、白鍵 → 琥珀 ---------- */
+[data-slot="dialog-content"].bg-black {
+  background: var(--ob-shell, #161616) !important;
+  padding: 14px 16px !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+/* 頂列資訊 pill */
+[data-slot="dialog-content"].bg-black .rounded-full.bg-white\/10 {
+  background: hsl(var(--secondary)) !important;
+  color: hsl(var(--muted-foreground)) !important;
+  font-size: 11px !important;
+  padding: 3px 9px !important;
+  border-radius: 6px !important;
+}
+/* 「保存到」下拉 */
+[data-slot="dialog-content"].bg-black [data-slot="select-trigger"] {
+  background: hsl(var(--secondary)) !important;
+  border: none !important; border-radius: 7px !important;
+  color: hsl(var(--foreground)) !important;
+  height: 28px !important; width: auto !important; min-width: 140px;
+}
+/* 次要鍵（重新截圖 / 關閉）與主鍵（保存並識別） */
+[data-slot="dialog-content"].bg-black button.text-white {
+  color: hsl(var(--muted-foreground)) !important; border-radius: 8px !important; height: 28px !important;
+}
+[data-slot="dialog-content"].bg-black button.text-white:hover { background: hsl(var(--accent)) !important; color: hsl(var(--foreground)) !important; }
+[data-slot="dialog-content"].bg-black button.bg-white {
+  background: hsl(var(--primary)) !important; color: hsl(var(--primary-foreground)) !important;
+  border-radius: 8px !important; height: 28px !important; font-weight: 600 !important;
+}
+/* 預覽區：去白描邊、圓角卡片 */
+[data-slot="dialog-content"].bg-black .border-white\/10.bg-black\/80 {
+  background: hsl(var(--background)) !important;
+  border-color: transparent !important;
+  border-radius: 12px !important;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.035);
+}
+/* 底部縮圖列：卡片底、選中標記琥珀 */
+[data-slot="dialog-content"].bg-black .bg-white.text-black { background: hsl(var(--primary)) !important; color: hsl(var(--primary-foreground)) !important; }
+[data-slot="dialog-content"].bg-black [class*="CarouselPrevious"],
+[data-slot="dialog-content"].bg-black [class*="CarouselNext"],
+[data-slot="dialog-content"].bg-black button.border-white\/20 {
+  background: hsl(var(--secondary)) !important; border: none !important; color: hsl(var(--foreground)) !important;
+}
+[data-slot="dialog-content"].bg-black .bg-white\/10.text-white { background: hsl(var(--secondary)) !important; color: hsl(var(--foreground)) !important; }
+/* 截圖畫面用 inline style 把 top 釘在 36px（TITLE_BAR_HEIGHT_PX）；標題列已加高到 44px，補對齊 */
+[data-slot="dialog-content"].bg-black {
+  top: var(--ng-titlebar-h, 44px) !important;
+  height: calc(100vh - var(--ng-titlebar-h, 44px)) !important;
+}
+
+/* ---------- 15. 待辦記錄（v6.9；todo-form.tsx + control-todo.tsx:183-200）：標題優先、其餘收成一列 ---------- */
+/* 15-1 藏掉所有欄位標籤與誤植的說明句 */
+[data-slot="dialog-content"] label[for^="todo-"] { display: none !important; }
+
+/* 15-2 表單容器：垂直間距 10px；改成可換行的 flex，讓標籤下拉與優先級排同一列 */
+[data-slot="dialog-content"]:has(input[id^="todo-title"]) > .space-y-4 {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px !important;
+}
+[data-slot="dialog-content"]:has(input[id^="todo-title"]) > .space-y-4 > * { margin: 0 !important; }
+
+/* 15-3 標題框：排第一、整列寬、48px、17px 字 */
+[data-slot="dialog-content"]:has(input[id^="todo-title"]) > .space-y-4 > div:has(input[id^="todo-title"]) { order: 1; flex: 1 1 100%; }
+[data-slot="dialog-content"] input[id^="todo-title"] {
+  height: 48px !important; font-size: 17px !important; color: hsl(var(--third-foreground)) !important;
+  background: hsl(var(--card)) !important; border: none !important; border-radius: 10px !important;
+  padding: 0 14px !important; box-shadow: inset 0 0 0 1px hsl(var(--input)) !important;
+}
+[data-slot="dialog-content"] input[id^="todo-title"]:focus { box-shadow: inset 0 0 0 1px hsl(var(--primary) / .6) !important; }
+
+/* 15-4 標籤下拉 → chip（第二列左） */
+[data-slot="dialog-content"]:has(input[id^="todo-title"]) > .space-y-4 > div:has(label[for="todo-tag"]) { order: 2; flex: 0 0 auto; }
+[data-slot="dialog-content"] div:has(> label[for="todo-tag"]) [data-slot="select-trigger"] {
+  height: 28px !important; min-height: 28px !important; width: auto !important; min-width: 0 !important;
+  padding: 0 10px !important; border: none !important; border-radius: 7px !important;
+  background: hsl(var(--secondary)) !important; font-size: 12px !important; box-shadow: none !important; margin: 0 !important;
+}
+[data-slot="dialog-content"] div:has(> label[for="todo-tag"]) [data-slot="select-trigger"]::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: hsl(var(--primary)); margin-right: 2px; flex: 0 0 auto; }
+
+/* 15-5 優先級 Tabs → 小段切換（第二列右），選中琥珀 */
+[data-slot="dialog-content"]:has(input[id^="todo-title"]) > .space-y-4 > div:has([id^="todo-priority"]) { order: 3; flex: 0 0 auto; }
+[data-slot="dialog-content"] [id^="todo-priority"] [data-slot="tabs-list"] {
+  width: auto !important; height: 28px !important; padding: 2px !important; gap: 2px !important;
+  background: hsl(var(--card)) !important; border-radius: 8px !important;
+}
+[data-slot="dialog-content"] [id^="todo-priority"] [data-slot="tabs-trigger"] {
+  height: 24px !important; padding: 0 10px !important; width: auto !important; font-size: 12px !important;
+  border-radius: 6px !important; color: hsl(var(--muted-foreground)) !important; background: transparent !important; border: none !important; box-shadow: none !important;
+}
+[data-slot="dialog-content"] [id^="todo-priority"] [data-slot="tabs-trigger"][data-state="active"] {
+  background: hsl(var(--primary)) !important; color: hsl(var(--primary-foreground)) !important; font-weight: 600 !important;
+}
+
+/* 15-6 描述：排最後、整列寬、矮一點 */
+[data-slot="dialog-content"]:has(input[id^="todo-title"]) > .space-y-4 > div:has(textarea[id^="todo-description"]) { order: 4; flex: 1 1 100%; }
+[data-slot="dialog-content"] textarea[id^="todo-description"] {
+  min-height: 68px !important; max-height: 160px !important;
+  background: hsl(var(--card)) !important; border: none !important; border-radius: 10px !important;
+  padding: 10px 14px !important; font-size: 13px !important; box-shadow: none !important;
+}
+[data-slot="dialog-content"] textarea[id^="todo-description"]:focus { box-shadow: inset 0 0 0 1px hsl(var(--input)) !important; }
+
+/* ---------- 16. 切換群組 / 開關式按鈕的「選中」狀態（v6.10；toggle.tsx: data-[state=on]:bg-muted） ----------
+   原因：我們把 --muted 設成和卡片同色（#262626），shadcn 的選中底色就看不見了。 */
+[data-slot="toggle-group-item"][data-state="on"],
+[data-slot="toggle"][data-state="on"],
+[data-slot="toggle-group-item"][aria-pressed="true"],
+[data-slot="toggle"][aria-pressed="true"] {
+  background: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+  border-color: transparent !important;
+  font-weight: 600;
+}
+[data-slot="toggle-group-item"]:not([data-state="on"]),
+[data-slot="toggle"]:not([data-state="on"]) {
+  color: hsl(var(--muted-foreground)) !important;
+  border-color: hsl(var(--input)) !important;
+}
+[data-slot="toggle-group-item"]:not([data-state="on"]):hover,
+[data-slot="toggle"]:not([data-state="on"]):hover { background: hsl(var(--accent)) !important; color: hsl(var(--foreground)) !important; }
+[data-slot="toggle-group"] { gap: 6px; }
+
+/* 同類：Tabs 的選中（設定頁與其他地方的 tabs-trigger；待辦優先級已另有第 15 段） */
+[data-slot="tabs-trigger"][data-state="active"]:not([id^="todo-priority"] *) {
+  background: hsl(var(--third)) !important;
+  color: hsl(var(--third-foreground)) !important;
+}
+
+/* ---------- 17. 檔案列表（v6.13；globals.css .file-manager-item、file-tree-row.tsx、file-item.tsx:915-923、folder-item/index.tsx:1022-1033） ----------
+   DOM：.file-manager-item > [chevron button | span.size-4 佔位] > span > div.relative.flex.min-w-0.flex-1 > [圖示 svg 或 div.shrink-0] + span.truncate(檔名)
+   市場慣例對照（Obsidian / VS Code / Notion / Bear）：
+   - 列高 24–28px、13px 字：採 26px / 13px
+   - 資料夾與檔案靠字重與色階區分，不靠圖示（Obsidian）；或靠圖示（VS Code）：預設走 Obsidian，圖示版見 17-B
+   - 階層用縮排 + 細導引線（VS Code 的 indent guides）：用 inline padding 指紋畫 1–5 層
+   - 作用中列：淡底、無色條；多選：主色 12%
+   - 副檔名隱藏（Obsidian）：CSS 做不到，需改 file-item.tsx:923 的 item.name 顯示 */
+.file-manager-item {
+  height: 26px !important;
+  gap: 4px !important;
+  border-radius: 6px !important;
+  color: hsl(var(--foreground)) !important;
+  margin-inline: 6px; width: calc(100% - 12px) !important;
+}
+.file-manager-item span.truncate { font-size: 13px !important; }
+
+/* 17-A 隱藏資料夾 / 檔案圖示（Obsidian 風格；要圖示版就把這兩行刪掉，並解開 17-B） */
+.file-manager-item .relative.flex.min-w-0.flex-1 > svg,
+.file-manager-item .relative.flex.min-w-0.flex-1 > div.shrink-0 { display: none !important; }
+
+/* 17-B 圖示版（備用）：圖示變淡、資料夾圖示填色
+.file-manager-item .relative.flex.min-w-0.flex-1 > svg,
+.file-manager-item .relative.flex.min-w-0.flex-1 > div.shrink-0 svg { width: 14px; height: 14px; color: var(--ob-faint, #6e6e6e); }
+.file-manager-item[data-file-manager-item-kind="folder"] .relative.flex.min-w-0.flex-1 > svg { color: hsl(var(--primary)); opacity: .8; }
+*/
+
+/* 資料夾：字重 500、字色略亮；檔案：一般 */
+.file-manager-item[data-file-manager-item-kind="folder"] span.truncate { font-weight: 500; color: hsl(var(--third-foreground)); }
+.file-manager-item[data-file-manager-item-kind="file"] span.truncate { font-weight: 400; }
+
+/* chevron：更小更淡；資料夾 hover 時才亮 */
+.file-manager-item [data-file-manager-toggle] svg { width: 12px; height: 12px; color: var(--ob-faint, #6e6e6e); }
+.file-manager-item:hover [data-file-manager-toggle] svg { color: hsl(var(--muted-foreground)); }
+
+/* 縮排導引線（VS Code indent guides）：依 file-tree-row.tsx 的 padding-inline-start = 4 + level*16 */
+.file-manager-item[style*="padding-inline-start: 20px"],
+.file-manager-item[style*="padding-inline-start: 36px"],
+.file-manager-item[style*="padding-inline-start: 52px"],
+.file-manager-item[style*="padding-inline-start: 68px"],
+.file-manager-item[style*="padding-inline-start: 84px"] {
+  background-image: repeating-linear-gradient(to right, transparent 0 11px, hsl(var(--border)) 11px 12px, transparent 12px 16px);
+  background-repeat: no-repeat;
+  background-origin: padding-box;
+}
+.file-manager-item[style*="padding-inline-start: 20px"] { background-size: 20px 100%; }
+.file-manager-item[style*="padding-inline-start: 36px"] { background-size: 36px 100%; }
+.file-manager-item[style*="padding-inline-start: 52px"] { background-size: 52px 100%; }
+.file-manager-item[style*="padding-inline-start: 68px"] { background-size: 68px 100%; }
+.file-manager-item[style*="padding-inline-start: 84px"] { background-size: 84px 100%; }
+
+/* hover / active / selected */
+.file-manager-item:not(.active):not(.file-selected):hover { background-color: hsl(var(--accent)) !important; font-weight: inherit !important; }
+.file-manager-item.active { background-color: hsl(var(--third)) !important; }
+.file-manager-item.active span.truncate { color: hsl(var(--third-foreground)); }
+.file-manager-item.active::before { display: none !important; }      /* 去掉左側 2px 色條；要留就刪這行 */
+.file-manager-item.file-selected { background-color: hsl(var(--primary) / .12) !important; }
+
+/* ---------- 18. 外掛視圖（NoteGen Today）v6.15 ----------
+   plugin-view-surface.tsx:82 的容器帶 aria-busy 屬性（唯一穩定指紋）；
+   plugin-declarative-ui.tsx:53 的根是 div.flex.min-w-0.flex-col.break-words。
+   宣告式 UI 是扁平 blocks，無法真的包成卡片；用「眉標 + 區塊卡」模擬示意圖。 */
+main div[aria-busy]:has(> div.flex.min-w-0.flex-col.break-words) {
+  padding: 20px 28px 40px !important; overflow-x: hidden !important;
+}
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words {
+  max-width: 960px; margin: 0 auto; gap: 12px !important; padding: 0 !important;
+}
+/* 第一個 heading = 時鐘列 */
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words > h3:first-child {
+  font-size: 28px !important; font-weight: 600 !important; letter-spacing: -.02em; color: hsl(var(--third-foreground)) !important; margin-bottom: 4px;
+}
+/* 其他 heading = 區塊眉標 */
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words > h3:not(:first-child) {
+  font-size: 11px !important; font-weight: 500 !important; letter-spacing: .06em; color: hsl(var(--muted-foreground)) !important; margin-top: 8px;
+}
+/* 分隔線：拿掉 */
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words > [data-slot="separator"],
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words > hr,
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words > [role="none"] { display: none !important; }
+/* key-value = 卡片 */
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words > dl {
+  background: hsl(var(--card)); border-radius: 12px; padding: 6px 16px;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.035); gap: 0 !important;
+}
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words > dl > div { padding: 9px 0; border-bottom: 1px solid hsl(var(--border)); align-items: baseline; justify-content: flex-start !important; gap: 16px; }
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words > dl > div:last-child { border-bottom: none; }
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words > dl dt { font-size: 12px; flex: 0 0 72px; }
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words > dl dd { text-align: left !important; font-size: 13px; white-space: pre-line; word-break: normal !important; }
+/* table = 卡片 */
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table { background: hsl(var(--card)); border-radius: 12px; overflow: hidden; box-shadow: 0 0 0 1px rgba(255,255,255,.035); }
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words th { font-size: 11px; color: hsl(var(--muted-foreground)); font-weight: 500; }
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words td,
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words th { padding: 8px 14px !important; border-color: hsl(var(--border)) !important; }
+/* 需處理那行（tone: warning → text-destructive）：琥珀小牌 */
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words > p.text-destructive {
+  display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 6px; width: fit-content;
+  background: hsl(var(--primary) / .14); color: #fcd44f !important; font-size: 12px;
+}
+/* 動作列 */
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words [data-slot="button"] { height: 34px !important; padding: 0 16px !important; border-radius: 8px !important; font-weight: 500; }
+
+/* ---------- 18-B 外掛視圖：依 ReUI 示意圖的三張表（v6.16；順序固定：1 需處理、2 時間軸、3 本週） ---------- */
+/* 表 2：Timeline — 第一欄是指示符（◆ 現在 / ✓ 已完成 / · 已過 / ○ 未到） */
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:nth-of-type(2) thead { display: none; }
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:nth-of-type(2) td:nth-child(1) {
+  width: 28px; text-align: center; color: var(--ob-faint, #6e6e6e); font-size: 12px; position: relative;
+}
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:nth-of-type(2) td:nth-child(1)::before {   /* 直線 */
+  content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: hsl(var(--border)); z-index: 0;
+}
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:nth-of-type(2) tr:first-child td:nth-child(1)::before { top: 50%; }
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:nth-of-type(2) tr:last-child td:nth-child(1)::before { bottom: 50%; }
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:nth-of-type(2) td:nth-child(1) > * ,
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:nth-of-type(2) td:nth-child(1) { position: relative; z-index: 1; background: hsl(var(--card)); }
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:nth-of-type(2) td:nth-child(2) { width: 64px; color: hsl(var(--muted-foreground)); font-variant-numeric: tabular-nums; }
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:nth-of-type(2) td:nth-child(3) { font-weight: 500; color: hsl(var(--third-foreground)); }
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:nth-of-type(2) td:nth-child(4) { text-align: right; color: hsl(var(--muted-foreground)); font-size: 12px; }
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:nth-of-type(2) td { border-bottom: none !important; padding: 7px 10px !important; }
+/* 指示符顏色：CSS 無法讀文字，改用列的第 4 欄內容是否為空來推（已完成 / 已過 有字；現在與未到為空），
+   「現在」列另靠 entry.js 把第 3 欄寫成「現在」，無法由 CSS 單獨辨識 → 以 ◆ 字形區別 */
+
+/* 表 3：本週 — 七格並排、今天琥珀 */
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:nth-of-type(3) { table-layout: fixed; text-align: center; }
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:nth-of-type(3) th { text-align: center; font-size: 11px; color: var(--ob-faint, #6e6e6e); padding: 6px 0 2px !important; border: none !important; }
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:nth-of-type(3) td { text-align: center; font-size: 13px; padding: 8px 0 10px !important; border: none !important; font-variant-numeric: tabular-nums; }
+
+/* 表 1：需處理 — 第一欄做成小標籤 */
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:nth-of-type(1) thead { display: none; }
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:nth-of-type(1) td:nth-child(1) { width: 52px; font-size: 11px; color: hsl(var(--muted-foreground)); }
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:nth-of-type(1) td:nth-child(3) { text-align: right; font-size: 11px; color: var(--ob-faint, #6e6e6e); }

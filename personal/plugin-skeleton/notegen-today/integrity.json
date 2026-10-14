@@ -1,0 +1,4 @@
+{"version":1,"algorithm":"sha256","files":[
+{"path":"README.md","size":2873,"sha256":"3ea76b23550d9312a54140995750daf8a9ee1187d1aad84bb7344f00474288ee"},
+{"path":"entry.js","size":20832,"sha256":"e30b3448bccae8c950b24be93d52cfb15a008dae5b51e8f35ef29d4cc78c0876"},
+{"path":"plugin.json","size":2841,"sha256":"7e1ef9d558a83ab8beb4fe3d9d1160465c8892a00f7afaf4c640589d5abfbef2"}]}
