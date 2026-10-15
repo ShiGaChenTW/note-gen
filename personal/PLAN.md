@@ -2,7 +2,7 @@
 title: NoteGen 個人 Fork 開發計畫
 filename: PLAN.md
 created: 2026-10-15 05:10 (Asia/Taipei)
-modified: 2026-10-15 05:30 (Asia/Taipei)
+modified: 2026-10-15 07:00 (Asia/Taipei)
 source_llm: Claude (Opus 5.5, Claude Code session)
 status: approved 2026-10-15（D1–D6 全採建議）
 supersedes: HANDOFF.md 第 1、3、9 節的「純 CSS / 插件沙箱」前提
@@ -91,6 +91,14 @@ supersedes: HANDOFF.md 第 1、3、9 節的「純 CSS / 插件沙箱」前提
 | D5 | 只做 macOS 桌面版，還是也維護 mobile（iOS/Android）？ | 只做 macOS |
 | D6 | `custom-css/` 改名搬到 `personal/` 並 commit？ | 是 |
 
-## 5. 同意後的第一步
+## 5. 進度
+
+| 項目 | 狀態 | 備註 |
+|---|---|---|
+| Phase 0 | ✅ 完成 2026-10-15 | commit `26c82718`、`b62bbb73`；本機 build `NoteGen (Scott).app` 成功（需 stable Rust，見 FORK-CHANGES） |
+| Phase 1-2 slash menu 鍵盤 | ✅ fork 版無法重現 2026-10-15 | 隔離測試：乾淨環境、+custom CSS、+NoteGen Today 皆正常。疑似由上游 `a79486cb`（AI 續寫浮窗跨編輯器攔截 Enter/Escape，v0.38.2 之後才修）解決；`%name%` 是其他插件 manifest 的在地化 key 沒有翻譯。再出現時先查舊環境裝的其他插件 |
+| Phase 1-1 CSS / 插件截圖驗收 | ⏳ 待 Scott | |
+
+## 6. 同意後的第一步
 
 執行 Phase 0 的 1–2（identifier、updater、upstream remote、分支、納入 git），完成後回報再進 Phase 1。
