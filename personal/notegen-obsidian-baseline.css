@@ -1,7 +1,7 @@
 /* ============================================================
-   NoteGen — Obsidian 1.14 Baseline Look  (v6.16, source-verified)
+   NoteGen — Obsidian 1.14 Baseline Look  (v6.17, source-verified)
    File: notegen-obsidian-baseline.css
-   Created: 2026-10-14 15:15 | Modified: 2026-10-14 21:52
+   Created: 2026-10-14 15:15 | Modified: 2026-10-15 10:50
    Source: Claude (Fable 5.1) — verified against note-gen @ 9859c6e (2026-10-11)
    貼入位置：設定 → 一般 → 介面設定 → 自訂 CSS（整段取代）
    原理：NoteGen 把自訂 CSS 永遠放在 <head> 最後，且所有顏色都走
@@ -322,9 +322,9 @@ main .h-12 .rounded-xl > button {
 }
 main .h-12 .rounded-xl > button > span { display: none !important; }   /* 原本的展開文字 */
 main .h-12 .rounded-xl > button:nth-of-type(-n+3) > svg { display: none; }
-main .h-12 .rounded-xl > button:nth-of-type(1)::after { content: "筆記"; }
-main .h-12 .rounded-xl > button:nth-of-type(2)::after { content: "記錄"; }
-main .h-12 .rounded-xl > button:nth-of-type(3)::after { content: "畫布"; }
+main .h-12 .rounded-xl > button:nth-of-type(1)::after { content: "\7B46\8A18"; /* 筆記 */ }
+main .h-12 .rounded-xl > button:nth-of-type(2)::after { content: "\8A18\9304"; /* 記錄 */ }
+main .h-12 .rounded-xl > button:nth-of-type(3)::after { content: "\756B\5E03"; /* 畫布 */ }
 main .h-12 .rounded-xl > button:hover { color: hsl(var(--foreground)) !important; }
 main .h-12 .rounded-xl > button.bg-muted {
   color: hsl(var(--third-foreground)) !important;
@@ -700,32 +700,34 @@ main div[aria-busy] > div.flex.min-w-0.flex-col.break-words > p.text-destructive
 /* 動作列 */
 main div[aria-busy] > div.flex.min-w-0.flex-col.break-words [data-slot="button"] { height: 34px !important; padding: 0 16px !important; border-radius: 8px !important; font-weight: 500; }
 
-/* ---------- 18-B 外掛視圖：依 ReUI 示意圖的三張表（v6.16；順序固定：1 需處理、2 時間軸、3 本週） ---------- */
+/* ---------- 18-B 外掛視圖：依 ReUI 示意圖的三張表（v6.17：改用欄數辨識，1 需處理=3 欄、2 時間軸=4 欄、3 本週=7 欄） ----------
+   v6.16 用 table:nth-of-type(N) 失效：shadcn Table 每張表各包一層 div[data-slot="table-container"]，
+   三張表都算 nth-of-type(1)，表 1 的規則套到全部表格。 */
 /* 表 2：Timeline — 第一欄是指示符（◆ 現在 / ✓ 已完成 / · 已過 / ○ 未到） */
-main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:nth-of-type(2) thead { display: none; }
-main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:nth-of-type(2) td:nth-child(1) {
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:has(th:nth-child(4)):not(:has(th:nth-child(5))) thead { display: none; }
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:has(th:nth-child(4)):not(:has(th:nth-child(5))) td:nth-child(1) {
   width: 28px; text-align: center; color: var(--ob-faint, #6e6e6e); font-size: 12px; position: relative;
 }
-main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:nth-of-type(2) td:nth-child(1)::before {   /* 直線 */
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:has(th:nth-child(4)):not(:has(th:nth-child(5))) td:nth-child(1)::before {   /* 直線 */
   content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: hsl(var(--border)); z-index: 0;
 }
-main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:nth-of-type(2) tr:first-child td:nth-child(1)::before { top: 50%; }
-main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:nth-of-type(2) tr:last-child td:nth-child(1)::before { bottom: 50%; }
-main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:nth-of-type(2) td:nth-child(1) > * ,
-main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:nth-of-type(2) td:nth-child(1) { position: relative; z-index: 1; background: hsl(var(--card)); }
-main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:nth-of-type(2) td:nth-child(2) { width: 64px; color: hsl(var(--muted-foreground)); font-variant-numeric: tabular-nums; }
-main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:nth-of-type(2) td:nth-child(3) { font-weight: 500; color: hsl(var(--third-foreground)); }
-main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:nth-of-type(2) td:nth-child(4) { text-align: right; color: hsl(var(--muted-foreground)); font-size: 12px; }
-main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:nth-of-type(2) td { border-bottom: none !important; padding: 7px 10px !important; }
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:has(th:nth-child(4)):not(:has(th:nth-child(5))) tr:first-child td:nth-child(1)::before { top: 50%; }
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:has(th:nth-child(4)):not(:has(th:nth-child(5))) tr:last-child td:nth-child(1)::before { bottom: 50%; }
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:has(th:nth-child(4)):not(:has(th:nth-child(5))) td:nth-child(1) > * ,
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:has(th:nth-child(4)):not(:has(th:nth-child(5))) td:nth-child(1) { position: relative; z-index: 1; background: hsl(var(--card)); }
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:has(th:nth-child(4)):not(:has(th:nth-child(5))) td:nth-child(2) { width: 64px; color: hsl(var(--muted-foreground)); font-variant-numeric: tabular-nums; }
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:has(th:nth-child(4)):not(:has(th:nth-child(5))) td:nth-child(3) { font-weight: 500; color: hsl(var(--third-foreground)); }
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:has(th:nth-child(4)):not(:has(th:nth-child(5))) td:nth-child(4) { text-align: right; color: hsl(var(--muted-foreground)); font-size: 12px; }
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:has(th:nth-child(4)):not(:has(th:nth-child(5))) td { border-bottom: none !important; padding: 7px 10px !important; }
 /* 指示符顏色：CSS 無法讀文字，改用列的第 4 欄內容是否為空來推（已完成 / 已過 有字；現在與未到為空），
    「現在」列另靠 entry.js 把第 3 欄寫成「現在」，無法由 CSS 單獨辨識 → 以 ◆ 字形區別 */
 
 /* 表 3：本週 — 七格並排、今天琥珀 */
-main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:nth-of-type(3) { table-layout: fixed; text-align: center; }
-main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:nth-of-type(3) th { text-align: center; font-size: 11px; color: var(--ob-faint, #6e6e6e); padding: 6px 0 2px !important; border: none !important; }
-main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:nth-of-type(3) td { text-align: center; font-size: 13px; padding: 8px 0 10px !important; border: none !important; font-variant-numeric: tabular-nums; }
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:has(th:nth-child(7)) { table-layout: fixed; text-align: center; }
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:has(th:nth-child(7)) th { text-align: center; font-size: 11px; color: var(--ob-faint, #6e6e6e); padding: 6px 0 2px !important; border: none !important; }
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:has(th:nth-child(7)) td { text-align: center; font-size: 13px; padding: 8px 0 10px !important; border: none !important; font-variant-numeric: tabular-nums; }
 
 /* 表 1：需處理 — 第一欄做成小標籤 */
-main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:nth-of-type(1) thead { display: none; }
-main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:nth-of-type(1) td:nth-child(1) { width: 52px; font-size: 11px; color: hsl(var(--muted-foreground)); }
-main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:nth-of-type(1) td:nth-child(3) { text-align: right; font-size: 11px; color: var(--ob-faint, #6e6e6e); }
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:not(:has(th:nth-child(4))) thead { display: none; }
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:not(:has(th:nth-child(4))) td:nth-child(1) { width: 52px; font-size: 11px; color: hsl(var(--muted-foreground)); }
+main div[aria-busy] > div.flex.min-w-0.flex-col.break-words table:not(:has(th:nth-child(4))) td:nth-child(3) { text-align: right; font-size: 11px; color: var(--ob-faint, #6e6e6e); }
