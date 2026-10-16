@@ -88,28 +88,7 @@ export function completeTaskLine(line: string, today: Date): CompletedTask | nul
   const rule = recurrenceOf(bare)
   if (!rule) return { completed, next: null, lines: [completed] }
 
-  const todayStr = formatYmd(localDay(today))
-  const dates = readDates(bare)
-  const referenceField = REFERENCE_ORDER.find(f => dates[f])
-  const reference = referenceField ? dates[referenceField]! : null
-
-  let next = bare
-    .replace(TASK_CHECKBOX_RE, (_, open: string, _status: string, rest: string) => `${open} ${rest}`)
-    .replace(DONE_OR_CANCELLED_RE, '')
-    .replace(CREATED_RE, (_, prefix: string) => `${prefix}${todayStr}`)
-
-  // 沒有任何日期時（不論是否 when done），Tasks 產生不帶日期的新任務
-  if (reference) {
-    const nextRef = nextOccurrence(rule, rule.whenDone ? todayStr : reference)
-    for (const field of REFERENCE_ORDER) {
-      const value = dates[field]
-      if (!value) continue
-      const shifted = formatYmd(addDays(parseYmd(nextRef)!, diffDays(value, reference)))
-      next = replaceDate(next, field, shifted)
-    }
-  }
-
-  next += cr
+  const next = buildNextOccurrence(bare, rule, today) + cr
   return { completed, next, lines: [completed, next] }
 }
 
@@ -124,6 +103,30 @@ export function completeTaskInContent(content: string, lineNo: number, today: Da
   if (!result) return null
   lines.splice(lineNo, 1, ...result.lines)
   return lines.join('\n')
+}
+
+/** 依 🔁 規則產生下一次的任務行（未完成、日期依參考日平移；不含行尾 `\r`）。 */
+function buildNextOccurrence(bare: string, rule: Recurrence, today: Date): string {
+  const todayStr = formatYmd(localDay(today))
+  const dates = readDates(bare)
+  const referenceField = REFERENCE_ORDER.find(f => dates[f])
+  const reference = referenceField ? dates[referenceField]! : null
+
+  let next = bare
+    .replace(TASK_CHECKBOX_RE, (_, open: string, _status: string, rest: string) => `${open} ${rest}`)
+    .replace(DONE_OR_CANCELLED_RE, '')
+    .replace(CREATED_RE, (_, prefix: string) => `${prefix}${todayStr}`)
+
+  // 沒有任何日期時（不論是否 when done），Tasks 產生不帶日期的新任務
+  if (!reference) return next
+  const nextRef = nextOccurrence(rule, rule.whenDone ? todayStr : reference)
+  for (const field of REFERENCE_ORDER) {
+    const value = dates[field]
+    if (!value) continue
+    const shifted = formatYmd(addDays(parseYmd(nextRef)!, diffDays(value, reference)))
+    next = replaceDate(next, field, shifted)
+  }
+  return next
 }
 
 function readDates(line: string): Partial<Record<DateField, string>> {

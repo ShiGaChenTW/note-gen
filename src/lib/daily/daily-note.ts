@@ -91,33 +91,47 @@ const hasMarker = (md: string, key: string) => new RegExp(`^${key}::\\s*done\\s*
 
 export function parseDailyNote(md: string): DailyNote {
   const lines = md.split('\n').map(l => l.replace(/\r$/, ''))
-
-  let tone: string | null = null
-  const toneIdx = findLine(lines, /一句話定調/)
-  if (toneIdx >= 0) {
-    const after = lines[toneIdx].split(/→|->/).slice(1).join('→')
-    const t = cleanText(after.replace(/^>\s*/, ''))
-    tone = t || null
+  return {
+    tone: parseTone(lines),
+    oneThing: parseOneThing(lines),
+    mits: parseMits(lines),
+    anchors: parseAnchors(lines),
+    capture: parseCapture(lines),
+    reflection: parseReflection(lines),
+    morning: hasMarker(md, 'morning'),
+    reviewed: hasMarker(md, 'reviewed'),
   }
+}
 
-  let oneThing: DailyBullet | null = null
+function parseTone(lines: string[]): string | null {
+  const toneIdx = findLine(lines, /一句話定調/)
+  if (toneIdx < 0) return null
+  const after = lines[toneIdx].split(/→|->/).slice(1).join('→')
+  return cleanText(after.replace(/^>\s*/, '')) || null
+}
+
+function parseOneThing(lines: string[]): DailyBullet | null {
   const oneIdx = findLine(lines, /唯一要務|The ONE Thing/i)
-  if (oneIdx >= 0) oneThing = bulletsAfter(lines, oneIdx).find(b => b.text) ?? null
+  return oneIdx >= 0 ? bulletsAfter(lines, oneIdx).find(b => b.text) ?? null : null
+}
 
+function parseMits(lines: string[]): DailyMit[] {
   const mitIdx = findLine(lines, /三件\s*MIT/i)
-  const mits: DailyMit[] = mitIdx >= 0
-    ? bulletsAfter(lines, mitIdx).filter(b => b.text).map(b => ({ ...b, priority: priorityOf(b.raw) }))
-    : []
+  if (mitIdx < 0) return []
+  return bulletsAfter(lines, mitIdx).filter(b => b.text).map(b => ({ ...b, priority: priorityOf(b.raw) }))
+}
 
+function parseAnchors(lines: string[]): DailyAnchor[] {
   const anchorIdx = findLine(lines, /錨點時段/)
-  const anchors: DailyAnchor[] = anchorIdx >= 0
-    ? bulletsAfter(lines, anchorIdx).filter(b => b.text).map(b => {
-      const m = b.text.match(/^(\d{1,2}):(\d{2})\s*(?:[-–~]\s*\d{1,2}:\d{2})?\s*(.*)$/)
-      if (!m) return { ...b, time: '' }
-      return { ...b, time: `${m[1].padStart(2, '0')}:${m[2]}`, text: m[3].trim() || b.text }
-    })
-    : []
+  if (anchorIdx < 0) return []
+  return bulletsAfter(lines, anchorIdx).filter(b => b.text).map(b => {
+    const m = b.text.match(/^(\d{1,2}):(\d{2})\s*(?:[-–~]\s*\d{1,2}:\d{2})?\s*(.*)$/)
+    if (!m) return { ...b, time: '' }
+    return { ...b, time: `${m[1].padStart(2, '0')}:${m[2]}`, text: m[3].trim() || b.text }
+  })
+}
 
+function parseCapture(lines: string[]): DailyNote['capture'] {
   const capture = { total: 0, flash: 0, read: 0, task: 0 }
   const cap = sectionRange(lines, /^##\s.*捕捉軌/)
   if (cap) for (let i = cap[0] + 1; i < cap[1]; i++) {
@@ -130,7 +144,10 @@ export function parseDailyNote(md: string): DailyNote {
     if (/#閃/.test(raw)) capture.flash++
     if (/#讀/.test(raw)) capture.read++
   }
+  return capture
+}
 
+function parseReflection(lines: string[]): DailyNote['reflection'] {
   const reflection: DailyNote['reflection'] = { filled: false, done: null }
   const ref = sectionRange(lines, /^##\s.*沉澱/)
   if (ref) for (let i = ref[0] + 1; i < ref[1]; i++) {
@@ -141,8 +158,7 @@ export function parseDailyNote(md: string): DailyNote {
     reflection.filled = true
     if (/今天真正完成/.test(m[1])) reflection.done = val
   }
-
-  return { tone, oneThing, mits, anchors, capture, reflection, morning: hasMarker(md, 'morning'), reviewed: hasMarker(md, 'reviewed') }
+  return reflection
 }
 
 /**
