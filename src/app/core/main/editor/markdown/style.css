@@ -1716,3 +1716,12 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Fork (F1): YAML frontmatter shown read-only; edit it in source mode. */
+.tiptap-editor .ProseMirror pre.notegen-frontmatter {
+  font-size: 0.85em;
+  opacity: 0.75;
+  white-space: pre-wrap;
+  cursor: default;
+  user-select: text;
+}

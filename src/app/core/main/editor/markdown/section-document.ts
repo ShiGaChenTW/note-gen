@@ -1,4 +1,5 @@
 import MarkdownIt from 'markdown-it'
+import { findFrontmatterEnd } from '@/lib/markdown/frontmatter-split'
 
 export const DEFAULT_SECTION_TARGET_CHARACTERS = 24_000
 export const DEFAULT_SECTION_MAX_CHARACTERS = 64_000
@@ -120,7 +121,7 @@ export function splitMarkdownDocument(
   )
 
   const lineStarts = buildLineStarts(source)
-  const frontmatter = findFrontmatterRange(source, lineStarts)
+  const frontmatter = findFrontmatterRange(source)
   const mathRanges = findBlockMathRanges(source, lineStarts, frontmatter)
   const protectedRanges = mergeOverlappingRanges([
     ...(frontmatter ? [frontmatter] : []),
@@ -646,27 +647,10 @@ function assignByOrderedKey(
   }
 }
 
-function findFrontmatterRange(
-  source: string,
-  lineStarts: readonly number[],
-): SourceRange | null {
-  if (lineStarts.length === 0) return null
-  const firstLine = getLineText(source, lineStarts, 0).replace(/^\uFEFF/, '')
-  if (firstLine.trim() !== '---') return null
-
-  for (let line = 1; line < lineStarts.length; line++) {
-    const value = getLineText(source, lineStarts, line).trim()
-    if (value === '---' || value === '...') {
-      return {
-        from: 0,
-        to: getLineOffset(lineStarts, line + 1, source.length),
-      }
-    }
-  }
-
-  // An unclosed `---` is valid Markdown (usually a thematic break), not
-  // necessarily frontmatter. Avoid swallowing the complete document.
-  return null
+function findFrontmatterRange(source: string): SourceRange | null {
+  // Fork (F1): shared with the visual editor's frontmatter handling.
+  const to = findFrontmatterEnd(source)
+  return to === null ? null : { from: 0, to }
 }
 
 function findBlockMathRanges(
