@@ -2,7 +2,7 @@
 title: NoteGen Fork 偏離上游清單
 filename: FORK-CHANGES.md
 created: 2026-10-15 05:45 (Asia/Taipei)
-modified: 2026-10-15 06:30 (Asia/Taipei)
+modified: 2026-10-17 04:10 (Asia/Taipei)
 source_llm: Claude (Opus 5.5, Claude Code session)
 status: active
 ---
@@ -39,6 +39,13 @@ npx pnpm@9 install --frozen-lockfile
 | 2026-10-15 | `src-tauri/tauri.conf.json` | `plugins.updater.endpoints` → `[]` | 防止自動更新把 fork 換回官方版（D4）。「關於」頁按檢查更新會顯示錯誤，屬預期 |
 | 2026-10-15 | `personal/` | 新增：個人文件、custom CSS、NoteGen Today 插件 | D6 |
 | 2026-10-15 | `.mcp.json`、`.ignore`、`.gitignore` | graft 程式碼索引設定 | 本機開發工具 |
+| 2026-10-17 | `src/lib/markdown/frontmatter-split.ts`（新） | frontmatter 切分與拼回，`block + body === raw` | F1：共用的 frontmatter 規則 |
+| 2026-10-17 | `src/app/core/main/editor/markdown/frontmatter-extension.ts`（新） | Tiptap `frontmatter` 節點：載入前把 YAML 換成標記，存檔時原樣輸出 | F1：原本 `---` 被讀成分隔線，第一個 key 被讀成 `## 標題`，存檔就改壞 frontmatter |
+| 2026-10-17 | `src/app/core/main/editor/markdown/tiptap-editor.tsx` | 掛載點：import、extensions 加 `Frontmatter`、3 處 `setContent` 包 `encodeFrontmatterForEditor()` | F1 |
+| 2026-10-17 | `src/app/core/main/editor/markdown/section-document.ts` | `findFrontmatterRange` 改呼叫共用的 `findFrontmatterEnd` | F1：大檔模式與一般模式同一套規則 |
+| 2026-10-17 | `src/app/core/main/editor/markdown/style.css` | 檔尾加 `.notegen-frontmatter` 樣式 | F1：frontmatter 以唯讀區塊顯示 |
+| 2026-10-17 | `package.json`、`pnpm-lock.yaml`、`vitest.config.ts`（新）、`tests/`（新） | 加 `vitest`、`jsdom` 與 `test` script | 上游沒有測試框架；往返測試用 |
+| 2026-10-17 | `.gitignore` | 在上游的 `*.test.*` 之後加 `!src/**/*.test.ts`、`!tests/**/*.test.ts` | 上游忽略所有測試檔，fork 的 vitest 測試要進版控 |
 
 ## 刻意不改的東西
 
