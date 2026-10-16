@@ -820,6 +820,58 @@
         }
       }
     },
+    "daily": {
+      "title": "デイリーノート",
+      "desc": "デイリーノートの場所、ファイル名の形式、テンプレートを設定します。NoteGen は Obsidian と同じファイルを使い、別にデータを保存しません。",
+      "sections": {
+        "today": "今日のノート",
+        "location": "場所とファイル名",
+        "templates": "テンプレート"
+      },
+      "open": {
+        "button": "今日のノートを開く",
+        "preview": "今日のノート：{path}",
+        "created": "テンプレートから今日のノートを作成しました",
+        "opened": "今日のノートを開きました",
+        "error": "今日のノートを開けませんでした"
+      },
+      "openOnLaunch": {
+        "title": "起動時に今日のノートを開く",
+        "desc": "アプリの起動ごとに今日のノートを開きます。存在しない場合はテンプレートから作成します。"
+      },
+      "dailyFolder": {
+        "title": "デイリーノートのフォルダ",
+        "desc": "ワークスペースからの相対パス。例：20 Journal/21 Daily"
+      },
+      "dailyPattern": {
+        "title": "ファイル名の形式",
+        "desc": "YYYY MM DD ddd dddd に対応。/ でサブフォルダを表します。",
+        "invalid": "形式には YYYY、MM、DD が必要で、/ で始まったり終わったりできません。"
+      },
+      "inboxFolder": {
+        "title": "Inbox フォルダ",
+        "desc": "受信箱の場所。今日のページで溜まっているノートを知らせます。"
+      },
+      "templatesDesc": "テンプレートでは '{{date}}'、'{{date:FORMAT}}'、'{{time}}'、'{{weekday}}'、'{{title}}'、'{{random:ノートのパス}}' が使えます。",
+      "defaultTemplate": {
+        "title": "既定のテンプレート",
+        "desc": "テンプレートノートのパス（.md は省略可）。空欄なら空のノートを作成します。"
+      },
+      "weekdayTemplates": {
+        "title": "曜日別テンプレート",
+        "desc": "設定した曜日はこちらを優先し、それ以外は既定のテンプレートを使います。",
+        "placeholder": "空欄で既定のテンプレート"
+      },
+      "weekdays": {
+        "monday": "月曜日",
+        "tuesday": "火曜日",
+        "wednesday": "水曜日",
+        "thursday": "木曜日",
+        "friday": "金曜日",
+        "saturday": "土曜日",
+        "sunday": "日曜日"
+      }
+    },
     "record": {
       "title": "記録設定",
       "desc": "ここでは、記録関連の設定を構成できます。記録の説明やツールバーの設定などが含まれます。",

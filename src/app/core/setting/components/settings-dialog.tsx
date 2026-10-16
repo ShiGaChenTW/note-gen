@@ -21,6 +21,7 @@ import AboutPage from '../about/page'
 import AiPage from '../ai/page'
 import AudioPage from '../audio/page'
 import CanvasSettingPage from '../canvas/page'
+import DailySettingPage from '../daily/page'
 import EditorSettingPage from '../editor/page'
 import SettingFilePage from '../file/page'
 import GeneralSettingsPage from '../general/page'
@@ -48,6 +49,7 @@ const settingPages: Record<BuiltinSettingSection, ComponentType> = {
   about: AboutPage,
   general: GeneralSettingsPage,
   record: RecordSettingPage,
+  daily: DailySettingPage,
   editor: EditorSettingPage,
   canvas: CanvasSettingPage,
   sync: SyncPage,

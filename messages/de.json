@@ -1241,6 +1241,58 @@
         }
       }
     },
+    "daily": {
+      "title": "Tagesnotizen",
+      "desc": "Lege Ort, Dateinamensformat und Vorlagen der Tagesnotizen fest. NoteGen nutzt dieselben Dateien wie Obsidian und speichert keine zusätzlichen Daten.",
+      "sections": {
+        "today": "Heutige Notiz",
+        "location": "Ort und Dateiname",
+        "templates": "Vorlagen"
+      },
+      "open": {
+        "button": "Heutige Notiz öffnen",
+        "preview": "Heutige Notiz: {path}",
+        "created": "Heutige Notiz aus der Vorlage erstellt",
+        "opened": "Heutige Notiz geöffnet",
+        "error": "Heutige Notiz konnte nicht geöffnet werden"
+      },
+      "openOnLaunch": {
+        "title": "Beim Start heutige Notiz öffnen",
+        "desc": "Öffnet bei jedem App-Start die heutige Notiz und erstellt sie bei Bedarf aus der Vorlage."
+      },
+      "dailyFolder": {
+        "title": "Ordner für Tagesnotizen",
+        "desc": "Pfad relativ zum Arbeitsbereich, z. B. 20 Journal/21 Daily."
+      },
+      "dailyPattern": {
+        "title": "Dateinamensformat",
+        "desc": "Unterstützt YYYY MM DD ddd dddd; / steht für Unterordner.",
+        "invalid": "Das Format muss YYYY, MM und DD enthalten und darf nicht mit / beginnen oder enden."
+      },
+      "inboxFolder": {
+        "title": "Inbox-Ordner",
+        "desc": "Ort des Posteingangs; die Heute-Seite weist auf wartende Notizen hin."
+      },
+      "templatesDesc": "Vorlagen unterstützen '{{date}}', '{{date:FORMAT}}', '{{time}}', '{{weekday}}', '{{title}}' und '{{random:Notizpfad}}'.",
+      "defaultTemplate": {
+        "title": "Standardvorlage",
+        "desc": "Pfad zur Vorlagennotiz, .md ist optional. Leer lassen für eine leere Notiz."
+      },
+      "weekdayTemplates": {
+        "title": "Vorlagen nach Wochentag",
+        "desc": "Wird an diesem Tag bevorzugt, sonst gilt die Standardvorlage.",
+        "placeholder": "Leer: Standardvorlage"
+      },
+      "weekdays": {
+        "monday": "Montag",
+        "tuesday": "Dienstag",
+        "wednesday": "Mittwoch",
+        "thursday": "Donnerstag",
+        "friday": "Freitag",
+        "saturday": "Samstag",
+        "sunday": "Sonntag"
+      }
+    },
     "record": {
       "title": "Aufzeichnungs-Einstellungen",
       "desc": "Konfiguriere hier Einstellungen für Aufzeichnungen, einschließlich Aufzeichnungsbeschreibung und Symbolleistenkonfiguration.",

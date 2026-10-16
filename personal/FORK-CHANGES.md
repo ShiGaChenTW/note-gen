@@ -46,6 +46,12 @@ npx pnpm@9 install --frozen-lockfile
 | 2026-10-17 | `src/app/core/main/editor/markdown/style.css` | 檔尾加 `.notegen-frontmatter` 樣式 | F1：frontmatter 以唯讀區塊顯示 |
 | 2026-10-17 | `package.json`、`pnpm-lock.yaml`、`vitest.config.ts`（新）、`tests/`（新） | 加 `vitest`、`jsdom` 與 `test` script | 上游沒有測試框架；往返測試用 |
 | 2026-10-17 | `.gitignore` | 在上游的 `*.test.*` 之後加 `!src/**/*.test.ts`、`!tests/**/*.test.ts` | 上游忽略所有測試檔，fork 的 vitest 測試要進版控 |
+| 2026-10-17 | `src/lib/daily/`（新） | F2 日期與檔名、D1 模板引擎、任務與 Daily Note 解析、D4 自然語言、D5 重複任務、今日筆記內容與開啟服務 | Phase 1 純函式與 I/O，全部是新檔 |
+| 2026-10-17 | `src/stores/daily-settings.ts`（新） | 日記設定存在 `store.json` 的 `dailySettings` key | D1：不改上游的 `setting.ts` |
+| 2026-10-17 | `src/app/core/setting/daily/page.tsx`（新） | 設定頁「日記」分區 | D1 |
+| 2026-10-17 | `src/stores/settings-dialog.ts`、`src/app/core/setting/config.tsx`、`src/app/core/setting/components/settings-dialog.tsx` | 掛載點：加 `daily` 分區、導覽項目、頁面對應 | D1 |
+| 2026-10-17 | `messages/{en,zh,zh-TW,ja,de,pt-BR}.json` | 在 `settings.record` 前加 `settings.daily` | D1 |
+| 2026-10-17 | `src/app/core/main/daily-note-auto-open.tsx`（新）、`src/app/core/main/page.tsx` | 啟動時開啟今日筆記；page 只加 import 與一行掛載 | D1 |
 
 ## 刻意不改的東西
 

@@ -1241,6 +1241,58 @@
         }
       }
     },
+    "daily": {
+      "title": "Daily notes",
+      "desc": "Set where daily notes live, how they are named, and which templates they use. NoteGen uses the same files as Obsidian and stores no extra data.",
+      "sections": {
+        "today": "Today's note",
+        "location": "Location and file name",
+        "templates": "Templates"
+      },
+      "open": {
+        "button": "Open today's note",
+        "preview": "Today's note: {path}",
+        "created": "Created today's note from the template",
+        "opened": "Opened today's note",
+        "error": "Couldn't open today's note"
+      },
+      "openOnLaunch": {
+        "title": "Open today's note on launch",
+        "desc": "Open today's note every time the app starts, creating it from the template if it doesn't exist."
+      },
+      "dailyFolder": {
+        "title": "Daily notes folder",
+        "desc": "Path relative to the workspace, e.g. 20 Journal/21 Daily."
+      },
+      "dailyPattern": {
+        "title": "File name format",
+        "desc": "Supports YYYY MM DD ddd dddd; use / for subfolders.",
+        "invalid": "The format must contain YYYY, MM and DD, and cannot start or end with /."
+      },
+      "inboxFolder": {
+        "title": "Inbox folder",
+        "desc": "Where the inbox lives; the Today page flags notes waiting there."
+      },
+      "templatesDesc": "Templates support '{{date}}', '{{date:FORMAT}}', '{{time}}', '{{weekday}}', '{{title}}' and '{{random:note path}}'.",
+      "defaultTemplate": {
+        "title": "Default template",
+        "desc": "Path to the template note; .md is optional. Leave empty for a blank note."
+      },
+      "weekdayTemplates": {
+        "title": "Weekday templates",
+        "desc": "Used on that day when set; otherwise the default template is used.",
+        "placeholder": "Empty uses the default template"
+      },
+      "weekdays": {
+        "monday": "Monday",
+        "tuesday": "Tuesday",
+        "wednesday": "Wednesday",
+        "thursday": "Thursday",
+        "friday": "Friday",
+        "saturday": "Saturday",
+        "sunday": "Sunday"
+      }
+    },
     "record": {
       "title": "Record Settings",
       "desc": "Configure record-related settings here, including record description and toolbar configuration.",

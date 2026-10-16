@@ -1241,6 +1241,58 @@
         }
       }
     },
+    "daily": {
+      "title": "日记",
+      "desc": "设置每日笔记的位置、文件名格式和模板。NoteGen 与 Obsidian 使用相同的文件，不会另外保存数据。",
+      "sections": {
+        "today": "今日笔记",
+        "location": "位置与文件名",
+        "templates": "模板"
+      },
+      "open": {
+        "button": "打开今日笔记",
+        "preview": "今天的笔记：{path}",
+        "created": "已根据模板创建今日笔记",
+        "opened": "已打开今日笔记",
+        "error": "无法打开今日笔记"
+      },
+      "openOnLaunch": {
+        "title": "启动时打开今日笔记",
+        "desc": "每次启动应用时打开今天的笔记；不存在时根据模板创建。"
+      },
+      "dailyFolder": {
+        "title": "日记文件夹",
+        "desc": "相对于工作区的路径，例如 20 Journal/21 Daily。"
+      },
+      "dailyPattern": {
+        "title": "文件名格式",
+        "desc": "支持 YYYY MM DD ddd dddd，用 / 表示子文件夹。",
+        "invalid": "格式必须包含 YYYY、MM、DD，且不能以 / 开头或结尾。"
+      },
+      "inboxFolder": {
+        "title": "Inbox 文件夹",
+        "desc": "收件箱的位置，今日页会提醒积压的笔记。"
+      },
+      "templatesDesc": "模板支持 '{{date}}'、'{{date:FORMAT}}'、'{{time}}'、'{{weekday}}'、'{{title}}'、'{{random:笔记路径}}'。",
+      "defaultTemplate": {
+        "title": "默认模板",
+        "desc": "模板笔记的路径，可省略 .md。留空则创建空白笔记。"
+      },
+      "weekdayTemplates": {
+        "title": "按星期的模板",
+        "desc": "设置了的那天优先使用，否则使用默认模板。",
+        "placeholder": "留空使用默认模板"
+      },
+      "weekdays": {
+        "monday": "星期一",
+        "tuesday": "星期二",
+        "wednesday": "星期三",
+        "thursday": "星期四",
+        "friday": "星期五",
+        "saturday": "星期六",
+        "sunday": "星期日"
+      }
+    },
     "record": {
       "title": "记录设置",
       "desc": "在这里，你可以配置记录相关的设置，包括记录描述和工具栏配置。",

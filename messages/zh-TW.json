@@ -820,6 +820,58 @@
         }
       }
     },
+    "daily": {
+      "title": "日記",
+      "desc": "設定每日筆記的位置、檔名格式與模板。NoteGen 會用與 Obsidian 相同的檔案，不會另外保存資料。",
+      "sections": {
+        "today": "今日筆記",
+        "location": "位置與檔名",
+        "templates": "模板"
+      },
+      "open": {
+        "button": "開啟今日筆記",
+        "preview": "今天的筆記：{path}",
+        "created": "已依模板建立今日筆記",
+        "opened": "已開啟今日筆記",
+        "error": "無法開啟今日筆記"
+      },
+      "openOnLaunch": {
+        "title": "啟動時開啟今日筆記",
+        "desc": "每次啟動 App 時打開今天的筆記；還不存在就依模板建立。"
+      },
+      "dailyFolder": {
+        "title": "日記資料夾",
+        "desc": "相對於工作區的路徑，例如 20 Journal/21 Daily。"
+      },
+      "dailyPattern": {
+        "title": "檔名格式",
+        "desc": "支援 YYYY MM DD ddd dddd，用 / 表示子資料夾。",
+        "invalid": "格式必須包含 YYYY、MM、DD，且不能以 / 開頭或結尾。"
+      },
+      "inboxFolder": {
+        "title": "Inbox 資料夾",
+        "desc": "收件匣的位置，今日頁會提醒積壓的筆記。"
+      },
+      "templatesDesc": "模板支援 '{{date}}'、'{{date:FORMAT}}'、'{{time}}'、'{{weekday}}'、'{{title}}'、'{{random:筆記路徑}}'。",
+      "defaultTemplate": {
+        "title": "預設模板",
+        "desc": "模板筆記的路徑，可省略 .md。留空就建立空白筆記。"
+      },
+      "weekdayTemplates": {
+        "title": "星期專屬模板",
+        "desc": "有設定的那天優先使用，否則用預設模板。",
+        "placeholder": "留空使用預設模板"
+      },
+      "weekdays": {
+        "monday": "星期一",
+        "tuesday": "星期二",
+        "wednesday": "星期三",
+        "thursday": "星期四",
+        "friday": "星期五",
+        "saturday": "星期六",
+        "sunday": "星期日"
+      }
+    },
     "record": {
       "title": "記錄設置",
       "desc": "在這裡，你可以配置記錄相關的設置，包括記錄描述和工具欄配置。",

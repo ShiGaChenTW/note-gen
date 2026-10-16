@@ -20,6 +20,7 @@ import {
   Globe2,
   Palette,
   Blocks,
+  CalendarDays,
 } from "lucide-react"
 import type { ReactNode } from 'react'
 import type { BuiltinSettingSection } from '@/stores/settings-dialog'
@@ -54,6 +55,10 @@ const baseConfig: SettingNavigationItem[] = [
   {
     icon: <PenTool className="size-4" />,
     anchor: 'record',
+  },
+  {
+    icon: <CalendarDays className="size-4" />,
+    anchor: 'daily',
   },
   {
     icon: <FileCog className="size-4" />,

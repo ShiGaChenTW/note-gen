@@ -11,6 +11,7 @@
  * 不認得的 token 原樣保留。
  */
 
+import { splitFrontmatter } from '@/lib/markdown/frontmatter-split'
 import { formatDate, WEEKDAY_NAMES } from './format'
 
 /** 依路徑取一行隨機內容；回傳 null/undefined 代表沒有可用的行 */
@@ -65,9 +66,7 @@ export function collectRandomSources(template: string): string[] {
  * @param random 回傳 [0, 1) 的亂數函式，測試時注入
  */
 export function pickRandomLine(content: string, random: () => number = Math.random): string | null {
-  let body = content
-  const frontmatter = /^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/.exec(body)
-  if (frontmatter) body = body.slice(frontmatter[0].length)
+  const { body } = splitFrontmatter(content)
 
   const lines = body
     .split(/\r?\n/)
