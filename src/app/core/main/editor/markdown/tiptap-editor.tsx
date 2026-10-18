@@ -34,6 +34,7 @@ import { InlineMath, BlockMath } from './math-extension'
 import { MermaidDiagram } from './mermaid-extension'
 import { encodeFrontmatterForEditor, Frontmatter } from './frontmatter-extension'
 import { RecurringTask } from './recurring-task-extension'
+import { Wikilink } from './wikilink-extension'
 import { SearchReplacePanel } from './search-replace-panel'
 import { useEffect, useId, useLayoutEffect, useRef, useCallback, useMemo, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type UIEvent as ReactUIEvent, type WheelEvent as ReactWheelEvent } from 'react'
 import { createPortal } from 'react-dom'
@@ -2464,6 +2465,7 @@ export function TipTapEditor({
         nested: true,
       }),
       RecurringTask,
+      Wikilink,
       StableCodeBlockLowlight.configure({
         shouldHighlight: () => !isSourceViewRef.current,
       }),
