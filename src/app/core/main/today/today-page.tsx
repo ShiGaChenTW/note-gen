@@ -1,7 +1,7 @@
 'use client'
 
 // Fork (D2): native Today page, design v2 (personal/notegen-today-d2-redesign.html).
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useState } from 'react'
 import {
   AlertTriangle,
   ArrowDownToLine,
@@ -21,7 +21,6 @@ import {
   Zap,
 } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
-import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -32,170 +31,29 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
-import { parseDailyNote, type DailyNote } from '@/lib/daily/daily-note'
-import { dailyNotePath } from '@/lib/daily/format'
 import { openDailyNote } from '@/lib/daily/open-daily-note'
-import { readNote } from '@/lib/daily/note-io'
-import { useCalendarEvents } from '@/lib/calendar/calendar'
+import type { useCalendarEvents } from '@/lib/calendar/calendar'
 import type { TaskRef } from '@/lib/vault-index/index-core'
-import {
-  buildAgenda,
-  buildWeek,
-  dateKey,
-  daysBetween,
-  groupTasks,
-  staleInboxNotes,
-  type AgendaItem,
-} from '@/lib/today/today-model'
-import {
-  carryYesterdayTasks,
-  countCarryable,
-  quickAddTask,
-  scheduleTask,
-  setTaskChecked,
-  stampToday,
-  StaleTaskError,
-  undoWrites,
-  type WriteRecord,
-} from '@/lib/today/today-actions'
-import useArticleStore from '@/stores/article'
-import useDailySettingsStore from '@/stores/daily-settings'
-import useVaultIndexStore, { selectAllTasks } from '@/stores/vault-index'
+import { dateKey, daysBetween, type AgendaItem } from '@/lib/today/today-model'
+import useVaultIndexStore from '@/stores/vault-index'
 import { DailyCalendarPopover } from '../daily/daily-calendar'
 import { QuickAdd } from './quick-add'
 import { ScheduleButton, TASK_DRAG_MIME, taskDragKey, TimeBlocks } from './time-blocks'
-
-/** 分鐘級的「現在」，讓進程與「現在」線每分鐘前進。 */
-function useNow(): Date {
-  const [now, setNow] = useState(() => new Date())
-  useEffect(() => {
-    const tick = () => setNow(new Date())
-    const align = window.setTimeout(() => {
-      tick()
-      timer = window.setInterval(tick, 60_000)
-    }, 60_000 - (Date.now() % 60_000))
-    let timer: number | undefined
-    return () => {
-      window.clearTimeout(align)
-      if (timer) window.clearInterval(timer)
-    }
-  }, [])
-  return now
-}
+import { useTodayActions } from './use-today-actions'
+import { useTodayData } from './use-today-data'
 
 function hhmm(ms: number): string {
   const d = new Date(ms)
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
 }
 
-function sourceName(path: string): string {
-  return path.split('/').pop()?.replace(/\.md$/i, '') ?? path
-}
-
 export function TodayPage() {
   const t = useTranslations('today')
   const locale = useLocale()
-  const now = useNow()
-  const todayKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`
-
-  const notes = useVaultIndexStore(state => state.notes)
-  const revision = useVaultIndexStore(state => state.revision)
-  const indexStatus = useVaultIndexStore(state => state.status)
-  const tasks = useMemo(() => selectAllTasks({ notes, revision }), [notes, revision])
-
-  const settings = useDailySettingsStore()
-  const initDailySettings = useDailySettingsStore(state => state.initSettings)
-  useEffect(() => { void initDailySettings() }, [initDailySettings])
-  const todayPath = dailyNotePath(now, settings.dailyFolder, settings.dailyPattern)
-  const todayMtime = notes.get(todayPath)?.mtime ?? 0
-
-  const [dailyNote, setDailyNote] = useState<DailyNote | null>(null)
-  useEffect(() => {
-    let cancelled = false
-    void readNote(todayPath).then(content => {
-      if (!cancelled) setDailyNote(content === null ? null : parseDailyNote(content))
-    }).catch(() => { if (!cancelled) setDailyNote(null) })
-    return () => { cancelled = true }
-  }, [todayPath, todayMtime])
-
-  const [carryable, setCarryable] = useState(0)
-  useEffect(() => {
-    let cancelled = false
-    void countCarryable(now).then(count => { if (!cancelled) setCarryable(count) }).catch(() => undefined)
-    return () => { cancelled = true }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [todayKey, revision])
-
-  const calendar = useCalendarEvents(now)
-  const groups = useMemo(() => groupTasks(tasks, now), [tasks, now])
-  const agenda = useMemo(
-    () => buildAgenda({ now, dailyNote, tasks, events: calendar.events }),
-    [now, dailyNote, tasks, calendar.events],
-  )
-  const week = useMemo(() => buildWeek({
-    now,
-    tasks,
-    dailyNotePathFor: day => dailyNotePath(day, settings.dailyFolder, settings.dailyPattern),
-    hasNote: path => notes.has(path),
-  }), [now, tasks, notes, settings.dailyFolder, settings.dailyPattern])
-  const staleInbox = useMemo(
-    () => staleInboxNotes(notes.values(), settings.inboxFolder, settings.staleDays, now),
-    [notes, settings.inboxFolder, settings.staleDays, now],
-  )
-
-  const [busy, setBusy] = useState<string | null>(null)
-  const runWrite = useCallback(async <T extends WriteRecord>(key: string, action: () => Promise<T>, success: (record: T) => string): Promise<boolean> => {
-    setBusy(key)
-    try {
-      const record = await action()
-      if (record.writes.length === 0) return false
-      toast(success(record), {
-        action: {
-          label: t('undo'),
-          onClick: () => {
-            void undoWrites(record).then(ok => { if (!ok) toast.error(t('undoStale')) })
-          },
-        },
-      })
-      return true
-    } catch (error) {
-      if (error instanceof StaleTaskError) toast.error(t('taskStale', { name: sourceName(error.path) }))
-      else {
-        console.error('[today] write failed:', error)
-        toast.error(t('writeFailed'))
-      }
-      return false
-    } finally {
-      setBusy(null)
-    }
-  }, [t])
-
-  const toggleTask = useCallback((task: TaskRef, checked: boolean) => {
-    void runWrite(`${task.path}:${task.line}`, () => setTaskChecked(task, checked), record => (
-      record.nextDue !== undefined
-        ? t('taskDoneNext', { name: sourceName(task.path), date: record.nextDue || t('noDate') })
-        : checked ? t('taskDone', { name: sourceName(task.path) }) : t('taskUndone', { name: sourceName(task.path) })
-    ))
-  }, [runWrite, t])
-
-  const schedule = useCallback((task: TaskRef, time: string) => {
-    void runWrite(`${task.path}:${task.line}`, () => scheduleTask(task, time), () => (
-      time ? t('timeBlocks.scheduled', { time }) : t('timeBlocks.cleared')
-    ))
-  }, [runWrite, t])
-
-  const dropTask = useCallback((dragKey: string, time: string) => {
-    const task = tasks.find(candidate => taskDragKey(candidate) === dragKey)
-    if (task) schedule(task, time)
-  }, [tasks, schedule])
-
-  const addTask = useCallback((input: string) => runWrite('quick-add', () => quickAddTask(input, new Date()), record => (
-    t('quickAdd.added', { name: record.task.title })
-  )), [runWrite, t])
-
-  const openNote = useCallback((path: string) => {
-    void useArticleStore.getState().setActiveFilePath(path)
-  }, [])
+  const {
+    now, tasks, indexStatus, staleDays, dailyNote, carryable, calendar, groups, agenda, week, staleInbox,
+  } = useTodayData()
+  const { busy, toggleTask, schedule, dropTask, addTask, stamp, carry, openNote } = useTodayActions({ now, tasks })
 
   const dateTitle = new Intl.DateTimeFormat(locale, { month: 'long', day: 'numeric', weekday: 'long' }).format(now)
   const hour = now.getHours()
@@ -262,10 +120,10 @@ export function TodayPage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem disabled={dailyNote?.morning} onSelect={() => void runWrite('morning', () => stampToday('morning', now), () => t('stamped.morning'))}>
+                <DropdownMenuItem disabled={dailyNote?.morning} onSelect={() => stamp('morning')}>
                   <Sun className="size-4" aria-hidden />{dailyNote?.morning ? t('morningDone') : t('morning')}
                 </DropdownMenuItem>
-                <DropdownMenuItem disabled={dailyNote?.reviewed} onSelect={() => void runWrite('review', () => stampToday('review', now), () => t('stamped.review'))}>
+                <DropdownMenuItem disabled={dailyNote?.reviewed} onSelect={() => stamp('review')}>
                   <Moon className="size-4" aria-hidden />{dailyNote?.reviewed ? t('reviewDone') : t('review')}
                 </DropdownMenuItem>
                 <DropdownMenuItem disabled={indexStatus === 'scanning'} onSelect={() => void useVaultIndexStore.getState().rescan?.()}>
@@ -325,7 +183,7 @@ export function TodayPage() {
                   size="sm"
                   className="ml-auto border-primary/50 text-primary"
                   disabled={busy === 'carry'}
-                  onClick={() => void runWrite('carry', () => carryYesterdayTasks(now), record => t('carry.done', { count: (record as WriteRecord & { moved: number }).moved }))}
+                  onClick={carry}
                 >
                   {t('carry.action')}
                 </Button>
@@ -378,7 +236,7 @@ export function TodayPage() {
           <Tile icon={<Zap className="size-4" aria-hidden />} value={String(dailyNote?.capture.total ?? 0)} label={t('capture.title')}
             detail={t('capture.detail', { flash: dailyNote?.capture.flash ?? 0, read: dailyNote?.capture.read ?? 0, task: dailyNote?.capture.task ?? 0 })} />
           <Tile icon={<Inbox className="size-4" aria-hidden />} warn={staleInbox.length > 0} value={String(staleInbox.length)} label={t('inbox.title')}
-            detail={t('inbox.detail', { days: settings.staleDays })}
+            detail={t('inbox.detail', { days: staleDays })}
             action={staleInbox[0] ? { label: t('inbox.action'), onClick: () => openNote(staleInbox[0].path) } : undefined} />
           <Tile icon={<Moon className="size-4" aria-hidden />} value={dailyNote?.reflection.filled ? t('reflection.filled') : t('reflection.empty')} label={t('reflection.title')}
             detail={dailyNote?.reviewed ? t('reviewDone') : t('reflection.detail')}

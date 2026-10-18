@@ -2,7 +2,7 @@
 title: NoteGen Fork 偏離上游清單
 filename: FORK-CHANGES.md
 created: 2026-10-15 05:45 (Asia/Taipei)
-modified: 2026-10-19 00:08 (Asia/Taipei)
+modified: 2026-10-19 02:19 (Asia/Taipei)
 source_llm: Claude (Opus 5.5, Claude Code session)
 status: active
 ---
@@ -67,6 +67,7 @@ npx pnpm@9 install --frozen-lockfile
 | 2026-10-18 | `src/app/core/main/today/time-blocks.tsx`（新）、`src/lib/today/schedule.ts`（新） | D8 時間區塊：今日進程可切換「清單／時間軸」，把任務拖到時間軸寫入 `📅 今天 ⏰ HH:mm`（15 分鐘一格），時間軸上的任務可再拖動；任務列的時鐘按鈕是鍵盤替代方式 | D8 |
 | 2026-10-18 | `messages/*.json` | `today` 加 `calendarNav`、`quickAdd`、`timeBlocks`、`reminders` 等；`settings.daily` 加 `reminders` | D3、D4、D7、D8 |
 | 2026-10-19 | `personal/make-test-vault.mjs`（新） | 產生測試用 vault（預設 `~/Documents/NoteGen-Test-Vault`），日期以執行當天為今天，涵蓋 F1、D1–D8 的測試情境；只會覆寫自己建立的 vault | 驗收用，不動真正的 vault |
+| 2026-10-19 | `src/app/core/main/today/use-today-data.ts`（新）、`use-today-actions.ts`（新）、`today-page.tsx` | 重構：今日頁的資料讀取與寫回動作抽成兩個 hook，`TodayPage` 只負責畫面；行為不變 | graphify 指出 `TodayPage` 直接呼叫 37 個函式 |
 
 ## 刻意不改的東西
 
