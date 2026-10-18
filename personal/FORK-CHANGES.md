@@ -2,7 +2,7 @@
 title: NoteGen Fork 偏離上游清單
 filename: FORK-CHANGES.md
 created: 2026-10-15 05:45 (Asia/Taipei)
-modified: 2026-10-18 23:01 (Asia/Taipei)
+modified: 2026-10-19 00:08 (Asia/Taipei)
 source_llm: Claude (Opus 5.5, Claude Code session)
 status: active
 ---
@@ -66,6 +66,7 @@ npx pnpm@9 install --frozen-lockfile
 | 2026-10-18 | `src/lib/reminders/`（新）、`src/app/core/main/daily/reminder-service.tsx`（新）、`src/stores/daily-settings.ts`、`src/app/core/setting/daily/page.tsx` | D7 提醒：每分鐘檢查 `⏰` 任務並發 macOS 通知，App 關掉期間錯過的打開時補發（最多 24 小時，超過 3 個合併成一則）；已通知紀錄存在 AppData 的 `reminders.json`；設定頁加開關與「傳送測試通知」 | D7 |
 | 2026-10-18 | `src/app/core/main/today/time-blocks.tsx`（新）、`src/lib/today/schedule.ts`（新） | D8 時間區塊：今日進程可切換「清單／時間軸」，把任務拖到時間軸寫入 `📅 今天 ⏰ HH:mm`（15 分鐘一格），時間軸上的任務可再拖動；任務列的時鐘按鈕是鍵盤替代方式 | D8 |
 | 2026-10-18 | `messages/*.json` | `today` 加 `calendarNav`、`quickAdd`、`timeBlocks`、`reminders` 等；`settings.daily` 加 `reminders` | D3、D4、D7、D8 |
+| 2026-10-19 | `personal/make-test-vault.mjs`（新） | 產生測試用 vault（預設 `~/Documents/NoteGen-Test-Vault`），日期以執行當天為今天，涵蓋 F1、D1–D8 的測試情境；只會覆寫自己建立的 vault | 驗收用，不動真正的 vault |
 
 ## 刻意不改的東西
 
@@ -93,7 +94,7 @@ npx pnpm@9 tauri dev
 
 第一次啟動會由 `build.rs` 編譯行事曆小工具，需要幾分鐘。
 
-**測試前**：勾選、帶入、標記都會直接寫進 vault，先確認 vault 的 git 狀態乾淨或已備份。
+**測試前**：勾選、帶入、標記都會直接寫進 vault。建議改用測試 vault：`node personal/make-test-vault.mjs`（已存在時加 `--force` 重建），再到設定把工作區切到 `~/Documents/NoteGen-Test-Vault`。
 
 **今日頁**
 
