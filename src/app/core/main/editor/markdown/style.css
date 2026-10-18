@@ -1725,3 +1725,37 @@
   cursor: default;
   user-select: text;
 }
+
+/* Fork (L1): Obsidian [[wikilink]] nodes; resolution state comes from decorations. */
+.tiptap-editor .ProseMirror a.notegen-wikilink {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+  text-decoration-color: hsl(var(--primary) / 0.5);
+  text-underline-offset: 2px;
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.tiptap-editor .ProseMirror a.notegen-wikilink:hover {
+  background-color: hsl(var(--primary) / 0.1);
+}
+
+.tiptap-editor .ProseMirror a.notegen-wikilink.notegen-wikilink-unresolved {
+  opacity: 0.65;
+  text-decoration-style: dashed;
+}
+
+.tiptap-editor .ProseMirror span.notegen-wikilink-embed {
+  display: inline-block;
+  padding: 0 0.35em;
+  border: 1px dashed hsl(var(--border));
+  border-radius: 4px;
+  color: hsl(var(--muted-foreground));
+  font-size: 0.9em;
+  cursor: default;
+}
+
+.tiptap-editor .ProseMirror .notegen-wikilink.ProseMirror-selectednode {
+  outline: 2px solid hsl(var(--primary) / 0.6);
+  outline-offset: 1px;
+}
