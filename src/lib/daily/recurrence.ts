@@ -105,6 +105,20 @@ export function completeTaskInContent(content: string, lineNo: number, today: Da
   return lines.join('\n')
 }
 
+/**
+ * 編輯器用：輸入任務項目的文字（不含 `- [ ] `），回傳完成後的文字（加上 ✅ 日期）與下一次的文字。
+ * 沒有支援的 🔁 規則時回傳 null。
+ */
+export function completeRecurringText(text: string, today: Date): { completed: string, next: string } | null {
+  if (!recurrenceOf(text)) return null
+  const result = completeTaskLine(`- [ ] ${text}`, today)
+  if (!result?.next) return null
+  return {
+    completed: result.completed.replace(/^- \[[xX]\] ?/, ''),
+    next: result.next.replace(/^- \[ \] ?/, ''),
+  }
+}
+
 /** 依 🔁 規則產生下一次的任務行（未完成、日期依參考日平移；不含行尾 `\r`）。 */
 function buildNextOccurrence(bare: string, rule: Recurrence, today: Date): string {
   const todayStr = formatYmd(localDay(today))
