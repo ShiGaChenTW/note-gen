@@ -193,6 +193,15 @@
       "summaryTitle": "{count} 个任务提醒"
     }
   },
+  "backlinks": {
+    "title": "反向链接",
+    "linked": "链接到这篇",
+    "outgoing": "本篇连出",
+    "empty": "还没有笔记链接到这篇",
+    "indexing": "索引中…",
+    "notMarkdown": "请打开 Markdown 笔记以查看链接",
+    "unresolved": "尚未创建"
+  },
   "settings": {
     "defaultModels": {
       "title": "默认模型",

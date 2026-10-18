@@ -193,6 +193,15 @@
       "summaryTitle": "{count} task reminders"
     }
   },
+  "backlinks": {
+    "title": "Backlinks",
+    "linked": "Links to this note",
+    "outgoing": "Outgoing links",
+    "empty": "No notes link to this note yet",
+    "indexing": "Indexing…",
+    "notMarkdown": "Open a Markdown note to view links",
+    "unresolved": "Not created yet"
+  },
   "settings": {
     "defaultModels": {
       "title": "Default Models",

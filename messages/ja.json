@@ -193,6 +193,15 @@
       "summaryTitle": "{count} 件のタスクリマインダー"
     }
   },
+  "backlinks": {
+    "title": "バックリンク",
+    "linked": "このノートへのリンク",
+    "outgoing": "このノートからのリンク",
+    "empty": "このノートへのリンクはまだありません",
+    "indexing": "インデックス作成中…",
+    "notMarkdown": "Markdown ノートを開いてリンクを表示",
+    "unresolved": "未作成"
+  },
   "settings": {
     "defaultModels": {
       "title": "デフォルトモデル",

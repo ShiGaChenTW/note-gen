@@ -193,6 +193,15 @@
       "summaryTitle": "{count} Aufgabenerinnerungen"
     }
   },
+  "backlinks": {
+    "title": "Rückverweise",
+    "linked": "Links zu dieser Notiz",
+    "outgoing": "Ausgehende Links",
+    "empty": "Noch keine Links zu dieser Notiz",
+    "indexing": "Indizierung…",
+    "notMarkdown": "Öffne eine Markdown-Notiz, um Links anzuzeigen",
+    "unresolved": "Noch nicht erstellt"
+  },
   "settings": {
     "defaultModels": {
       "title": "Standardmodelle",
