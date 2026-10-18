@@ -1,6 +1,7 @@
 // Fork (F3): in-memory vault index. Filled by src/lib/vault-index/service.ts.
 import { create } from 'zustand'
 import { collectTasks, type TaskRef } from '@/lib/vault-index/index-core'
+import { collectBacklinks, collectOutgoingLinks, type BacklinkRef, type OutgoingLink } from '@/lib/vault-index/links'
 import type { IndexedNote } from '@/lib/vault-index/index-note'
 
 export type VaultIndexStatus = 'idle' | 'scanning' | 'ready' | 'error'
@@ -78,6 +79,33 @@ export function selectAllTasks(state: Pick<VaultIndexState, 'notes' | 'revision'
     taskCache = { revision: state.revision, tasks: collectTasks(state.notes.values()) }
   }
   return taskCache.tasks
+}
+
+let linkRevision = -1
+let linkNotes: Map<string, IndexedNote> | null = null
+const backlinkCache = new Map<string, BacklinkRef[]>()
+const outgoingCache = new Map<string, OutgoingLink[]>()
+
+type LinkState = Pick<VaultIndexState, 'notes' | 'revision'>
+
+function refreshLinkCache(state: LinkState) {
+  if (linkRevision === state.revision && linkNotes === state.notes) return
+  linkRevision = state.revision
+  linkNotes = state.notes
+  backlinkCache.clear()
+  outgoingCache.clear()
+}
+
+export function selectBacklinks(state: LinkState, targetPath: string): BacklinkRef[] {
+  refreshLinkCache(state)
+  if (!backlinkCache.has(targetPath)) backlinkCache.set(targetPath, collectBacklinks(targetPath, state.notes.values()))
+  return backlinkCache.get(targetPath)!
+}
+
+export function selectOutgoingLinks(state: LinkState, path: string): OutgoingLink[] {
+  refreshLinkCache(state)
+  if (!outgoingCache.has(path)) outgoingCache.set(path, collectOutgoingLinks(path, state.notes.values()))
+  return outgoingCache.get(path)!
 }
 
 export default useVaultIndexStore
