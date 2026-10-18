@@ -10,12 +10,14 @@ import {
   Clock,
   FileText,
   Inbox,
+  List,
   MoreHorizontal,
   Moon,
   RefreshCw,
   Repeat,
   Sun,
   Target,
+  Rows3,
   Zap,
 } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
@@ -48,6 +50,8 @@ import {
 import {
   carryYesterdayTasks,
   countCarryable,
+  quickAddTask,
+  scheduleTask,
   setTaskChecked,
   stampToday,
   StaleTaskError,
@@ -57,6 +61,9 @@ import {
 import useArticleStore from '@/stores/article'
 import useDailySettingsStore from '@/stores/daily-settings'
 import useVaultIndexStore, { selectAllTasks } from '@/stores/vault-index'
+import { DailyCalendarPopover } from '../daily/daily-calendar'
+import { QuickAdd } from './quick-add'
+import { ScheduleButton, TASK_DRAG_MIME, taskDragKey, TimeBlocks } from './time-blocks'
 
 /** 分鐘級的「現在」，讓進程與「現在」線每分鐘前進。 */
 function useNow(): Date {
@@ -137,11 +144,11 @@ export function TodayPage() {
   )
 
   const [busy, setBusy] = useState<string | null>(null)
-  const runWrite = useCallback(async (key: string, action: () => Promise<WriteRecord>, success: (record: WriteRecord) => string) => {
+  const runWrite = useCallback(async <T extends WriteRecord>(key: string, action: () => Promise<T>, success: (record: T) => string): Promise<boolean> => {
     setBusy(key)
     try {
       const record = await action()
-      if (record.writes.length === 0) return
+      if (record.writes.length === 0) return false
       toast(success(record), {
         action: {
           label: t('undo'),
@@ -150,22 +157,41 @@ export function TodayPage() {
           },
         },
       })
+      return true
     } catch (error) {
       if (error instanceof StaleTaskError) toast.error(t('taskStale', { name: sourceName(error.path) }))
       else {
         console.error('[today] write failed:', error)
         toast.error(t('writeFailed'))
       }
+      return false
     } finally {
       setBusy(null)
     }
   }, [t])
 
   const toggleTask = useCallback((task: TaskRef, checked: boolean) => {
-    void runWrite(`${task.path}:${task.line}`, () => setTaskChecked(task, checked), () => (
-      checked ? t('taskDone', { name: sourceName(task.path) }) : t('taskUndone', { name: sourceName(task.path) })
+    void runWrite(`${task.path}:${task.line}`, () => setTaskChecked(task, checked), record => (
+      record.nextDue !== undefined
+        ? t('taskDoneNext', { name: sourceName(task.path), date: record.nextDue || t('noDate') })
+        : checked ? t('taskDone', { name: sourceName(task.path) }) : t('taskUndone', { name: sourceName(task.path) })
     ))
   }, [runWrite, t])
+
+  const schedule = useCallback((task: TaskRef, time: string) => {
+    void runWrite(`${task.path}:${task.line}`, () => scheduleTask(task, time), () => (
+      time ? t('timeBlocks.scheduled', { time }) : t('timeBlocks.cleared')
+    ))
+  }, [runWrite, t])
+
+  const dropTask = useCallback((dragKey: string, time: string) => {
+    const task = tasks.find(candidate => taskDragKey(candidate) === dragKey)
+    if (task) schedule(task, time)
+  }, [tasks, schedule])
+
+  const addTask = useCallback((input: string) => runWrite('quick-add', () => quickAddTask(input, new Date()), record => (
+    t('quickAdd.added', { name: record.task.title })
+  )), [runWrite, t])
 
   const openNote = useCallback((path: string) => {
     void useArticleStore.getState().setActiveFilePath(path)
@@ -213,6 +239,16 @@ export function TodayPage() {
                 </button>
               )
             })}
+            <DailyCalendarPopover selected={now}>
+              <button
+                type="button"
+                aria-label={t('calendarNav.open')}
+                title={t('calendarNav.open')}
+                className="grid h-12 w-11 cursor-pointer place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                <CalendarDays className="size-4" aria-hidden />
+              </button>
+            </DailyCalendarPopover>
           </nav>
 
           <div className="flex items-center gap-2">
@@ -270,13 +306,15 @@ export function TodayPage() {
 
         {/* 3. 主體：今日進程、任務 */}
         <div className="grid grid-cols-[1fr_1.25fr] items-start gap-3.5 @max-[56rem]:grid-cols-1">
-          <AgendaPanel agenda={agenda} calendar={calendar} now={now} />
+          <AgendaPanel agenda={agenda} calendar={calendar} now={now} onDropTask={dropTask} />
 
           <section className="rounded-xl bg-background p-4" aria-labelledby="today-tasks">
             <header className="mb-2.5 flex items-center gap-2.5">
               <h2 id="today-tasks" className="text-[15px] font-semibold">{t('tasks.title')}</h2>
               <span className="ml-auto text-xs text-muted-foreground">{t('tasks.counts', { pending: groups.pendingCount, done: groups.doneToday.length })}</span>
             </header>
+
+            <QuickAdd now={now} busy={busy === 'quick-add'} onSubmit={addTask} />
 
             {carryable > 0 && (
               <div className="mb-2 flex items-center gap-2.5 rounded-lg bg-primary/10 px-3 py-2.5">
@@ -312,6 +350,7 @@ export function TodayPage() {
                 busy={busy}
                 onToggle={toggleTask}
                 onOpen={openNote}
+                onSchedule={schedule}
               />
             )}
             {groups.upcoming.map(day => day.tasks.length > 0 && (
@@ -325,10 +364,11 @@ export function TodayPage() {
                 busy={busy}
                 onToggle={toggleTask}
                 onOpen={openNote}
+                onSchedule={schedule}
               />
             ))}
             {groups.doneToday.length > 0 && (
-              <TaskGroup heading={t('tasks.doneToday', { count: groups.doneToday.length })} tasks={groups.doneToday} renderMeta={() => null} busy={busy} onToggle={toggleTask} onOpen={openNote} />
+              <TaskGroup heading={t('tasks.doneToday', { count: groups.doneToday.length })} tasks={groups.doneToday} renderMeta={() => null} busy={busy} onToggle={toggleTask} onOpen={openNote} onSchedule={schedule} />
             )}
           </section>
         </div>
@@ -349,13 +389,14 @@ export function TodayPage() {
   )
 }
 
-function TaskGroup({ heading, tasks, renderMeta, busy, onToggle, onOpen }: {
+function TaskGroup({ heading, tasks, renderMeta, busy, onToggle, onOpen, onSchedule }: {
   heading: React.ReactNode
   tasks: TaskRef[]
   renderMeta: (task: TaskRef) => React.ReactNode
   busy: string | null
   onToggle: (task: TaskRef, checked: boolean) => void
   onOpen: (path: string) => void
+  onSchedule: (task: TaskRef, time: string) => void
 }) {
   const t = useTranslations('today')
   return (
@@ -363,7 +404,15 @@ function TaskGroup({ heading, tasks, renderMeta, busy, onToggle, onOpen }: {
       <h3 className="flex items-center gap-1.5 px-2 pt-2.5 pb-1 text-xs font-semibold text-muted-foreground">{heading}</h3>
       <ul className="grid gap-0.5">
         {tasks.map(task => (
-          <li key={`${task.path}:${task.line}`} className="grid min-h-11 grid-cols-[24px_minmax(0,1fr)_auto] items-center gap-2.5 rounded-lg px-2 py-1 transition-colors hover:bg-muted">
+          <li
+            key={`${task.path}:${task.line}`}
+            draggable={!task.done}
+            onDragStart={event => {
+              event.dataTransfer.setData(TASK_DRAG_MIME, taskDragKey(task))
+              event.dataTransfer.effectAllowed = 'move'
+            }}
+            className={cn('group grid min-h-11 grid-cols-[24px_minmax(0,1fr)_auto] items-center gap-2.5 rounded-lg px-2 py-1 transition-colors hover:bg-muted', !task.done && 'cursor-grab active:cursor-grabbing')}
+          >
             <Checkbox
               className="size-[18px]"
               checked={task.done}
@@ -385,6 +434,11 @@ function TaskGroup({ heading, tasks, renderMeta, busy, onToggle, onOpen }: {
                 </span>
               )}
               {renderMeta(task)}
+              {!task.done && (
+                <span className="opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 [@media(hover:none)]:opacity-100">
+                  <ScheduleButton task={task} disabled={busy === `${task.path}:${task.line}`} onSchedule={onSchedule} />
+                </span>
+              )}
             </span>
           </li>
         ))}
@@ -393,12 +447,26 @@ function TaskGroup({ heading, tasks, renderMeta, busy, onToggle, onOpen }: {
   )
 }
 
-function AgendaPanel({ agenda, calendar, now }: {
+const AGENDA_VIEW_KEY = 'notegen.today.agendaView'
+
+function useAgendaView(): ['list' | 'blocks', (view: 'list' | 'blocks') => void] {
+  const [view, setView] = useState<'list' | 'blocks'>(() => {
+    try { return window.localStorage.getItem(AGENDA_VIEW_KEY) === 'blocks' ? 'blocks' : 'list' } catch { return 'list' }
+  })
+  return [view, next => {
+    setView(next)
+    try { window.localStorage.setItem(AGENDA_VIEW_KEY, next) } catch { /* 沒有 localStorage 就只記在這次 */ }
+  }]
+}
+
+function AgendaPanel({ agenda, calendar, now, onDropTask }: {
   agenda: AgendaItem[]
   calendar: ReturnType<typeof useCalendarEvents>
   now: Date
+  onDropTask: (dragKey: string, time: string) => void
 }) {
   const t = useTranslations('today')
+  const [view, setView] = useAgendaView()
   const [showPast, setShowPast] = useState(false)
   const past = agenda.filter(item => item.state === 'past')
   const visible = showPast ? agenda : agenda.filter(item => item.state !== 'past')
@@ -419,8 +487,25 @@ function AgendaPanel({ agenda, calendar, now }: {
     <section className="rounded-xl bg-background p-4" aria-labelledby="today-agenda">
       <header className="mb-2.5 flex items-center gap-2.5">
         <h2 id="today-agenda" className="text-[15px] font-semibold">{t('agenda.title')}</h2>
-        <span className="ml-auto text-xs text-muted-foreground">{t('agenda.sources')}</span>
+        <div className="ml-auto flex rounded-lg bg-muted p-0.5" role="group" aria-label={t('agenda.view')}>
+          {(['list', 'blocks'] as const).map(option => (
+            <button
+              key={option}
+              type="button"
+              aria-pressed={view === option}
+              onClick={() => setView(option)}
+              className={cn(
+                'flex h-7 cursor-pointer items-center gap-1 rounded-md px-2 text-xs text-muted-foreground transition-colors hover:text-foreground',
+                view === option && 'bg-background text-foreground shadow-sm',
+              )}
+            >
+              {option === 'list' ? <List className="size-3.5" aria-hidden /> : <Rows3 className="size-3.5" aria-hidden />}
+              {t(`agenda.${option}`)}
+            </button>
+          ))}
+        </div>
       </header>
+      <p className="-mt-1.5 mb-2 text-xs text-muted-foreground">{t('agenda.sources')}</p>
 
       {(calendar.access === 'notDetermined' || calendar.access === 'denied') && (
         <div className="mb-2 flex items-center gap-2.5 rounded-lg bg-muted px-3 py-2 text-sm">
@@ -432,19 +517,21 @@ function AgendaPanel({ agenda, calendar, now }: {
         </div>
       )}
 
-      {past.length > 0 && (
+      {view === 'blocks' && <TimeBlocks agenda={agenda} now={now} onDropTask={onDropTask} />}
+
+      {view === 'list' && past.length > 0 && (
         <button type="button" className="cursor-pointer pb-2 pl-[68px] text-xs text-muted-foreground hover:text-foreground" onClick={() => setShowPast(value => !value)} aria-expanded={showPast}>
           {showPast ? t('agenda.hidePast') : t('agenda.showPast', { count: past.length })}
         </button>
       )}
 
-      {agenda.length === 0
+      {view === 'list' && (agenda.length === 0
         ? <p className="py-6 text-center text-sm text-muted-foreground">{t('agenda.empty')}</p>
         : (
           <ol className="relative before:absolute before:top-2 before:bottom-2 before:left-[51px] before:w-px before:bg-border">
             {rows}
           </ol>
-        )}
+        ))}
     </section>
   )
 }

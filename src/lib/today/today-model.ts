@@ -286,9 +286,20 @@ export function carryTasks(input: {
     sourceLines[lineNo] = `${m[1]}- ${m[2]} → [[${targetNoteName}]]${cr}`
   }
   if (carried.length === 0) return { source: input.source, target: input.target, moved: 0 }
+  return {
+    source: sourceLines.join('\n'),
+    target: insertLinesInSection(input.target, carried, sectionHint, eolSource),
+    moved: carried.length,
+  }
+}
 
-  const eol = input.target.includes('\r\n') ? '\r\n' : eolSource
-  const targetLines = input.target.split(/\r?\n/)
+/**
+ * 把多行插在標題含 sectionHint 的區塊最後（略過區塊尾端的空行）；找不到該區塊就附在檔尾。
+ * 其餘行逐字不變；換行符沿用 target 的寫法，target 沒有換行時用 fallbackEol。
+ */
+export function insertLinesInSection(target: string, lines: readonly string[], sectionHint: string, fallbackEol = '\n'): string {
+  const eol = target.includes('\r\n') ? '\r\n' : fallbackEol
+  const targetLines = target.split(/\r?\n/)
   const head = targetLines.findIndex(line => /^#{1,6}\s/.test(line) && line.includes(sectionHint))
   let insertAt: number
   if (head >= 0) {
@@ -300,12 +311,8 @@ export function carryTasks(input: {
     insertAt = targetLines.length
     while (insertAt > 0 && targetLines[insertAt - 1].trim() === '') insertAt--
   }
-  targetLines.splice(insertAt, 0, ...carried)
-  return {
-    source: sourceLines.join('\n'),
-    target: targetLines.join(eol),
-    moved: carried.length,
-  }
+  targetLines.splice(insertAt, 0, ...lines)
+  return targetLines.join(eol)
 }
 
 /** 昨天的日記裡還沒完成的任務行（0 起算行號）。 */

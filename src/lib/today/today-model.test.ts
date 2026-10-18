@@ -8,6 +8,7 @@ import {
   carryTasks,
   daysBetween,
   groupTasks,
+  insertLinesInSection,
   needAttentionCount,
   openTaskLines,
   staleInboxNotes,
@@ -196,5 +197,18 @@ describe('carryTasks', () => {
     const result = carryTasks({ source: '- [ ] a\r\n', target: '# t\r\n', lines: [0], targetNoteName: 'n' })
     expect(result.source).toBe('- a → [[n]]\r\n')
     expect(result.target).toBe('# t\r\n- [ ] a\r\n')
+  })
+})
+
+describe('insertLinesInSection', () => {
+  it('插在指定區塊最後、略過尾端空行', () => {
+    const target = '# 今日\n\n## 捕捉軌\n- [ ] 舊的\n\n## 沉澱\n'
+    expect(insertLinesInSection(target, ['- [ ] 新的'], '捕捉軌'))
+      .toBe('# 今日\n\n## 捕捉軌\n- [ ] 舊的\n- [ ] 新的\n\n## 沉澱\n')
+  })
+
+  it('找不到區塊時附在檔尾，沿用 CRLF', () => {
+    expect(insertLinesInSection('# 今日\r\n內容\r\n', ['- [ ] 新的'], '捕捉軌'))
+      .toBe('# 今日\r\n內容\r\n- [ ] 新的\r\n')
   })
 })
