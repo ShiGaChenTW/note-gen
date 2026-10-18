@@ -2,7 +2,7 @@
 title: NoteGen Fork 偏離上游清單
 filename: FORK-CHANGES.md
 created: 2026-10-15 05:45 (Asia/Taipei)
-modified: 2026-10-17 04:10 (Asia/Taipei)
+modified: 2026-10-18 11:00 (Asia/Taipei)
 source_llm: Claude (Opus 5.5, Claude Code session)
 status: active
 ---
@@ -52,6 +52,8 @@ npx pnpm@9 install --frozen-lockfile
 | 2026-10-17 | `src/stores/settings-dialog.ts`、`src/app/core/setting/config.tsx`、`src/app/core/setting/components/settings-dialog.tsx` | 掛載點：加 `daily` 分區、導覽項目、頁面對應 | D1 |
 | 2026-10-17 | `messages/{en,zh,zh-TW,ja,de,pt-BR}.json` | 在 `settings.record` 前加 `settings.daily` | D1 |
 | 2026-10-17 | `src/app/core/main/daily-note-auto-open.tsx`（新）、`src/app/core/main/page.tsx` | 啟動時開啟今日筆記；page 只加 import 與一行掛載 | D1 |
+| 2026-10-18 | `src/lib/vault-index/`（新）、`src/stores/vault-index.ts`（新） | vault 索引：任務行、frontmatter、mtime；快取存在 AppData `vault-index/`，不寫進 vault；用 fs watch 增量更新 | F3 |
+| 2026-10-18 | `src/app/core/main/fork-services.tsx`（新）、`src/app/core/main/page.tsx` | fork 背景服務統一從 `<ForkServices />` 掛載（F3 索引＋D1 自動開啟）；page 仍只有一行 import 與一行掛載 | F3 |
 
 ## 刻意不改的東西
 
