@@ -15,6 +15,10 @@
     <string>NoteGen 需要保存图片到相册。</string>
     <key>NSCameraUsageDescription</key>
     <string>NoteGen 需要访问相机以支持拍照和图片记录功能。</string>
+    <key>NSCalendarsUsageDescription</key>
+    <string>NoteGen 會在「今日」頁顯示你今天的行事曆事件，只讀取、不會修改。</string>
+    <key>NSCalendarsFullAccessUsageDescription</key>
+    <string>NoteGen 會在「今日」頁顯示你今天的行事曆事件，只讀取、不會修改。</string>
     <key>UIFileSharingEnabled</key>
     <true/>
     <key>LSSupportsOpeningDocumentsInPlace</key>

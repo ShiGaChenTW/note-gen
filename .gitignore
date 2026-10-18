@@ -38,6 +38,7 @@ target/*
 /docs/*/*
 skills-lock.json
 src-tauri/resources/ocr/*
+src-tauri/resources/calendar/*
 !src-tauri/resources/ocr/.gitkeep
 src-tauri/native-ocr/ios-vision/.tauri/
 
@@ -52,6 +53,9 @@ src-tauri/native-ocr/ios-vision/.tauri/
 # testing
 /coverage
 *.test.*
+# Fork: keep vitest suites (upstream ignores *.test.*)
+!src/**/*.test.ts
+!tests/**/*.test.ts
 
 # next.js
 /.next/

@@ -36,7 +36,8 @@
     "targets": "all",
     "resources": [
       "icons",
-      "resources/ocr/*"
+      "resources/ocr/*",
+      "resources/calendar/*"
     ],
     "fileAssociations": [
       {

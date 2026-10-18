@@ -32,6 +32,8 @@ import { dropPoint } from '@tiptap/pm/transform'
 import 'katex/dist/katex.min.css'
 import { InlineMath, BlockMath } from './math-extension'
 import { MermaidDiagram } from './mermaid-extension'
+import { encodeFrontmatterForEditor, Frontmatter } from './frontmatter-extension'
+import { RecurringTask } from './recurring-task-extension'
 import { SearchReplacePanel } from './search-replace-panel'
 import { useEffect, useId, useLayoutEffect, useRef, useCallback, useMemo, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type UIEvent as ReactUIEvent, type WheelEvent as ReactWheelEvent } from 'react'
 import { createPortal } from 'react-dom'
@@ -2000,7 +2002,7 @@ function setEditorContentWithoutUndo(editor: CoreEditor, content: string): void 
   editor
     .chain()
     .setMeta('addToHistory', false)
-    .setContent(content, { contentType: 'markdown' })
+    .setContent(encodeFrontmatterForEditor(content), { contentType: 'markdown' })
     .run()
 
   resetEditorHistory(editor)
@@ -2436,6 +2438,7 @@ export function TipTapEditor({
         runCommand: runEditorShortcutCommand,
       }),
       GitHubAlertBlockquoteEditor,
+      Frontmatter,
       StarterKit.configure({
         blockquote: false,
         heading: {
@@ -2460,6 +2463,7 @@ export function TipTapEditor({
       TaskItem.configure({
         nested: true,
       }),
+      RecurringTask,
       StableCodeBlockLowlight.configure({
         shouldHighlight: () => !isSourceViewRef.current,
       }),
@@ -2809,7 +2813,7 @@ export function TipTapEditor({
       if (options.resetHistory) {
         setEditorContentWithoutUndo(targetEditor, content)
       } else {
-        targetEditor.commands.setContent(content, {
+        targetEditor.commands.setContent(encodeFrontmatterForEditor(content), {
           contentType: 'markdown',
           emitUpdate: options.emitUpdate,
         })
@@ -7406,7 +7410,7 @@ export function TipTapEditor({
               return
             }
 
-            editor.commands.setContent(updatedMarkdown, { contentType: 'markdown' })
+            editor.commands.setContent(encodeFrontmatterForEditor(updatedMarkdown), { contentType: 'markdown' })
           } else {
             const $from = editor.state.doc.resolve(from)
             const $to = editor.state.doc.resolve(to)

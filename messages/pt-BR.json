@@ -49,6 +49,150 @@
     "hideWindow": "Ocultar na bandeja",
     "quit": "Sair do NoteGen"
   },
+  "today": {
+    "title": "Hoje",
+    "summary": "{today} para hoje, {overdue} atrasadas",
+    "greeting": {
+      "morning": "Bom dia",
+      "afternoon": "Boa tarde",
+      "evening": "Boa noite"
+    },
+    "week": {
+      "label": "Notas diárias da semana",
+      "day": "{date}, {open} em aberto"
+    },
+    "openDaily": "Abrir nota diária",
+    "moreActions": "Mais ações",
+    "morning": "Início da manhã",
+    "morningDone": "Início da manhã · feito",
+    "review": "Revisão do dia",
+    "reviewDone": "Revisão do dia · feita",
+    "stamped": {
+      "morning": "morning:: done registrado",
+      "review": "reviewed:: done registrado"
+    },
+    "index": {
+      "rescan": "Reescanear vault",
+      "scanning": "Escaneando o vault…"
+    },
+    "oneThing": "A única prioridade",
+    "notFilled": "Ainda não preenchido",
+    "tone": "Tom: {tone}",
+    "mits": "Três MITs · {done} de {total} feitas",
+    "done": "feita",
+    "agenda": {
+      "title": "Linha do dia",
+      "sources": "Âncoras · tarefas com horário · calendário",
+      "empty": "Nenhum bloco ou tarefa com horário hoje",
+      "showPast": "{count} passados · mostrar",
+      "hidePast": "Ocultar passados",
+      "until": "até {time}, faltam {minutes} min",
+      "kind": {
+        "anchor": "Âncora",
+        "task": "Tarefa",
+        "calendar": "Calendário"
+      },
+      "view": "Modo de exibição",
+      "list": "Lista",
+      "blocks": "Linha do tempo"
+    },
+    "calendar": {
+      "prompt": "Conecte o Calendário do macOS para ver as reuniões de hoje",
+      "connect": "Conectar calendário",
+      "denied": "O acesso ao calendário está desativado. Ative em Ajustes do Sistema → Privacidade e Segurança → Calendários."
+    },
+    "tasks": {
+      "title": "Tarefas",
+      "counts": "{pending} abertas · {done} feitas hoje",
+      "overdue": "Atrasadas · {count}",
+      "day0": "Hoje · {count}",
+      "day1": "Amanhã · {count}",
+      "day2": "Depois de amanhã · {count}",
+      "doneToday": "Feitas hoje · {count}",
+      "lateBy": "{days} d de atraso",
+      "empty": "Nada atrasado ou para os próximos três dias",
+      "loading": "Criando o índice de tarefas…"
+    },
+    "priorityHigh": "Alta",
+    "openSource": "Abrir {name}",
+    "carry": {
+      "prompt": "{count} pendentes de ontem",
+      "action": "Trazer para hoje",
+      "done": "{count} trazidas para hoje"
+    },
+    "capture": {
+      "title": "capturas",
+      "detail": "{flash} ideia · {read} leitura · {task} tarefa"
+    },
+    "inbox": {
+      "title": "paradas",
+      "detail": "Na Inbox há mais de {days} dias",
+      "action": "Organizar"
+    },
+    "reflection": {
+      "title": "Reflexão",
+      "detail": "Revisão da noite",
+      "empty": "Ainda não",
+      "filled": "Escrita",
+      "action": "Começar revisão"
+    },
+    "status": {
+      "open": "Hoje",
+      "need": "{count} pendentes",
+      "aria": "{count} itens pendentes, abrir a aba Hoje"
+    },
+    "undo": "Desfazer",
+    "undoStale": "O arquivo mudou em outro lugar e não pode ser desfeito",
+    "taskDone": "Feita, salva em {name}",
+    "taskUndone": "Reaberta, salva em {name}",
+    "taskStale": "{name} mudou em outro lugar. Atualize e tente de novo.",
+    "writeFailed": "Não foi possível salvar",
+    "taskDoneNext": "Concluída. Próxima em {date} ({name})",
+    "noDate": "sem data",
+    "calendarNav": {
+      "open": "Calendário de notas diárias",
+      "prev": "Nota diária anterior",
+      "next": "Próxima nota diária",
+      "prevShortcut": "Nota diária anterior (⌘⌥[)",
+      "nextShortcut": "Próxima nota diária (⌘⌥])",
+      "today": "Hoje",
+      "legendNote": "Tem nota",
+      "legendTasks": "Tarefas com prazo",
+      "noMore": "Não há mais notas diárias",
+      "openFailed": "Não foi possível abrir a nota diária"
+    },
+    "quickAdd": {
+      "label": "Adicionar tarefa rápida",
+      "placeholder": "Comprar leite @tomorrow 9am !high #casa",
+      "hint": "@data, horário, !prioridade, #tag. Enter adiciona à nota de hoje",
+      "needTitle": "Digite a tarefa",
+      "preview": "Será adicionada",
+      "added": "“{name}” adicionada à nota de hoje",
+      "priority": {
+        "highest": "Máxima",
+        "high": "Alta",
+        "medium": "Média",
+        "low": "Baixa",
+        "lowest": "Mínima"
+      }
+    },
+    "timeBlocks": {
+      "label": "Linha do tempo de hoje. Solte uma tarefa aqui para agendá-la",
+      "hint": "Arraste uma tarefa para a linha do tempo para definir o horário ⏰ em passos de {minutes} minutos",
+      "schedule": "Agendar “{name}”",
+      "scheduleShort": "Agendar",
+      "timeLabel": "Horário hoje",
+      "timeHelp": "Grava 📅 hoje e ⏰ horário",
+      "clear": "Limpar horário",
+      "apply": "Agendar",
+      "scheduled": "Agendada para hoje às {time}",
+      "cleared": "Horário removido"
+    },
+    "reminders": {
+      "title": "⏰ {time} Lembrete de tarefa",
+      "summaryTitle": "{count} lembretes de tarefas"
+    }
+  },
   "settings": {
     "defaultModels": {
       "title": "Modelos Padrão",
@@ -818,6 +962,68 @@
             "name": "Nome"
           }
         }
+      }
+    },
+    "daily": {
+      "title": "Notas diárias",
+      "desc": "Defina onde ficam as notas diárias, como são nomeadas e quais modelos usam. O NoteGen usa os mesmos arquivos do Obsidian e não guarda dados extras.",
+      "sections": {
+        "today": "Nota de hoje",
+        "location": "Local e nome do arquivo",
+        "templates": "Modelos",
+        "reminders": "Lembretes"
+      },
+      "open": {
+        "button": "Abrir nota de hoje",
+        "preview": "Nota de hoje: {path}",
+        "created": "Nota de hoje criada a partir do modelo",
+        "opened": "Nota de hoje aberta",
+        "error": "Não foi possível abrir a nota de hoje"
+      },
+      "openOnLaunch": {
+        "title": "Abrir a nota de hoje ao iniciar",
+        "desc": "Abre a nota de hoje sempre que o app inicia, criando-a a partir do modelo se não existir."
+      },
+      "dailyFolder": {
+        "title": "Pasta das notas diárias",
+        "desc": "Caminho relativo ao espaço de trabalho, por exemplo 20 Journal/21 Daily."
+      },
+      "dailyPattern": {
+        "title": "Formato do nome do arquivo",
+        "desc": "Aceita YYYY MM DD ddd dddd; use / para subpastas.",
+        "invalid": "O formato deve conter YYYY, MM e DD e não pode começar nem terminar com /."
+      },
+      "inboxFolder": {
+        "title": "Pasta Inbox",
+        "desc": "Local da caixa de entrada; a página Hoje avisa sobre notas acumuladas."
+      },
+      "templatesDesc": "Os modelos aceitam '{{date}}', '{{date:FORMAT}}', '{{time}}', '{{weekday}}', '{{title}}' e '{{random:caminho da nota}}'.",
+      "defaultTemplate": {
+        "title": "Modelo padrão",
+        "desc": "Caminho da nota de modelo; .md é opcional. Deixe vazio para uma nota em branco."
+      },
+      "weekdayTemplates": {
+        "title": "Modelos por dia da semana",
+        "desc": "Usado nesse dia quando definido; caso contrário, vale o modelo padrão.",
+        "placeholder": "Vazio usa o modelo padrão"
+      },
+      "weekdays": {
+        "monday": "Segunda-feira",
+        "tuesday": "Terça-feira",
+        "wednesday": "Quarta-feira",
+        "thursday": "Quinta-feira",
+        "friday": "Sexta-feira",
+        "saturday": "Sábado",
+        "sunday": "Domingo"
+      },
+      "reminders": {
+        "title": "Notificar no horário da tarefa",
+        "desc": "Envia uma notificação do macOS quando chega o horário ⏰ de uma tarefa. Os lembretes perdidos com o app fechado são enviados na próxima abertura (até 24 horas antes).",
+        "test": "Enviar notificação de teste",
+        "testTitle": "Teste de lembrete do NoteGen",
+        "testBody": "Se você está vendo isto, os lembretes estão funcionando.",
+        "denied": "As notificações estão desativadas. Ative-as para o NoteGen em Ajustes do Sistema → Notificações",
+        "sent": "Notificação de teste enviada"
       }
     },
     "record": {

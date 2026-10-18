@@ -6,6 +6,7 @@ mod android_cloud_folder;
 mod android_ocr;
 mod backup;
 mod backup_manager;
+mod calendar;
 mod cloud_folder_sync;
 mod database_recovery;
 mod record_transaction;
@@ -134,6 +135,8 @@ pub fn run() {
 
     builder
         .invoke_handler(tauri::generate_handler![
+            calendar::calendar_events,
+            calendar::calendar_request_access,
             system_permissions::get_system_media_permissions,
             #[cfg(target_os = "macos")]
             system_permissions::request_screen_capture_permission,

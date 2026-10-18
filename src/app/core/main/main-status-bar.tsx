@@ -7,6 +7,8 @@ import { FileFooter } from './file/file-footer'
 import { PluginStatusBarCenter } from '@/components/plugins/plugin-status-bar-center'
 import { UnifiedSyncStatus } from './unified-sync-status'
 import { StatusBarItem, StatusBarSpacer, useStatusBarOrder } from './status-bar-order'
+import { TodayStatusItem } from './today/today-status-item'
+import { DailyNavStatusItem } from './daily/daily-calendar'
 
 const EDITOR_STATUS_SLOT_ID = 'main-editor-status-slot'
 
@@ -26,6 +28,8 @@ export function MainStatusBar() {
       <StatusBarSpacer id="spacer:before-plugins" rank={45} />
       <PluginStatusBarCenter />
       <StatusBarSpacer id="spacer:after-plugins" rank={56} />
+      <StatusBarItem id="fork:daily-nav" rank={57}><DailyNavStatusItem /></StatusBarItem>
+      <StatusBarItem id="fork:today" rank={58}><TodayStatusItem /></StatusBarItem>
       <ChatFooter embedded />
     </footer>
   )

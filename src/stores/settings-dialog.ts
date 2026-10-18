@@ -4,6 +4,7 @@ export type BuiltinSettingSection =
   | 'about'
   | 'general'
   | 'record'
+  | 'daily'
   | 'editor'
   | 'canvas'
   | 'sync'
@@ -34,6 +35,7 @@ export const settingSections: SettingSection[] = [
   'about',
   'general',
   'record',
+  'daily',
   'editor',
   'canvas',
   'shortcuts',

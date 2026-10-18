@@ -45,6 +45,8 @@ import { TabBar, type TabInfo } from './tab-bar'
 import { BrowserPanel } from './browser-panel'
 import { ImageEditor } from './image/image-editor'
 import { EmptyState } from './empty-state'
+import { TodayPage } from '../today/today-page'
+import { isTodayTab, useTodayTabOpener } from '../today/today-tab'
 import { FolderView } from './folder'
 import { PluginDocumentPreview } from '@/components/plugins/plugin-document-preview'
 import { PluginViewSurface } from '@/components/plugins/plugin-view-surface'
@@ -294,7 +296,7 @@ function EditorGroupPane({
             {tab.kind !== 'blank'
               && renderActiveContent(tab, isActiveGroup && tab.id === activeTab?.id, group.id)}
             {tab.kind === 'blank' && tab.id === activeTab?.id
-              && renderEmpty('new-tab', isActiveGroup)}
+              && (isTodayTab(tab) ? <TodayPage /> : renderEmpty('new-tab', isActiveGroup))}
           </div>
         ))}
         {!activeTab && renderEmpty(groupTabs.length > 0 ? 'new-tab' : 'empty-group', isActiveGroup)}
@@ -1294,6 +1296,10 @@ export function EditorLayout() {
     })
     void activateTab(groupId, tab)
   }, [activateTab, addTab, canDeactivateActiveEditor, setLayout, tGroups])
+
+  // Fork (D2): open the Today tab on request (status bar, commands).
+  const tToday = useTranslations('today')
+  useTodayTabOpener({ layoutReady, layoutRef, setLayout, activateTab, canDeactivateActiveEditor, title: tToday('title') })
 
   useEffect(() => {
     if (!layoutReady || !checkIsTauri()) return

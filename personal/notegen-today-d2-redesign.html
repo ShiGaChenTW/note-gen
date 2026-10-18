@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--
+filename: notegen-today-d2-redesign.html
+created: 2026-10-18 12:10 (Asia/Taipei)
+modified: 2026-10-18 12:10 (Asia/Taipei)
+source_llm: Claude (Opus 5.5, Claude Code session) + ui-ux-pro-max
+-->
+<title>今日頁新設計</title>
+<style>
+  /* ---------- tokens（沿用 HANDOFF 定案：琥珀、#161616 外殼、#202020 卡片、14px 間距） ---------- */
+  :root {
+    --shell: #161616;
+    --card: #202020;
+    --raised: #2a2a2a;
+    --hover: #303030;
+    --line: #333333;
+    --text: #ededed;          /* 13.9:1 on card */
+    --muted: #a8a8a8;         /*  7.4:1 on card */
+    --subtle: #8c8c8c;        /*  5.0:1 on card */
+    --primary: #fbbd23;       /* 琥珀 */
+    --on-primary: #161616;
+    --primary-soft: rgba(251, 189, 35, .12);
+    --primary-line: rgba(251, 189, 35, .45);
+    --success: #5cc185;
+    --focus: #fbbd23;
+    --gap: 14px;
+    --r-lg: 12px;
+    --r-md: 8px;
+    --dur: 160ms;
+    --ease: cubic-bezier(.2, .8, .2, 1);
+  }
+  * { box-sizing: border-box; }
+  html { color-scheme: dark; }
+  body {
+    margin: 0; background: #0f0f0f; color: var(--text);
+    font: 14px/1.5 "Inter", -apple-system, "PingFang TC", "Noto Sans TC", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
+  svg.i { width: 16px; height: 16px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+  .num { font-variant-numeric: tabular-nums; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  .page { max-width: 1480px; margin: 0 auto; padding: 24px 16px 48px; }
+  .page > h1 { font-size: 18px; margin: 0 0 4px; }
+  .lede { color: var(--muted); margin: 0 0 18px; max-width: 900px; }
+
+  /* ---------- app frame ---------- */
+  .app { background: var(--shell); border: 1px solid #262626; border-radius: 14px; overflow: hidden; display: grid; grid-template-rows: 44px 1fr 30px; }
+  .titlebar { display: flex; align-items: center; gap: 10px; padding: 0 14px; color: var(--muted); font-size: 13px; }
+  .lights { display: flex; gap: 8px; margin-right: 6px; }
+  .lights i { width: 12px; height: 12px; border-radius: 50%; background: #3a3a3a; }
+  .body { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: var(--gap); padding: 0 var(--gap); }
+  .sidebar { background: var(--card); border-radius: var(--r-lg); padding: 10px 8px; }
+  .side-tabs { display: flex; gap: 18px; padding: 4px 8px 12px; color: var(--muted); font-size: 13px; }
+  .side-tabs .on { color: var(--text); position: relative; }
+  .side-tabs .on::after { content: ""; position: absolute; left: 0; right: 0; bottom: -6px; height: 2px; background: var(--primary); border-radius: 2px; }
+  .tree div { height: 26px; display: flex; align-items: center; padding-left: 8px; border-radius: 6px; color: #cfcfcf; font-size: 13px; white-space: nowrap; }
+  .tree .d1 { padding-left: 22px; } .tree .d2 { padding-left: 36px; }
+  .tree .sel { background: var(--raised); color: var(--text); }
+  .main { display: grid; grid-template-rows: 34px 1fr; min-width: 0; }
+  .tabs { display: flex; align-items: flex-end; gap: 2px; overflow: hidden; }
+  .tab { height: 32px; padding: 0 14px; display: flex; align-items: center; gap: 6px; border-radius: 8px 8px 0 0; color: var(--muted); font-size: 13px; white-space: nowrap; }
+  .tab.on { background: var(--card); color: var(--text); }
+  .statusbar { display: flex; align-items: center; gap: 16px; padding: 0 16px; color: var(--muted); font-size: 12px; }
+  .statusbar .need { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; color: var(--text); background: var(--primary-soft); border: 0; border-radius: 6px; padding: 2px 8px; cursor: pointer; }
+
+  /* ---------- today ---------- */
+  .today { background: var(--card); border-radius: 0 var(--r-lg) var(--r-lg) var(--r-lg); padding: 20px; display: grid; gap: var(--gap); container-type: inline-size; }
+
+  /* 1. 頂列：日期＋本週＋單一主要動作 */
+  .top { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+  .when h2 { margin: 0; font-size: 22px; font-weight: 650; letter-spacing: -.2px; }
+  .when p { margin: 2px 0 0; color: var(--muted); }
+  .week { display: flex; gap: 4px; margin-left: auto; }
+  .day { width: 44px; height: 48px; border-radius: var(--r-md); border: 0; background: transparent; color: var(--muted); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer; transition: background var(--dur) var(--ease); }
+  .day:hover { background: var(--raised); }
+  .day b { color: var(--text); font-weight: 600; font-size: 14px; }
+  .day small { font-size: 12px; }
+  .day .mk { width: 5px; height: 5px; border-radius: 50%; background: var(--subtle); }
+  .day .mk.open { background: var(--primary); }
+  .day .mk.none { background: transparent; }
+  .day[aria-current="date"] { background: var(--primary-soft); box-shadow: inset 0 0 0 1.5px var(--primary-line); }
+  .cta { height: 40px; padding: 0 18px; border-radius: var(--r-md); border: 0; background: var(--primary); color: var(--on-primary); font-weight: 650; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; transition: filter var(--dur) var(--ease); }
+  .cta:hover { filter: brightness(1.06); }
+  .more { height: 40px; width: 40px; border-radius: var(--r-md); border: 0; background: var(--raised); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+
+  /* 2. 焦點：一句話定調＋唯一要務＋三件 MIT */
+  .focus { background: var(--shell); border-radius: var(--r-lg); padding: 18px 20px; display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 24px; }
+  .eyebrow { color: var(--muted); font-size: 12px; font-weight: 600; letter-spacing: .4px; display: flex; align-items: center; gap: 6px; }
+  .one { margin: 6px 0 4px; font-size: 24px; font-weight: 700; line-height: 1.3; }
+  .tone { color: var(--muted); margin: 0; }
+  .mit { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; }
+
+  /* 共用：任務列 */
+  .row { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; gap: 10px; align-items: center; min-height: 44px; padding: 4px 8px; border-radius: var(--r-md); transition: background var(--dur) var(--ease); }
+  .row:hover { background: var(--raised); }
+  .check { width: 24px; height: 24px; border-radius: 6px; border: 0; background: transparent; display: grid; place-items: center; cursor: pointer; padding: 0; }
+  .check span { width: 18px; height: 18px; border-radius: 5px; border: 1.75px solid #6e6e6e; display: grid; place-items: center; transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease); }
+  .check svg { width: 12px; height: 12px; stroke: var(--on-primary); stroke-width: 3; opacity: 0; }
+  .check[aria-checked="true"] span { background: var(--primary); border-color: var(--primary); }
+  .check[aria-checked="true"] svg { opacity: 1; }
+  .row.done .title { color: var(--subtle); text-decoration: line-through; }
+  .title { display: block; overflow-wrap: anywhere; }
+  .src { display: flex; align-items: center; gap: 6px; color: var(--subtle); font-size: 12px; }
+  .src svg.i { width: 13px; height: 13px; }
+  .tag { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; border-radius: 6px; padding: 2px 7px; white-space: nowrap; }
+  .tag svg.i { width: 13px; height: 13px; }
+  .tag.late { color: var(--primary); background: var(--primary-soft); }
+  .tag.time { color: var(--text); background: var(--raised); }
+  .tag.plain { color: var(--muted); }
+  .pri { display: inline-flex; align-items: center; gap: 3px; color: var(--primary); font-size: 12px; font-weight: 600; }
+
+  /* 3. 主體：今日進程 ＋ 任務 */
+  .grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: var(--gap); align-items: start; }
+  .panel { background: var(--shell); border-radius: var(--r-lg); padding: 16px; }
+  .panel > header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .panel h3 { margin: 0; font-size: 15px; font-weight: 650; }
+  .panel header .aside { margin-left: auto; color: var(--muted); font-size: 12px; }
+
+  .agenda { list-style: none; margin: 0; padding: 0; position: relative; }
+  .agenda::before { content: ""; position: absolute; left: 51px; top: 8px; bottom: 8px; width: 1.5px; background: var(--line); }
+  .slot { display: grid; grid-template-columns: 44px 16px minmax(0, 1fr); gap: 8px; align-items: start; padding: 8px 0; position: relative; }
+  .slot time { color: var(--muted); font-size: 13px; text-align: right; padding-top: 1px; }
+  .slot .dot { width: 11px; height: 11px; margin: 5px 0 0 2px; border-radius: 50%; background: var(--card); border: 2px solid #5b5b5b; position: relative; z-index: 1; }
+  .slot.past { color: var(--subtle); }
+  .slot.past .dot { background: #5b5b5b; }
+  .slot.past .what { color: var(--subtle); }
+  .slot .kind { color: var(--subtle); font-size: 12px; display: flex; gap: 6px; align-items: center; }
+  .slot.now .dot { border-color: var(--primary); background: var(--primary); box-shadow: 0 0 0 4px var(--primary-soft); }
+  .slot.now .what { font-weight: 650; }
+  .bar { height: 4px; border-radius: 4px; background: var(--raised); margin-top: 6px; overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 33%; background: var(--primary); border-radius: 4px; }
+  .nowline { display: grid; grid-template-columns: 44px 16px 1fr; gap: 8px; align-items: center; color: var(--primary); font-size: 12px; font-weight: 650; margin: 2px 0; }
+  .nowline time { text-align: right; }
+  .nowline i { height: 1.5px; background: var(--primary-line); grid-column: 2 / 4; }
+  .collapsed { width: 100%; border: 0; background: transparent; color: var(--subtle); text-align: left; font-size: 12px; padding: 4px 0 8px 68px; cursor: pointer; }
+
+  .seg { display: inline-flex; background: var(--raised); border-radius: var(--r-md); padding: 3px; gap: 2px; }
+  .seg button { border: 0; background: transparent; color: var(--muted); height: 30px; padding: 0 12px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  .seg button[aria-selected="true"] { background: var(--card); color: var(--text); }
+  .seg .n { font-size: 12px; color: var(--muted); }
+  .seg button[aria-selected="true"] .n { color: var(--primary); }
+  .carry { display: flex; align-items: center; gap: 10px; background: var(--primary-soft); border-radius: var(--r-md); padding: 10px 12px; margin-bottom: 8px; }
+  .carry p { margin: 0; }
+  .ghost { margin-left: auto; height: 32px; padding: 0 12px; border-radius: 6px; border: 1px solid var(--primary-line); background: transparent; color: var(--primary); cursor: pointer; white-space: nowrap; }
+  .tasklist { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+  .group { color: var(--muted); font-size: 12px; font-weight: 600; padding: 10px 8px 4px; display: flex; gap: 6px; align-items: center; }
+
+  /* 4. 底列：今日足跡 */
+  .tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--gap); }
+  .tile { background: var(--shell); border-radius: var(--r-lg); padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
+  .tile .ico { width: 36px; height: 36px; border-radius: 10px; background: var(--raised); display: grid; place-items: center; color: var(--muted); }
+  .tile .ico.warn { color: var(--primary); background: var(--primary-soft); }
+  .tile b { font-size: 18px; }
+  .tile p { margin: 0; color: var(--muted); font-size: 13px; }
+  .tile .link { margin-left: auto; border: 0; background: transparent; color: var(--text); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; white-space: nowrap; }
+
+  /* toast */
+  .toast { position: absolute; left: 50%; bottom: 46px; transform: translate(-50%, 12px); opacity: 0; pointer-events: none; background: #2e2e2e; border: 1px solid var(--line); border-radius: 10px; padding: 8px 8px 8px 14px; display: flex; gap: 12px; align-items: center; transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease); }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+  .toast button { border: 0; background: var(--raised); color: var(--primary); height: 30px; padding: 0 12px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+
+  /* ---------- 窄寬（今日分頁被拉窄、或分割視窗） ---------- */
+  @container (max-width: 900px) {
+    .focus, .grid2 { grid-template-columns: 1fr; }
+    .tiles { grid-template-columns: 1fr; }
+    .week { margin-left: 0; order: 3; width: 100%; justify-content: space-between; }
+  }
+  @media (max-width: 860px) {
+    .body { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+
+  /* ---------- 說明區 ---------- */
+  .notes { margin-top: 24px; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr)); gap: 12px; }
+  .note { background: var(--card); border-radius: 10px; padding: 14px 16px; }
+  .note h4 { margin: 0 0 6px; font-size: 14px; }
+  .note p, .note li { color: var(--muted); margin: 0; }
+  .note ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+  .note code { background: var(--raised); border-radius: 4px; padding: 0 4px; color: #e6e6e6; font-size: 12.5px; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-repeat" viewBox="0 0 24 24"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></symbol>
+  <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1z"/></symbol>
+  <symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9z"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="m18 15-6-6-6 6"/></symbol>
+</svg>
+
+<div class="page">
+  <h1>今日頁 · 新設計（v2）</h1>
+  <p class="lede">以「今天最重要的事」為焦點、依一天的動線由上往下讀：先看定調與唯一要務，再看此刻在哪個時段、手上要處理的任務，最後是今日足跡。可以直接勾選任務、切換分頁、按「帶入今天」試操作。示意時間 2026-10-18（週日）14:20。</p>
+
+  <div class="app">
+    <div class="titlebar"><div class="lights"><i></i><i></i><i></i></div>NoteGen (Scott)</div>
+
+    <div class="body">
+      <aside class="sidebar" aria-label="檔案">
+        <div class="side-tabs"><span class="on">筆記</span><span>記錄</span><span>畫布</span></div>
+        <div class="tree">
+          <div>00 System</div><div>10 Inbox</div><div>20 Journal</div>
+          <div class="d1">21 Daily</div><div class="d2">20261017.md</div><div class="d2 sel">20261018.md</div>
+          <div>30 Projects</div><div class="d1">NoteGen</div><div class="d1">HelmDeck</div>
+          <div>40 Areas</div><div>50 Resources</div>
+        </div>
+      </aside>
+
+      <section class="main">
+        <div class="tabs" role="tablist">
+          <div class="tab on" role="tab" aria-selected="true">今日</div>
+          <div class="tab" role="tab">20261018.md</div>
+          <div class="tab" role="tab">NoteGen 外掛規格.md</div>
+        </div>
+
+        <main class="today" style="position:relative">
+          <!-- 1. 頂列 -->
+          <div class="top">
+            <div class="when">
+              <h2>10 月 18 日，週日</h2>
+              <p>午安，Scott · <span class="num" id="clock">14:20</span> · 今天到期 6 項，逾期 4 項</p>
+            </div>
+            <nav class="week" aria-label="本週日記">
+              <button class="day" aria-label="10 月 12 日週一，全部完成"><small>一</small><b class="num">12</b><span class="mk"></span></button>
+              <button class="day" aria-label="10 月 13 日週二，全部完成"><small>二</small><b class="num">13</b><span class="mk"></span></button>
+              <button class="day" aria-label="10 月 14 日週三，全部完成"><small>三</small><b class="num">14</b><span class="mk"></span></button>
+              <button class="day" aria-label="10 月 15 日週四，1 項未完成"><small>四</small><b class="num">15</b><span class="mk open"></span></button>
+              <button class="day" aria-label="10 月 16 日週五，1 項未完成"><small>五</small><b class="num">16</b><span class="mk open"></span></button>
+              <button class="day" aria-label="10 月 17 日週六，2 項未完成"><small>六</small><b class="num">17</b><span class="mk open"></span></button>
+              <button class="day" aria-current="date" aria-label="今天，10 月 18 日週日"><small>日</small><b class="num">18</b><span class="mk none"></span></button>
+            </nav>
+            <button class="cta"><svg class="i" aria-hidden="true"><use href="#i-file"/></svg>開啟 Daily Note</button>
+            <button class="more" aria-label="更多動作：早晨啟動、整日復盤、重新掃描"><svg class="i" aria-hidden="true"><use href="#i-more"/></svg></button>
+          </div>
+
+          <!-- 2. 焦點 -->
+          <section class="focus" aria-labelledby="one-label">
+            <div>
+              <div class="eyebrow" id="one-label"><svg class="i" aria-hidden="true"><use href="#i-target"/></svg>唯一要務</div>
+              <p class="one">把今日頁的設計定下來</p>
+              <p class="tone">定調：先做決定，再寫程式。</p>
+            </div>
+            <div>
+              <div class="eyebrow">三件 MIT · 完成 1 / 3</div>
+              <ul class="mit">
+                <li class="row done"><button class="check" role="checkbox" aria-checked="true" aria-label="D2 示意圖定案"><span><svg class="i"><use href="#i-check"/></svg></span></button><span class="title">D2 示意圖定案</span><span></span></li>
+                <li class="row"><button class="check" role="checkbox" aria-checked="false" aria-label="F3 用 vault 實測"><span><svg class="i"><use href="#i-check"/></svg></span></button><span class="title">F3 用 vault 實測掃描時間</span><span></span></li>
+                <li class="row"><button class="check" role="checkbox" aria-checked="false" aria-label="UAT F1 加 D1"><span><svg class="i"><use href="#i-check"/></svg></span></button><span class="title">UAT F1＋D1</span><span></span></li>
+              </ul>
+            </div>
+          </section>
+
+          <!-- 3. 主體 -->
+          <div class="grid2">
+            <section class="panel" aria-labelledby="agenda-h">
+              <header><h3 id="agenda-h">今日進程</h3><span class="aside">錨點時段與有時間的任務</span></header>
+              <button class="collapsed">已過 2 個時段 · 展開</button>
+              <ol class="agenda">
+                <li class="slot now">
+                  <time class="num">14:00</time><span class="dot" aria-hidden="true"></span>
+                  <div><div class="what">深工作：D2 今日頁</div><div class="kind">錨點時段 · 到 15:00，還有 40 分鐘</div><div class="bar" role="progressbar" aria-label="深工作進度" aria-valuenow="33" aria-valuemin="0" aria-valuemax="100"><i></i></div></div>
+                </li>
+                <li class="nowline" aria-hidden="true"><time class="num">14:20</time><i></i></li>
+                <li class="slot">
+                  <time class="num">15:00</time><span class="dot" aria-hidden="true"></span>
+                  <div><div class="what">D2 今日頁示意圖定案</div><div class="kind"><svg class="i" aria-hidden="true"><use href="#i-clock"/></svg>任務 · 20261018.md</div></div>
+                </li>
+                <li class="slot">
+                  <time class="num">21:30</time><span class="dot" aria-hidden="true"></span>
+                  <div><div class="what">整日復盤</div><div class="kind"><svg class="i" aria-hidden="true"><use href="#i-moon"/></svg>錨點時段 · 寫入 reviewed:: done</div></div>
+                </li>
+              </ol>
+            </section>
+
+            <section class="panel" aria-labelledby="tasks-h">
+              <header>
+                <h3 id="tasks-h">任務</h3>
+                <div class="seg" role="tablist" aria-label="任務範圍" style="margin-left:auto">
+                  <button role="tab" aria-selected="true">待處理 <span class="n num">10</span></button>
+                  <button role="tab" aria-selected="false">已完成 <span class="n num">1</span></button>
+                </div>
+              </header>
+
+              <div class="carry" id="carry">
+                <svg class="i" aria-hidden="true" style="color:var(--primary)"><use href="#i-down"/></svg>
+                <p>昨天有 <b class="num">3</b> 項未完成</p>
+                <button class="ghost" id="carry-btn">帶入今天</button>
+              </div>
+
+              <ul class="tasklist" id="tasks">
+                <li class="group"><svg class="i" aria-hidden="true" style="color:var(--primary)"><use href="#i-alert"/></svg>逾期 · 4</li>
+                <li class="row"><button class="check" role="checkbox" aria-checked="false" aria-label="寄報價單給 Acme"><span><svg class="i"><use href="#i-check"/></svg></span></button>
+                  <div><span class="title">寄報價單給 Acme</span><span class="src"><svg class="i" aria-hidden="true"><use href="#i-file"/></svg>30 Projects/Acme.md</span></div>
+                  <span><span class="pri" aria-label="高優先"><svg class="i" aria-hidden="true"><use href="#i-up"/></svg>高</span> <span class="tag late">逾期 3 天</span></span></li>
+                <li class="row"><button class="check" role="checkbox" aria-checked="false" aria-label="整理 color token 對照表"><span><svg class="i"><use href="#i-check"/></svg></span></button>
+                  <div><span class="title">整理 color token 對照表</span><span class="src"><svg class="i" aria-hidden="true"><use href="#i-file"/></svg>30 Projects/NoteGen/CSS.md</span></div>
+                  <span class="tag late">逾期 2 天</span></li>
+                <li class="row"><button class="check" role="checkbox" aria-checked="false" aria-label="回覆 HelmDeck issue 12"><span><svg class="i"><use href="#i-check"/></svg></span></button>
+                  <div><span class="title">回覆 HelmDeck issue #12</span><span class="src"><svg class="i" aria-hidden="true"><use href="#i-file"/></svg>30 Projects/HelmDeck.md</span></div>
+                  <span class="tag late">逾期 1 天</span></li>
+
+                <li class="group">今天 · 6</li>
+                <li class="row"><button class="check" role="checkbox" aria-checked="false" aria-label="D2 今日頁示意圖定案"><span><svg class="i"><use href="#i-check"/></svg></span></button>
+                  <div><span class="title">D2 今日頁示意圖定案</span><span class="src"><svg class="i" aria-hidden="true"><use href="#i-repeat"/></svg>每天 · 20261018.md</span></div>
+                  <span class="tag time num"><svg class="i" aria-hidden="true"><use href="#i-clock"/></svg>15:00</span></li>
+                <li class="row"><button class="check" role="checkbox" aria-checked="false" aria-label="週報"><span><svg class="i"><use href="#i-check"/></svg></span></button>
+                  <div><span class="title">週報</span><span class="src"><svg class="i" aria-hidden="true"><use href="#i-file"/></svg>40 Areas/Work.md</span></div>
+                  <span class="tag plain">今天</span></li>
+              </ul>
+            </section>
+          </div>
+
+          <!-- 4. 今日足跡 -->
+          <div class="tiles">
+            <div class="tile"><span class="ico"><svg class="i" aria-hidden="true"><use href="#i-zap"/></svg></span><div><b class="num">5</b> 則捕捉<p>閃 3 · 讀 1 · 任務 1</p></div></div>
+            <div class="tile"><span class="ico warn"><svg class="i" aria-hidden="true"><use href="#i-inbox"/></svg></span><div><b class="num">3</b> 檔積壓<p>Inbox 超過 3 天未整理</p></div><button class="link">去整理</button></div>
+            <div class="tile"><span class="ico"><svg class="i" aria-hidden="true"><use href="#i-moon"/></svg></span><div><b>沉澱</b><p>晚間復盤 · 尚未填寫</p></div><button class="link">開始復盤</button></div>
+          </div>
+
+          <div class="toast" id="toast" role="status" aria-live="polite"><span id="toast-msg">已完成並寫回 Acme.md</span><button id="undo">復原</button></div>
+        </main>
+      </section>
+    </div>
+
+    <footer class="statusbar">
+      <span>20 Journal/21 Daily/20261018.md</span>
+      <span>索引 1,284 檔</span>
+      <button class="need" aria-label="需處理 10 項，開啟今日分頁"><svg class="i" aria-hidden="true" style="width:13px;height:13px;color:var(--primary)"><use href="#i-alert"/></svg>需處理 10</button>
+    </footer>
+  </div>
+
+  <div class="notes">
+    <div class="note"><h4>跟 v1 比，改了什麼</h4><ul>
+      <li><b>一個焦點</b>：唯一要務放大到頂部，原本 7 張同重量的卡片收斂成 4 段。</li>
+      <li><b>一個主要動作</b>：頂列只留「開啟 Daily Note」；早晨啟動、整日復盤收進「⋯」，也出現在進程的對應時段。</li>
+      <li><b>不重複</b>：拿掉「需處理」晶片列，逾期直接在任務清單分組；狀態列保留總數入口。</li>
+      <li><b>時間軸改成進程清單</b>：只列有內容的時段，已過的收合，現在的時段顯示剩餘時間與進度。</li>
+      <li><b>大時鐘縮小</b>：系統列已有時間，改成標題列的一段文字。</li>
+    </ul></div>
+    <div class="note"><h4>可讀性與無障礙（ui-ux-pro-max）</h4><ul>
+      <li>內文 14px、輔助文字最小 12px；次要文字 <code>#a8a8a8</code>（7.4:1）、最淡 <code>#8c8c8c</code>（5.0:1），都過 4.5:1。</li>
+      <li>逾期不只靠顏色：有警示圖示＋「逾期 3 天」文字；優先度是箭頭＋「高」。</li>
+      <li>emoji 全換成同一套線條圖示（實作用專案已有的 lucide-react）。</li>
+      <li>勾選框點擊區 44px 列高、有鍵盤焦點框、<code>role="checkbox"</code>；勾選後出現可「復原」的提示，以 <code>aria-live</code> 播報。</li>
+      <li>動畫 160ms、尊重「減少動態效果」設定。</li>
+    </ul></div>
+    <div class="note"><h4>窄寬度</h4><p>今日分頁寬度低於 900px（例如分割視窗）時，焦點區、進程與任務、足跡都改成單欄，本週列換到第二行；把瀏覽器拉窄就能看到。</p></div>
+    <div class="note"><h4>沿用不變</h4><p>琥珀 <code>#fbbd23</code>、外殼 <code>#161616</code>、卡片 <code>#202020</code>、14px 間距、Inter＋PingFang TC、不用紫色。資料來源與 v1 相同：F3 索引＋今日 Daily Note。</p></div>
+  </div>
+</div>
+
+<script>
+  const toast = document.getElementById('toast')
+  const toastMsg = document.getElementById('toast-msg')
+  let lastRow = null, timer = null
+  function showToast(msg) {
+    toastMsg.textContent = msg
+    toast.classList.add('show')
+    clearTimeout(timer)
+    timer = setTimeout(() => toast.classList.remove('show'), 4000)
+  }
+  document.querySelectorAll('.check').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const on = btn.getAttribute('aria-checked') !== 'true'
+      btn.setAttribute('aria-checked', String(on))
+      const row = btn.closest('.row')
+      row.classList.toggle('done', on)
+      lastRow = { btn, row, on }
+      const src = row.querySelector('.src')?.textContent.split('·').pop().trim() || '今日筆記'
+      showToast(on ? `已完成，寫回 ${src.split('/').pop()}` : `已取消完成，寫回 ${src.split('/').pop()}`)
+    })
+  })
+  document.getElementById('undo').addEventListener('click', () => {
+    if (!lastRow) return
+    const { btn, row, on } = lastRow
+    btn.setAttribute('aria-checked', String(!on))
+    row.classList.toggle('done', !on)
+    toast.classList.remove('show')
+  })
+  document.getElementById('carry-btn').addEventListener('click', () => {
+    document.getElementById('carry').remove()
+    showToast('已把 3 項帶入今天，原處留下 → [[20261018]]')
+  })
+  document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-selected', String(x === b)))
+  }))
+</script>
+</body>
+</html>

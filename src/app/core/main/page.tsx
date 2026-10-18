@@ -11,6 +11,7 @@ import { Store } from '@tauri-apps/plugin-store'
 import { Layout, PanelImperativeHandle } from 'react-resizable-panels'
 import { restoreEditorWindows } from '@/lib/editor-windows'
 import { MainStatusBar } from './main-status-bar'
+import { ForkServices } from './fork-services'
 
 function getDefaultLayout(layoutKey: string) {
   const storageKey = `react-resizable-panels:main-layout:${layoutKey}`
@@ -298,6 +299,7 @@ function ResizableWrapper() {
         {renderLayout()}
       </ResizablePanelGroup>
       <MainStatusBar />
+      <ForkServices />
     </div>
   )
 }

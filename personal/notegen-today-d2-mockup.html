@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--
+filename: notegen-today-d2-mockup.html
+created: 2026-10-18 11:20 (Asia/Taipei)
+modified: 2026-10-18 11:20 (Asia/Taipei)
+source_llm: Claude (Opus 5.5, Claude Code session)
+-->
+<title>D2 今日頁示意圖</title>
+<style>
+  :root {
+    --shell: #161616;
+    --card: #202020;
+    --raised: #2a2a2a;
+    --line: #2f2f2f;
+    --text: #ececec;
+    --muted: #9a9a9a;
+    --faint: #6b6b6b;
+    --amber: #fbbd23;
+    --amber-soft: rgba(251, 189, 35, .14);
+    --green: #4caf6a;
+    --gap: 14px;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #0e0e0e;
+    color: var(--text);
+    font: 13px/1.45 "Inter", -apple-system, "PingFang TC", "Noto Sans TC", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page { padding: 24px 16px 40px; max-width: 1472px; margin: 0 auto; }
+  .page > h1 { font-size: 18px; margin: 0 0 4px; }
+  .page > p.lede { color: var(--muted); margin: 0 0 18px; }
+
+  /* ---------- app frame ---------- */
+  .app {
+    background: var(--shell);
+    border: 1px solid #262626;
+    border-radius: 14px;
+    overflow: hidden;
+    display: grid;
+    grid-template-rows: 44px 1fr 30px;
+    height: 900px;
+    width: 1440px;
+  }
+  .frame-scroll { overflow-x: auto; }
+  .titlebar {
+    display: flex; align-items: center; gap: 10px; padding: 0 14px;
+    color: var(--muted);
+  }
+  .lights { display: flex; gap: 8px; margin-right: 8px; }
+  .lights i { width: 12px; height: 12px; border-radius: 50%; background: #3a3a3a; display: block; }
+  .body {
+    display: grid; grid-template-columns: 236px 1fr; gap: var(--gap);
+    padding: 0 var(--gap); min-height: 0;
+  }
+  .sidebar { background: var(--card); border-radius: var(--radius); padding: 10px 0; overflow: hidden; }
+  .side-tabs { display: flex; gap: 18px; padding: 4px 16px 10px; color: var(--muted); }
+  .side-tabs span.on { color: var(--text); position: relative; }
+  .side-tabs span.on::after { content: ""; position: absolute; left: 0; right: 0; bottom: -6px; height: 2px; background: var(--amber); border-radius: 2px; }
+  .tree { padding: 4px 8px; }
+  .tree div { height: 26px; display: flex; align-items: center; padding-left: 10px; border-radius: 6px; color: #cfcfcf; white-space: nowrap; }
+  .tree .d1 { padding-left: 24px; }
+  .tree .d2 { padding-left: 38px; }
+  .tree .sel { background: var(--raised); color: var(--text); }
+
+  .main { display: grid; grid-template-rows: 36px 1fr; min-height: 0; }
+  .tabs { display: flex; align-items: flex-end; gap: 2px; }
+  .tab { height: 32px; padding: 0 14px; display: flex; align-items: center; gap: 6px; border-radius: 8px 8px 0 0; color: var(--muted); }
+  .tab.on { background: var(--card); color: var(--text); }
+  .tab .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--amber); }
+
+  /* ---------- today page ---------- */
+  .today {
+    background: var(--card); border-radius: 0 var(--radius) var(--radius) var(--radius);
+    padding: var(--gap); overflow: hidden;
+    display: grid; gap: var(--gap);
+    grid-template-columns: 320px 1fr 300px;
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas:
+      "clock attn actions"
+      "tasks timeline note"
+      "week week week";
+    min-height: 0;
+  }
+  .panel { background: var(--shell); border-radius: 10px; padding: 14px 16px; min-height: 0; position: relative; }
+  .panel h2 { font-size: 13px; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 8px; }
+  .panel h2 .sub { color: var(--muted); font-weight: 400; margin-left: auto; font-size: 12px; }
+
+  .clock { grid-area: clock; display: flex; align-items: center; gap: 14px; }
+  .clock .time { font-size: 44px; font-weight: 700; letter-spacing: -1px; font-variant-numeric: tabular-nums; }
+  .clock .date { color: var(--muted); line-height: 1.5; }
+  .clock .date b { color: var(--text); font-weight: 500; }
+
+  .attn { grid-area: attn; display: flex; flex-direction: column; gap: 10px; }
+  .attn .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; background: var(--amber); color: #1a1a1a; font-weight: 700; border-radius: 6px; padding: 3px 9px; }
+  .stat { color: var(--muted); }
+  .stat b { color: var(--text); }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip { background: var(--raised); border-radius: 7px; padding: 4px 10px; display: inline-flex; align-items: center; gap: 6px; }
+  .chip .d { width: 6px; height: 6px; border-radius: 50%; background: var(--amber); }
+  .chip.more { background: transparent; color: var(--muted); }
+
+  .actions { grid-area: actions; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-content: center; }
+  .btn { height: 36px; border-radius: 8px; border: 0; background: var(--raised); color: var(--text); font: inherit; display: flex; align-items: center; justify-content: center; gap: 7px; }
+  .btn.primary { background: var(--amber); color: #161616; font-weight: 600; grid-column: span 2; }
+  .btn .ok { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+  .btn .no { width: 7px; height: 7px; border-radius: 50%; border: 1.5px solid var(--faint); }
+  .btn.small { height: 28px; padding: 0 10px; font-size: 12px; }
+
+  .tasks { grid-area: tasks; display: flex; flex-direction: column; gap: 10px; overflow: hidden; }
+  .group-label { color: var(--muted); font-size: 12px; display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+  .group-label .n { color: var(--text); font-weight: 600; }
+  .task { display: grid; grid-template-columns: 18px 1fr auto; gap: 8px; align-items: start; padding: 6px 4px; border-radius: 6px; }
+  .task:hover { background: var(--raised); }
+  .cb { width: 14px; height: 14px; border: 1.5px solid #5a5a5a; border-radius: 4px; margin-top: 2px; }
+  .cb.on { background: var(--amber); border-color: var(--amber); }
+  .task .t { line-height: 1.4; }
+  .task .src { color: var(--faint); font-size: 11.5px; }
+  .task.done .t { color: var(--faint); text-decoration: line-through; }
+  .meta { color: var(--muted); font-size: 12px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .meta.late { color: var(--amber); }
+  .pri { display: inline-block; width: 3px; height: 12px; border-radius: 2px; background: var(--amber); margin-right: 6px; vertical-align: -1px; }
+  .pri.mid { background: #8a8a8a; }
+  .carry { margin-top: auto; display: flex; align-items: center; gap: 8px; border-top: 1px dashed var(--line); padding-top: 10px; color: var(--muted); }
+  .carry .btn { margin-left: auto; }
+
+  .timeline { grid-area: timeline; display: flex; flex-direction: column; gap: 10px; overflow: hidden; }
+  .grid { position: relative; flex: 1; border-radius: 8px; background: #1b1b1b; overflow: hidden; }
+  .hour { position: absolute; left: 0; right: 0; border-top: 1px solid #262626; }
+  .hour span { position: absolute; left: 10px; top: -9px; background: #1b1b1b; padding: 0 4px; color: var(--faint); font-size: 11px; font-variant-numeric: tabular-nums; }
+  .ev { position: absolute; left: 54px; right: 12px; border-radius: 6px; background: var(--raised); border-left: 3px solid var(--amber); padding: 5px 10px; display: flex; justify-content: space-between; gap: 10px; }
+  .ev.cal { border-left-color: #7d7d7d; }
+  .ev.past { opacity: .55; }
+  .ev .k { color: var(--muted); font-size: 11.5px; white-space: nowrap; }
+  .now { position: absolute; left: 0; right: 0; height: 2px; background: var(--amber); }
+  .now span { position: absolute; left: 4px; top: -10px; background: var(--amber); color: #161616; font-weight: 700; font-size: 11px; padding: 1px 6px; border-radius: 5px; }
+
+  .note { grid-area: note; display: flex; flex-direction: column; gap: 0; overflow: hidden; }
+  .note h2 { margin-bottom: 8px; }
+  .kv { display: grid; grid-template-columns: 76px 1fr; gap: 10px; padding: 9px 0; border-top: 1px solid var(--line); }
+  .kv .k { color: var(--muted); }
+  .kv .v.empty { color: var(--faint); }
+  .kv ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 3px; }
+  .tone { color: var(--muted); padding: 2px 0 8px; }
+
+  .week { grid-area: week; }
+  .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-top: 10px; }
+  .day { background: #1b1b1b; border-radius: 8px; padding: 8px 10px; min-height: 66px; display: flex; flex-direction: column; gap: 4px; }
+  .day .h { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; }
+  .day .h b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .day .h .has { width: 6px; height: 6px; border-radius: 50%; background: var(--green); margin-left: auto; }
+  .day.today { outline: 1.5px solid var(--amber); }
+  .day .c { font-size: 12px; color: var(--muted); }
+  .day .c b { color: var(--text); }
+  .day .c.late b { color: var(--amber); }
+
+  .statusbar { display: flex; align-items: center; gap: 16px; padding: 0 16px; color: var(--muted); font-size: 12px; }
+  .statusbar .need { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; color: var(--text); background: var(--amber-soft); border-radius: 6px; padding: 2px 8px; }
+  .statusbar .need i { width: 6px; height: 6px; border-radius: 50%; background: var(--amber); display: block; }
+
+  /* ---------- callouts ---------- */
+  .pin { position: absolute; width: 20px; height: 20px; border-radius: 50%; background: #fff; color: #111; font-weight: 700; font-size: 11px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 3px rgba(0,0,0,.45); z-index: 5; }
+  .notes { margin-top: 22px; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+  .notes div { background: var(--card); border-radius: 10px; padding: 12px 14px; color: #cfcfcf; }
+  .notes b.n { display: inline-flex; width: 20px; height: 20px; border-radius: 50%; background: #fff; color: #111; font-size: 11px; align-items: center; justify-content: center; margin-right: 8px; }
+  .notes h3 { margin: 0 0 6px; font-size: 13px; display: flex; align-items: center; color: var(--text); }
+  .notes p { margin: 0; color: var(--muted); }
+  .notes code { background: var(--raised); border-radius: 4px; padding: 0 4px; color: #e6e6e6; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>D2 原生今日頁 · 示意圖</h1>
+  <p class="lede">在 NoteGen 內以「今日」分頁呈現；資料來自 F3 vault 索引與今日 Daily Note。畫面時間示意為 2026-10-18（週日）14:20。白色編號對應下方說明。</p>
+
+  <div class="frame-scroll">
+  <div class="app">
+    <div class="titlebar">
+      <div class="lights"><i></i><i></i><i></i></div>
+      NoteGen (Scott)
+    </div>
+
+    <div class="body">
+      <aside class="sidebar">
+        <div class="side-tabs"><span class="on">筆記</span><span>記錄</span><span>畫布</span></div>
+        <div class="tree">
+          <div>00 System</div>
+          <div>10 Inbox</div>
+          <div>20 Journal</div>
+          <div class="d1">21 Daily</div>
+          <div class="d2">20261016.md</div>
+          <div class="d2">20261017.md</div>
+          <div class="d2 sel">20261018.md</div>
+          <div>30 Projects</div>
+          <div class="d1">NoteGen</div>
+          <div class="d1">HelmDeck</div>
+          <div>40 Areas</div>
+          <div>50 Resources</div>
+        </div>
+      </aside>
+
+      <section class="main">
+        <div class="tabs">
+          <div class="tab on"><span class="dot"></span>今日</div>
+          <div class="tab">20261018.md</div>
+          <div class="tab">NoteGen 外掛規格.md</div>
+        </div>
+
+        <div class="today" style="position:relative">
+          <span class="pin" style="left:6px;top:6px">1</span>
+          <span class="pin" style="left:340px;top:6px">2</span>
+          <span class="pin" style="right:6px;top:6px">3</span>
+          <span class="pin" style="left:6px;top:150px">4</span>
+          <span class="pin" style="left:342px;top:150px">5</span>
+          <span class="pin" style="right:6px;top:150px">6</span>
+          <span class="pin" style="left:6px;bottom:100px">7</span>
+
+          <div class="panel clock">
+            <div class="time">14:20</div>
+            <div class="date"><b>2026-10-18</b><br>週日<br>午安，Scott</div>
+          </div>
+
+          <div class="panel attn">
+            <div class="row">
+              <span class="badge">▲ 需處理 13</span>
+              <span class="stat">逾期 <b>4</b> · 今日到期 <b>6</b> · Inbox 積壓 <b>3</b></span>
+            </div>
+            <div class="chips">
+              <span class="chip"><span class="d"></span>寄報價單給 Acme</span>
+              <span class="chip"><span class="d"></span>整理 color token 對照表</span>
+              <span class="chip"><span class="d"></span>Inbox：HelmDeck 素材（5 天）</span>
+              <span class="chip more">另 10 項</span>
+            </div>
+          </div>
+
+          <div class="panel actions">
+            <button class="btn"><span class="ok"></span>早晨啟動</button>
+            <button class="btn"><span class="no"></span>整日復盤</button>
+            <button class="btn primary">開啟 Daily Note</button>
+          </div>
+
+          <div class="panel tasks">
+            <h2>任務<span class="sub">10 未完成 · 1 完成</span></h2>
+
+            <div class="group-label">逾期 <span class="n">4</span></div>
+            <div class="task"><span class="cb"></span><div><div class="t"><span class="pri"></span>寄報價單給 Acme</div><div class="src">30 Projects/Acme.md</div></div><span class="meta late">10/15</span></div>
+            <div class="task"><span class="cb"></span><div><div class="t"><span class="pri mid"></span>整理 color token 對照表</div><div class="src">30 Projects/NoteGen/CSS.md</div></div><span class="meta late">10/16</span></div>
+            <div class="task"><span class="cb"></span><div><div class="t"><span class="pri mid"></span>回覆 HelmDeck issue #12</div><div class="src">30 Projects/HelmDeck.md</div></div><span class="meta late">10/17</span></div>
+
+            <div class="group-label">今日 <span class="n">6</span></div>
+            <div class="task"><span class="cb"></span><div><div class="t"><span class="pri"></span>D2 今日頁示意圖定案</div><div class="src">20261018.md · 🔁 every day</div></div><span class="meta">15:00</span></div>
+            <div class="task"><span class="cb"></span><div><div class="t"><span class="pri mid"></span>週報</div><div class="src">40 Areas/Work.md</div></div><span class="meta">今天</span></div>
+            <div class="task done"><span class="cb on"></span><div><div class="t">繳電費</div><div class="src">40 Areas/Home.md</div></div><span class="meta">✓</span></div>
+
+            <div class="carry">
+              昨天有 <b style="color:var(--text)">3</b> 項未完成
+              <button class="btn small">帶入今天</button>
+            </div>
+          </div>
+
+          <div class="panel timeline">
+            <h2>今日時間軸<span class="sub">錨點時段 · ⏰ 任務 · 行事曆</span></h2>
+            <div class="grid" id="grid"></div>
+          </div>
+
+          <div class="panel note">
+            <h2>Daily Note<span class="sub">20261018.md</span></h2>
+            <div class="tone">一句話定調 → 把今日頁的樣子定下來</div>
+            <div class="kv"><span class="k">唯一要務</span><span class="v">D2 示意圖定案</span></div>
+            <div class="kv"><span class="k">三件 MIT</span>
+              <ul>
+                <li><span class="pri"></span>D2 示意圖定案</li>
+                <li><span class="pri mid"></span>F3 用 vault 實測</li>
+                <li><span class="pri mid"></span>UAT F1＋D1</li>
+              </ul>
+            </div>
+            <div class="kv"><span class="k">捕捉軌</span><span class="v"><b>5</b> 則 · 閃 3 · 讀 1 · 任務 1</span></div>
+            <div class="kv"><span class="k">Inbox</span><span class="v"><span style="color:var(--amber)">●</span> 3 檔超過 3 天</span></div>
+            <div class="kv"><span class="k">沉澱</span><span class="v empty">○ 晚間 · 尚未填寫</span></div>
+          </div>
+
+          <div class="panel week">
+            <h2>本週<span class="sub">10/12 – 10/18 · 每天的到期任務</span></h2>
+            <div class="days">
+              <div class="day"><div class="h">一 <b>12</b><span class="has"></span></div><div class="c"><b>3</b> 項 · 全完成</div></div>
+              <div class="day"><div class="h">二 <b>13</b><span class="has"></span></div><div class="c"><b>2</b> 項 · 全完成</div></div>
+              <div class="day"><div class="h">三 <b>14</b><span class="has"></span></div><div class="c"><b>4</b> 項 · 全完成</div></div>
+              <div class="day"><div class="h">四 <b>15</b><span class="has"></span></div><div class="c late"><b>1</b> 項未完成</div></div>
+              <div class="day"><div class="h">五 <b>16</b><span class="has"></span></div><div class="c late"><b>1</b> 項未完成</div></div>
+              <div class="day"><div class="h">六 <b>17</b><span class="has"></span></div><div class="c late"><b>2</b> 項未完成</div></div>
+              <div class="day today"><div class="h">日 <b>18</b><span class="has"></span></div><div class="c"><b>6</b> 項 · 1 完成</div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <footer class="statusbar">
+      <span>20 Journal/21 Daily/20261018.md</span>
+      <span>索引 1,284 檔 · 0.8 秒</span>
+      <span class="need"><i></i>需處理 13</span>
+      <span class="pin" style="position:static;margin-left:4px">8</span>
+    </footer>
+  </div>
+  </div>
+
+  <div class="notes">
+    <div><h3><b class="n">1</b>時鐘</h3><p>每秒更新；問候語依時段（早安／午安／晚安）。</p></div>
+    <div><h3><b class="n">2</b>需處理</h3><p>逾期＋今日到期＋Inbox 積壓（超過 <code>staleDays</code> 天）。點晶片直接開該筆記並跳到那一行。</p></div>
+    <div><h3><b class="n">3</b>動作</h3><p>早晨啟動／整日復盤寫入 <code>morning:: done</code>、<code>reviewed:: done</code>，已標記的顯示綠點。開啟 Daily Note 不存在時依 D1 模板建立。</p></div>
+    <div><h3><b class="n">4</b>任務（可勾選）</h3><p>逾期與今日到期分組；勾選直接寫回原筆記那一行（含 ✅ 日期）。🔁 任務勾掉後自動產生下一筆（D5）。底部是 D6「帶入今天」：移動到今日筆記，原處留下 <code>→ [[YYYYMMDD]]</code>。</p></div>
+    <div><h3><b class="n">5</b>今日時間軸</h3><p>06–23 點；放錨點時段與有 ⏰ 的任務，琥珀「現在」線每分鐘移動，已過的時段變淡。行事曆來源（灰邊）先保留位置，Phase 1 不接。</p></div>
+    <div><h3><b class="n">6</b>Daily Note 摘要</h3><p>解析今日筆記的定調、唯一要務、三件 MIT、捕捉軌、沉澱；筆記一存檔就更新。</p></div>
+    <div><h3><b class="n">7</b>本週</h3><p>週一到週日；綠點表示那天有日記，數字是當天到期的任務，有未完成的顯示琥珀色。點某天開啟那天的日記。</p></div>
+    <div><h3><b class="n">8</b>狀態列入口</h3><p>任何畫面都看得到「需處理 N」，點擊開啟今日分頁；另提供指令「今日：開啟」。左側顯示索引檔數與首次掃描時間（F3 實測用）。</p></div>
+  </div>
+</div>
+
+<script>
+  // 時間軸：06:00–23:00
+  const grid = document.getElementById('grid')
+  const start = 6, end = 23
+  const pct = h => ((h - start) / (end - start)) * 100
+  for (let h = start; h <= end; h += 2) {
+    const line = document.createElement('div')
+    line.className = 'hour'
+    line.style.top = pct(h) + '%'
+    line.innerHTML = `<span>${String(h).padStart(2, '0')}</span>`
+    grid.appendChild(line)
+  }
+  const events = [
+    { from: 8, to: 8.67, title: '早晨啟動 · 看 daily note', k: '08:00–08:40 · 錨點', past: true },
+    { from: 10.25, to: 11.5, title: 'NoteGen 外掛規格討論', k: '10:15–11:30 · 行事曆（之後）', cal: true, past: true },
+    { from: 14, to: 15, title: '深工作：D2 今日頁', k: '14:00–15:00 · 錨點' },
+    { from: 15, to: 15.5, title: 'D2 今日頁示意圖定案', k: '⏰ 15:00 · 任務' },
+    { from: 21.5, to: 22.25, title: '整日復盤', k: '21:30 · 錨點' },
+  ]
+  for (const e of events) {
+    const el = document.createElement('div')
+    el.className = 'ev' + (e.cal ? ' cal' : '') + (e.past ? ' past' : '')
+    el.style.top = pct(e.from) + '%'
+    el.style.height = `calc(${pct(e.to) - pct(e.from)}% - 3px)`
+    el.innerHTML = `<span>${e.title}</span><span class="k">${e.k}</span>`
+    grid.appendChild(el)
+  }
+  const now = document.createElement('div')
+  now.className = 'now'
+  now.style.top = pct(14 + 20 / 60) + '%'
+  now.innerHTML = '<span>14:20</span>'
+  grid.appendChild(now)
+</script>
+</body>
+</html>

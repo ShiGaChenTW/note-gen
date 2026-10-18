@@ -49,6 +49,150 @@
     "hideWindow": "Hide to Tray",
     "quit": "Quit NoteGen"
   },
+  "today": {
+    "title": "Today",
+    "summary": "{today} due today, {overdue} overdue",
+    "greeting": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening"
+    },
+    "week": {
+      "label": "This week’s daily notes",
+      "day": "{date}, {open} open"
+    },
+    "openDaily": "Open daily note",
+    "moreActions": "More actions",
+    "morning": "Morning kickoff",
+    "morningDone": "Morning kickoff · done",
+    "review": "Daily review",
+    "reviewDone": "Daily review · done",
+    "stamped": {
+      "morning": "Wrote morning:: done",
+      "review": "Wrote reviewed:: done"
+    },
+    "index": {
+      "rescan": "Rescan vault",
+      "scanning": "Scanning vault…"
+    },
+    "oneThing": "The one thing",
+    "notFilled": "Not filled in yet",
+    "tone": "Tone: {tone}",
+    "mits": "Three MITs · {done} of {total} done",
+    "done": "done",
+    "agenda": {
+      "title": "Today’s timeline",
+      "sources": "Anchors · timed tasks · calendar",
+      "empty": "No time blocks or timed tasks today",
+      "showPast": "{count} past · show",
+      "hidePast": "Hide past items",
+      "until": "until {time}, {minutes} min left",
+      "kind": {
+        "anchor": "Anchor",
+        "task": "Task",
+        "calendar": "Calendar"
+      },
+      "view": "Agenda view",
+      "list": "List",
+      "blocks": "Timeline"
+    },
+    "calendar": {
+      "prompt": "Connect macOS Calendar to show today’s meetings here",
+      "connect": "Connect calendar",
+      "denied": "Calendar access is off. Turn it on in System Settings → Privacy & Security → Calendars."
+    },
+    "tasks": {
+      "title": "Tasks",
+      "counts": "{pending} open · {done} done today",
+      "overdue": "Overdue · {count}",
+      "day0": "Today · {count}",
+      "day1": "Tomorrow · {count}",
+      "day2": "Day after · {count}",
+      "doneToday": "Done today · {count}",
+      "lateBy": "{days}d overdue",
+      "empty": "Nothing overdue or due in the next three days",
+      "loading": "Building the task index…"
+    },
+    "priorityHigh": "High",
+    "openSource": "Open {name}",
+    "carry": {
+      "prompt": "{count} unfinished from yesterday",
+      "action": "Bring to today",
+      "done": "Moved {count} to today"
+    },
+    "capture": {
+      "title": "captures",
+      "detail": "{flash} flash · {read} read · {task} task"
+    },
+    "inbox": {
+      "title": "waiting",
+      "detail": "In Inbox for over {days} days",
+      "action": "Sort now"
+    },
+    "reflection": {
+      "title": "Reflection",
+      "detail": "Evening review",
+      "empty": "Not yet",
+      "filled": "Written",
+      "action": "Start review"
+    },
+    "status": {
+      "open": "Today",
+      "need": "{count} to handle",
+      "aria": "{count} items to handle, open the Today tab"
+    },
+    "undo": "Undo",
+    "undoStale": "The file changed elsewhere, so it can’t be undone",
+    "taskDone": "Done, saved to {name}",
+    "taskUndone": "Marked open, saved to {name}",
+    "taskStale": "{name} changed elsewhere. Refresh and try again.",
+    "writeFailed": "Couldn’t save",
+    "taskDoneNext": "Done. Next one {date} ({name})",
+    "noDate": "no date",
+    "calendarNav": {
+      "open": "Daily note calendar",
+      "prev": "Previous daily note",
+      "next": "Next daily note",
+      "prevShortcut": "Previous daily note (⌘⌥[)",
+      "nextShortcut": "Next daily note (⌘⌥])",
+      "today": "Today",
+      "legendNote": "Has note",
+      "legendTasks": "Tasks due",
+      "noMore": "No more daily notes",
+      "openFailed": "Couldn't open the daily note"
+    },
+    "quickAdd": {
+      "label": "Quick add task",
+      "placeholder": "Buy milk @tomorrow 9am !high #home",
+      "hint": "@date, time, !priority, #tag. Press Enter to add to today’s note",
+      "needTitle": "Type what the task is",
+      "preview": "Will add",
+      "added": "Added “{name}” to today’s note",
+      "priority": {
+        "highest": "Highest",
+        "high": "High",
+        "medium": "Medium",
+        "low": "Low",
+        "lowest": "Lowest"
+      }
+    },
+    "timeBlocks": {
+      "label": "Today’s timeline. Drop a task here to schedule it",
+      "hint": "Drag a task onto the timeline to set its ⏰ time in {minutes}-minute steps",
+      "schedule": "Schedule “{name}”",
+      "scheduleShort": "Schedule",
+      "timeLabel": "Time today",
+      "timeHelp": "Writes 📅 today and ⏰ time",
+      "clear": "Clear time",
+      "apply": "Schedule",
+      "scheduled": "Scheduled for {time} today",
+      "cleared": "Time cleared"
+    },
+    "reminders": {
+      "title": "⏰ {time} Task reminder",
+      "summaryTitle": "{count} task reminders"
+    }
+  },
   "settings": {
     "defaultModels": {
       "title": "Default Models",
@@ -1239,6 +1383,68 @@
             "name": "Name"
           }
         }
+      }
+    },
+    "daily": {
+      "title": "Daily notes",
+      "desc": "Set where daily notes live, how they are named, and which templates they use. NoteGen uses the same files as Obsidian and stores no extra data.",
+      "sections": {
+        "today": "Today's note",
+        "location": "Location and file name",
+        "templates": "Templates",
+        "reminders": "Reminders"
+      },
+      "open": {
+        "button": "Open today's note",
+        "preview": "Today's note: {path}",
+        "created": "Created today's note from the template",
+        "opened": "Opened today's note",
+        "error": "Couldn't open today's note"
+      },
+      "openOnLaunch": {
+        "title": "Open today's note on launch",
+        "desc": "Open today's note every time the app starts, creating it from the template if it doesn't exist."
+      },
+      "dailyFolder": {
+        "title": "Daily notes folder",
+        "desc": "Path relative to the workspace, e.g. 20 Journal/21 Daily."
+      },
+      "dailyPattern": {
+        "title": "File name format",
+        "desc": "Supports YYYY MM DD ddd dddd; use / for subfolders.",
+        "invalid": "The format must contain YYYY, MM and DD, and cannot start or end with /."
+      },
+      "inboxFolder": {
+        "title": "Inbox folder",
+        "desc": "Where the inbox lives; the Today page flags notes waiting there."
+      },
+      "templatesDesc": "Templates support '{{date}}', '{{date:FORMAT}}', '{{time}}', '{{weekday}}', '{{title}}' and '{{random:note path}}'.",
+      "defaultTemplate": {
+        "title": "Default template",
+        "desc": "Path to the template note; .md is optional. Leave empty for a blank note."
+      },
+      "weekdayTemplates": {
+        "title": "Weekday templates",
+        "desc": "Used on that day when set; otherwise the default template is used.",
+        "placeholder": "Empty uses the default template"
+      },
+      "weekdays": {
+        "monday": "Monday",
+        "tuesday": "Tuesday",
+        "wednesday": "Wednesday",
+        "thursday": "Thursday",
+        "friday": "Friday",
+        "saturday": "Saturday",
+        "sunday": "Sunday"
+      },
+      "reminders": {
+        "title": "Notify when a task is due",
+        "desc": "Sends a macOS notification when a task’s ⏰ time comes. Reminders missed while the app was closed are sent the next time it opens (up to 24 hours back).",
+        "test": "Send test notification",
+        "testTitle": "NoteGen reminder test",
+        "testBody": "If you can see this, reminders are working.",
+        "denied": "Notifications are off. Turn them on for NoteGen in System Settings → Notifications",
+        "sent": "Test notification sent"
       }
     },
     "record": {

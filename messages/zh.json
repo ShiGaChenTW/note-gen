@@ -49,6 +49,150 @@
     "hideWindow": "隐藏到托盘",
     "quit": "退出 NoteGen"
   },
+  "today": {
+    "title": "今日",
+    "summary": "今天到期 {today} 项，逾期 {overdue} 项",
+    "greeting": {
+      "morning": "早上好",
+      "afternoon": "下午好",
+      "evening": "晚上好"
+    },
+    "week": {
+      "label": "本周日记",
+      "day": "{date}，{open} 项未完成"
+    },
+    "openDaily": "打开 Daily Note",
+    "moreActions": "更多操作",
+    "morning": "早晨启动",
+    "morningDone": "早晨启动 · 已完成",
+    "review": "整日复盘",
+    "reviewDone": "整日复盘 · 已完成",
+    "stamped": {
+      "morning": "已写入 morning:: done",
+      "review": "已写入 reviewed:: done"
+    },
+    "index": {
+      "rescan": "重新扫描 vault",
+      "scanning": "正在扫描 vault…"
+    },
+    "oneThing": "唯一要务",
+    "notFilled": "尚未填写",
+    "tone": "定调：{tone}",
+    "mits": "三件 MIT · 完成 {done} / {total}",
+    "done": "已完成",
+    "agenda": {
+      "title": "今日进程",
+      "sources": "锚点时段 · 有时间的任务 · 日历",
+      "empty": "今天还没有时段或有时间的任务",
+      "showPast": "已过 {count} 个时段 · 展开",
+      "hidePast": "收起已过的时段",
+      "until": "到 {time}，还有 {minutes} 分钟",
+      "kind": {
+        "anchor": "锚点时段",
+        "task": "任务",
+        "calendar": "日历"
+      },
+      "view": "进程视图",
+      "list": "列表",
+      "blocks": "时间轴"
+    },
+    "calendar": {
+      "prompt": "连接 macOS 日历，把今天的会议放进进程",
+      "connect": "连接日历",
+      "denied": "日历权限已关闭，可到「系统设置 → 隐私与安全性 → 日历」开启"
+    },
+    "tasks": {
+      "title": "任务",
+      "counts": "待处理 {pending} · 今天完成 {done}",
+      "overdue": "逾期 · {count}",
+      "day0": "今天 · {count}",
+      "day1": "明天 · {count}",
+      "day2": "后天 · {count}",
+      "doneToday": "今天完成 · {count}",
+      "lateBy": "逾期 {days} 天",
+      "empty": "逾期与近三日没有待处理的任务",
+      "loading": "正在建立任务索引…"
+    },
+    "priorityHigh": "高",
+    "openSource": "打开 {name}",
+    "carry": {
+      "prompt": "昨天有 {count} 项未完成",
+      "action": "带入今天",
+      "done": "已把 {count} 项带入今天"
+    },
+    "capture": {
+      "title": "条捕捉",
+      "detail": "闪 {flash} · 读 {read} · 任务 {task}"
+    },
+    "inbox": {
+      "title": "个积压",
+      "detail": "Inbox 超过 {days} 天未整理",
+      "action": "去整理"
+    },
+    "reflection": {
+      "title": "沉淀",
+      "detail": "晚间复盘",
+      "empty": "尚未填写",
+      "filled": "已填写",
+      "action": "开始复盘"
+    },
+    "status": {
+      "open": "今日",
+      "need": "需处理 {count}",
+      "aria": "需处理 {count} 项，打开今日标签页"
+    },
+    "undo": "撤销",
+    "undoStale": "文件已在别处修改，无法撤销",
+    "taskDone": "已完成，写回 {name}",
+    "taskUndone": "已取消完成，写回 {name}",
+    "taskStale": "{name} 已在别处修改，请刷新后再试",
+    "writeFailed": "写入失败",
+    "taskDoneNext": "已完成，下一次 {date}（{name}）",
+    "noDate": "不限日期",
+    "calendarNav": {
+      "open": "日记月历",
+      "prev": "上一篇日记",
+      "next": "下一篇日记",
+      "prevShortcut": "上一篇日记（⌘⌥[）",
+      "nextShortcut": "下一篇日记（⌘⌥]）",
+      "today": "今天",
+      "legendNote": "有日记",
+      "legendTasks": "有任务到期",
+      "noMore": "没有更多日记了",
+      "openFailed": "无法打开日记"
+    },
+    "quickAdd": {
+      "label": "快速添加任务",
+      "placeholder": "买菜 @明天 9am !high #家",
+      "hint": "@日期、时间、!优先级、#标签，按 Enter 写入今日笔记",
+      "needTitle": "再输入任务内容",
+      "preview": "将添加",
+      "added": "已添加「{name}」到今日笔记",
+      "priority": {
+        "highest": "最高",
+        "high": "高",
+        "medium": "中",
+        "low": "低",
+        "lowest": "最低"
+      }
+    },
+    "timeBlocks": {
+      "label": "今天的时间轴，可把任务拖到这里安排时间",
+      "hint": "把任务拖到时间轴上，会以 {minutes} 分钟为单位写入 ⏰ 时间",
+      "schedule": "为「{name}」安排时间",
+      "scheduleShort": "安排时间",
+      "timeLabel": "今天几点做",
+      "timeHelp": "会写入 📅 今天与 ⏰ 时间",
+      "clear": "清除时间",
+      "apply": "安排",
+      "scheduled": "已安排在今天 {time}",
+      "cleared": "已清除时间"
+    },
+    "reminders": {
+      "title": "⏰ {time} 任务提醒",
+      "summaryTitle": "{count} 个任务提醒"
+    }
+  },
   "settings": {
     "defaultModels": {
       "title": "默认模型",
@@ -1239,6 +1383,68 @@
             "name": "名称"
           }
         }
+      }
+    },
+    "daily": {
+      "title": "日记",
+      "desc": "设置每日笔记的位置、文件名格式和模板。NoteGen 与 Obsidian 使用相同的文件，不会另外保存数据。",
+      "sections": {
+        "today": "今日笔记",
+        "location": "位置与文件名",
+        "templates": "模板",
+        "reminders": "提醒"
+      },
+      "open": {
+        "button": "打开今日笔记",
+        "preview": "今天的笔记：{path}",
+        "created": "已根据模板创建今日笔记",
+        "opened": "已打开今日笔记",
+        "error": "无法打开今日笔记"
+      },
+      "openOnLaunch": {
+        "title": "启动时打开今日笔记",
+        "desc": "每次启动应用时打开今天的笔记；不存在时根据模板创建。"
+      },
+      "dailyFolder": {
+        "title": "日记文件夹",
+        "desc": "相对于工作区的路径，例如 20 Journal/21 Daily。"
+      },
+      "dailyPattern": {
+        "title": "文件名格式",
+        "desc": "支持 YYYY MM DD ddd dddd，用 / 表示子文件夹。",
+        "invalid": "格式必须包含 YYYY、MM、DD，且不能以 / 开头或结尾。"
+      },
+      "inboxFolder": {
+        "title": "Inbox 文件夹",
+        "desc": "收件箱的位置，今日页会提醒积压的笔记。"
+      },
+      "templatesDesc": "模板支持 '{{date}}'、'{{date:FORMAT}}'、'{{time}}'、'{{weekday}}'、'{{title}}'、'{{random:笔记路径}}'。",
+      "defaultTemplate": {
+        "title": "默认模板",
+        "desc": "模板笔记的路径，可省略 .md。留空则创建空白笔记。"
+      },
+      "weekdayTemplates": {
+        "title": "按星期的模板",
+        "desc": "设置了的那天优先使用，否则使用默认模板。",
+        "placeholder": "留空使用默认模板"
+      },
+      "weekdays": {
+        "monday": "星期一",
+        "tuesday": "星期二",
+        "wednesday": "星期三",
+        "thursday": "星期四",
+        "friday": "星期五",
+        "saturday": "星期六",
+        "sunday": "星期日"
+      },
+      "reminders": {
+        "title": "任务到时间时通知",
+        "desc": "带 ⏰ 时间的任务到点时发送 macOS 通知；App 关闭期间错过的，下次打开时补发（最多回补 24 小时）。",
+        "test": "发送测试通知",
+        "testTitle": "NoteGen 提醒测试",
+        "testBody": "看到这条通知，说明提醒可以正常工作。",
+        "denied": "没有通知权限，请到「系统设置 → 通知」开启 NoteGen",
+        "sent": "已发送测试通知"
       }
     },
     "record": {

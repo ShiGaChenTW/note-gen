@@ -49,6 +49,150 @@
     "hideWindow": "In den Tray minimieren",
     "quit": "NoteGen beenden"
   },
+  "today": {
+    "title": "Heute",
+    "summary": "{today} heute fällig, {overdue} überfällig",
+    "greeting": {
+      "morning": "Guten Morgen",
+      "afternoon": "Guten Tag",
+      "evening": "Guten Abend"
+    },
+    "week": {
+      "label": "Tagesnotizen dieser Woche",
+      "day": "{date}, {open} offen"
+    },
+    "openDaily": "Tagesnotiz öffnen",
+    "moreActions": "Weitere Aktionen",
+    "morning": "Morgenstart",
+    "morningDone": "Morgenstart · erledigt",
+    "review": "Tagesrückblick",
+    "reviewDone": "Tagesrückblick · erledigt",
+    "stamped": {
+      "morning": "morning:: done eingetragen",
+      "review": "reviewed:: done eingetragen"
+    },
+    "index": {
+      "rescan": "Vault neu scannen",
+      "scanning": "Vault wird gescannt…"
+    },
+    "oneThing": "Das Wichtigste",
+    "notFilled": "Noch nicht ausgefüllt",
+    "tone": "Leitsatz: {tone}",
+    "mits": "Drei MITs · {done} von {total} erledigt",
+    "done": "erledigt",
+    "agenda": {
+      "title": "Tagesverlauf",
+      "sources": "Ankerzeiten · Aufgaben mit Uhrzeit · Kalender",
+      "empty": "Heute keine Zeitblöcke oder Aufgaben mit Uhrzeit",
+      "showPast": "{count} vorbei · anzeigen",
+      "hidePast": "Vergangenes ausblenden",
+      "until": "bis {time}, noch {minutes} Min.",
+      "kind": {
+        "anchor": "Ankerzeit",
+        "task": "Aufgabe",
+        "calendar": "Kalender"
+      },
+      "view": "Ansicht",
+      "list": "Liste",
+      "blocks": "Zeitleiste"
+    },
+    "calendar": {
+      "prompt": "macOS-Kalender verbinden, um heutige Termine hier zu sehen",
+      "connect": "Kalender verbinden",
+      "denied": "Kalenderzugriff ist aus. Aktiviere ihn unter Systemeinstellungen → Datenschutz & Sicherheit → Kalender."
+    },
+    "tasks": {
+      "title": "Aufgaben",
+      "counts": "{pending} offen · {done} heute erledigt",
+      "overdue": "Überfällig · {count}",
+      "day0": "Heute · {count}",
+      "day1": "Morgen · {count}",
+      "day2": "Übermorgen · {count}",
+      "doneToday": "Heute erledigt · {count}",
+      "lateBy": "{days} Tg. überfällig",
+      "empty": "Nichts überfällig oder in den nächsten drei Tagen fällig",
+      "loading": "Aufgabenindex wird erstellt…"
+    },
+    "priorityHigh": "Hoch",
+    "openSource": "{name} öffnen",
+    "carry": {
+      "prompt": "{count} von gestern offen",
+      "action": "Auf heute übernehmen",
+      "done": "{count} auf heute übernommen"
+    },
+    "capture": {
+      "title": "Notizen erfasst",
+      "detail": "{flash} Blitz · {read} Lesen · {task} Aufgabe"
+    },
+    "inbox": {
+      "title": "warten",
+      "detail": "Länger als {days} Tage in der Inbox",
+      "action": "Aufräumen"
+    },
+    "reflection": {
+      "title": "Reflexion",
+      "detail": "Abendrückblick",
+      "empty": "Noch offen",
+      "filled": "Geschrieben",
+      "action": "Rückblick starten"
+    },
+    "status": {
+      "open": "Heute",
+      "need": "{count} zu erledigen",
+      "aria": "{count} Punkte zu erledigen, Heute-Tab öffnen"
+    },
+    "undo": "Rückgängig",
+    "undoStale": "Die Datei wurde anderswo geändert und kann nicht zurückgesetzt werden",
+    "taskDone": "Erledigt, in {name} gespeichert",
+    "taskUndone": "Wieder offen, in {name} gespeichert",
+    "taskStale": "{name} wurde anderswo geändert. Bitte neu laden und erneut versuchen.",
+    "writeFailed": "Speichern fehlgeschlagen",
+    "taskDoneNext": "Erledigt. Nächster Termin {date} ({name})",
+    "noDate": "ohne Datum",
+    "calendarNav": {
+      "open": "Kalender der Tagesnotizen",
+      "prev": "Vorherige Tagesnotiz",
+      "next": "Nächste Tagesnotiz",
+      "prevShortcut": "Vorherige Tagesnotiz (⌘⌥[)",
+      "nextShortcut": "Nächste Tagesnotiz (⌘⌥])",
+      "today": "Heute",
+      "legendNote": "Notiz vorhanden",
+      "legendTasks": "Aufgaben fällig",
+      "noMore": "Keine weiteren Tagesnotizen",
+      "openFailed": "Tagesnotiz konnte nicht geöffnet werden"
+    },
+    "quickAdd": {
+      "label": "Aufgabe schnell hinzufügen",
+      "placeholder": "Milch kaufen @tomorrow 9am !high #home",
+      "hint": "@Datum, Uhrzeit, !Priorität, #Tag. Mit Enter zur heutigen Notiz hinzufügen",
+      "needTitle": "Beschreibe die Aufgabe",
+      "preview": "Wird hinzugefügt",
+      "added": "„{name}“ zur heutigen Notiz hinzugefügt",
+      "priority": {
+        "highest": "Höchste",
+        "high": "Hoch",
+        "medium": "Mittel",
+        "low": "Niedrig",
+        "lowest": "Niedrigste"
+      }
+    },
+    "timeBlocks": {
+      "label": "Heutige Zeitleiste. Aufgabe hierher ziehen, um sie einzuplanen",
+      "hint": "Ziehe eine Aufgabe auf die Zeitleiste, um die ⏰ Uhrzeit in {minutes}-Minuten-Schritten zu setzen",
+      "schedule": "„{name}“ einplanen",
+      "scheduleShort": "Einplanen",
+      "timeLabel": "Uhrzeit heute",
+      "timeHelp": "Schreibt 📅 heute und ⏰ Uhrzeit",
+      "clear": "Uhrzeit entfernen",
+      "apply": "Einplanen",
+      "scheduled": "Für heute {time} eingeplant",
+      "cleared": "Uhrzeit entfernt"
+    },
+    "reminders": {
+      "title": "⏰ {time} Aufgabenerinnerung",
+      "summaryTitle": "{count} Aufgabenerinnerungen"
+    }
+  },
   "settings": {
     "defaultModels": {
       "title": "Standardmodelle",
@@ -1239,6 +1383,68 @@
             "name": "Name"
           }
         }
+      }
+    },
+    "daily": {
+      "title": "Tagesnotizen",
+      "desc": "Lege Ort, Dateinamensformat und Vorlagen der Tagesnotizen fest. NoteGen nutzt dieselben Dateien wie Obsidian und speichert keine zusätzlichen Daten.",
+      "sections": {
+        "today": "Heutige Notiz",
+        "location": "Ort und Dateiname",
+        "templates": "Vorlagen",
+        "reminders": "Erinnerungen"
+      },
+      "open": {
+        "button": "Heutige Notiz öffnen",
+        "preview": "Heutige Notiz: {path}",
+        "created": "Heutige Notiz aus der Vorlage erstellt",
+        "opened": "Heutige Notiz geöffnet",
+        "error": "Heutige Notiz konnte nicht geöffnet werden"
+      },
+      "openOnLaunch": {
+        "title": "Beim Start heutige Notiz öffnen",
+        "desc": "Öffnet bei jedem App-Start die heutige Notiz und erstellt sie bei Bedarf aus der Vorlage."
+      },
+      "dailyFolder": {
+        "title": "Ordner für Tagesnotizen",
+        "desc": "Pfad relativ zum Arbeitsbereich, z. B. 20 Journal/21 Daily."
+      },
+      "dailyPattern": {
+        "title": "Dateinamensformat",
+        "desc": "Unterstützt YYYY MM DD ddd dddd; / steht für Unterordner.",
+        "invalid": "Das Format muss YYYY, MM und DD enthalten und darf nicht mit / beginnen oder enden."
+      },
+      "inboxFolder": {
+        "title": "Inbox-Ordner",
+        "desc": "Ort des Posteingangs; die Heute-Seite weist auf wartende Notizen hin."
+      },
+      "templatesDesc": "Vorlagen unterstützen '{{date}}', '{{date:FORMAT}}', '{{time}}', '{{weekday}}', '{{title}}' und '{{random:Notizpfad}}'.",
+      "defaultTemplate": {
+        "title": "Standardvorlage",
+        "desc": "Pfad zur Vorlagennotiz, .md ist optional. Leer lassen für eine leere Notiz."
+      },
+      "weekdayTemplates": {
+        "title": "Vorlagen nach Wochentag",
+        "desc": "Wird an diesem Tag bevorzugt, sonst gilt die Standardvorlage.",
+        "placeholder": "Leer: Standardvorlage"
+      },
+      "weekdays": {
+        "monday": "Montag",
+        "tuesday": "Dienstag",
+        "wednesday": "Mittwoch",
+        "thursday": "Donnerstag",
+        "friday": "Freitag",
+        "saturday": "Samstag",
+        "sunday": "Sonntag"
+      },
+      "reminders": {
+        "title": "Benachrichtigen, wenn eine Aufgabe fällig ist",
+        "desc": "Sendet eine macOS-Mitteilung, wenn die ⏰ Uhrzeit einer Aufgabe erreicht ist. Verpasste Erinnerungen werden beim nächsten Öffnen nachgeholt (bis zu 24 Stunden).",
+        "test": "Testmitteilung senden",
+        "testTitle": "NoteGen-Erinnerungstest",
+        "testBody": "Wenn du das siehst, funktionieren Erinnerungen.",
+        "denied": "Mitteilungen sind aus. Aktiviere sie für NoteGen unter Systemeinstellungen → Mitteilungen",
+        "sent": "Testmitteilung gesendet"
       }
     },
     "record": {
