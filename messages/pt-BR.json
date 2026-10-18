@@ -5519,6 +5519,11 @@
       "enhance": "Aprimorar busca",
       "searching": "Buscando arquivos relacionados..."
     },
+    "wikilinkSuggest": {
+      "create": "Criar \"{name}\"",
+      "alias": "Alias",
+      "noResults": "Nenhuma nota correspondente"
+    },
     "outline": {
       "title": "Sumário",
       "open": "Abrir sumário",

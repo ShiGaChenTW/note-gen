@@ -5631,6 +5631,11 @@
       "enhance": "Enhance search",
       "searching": "Searching related files..."
     },
+    "wikilinkSuggest": {
+      "create": "Create \"{name}\"",
+      "alias": "Alias",
+      "noResults": "No matching notes"
+    },
     "outline": {
       "title": "Outline",
       "open": "Open Outline",

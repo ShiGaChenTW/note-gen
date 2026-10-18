@@ -5631,6 +5631,11 @@
       "enhance": "增强搜索",
       "searching": "正在搜索相关文件..."
     },
+    "wikilinkSuggest": {
+      "create": "建立「{name}」",
+      "alias": "别名",
+      "noResults": "没有符合的笔记"
+    },
     "outline": {
       "title": "大纲",
       "open": "打开大纲",

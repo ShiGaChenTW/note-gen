@@ -5489,6 +5489,11 @@
       "enhance": "Suche verbessern",
       "searching": "Suche nach verwandten Dateien..."
     },
+    "wikilinkSuggest": {
+      "create": "„{name}“ erstellen",
+      "alias": "Alias",
+      "noResults": "Keine passenden Notizen"
+    },
     "outline": {
       "title": "Gliederung",
       "open": "Gliederung öffnen",
