@@ -5539,6 +5539,11 @@
       "enhance": "增強搜尋",
       "searching": "正在搜尋相關檔案..."
     },
+    "wikilinkSuggest": {
+      "create": "建立「{name}」",
+      "alias": "別名",
+      "noResults": "沒有符合的筆記"
+    },
     "outline": {
       "title": "大綱",
       "open": "打開大綱",

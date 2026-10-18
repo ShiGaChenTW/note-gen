@@ -5549,6 +5549,11 @@
       "enhance": "高精度で検索",
       "searching": "関連ファイルを検索中..."
     },
+    "wikilinkSuggest": {
+      "create": "「{name}」を作成",
+      "alias": "別名",
+      "noResults": "一致するノートがありません"
+    },
     "outline": {
       "title": "アウトライン",
       "open": "アウトラインを開く",
