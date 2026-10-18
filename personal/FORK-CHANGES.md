@@ -2,7 +2,7 @@
 title: NoteGen Fork 偏離上游清單
 filename: FORK-CHANGES.md
 created: 2026-10-15 05:45 (Asia/Taipei)
-modified: 2026-10-18 11:00 (Asia/Taipei)
+modified: 2026-10-18 22:47 (Asia/Taipei)
 source_llm: Claude (Opus 5.5, Claude Code session)
 status: active
 ---
@@ -72,3 +72,41 @@ npx pnpm@9 install --frozen-lockfile
 - 桌面版 build 需要 Rust（`rustup`）。
 - **Rust 用 stable，不用 repo 指定的 1.88.0**：macOS 27 的 dyld 拒絕載入 1.88.0 編出的 proc-macro（`sqlx-macros` 報 `mis-aligned LINKEDIT string pool`）。本機用 `rustup override set stable` 蓋過 `rust-toolchain.toml`，不改 repo 檔案。1.99.0 驗證可 build。
 - 本機 build：`npx pnpm@9 tauri build --bundles app` → `src-tauri/target/release/bundle/macos/NoteGen (Scott).app`。
+
+## 測試步驟
+
+### 今日頁（D2）與 macOS 行事曆
+
+**啟動**（分支 `feat/d2-today-page` 或之後的分支；確定 port 3456 沒被其他 dev server 佔用）：
+
+```bash
+source "$HOME/.cargo/env"
+npx pnpm@9 tauri dev
+```
+
+第一次啟動會由 `build.rs` 編譯行事曆小工具，需要幾分鐘。
+
+**測試前**：勾選、帶入、標記都會直接寫進 vault，先確認 vault 的 git 狀態乾淨或已備份。
+
+**今日頁**
+
+1. 開啟：點底部狀態列右側的「需處理 N」或「今日」，分頁列最左邊出現「今日」分頁。
+2. 頂列：日期、問候語、時間正確；點本週任一天，開啟那天的日記，不存在時依模板建立。
+3. 唯一要務／三件 MIT：顯示今日日記的對應區塊，沒填時顯示「尚未填寫」；改日記存檔後幾秒內更新。
+4. 任務清單：分成逾期、今天、明天、後天、今天完成；逾期項目顯示「逾期 N 天」，高優先度顯示「高」。
+5. 勾選任務：原筆記那一行變成 `[x]` 並加上 `✅ 今天日期`；按提示的「復原」會還原。勾帶 `🔁` 的任務時，下一行會多出下一次的任務。
+6. 帶入今天（D6）：昨天日記有未完成任務時出現琥珀色提示；按「帶入今天」後，任務移到今日筆記的「捕捉軌」區塊最後，昨天那行變成 `- 原文字 → [[今天]]`。
+7. 「⋯」選單：早晨啟動／整日復盤會在今日筆記寫入 `morning:: done`／`reviewed:: done`；「重新掃描 vault」會重讀索引。
+8. 窄寬度：分割編輯區（`Cmd+\`）讓今日分頁變窄，版面改成單欄。
+
+**行事曆**
+
+1. 今日進程顯示「連接 macOS 行事曆…」，按「連接行事曆」。
+2. `tauri dev` 不是打包好的 App，系統權限詢問會以啟動它的終端機 App（例如 Terminal、iTerm）名義跳出。允許後，今天的非全天事件依時間排進進程，標示日曆名稱。
+3. 拒絕過或沒跳出詢問：到「系統設定 → 隱私權與安全性 → 行事曆」開啟該終端機 App，再切回 NoteGen 視窗，切回時會重新讀取。
+4. 打包版（`npx pnpm@9 tauri build --bundles app`）才會用 `Info.plist` 裡「NoteGen 會在『今日』頁顯示你今天的行事曆事件」的說明，權限也記在 NoteGen 名下。
+
+**這份步驟沒涵蓋的**
+
+- F3 首次掃描時間：看開發者工具 Console 的 `[vault-index] N files in Xms`。
+- 打包版的行事曆權限流程。
