@@ -172,7 +172,7 @@ export function TodayPage() {
               <span className="ml-auto text-xs text-muted-foreground">{t('tasks.counts', { pending: groups.pendingCount, done: groups.doneToday.length })}</span>
             </header>
 
-            <QuickAdd now={now} busy={busy === 'quick-add'} onSubmit={addTask} />
+            <QuickAdd now={now} busy={busy.has('quick-add')} onSubmit={addTask} />
 
             {carryable > 0 && (
               <div className="mb-2 flex items-center gap-2.5 rounded-lg bg-primary/10 px-3 py-2.5">
@@ -182,7 +182,7 @@ export function TodayPage() {
                   variant="outline"
                   size="sm"
                   className="ml-auto border-primary/50 text-primary"
-                  disabled={busy === 'carry'}
+                  disabled={busy.has('carry')}
                   onClick={carry}
                 >
                   {t('carry.action')}
@@ -251,7 +251,7 @@ function TaskGroup({ heading, tasks, renderMeta, busy, onToggle, onOpen, onSched
   heading: React.ReactNode
   tasks: TaskRef[]
   renderMeta: (task: TaskRef) => React.ReactNode
-  busy: string | null
+  busy: ReadonlySet<string>
   onToggle: (task: TaskRef, checked: boolean) => void
   onOpen: (path: string) => void
   onSchedule: (task: TaskRef, time: string) => void
@@ -274,7 +274,7 @@ function TaskGroup({ heading, tasks, renderMeta, busy, onToggle, onOpen, onSched
             <Checkbox
               className="size-[18px]"
               checked={task.done}
-              disabled={busy === `${task.path}:${task.line}`}
+              disabled={busy.has(`${task.path}:${task.line}`)}
               onCheckedChange={checked => onToggle(task, checked === true)}
               aria-label={task.title}
             />
@@ -294,7 +294,7 @@ function TaskGroup({ heading, tasks, renderMeta, busy, onToggle, onOpen, onSched
               {renderMeta(task)}
               {!task.done && (
                 <span className="opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 [@media(hover:none)]:opacity-100">
-                  <ScheduleButton task={task} disabled={busy === `${task.path}:${task.line}`} onSchedule={onSchedule} />
+                  <ScheduleButton task={task} disabled={busy.has(`${task.path}:${task.line}`)} onSchedule={onSchedule} />
                 </span>
               )}
             </span>

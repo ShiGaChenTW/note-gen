@@ -1,8 +1,9 @@
 'use client'
 
 // Fork (D2–D8): the Today page's write-backs. Every write shows a toast with Undo;
-// `busy` holds the key of the write in flight so its control can be disabled.
-import { useCallback, useState } from 'react'
+// `busy` holds the keys of the writes in flight so their controls can be disabled;
+// writes to different tasks can overlap without clearing each other's state.
+import { useCallback, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import type { StampKind } from '@/lib/daily/daily-note'
@@ -26,11 +27,15 @@ export function sourceName(path: string): string {
 
 export function useTodayActions({ now, tasks }: { now: Date, tasks: readonly TaskRef[] }) {
   const t = useTranslations('today')
-  const [busy, setBusy] = useState<string | null>(null)
+  const [busy, setBusy] = useState<ReadonlySet<string>>(() => new Set())
+  // 同步的紀錄：同一個 key 的寫回還沒結束時，再按一次直接略過
+  const inFlight = useRef(new Set<string>())
 
   /** 執行寫回並提示；有寫入時回傳 true。 */
   const runWrite = useCallback(async <T extends WriteRecord>(key: string, action: () => Promise<T>, success: (record: T) => string): Promise<boolean> => {
-    setBusy(key)
+    if (inFlight.current.has(key)) return false
+    inFlight.current.add(key)
+    setBusy(new Set(inFlight.current))
     try {
       const record = await action()
       if (record.writes.length === 0) return false
@@ -51,7 +56,8 @@ export function useTodayActions({ now, tasks }: { now: Date, tasks: readonly Tas
       }
       return false
     } finally {
-      setBusy(null)
+      inFlight.current.delete(key)
+      setBusy(new Set(inFlight.current))
     }
   }, [t])
 
