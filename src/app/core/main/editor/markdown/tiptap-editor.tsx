@@ -135,6 +135,7 @@ import { isAiSuggestionShortcutVisible } from '@/lib/ai-suggestion-shortcut-stat
 import { getFileManagerDragPath, hasFileManagerDragData } from '@/app/core/main/file/file-dnd'
 import { getMarkLocalAssetPath, type Mark } from '@/db/marks'
 import { SmartFileLink } from './smart-file-link'
+import { WikilinkSuggest } from './wikilink-suggest'
 import { isLargeMarkdownDocument } from './large-markdown'
 import {
   activateImageSource as activateDeferredImageSource,
@@ -8082,6 +8083,7 @@ export function TipTapEditor({
             ) : null}
             <EditorContent editor={editor} className={cn("relative select-text", scrollable && "h-full")}>
               <SmartFileLink editor={editor} activeFilePath={activeFilePath} />
+              <WikilinkSuggest editor={editor} activeFilePath={activeFilePath} />
 
               {!readOnly && !isMobile && <ImageBubbleMenu editor={editor} pluginsEnabled={exposeToPluginHost} />}
 

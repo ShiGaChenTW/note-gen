@@ -14,6 +14,8 @@ import {
 } from '@/components/ui/command'
 import { Badge } from '@/components/ui/badge'
 import { getAllMarkdownFiles } from '@/lib/files'
+import { parseWikilink } from '@/lib/markdown/wikilink'
+import { WIKILINK_NODE_NAME } from './wikilink-extension'
 import {
   buildCreateInsertion,
   buildWikilinkInsertion,
@@ -216,6 +218,15 @@ export function WikilinkSuggest({ editor, activeFilePath }: WikilinkSuggestProps
 
   const insertText = useCallback((text: string) => {
     if (!context || editor.isDestroyed) return
+    // 掛了 L1 的 wikilink 節點時直接插入節點（連同既有的 `]]` 一起換掉），否則退回純文字
+    const raw = context.hasClosingBrackets ? `${text}]]` : text
+    const attrs = editor.schema.nodes[WIKILINK_NODE_NAME] ? parseWikilink(raw) : null
+    if (attrs) {
+      const to = context.hasClosingBrackets ? context.cursor + 2 : context.cursor
+      editor.chain().focus().insertContentAt({ from: context.from, to }, { type: WIKILINK_NODE_NAME, attrs }).run()
+      setContext(null)
+      return
+    }
     const cursorAfter = context.from + text.length + (context.hasClosingBrackets ? 2 : 0)
     let chain = editor.chain().focus().insertContentAt({ from: context.from, to: context.cursor }, text)
     if (context.hasClosingBrackets) chain = chain.setTextSelection(cursorAfter)

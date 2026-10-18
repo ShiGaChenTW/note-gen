@@ -7,7 +7,7 @@
 //
 // Whether a link resolves to an existing note is shown with ProseMirror decorations
 // computed from the vault index (never stored in attrs, which would leak into the file).
-import { Extension, mergeAttributes, Node } from '@tiptap/core'
+import { Extension, mergeAttributes, Node, nodeInputRule } from '@tiptap/core'
 import type { MarkdownToken } from '@tiptap/core'
 import type { Node as PMNode } from '@tiptap/pm/model'
 import { Plugin, PluginKey, type EditorState } from '@tiptap/pm/state'
@@ -316,6 +316,20 @@ export const Wikilink = Node.create({
 
   addProseMirrorPlugins() {
     return [createWikilinkPlugin()]
+  },
+
+  // 手動打完 `]]`（或 L2 之外的輸入）時，把 `[[...]]` 文字換成節點；不合法的照原樣留著
+  addInputRules() {
+    return [
+      nodeInputRule({
+        find: text => {
+          const m = /!?\[\[[^\[\]\n]+\]\]$/.exec(text)
+          return m && parseWikilink(m[0]) ? { index: m.index, text: m[0] } : null
+        },
+        type: this.type,
+        getAttributes: match => attrsOf(match[0]),
+      }),
+    ]
   },
 
   markdownTokenName: TOKEN_NAME,

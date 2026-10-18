@@ -2,7 +2,7 @@
 title: NoteGen Fork 偏離上游清單
 filename: FORK-CHANGES.md
 created: 2026-10-15 05:45 (Asia/Taipei)
-modified: 2026-10-19 02:19 (Asia/Taipei)
+modified: 2026-10-19 05:00 (Asia/Taipei)
 source_llm: Claude (Opus 5.5, Claude Code session)
 status: active
 ---
@@ -68,6 +68,13 @@ npx pnpm@9 install --frozen-lockfile
 | 2026-10-18 | `messages/*.json` | `today` 加 `calendarNav`、`quickAdd`、`timeBlocks`、`reminders` 等；`settings.daily` 加 `reminders` | D3、D4、D7、D8 |
 | 2026-10-19 | `personal/make-test-vault.mjs`（新） | 產生測試用 vault（預設 `~/Documents/NoteGen-Test-Vault`），日期以執行當天為今天，涵蓋 F1、D1–D8 的測試情境；只會覆寫自己建立的 vault | 驗收用，不動真正的 vault |
 | 2026-10-19 | `src/app/core/main/today/use-today-data.ts`（新）、`use-today-actions.ts`（新）、`today-page.tsx` | 重構：今日頁的資料讀取與寫回動作抽成兩個 hook，`TodayPage` 只負責畫面；行為不變 | graphify 指出 `TodayPage` 直接呼叫 37 個函式 |
+| 2026-10-19 | `src/lib/markdown/wikilink.ts`（新） | Phase 2 共用：`[[ ]]` 解析（別名、`\|`、`#標題`、`^block`、嵌入）、全文搜尋（跳過 code）、Obsidian「shortest path」目標解析與寫法 | Phase 2-1 三條軌道共用；規格 `docs/notegen-plan/07-Phase2-1實作規格.md`（`docs/` 未納入 git） |
+| 2026-10-19 | `src/lib/vault-index/index-note.ts`、新檔 `links.ts`、`src/stores/vault-index.ts` | 索引 `links`（wikilink＋相對 markdown 連結，含行號、上下文）、`aliases`、`tags`（frontmatter＋內文 `#tag`，允許 `-`／`_`）；`INDEX_SCHEMA_VERSION` 2，舊快取自動重建；`selectBacklinks`／`selectOutgoingLinks` 按路徑快取 | L3（Codex 實作） |
+| 2026-10-19 | `src/app/core/main/backlinks/`（新）、`src/components/plugins/plugin-right-sidebar.tsx` | 右側欄「反向連結」tab：連結到這篇（依來源筆記分組、強調連結文字、點擊開啟）、本篇連出（標示尚未建立）。掛載點：加 `@backlinks` tab，沒有外掛時也畫 Tabs（原本直接回 `<Chat />`） | L3 |
+| 2026-10-19 | `src/lib/wikilink-suggest-model.ts`（新）、`src/app/core/main/editor/markdown/wikilink-suggest.tsx`（新）、`tiptap-editor.tsx` | L2：輸入 `[[` 跳出筆記選單（名稱／別名前綴 > 子序列 > 路徑；空 query 列已開分頁），Enter／Tab 插入 `[[目標]]` 或 `[[目標|別名]]`，最後一列「建立」；`tiptap-editor.tsx` 只加 import 與掛載一行 | L2（Grok 實作） |
+| 2026-10-19 | `messages/*.json` | 頂層 `backlinks` 命名空間（`today` 之後）、`editor.wikilinkSuggest`（`smartFileLink` 之後） | L2、L3 |
+| 2026-10-19 | `src/app/core/main/editor/markdown/wikilink-extension.ts`（新）、`tiptap-editor.tsx`、`markdown/style.css`、`tests/l1-wikilink-roundtrip.test.ts`（新） | L1：`[[ ]]`／`![[ ]]` 成為 inline atom 節點，存檔輸出原始字串；表格內 `\|` 由附帶的 block tokenizer 還原（只對含 `[[` 的表格出手；上游 marked 會把 `\|` 切成 `|`，這是目前唯一真的會改壞檔案的情境）；已建立／未建立用 decorations 跟隨索引；點擊開啟、不存在則在同資料夾建立 `名稱.md`；打完 `]]` 的 input rule 轉成節點。`tiptap-editor.tsx` 加 import 與 extensions 一行、L2 掛載兩行 | L1（Claude Code 子代理實作）；已知上游限制：`**粗體 [[B]]**` 會存成 `**粗體** [[B]]`（@tiptap/markdown 只把 mark 套在 text node，InlineMath 同病），測試以 `it.fails` 記錄 |
+| 2026-10-19 | `tests/p2-1-wikilink-integration.test.ts`（新） | 整合：手打 `]]` 轉節點、L2 選單直接插入 L1 節點（連既有 `]]` 一起換掉） | PM 整合 |
 
 ## 刻意不改的東西
 
@@ -161,3 +168,35 @@ npx pnpm@9 tauri dev
 
 - 打包版的通知權限（會記在 NoteGen 名下）。
 - 時間軸拖放只支援滑鼠或觸控板；用鍵盤時改用任務列的時鐘按鈕。
+
+### Phase 2-1 基本雙鏈（L1 wikilink、L2 自動完成、L3 反向連結）
+
+啟動方式同上。測試 vault 建議先加幾篇互相 `[[ ]]` 連結的筆記（`make-test-vault.mjs` 目前沒有這類樣本）。
+
+**L1 wikilink**
+
+1. 開一篇含 `[[筆記]]`、`[[筆記|別名]]`、`[[筆記#標題]]`、`![[圖.png]]` 的筆記：連結顯示為琥珀色底線文字（別名優先），嵌入顯示 `⧉ 檔名` 的虛線框。
+2. 指向不存在筆記的連結是虛線、較淡；建好那篇筆記後幾秒內虛線消失（索引 watcher）。
+3. 點既有連結：左側檔案樹 reveal 並開啟那篇；點不存在的連結：在目前筆記同資料夾建立 `名稱.md`（內容 `# 名稱`）並開啟；`[[#標題]]` 與嵌入點了不動作。
+4. **存檔 diff 為空**：不改內容只按存檔，再用 git 或 Obsidian 比對；特別測表格列 `| [[A\|a]] | [[B]] |`、行內 code `` `[[x]]` ``、frontmatter `related: "[[Front]]"`。
+5. 方向鍵會跳過整個連結，Backspace 整個刪掉。手動打 `[[新連結]]`，打完第二個 `]` 立刻變成節點。
+
+**L2 自動完成**
+
+1. 輸入 `[[` 出現選單：名稱前綴命中的在前，別名命中的有「別名」badge，淡色顯示資料夾；空 query 時列出已開分頁的筆記。
+2. ↑↓ 選擇、Enter 或 Tab 送出：插入 `[[筆記]]`（同名筆記存在時寫完整路徑 `[[folder/筆記]]`）；用別名選到時是 `[[筆記|別名]]`。Esc 關閉。
+3. 游標後面已有 `]]` 時不會多出一組。
+4. 打一個不存在的名稱，最後一列「建立「名稱」」：送出後插入 `[[名稱]]`（虛線），點它才建立檔案。
+
+**L3 反向連結**
+
+1. 右側欄多一個鏈結圖示的 tab「反向連結」（沒有安裝任何外掛時也有）。
+2. 開一篇被其他筆記連到的筆記：「連結到這篇 N」依來源筆記分組，每筆顯示那一行的上下文並強調連結文字；點一筆開啟來源筆記。相對路徑的 markdown 連結 `[文字](../筆記.md)` 也算。
+3. 「本篇連出 N」列出這篇的連結，尚未建立的標「尚未建立」。
+4. 索引掃描中顯示「索引中…」；開的不是 `.md` 時顯示提示。
+5. 第一次啟動會因 `INDEX_SCHEMA_VERSION` 升到 2 而整份重建索引，Console 看 `[vault-index]` 時間。
+
+**這份步驟沒涵蓋的**
+
+- 嵌入 `![[ ]]` 的內容轉入、`#標題` 捲動、block ref 跳轉（Phase 2-3）。
+- 跨連結套粗體／斜體的存檔差異（上游限制，見修改清單）。
