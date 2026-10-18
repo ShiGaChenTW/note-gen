@@ -6,6 +6,8 @@ import { useEffect } from 'react'
 import useSettingStore from '@/stores/setting'
 import { startVaultIndex, type VaultIndexHandle } from '@/lib/vault-index/service'
 import { DailyNoteAutoOpen } from './daily-note-auto-open'
+import { DailyNavShortcuts } from './daily/daily-nav-shortcuts'
+import { ReminderService } from './daily/reminder-service'
 
 /** F3: keep the vault index in sync with the active workspace. */
 function VaultIndexService() {
@@ -34,6 +36,8 @@ export function ForkServices() {
     <>
       <VaultIndexService />
       <DailyNoteAutoOpen />
+      <DailyNavShortcuts />
+      <ReminderService />
     </>
   )
 }

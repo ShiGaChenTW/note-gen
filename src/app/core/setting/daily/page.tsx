@@ -2,7 +2,7 @@
 
 // Fork (D1): 日記 settings section.
 import { useEffect, useState } from 'react'
-import { CalendarDays, CalendarPlus, FolderOpen, Inbox, LayoutTemplate } from 'lucide-react'
+import { BellRing, CalendarDays, CalendarPlus, FolderOpen, Inbox, LayoutTemplate } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 
@@ -22,6 +22,7 @@ import { Switch } from '@/components/ui/switch'
 import { dailyNotePath, isValidDailyPattern } from '@/lib/daily/format'
 import { WEEKDAY_KEYS, type WeekdayKey } from '@/lib/daily/template'
 import { openDailyNote } from '@/lib/daily/open-daily-note'
+import { ensureNotificationPermission, notify } from '@/lib/reminders/service'
 import useDailySettingsStore, { type DailySettings } from '@/stores/daily-settings'
 
 // Monday first, like the vault's week view.
@@ -105,7 +106,7 @@ function WeekdayTemplate({ weekday }: { weekday: WeekdayKey }) {
 
 export default function DailySettingPage() {
   const t = useTranslations('settings.daily')
-  const { initialized, initSettings, openOnLaunch, dailyFolder, dailyPattern, updateSetting } = useDailySettingsStore()
+  const { initialized, initSettings, openOnLaunch, remindersEnabled, dailyFolder, dailyPattern, updateSetting } = useDailySettingsStore()
   const [opening, setOpening] = useState(false)
 
   useEffect(() => { void initSettings() }, [initSettings])
@@ -120,6 +121,20 @@ export default function DailySettingPage() {
       toast.error(t('open.error'))
     } finally {
       setOpening(false)
+    }
+  }
+
+  async function handleTestNotification() {
+    try {
+      if (!await ensureNotificationPermission()) {
+        toast.error(t('reminders.denied'))
+        return
+      }
+      notify(t('reminders.testTitle'), t('reminders.testBody'))
+      toast.success(t('reminders.sent'))
+    } catch (error) {
+      console.error('Failed to send test notification:', error)
+      toast.error(t('reminders.denied'))
     }
   }
 
@@ -148,6 +163,31 @@ export default function DailySettingPage() {
               checked={openOnLaunch}
               aria-label={t('openOnLaunch.title')}
               onCheckedChange={checked => void updateSetting('openOnLaunch', checked)}
+            />
+          </ItemActions>
+        </Item>
+      </SettingSection>
+
+      <SettingSection
+        title={t('sections.reminders')}
+        actions={(
+          <Button size="sm" variant="outline" onClick={() => void handleTestNotification()}>
+            <BellRing />
+            {t('reminders.test')}
+          </Button>
+        )}
+      >
+        <Item variant="outline">
+          <ItemMedia variant="icon"><BellRing /></ItemMedia>
+          <ItemContent>
+            <ItemTitle>{t('reminders.title')}</ItemTitle>
+            <ItemDescription>{t('reminders.desc')}</ItemDescription>
+          </ItemContent>
+          <ItemActions className="mobile-setting-inline-action">
+            <Switch
+              checked={remindersEnabled}
+              aria-label={t('reminders.title')}
+              onCheckedChange={checked => void updateSetting('remindersEnabled', checked)}
             />
           </ItemActions>
         </Item>

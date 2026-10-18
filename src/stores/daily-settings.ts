@@ -16,6 +16,8 @@ export interface DailySettings {
   weekdayTemplates: Partial<Record<WeekdayKey, string>>
   /** Open (and create if missing) today's note once per app launch. */
   openOnLaunch: boolean
+  /** D7: macOS notifications for tasks with `⏰ HH:mm`. */
+  remindersEnabled: boolean
 }
 
 export const DEFAULT_DAILY_SETTINGS: DailySettings = {
@@ -23,6 +25,7 @@ export const DEFAULT_DAILY_SETTINGS: DailySettings = {
   defaultTemplate: '',
   weekdayTemplates: {},
   openOnLaunch: true,
+  remindersEnabled: true,
 }
 
 const STORE_KEY = 'dailySettings'
@@ -49,6 +52,7 @@ function pickSettings(state: DailySettings): DailySettings {
     defaultTemplate: state.defaultTemplate,
     weekdayTemplates: state.weekdayTemplates,
     openOnLaunch: state.openOnLaunch,
+    remindersEnabled: state.remindersEnabled,
   }
 }
 
