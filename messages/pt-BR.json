@@ -91,7 +91,10 @@
         "anchor": "Âncora",
         "task": "Tarefa",
         "calendar": "Calendário"
-      }
+      },
+      "view": "Modo de exibição",
+      "list": "Lista",
+      "blocks": "Linha do tempo"
     },
     "calendar": {
       "prompt": "Conecte o Calendário do macOS para ver as reuniões de hoje",
@@ -143,7 +146,52 @@
     "taskDone": "Feita, salva em {name}",
     "taskUndone": "Reaberta, salva em {name}",
     "taskStale": "{name} mudou em outro lugar. Atualize e tente de novo.",
-    "writeFailed": "Não foi possível salvar"
+    "writeFailed": "Não foi possível salvar",
+    "taskDoneNext": "Concluída. Próxima em {date} ({name})",
+    "noDate": "sem data",
+    "calendarNav": {
+      "open": "Calendário de notas diárias",
+      "prev": "Nota diária anterior",
+      "next": "Próxima nota diária",
+      "prevShortcut": "Nota diária anterior (⌘⌥[)",
+      "nextShortcut": "Próxima nota diária (⌘⌥])",
+      "today": "Hoje",
+      "legendNote": "Tem nota",
+      "legendTasks": "Tarefas com prazo",
+      "noMore": "Não há mais notas diárias",
+      "openFailed": "Não foi possível abrir a nota diária"
+    },
+    "quickAdd": {
+      "label": "Adicionar tarefa rápida",
+      "placeholder": "Comprar leite @tomorrow 9am !high #casa",
+      "hint": "@data, horário, !prioridade, #tag. Enter adiciona à nota de hoje",
+      "needTitle": "Digite a tarefa",
+      "preview": "Será adicionada",
+      "added": "“{name}” adicionada à nota de hoje",
+      "priority": {
+        "highest": "Máxima",
+        "high": "Alta",
+        "medium": "Média",
+        "low": "Baixa",
+        "lowest": "Mínima"
+      }
+    },
+    "timeBlocks": {
+      "label": "Linha do tempo de hoje. Solte uma tarefa aqui para agendá-la",
+      "hint": "Arraste uma tarefa para a linha do tempo para definir o horário ⏰ em passos de {minutes} minutos",
+      "schedule": "Agendar “{name}”",
+      "scheduleShort": "Agendar",
+      "timeLabel": "Horário hoje",
+      "timeHelp": "Grava 📅 hoje e ⏰ horário",
+      "clear": "Limpar horário",
+      "apply": "Agendar",
+      "scheduled": "Agendada para hoje às {time}",
+      "cleared": "Horário removido"
+    },
+    "reminders": {
+      "title": "⏰ {time} Lembrete de tarefa",
+      "summaryTitle": "{count} lembretes de tarefas"
+    }
   },
   "settings": {
     "defaultModels": {
@@ -922,7 +970,8 @@
       "sections": {
         "today": "Nota de hoje",
         "location": "Local e nome do arquivo",
-        "templates": "Modelos"
+        "templates": "Modelos",
+        "reminders": "Lembretes"
       },
       "open": {
         "button": "Abrir nota de hoje",
@@ -966,6 +1015,15 @@
         "friday": "Sexta-feira",
         "saturday": "Sábado",
         "sunday": "Domingo"
+      },
+      "reminders": {
+        "title": "Notificar no horário da tarefa",
+        "desc": "Envia uma notificação do macOS quando chega o horário ⏰ de uma tarefa. Os lembretes perdidos com o app fechado são enviados na próxima abertura (até 24 horas antes).",
+        "test": "Enviar notificação de teste",
+        "testTitle": "Teste de lembrete do NoteGen",
+        "testBody": "Se você está vendo isto, os lembretes estão funcionando.",
+        "denied": "As notificações estão desativadas. Ative-as para o NoteGen em Ajustes do Sistema → Notificações",
+        "sent": "Notificação de teste enviada"
       }
     },
     "record": {

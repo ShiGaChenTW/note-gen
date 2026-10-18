@@ -91,7 +91,10 @@
         "anchor": "Anchor",
         "task": "Task",
         "calendar": "Calendar"
-      }
+      },
+      "view": "Agenda view",
+      "list": "List",
+      "blocks": "Timeline"
     },
     "calendar": {
       "prompt": "Connect macOS Calendar to show today’s meetings here",
@@ -143,7 +146,52 @@
     "taskDone": "Done, saved to {name}",
     "taskUndone": "Marked open, saved to {name}",
     "taskStale": "{name} changed elsewhere. Refresh and try again.",
-    "writeFailed": "Couldn’t save"
+    "writeFailed": "Couldn’t save",
+    "taskDoneNext": "Done. Next one {date} ({name})",
+    "noDate": "no date",
+    "calendarNav": {
+      "open": "Daily note calendar",
+      "prev": "Previous daily note",
+      "next": "Next daily note",
+      "prevShortcut": "Previous daily note (⌘⌥[)",
+      "nextShortcut": "Next daily note (⌘⌥])",
+      "today": "Today",
+      "legendNote": "Has note",
+      "legendTasks": "Tasks due",
+      "noMore": "No more daily notes",
+      "openFailed": "Couldn't open the daily note"
+    },
+    "quickAdd": {
+      "label": "Quick add task",
+      "placeholder": "Buy milk @tomorrow 9am !high #home",
+      "hint": "@date, time, !priority, #tag. Press Enter to add to today’s note",
+      "needTitle": "Type what the task is",
+      "preview": "Will add",
+      "added": "Added “{name}” to today’s note",
+      "priority": {
+        "highest": "Highest",
+        "high": "High",
+        "medium": "Medium",
+        "low": "Low",
+        "lowest": "Lowest"
+      }
+    },
+    "timeBlocks": {
+      "label": "Today’s timeline. Drop a task here to schedule it",
+      "hint": "Drag a task onto the timeline to set its ⏰ time in {minutes}-minute steps",
+      "schedule": "Schedule “{name}”",
+      "scheduleShort": "Schedule",
+      "timeLabel": "Time today",
+      "timeHelp": "Writes 📅 today and ⏰ time",
+      "clear": "Clear time",
+      "apply": "Schedule",
+      "scheduled": "Scheduled for {time} today",
+      "cleared": "Time cleared"
+    },
+    "reminders": {
+      "title": "⏰ {time} Task reminder",
+      "summaryTitle": "{count} task reminders"
+    }
   },
   "settings": {
     "defaultModels": {
@@ -1343,7 +1391,8 @@
       "sections": {
         "today": "Today's note",
         "location": "Location and file name",
-        "templates": "Templates"
+        "templates": "Templates",
+        "reminders": "Reminders"
       },
       "open": {
         "button": "Open today's note",
@@ -1387,6 +1436,15 @@
         "friday": "Friday",
         "saturday": "Saturday",
         "sunday": "Sunday"
+      },
+      "reminders": {
+        "title": "Notify when a task is due",
+        "desc": "Sends a macOS notification when a task’s ⏰ time comes. Reminders missed while the app was closed are sent the next time it opens (up to 24 hours back).",
+        "test": "Send test notification",
+        "testTitle": "NoteGen reminder test",
+        "testBody": "If you can see this, reminders are working.",
+        "denied": "Notifications are off. Turn them on for NoteGen in System Settings → Notifications",
+        "sent": "Test notification sent"
       }
     },
     "record": {

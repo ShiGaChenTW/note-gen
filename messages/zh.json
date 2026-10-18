@@ -91,7 +91,10 @@
         "anchor": "锚点时段",
         "task": "任务",
         "calendar": "日历"
-      }
+      },
+      "view": "进程视图",
+      "list": "列表",
+      "blocks": "时间轴"
     },
     "calendar": {
       "prompt": "连接 macOS 日历，把今天的会议放进进程",
@@ -143,7 +146,52 @@
     "taskDone": "已完成，写回 {name}",
     "taskUndone": "已取消完成，写回 {name}",
     "taskStale": "{name} 已在别处修改，请刷新后再试",
-    "writeFailed": "写入失败"
+    "writeFailed": "写入失败",
+    "taskDoneNext": "已完成，下一次 {date}（{name}）",
+    "noDate": "不限日期",
+    "calendarNav": {
+      "open": "日记月历",
+      "prev": "上一篇日记",
+      "next": "下一篇日记",
+      "prevShortcut": "上一篇日记（⌘⌥[）",
+      "nextShortcut": "下一篇日记（⌘⌥]）",
+      "today": "今天",
+      "legendNote": "有日记",
+      "legendTasks": "有任务到期",
+      "noMore": "没有更多日记了",
+      "openFailed": "无法打开日记"
+    },
+    "quickAdd": {
+      "label": "快速添加任务",
+      "placeholder": "买菜 @明天 9am !high #家",
+      "hint": "@日期、时间、!优先级、#标签，按 Enter 写入今日笔记",
+      "needTitle": "再输入任务内容",
+      "preview": "将添加",
+      "added": "已添加「{name}」到今日笔记",
+      "priority": {
+        "highest": "最高",
+        "high": "高",
+        "medium": "中",
+        "low": "低",
+        "lowest": "最低"
+      }
+    },
+    "timeBlocks": {
+      "label": "今天的时间轴，可把任务拖到这里安排时间",
+      "hint": "把任务拖到时间轴上，会以 {minutes} 分钟为单位写入 ⏰ 时间",
+      "schedule": "为「{name}」安排时间",
+      "scheduleShort": "安排时间",
+      "timeLabel": "今天几点做",
+      "timeHelp": "会写入 📅 今天与 ⏰ 时间",
+      "clear": "清除时间",
+      "apply": "安排",
+      "scheduled": "已安排在今天 {time}",
+      "cleared": "已清除时间"
+    },
+    "reminders": {
+      "title": "⏰ {time} 任务提醒",
+      "summaryTitle": "{count} 个任务提醒"
+    }
   },
   "settings": {
     "defaultModels": {
@@ -1343,7 +1391,8 @@
       "sections": {
         "today": "今日笔记",
         "location": "位置与文件名",
-        "templates": "模板"
+        "templates": "模板",
+        "reminders": "提醒"
       },
       "open": {
         "button": "打开今日笔记",
@@ -1387,6 +1436,15 @@
         "friday": "星期五",
         "saturday": "星期六",
         "sunday": "星期日"
+      },
+      "reminders": {
+        "title": "任务到时间时通知",
+        "desc": "带 ⏰ 时间的任务到点时发送 macOS 通知；App 关闭期间错过的，下次打开时补发（最多回补 24 小时）。",
+        "test": "发送测试通知",
+        "testTitle": "NoteGen 提醒测试",
+        "testBody": "看到这条通知，说明提醒可以正常工作。",
+        "denied": "没有通知权限，请到「系统设置 → 通知」开启 NoteGen",
+        "sent": "已发送测试通知"
       }
     },
     "record": {

@@ -91,7 +91,10 @@
         "anchor": "アンカー",
         "task": "タスク",
         "calendar": "カレンダー"
-      }
+      },
+      "view": "表示切り替え",
+      "list": "リスト",
+      "blocks": "タイムライン"
     },
     "calendar": {
       "prompt": "macOS カレンダーと連携して今日の予定を表示",
@@ -143,7 +146,52 @@
     "taskDone": "完了にして {name} に保存しました",
     "taskUndone": "未完了にして {name} に保存しました",
     "taskStale": "{name} が別の場所で変更されています。更新して再試行してください。",
-    "writeFailed": "保存できませんでした"
+    "writeFailed": "保存できませんでした",
+    "taskDoneNext": "完了しました。次回は {date}（{name}）",
+    "noDate": "日付なし",
+    "calendarNav": {
+      "open": "デイリーノートのカレンダー",
+      "prev": "前のデイリーノート",
+      "next": "次のデイリーノート",
+      "prevShortcut": "前のデイリーノート（⌘⌥[）",
+      "nextShortcut": "次のデイリーノート（⌘⌥]）",
+      "today": "今日",
+      "legendNote": "ノートあり",
+      "legendTasks": "期限のタスクあり",
+      "noMore": "これ以上デイリーノートはありません",
+      "openFailed": "デイリーノートを開けませんでした"
+    },
+    "quickAdd": {
+      "label": "タスクをすばやく追加",
+      "placeholder": "買い物 @明日 9am !high #家",
+      "hint": "@日付、時刻、!優先度、#タグ。Enter で今日のノートに追加",
+      "needTitle": "タスクの内容を入力してください",
+      "preview": "追加内容",
+      "added": "「{name}」を今日のノートに追加しました",
+      "priority": {
+        "highest": "最高",
+        "high": "高",
+        "medium": "中",
+        "low": "低",
+        "lowest": "最低"
+      }
+    },
+    "timeBlocks": {
+      "label": "今日のタイムライン。タスクをドロップして時間を設定",
+      "hint": "タスクをタイムラインにドラッグすると、{minutes} 分単位で ⏰ 時刻を書き込みます",
+      "schedule": "「{name}」の時間を設定",
+      "scheduleShort": "時間を設定",
+      "timeLabel": "今日の何時に",
+      "timeHelp": "📅 今日と ⏰ 時刻を書き込みます",
+      "clear": "時刻を削除",
+      "apply": "設定",
+      "scheduled": "今日 {time} に設定しました",
+      "cleared": "時刻を削除しました"
+    },
+    "reminders": {
+      "title": "⏰ {time} タスクのリマインダー",
+      "summaryTitle": "{count} 件のタスクリマインダー"
+    }
   },
   "settings": {
     "defaultModels": {
@@ -922,7 +970,8 @@
       "sections": {
         "today": "今日のノート",
         "location": "場所とファイル名",
-        "templates": "テンプレート"
+        "templates": "テンプレート",
+        "reminders": "リマインダー"
       },
       "open": {
         "button": "今日のノートを開く",
@@ -966,6 +1015,15 @@
         "friday": "金曜日",
         "saturday": "土曜日",
         "sunday": "日曜日"
+      },
+      "reminders": {
+        "title": "タスクの時刻に通知",
+        "desc": "⏰ 時刻のあるタスクの時間になると macOS の通知を送ります。アプリを閉じていた間の通知は、次に開いたときに送ります（最大 24 時間前まで）。",
+        "test": "テスト通知を送信",
+        "testTitle": "NoteGen リマインダーのテスト",
+        "testBody": "この通知が見えていれば、リマインダーは正常に動作しています。",
+        "denied": "通知が許可されていません。システム設定 → 通知 で NoteGen を許可してください",
+        "sent": "テスト通知を送信しました"
       }
     },
     "record": {

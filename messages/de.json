@@ -91,7 +91,10 @@
         "anchor": "Ankerzeit",
         "task": "Aufgabe",
         "calendar": "Kalender"
-      }
+      },
+      "view": "Ansicht",
+      "list": "Liste",
+      "blocks": "Zeitleiste"
     },
     "calendar": {
       "prompt": "macOS-Kalender verbinden, um heutige Termine hier zu sehen",
@@ -143,7 +146,52 @@
     "taskDone": "Erledigt, in {name} gespeichert",
     "taskUndone": "Wieder offen, in {name} gespeichert",
     "taskStale": "{name} wurde anderswo geändert. Bitte neu laden und erneut versuchen.",
-    "writeFailed": "Speichern fehlgeschlagen"
+    "writeFailed": "Speichern fehlgeschlagen",
+    "taskDoneNext": "Erledigt. Nächster Termin {date} ({name})",
+    "noDate": "ohne Datum",
+    "calendarNav": {
+      "open": "Kalender der Tagesnotizen",
+      "prev": "Vorherige Tagesnotiz",
+      "next": "Nächste Tagesnotiz",
+      "prevShortcut": "Vorherige Tagesnotiz (⌘⌥[)",
+      "nextShortcut": "Nächste Tagesnotiz (⌘⌥])",
+      "today": "Heute",
+      "legendNote": "Notiz vorhanden",
+      "legendTasks": "Aufgaben fällig",
+      "noMore": "Keine weiteren Tagesnotizen",
+      "openFailed": "Tagesnotiz konnte nicht geöffnet werden"
+    },
+    "quickAdd": {
+      "label": "Aufgabe schnell hinzufügen",
+      "placeholder": "Milch kaufen @tomorrow 9am !high #home",
+      "hint": "@Datum, Uhrzeit, !Priorität, #Tag. Mit Enter zur heutigen Notiz hinzufügen",
+      "needTitle": "Beschreibe die Aufgabe",
+      "preview": "Wird hinzugefügt",
+      "added": "„{name}“ zur heutigen Notiz hinzugefügt",
+      "priority": {
+        "highest": "Höchste",
+        "high": "Hoch",
+        "medium": "Mittel",
+        "low": "Niedrig",
+        "lowest": "Niedrigste"
+      }
+    },
+    "timeBlocks": {
+      "label": "Heutige Zeitleiste. Aufgabe hierher ziehen, um sie einzuplanen",
+      "hint": "Ziehe eine Aufgabe auf die Zeitleiste, um die ⏰ Uhrzeit in {minutes}-Minuten-Schritten zu setzen",
+      "schedule": "„{name}“ einplanen",
+      "scheduleShort": "Einplanen",
+      "timeLabel": "Uhrzeit heute",
+      "timeHelp": "Schreibt 📅 heute und ⏰ Uhrzeit",
+      "clear": "Uhrzeit entfernen",
+      "apply": "Einplanen",
+      "scheduled": "Für heute {time} eingeplant",
+      "cleared": "Uhrzeit entfernt"
+    },
+    "reminders": {
+      "title": "⏰ {time} Aufgabenerinnerung",
+      "summaryTitle": "{count} Aufgabenerinnerungen"
+    }
   },
   "settings": {
     "defaultModels": {
@@ -1343,7 +1391,8 @@
       "sections": {
         "today": "Heutige Notiz",
         "location": "Ort und Dateiname",
-        "templates": "Vorlagen"
+        "templates": "Vorlagen",
+        "reminders": "Erinnerungen"
       },
       "open": {
         "button": "Heutige Notiz öffnen",
@@ -1387,6 +1436,15 @@
         "friday": "Freitag",
         "saturday": "Samstag",
         "sunday": "Sonntag"
+      },
+      "reminders": {
+        "title": "Benachrichtigen, wenn eine Aufgabe fällig ist",
+        "desc": "Sendet eine macOS-Mitteilung, wenn die ⏰ Uhrzeit einer Aufgabe erreicht ist. Verpasste Erinnerungen werden beim nächsten Öffnen nachgeholt (bis zu 24 Stunden).",
+        "test": "Testmitteilung senden",
+        "testTitle": "NoteGen-Erinnerungstest",
+        "testBody": "Wenn du das siehst, funktionieren Erinnerungen.",
+        "denied": "Mitteilungen sind aus. Aktiviere sie für NoteGen unter Systemeinstellungen → Mitteilungen",
+        "sent": "Testmitteilung gesendet"
       }
     },
     "record": {

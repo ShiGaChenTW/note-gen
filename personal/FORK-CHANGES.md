@@ -2,7 +2,7 @@
 title: NoteGen Fork 偏離上游清單
 filename: FORK-CHANGES.md
 created: 2026-10-15 05:45 (Asia/Taipei)
-modified: 2026-10-18 22:47 (Asia/Taipei)
+modified: 2026-10-18 23:01 (Asia/Taipei)
 source_llm: Claude (Opus 5.5, Claude Code session)
 status: active
 ---
@@ -59,6 +59,13 @@ npx pnpm@9 install --frozen-lockfile
 | 2026-10-18 | `src/app/core/main/main-status-bar.tsx` | 掛載點：狀態列「需處理 N」 | D2 |
 | 2026-10-18 | `messages/*.json` | 新增頂層 `today` 命名空間（6 語系） | D2 |
 | 2026-10-18 | `src-tauri/native-calendar/`（新）、`src-tauri/src/calendar.rs`（新）、`build.rs`、`lib.rs`、`tauri.conf.json`、`Info.plist`、`Entitlements.plist`、`.gitignore` | macOS 行事曆唯讀：Swift EventKit 小工具（比照 OCR 由 build.rs 編譯、放 `resources/calendar/`），Rust 指令 `calendar_events`／`calendar_request_access`；補行事曆用途說明與 entitlement | D2：Scott 決定 Phase 1 接行事曆 |
+| 2026-10-18 | `src/app/core/main/daily/`（新）、`src/lib/daily/daily-nav.ts`（新）、`open-daily-note.ts` | D3 日記導航：前一篇／後一篇日記（跳過沒有日記的日子，往今天走時停在今天）、月曆跳日期（有日記灰點、有任務到期琥珀點）、快捷鍵 `⌘⌥[`／`⌘⌥]` | D3 |
+| 2026-10-18 | `src/app/core/main/main-status-bar.tsx` | 掛載點：狀態列加 `fork:daily-nav`（開著日記時顯示「‹ 日期 ›」，其他時候只有月曆按鈕） | D3 |
+| 2026-10-18 | `src/app/core/main/today/quick-add.tsx`（新）、`src/lib/today/today-actions.ts` | D4 快速新增：今日頁任務區的輸入框，即時預覽解析結果，Enter 寫進今日筆記「捕捉軌」區塊最後 | D4：Inbox 資料夾不在任務索引範圍內，所以只寫今日筆記 |
+| 2026-10-18 | `src/app/core/main/editor/markdown/recurring-task-extension.ts`（新）、`tiptap-editor.tsx` | D5：在編輯器勾選 `🔁` 任務時加上 `✅ 今天`，下一行產生下一次；只認單一勾選動作，載入 Obsidian 已勾好的檔案不會重複產生。`tiptap-editor.tsx` 只加 import 與 extensions 一行 | D5：今日頁勾選在 D2 已接好，這次補編輯器 |
+| 2026-10-18 | `src/lib/reminders/`（新）、`src/app/core/main/daily/reminder-service.tsx`（新）、`src/stores/daily-settings.ts`、`src/app/core/setting/daily/page.tsx` | D7 提醒：每分鐘檢查 `⏰` 任務並發 macOS 通知，App 關掉期間錯過的打開時補發（最多 24 小時，超過 3 個合併成一則）；已通知紀錄存在 AppData 的 `reminders.json`；設定頁加開關與「傳送測試通知」 | D7 |
+| 2026-10-18 | `src/app/core/main/today/time-blocks.tsx`（新）、`src/lib/today/schedule.ts`（新） | D8 時間區塊：今日進程可切換「清單／時間軸」，把任務拖到時間軸寫入 `📅 今天 ⏰ HH:mm`（15 分鐘一格），時間軸上的任務可再拖動；任務列的時鐘按鈕是鍵盤替代方式 | D8 |
+| 2026-10-18 | `messages/*.json` | `today` 加 `calendarNav`、`quickAdd`、`timeBlocks`、`reminders` 等；`settings.daily` 加 `reminders` | D3、D4、D7、D8 |
 
 ## 刻意不改的東西
 
@@ -110,3 +117,45 @@ npx pnpm@9 tauri dev
 
 - F3 首次掃描時間：看開發者工具 Console 的 `[vault-index] N files in Xms`。
 - 打包版的行事曆權限流程。
+
+### 時間管理（D3、D4、D5、D7）與時間區塊（D8）
+
+啟動方式同上。這些動作同樣會寫進 vault，先確認 vault 已備份或 git 狀態乾淨。
+
+**D3 日記導航**
+
+1. 打開任一篇日記，狀態列右側出現「‹ 10月18日 週日 ›」。
+2. 按 `‹`／`›` 或 `⌘⌥[`／`⌘⌥]`：跳到前一篇／後一篇已存在的日記，中間沒有日記的日子會跳過；往今天的方向走時會停在今天（今天的日記不存在就依模板建立）。到最早一篇再按會提示「沒有更多日記了」。
+3. 點日期打開月曆：有日記的日子有灰點，有未完成任務到期的日子有琥珀點；點任一天打開那天的日記（不存在就建立），「今天」按鈕回到今天。
+4. 今日頁本週列的最右邊也有月曆按鈕，行為相同。
+
+**D4 快速新增**
+
+1. 今日頁任務區最上方的輸入框輸入 `買菜 @明天 9am !high #家`，下方即時顯示：買菜、明天的日期、09:00、高、家。
+2. 按 Enter：今日筆記「捕捉軌」區塊最後多出 `- [ ] 買菜 📅 YYYY-MM-DD ⏰ 09:00 ⏫ #家`；按提示的「復原」會移除。
+3. 再試 `回信 @下週五`、`開會 下午3點`、`繳費 @25號`。
+
+**D5 重複任務（編輯器）**
+
+1. 在任一筆記寫 `- [ ] 澆花 🔁 every week 📅 今天日期`，在編輯器裡勾選。
+2. 這行變成 `- [x] … ✅ 今天日期`，下一行出現 `- [ ] 澆花 🔁 every week 📅 下週同一天`。按 `⌘Z` 一次會連同新的那行一起復原。
+3. 今日頁勾選 `🔁` 任務時，提示會寫「已完成，下一次 YYYY-MM-DD」。
+
+**D7 提醒**
+
+1. 設定 →「日記」→「提醒」：開關預設開啟。按「傳送測試通知」，第一次會跳出通知權限詢問（`tauri dev` 下以終端機 App 名義），允許後收到測試通知。
+2. 在今日筆記寫 `- [ ] 測試提醒 📅 今天日期 ⏰ 兩分鐘後的時間`，存檔後等到那個時間，一分鐘內收到「⏰ HH:mm 任務提醒」。
+3. 補發：再寫一個 ⏰ 五分鐘後的任務，關掉 App，過了時間再打開，App 載入完成後收到那則提醒。
+4. 同一個提醒不會重複通知；關掉開關期間到點的提醒，重新打開開關後不會補發。
+
+**D8 時間區塊**
+
+1. 今日頁「今日進程」右上角切到「時間軸」，看到 07:00–22:00 的時間格與「現在」線；錨點時段、⏰ 任務、行事曆事件依時間排上去，重疊的會並排。
+2. 從右邊任務清單拖一個任務到時間軸：出現虛線與對齊 15 分鐘的時間，放開後原筆記那行改成 `📅 今天 ⏰ HH:mm`，任務出現在時間軸上。
+3. 把時間軸上的任務拖到別的時間，⏰ 跟著改；按提示的「復原」會還原。
+4. 鍵盤：滑鼠移到任務列（或用 Tab）會出現時鐘按鈕，選時間後按「排入」；已有時間的任務可以「清除時間」（不改到期日）。
+
+**這份步驟沒涵蓋的**
+
+- 打包版的通知權限（會記在 NoteGen 名下）。
+- 時間軸拖放只支援滑鼠或觸控板；用鍵盤時改用任務列的時鐘按鈕。
