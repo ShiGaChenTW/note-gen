@@ -22,6 +22,8 @@ interface VaultIndexState {
   revision: number
   lastScan: VaultScanStats | null
   error: string | null
+  /** 由索引服務設定；今日頁的「重新掃描」使用 */
+  rescan: (() => Promise<void>) | null
 
   reset: (workspace: string) => void
   setStatus: (status: VaultIndexStatus, error?: string | null) => void
@@ -29,6 +31,7 @@ interface VaultIndexState {
   upsert: (notes: IndexedNote[]) => void
   remove: (paths: string[]) => void
   setLastScan: (stats: VaultScanStats) => void
+  setRescan: (rescan: (() => Promise<void>) | null) => void
 }
 
 const useVaultIndexStore = create<VaultIndexState>((set, get) => ({
@@ -38,6 +41,7 @@ const useVaultIndexStore = create<VaultIndexState>((set, get) => ({
   revision: 0,
   lastScan: null,
   error: null,
+  rescan: null,
 
   reset: (workspace) => set({
     status: 'idle',
@@ -63,6 +67,7 @@ const useVaultIndexStore = create<VaultIndexState>((set, get) => ({
     set({ notes: next, revision: get().revision + 1 })
   },
   setLastScan: (lastScan) => set({ lastScan }),
+  setRescan: (rescan) => set({ rescan }),
 }))
 
 let taskCache: { revision: number, tasks: TaskRef[] } | null = null

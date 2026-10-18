@@ -134,10 +134,75 @@ fn build_macos_vision_ocr_provider() {
     }
 }
 
+#[cfg(target_os = "macos")]
+fn build_macos_calendar_helper() {
+    // Fork (D2): EventKit helper for the Today page, bundled like the OCR provider.
+    use std::fs;
+    use std::os::unix::fs::PermissionsExt;
+    use std::path::PathBuf;
+    use std::process::Command;
+
+    let manifest_dir = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
+    let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
+    let source = manifest_dir
+        .join("native-calendar")
+        .join("macos-eventkit")
+        .join("main.swift");
+    let resource_output_dir = manifest_dir.join("resources").join("calendar");
+    let resource_output = resource_output_dir.join("notegen-calendar");
+    let build_output = out_dir.join("native-calendar").join("notegen-calendar");
+    let swift_target = match std::env::var("TARGET").as_deref() {
+        Ok("aarch64-apple-darwin") => "arm64-apple-macosx11.0",
+        Ok("x86_64-apple-darwin") => "x86_64-apple-macosx10.15",
+        Ok(target) => panic!("unsupported macOS calendar target: {target}"),
+        Err(error) => panic!("missing macOS calendar target: {error}"),
+    };
+
+    println!("cargo:rerun-if-changed={}", source.display());
+
+    if Command::new("swiftc").arg("--version").output().is_err() {
+        println!("cargo:warning=swiftc not found; macOS calendar on the Today page will be unavailable.");
+        return;
+    }
+
+    fs::create_dir_all(&resource_output_dir).expect("failed to create calendar resource directory");
+    fs::create_dir_all(build_output.parent().unwrap()).expect("failed to create calendar build directory");
+
+    let status = Command::new("swiftc")
+        .arg("-O")
+        .arg("-target")
+        .arg(swift_target)
+        .arg("-framework")
+        .arg("Foundation")
+        .arg("-framework")
+        .arg("EventKit")
+        .arg(&source)
+        .arg("-o")
+        .arg(&build_output)
+        .status()
+        .expect("failed to run swiftc for the macOS calendar helper");
+    if !status.success() {
+        panic!("failed to build the macOS calendar helper");
+    }
+
+    let built_bytes = fs::read(&build_output).expect("failed to read built calendar helper");
+    if fs::read(&resource_output).ok().as_deref() != Some(built_bytes.as_slice()) {
+        fs::write(&resource_output, built_bytes).expect("failed to update calendar helper resource");
+    }
+    let mut permissions = fs::metadata(&resource_output)
+        .expect("failed to read calendar helper metadata")
+        .permissions();
+    if permissions.mode() & 0o111 == 0 {
+        permissions.set_mode(0o755);
+        fs::set_permissions(&resource_output, permissions).expect("failed to mark calendar helper executable");
+    }
+}
+
 fn main() {
     #[cfg(target_os = "macos")]
     if std::env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("macos") {
         build_macos_vision_ocr_provider();
+        build_macos_calendar_helper();
     }
 
     #[cfg(target_os = "macos")]

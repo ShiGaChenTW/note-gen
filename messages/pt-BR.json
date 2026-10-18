@@ -49,6 +49,102 @@
     "hideWindow": "Ocultar na bandeja",
     "quit": "Sair do NoteGen"
   },
+  "today": {
+    "title": "Hoje",
+    "summary": "{today} para hoje, {overdue} atrasadas",
+    "greeting": {
+      "morning": "Bom dia",
+      "afternoon": "Boa tarde",
+      "evening": "Boa noite"
+    },
+    "week": {
+      "label": "Notas diárias da semana",
+      "day": "{date}, {open} em aberto"
+    },
+    "openDaily": "Abrir nota diária",
+    "moreActions": "Mais ações",
+    "morning": "Início da manhã",
+    "morningDone": "Início da manhã · feito",
+    "review": "Revisão do dia",
+    "reviewDone": "Revisão do dia · feita",
+    "stamped": {
+      "morning": "morning:: done registrado",
+      "review": "reviewed:: done registrado"
+    },
+    "index": {
+      "rescan": "Reescanear vault",
+      "scanning": "Escaneando o vault…"
+    },
+    "oneThing": "A única prioridade",
+    "notFilled": "Ainda não preenchido",
+    "tone": "Tom: {tone}",
+    "mits": "Três MITs · {done} de {total} feitas",
+    "done": "feita",
+    "agenda": {
+      "title": "Linha do dia",
+      "sources": "Âncoras · tarefas com horário · calendário",
+      "empty": "Nenhum bloco ou tarefa com horário hoje",
+      "showPast": "{count} passados · mostrar",
+      "hidePast": "Ocultar passados",
+      "until": "até {time}, faltam {minutes} min",
+      "kind": {
+        "anchor": "Âncora",
+        "task": "Tarefa",
+        "calendar": "Calendário"
+      }
+    },
+    "calendar": {
+      "prompt": "Conecte o Calendário do macOS para ver as reuniões de hoje",
+      "connect": "Conectar calendário",
+      "denied": "O acesso ao calendário está desativado. Ative em Ajustes do Sistema → Privacidade e Segurança → Calendários."
+    },
+    "tasks": {
+      "title": "Tarefas",
+      "counts": "{pending} abertas · {done} feitas hoje",
+      "overdue": "Atrasadas · {count}",
+      "day0": "Hoje · {count}",
+      "day1": "Amanhã · {count}",
+      "day2": "Depois de amanhã · {count}",
+      "doneToday": "Feitas hoje · {count}",
+      "lateBy": "{days} d de atraso",
+      "empty": "Nada atrasado ou para os próximos três dias",
+      "loading": "Criando o índice de tarefas…"
+    },
+    "priorityHigh": "Alta",
+    "openSource": "Abrir {name}",
+    "carry": {
+      "prompt": "{count} pendentes de ontem",
+      "action": "Trazer para hoje",
+      "done": "{count} trazidas para hoje"
+    },
+    "capture": {
+      "title": "capturas",
+      "detail": "{flash} ideia · {read} leitura · {task} tarefa"
+    },
+    "inbox": {
+      "title": "paradas",
+      "detail": "Na Inbox há mais de {days} dias",
+      "action": "Organizar"
+    },
+    "reflection": {
+      "title": "Reflexão",
+      "detail": "Revisão da noite",
+      "empty": "Ainda não",
+      "filled": "Escrita",
+      "action": "Começar revisão"
+    },
+    "status": {
+      "open": "Hoje",
+      "need": "{count} pendentes",
+      "aria": "{count} itens pendentes, abrir a aba Hoje"
+    },
+    "undo": "Desfazer",
+    "undoStale": "O arquivo mudou em outro lugar e não pode ser desfeito",
+    "taskDone": "Feita, salva em {name}",
+    "taskUndone": "Reaberta, salva em {name}",
+    "taskStale": "{name} mudou em outro lugar. Atualize e tente de novo.",
+    "writeFailed": "Não foi possível salvar"
+  },
   "settings": {
     "defaultModels": {
       "title": "Modelos Padrão",

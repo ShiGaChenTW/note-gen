@@ -49,6 +49,102 @@
     "hideWindow": "隐藏到托盘",
     "quit": "退出 NoteGen"
   },
+  "today": {
+    "title": "今日",
+    "summary": "今天到期 {today} 项，逾期 {overdue} 项",
+    "greeting": {
+      "morning": "早上好",
+      "afternoon": "下午好",
+      "evening": "晚上好"
+    },
+    "week": {
+      "label": "本周日记",
+      "day": "{date}，{open} 项未完成"
+    },
+    "openDaily": "打开 Daily Note",
+    "moreActions": "更多操作",
+    "morning": "早晨启动",
+    "morningDone": "早晨启动 · 已完成",
+    "review": "整日复盘",
+    "reviewDone": "整日复盘 · 已完成",
+    "stamped": {
+      "morning": "已写入 morning:: done",
+      "review": "已写入 reviewed:: done"
+    },
+    "index": {
+      "rescan": "重新扫描 vault",
+      "scanning": "正在扫描 vault…"
+    },
+    "oneThing": "唯一要务",
+    "notFilled": "尚未填写",
+    "tone": "定调：{tone}",
+    "mits": "三件 MIT · 完成 {done} / {total}",
+    "done": "已完成",
+    "agenda": {
+      "title": "今日进程",
+      "sources": "锚点时段 · 有时间的任务 · 日历",
+      "empty": "今天还没有时段或有时间的任务",
+      "showPast": "已过 {count} 个时段 · 展开",
+      "hidePast": "收起已过的时段",
+      "until": "到 {time}，还有 {minutes} 分钟",
+      "kind": {
+        "anchor": "锚点时段",
+        "task": "任务",
+        "calendar": "日历"
+      }
+    },
+    "calendar": {
+      "prompt": "连接 macOS 日历，把今天的会议放进进程",
+      "connect": "连接日历",
+      "denied": "日历权限已关闭，可到「系统设置 → 隐私与安全性 → 日历」开启"
+    },
+    "tasks": {
+      "title": "任务",
+      "counts": "待处理 {pending} · 今天完成 {done}",
+      "overdue": "逾期 · {count}",
+      "day0": "今天 · {count}",
+      "day1": "明天 · {count}",
+      "day2": "后天 · {count}",
+      "doneToday": "今天完成 · {count}",
+      "lateBy": "逾期 {days} 天",
+      "empty": "逾期与近三日没有待处理的任务",
+      "loading": "正在建立任务索引…"
+    },
+    "priorityHigh": "高",
+    "openSource": "打开 {name}",
+    "carry": {
+      "prompt": "昨天有 {count} 项未完成",
+      "action": "带入今天",
+      "done": "已把 {count} 项带入今天"
+    },
+    "capture": {
+      "title": "条捕捉",
+      "detail": "闪 {flash} · 读 {read} · 任务 {task}"
+    },
+    "inbox": {
+      "title": "个积压",
+      "detail": "Inbox 超过 {days} 天未整理",
+      "action": "去整理"
+    },
+    "reflection": {
+      "title": "沉淀",
+      "detail": "晚间复盘",
+      "empty": "尚未填写",
+      "filled": "已填写",
+      "action": "开始复盘"
+    },
+    "status": {
+      "open": "今日",
+      "need": "需处理 {count}",
+      "aria": "需处理 {count} 项，打开今日标签页"
+    },
+    "undo": "撤销",
+    "undoStale": "文件已在别处修改，无法撤销",
+    "taskDone": "已完成，写回 {name}",
+    "taskUndone": "已取消完成，写回 {name}",
+    "taskStale": "{name} 已在别处修改，请刷新后再试",
+    "writeFailed": "写入失败"
+  },
   "settings": {
     "defaultModels": {
       "title": "默认模型",

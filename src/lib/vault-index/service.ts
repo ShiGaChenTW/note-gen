@@ -222,10 +222,12 @@ export async function startVaultIndex(workspacePath: string): Promise<VaultIndex
     console.warn('[vault-index] file watcher unavailable; index updates only on rescan:', error)
   }
 
+  useVaultIndexStore.getState().setRescan(rescan)
   return {
     rescan,
     stop: () => {
       stopped = true
+      if (useVaultIndexStore.getState().rescan === rescan) useVaultIndexStore.getState().setRescan(null)
       unwatch?.()
       if (saveTimer) {
         clearTimeout(saveTimer)

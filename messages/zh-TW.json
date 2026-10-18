@@ -49,6 +49,102 @@
     "hideWindow": "隱藏到托盤",
     "quit": "退出 NoteGen"
   },
+  "today": {
+    "title": "今日",
+    "summary": "今天到期 {today} 項，逾期 {overdue} 項",
+    "greeting": {
+      "morning": "早安",
+      "afternoon": "午安",
+      "evening": "晚安"
+    },
+    "week": {
+      "label": "本週日記",
+      "day": "{date}，{open} 項未完成"
+    },
+    "openDaily": "開啟 Daily Note",
+    "moreActions": "更多動作",
+    "morning": "早晨啟動",
+    "morningDone": "早晨啟動 · 已完成",
+    "review": "整日復盤",
+    "reviewDone": "整日復盤 · 已完成",
+    "stamped": {
+      "morning": "已寫入 morning:: done",
+      "review": "已寫入 reviewed:: done"
+    },
+    "index": {
+      "rescan": "重新掃描 vault",
+      "scanning": "正在掃描 vault…"
+    },
+    "oneThing": "唯一要務",
+    "notFilled": "尚未填寫",
+    "tone": "定調：{tone}",
+    "mits": "三件 MIT · 完成 {done} / {total}",
+    "done": "已完成",
+    "agenda": {
+      "title": "今日進程",
+      "sources": "錨點時段 · 有時間的任務 · 行事曆",
+      "empty": "今天還沒有時段或有時間的任務",
+      "showPast": "已過 {count} 個時段 · 展開",
+      "hidePast": "收合已過的時段",
+      "until": "到 {time}，還有 {minutes} 分鐘",
+      "kind": {
+        "anchor": "錨點時段",
+        "task": "任務",
+        "calendar": "行事曆"
+      }
+    },
+    "calendar": {
+      "prompt": "連接 macOS 行事曆，把今天的會議放進進程",
+      "connect": "連接行事曆",
+      "denied": "行事曆權限已關閉，可到「系統設定 → 隱私權與安全性 → 行事曆」開啟"
+    },
+    "tasks": {
+      "title": "任務",
+      "counts": "待處理 {pending} · 今天完成 {done}",
+      "overdue": "逾期 · {count}",
+      "day0": "今天 · {count}",
+      "day1": "明天 · {count}",
+      "day2": "後天 · {count}",
+      "doneToday": "今天完成 · {count}",
+      "lateBy": "逾期 {days} 天",
+      "empty": "逾期與近三日沒有待處理的任務",
+      "loading": "正在建立任務索引…"
+    },
+    "priorityHigh": "高",
+    "openSource": "開啟 {name}",
+    "carry": {
+      "prompt": "昨天有 {count} 項未完成",
+      "action": "帶入今天",
+      "done": "已把 {count} 項帶入今天"
+    },
+    "capture": {
+      "title": "則捕捉",
+      "detail": "閃 {flash} · 讀 {read} · 任務 {task}"
+    },
+    "inbox": {
+      "title": "檔積壓",
+      "detail": "Inbox 超過 {days} 天未整理",
+      "action": "去整理"
+    },
+    "reflection": {
+      "title": "沉澱",
+      "detail": "晚間復盤",
+      "empty": "尚未填寫",
+      "filled": "已填寫",
+      "action": "開始復盤"
+    },
+    "status": {
+      "open": "今日",
+      "need": "需處理 {count}",
+      "aria": "需處理 {count} 項，開啟今日分頁"
+    },
+    "undo": "復原",
+    "undoStale": "檔案已在別處修改，無法復原",
+    "taskDone": "已完成，寫回 {name}",
+    "taskUndone": "已取消完成，寫回 {name}",
+    "taskStale": "{name} 已在別處修改，請重新整理後再試",
+    "writeFailed": "寫入失敗"
+  },
   "settings": {
     "defaultModels": {
       "title": "預設模型",

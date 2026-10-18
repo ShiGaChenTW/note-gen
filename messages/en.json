@@ -49,6 +49,102 @@
     "hideWindow": "Hide to Tray",
     "quit": "Quit NoteGen"
   },
+  "today": {
+    "title": "Today",
+    "summary": "{today} due today, {overdue} overdue",
+    "greeting": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening"
+    },
+    "week": {
+      "label": "This week’s daily notes",
+      "day": "{date}, {open} open"
+    },
+    "openDaily": "Open daily note",
+    "moreActions": "More actions",
+    "morning": "Morning kickoff",
+    "morningDone": "Morning kickoff · done",
+    "review": "Daily review",
+    "reviewDone": "Daily review · done",
+    "stamped": {
+      "morning": "Wrote morning:: done",
+      "review": "Wrote reviewed:: done"
+    },
+    "index": {
+      "rescan": "Rescan vault",
+      "scanning": "Scanning vault…"
+    },
+    "oneThing": "The one thing",
+    "notFilled": "Not filled in yet",
+    "tone": "Tone: {tone}",
+    "mits": "Three MITs · {done} of {total} done",
+    "done": "done",
+    "agenda": {
+      "title": "Today’s timeline",
+      "sources": "Anchors · timed tasks · calendar",
+      "empty": "No time blocks or timed tasks today",
+      "showPast": "{count} past · show",
+      "hidePast": "Hide past items",
+      "until": "until {time}, {minutes} min left",
+      "kind": {
+        "anchor": "Anchor",
+        "task": "Task",
+        "calendar": "Calendar"
+      }
+    },
+    "calendar": {
+      "prompt": "Connect macOS Calendar to show today’s meetings here",
+      "connect": "Connect calendar",
+      "denied": "Calendar access is off. Turn it on in System Settings → Privacy & Security → Calendars."
+    },
+    "tasks": {
+      "title": "Tasks",
+      "counts": "{pending} open · {done} done today",
+      "overdue": "Overdue · {count}",
+      "day0": "Today · {count}",
+      "day1": "Tomorrow · {count}",
+      "day2": "Day after · {count}",
+      "doneToday": "Done today · {count}",
+      "lateBy": "{days}d overdue",
+      "empty": "Nothing overdue or due in the next three days",
+      "loading": "Building the task index…"
+    },
+    "priorityHigh": "High",
+    "openSource": "Open {name}",
+    "carry": {
+      "prompt": "{count} unfinished from yesterday",
+      "action": "Bring to today",
+      "done": "Moved {count} to today"
+    },
+    "capture": {
+      "title": "captures",
+      "detail": "{flash} flash · {read} read · {task} task"
+    },
+    "inbox": {
+      "title": "waiting",
+      "detail": "In Inbox for over {days} days",
+      "action": "Sort now"
+    },
+    "reflection": {
+      "title": "Reflection",
+      "detail": "Evening review",
+      "empty": "Not yet",
+      "filled": "Written",
+      "action": "Start review"
+    },
+    "status": {
+      "open": "Today",
+      "need": "{count} to handle",
+      "aria": "{count} items to handle, open the Today tab"
+    },
+    "undo": "Undo",
+    "undoStale": "The file changed elsewhere, so it can’t be undone",
+    "taskDone": "Done, saved to {name}",
+    "taskUndone": "Marked open, saved to {name}",
+    "taskStale": "{name} changed elsewhere. Refresh and try again.",
+    "writeFailed": "Couldn’t save"
+  },
   "settings": {
     "defaultModels": {
       "title": "Default Models",

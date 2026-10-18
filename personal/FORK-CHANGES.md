@@ -54,6 +54,11 @@ npx pnpm@9 install --frozen-lockfile
 | 2026-10-17 | `src/app/core/main/daily-note-auto-open.tsx`（新）、`src/app/core/main/page.tsx` | 啟動時開啟今日筆記；page 只加 import 與一行掛載 | D1 |
 | 2026-10-18 | `src/lib/vault-index/`（新）、`src/stores/vault-index.ts`（新） | vault 索引：任務行、frontmatter、mtime；快取存在 AppData `vault-index/`，不寫進 vault；用 fs watch 增量更新 | F3 |
 | 2026-10-18 | `src/app/core/main/fork-services.tsx`（新）、`src/app/core/main/page.tsx` | fork 背景服務統一從 `<ForkServices />` 掛載（F3 索引＋D1 自動開啟）；page 仍只有一行 import 與一行掛載 | F3 |
+| 2026-10-18 | `src/lib/today/`（新）、`src/app/core/main/today/`（新）、`src/lib/daily/note-io.ts`（新） | D2 原生今日頁（設計 v2）：任務分組（逾期＋近三日）、今日進程、本週、勾選寫回與復原、早晨啟動／整日復盤、D6 帶入今天 | D2、D6 |
+| 2026-10-18 | `src/app/core/main/editor/editor-layout.tsx` | 掛載點：`blank://fork-today` 分頁改畫 `<TodayPage />`；呼叫 `useTodayTabOpener`（共 8 行） | D2：沿用上游 blank 分頁機制，不新增分頁種類 |
+| 2026-10-18 | `src/app/core/main/main-status-bar.tsx` | 掛載點：狀態列「需處理 N」 | D2 |
+| 2026-10-18 | `messages/*.json` | 新增頂層 `today` 命名空間（6 語系） | D2 |
+| 2026-10-18 | `src-tauri/native-calendar/`（新）、`src-tauri/src/calendar.rs`（新）、`build.rs`、`lib.rs`、`tauri.conf.json`、`Info.plist`、`Entitlements.plist`、`.gitignore` | macOS 行事曆唯讀：Swift EventKit 小工具（比照 OCR 由 build.rs 編譯、放 `resources/calendar/`），Rust 指令 `calendar_events`／`calendar_request_access`；補行事曆用途說明與 entitlement | D2：Scott 決定 Phase 1 接行事曆 |
 
 ## 刻意不改的東西
 

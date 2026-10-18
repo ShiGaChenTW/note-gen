@@ -38,6 +38,7 @@ target/*
 /docs/*/*
 skills-lock.json
 src-tauri/resources/ocr/*
+src-tauri/resources/calendar/*
 !src-tauri/resources/ocr/.gitkeep
 src-tauri/native-ocr/ios-vision/.tauri/
 

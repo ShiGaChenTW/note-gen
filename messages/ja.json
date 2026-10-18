@@ -49,6 +49,102 @@
     "hideWindow": "トレイに隠す",
     "quit": "NoteGenを終了"
   },
+  "today": {
+    "title": "今日",
+    "summary": "今日が期限 {today} 件、期限切れ {overdue} 件",
+    "greeting": {
+      "morning": "おはようございます",
+      "afternoon": "こんにちは",
+      "evening": "こんばんは"
+    },
+    "week": {
+      "label": "今週のデイリーノート",
+      "day": "{date}、未完了 {open} 件"
+    },
+    "openDaily": "デイリーノートを開く",
+    "moreActions": "その他の操作",
+    "morning": "朝のスタート",
+    "morningDone": "朝のスタート · 完了",
+    "review": "一日の振り返り",
+    "reviewDone": "一日の振り返り · 完了",
+    "stamped": {
+      "morning": "morning:: done を書き込みました",
+      "review": "reviewed:: done を書き込みました"
+    },
+    "index": {
+      "rescan": "vault を再スキャン",
+      "scanning": "vault をスキャン中…"
+    },
+    "oneThing": "最重要タスク",
+    "notFilled": "未記入",
+    "tone": "トーン：{tone}",
+    "mits": "3 つの MIT · {done} / {total} 完了",
+    "done": "完了",
+    "agenda": {
+      "title": "今日の進行",
+      "sources": "アンカー · 時刻付きタスク · カレンダー",
+      "empty": "今日は時間帯や時刻付きタスクがありません",
+      "showPast": "過ぎた {count} 件 · 表示",
+      "hidePast": "過ぎた項目を隠す",
+      "until": "{time} まで、残り {minutes} 分",
+      "kind": {
+        "anchor": "アンカー",
+        "task": "タスク",
+        "calendar": "カレンダー"
+      }
+    },
+    "calendar": {
+      "prompt": "macOS カレンダーと連携して今日の予定を表示",
+      "connect": "カレンダーと連携",
+      "denied": "カレンダーへのアクセスがオフです。システム設定 → プライバシーとセキュリティ → カレンダーでオンにしてください。"
+    },
+    "tasks": {
+      "title": "タスク",
+      "counts": "未完了 {pending} · 今日完了 {done}",
+      "overdue": "期限切れ · {count}",
+      "day0": "今日 · {count}",
+      "day1": "明日 · {count}",
+      "day2": "明後日 · {count}",
+      "doneToday": "今日完了 · {count}",
+      "lateBy": "{days} 日超過",
+      "empty": "期限切れや 3 日以内のタスクはありません",
+      "loading": "タスクの索引を作成中…"
+    },
+    "priorityHigh": "高",
+    "openSource": "{name} を開く",
+    "carry": {
+      "prompt": "昨日の未完了 {count} 件",
+      "action": "今日に移す",
+      "done": "{count} 件を今日に移しました"
+    },
+    "capture": {
+      "title": "件のキャプチャ",
+      "detail": "ひらめき {flash} · 読む {read} · タスク {task}"
+    },
+    "inbox": {
+      "title": "件が滞留",
+      "detail": "Inbox に {days} 日以上",
+      "action": "整理する"
+    },
+    "reflection": {
+      "title": "振り返り",
+      "detail": "夜の振り返り",
+      "empty": "未記入",
+      "filled": "記入済み",
+      "action": "振り返りを始める"
+    },
+    "status": {
+      "open": "今日",
+      "need": "対応 {count}",
+      "aria": "対応が必要 {count} 件、今日タブを開く"
+    },
+    "undo": "元に戻す",
+    "undoStale": "ファイルが別の場所で変更されたため元に戻せません",
+    "taskDone": "完了にして {name} に保存しました",
+    "taskUndone": "未完了にして {name} に保存しました",
+    "taskStale": "{name} が別の場所で変更されています。更新して再試行してください。",
+    "writeFailed": "保存できませんでした"
+  },
   "settings": {
     "defaultModels": {
       "title": "デフォルトモデル",
