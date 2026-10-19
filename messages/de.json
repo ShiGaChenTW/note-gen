@@ -246,6 +246,16 @@
       "aliases": "Aliasse"
     }
   },
+  "localGraph": {
+    "title": "Lokaler Graph",
+    "depth1": "1 Ebene",
+    "depth2": "2 Ebenen",
+    "empty": "Diese Notiz hat noch keine Links",
+    "indexing": "Indizierung…",
+    "notMarkdown": "Öffne eine Markdown-Notiz, um ihren lokalen Graphen zu sehen",
+    "unresolved": "Noch nicht erstellt",
+    "truncated": "Zu viele Knoten; nur die ersten {count} werden angezeigt. Wechsle zurück auf 1 Ebene"
+  },
   "settings": {
     "defaultModels": {
       "title": "Standardmodelle",
@@ -5555,7 +5565,18 @@
     "wikilinkSuggest": {
       "create": "„{name}“ erstellen",
       "alias": "Alias",
-      "noResults": "Keine passenden Notizen"
+      "noResults": "Keine passenden Notizen",
+      "headings": "Überschriften",
+      "blocks": "Blöcke",
+      "noHeadings": "Diese Notiz hat keine Überschriften",
+      "noBlocks": "Diese Notiz hat keine Block-IDs"
+    },
+    "wikilinkEmbed": {
+      "notFound": "Nicht gefunden",
+      "sectionNotFound": "Diese Notiz hat keine solche Überschrift oder keinen solchen Block",
+      "loading": "Wird geladen…",
+      "open": "Öffnen",
+      "tooDeep": "Einbettung zu tief, wird nicht aufgelöst"
     },
     "outline": {
       "title": "Gliederung",

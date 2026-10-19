@@ -20,6 +20,7 @@ vi.mock('@/components/plugins/plugin-view-surface', () => ({ PluginViewSurface: 
 vi.mock('@/app/core/main/chat', () => ({ default: () => React.createElement('div', null, 'chat content') }))
 vi.mock('./backlinks-panel', () => ({ default: () => React.createElement('div', null, 'backlinks content') }))
 vi.mock('@/app/core/main/properties/properties-panel', () => ({ default: () => React.createElement('div', null, 'properties content') }))
+vi.mock('@/app/core/main/graph/local-graph-panel', () => ({ default: () => React.createElement('div', null, 'graph content') }))
 vi.mock('next-intl', () => ({ useLocale: () => 'zh-TW', useTranslations: () => (key: string) => key }))
 const { PluginRightSidebar } = await import('@/components/plugins/plugin-right-sidebar')
 let container: HTMLDivElement
@@ -40,11 +41,12 @@ describe('backlinks sidebar mounting', () => {
   it('keeps chat, backlinks and properties tabs available without plugin contributions and force-mounts all panels', async () => {
     await act(async () => root.render(React.createElement(PluginRightSidebar)))
     const tabs = container.querySelectorAll('[role="tab"]')
-    expect([...tabs].map(tab => tab.getAttribute('aria-label'))).toEqual(['chat', 'title', 'title'])
-    expect(container.querySelectorAll('[role="tabpanel"]')).toHaveLength(3)
+    expect([...tabs].map(tab => tab.getAttribute('aria-label'))).toEqual(['chat', 'title', 'title', 'title'])
+    expect(container.querySelectorAll('[role="tabpanel"]')).toHaveLength(4)
     expect(container.textContent).toContain('chat content')
     expect(container.textContent).toContain('backlinks content')
     expect(container.textContent).toContain('properties content')
+    expect(container.textContent).toContain('graph content')
     const panels = container.querySelectorAll('[role="tabpanel"]')
     expect(panels[1].className).toContain('data-[state=inactive]:hidden')
     await act(async () => {
@@ -52,6 +54,9 @@ describe('backlinks sidebar mounting', () => {
     })
     expect(ui.getState().activeRightView).toBe('@backlinks')
     expect(panels[1].getAttribute('data-state')).toBe('active')
+    await act(async () => { tabs[3].dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 })) })
+    expect(ui.getState().activeRightView).toBe('@graph')
+    expect(panels[3].getAttribute('data-state')).toBe('active')
     expect(panels[0].getAttribute('data-state')).toBe('inactive')
     await act(async () => {
       tabs[0].dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }))

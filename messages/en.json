@@ -246,6 +246,16 @@
       "aliases": "Aliases"
     }
   },
+  "localGraph": {
+    "title": "Local graph",
+    "depth1": "1 level",
+    "depth2": "2 levels",
+    "empty": "This note has no links yet",
+    "indexing": "Indexing…",
+    "notMarkdown": "Open a Markdown note to view its local graph",
+    "unresolved": "Not created yet",
+    "truncated": "Too many nodes; showing the first {count}. Switch back to 1 level"
+  },
   "settings": {
     "defaultModels": {
       "title": "Default Models",
@@ -5697,7 +5707,18 @@
     "wikilinkSuggest": {
       "create": "Create \"{name}\"",
       "alias": "Alias",
-      "noResults": "No matching notes"
+      "noResults": "No matching notes",
+      "headings": "Headings",
+      "blocks": "Blocks",
+      "noHeadings": "This note has no headings",
+      "noBlocks": "This note has no block IDs"
+    },
+    "wikilinkEmbed": {
+      "notFound": "Not found",
+      "sectionNotFound": "This note has no such heading or block",
+      "loading": "Loading…",
+      "open": "Open",
+      "tooDeep": "Embed too deep, not expanded"
     },
     "outline": {
       "title": "Outline",

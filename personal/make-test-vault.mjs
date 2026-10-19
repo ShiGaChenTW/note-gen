@@ -347,7 +347,7 @@ tags:
 
 # 標籤 A
 
-內文標籤 #專案/alpha 重複不重複計算， #待辦 只在這篇（標籤前要有空白，緊接標點的不算）。
+內文標籤 #專案/alpha 重複不重複計算，#待辦 只在這篇（緊接全形標點後也算）；#12 是純數字不算標籤。
 `)
 write('60 Notes/標籤B.md', '# 標籤 B\n\n#專案/beta 與 #閱讀，還有大寫的 #Reading（與下一篇的 #reading 是同一個）。\n')
 write('60 Notes/標籤C.md', '# 標籤 C\n\n#reading 與 #專案（只有父層）。\n\n`#code裡的不算`\n')
@@ -399,6 +399,57 @@ write('60 Notes/提及來源.md', `# 提及來源
 `)
 write('60 Notes/提及來源二.md', '# 提及來源二\n\n標題裡也算：\n\n## 關於提及目標的筆記\n')
 
+// ---------- Phase 2-3a：嵌入轉入、標題／區塊跳轉、關聯圖、索引標題與區塊 ----------
+write('60 Notes/區塊目標.md', `# 區塊目標
+
+## 第一節
+
+這一段有區塊 id，嵌入與跳轉都指到這裡。 ^blk-1
+
+## 第二節
+
+- 清單項也可以有 id ^item-1
+- 另一項
+
+| 欄 | 值 |
+|---|---|
+| 表格列 | 3 ^row-1 |
+
+第三節之前的最後一段。
+
+## 第三節 ^sec-3
+
+回連 [[雙鏈目標]]、[[嵌入來源]]。
+`)
+
+write('60 Notes/嵌入來源.md', `# 嵌入來源
+
+整篇：![[雙鏈目標]]
+
+只一節：![[雙鏈目標#第二節]]
+
+只一段（區塊 id）：![[區塊目標#^blk-1]]
+
+表格列：![[區塊目標#^row-1]]
+
+圖片（寬 120）：![[附件.png|120]]
+
+不存在：![[沒有這篇]]
+
+沒有這一節：![[雙鏈目標#不存在的節]]
+
+跳轉：[[雙鏈目標#第二節]]、[[區塊目標#^item-1]]、[[#本篇標題]]
+
+## 本篇標題
+
+巢狀：![[嵌入中層]]
+`)
+write('60 Notes/嵌入中層.md', '# 嵌入中層\n\n第二層：![[區塊目標#第一節]]\n\n第三層不轉入：![[雙鏈目標]]\n')
+// 1×1 透明 PNG（嵌入圖片用）
+fs.mkdirSync(path.join(target, '60 Notes'), { recursive: true })
+fs.writeFileSync(path.join(target, '60 Notes/附件.png'), Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64'))
+written.push('60 Notes/附件.png')
+
 write('README.md', `# NoteGen 測試 vault
 
 由 \`personal/make-test-vault.mjs\` 在 ${ymd(now)} ${pad(now.getHours())}:${pad(now.getMinutes())} 產生，日期都以那天為「今天」。
@@ -422,6 +473,12 @@ write('README.md', `# NoteGen 測試 vault
 | L6 筆記標籤 | 左側欄「筆記標籤」：專案（3 篇：alpha 1、beta 1、只有父層 1）、閱讀 2、reading 2（大小寫合併）、待辦 1、notegen 等 frontmatter 標籤；code 裡的不算 |
 | L7 改名改寫 | 把 60 Notes/待改名.md 改名：跳出詢問「4 篇筆記共 10 個連結」；確認後 改名來源一（5 筆，code 內不改）、改名來源二（表格 \`\\|\` 與 markdown 連結，CRLF 要保留）、子資料夾/改名來源三（含 \`../\` 相對連結）、屬性樣本（related 1 筆）只有連結那幾行有 diff；再把它拖進子資料夾，來源三的 \`[[待改名]]\` 不變、markdown 相對路徑要重算 |
 | L4 未連結提及 | 開 60 Notes/提及目標.md：未連結提及 4 筆（提及來源 2 筆：純文字＋別名；提及來源二 標題 1 筆；README 這一列 1 筆）；已連結、code、markdown 連結不算；按「連結」後該筆消失、git diff 只有那一行 |
+| 表格原文往返 | 60 Notes/雙鏈表格.md 與 改名來源二.md：不改內容直接存檔，git diff 必須是空的（緊湊 \`|---|---|\` 不再被補空白、表前不多空行）；改一格後才會重排 |
+| 嵌入轉入 | 60 Notes/嵌入來源.md：整篇、只一節、區塊、表格列、圖片 120px、不存在（虛線「找不到」）、沒有這一節；巢狀兩層後第三層只顯示晶片；存檔 diff 為空 |
+| 標題／區塊跳轉 | 嵌入來源.md 最後一行三個連結：開啟並捲到「第二節」、捲到清單項並高亮 1.5 秒、本篇捲到「本篇標題」 |
+| L8 關聯圖 | 開 雙鏈目標.md：1 層有 雙鏈來源、雙鏈表格、改名來源一…等連入與 區塊目標 連出；切 2 層再多一圈；點節點換中心 |
+| 自動完成 #／^ | 任一筆記打 \`[[區塊目標#\` 列 3 個標題；\`[[區塊目標#^\` 列 blk-1、item-1、row-1、sec-3；\`[[#\` 列本篇標題 |
+| 索引 #tag 規則 | 標籤B／標籤A：\`，#待辦\` 緊接全形標點也算；\`#12\` 純數字不算（筆記標籤樹不出現 12） |
 `)
 
 fs.writeFileSync(path.join(target, MARKER), `created ${now.toISOString()}\n`)

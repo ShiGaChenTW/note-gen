@@ -246,6 +246,16 @@
       "aliases": "别名"
     }
   },
+  "localGraph": {
+    "title": "关联图",
+    "depth1": "1 层",
+    "depth2": "2 层",
+    "empty": "这篇还没有链接",
+    "indexing": "索引中…",
+    "notMarkdown": "打开 Markdown 笔记以查看关联图",
+    "unresolved": "尚未创建",
+    "truncated": "节点太多，只显示前 {count} 个；请切回 1 层"
+  },
   "settings": {
     "defaultModels": {
       "title": "默认模型",
@@ -5697,7 +5707,18 @@
     "wikilinkSuggest": {
       "create": "建立「{name}」",
       "alias": "别名",
-      "noResults": "没有符合的笔记"
+      "noResults": "没有符合的笔记",
+      "headings": "标题",
+      "blocks": "区块",
+      "noHeadings": "这篇没有标题",
+      "noBlocks": "这篇没有区块 id"
+    },
+    "wikilinkEmbed": {
+      "notFound": "找不到",
+      "sectionNotFound": "这篇没有这个标题或区块",
+      "loading": "读取中…",
+      "open": "打开",
+      "tooDeep": "嵌入太深，不再转入"
     },
     "outline": {
       "title": "大纲",

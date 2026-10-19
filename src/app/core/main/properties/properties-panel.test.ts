@@ -42,7 +42,8 @@ describe('屬性面板資料轉換', () => {
       expect(Object.keys(data.properties.types as object).sort()).toEqual(['text', 'multitext', 'number', 'checkbox', 'date', 'datetime', 'tags', 'aliases'].sort())
       const keys = Object.keys(locale)
       expect(keys[keys.indexOf('backlinks') + 1]).toBe('properties')
-      expect(keys[keys.indexOf('properties') + 1]).toBe('settings')
+      expect(keys[keys.indexOf('properties') + 1]).toBe('localGraph')
+      expect(keys[keys.indexOf('localGraph') + 1]).toBe('settings')
     }
   })
 })

@@ -1,6 +1,6 @@
 /**
  * F3 vault 索引：把單一筆記轉成索引項目。純函式、無 I/O。
- * 索引任務、frontmatter、連結、別名與標籤。
+ * 索引任務、frontmatter、連結、別名、標籤、標題與區塊 id。
  */
 
 import { parse as parseYaml } from 'yaml'
@@ -10,7 +10,7 @@ import { findWikilinks } from '@/lib/markdown/wikilink'
 import { recurrenceOf } from '@/lib/daily/recurrence'
 
 /** 快取格式版本；欄位或解析規則改變時加一，舊快取會整份重建。 */
-export const INDEX_SCHEMA_VERSION = 2
+export const INDEX_SCHEMA_VERSION = 3
 
 export interface IndexedTask {
   /** 0 起算的行號（對應 split('\n') 後的位置） */
@@ -41,6 +41,24 @@ export interface IndexedLink {
   context: string
 }
 
+export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6
+
+export interface IndexedHeading {
+  level: HeadingLevel
+  /** 去掉尾端 `#` 與行尾區塊 id 之後的文字 */
+  text: string
+  /** 0 起算、對整份檔案的行號 */
+  line: number
+}
+
+export interface IndexedBlockId {
+  id: string
+  /** 0 起算、對整份檔案的行號 */
+  line: number
+  /** 該行（去掉尾端 `\r`）的前 60 個字 */
+  context: string
+}
+
 export interface IndexedNote {
   path: string
   /** 毫秒；取不到時為 0 */
@@ -50,6 +68,8 @@ export interface IndexedNote {
   links: IndexedLink[]
   aliases: string[]
   tags: string[]
+  headings: IndexedHeading[]
+  blockIds: IndexedBlockId[]
 }
 
 const TIME_RE = /⏰️?\s*(\d{1,2}):(\d{2})/u
@@ -150,6 +170,64 @@ function metadataStrings(value: unknown, split = false): string[] {
     .map(item => item.trim()).filter(Boolean)
 }
 
+/** Obsidian：至少要有一個非數字字元。純數字，或只用 `/` 串起的數字，都不是標籤。 */
+function isIndexableTag(tag: string): boolean {
+  return tag !== '' && !/^\d+(?:\/\d+)*$/u.test(tag)
+}
+
+const ATX_RE = /^( {0,3})(#{1,6})(?:[ \t]+(.*))?$/
+// 行尾 ` ^id`，或單獨一行的 `^id`。id 只允許英數與連字號。
+const BLOCK_ID_RE = /(?:^|\s)\^([A-Za-z0-9-]+)\s*$/
+
+function blockIdIn(line: string): { id: string, rest: string } | null {
+  const match = BLOCK_ID_RE.exec(line)
+  if (!match) return null
+  return { id: match[1], rest: line.slice(0, match.index).replace(/[ \t]+$/, '') }
+}
+
+function parseAtx(line: string): { level: HeadingLevel, text: string } | null {
+  const match = ATX_RE.exec(line)
+  if (!match) return null
+  const level = match[2].length
+  if (level < 1 || level > 6) return null
+  let text = (match[3] ?? '').replace(/[ \t]+$/, '')
+  const closed = /^(.*?)[ \t]+#+$/.exec(text)
+  if (closed) text = closed[1]
+  return { level: level as HeadingLevel, text: text.trim() }
+}
+
+function linePreview(line: string): string {
+  return Array.from(line).slice(0, 60).join('')
+}
+
+/**
+ * ATX 標題與行尾區塊 id。跳過 frontmatter、fenced code 與 inline code。
+ * 引言與 setext 標題不收。行尾 `^id` 會從標題文字拿掉，另外記入 blockIds。
+ */
+function indexOutline(content: string): { headings: IndexedHeading[], blockIds: IndexedBlockId[] } {
+  const { block, body } = splitFrontmatter(content)
+  const offset = block ? block.split('\n').length - 1 : 0
+  const original = body.split('\n')
+  const masked = withoutCode(body).split('\n')
+  const headings: IndexedHeading[] = []
+  const blockIds: IndexedBlockId[] = []
+  for (let i = 0; i < original.length; i++) {
+    const raw = original[i].replace(/\r$/, '')
+    const visible = (masked[i] ?? raw).replace(/\r$/, '')
+    // 整行都在程式碼裡時，遮罩後只剩空白
+    if (raw.trim() !== '' && visible.trim() === '') continue
+    const visibleId = blockIdIn(visible)
+    const rawId = blockIdIn(raw)
+    const id = visibleId && rawId && visibleId.id === rawId.id ? rawId.id : null
+    if (id && rawId) blockIds.push({ id, line: offset + i, context: linePreview(raw) })
+    const heading = parseAtx(id && rawId ? rawId.rest : raw)
+    const headingVisible = parseAtx(id && visibleId ? visibleId.rest : visible)
+    if (!heading || !headingVisible) continue
+    headings.push({ level: heading.level, text: heading.text, line: offset + i })
+  }
+  return { headings, blockIds }
+}
+
 function markdownTarget(href: string, sourcePath: string): { target: string, heading: string } | null {
   if (/^(?:[a-z][a-z0-9+.-]*:|[/#])/i.test(href)) return null
   const hash = href.indexOf('#')
@@ -204,7 +282,9 @@ export function indexNote(path: string, content: string, mtime: number): Indexed
   const frontmatter = parseFrontmatterData(block)
   const aliases = metadataStrings(frontmatter?.aliases ?? frontmatter?.alias)
   const tags = metadataStrings(frontmatter?.tags ?? frontmatter?.tag, true).map(tag => tag.replace(/^#/, ''))
-  for (const match of withoutCode(body).matchAll(/(?:^|[\s(（])#((?:[^\s\p{P}\p{S}]|[-_])+(?:\/(?:[^\s\p{P}\p{S}]|[-_])+)*)/gmu)) tags.push(match[1])
+  // 前導：行首、空白、半形／全形括號，以及全形標點 ，、；：。
+  for (const match of withoutCode(body).matchAll(/(?:^|[\s(（，、；：。])#((?:[^\s\p{P}\p{S}]|[-_])+(?:\/(?:[^\s\p{P}\p{S}]|[-_])+)*)/gmu)) tags.push(match[1])
+  const outline = indexOutline(content)
   return {
     path,
     mtime,
@@ -212,6 +292,8 @@ export function indexNote(path: string, content: string, mtime: number): Indexed
     tasks,
     links: indexLinks(path, content),
     aliases: [...new Set(aliases)],
-    tags: [...new Set(tags.filter(Boolean))],
+    tags: [...new Set(tags.filter(isIndexableTag))],
+    headings: outline.headings,
+    blockIds: outline.blockIds,
   }
 }
