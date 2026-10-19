@@ -4,12 +4,12 @@ import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { toast } from '@/hooks/use-toast'
 import { findWikilinks, noteKeyOf, wikilinkTargetFor } from '@/lib/markdown/wikilink'
-import { linkMentions, type Mention } from '@/lib/markdown/unlinked-mentions'
+import { findUnlinkedMentions, linkMentions, type Mention } from '@/lib/markdown/unlinked-mentions'
 import { readNote, revealInFileTree } from '@/lib/daily/note-io'
 import { rewriteNote } from '@/lib/note-rewrite'
 import type { IndexedLink } from '@/lib/vault-index/index-note'
 import type { BacklinkRef } from '@/lib/vault-index/links'
-import { isAbortError, scanUnlinkedMentions, type UnlinkedMentionGroup } from '@/lib/vault-index/unlinked-mentions-scan'
+import { isAbortError, mentionNamesFor, scanUnlinkedMentions, type UnlinkedMentionGroup } from '@/lib/vault-index/unlinked-mentions-scan'
 import useArticleStore from '@/stores/article'
 import useVaultIndexStore, { selectBacklinks, selectOutgoingLinks } from '@/stores/vault-index'
 
@@ -71,12 +71,16 @@ function UnlinkedMentions({ path }: { path: string }) {
   async function link(sourcePath: string, mentions: Mention[]) {
     const target = wikilinkTargetFor(path, notes.keys())
     try {
-      await rewriteNote(sourcePath, content => linkMentions(content, mentions, target))
+      const written = await rewriteNote(sourcePath, content => linkMentions(content, mentions, target))
+      // 同一行有多筆提及時，連結其中一筆會讓其餘的 column 位移；用寫回後的內容重算這篇的提及，不用舊位置過濾
+      const remaining = written
+        ? findUnlinkedMentions(written.content, mentionNamesFor(path, notes))
+        : null
       setScan(previous => previous && {
         ...previous,
         groups: previous.groups
           .map(group => group.sourcePath === sourcePath
-            ? { ...group, mentions: group.mentions.filter(mention => !mentions.includes(mention)) }
+            ? { ...group, mentions: remaining ?? group.mentions.filter(mention => !mentions.includes(mention)) }
             : group)
           .filter(group => group.mentions.length > 0),
       })
