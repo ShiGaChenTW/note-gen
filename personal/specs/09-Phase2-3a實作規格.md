@@ -2,9 +2,9 @@
 title: Phase 2-3a 實作規格：嵌入與跳轉、local graph、索引標題與區塊、表格原文往返
 filename: 09-Phase2-3a實作規格.md
 created: 2026-10-19 18:00 (Asia/Taipei)
-modified: 2026-10-19 18:00 (Asia/Taipei)
+modified: 2026-10-19 19:05 (Asia/Taipei)
 source_llm: Claude (Fable 5.1, Claude Code session，PM 角色)
-status: 派工中（2026-10-19）
+status: 程式完成（2026-10-19），待實機驗收
 ---
 
 # Phase 2-3a 實作規格

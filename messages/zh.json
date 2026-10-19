@@ -5713,6 +5713,13 @@
       "noHeadings": "这篇没有标题",
       "noBlocks": "这篇没有区块 id"
     },
+    "wikilinkEmbed": {
+      "notFound": "找不到",
+      "sectionNotFound": "这篇没有这个标题或区块",
+      "loading": "读取中…",
+      "open": "打开",
+      "tooDeep": "嵌入太深，不再转入"
+    },
     "outline": {
       "title": "大纲",
       "open": "打开大纲",

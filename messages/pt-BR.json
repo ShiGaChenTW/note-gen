@@ -5601,6 +5601,13 @@
       "noHeadings": "Esta nota não tem títulos",
       "noBlocks": "Esta nota não tem IDs de bloco"
     },
+    "wikilinkEmbed": {
+      "notFound": "Não encontrado",
+      "sectionNotFound": "Esta nota não tem esse título ou bloco",
+      "loading": "Carregando…",
+      "open": "Abrir",
+      "tooDeep": "Incorporação profunda demais, não expandida"
+    },
     "outline": {
       "title": "Sumário",
       "open": "Abrir sumário",

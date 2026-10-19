@@ -5571,6 +5571,13 @@
       "noHeadings": "Diese Notiz hat keine Überschriften",
       "noBlocks": "Diese Notiz hat keine Block-IDs"
     },
+    "wikilinkEmbed": {
+      "notFound": "Nicht gefunden",
+      "sectionNotFound": "Diese Notiz hat keine solche Überschrift oder keinen solchen Block",
+      "loading": "Wird geladen…",
+      "open": "Öffnen",
+      "tooDeep": "Einbettung zu tief, wird nicht aufgelöst"
+    },
     "outline": {
       "title": "Gliederung",
       "open": "Gliederung öffnen",

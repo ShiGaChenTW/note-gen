@@ -5622,6 +5622,13 @@
       "noHeadings": "このノートに見出しはありません",
       "noBlocks": "このノートにブロック ID はありません"
     },
+    "wikilinkEmbed": {
+      "notFound": "見つかりません",
+      "sectionNotFound": "このノートにその見出しやブロックはありません",
+      "loading": "読み込み中…",
+      "open": "開く",
+      "tooDeep": "埋め込みが深すぎるため展開しません"
+    },
     "outline": {
       "title": "アウトライン",
       "open": "アウトラインを開く",

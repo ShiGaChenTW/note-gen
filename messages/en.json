@@ -5713,6 +5713,13 @@
       "noHeadings": "This note has no headings",
       "noBlocks": "This note has no block IDs"
     },
+    "wikilinkEmbed": {
+      "notFound": "Not found",
+      "sectionNotFound": "This note has no such heading or block",
+      "loading": "Loading…",
+      "open": "Open",
+      "tooDeep": "Embed too deep, not expanded"
+    },
     "outline": {
       "title": "Outline",
       "open": "Open Outline",

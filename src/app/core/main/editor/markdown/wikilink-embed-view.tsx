@@ -20,7 +20,8 @@ import MarkdownIt from 'markdown-it'
 import type StateInline from 'markdown-it/lib/rules_inline/state_inline.mjs'
 import type StateCore from 'markdown-it/lib/rules_core/state_core.mjs'
 import type Token from 'markdown-it/lib/token.mjs'
-import { useCallback, useEffect, useRef, useState, type MouseEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
+import { useTranslations } from 'next-intl'
 import {
   findWikilinks,
   noteKeyOf,
@@ -47,6 +48,8 @@ export const EMBED_TEXT = {
   open: '開啟',
   tooDeep: '嵌入太深，不再轉入',
 } as const
+
+export type EmbedText = { [K in keyof typeof EMBED_TEXT]: string }
 
 export const MAX_EMBED_DEPTH = 2
 const IMAGE_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg', 'avif'])
@@ -221,7 +224,7 @@ export const defaultEmbedDeps: EmbedDeps = {
 const WIKILINK_TOKEN = 'notegen_wikilink'
 const WIKILINK_RE = /^!?\[\[[^\]\n]*?\]\]/
 
-interface EmbedEnv { note: EmbedNote, depth: number }
+interface EmbedEnv { note: EmbedNote, depth: number, text: EmbedText }
 
 const md = new MarkdownIt({ html: false, linkify: false, breaks: false, typographer: false })
 const escapeHtml = md.utils.escapeHtml
@@ -284,11 +287,11 @@ function renderNestedEmbed(link: Wikilink & { block?: boolean }, env: EmbedEnv):
     return embedChip(`⧉ ${name}`, 'notegen-embed-too-deep')
   }
   const child = env.note.children.get(link.raw)
-  if (!child) return embedChip(`${EMBED_TEXT.notFound} ⧉ ${name}`, 'notegen-wikilink-unresolved')
+  if (!child) return embedChip(`${env.text.notFound} ⧉ ${name}`, 'notegen-wikilink-unresolved')
   const title = link.heading ? `${name} > ${link.heading}` : link.blockId ? `${name} > ^${link.blockId}` : name
   const body = child.sectionMissing
-    ? `<span class="notegen-embed-empty">${escapeHtml(EMBED_TEXT.sectionNotFound)}</span>`
-    : renderEmbedHtml(child, env.depth + 1)
+    ? `<span class="notegen-embed-empty">${escapeHtml(env.text.sectionNotFound)}</span>`
+    : renderEmbedHtml(child, env.depth + 1, env.text)
   const tag = link.block ? 'div' : 'span'
   return `<${tag} class="notegen-embed notegen-embed-nested" data-depth="${env.depth + 1}">`
     + `<${tag} class="notegen-embed-title"><button type="button" class="notegen-embed-open" data-notegen-open="${escapeHtml(child.path)}">⧉ ${escapeHtml(title)}</button></${tag}>`
@@ -319,8 +322,8 @@ md.renderer.rules.image = (tokens, index, options, envRaw, self) => {
 }
 
 /** 把一篇（或一段）嵌入內容轉成 HTML；`depth` 是這段內容的層數（最外層 1）。 */
-export function renderEmbedHtml(note: EmbedNote, depth = 1): string {
-  return md.render(note.markdown, { note, depth } satisfies EmbedEnv)
+export function renderEmbedHtml(note: EmbedNote, depth = 1, text: EmbedText = EMBED_TEXT): string {
+  return md.render(note.markdown, { note, depth, text } satisfies EmbedEnv)
 }
 
 // ---------------------------------------------------------------------------
@@ -366,6 +369,10 @@ async function activateEmbedImages(root: HTMLElement): Promise<void> {
 type LoadState = { status: 'loading' } | { status: 'ready', result: EmbedResult }
 
 export function WikilinkEmbedView({ node }: ReactNodeViewProps) {
+  const t = useTranslations('editor.wikilinkEmbed')
+  const text = useMemo<EmbedText>(() => ({
+    notFound: t('notFound'), sectionNotFound: t('sectionNotFound'), loading: t('loading'), open: t('open'), tooDeep: t('tooDeep'),
+  }), [t])
   const link = node.attrs as Wikilink
   const sourcePath = useArticleStore(state => state.activeFilePath)
   const revision = useVaultIndexStore(state => state.revision)
@@ -388,7 +395,7 @@ export function WikilinkEmbedView({ node }: ReactNodeViewProps) {
   }, [link.raw, sourcePath, revision]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const result = state.status === 'ready' ? state.result : null
-  const html = result?.kind === 'note' && !result.sectionMissing ? renderEmbedHtml(result, 1) : ''
+  const html = result?.kind === 'note' && !result.sectionMissing ? renderEmbedHtml(result, 1, text) : ''
 
   useEffect(() => {
     if (result?.kind !== 'image') { setImageSrc(null); return }
@@ -435,7 +442,7 @@ export function WikilinkEmbedView({ node }: ReactNodeViewProps) {
   if (!result) {
     return (
       <NodeViewWrapper as="span" className="notegen-embed notegen-embed-loading" {...shared}>
-        <span className="notegen-wikilink notegen-wikilink-embed">⧉ {name} · {EMBED_TEXT.loading}</span>
+        <span className="notegen-wikilink notegen-wikilink-embed">⧉ {name} · {text.loading}</span>
       </NodeViewWrapper>
     )
   }
@@ -443,7 +450,7 @@ export function WikilinkEmbedView({ node }: ReactNodeViewProps) {
   if (result.kind === 'missing') {
     return (
       <NodeViewWrapper as="span" className="notegen-embed notegen-embed-missing" {...shared}>
-        <span className="notegen-wikilink notegen-wikilink-embed notegen-wikilink-unresolved">{EMBED_TEXT.notFound} ⧉ {name}</span>
+        <span className="notegen-wikilink notegen-wikilink-embed notegen-wikilink-unresolved">{text.notFound} ⧉ {name}</span>
       </NodeViewWrapper>
     )
   }
@@ -472,7 +479,7 @@ export function WikilinkEmbedView({ node }: ReactNodeViewProps) {
               void openAttachment(result.path).catch(error => console.error('[wikilink-embed] open failed', error))
             }}
           >
-            {EMBED_TEXT.open}
+            {text.open}
           </button>
         </span>
       </NodeViewWrapper>
@@ -495,7 +502,7 @@ export function WikilinkEmbedView({ node }: ReactNodeViewProps) {
         </button>
       </span>
       {result.sectionMissing
-        ? <span className="notegen-embed-body notegen-embed-empty">{EMBED_TEXT.sectionNotFound}</span>
+        ? <span className="notegen-embed-body notegen-embed-empty">{text.sectionNotFound}</span>
         : <span ref={bodyRef} className="notegen-embed-body" onClick={handleBodyClick} dangerouslySetInnerHTML={{ __html: html }} />}
     </NodeViewWrapper>
   )

@@ -5612,6 +5612,13 @@
       "noHeadings": "這篇沒有標題",
       "noBlocks": "這篇沒有區塊 id"
     },
+    "wikilinkEmbed": {
+      "notFound": "找不到",
+      "sectionNotFound": "這篇沒有這個標題或區塊",
+      "loading": "讀取中…",
+      "open": "開啟",
+      "tooDeep": "嵌入太深，不再轉入"
+    },
     "outline": {
       "title": "大綱",
       "open": "打開大綱",

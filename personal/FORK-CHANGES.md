@@ -2,7 +2,7 @@
 title: NoteGen Fork 偏離上游清單
 filename: FORK-CHANGES.md
 created: 2026-10-15 05:45 (Asia/Taipei)
-modified: 2026-10-19 17:17 (Asia/Taipei)
+modified: 2026-10-19 19:00 (Asia/Taipei)
 source_llm: Claude (Opus 5.5, Claude Code session)
 status: active
 ---
@@ -85,6 +85,13 @@ npx pnpm@9 install --frozen-lockfile
 | 2026-10-19 | `src/lib/markdown/unlinked-mentions.ts`（新）、`src/lib/vault-index/unlinked-mentions-scan.ts`（新）、`src/app/core/main/backlinks/backlinks-panel.tsx` | L4 未連結提及：反向連結面板第三區（預設收合、展開時才掃描全 vault、依索引 revision 快取、索引變動後改按「掃描」重掃）；純字串比對（ASCII 邊界、CJK 不設邊界，跳過 code／`[[ ]]`／markdown 連結／frontmatter／URL／`#tag`）；「連結」「全部連結」改寫為 `[[目標]]` 或 `[[目標|原文字]]` | L4（Claude Code 子代理實作） |
 | 2026-10-19 | `messages/*.json` | 頂層 `linkRewrite`（`today` 之後）、`backlinks` 尾端 8 個未連結提及 key、頂層 `properties`（`backlinks` 之後）、頂層 `noteTags`（`tags` 之後）、`navigation.noteTags` | L4、L5、L6、L7 |
 | 2026-10-19 | `personal/make-test-vault.mjs` | `60 Notes/` 加 2-2 樣本：`.obsidian/types.json`、屬性樣本、標籤 A／B／C、待改名與三篇改名來源、提及目標與兩篇提及來源 | 驗收用 |
+| 2026-10-19 | `src/lib/vault-index/index-note.ts`、`src/lib/wikilink-suggest-model.ts`、`wikilink-suggest.tsx` | 2-3a：索引 `INDEX_SCHEMA_VERSION` 3，加 `headings`（ATX）與 `blockIds`（行尾 `^id` 含 context）；`#tag` 允許緊接全形標點、純數字不算；自動完成 `[[Note#` 列標題、`[[Note#^` 列區塊、`[[#` 為本篇（筆記唯一才列） | Grok 實作；舊快取自動重建 |
+| 2026-10-19 | `src/lib/vault-index/graph.ts`（新）、`src/app/core/main/graph/`（新）、`plugin-right-sidebar.tsx` | L8 local graph：中心筆記 1／2 層鄰接圖（未解析目標虛線、150 節點上限），elkjs 佈局、xyflow 唯讀繪圖，點節點換中心；右側欄加 `@graph` tab（屬性之後） | Codex 實作 |
+| 2026-10-19 | `src/app/core/main/editor/markdown/table-raw-extension.ts`（新）、`tiptap-editor.tsx` | 表格原文往返：載入時把 marked 的 `token.raw` 與儲存格簽章存進 table 節點（不輸出 HTML），存檔時簽章相同就輸出原文；`tiptap-editor.tsx` 只在 `MarkdownTable` 外包一層 `withRawTableRoundtrip` 加一行 import | 解掉 2-1 以來「表格會被重排」；Claude Code 子代理實作 |
+| 2026-10-19 | `src/app/core/main/editor/markdown/wikilink-extension.ts`、`markdown/style.css` | `[[Note#標題]]`／`[[#標題]]`／`[[Note#^id]]` 點擊後開檔並捲到目標（`^id` 高亮 1.5 秒，decoration 不進檔案）；`embed: true` 改走 React node view | 同上 |
+| 2026-10-19 | `src/app/core/main/editor/markdown/wikilink-embed-view.tsx`（新）、`src/lib/markdown/note-section.ts`（新） | `![[嵌入]]` 轉入：整篇／`#標題` 段／`^id` 區塊／圖片（`\|寬`）／附件，markdown-it 渲染（`html: false`）、巢狀 2 層、依 mtime 快取；介面文字 `editor.wikilinkEmbed` | 同上 |
+| 2026-10-19 | `messages/*.json` | `localGraph`（`properties` 之後）、`editor.wikilinkSuggest` 加 4 key、`editor.wikilinkEmbed`（`wikilinkSuggest` 之後） | 2-3a |
+| 2026-10-19 | `personal/make-test-vault.mjs` | `60 Notes/` 加 2-3a 樣本：區塊目標（標題＋`^id`）、嵌入來源／嵌入中層、`附件.png`；標籤樣本改驗新規則 | 驗收用 |
 
 ## 刻意不改的東西
 
@@ -210,8 +217,8 @@ npx pnpm@9 tauri dev
 
 - 嵌入 `![[ ]]` 的內容轉入、`#標題` 捲動、block ref 跳轉（Phase 2-3）。
 - 跨連結套粗體／斜體的存檔差異（上游限制，見修改清單）。
-- **表格存檔會被重排**：上游 @tiptap/markdown 的表格序列化器會把欄寬補齊（`|---|---|` 變 `| --- | --- |`、儲存格補空白）並在表格前多放一個空行；不開 Wikilink 擴充也一樣，所有含表格的筆記都受影響，與 2-1 無關。要達成「表格也一字不差」需要另開小 PR 在存檔路徑還原原始表格文字。
-- **部分路徑不解析**：`resolveWikilinkTarget` 只認「從 vault 根目錄的完整路徑」或「純檔名」，`[[子資料夾/同名]]` 這種相對於本篇資料夾的部分路徑（Obsidian「Relative path to file」連結格式）會標成未建立。2-1 假設 vault 用 Obsidian 預設的「Shortest path when possible」；2-2 再補相對路徑解析。
+- ~~表格存檔會被重排~~：2-3a 的 `table-raw-extension.ts` 已解，沒動過的表格存檔輸出原文。
+- **部分路徑**：2-2 的 L7 解析器已支援相對本篇資料夾的 `[[子資料夾/同名]]`；L1 的 decorations 與點擊仍用 `resolveWikilinkTarget`（只認完整路徑或純檔名），兩邊統一留到之後。
 
 ### Phase 2-2 知識庫整理（L5 屬性面板、L7 改名改寫連結、L6 筆記標籤、L4 未連結提及）
 
@@ -254,5 +261,38 @@ npx pnpm@9 tauri dev
 - L5：Properties 的 Visible／Hidden 模式、寫入 `types.json`、Dataview 行內欄位；YAML 錨點／別名／多行字串只能用原始碼改。
 - L7：指向非 `.md` 附件（PDF 等）的連結不在索引裡，改名附件不會改寫（圖片由上游處理）；`[text](Note)` 省略 `.md` 的 markdown 連結不會跟著搬；「記住選擇」設定沒做，每次都問。
 - L4：純字串比對，很短或很常見的名稱會命中很多；每次展開都讀全 vault 的 `.md`，3,000 篇以內可接受。
-- 索引的內文 `#tag` 只認行首或空白／括號之後的 `#`，緊接在標點後的（`，#待辦`）不算，純數字 `#12` 會被當成標籤（Obsidian 不會）：2-3 修索引時一併處理。
-- 上游表格序列化器重排（見 2-1）仍未處理。
+- ~~索引的內文 `#tag` 規則~~、~~表格重排~~：2-3a 已解。
+
+### Phase 2-3a 嵌入與跳轉、local graph、索引標題與區塊、表格原文往返
+
+啟動方式同上。測試 vault：`node personal/make-test-vault.mjs --force`，樣本在 `60 Notes/`。第一次啟動索引會因版本升到 3 整份重建。
+
+**表格原文往返**
+
+1. 開 `60 Notes/雙鏈表格.md` 不改內容直接存檔：`git diff` 必須是空的（緊湊 `|---|---|` 不再補空白、表前不多空行）。`改名來源二.md`（CRLF）同樣。
+2. 改一格再存：那個表格走正常序列化（會重排），其他表格不受影響。Undo 回原樣再存又是原文。
+
+**嵌入轉入與跳轉**
+
+1. 開 `嵌入來源.md`：整篇嵌入顯示「雙鏈目標」去掉 frontmatter 的內容，上方小字可點開；`#第二節` 只顯示那一節；`^blk-1` 只顯示那一段；`^row-1` 顯示那一列；圖片 120px 寬；「沒有這篇」虛線「找不到」；「不存在的節」顯示「這篇沒有這個標題或區塊」。
+2. 「嵌入中層」在本篇內是第二層，裡面的 `![[雙鏈目標]]` 是第三層，只顯示「⧉ 雙鏈目標」晶片。
+3. 存檔 diff 為空。嵌入內的 `[[連結]]` 可點。
+4. 最後一行三個連結：`[[雙鏈目標#第二節]]` 開檔並捲到第二節；`[[區塊目標#^item-1]]` 捲到清單項並高亮 1.5 秒；`[[#本篇標題]]` 本篇捲動不重開。目標筆記若已在別的分頁開著也要捲。
+
+**L8 關聯圖**
+
+1. 右側欄多一個「關聯圖」tab（屬性之後）。開 `雙鏈目標.md`：1 層看到所有連入（雙鏈來源、雙鏈表格、改名來源一、屬性樣本…）與連出（區塊目標…），未建立的目標是虛線節點。
+2. 切「2 層」多一圈；點任一節點換中心並開啟那篇；索引更新後圖會重算。
+
+**自動完成 `#`／`^` 與索引規則**
+
+1. 任一筆記打 `[[區塊目標#`：列 第一節、第二節、第三節；`[[區塊目標#^`：列 blk-1、item-1、row-1、sec-3（各附那一行前 60 字）；`[[#` 列本篇標題；Enter 插入 `[[區塊目標#第二節]]` 等。
+2. 左側欄筆記標籤：`待辦` 1（緊接 `，` 的也算）；沒有 `12` 這個標籤。
+
+**這份步驟沒涵蓋的**
+
+- 嵌入：附件只找本篇同資料夾與 vault 根目錄（不讀 `.obsidian/app.json` 的附件資料夾）；嵌入內的 `- [ ]` 任務照字面顯示；大檔分段模式的非作用中段落只顯示晶片；嵌入內容不可就地編輯。
+- 跳轉：目標沒有該標題時只開檔；pending 10 秒後作廢。
+- 表格：只改儲存格對齊屬性而不改內容時仍輸出原文；含字面 `&nbsp;` 的表格列仍被上游換成空格。
+- 關聯圖：超過 150 節點只畫前 150；不畫標籤節點。
+- L1 的連結解析仍不認「相對本篇資料夾的部分路徑」（L7 已認），兩邊統一待之後。
