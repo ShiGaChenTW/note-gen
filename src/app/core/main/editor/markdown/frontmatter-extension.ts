@@ -24,7 +24,7 @@ export const Frontmatter = Node.create({
   name: 'frontmatter',
   group: 'block',
   atom: true,
-  selectable: true,
+  selectable: false, // 點選後打字會整塊取代 frontmatter（2-3b 驗收誤觸過一次），一律從屬性面板或原始碼改
   draggable: false,
 
   addAttributes() {
