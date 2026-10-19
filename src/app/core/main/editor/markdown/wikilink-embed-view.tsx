@@ -248,18 +248,25 @@ function wikilinkInlineRule(state: StateInline, silent: boolean): boolean {
   return true
 }
 
-/** 整段只有一個嵌入時拿掉 `<p>`，讓巢狀嵌入能以區塊呈現（`<p>` 裡放 `<div>` 會被瀏覽器拆開）。 */
+/**
+ * 段落裡只要有「筆記嵌入」就拿掉 `<p>`，並把那些嵌入以區塊（`<div>`）呈現：
+ * 巢狀內容本身含 `<h2>`／`<p>`，塞在 `<p>`／`<span>` 裡會被瀏覽器拆開，連同段落裡的其他文字一起消失。
+ * 圖片嵌入是 `<img>`，留在行內沒問題。
+ */
 function unwrapEmbedParagraphs(state: StateCore): void {
   const tokens = state.tokens
   for (let i = 0; i + 2 < tokens.length; i++) {
     if (tokens[i].type !== 'paragraph_open' || tokens[i + 1].type !== 'inline' || tokens[i + 2].type !== 'paragraph_close') continue
-    const children = (tokens[i + 1].children ?? []).filter(t => !(t.type === 'text' && t.content.trim() === ''))
-    if (children.length !== 1 || children[0].type !== WIKILINK_TOKEN) continue
-    const link = children[0].meta as Wikilink
-    if (!link.embed) continue
+    const children = tokens[i + 1].children ?? []
+    const embeds = children.filter(child => {
+      if (child.type !== WIKILINK_TOKEN) return false
+      const link = child.meta as Wikilink
+      return link.embed && classifyEmbedTarget(link.target) === 'note'
+    })
+    if (embeds.length === 0) continue
     tokens[i].hidden = true
     tokens[i + 2].hidden = true
-    children[0].meta = { ...link, block: true }
+    for (const child of embeds) child.meta = { ...(child.meta as Wikilink), block: true }
   }
 }
 
