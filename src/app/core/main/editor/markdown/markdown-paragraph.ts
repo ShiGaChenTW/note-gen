@@ -42,7 +42,10 @@ export function normalizeMarkdownPlaceholders(markdown: string): string {
     })
     .join('\n')
 
-  return normalized.replace(TRAILING_EMPTY_PARAGRAPHS_RE, '')
+  const trimmed = normalized.replace(TRAILING_EMPTY_PARAGRAPHS_RE, '')
+  // Fork：序列化器對「以段落結尾」的文件不會補結尾換行（標題、清單、code block 結尾都會），
+  // 存檔時統一補上一個，讓以段落結尾的筆記也能往返一字不差（POSIX 文字檔結尾應有換行）。
+  return trimmed && !trimmed.endsWith('\n') ? `${trimmed}\n` : trimmed
 }
 
 export const MarkdownParagraph = Node.create<MarkdownParagraphOptions>({

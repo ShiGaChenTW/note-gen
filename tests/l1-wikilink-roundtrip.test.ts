@@ -242,7 +242,20 @@ describe('L1: wikilink round trip through the visual editor', () => {
     editor.commands.insertContent(' 新增')
     const out = save(editor)
     editor.destroy()
-    expect(out).toBe('前面 [[A]] 後面 新增')
+    expect(out).toBe('前面 [[A]] 後面 新增\n')
+  })
+
+  it('以段落結尾的文件存檔會補上結尾換行（標題、清單結尾本來就有）', () => {
+    for (const raw of ['a\n', '文字 [[連結]]\n', '巢狀：![[B]]\n', '# h\n', '- 項目\n']) {
+      const editor = createEditor()
+      load(editor, raw)
+      expect(save(editor)).toBe(raw)
+      editor.destroy()
+    }
+    const editor = createEditor()
+    load(editor, '沒有結尾換行')
+    expect(save(editor)).toBe('沒有結尾換行\n')
+    editor.destroy()
   })
 
   it('is an inline atom (arrow keys skip it, Backspace deletes it whole)', () => {

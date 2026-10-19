@@ -170,11 +170,13 @@ describe('A-1: renderEmbedHtml', () => {
     expect(html).toContain('行內 <span class="notegen-wikilink notegen-wikilink-embed notegen-embed-too-deep">⧉ C</span> 文字')
   })
 
-  it('inline nested embed at depth 1 renders as a span, not a div', async () => {
+  it('inline nested embed with text in the same paragraph: the <p> is unwrapped and the embed is a block (block content inside <p>/<span> would be torn apart by the browser)', async () => {
     const b = await loadNote('![[B]]')
     const html = renderEmbedHtml(b)
     expect(html).toContain('<div class="notegen-embed notegen-embed-nested" data-depth="2">')
-    expect(html).toContain('<p>行內 <span class="notegen-embed notegen-embed-nested" data-depth="2">')
+    expect(html).toContain('行內 <div class="notegen-embed notegen-embed-nested" data-depth="2">')
+    expect(html).not.toContain('<p>行內')
+    expect(html).not.toContain('<span class="notegen-embed notegen-embed-nested"')
   })
 
   it('unresolved nested embed shows 找不到, cycle shows the plain chip', async () => {
