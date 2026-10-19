@@ -2,6 +2,7 @@
 import { create } from 'zustand'
 import { collectTasks, type TaskRef } from '@/lib/vault-index/index-core'
 import { collectBacklinks, collectOutgoingLinks, type BacklinkRef, type OutgoingLink } from '@/lib/vault-index/links'
+import { buildTagTree, type TagNode } from '@/lib/vault-index/tags'
 import type { IndexedNote } from '@/lib/vault-index/index-note'
 
 export type VaultIndexStatus = 'idle' | 'scanning' | 'ready' | 'error'
@@ -106,6 +107,16 @@ export function selectOutgoingLinks(state: LinkState, path: string): OutgoingLin
   refreshLinkCache(state)
   if (!outgoingCache.has(path)) outgoingCache.set(path, collectOutgoingLinks(path, state.notes.values()))
   return outgoingCache.get(path)!
+}
+
+let tagCache: { revision: number, tree: TagNode[] } | null = null
+
+/** 全 vault 的標籤樹（依名稱排序）；同一個 revision 只算一次。 */
+export function selectTagTree(state: Pick<VaultIndexState, 'notes' | 'revision'>): TagNode[] {
+  if (tagCache?.revision !== state.revision) {
+    tagCache = { revision: state.revision, tree: buildTagTree(state.notes.values()) }
+  }
+  return tagCache.tree
 }
 
 export default useVaultIndexStore

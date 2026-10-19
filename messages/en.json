@@ -4886,7 +4886,8 @@
     "showRightSidebar": "Show Right Sidebar",
     "hideRightSidebar": "Hide Right Sidebar",
     "searchPlaceholder": "Search notes, records, or canvases...",
-    "navigate": "Navigate"
+    "navigate": "Navigate",
+    "noteTags": "Note tags"
   },
   "activity": {
     "title": "Activity Calendar",
@@ -4934,6 +4935,15 @@
   },
   "tags": {
     "inspiration": "Inspiration"
+  },
+  "noteTags": {
+    "title": "Note tags",
+    "search": "Search tags",
+    "sortByName": "By name",
+    "sortByCount": "By count",
+    "notes": "{count} notes",
+    "empty": "No tags yet",
+    "indexing": "Indexing…"
   },
   "sync": {
     "status": "Sync Repository Status",

@@ -4745,7 +4745,8 @@
     "showRightSidebar": "Rechte Seitenleiste anzeigen",
     "hideRightSidebar": "Rechte Seitenleiste ausblenden",
     "searchPlaceholder": "Notizen, Aufzeichnungen oder Canvases suchen...",
-    "navigate": "Navigieren"
+    "navigate": "Navigieren",
+    "noteTags": "Notiz-Tags"
   },
   "activity": {
     "title": "Aktivitätskalender",
@@ -4793,6 +4794,15 @@
   },
   "tags": {
     "inspiration": "Inspiration"
+  },
+  "noteTags": {
+    "title": "Notiz-Tags",
+    "search": "Tags suchen",
+    "sortByName": "Nach Name",
+    "sortByCount": "Nach Anzahl",
+    "notes": "{count} Notizen",
+    "empty": "Noch keine Tags",
+    "indexing": "Indizierung…"
   },
   "sync": {
     "status": "Sync Repository-Status",

@@ -5,7 +5,7 @@ import { isPluginDisplayVisible } from '@/lib/plugins/display-preferences'
 import { usePluginLocalization } from '@/lib/plugins/localization'
 import { useEffect } from 'react'
 import { Tabs, TabsContent } from "@/components/ui/tabs"
-import { Files, Highlighter, Palette } from "lucide-react"
+import { Files, Hash, Highlighter, Palette } from "lucide-react"
 import { FileSidebar } from "./file"
 import { NoteSidebar } from "./mark"
 import { FileActions } from "./file/file-actions"
@@ -16,6 +16,7 @@ import { ExpandableTabs } from "@/components/ui/expandable-tabs"
 import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
 import { CanvasActions, CanvasSidebar } from './canvas/canvas-sidebar'
+import NoteTagsSidebar from './note-tags/note-tags-sidebar'
 import { SidebarSearch } from './sidebar-search'
 import { getPluginIcon } from '@/components/plugins/plugin-icon'
 import { PluginViewSurface, PluginViewToolbar } from '@/components/plugins/plugin-view-surface'
@@ -27,6 +28,7 @@ const SIDEBAR_TABS = [
   { title: "files", icon: Files },
   { title: "notes", icon: Highlighter },
   { title: "canvases", icon: Palette },
+  { title: "noteTags", icon: Hash },
 ] as const
 
 export function LeftSidebar() {
@@ -71,6 +73,8 @@ export function LeftSidebar() {
   // Prepare tabs with translated titles
   const tabs = allTabs
   const activePluginTab = pluginTabs.find((tab) => tab.id === leftSidebarTab)
+  // 筆記標籤不進 SidebarSearch 的範圍（它只認筆記、記錄、畫布）。
+  const searchTab = isBuiltInLeftSidebarTab(leftSidebarTab) && leftSidebarTab !== 'noteTags' ? leftSidebarTab : 'files'
 
   return (
     <div className="w-full h-full flex flex-col">
@@ -135,7 +139,7 @@ export function LeftSidebar() {
           <div className="min-h-0 flex-1 overflow-y-auto">
             <PluginViewSurface key={activePluginTab.id} viewKey={activePluginTab.id} toolbarInHeader />
           </div>
-        ) : <SidebarSearch activeTab={isBuiltInLeftSidebarTab(leftSidebarTab) ? leftSidebarTab : 'files'}>
+        ) : <SidebarSearch activeTab={searchTab}>
           <div className="relative min-h-0 flex-1">
             <TabsContent
               forceMount
@@ -157,6 +161,13 @@ export function LeftSidebar() {
               className="absolute inset-0 m-0 overflow-hidden data-[state=inactive]:hidden"
             >
               <CanvasSidebar />
+            </TabsContent>
+            <TabsContent
+              forceMount
+              value="noteTags"
+              className="absolute inset-0 m-0 overflow-hidden data-[state=inactive]:hidden"
+            >
+              <NoteTagsSidebar />
             </TabsContent>
           </div>
         </SidebarSearch>}
