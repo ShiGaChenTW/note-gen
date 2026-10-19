@@ -322,6 +322,8 @@ async function listWorkspaceMarkdownFiles(directory = ''): Promise<string[]> {
   const markdownFiles: string[] = []
 
   for (const entry of entries) {
+    // Fork：跳過隱藏項目（例如 Obsidian vault 的 .obsidian），否則 Tauri fs scope 會回 forbidden path 讓改名／搬動整個回滾
+    if (entry.name.startsWith('.')) continue
     const relativePath = directory ? `${directory}/${entry.name}` : entry.name
     if (entry.isDirectory && !entry.isSymlink) {
       markdownFiles.push(...await listWorkspaceMarkdownFiles(relativePath))
