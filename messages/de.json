@@ -4768,6 +4768,16 @@
       "description": "Erstelle ein Canvas, um Ideen mit Diagrammen und Freihandzeichnungen zu organisieren."
     }
   },
+  "obsidianCanvas": {
+    "title": "Canvas",
+    "addText": "Text hinzufügen",
+    "delete": "Löschen",
+    "parseError": "Canvas-Formatfehler: {message}",
+    "openAsText": "Als Text öffnen",
+    "externalChange": "Die Datei wurde extern geändert. Bitte erneut öffnen.",
+    "untitledGroup": "Unbenannte Gruppe",
+    "readOnly": "Schreibgeschützt"
+  },
   "navigation": {
     "canvases": "Canvas",
     "chat": "Chat",
