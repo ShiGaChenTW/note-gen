@@ -513,21 +513,20 @@ filters:
 \`\`\`
 `)
 
-// JSON Canvas 1.0：Tab 縮排、結尾換行與 Obsidian 寫法相同；extraField 是未知欄位，改圖後要還在
-write('60 Notes/白板.canvas', `{
-\t"nodes":[
-\t\t{"id":"8132d4d894c80cf6","type":"group","x":-240,"y":-360,"width":600,"height":320,"label":"研究","color":"4"},
-\t\t{"id":"754a8ef995a366e6","type":"file","file":"60 Notes/雙鏈目標.md","x":-220,"y":-320,"width":260,"height":120},
-\t\t{"id":"cf5b61eb8c6e1b4a","type":"text","text":"# 想法\\n\\n連到 [[雙鏈來源]]","x":80,"y":-320,"width":260,"height":120,"color":"#ff8800","extraField":true},
-\t\t{"id":"be0b8f7c6a4c9e22","type":"link","url":"https://obsidian.md","x":-220,"y":-160,"width":260,"height":80},
-\t\t{"id":"a1b2c3d4e5f60718","type":"text","text":"群組外的卡片","x":480,"y":-200,"width":200,"height":100,"color":"2"}
-\t],
-\t"edges":[
-\t\t{"id":"2a7f6b0e9d1c4e5f","fromNode":"754a8ef995a366e6","fromSide":"right","toNode":"cf5b61eb8c6e1b4a","toSide":"left","toEnd":"arrow","label":"參考","color":"2"},
-\t\t{"id":"3b8c7d1f0e2a5b6c","fromNode":"cf5b61eb8c6e1b4a","fromSide":"bottom","toNode":"a1b2c3d4e5f60718","toSide":"top"}
-\t]
-}
-`)
+// JSON Canvas 1.0：用 Obsidian 的寫法（JSON.stringify(data, null, '\t') + 換行）產生；extraField 是未知欄位，改圖後要還在
+write('60 Notes/白板.canvas', JSON.stringify({
+  nodes: [
+    { id: '8132d4d894c80cf6', type: 'group', x: -240, y: -360, width: 600, height: 320, label: '研究', color: '4' },
+    { id: '754a8ef995a366e6', type: 'file', file: '60 Notes/雙鏈目標.md', x: -220, y: -320, width: 260, height: 120 },
+    { id: 'cf5b61eb8c6e1b4a', type: 'text', text: '# 想法\n\n連到 [[雙鏈來源]]', x: 80, y: -320, width: 260, height: 120, color: '#ff8800', extraField: true },
+    { id: 'be0b8f7c6a4c9e22', type: 'link', url: 'https://obsidian.md', x: -220, y: -160, width: 260, height: 80 },
+    { id: 'a1b2c3d4e5f60718', type: 'text', text: '群組外的卡片', x: 480, y: -200, width: 200, height: 100, color: '2' },
+  ],
+  edges: [
+    { id: '2a7f6b0e9d1c4e5f', fromNode: '754a8ef995a366e6', fromSide: 'right', toNode: 'cf5b61eb8c6e1b4a', toSide: 'left', toEnd: 'arrow', label: '參考', color: '2' },
+    { id: '3b8c7d1f0e2a5b6c', fromNode: 'cf5b61eb8c6e1b4a', fromSide: 'bottom', toNode: 'a1b2c3d4e5f60718', toSide: 'top' },
+  ],
+}, null, '\t') + '\n')
 // 16×16 琥珀色 PNG（嵌入圖片用，要看得見）
 fs.mkdirSync(path.join(target, '60 Notes'), { recursive: true })
 fs.writeFileSync(path.join(target, '60 Notes/附件.png'), Buffer.from('iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGklEQVR42mP4vVf5PyWYYdSAUQNGDRguBgAAcfXaH63pA8EAAAAASUVORK5CYII=', 'base64'))
