@@ -109,6 +109,16 @@ describe('unlinked mentions section', () => {
     expect(details().querySelector('summary')?.textContent).toBe(`${t.unlinked} 2`)
   })
 
+  it('同一行兩筆提及：先連第一筆，再連第二筆仍要寫進去（位置以寫回後的內容重算）', async () => {
+    await render()
+    await expand()
+    await act(async () => buttons(t.linkOne)[1].click())
+    expect(files.get('folder/Source.md')).toBe('第一行\n提到 [[Target|target]] 與 別名\n[[Target]] 已連結\n')
+    await act(async () => buttons(t.linkOne)[1].click())
+    expect(files.get('folder/Source.md')).toBe('第一行\n提到 [[Target|target]] 與 [[Target|別名]]\n[[Target]] 已連結\n')
+    expect([...details().querySelectorAll('h3')].map(h => h.textContent)).toEqual(['Other'])
+  })
+
   it('「全部連結」由後往前一次改完整篇，清空的群組消失；同名時寫完整路徑', async () => {
     files.set('dup/Target.md', '')
     useVaultIndexStore.getState().upsert([indexNote('dup/Target.md', '', 1)])
