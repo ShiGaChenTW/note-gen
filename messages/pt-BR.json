@@ -193,6 +193,15 @@
       "summaryTitle": "{count} lembretes de tarefas"
     }
   },
+  "linkRewrite": {
+    "title": "Atualizar links",
+    "description": "{links} links em {files} notas apontam para o arquivo renomeado. Atualizá-los também?",
+    "obsidianHint": "Se o Obsidian estiver com este vault aberto, ele também pode alterar os mesmos arquivos.",
+    "confirm": "Atualizar",
+    "skip": "Não atualizar",
+    "done": "{files} notas atualizadas",
+    "failed": "Falha ao atualizar, os arquivos foram restaurados"
+  },
   "backlinks": {
     "title": "Links de retorno",
     "linked": "Links para esta nota",
@@ -200,7 +209,42 @@
     "empty": "Nenhuma nota aponta para esta nota ainda",
     "indexing": "Indexando…",
     "notMarkdown": "Abra uma nota Markdown para ver os links",
-    "unresolved": "Ainda não criada"
+    "unresolved": "Ainda não criada",
+    "unlinked": "Menções sem link",
+    "scan": "Verificar",
+    "scanning": "Verificando…",
+    "linkOne": "Vincular",
+    "linkAll": "Vincular todas",
+    "unlinkedEmpty": "Nenhuma menção sem link",
+    "linkDone": "Convertida em link",
+    "linkFailed": "Falha ao vincular, o arquivo foi restaurado"
+  },
+  "properties": {
+    "title": "Propriedades",
+    "add": "Adicionar propriedade",
+    "empty": "Esta nota ainda não tem propriedades",
+    "source": "Código-fonte",
+    "apply": "Aplicar",
+    "invalidYaml": "YAML inválido",
+    "keyPlaceholder": "Nome da propriedade",
+    "valuePlaceholder": "Insira um valor",
+    "remove": "Excluir",
+    "rename": "Renomear",
+    "unsupported": "Formato não suportado; edite no código-fonte",
+    "notMarkdown": "Abra uma nota Markdown para ver as propriedades",
+    "type": "Tipo de propriedade",
+    "keyExists": "Já existe uma propriedade com este nome",
+    "saveFailed": "Não foi possível salvar as propriedades",
+    "types": {
+      "text": "Texto",
+      "multitext": "Lista",
+      "number": "Número",
+      "checkbox": "Caixa de seleção",
+      "date": "Data",
+      "datetime": "Data e hora",
+      "tags": "Tags",
+      "aliases": "Apelidos"
+    }
   },
   "settings": {
     "defaultModels": {
@@ -4786,7 +4830,8 @@
     "searchPlaceholder": "Pesquisar notas, registros ou telas...",
     "showCenterPanel": "Mostrar editor",
     "hideCenterPanel": "Ocultar editor",
-    "navigate": "Navegar"
+    "navigate": "Navegar",
+    "noteTags": "Tags de notas"
   },
   "activity": {
     "title": "Calendário de Atividade",
@@ -4834,6 +4879,15 @@
   },
   "tags": {
     "inspiration": "Inspiração"
+  },
+  "noteTags": {
+    "title": "Tags de notas",
+    "search": "Buscar tags",
+    "sortByName": "Por nome",
+    "sortByCount": "Por quantidade",
+    "notes": "{count} notas",
+    "empty": "Ainda não há tags",
+    "indexing": "Indexando…"
   },
   "sync": {
     "status": "Status do Repositório de Sincronização",

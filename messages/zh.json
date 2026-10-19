@@ -193,6 +193,15 @@
       "summaryTitle": "{count} 个任务提醒"
     }
   },
+  "linkRewrite": {
+    "title": "更新链接",
+    "description": "{files} 篇笔记共 {links} 个链接指向被重命名的文件，要一并改写吗？",
+    "obsidianHint": "Obsidian 同时打开这个 vault 时，它也可能改到同一批文件。",
+    "confirm": "改写",
+    "skip": "不改写",
+    "done": "已更新 {files} 篇笔记",
+    "failed": "改写失败，文件已还原"
+  },
   "backlinks": {
     "title": "反向链接",
     "linked": "链接到这篇",
@@ -200,7 +209,42 @@
     "empty": "还没有笔记链接到这篇",
     "indexing": "索引中…",
     "notMarkdown": "请打开 Markdown 笔记以查看链接",
-    "unresolved": "尚未创建"
+    "unresolved": "尚未创建",
+    "unlinked": "未链接提及",
+    "scan": "扫描",
+    "scanning": "扫描中…",
+    "linkOne": "链接",
+    "linkAll": "全部链接",
+    "unlinkedEmpty": "没有未链接的提及",
+    "linkDone": "已转成链接",
+    "linkFailed": "转成链接失败，文件已还原"
+  },
+  "properties": {
+    "title": "属性",
+    "add": "新增属性",
+    "empty": "这篇还没有属性",
+    "source": "源代码",
+    "apply": "应用",
+    "invalidYaml": "YAML 格式错误",
+    "keyPlaceholder": "属性名称",
+    "valuePlaceholder": "输入值",
+    "remove": "删除",
+    "rename": "重命名",
+    "unsupported": "不支持的格式，请用源代码编辑",
+    "notMarkdown": "请打开 Markdown 笔记以查看属性",
+    "type": "属性类型",
+    "keyExists": "属性名称已存在",
+    "saveFailed": "无法保存属性",
+    "types": {
+      "text": "文本",
+      "multitext": "列表",
+      "number": "数字",
+      "checkbox": "复选框",
+      "date": "日期",
+      "datetime": "日期与时间",
+      "tags": "标签",
+      "aliases": "别名"
+    }
   },
   "settings": {
     "defaultModels": {
@@ -4886,7 +4930,8 @@
     "showRightSidebar": "显示右侧边栏",
     "hideRightSidebar": "隐藏右侧边栏",
     "searchPlaceholder": "搜索笔记、记录或画布...",
-    "navigate": "导航"
+    "navigate": "导航",
+    "noteTags": "笔记标签"
   },
   "activity": {
     "title": "活跃度日历",
@@ -4934,6 +4979,15 @@
   },
   "tags": {
     "inspiration": "灵感"
+  },
+  "noteTags": {
+    "title": "笔记标签",
+    "search": "搜索标签",
+    "sortByName": "按名称",
+    "sortByCount": "按数量",
+    "notes": "{count} 篇笔记",
+    "empty": "还没有标签",
+    "indexing": "索引中…"
   },
   "sync": {
     "status": "同步仓库状态",

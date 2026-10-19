@@ -2,7 +2,7 @@
 title: NoteGen Fork 偏離上游清單
 filename: FORK-CHANGES.md
 created: 2026-10-15 05:45 (Asia/Taipei)
-modified: 2026-10-19 05:30 (Asia/Taipei)
+modified: 2026-10-19 17:17 (Asia/Taipei)
 source_llm: Claude (Opus 5.5, Claude Code session)
 status: active
 ---
@@ -75,6 +75,16 @@ npx pnpm@9 install --frozen-lockfile
 | 2026-10-19 | `messages/*.json` | 頂層 `backlinks` 命名空間（`today` 之後）、`editor.wikilinkSuggest`（`smartFileLink` 之後） | L2、L3 |
 | 2026-10-19 | `src/app/core/main/editor/markdown/wikilink-extension.ts`（新）、`tiptap-editor.tsx`、`markdown/style.css`、`tests/l1-wikilink-roundtrip.test.ts`（新） | L1：`[[ ]]`／`![[ ]]` 成為 inline atom 節點，存檔輸出原始字串；表格內 `\|` 由附帶的 block tokenizer 還原（只對含 `[[` 的表格出手；上游 marked 會把 `\|` 切成 `|`，這是目前唯一真的會改壞檔案的情境）；已建立／未建立用 decorations 跟隨索引；點擊開啟、不存在則在同資料夾建立 `名稱.md`；打完 `]]` 的 input rule 轉成節點。`tiptap-editor.tsx` 加 import 與 extensions 一行、L2 掛載兩行 | L1（Claude Code 子代理實作）；已知上游限制：`**粗體 [[B]]**` 會存成 `**粗體** [[B]]`（@tiptap/markdown 只把 mark 套在 text node，InlineMath 同病），測試以 `it.fails` 記錄 |
 | 2026-10-19 | `tests/p2-1-wikilink-integration.test.ts`（新） | 整合：手打 `]]` 轉節點、L2 選單直接插入 L1 節點（連既有 `]]` 一起換掉） | PM 整合 |
+| 2026-10-19 | `src/lib/note-rewrite.ts`（新） | Phase 2-2 共用：改寫可能正在編輯器裡開著的筆記（`runEditorPathWriteTransaction` 排隊、寫前重讀、開著的那篇寫完發 `editor-file-content-updated`／`external-content-update` 讓編輯器重載、失敗整批還原），照上游 `markdown-media-path.ts` 的流程 | 2-2 三軌寫檔的唯一入口；規格 `personal/specs/08-Phase2-2實作規格.md` |
+| 2026-10-19 | `src/lib/vault-index/tags.ts`（新）、`src/stores/vault-index.ts`、`src/app/core/main/note-tags/`（新） | L6 筆記標籤：以索引的 `tags` 建樹（`/` 分層、不分大小寫、去重計數）、搜尋、依名稱／數量排序、點標籤列筆記；store 檔尾加 `selectTagTree` | L6（Grok 實作）；與上游「記錄」的標籤表完全分開 |
+| 2026-10-19 | `src/stores/sidebar.ts`、`src/app/core/main/left-sidebar.tsx` | 掛載點：內建左側欄 tab 加 `noteTags`（lucide `Hash`，放在畫布之後）；`SidebarSearch` 不涵蓋這個 tab | L6 |
+| 2026-10-19 | `src/lib/markdown/frontmatter-edit.ts`（新）、`src/lib/obsidian-types.ts`（新）、`src/app/core/main/properties/`（新） | L5 屬性面板：用 `yaml` `parseDocument` 的節點 range 做文字替換，只改動到的 key（註解、引號、順序、CRLF 不動）；八種 Obsidian 型別，優先讀 vault 的 `.obsidian/types.json`（唯讀）；巢狀、多行、錨點唯讀；各型別編輯元件、新增屬性 key 自動完成（全 vault 索引）、原始碼模式；寫回走 `rewriteNote` | L5（Codex 實作）；已知：被改的那一行若有行尾註解，註解前的多個空白會縮成一個；flow 清單被改時轉 block |
+| 2026-10-19 | `src/components/plugins/plugin-right-sidebar.tsx` | 掛載點：右側欄加 `@properties` tab（lucide `SlidersHorizontal`，放在反向連結之後） | L5 |
+| 2026-10-19 | `src/lib/markdown/wikilink-rewrite.ts`（新）、`src/lib/wikilink-rename.ts`（新）、`src/app/core/main/link-rewrite/`（新）、`fork-services.tsx` | L7 改名改寫連結：改名／搬動後用索引篩出連到被搬動檔案的筆記，比較搬動前後的解析結果，只改真的會指錯的連結（保留 `#標題`、`\|別名`、嵌入、frontmatter 引號內；markdown 相對連結重算）；補上「相對本篇資料夾的部分路徑」解析；AlertDialog 每次詢問；改寫走 `rewriteNotes`，失敗還原但不回滾改名 | L7（Claude Code 子代理實作）；2-1 的「部分路徑不解析」限制在 L7 的解析器已補，L1 的 decorations 仍用舊 resolver（2-3 統一） |
+| 2026-10-19 | `src/app/core/main/file/file-item.tsx`、`file-dnd.ts`、`folder-item/index.tsx` | 掛載點：各加 1 行 import 與 2 行 `await requestLinkRewrite(...)`，放在上游 `rewriteWorkspaceMarkdownMediaPaths` 之後、外層 try 之內；函式內部 catch，不觸發上游 rollback | L7 |
+| 2026-10-19 | `src/lib/markdown/unlinked-mentions.ts`（新）、`src/lib/vault-index/unlinked-mentions-scan.ts`（新）、`src/app/core/main/backlinks/backlinks-panel.tsx` | L4 未連結提及：反向連結面板第三區（預設收合、展開時才掃描全 vault、依索引 revision 快取、索引變動後改按「掃描」重掃）；純字串比對（ASCII 邊界、CJK 不設邊界，跳過 code／`[[ ]]`／markdown 連結／frontmatter／URL／`#tag`）；「連結」「全部連結」改寫為 `[[目標]]` 或 `[[目標|原文字]]` | L4（Claude Code 子代理實作） |
+| 2026-10-19 | `messages/*.json` | 頂層 `linkRewrite`（`today` 之後）、`backlinks` 尾端 8 個未連結提及 key、頂層 `properties`（`backlinks` 之後）、頂層 `noteTags`（`tags` 之後）、`navigation.noteTags` | L4、L5、L6、L7 |
+| 2026-10-19 | `personal/make-test-vault.mjs` | `60 Notes/` 加 2-2 樣本：`.obsidian/types.json`、屬性樣本、標籤 A／B／C、待改名與三篇改名來源、提及目標與兩篇提及來源 | 驗收用 |
 
 ## 刻意不改的東西
 
@@ -202,3 +212,47 @@ npx pnpm@9 tauri dev
 - 跨連結套粗體／斜體的存檔差異（上游限制，見修改清單）。
 - **表格存檔會被重排**：上游 @tiptap/markdown 的表格序列化器會把欄寬補齊（`|---|---|` 變 `| --- | --- |`、儲存格補空白）並在表格前多放一個空行；不開 Wikilink 擴充也一樣，所有含表格的筆記都受影響，與 2-1 無關。要達成「表格也一字不差」需要另開小 PR 在存檔路徑還原原始表格文字。
 - **部分路徑不解析**：`resolveWikilinkTarget` 只認「從 vault 根目錄的完整路徑」或「純檔名」，`[[子資料夾/同名]]` 這種相對於本篇資料夾的部分路徑（Obsidian「Relative path to file」連結格式）會標成未建立。2-1 假設 vault 用 Obsidian 預設的「Shortest path when possible」；2-2 再補相對路徑解析。
+
+### Phase 2-2 知識庫整理（L5 屬性面板、L7 改名改寫連結、L6 筆記標籤、L4 未連結提及）
+
+啟動方式同上。測試 vault：`node personal/make-test-vault.mjs --force`，樣本在 `60 Notes/`，預期數字見該 vault 的 README。驗收前先在 Obsidian 開同一個 vault 一次，確認 `.obsidian/types.json` 是腳本放的那份（Obsidian 可能會改寫它）。
+
+**L5 屬性面板**
+
+1. 右側欄多一個滑桿圖示的 tab「屬性」（對話、反向連結之後）。開 `60 Notes/屬性樣本.md`：列出 9 個屬性，`due` 是日期、`reviewed` 是日期時間、`rating` 數字、`done` 核取、`related`／`tags`／`aliases` 是 chip 列、`nested` 顯示原文並標「不支援」。
+2. 改 `rating` 為 5、勾 `done`、改 `title`：每次存檔後 `git diff` 只有那一行；`title` 行尾的 `# 行尾註解要留著` 仍在（註解前空白會縮成一個）。
+3. `tags` 加一個 chip：那段從 `[notegen, phase-2]` 變成 block 清單（三行），其他行不動。刪掉 `aliases` 的唯一一個值：變成 `aliases: []`。
+4. 「新增屬性」打 `due`：下拉有 vault 裡出現過的 key，型別自動顯示「日期」（來自 `types.json`）。新 key 加在 `nested` 區塊之後、`---` 之前。
+5. 「原始碼」：改壞 YAML 按套用會顯示錯誤、不寫檔；改好再套用整塊替換。
+6. 編輯器同時開著這篇：改屬性後編輯器畫面上的 frontmatter 區塊即時更新，游標不跳。開著「今日頁」或非 `.md` 時面板顯示提示。
+
+**L6 筆記標籤**
+
+1. 左側欄多一個 `#` 圖示的 tab「筆記標籤」（畫布之後）；索引中顯示「索引中…」。
+2. 樹：`專案`（3）展開有 `alpha`（1）、`beta`（1）；`閱讀` 2；`Reading` 2（`#Reading` 與 `#reading` 合併，顯示第一次遇到的寫法）；`待辦` 1；frontmatter 的 `notegen`、`phase-2` 也在。code 內的 `#code裡的不算` 不出現。
+3. 點 `專案`：下方列 標籤A、標籤B、標籤C（含子標籤的筆記）；點 `alpha` 只有標籤A。點筆記會開啟。
+4. 搜尋框打 `alp`：只剩 `專案 › alpha`，祖先自動展開；「依數量」切換排序。
+5. 這個 tab 與上游「記錄」頁的標籤互不影響。
+
+**L7 改名改寫連結**
+
+1. 在檔案樹把 `60 Notes/待改名.md` 改名為 `新名字`：跳出「更新連結」對話框，寫「4 篇筆記共 10 個連結」，列出 改名來源一（5）、改名來源二（2）、子資料夾/改名來源三（2）、屬性樣本（1）。
+2. 按「改寫」：toast「已更新 4 篇筆記」。`git diff`：改名來源一只有 5 行變（frontmatter 引號內、一般、別名、標題、嵌入），行內 code 的 `[[待改名]]` 不變；改名來源二的表格 `[[新名字\|表格別名]]` 保留 `\|`，markdown 連結變 `(新名字.md)`，檔案仍是 CRLF；來源三的 `[連結](../新名字.md)`；屬性樣本的 `related` 那一行。
+3. 把改名後的檔案拖進 `子資料夾/`：對話框只列 markdown 連結會變的檔案（來源二、來源三、被搬動的那篇自己的 `[雙鏈目標](../雙鏈目標.md)`）；`[[新名字]]` 這種 wikilink 不列、不改（shortest path 不受資料夾影響）。
+4. 按「不改寫」：什麼都不動，連結變虛線（未建立）。
+5. 改名整個 `60 Notes/` 資料夾：只有寫完整路徑的 `[[60 Notes/子資料夾/同名]]` 會改，`[[同名]]` 不動。
+6. 被連到的筆記正開在編輯器裡時改名另一篇：編輯器內容即時更新、不會出現「檔案已變更」衝突。改寫失敗（例如改寫期間編輯器還有未存檔的輸入）會 toast「改寫失敗，檔案已還原」，改名本身維持成功。
+
+**L4 未連結提及**
+
+1. 開 `60 Notes/提及目標.md`，右側欄「反向連結」最下方「未連結提及」預設收合；展開顯示「掃描中…」然後列出 4 筆：提及來源（純文字 1、別名「提及別名」1）、提及來源二（標題 1）、README（1）。已是 `[[ ]]`、code、markdown 連結裡的不算；`Note` 不命中 `Notes`。
+2. 按某一筆的「連結」：那一筆消失、toast「已轉成連結」，`git diff` 只有那一行，純文字變 `[[提及目標]]`，別名那筆變 `[[提及目標|提及別名]]`；幾秒後索引更新，它出現在「連結到這篇」。
+3. 「全部連結」一次改同一篇的多筆；改完後區塊上方出現「掃描」按鈕（索引變了不自動重掃），按下重掃。
+
+**這份步驟沒涵蓋的**
+
+- L5：Properties 的 Visible／Hidden 模式、寫入 `types.json`、Dataview 行內欄位；YAML 錨點／別名／多行字串只能用原始碼改。
+- L7：指向非 `.md` 附件（PDF 等）的連結不在索引裡，改名附件不會改寫（圖片由上游處理）；`[text](Note)` 省略 `.md` 的 markdown 連結不會跟著搬；「記住選擇」設定沒做，每次都問。
+- L4：純字串比對，很短或很常見的名稱會命中很多；每次展開都讀全 vault 的 `.md`，3,000 篇以內可接受。
+- 索引的內文 `#tag` 只認行首或空白／括號之後的 `#`，緊接在標點後的（`，#待辦`）不算，純數字 `#12` 會被當成標籤（Obsidian 不會）：2-3 修索引時一併處理。
+- 上游表格序列化器重排（見 2-1）仍未處理。

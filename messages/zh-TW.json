@@ -193,6 +193,15 @@
       "summaryTitle": "{count} 個任務提醒"
     }
   },
+  "linkRewrite": {
+    "title": "更新連結",
+    "description": "{files} 篇筆記共 {links} 個連結指向被改名的檔案，要一併改寫嗎？",
+    "obsidianHint": "Obsidian 同時開著這個 vault 時，它也可能改到同一批檔案。",
+    "confirm": "改寫",
+    "skip": "不改寫",
+    "done": "已更新 {files} 篇筆記",
+    "failed": "改寫失敗，檔案已還原"
+  },
   "backlinks": {
     "title": "反向連結",
     "linked": "連結到這篇",
@@ -200,7 +209,42 @@
     "empty": "還沒有筆記連到這篇",
     "indexing": "索引中…",
     "notMarkdown": "請開啟 Markdown 筆記以查看連結",
-    "unresolved": "尚未建立"
+    "unresolved": "尚未建立",
+    "unlinked": "未連結提及",
+    "scan": "掃描",
+    "scanning": "掃描中…",
+    "linkOne": "連結",
+    "linkAll": "全部連結",
+    "unlinkedEmpty": "沒有未連結的提及",
+    "linkDone": "已轉成連結",
+    "linkFailed": "轉成連結失敗，檔案已還原"
+  },
+  "properties": {
+    "title": "屬性",
+    "add": "新增屬性",
+    "empty": "這篇還沒有屬性",
+    "source": "原始碼",
+    "apply": "套用",
+    "invalidYaml": "YAML 格式錯誤",
+    "keyPlaceholder": "屬性名稱",
+    "valuePlaceholder": "輸入值",
+    "remove": "刪除",
+    "rename": "重新命名",
+    "unsupported": "不支援的格式，請用原始碼編輯",
+    "notMarkdown": "請開啟 Markdown 筆記以查看屬性",
+    "type": "屬性型別",
+    "keyExists": "屬性名稱已存在",
+    "saveFailed": "無法儲存屬性",
+    "types": {
+      "text": "文字",
+      "multitext": "清單",
+      "number": "數字",
+      "checkbox": "核取方塊",
+      "date": "日期",
+      "datetime": "日期與時間",
+      "tags": "標籤",
+      "aliases": "別名"
+    }
   },
   "settings": {
     "defaultModels": {
@@ -4793,7 +4837,8 @@
     "searchPlaceholder": "搜尋筆記、記錄或畫布...",
     "showCenterPanel": "显示编辑器",
     "hideCenterPanel": "隐藏编辑器",
-    "navigate": "導覽"
+    "navigate": "導覽",
+    "noteTags": "筆記標籤"
   },
   "activity": {
     "title": "活躍度日曆",
@@ -4841,6 +4886,15 @@
   },
   "tags": {
     "inspiration": "靈感"
+  },
+  "noteTags": {
+    "title": "筆記標籤",
+    "search": "搜尋標籤",
+    "sortByName": "依名稱",
+    "sortByCount": "依數量",
+    "notes": "{count} 篇筆記",
+    "empty": "還沒有標籤",
+    "indexing": "索引中…"
   },
   "sync": {
     "status": "同步倉庫狀態",

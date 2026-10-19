@@ -3,6 +3,7 @@ import { exists, rename } from "@tauri-apps/plugin-fs"
 import { getFilePathOptions, getWorkspacePath } from "@/lib/workspace"
 import { moveSelfHostedWorkspacePath } from '@/lib/self-hosted-sync/files'
 import { rewriteWorkspaceMarkdownMediaPaths } from '@/lib/markdown-media-path'
+import { requestLinkRewrite } from '../link-rewrite/link-rewrite-store' // Fork L7
 import useArticleStore from '@/stores/article'
 
 export const FILE_MANAGER_DRAG_MIME = "application/x-notegen-file-path"
@@ -206,6 +207,8 @@ export async function moveFileManagerEntries(
       sourcePath: result.sourcePath,
       targetPath: result.targetPath,
     })))
+    // Fork L7：搬動成功後詢問是否改寫連入的連結；內部自行 catch，不觸發下面的 rollback
+    await requestLinkRewrite(moved.map(result => ({ sourcePath: result.sourcePath, targetPath: result.targetPath })))
     return { moved, failed: [], rolledBack: false }
   } catch {
     let rollbackFailed = false

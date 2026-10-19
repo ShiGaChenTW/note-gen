@@ -193,6 +193,15 @@
       "summaryTitle": "{count} 件のタスクリマインダー"
     }
   },
+  "linkRewrite": {
+    "title": "リンクを更新",
+    "description": "{files} 件のノートの {links} 個のリンクが名前変更されたファイルを指しています。あわせて書き換えますか？",
+    "obsidianHint": "Obsidian で同じ vault を開いている場合、同じファイルが変更されることがあります。",
+    "confirm": "書き換える",
+    "skip": "書き換えない",
+    "done": "{files} 件のノートを更新しました",
+    "failed": "書き換えに失敗しました。ファイルは元に戻しました"
+  },
   "backlinks": {
     "title": "バックリンク",
     "linked": "このノートへのリンク",
@@ -200,7 +209,42 @@
     "empty": "このノートへのリンクはまだありません",
     "indexing": "インデックス作成中…",
     "notMarkdown": "Markdown ノートを開いてリンクを表示",
-    "unresolved": "未作成"
+    "unresolved": "未作成",
+    "unlinked": "リンクされていない言及",
+    "scan": "スキャン",
+    "scanning": "スキャン中…",
+    "linkOne": "リンク",
+    "linkAll": "すべてリンク",
+    "unlinkedEmpty": "リンクされていない言及はありません",
+    "linkDone": "リンクに変換しました",
+    "linkFailed": "リンクへの変換に失敗しました。ファイルは元に戻しました"
+  },
+  "properties": {
+    "title": "プロパティ",
+    "add": "プロパティを追加",
+    "empty": "このノートにはまだプロパティがありません",
+    "source": "ソース",
+    "apply": "適用",
+    "invalidYaml": "無効な YAML",
+    "keyPlaceholder": "プロパティ名",
+    "valuePlaceholder": "値を入力",
+    "remove": "削除",
+    "rename": "名前を変更",
+    "unsupported": "未対応の形式です。ソースで編集してください",
+    "notMarkdown": "Markdown ノートを開いてプロパティを表示してください",
+    "type": "プロパティの種類",
+    "keyExists": "同じ名前のプロパティがすでに存在します",
+    "saveFailed": "プロパティを保存できませんでした",
+    "types": {
+      "text": "テキスト",
+      "multitext": "リスト",
+      "number": "数値",
+      "checkbox": "チェックボックス",
+      "date": "日付",
+      "datetime": "日時",
+      "tags": "タグ",
+      "aliases": "エイリアス"
+    }
   },
   "settings": {
     "defaultModels": {
@@ -4774,7 +4818,8 @@
     "searchPlaceholder": "ノート、記録、キャンバスを検索...",
     "showCenterPanel": "显示编辑器",
     "hideCenterPanel": "隐藏编辑器",
-    "navigate": "ナビゲーション"
+    "navigate": "ナビゲーション",
+    "noteTags": "ノートタグ"
   },
   "activity": {
     "title": "アクティビティカレンダー",
@@ -4851,6 +4896,15 @@
   },
   "tags": {
     "inspiration": "インスピレーション"
+  },
+  "noteTags": {
+    "title": "ノートタグ",
+    "search": "タグを検索",
+    "sortByName": "名前順",
+    "sortByCount": "件数順",
+    "notes": "{count} 件のノート",
+    "empty": "タグはまだありません",
+    "indexing": "インデックス作成中…"
   },
   "sync": {
     "status": "同期リポジトリの状態",

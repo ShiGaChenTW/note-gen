@@ -23,7 +23,7 @@ export interface SidebarState {
   initSidebarState: () => Promise<void>
 }
 
-export const BUILT_IN_LEFT_SIDEBAR_TABS = ['files', 'notes', 'canvases'] as const
+export const BUILT_IN_LEFT_SIDEBAR_TABS = ['files', 'notes', 'canvases', 'noteTags'] as const
 export type BuiltInLeftSidebarTab = typeof BUILT_IN_LEFT_SIDEBAR_TABS[number]
 
 const builtInLeftSidebarTabs = new Set<string>(BUILT_IN_LEFT_SIDEBAR_TABS)
