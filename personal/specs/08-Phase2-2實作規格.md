@@ -2,9 +2,9 @@
 title: Phase 2-2 實作規格：知識庫整理（L5 屬性面板、L7 改名改寫連結、L6 筆記標籤、L4 未連結提及）
 filename: 08-Phase2-2實作規格.md
 created: 2026-10-19 16:30 (Asia/Taipei)
-modified: 2026-10-19 16:30 (Asia/Taipei)
+modified: 2026-10-19 17:20 (Asia/Taipei)
 source_llm: Claude (Fable 5.1, Claude Code session，PM 角色)
-status: 派工中（2026-10-19）
+status: 程式完成（2026-10-19），待實機驗收
 ---
 
 # Phase 2-2 實作規格：知識庫整理
