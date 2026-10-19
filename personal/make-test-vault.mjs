@@ -527,9 +527,9 @@ write('60 Notes/白板.canvas', `{
 \t]
 }
 `)
-// 1×1 透明 PNG（嵌入圖片用）
+// 16×16 琥珀色 PNG（嵌入圖片用，要看得見）
 fs.mkdirSync(path.join(target, '60 Notes'), { recursive: true })
-fs.writeFileSync(path.join(target, '60 Notes/附件.png'), Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64'))
+fs.writeFileSync(path.join(target, '60 Notes/附件.png'), Buffer.from('iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGklEQVR42mP4vVf5PyWYYdSAUQNGDRguBgAAcfXaH63pA8EAAAAASUVORK5CYII=', 'base64'))
 written.push('60 Notes/附件.png')
 
 write('README.md', `# NoteGen 測試 vault
