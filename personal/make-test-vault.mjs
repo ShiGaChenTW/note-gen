@@ -389,7 +389,7 @@ aliases: [提及別名]
 
 # 提及目標
 
-反向連結面板「未連結提及」應列出 3 筆（提及來源 2 筆、標籤A 0 筆、雙鏈來源 0 筆），一鍵「連結」後變成 [[提及目標]]。
+反向連結面板「未連結提及」應列出 4 筆（提及來源 2 筆、提及來源二 1 筆、vault 根目錄 README 1 筆），一鍵「連結」後變成 [[提及目標]]。
 `)
 write('60 Notes/提及來源.md', `# 提及來源
 
@@ -420,8 +420,8 @@ write('README.md', `# NoteGen 測試 vault
 | L3 反向連結 | 開 雙鏈目標.md：連結到這篇 6 筆（來源 5 筆含 frontmatter 與 markdown 相對連結、表格 1 筆；code 內的不算）；同名.md 2 筆、子資料夾/同名.md 1 筆、孤兒.md 空狀態 |
 | L5 屬性面板 | 60 Notes/屬性樣本.md：9 個屬性各型別（\`.obsidian/types.json\` 指定 due/reviewed/rating/done 型別），\`nested\` 唯讀；改任一值後 git diff 只有那幾行，行尾註解與引號要留著 |
 | L6 筆記標籤 | 左側欄「筆記標籤」：專案（3 篇：alpha 1、beta 1、只有父層 1）、閱讀 2、reading 2（大小寫合併）、待辦 1、notegen 等 frontmatter 標籤；code 裡的不算 |
-| L7 改名改寫 | 把 60 Notes/待改名.md 改名：跳出詢問「3 篇筆記共 9 個連結」；確認後 改名來源一（5 筆，code 內不改）、改名來源二（表格 \`\\|\` 與 markdown 連結，CRLF 要保留）、子資料夾/改名來源三（含 \`../\` 相對連結）只有連結那幾行有 diff；再把它拖進子資料夾，來源三的 \`[[待改名]]\` 不變、markdown 相對路徑要重算 |
-| L4 未連結提及 | 開 60 Notes/提及目標.md：未連結提及 3 筆（提及來源 2 筆：純文字＋別名；提及來源二 標題 1 筆）；已連結、code、markdown 連結不算；按「連結」後該筆消失、git diff 只有那一行 |
+| L7 改名改寫 | 把 60 Notes/待改名.md 改名：跳出詢問「4 篇筆記共 10 個連結」；確認後 改名來源一（5 筆，code 內不改）、改名來源二（表格 \`\\|\` 與 markdown 連結，CRLF 要保留）、子資料夾/改名來源三（含 \`../\` 相對連結）、屬性樣本（related 1 筆）只有連結那幾行有 diff；再把它拖進子資料夾，來源三的 \`[[待改名]]\` 不變、markdown 相對路徑要重算 |
+| L4 未連結提及 | 開 60 Notes/提及目標.md：未連結提及 4 筆（提及來源 2 筆：純文字＋別名；提及來源二 標題 1 筆；README 這一列 1 筆）；已連結、code、markdown 連結不算；按「連結」後該筆消失、git diff 只有那一行 |
 `)
 
 fs.writeFileSync(path.join(target, MARKER), `created ${now.toISOString()}\n`)
