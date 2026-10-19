@@ -45,6 +45,13 @@ describe('逐 key 編輯', () => {
     expect(edit(content, { kind: 'set', key: 'a', value: [], type: 'multitext' })).toBe('---\na: [] # 清單\n# keep\nb: z\n---\nbody')
     expect(edit(content, { kind: 'remove', key: 'a' })).toBe('---\n# keep\nb: z\n---\nbody')
   })
+  it('改純量只換值本身，值後面的空白與註解一字不差（Issue #11）', () => {
+    expect(edit('---\ntitle: "x: y"  # 行尾註解\n---\nbody', { kind: 'set', key: 'title', value: '新值', type: 'text' })).toBe('---\ntitle: 新值  # 行尾註解\n---\nbody')
+    expect(edit('---\na: 1\t# tab\nb: 2\n---\n', { kind: 'set', key: 'a', value: 2, type: 'number' })).toBe('---\na: 2\t# tab\nb: 2\n---\n')
+    expect(edit('---\ndone: false   \n---\n', { kind: 'set', key: 'done', value: true, type: 'checkbox' })).toBe('---\ndone: true   \n---\n')
+    expect(edit('---\r\ndue: 2026-10-25  # d\r\n---\r\n', { kind: 'set', key: 'due', value: '2026-11-01', type: 'date' })).toBe('---\r\ndue: 2026-11-01  # d\r\n---\r\n')
+  })
+
   it('空值行的註解與換行', () => {
     const content = '---\na: # hi\nb: z\n---\nbody'
     expect(edit(content, { kind: 'set', key: 'a', value: 'v', type: 'text' })).toBe('---\na: v # hi\nb: z\n---\nbody')

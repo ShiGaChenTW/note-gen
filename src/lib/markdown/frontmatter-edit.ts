@@ -130,6 +130,13 @@ export function applyFrontmatterEdit(content: string, edit: FrontmatterEdit, typ
       if (!property?.editable) throw new Error('請使用原始碼編輯')
       const colon = yaml.indexOf(':', keyNode.range[1])
       const node = pair.value
+      const isListType = ['multitext', 'tags', 'aliases'].includes(edit.type)
+      if (!isListType && isScalar(node) && node.range && node.range[1] > node.range[0]) {
+        // 純量：只換掉值本身的文字範圍，值之後到行尾（空白與註解）原樣保留（Issue #11）
+        yaml = yaml.slice(0, node.range[0]) + value.replace(/^ /, '') + yaml.slice(node.range[1])
+        const result = parts.opening + yaml + parts.closing
+        return block ? result + body : (content.startsWith('\uFEFF') ? '\uFEFF' : '') + result + content.slice(content.startsWith('\uFEFF') ? 1 : 0)
+      }
       const end = node?.range?.[2] ?? keyNode.range[2]
       const original = yaml.slice(colon + 1, end)
       // 保留同一行註解；集合內的註解屬於被編輯的 key。
