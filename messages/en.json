@@ -3448,6 +3448,20 @@
     "noSearchResults": "No matching settings found",
     "title": "Settings"
   },
+  "bases": {
+    "title": "Bases",
+    "views": "Views",
+    "refresh": "Refresh",
+    "source": "Source",
+    "unsupportedView": "Unsupported view type {type}; shown as a table",
+    "more": "{count} more",
+    "empty": "No matching notes",
+    "parseError": "Invalid Bases format: {message}",
+    "exprError": "Expression error: ",
+    "indexing": "Indexing…",
+    "edit": "Edit",
+    "done": "Done"
+  },
   "record": {
     "tagging": {
       "manage": "Manage tags",

@@ -3307,6 +3307,20 @@
     "noSearchResults": "Keine passenden Einstellungen gefunden",
     "title": "Einstellungen"
   },
+  "bases": {
+    "title": "Bases",
+    "views": "Ansichten",
+    "refresh": "Aktualisieren",
+    "source": "Quelltext",
+    "unsupportedView": "Nicht unterstützter Ansichtstyp {type}; wird als Tabelle angezeigt",
+    "more": "{count} weitere",
+    "empty": "Keine passenden Notizen",
+    "parseError": "Ungültiges Bases-Format: {message}",
+    "exprError": "Ausdrucksfehler: ",
+    "indexing": "Indizierung…",
+    "edit": "Bearbeiten",
+    "done": "Fertig"
+  },
   "record": {
     "tagging": {
       "manage": "Tags verwalten",

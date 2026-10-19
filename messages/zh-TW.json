@@ -3444,6 +3444,20 @@
     "noSearchResults": "找不到相關設定",
     "title": "設定"
   },
+  "bases": {
+    "title": "Bases",
+    "views": "檢視",
+    "refresh": "重新整理",
+    "source": "原始碼",
+    "unsupportedView": "不支援的檢視類型 {type}，以表格顯示",
+    "more": "還有 {count} 筆",
+    "empty": "沒有符合的筆記",
+    "parseError": "Bases 格式錯誤：{message}",
+    "exprError": "運算式錯誤：",
+    "indexing": "索引中…",
+    "edit": "編輯",
+    "done": "完成"
+  },
   "record": {
     "tagging": {
       "manage": "管理標籤",

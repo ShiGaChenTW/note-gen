@@ -3448,6 +3448,20 @@
     "noSearchResults": "没有找到相关设置",
     "title": "设置"
   },
+  "bases": {
+    "title": "Bases",
+    "views": "视图",
+    "refresh": "刷新",
+    "source": "源码",
+    "unsupportedView": "不支持的视图类型 {type}，以表格显示",
+    "more": "还有 {count} 条",
+    "empty": "没有符合的笔记",
+    "parseError": "Bases 格式错误：{message}",
+    "exprError": "表达式错误：",
+    "indexing": "索引中…",
+    "edit": "编辑",
+    "done": "完成"
+  },
   "record": {
     "tagging": {
       "manage": "管理标签",
