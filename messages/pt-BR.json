@@ -4786,7 +4786,8 @@
     "searchPlaceholder": "Pesquisar notas, registros ou telas...",
     "showCenterPanel": "Mostrar editor",
     "hideCenterPanel": "Ocultar editor",
-    "navigate": "Navegar"
+    "navigate": "Navegar",
+    "noteTags": "Tags de notas"
   },
   "activity": {
     "title": "Calendário de Atividade",
@@ -4834,6 +4835,15 @@
   },
   "tags": {
     "inspiration": "Inspiração"
+  },
+  "noteTags": {
+    "title": "Tags de notas",
+    "search": "Buscar tags",
+    "sortByName": "Por nome",
+    "sortByCount": "Por quantidade",
+    "notes": "{count} notas",
+    "empty": "Ainda não há tags",
+    "indexing": "Indexando…"
   },
   "sync": {
     "status": "Status do Repositório de Sincronização",

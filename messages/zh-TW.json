@@ -4793,7 +4793,8 @@
     "searchPlaceholder": "搜尋筆記、記錄或畫布...",
     "showCenterPanel": "显示编辑器",
     "hideCenterPanel": "隐藏编辑器",
-    "navigate": "導覽"
+    "navigate": "導覽",
+    "noteTags": "筆記標籤"
   },
   "activity": {
     "title": "活躍度日曆",
@@ -4841,6 +4842,15 @@
   },
   "tags": {
     "inspiration": "靈感"
+  },
+  "noteTags": {
+    "title": "筆記標籤",
+    "search": "搜尋標籤",
+    "sortByName": "依名稱",
+    "sortByCount": "依數量",
+    "notes": "{count} 篇筆記",
+    "empty": "還沒有標籤",
+    "indexing": "索引中…"
   },
   "sync": {
     "status": "同步倉庫狀態",

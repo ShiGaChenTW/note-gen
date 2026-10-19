@@ -4774,7 +4774,8 @@
     "searchPlaceholder": "ノート、記録、キャンバスを検索...",
     "showCenterPanel": "显示编辑器",
     "hideCenterPanel": "隐藏编辑器",
-    "navigate": "ナビゲーション"
+    "navigate": "ナビゲーション",
+    "noteTags": "ノートタグ"
   },
   "activity": {
     "title": "アクティビティカレンダー",
@@ -4851,6 +4852,15 @@
   },
   "tags": {
     "inspiration": "インスピレーション"
+  },
+  "noteTags": {
+    "title": "ノートタグ",
+    "search": "タグを検索",
+    "sortByName": "名前順",
+    "sortByCount": "件数順",
+    "notes": "{count} 件のノート",
+    "empty": "タグはまだありません",
+    "indexing": "インデックス作成中…"
   },
   "sync": {
     "status": "同期リポジトリの状態",

@@ -4886,7 +4886,8 @@
     "showRightSidebar": "显示右侧边栏",
     "hideRightSidebar": "隐藏右侧边栏",
     "searchPlaceholder": "搜索笔记、记录或画布...",
-    "navigate": "导航"
+    "navigate": "导航",
+    "noteTags": "笔记标签"
   },
   "activity": {
     "title": "活跃度日历",
@@ -4934,6 +4935,15 @@
   },
   "tags": {
     "inspiration": "灵感"
+  },
+  "noteTags": {
+    "title": "笔记标签",
+    "search": "搜索标签",
+    "sortByName": "按名称",
+    "sortByCount": "按数量",
+    "notes": "{count} 篇笔记",
+    "empty": "还没有标签",
+    "indexing": "索引中…"
   },
   "sync": {
     "status": "同步仓库状态",
