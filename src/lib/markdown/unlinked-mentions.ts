@@ -40,6 +40,21 @@ function isAsciiAlnum(ch: string): boolean {
   return /[A-Za-z0-9]/.test(ch)
 }
 
+function escapeRegExp(text: string): string {
+  return text.replace(/[\\^$.*+?()[\]{}|]/g, '\\$&')
+}
+
+let mentionPatternCache: { key: string, source: string } | null = null
+
+/** 多個名稱合成一個 RegExp，由長到短，ASCII 大小寫已先折好。 */
+function mentionPattern(names: string[]): RegExp {
+  const key = `${names.length}\0${names.join('\0')}`
+  if (!mentionPatternCache || mentionPatternCache.key !== key) {
+    mentionPatternCache = { key, source: names.map(name => escapeRegExp(asciiLower(name))).join('|') }
+  }
+  return new RegExp(mentionPatternCache.source, 'g')
+}
+
 /** 名稱清單：去空白、長度 < 2 或純數字的略過、不分大小寫去重、長的在前。 */
 export function normalizeMentionNames(names: string[]): string[] {
   const seen = new Set<string>()
@@ -106,6 +121,8 @@ export function findUnlinkedMentions(content: string, names: string[]): Mention[
   const masked = maskContent(content)
   const lines = content.split('\n')
   const maskedLines = masked.split('\n')
+  const pattern = mentionPattern(wanted)
+  const needles = wanted.map(name => asciiLower(name))
   const out: Mention[] = []
 
   for (let lineNo = 0; lineNo < lines.length; lineNo++) {
@@ -113,19 +130,28 @@ export function findUnlinkedMentions(content: string, names: string[]): Mention[
     const lowerMasked = asciiLower(maskedLines[lineNo])
     if (!line.trim()) continue
     const hits: Array<{ column: number, length: number }> = []
-    for (const name of wanted) {
-      const needle = asciiLower(name)
-      const headBound = isAsciiAlnum(name[0])
-      const tailBound = isAsciiAlnum(name[name.length - 1])
-      let from = 0
-      while (from <= lowerMasked.length - needle.length) {
-        const at = lowerMasked.indexOf(needle, from)
-        if (at < 0) break
-        from = at + 1
+    pattern.lastIndex = 0
+    while (pattern.lastIndex <= lowerMasked.length) {
+      const found = pattern.exec(lowerMasked)
+      if (!found) break
+      const at = found.index
+      const matched = found[0]
+      if (matched.length === 0) {
+        pattern.lastIndex = at + 1
+        continue
+      }
+      // 最長名稱可能因邊界失敗，同一位置較短的前綴名稱仍要留下。
+      let step = 1
+      for (const needle of needles) {
+        if (needle.length > matched.length || !matched.startsWith(needle)) continue
+        const headBound = isAsciiAlnum(needle[0])
+        const tailBound = isAsciiAlnum(needle[needle.length - 1])
         if (headBound && isAsciiWord(line[at - 1])) continue
         if (tailBound && isAsciiWord(line[at + needle.length])) continue
         hits.push({ column: at, length: needle.length })
+        if (needle.length > step) step = needle.length
       }
+      pattern.lastIndex = at + step
     }
     // 同一位置取最長，重疊的只留前面那個
     hits.sort((a, b) => a.column - b.column || b.length - a.length)

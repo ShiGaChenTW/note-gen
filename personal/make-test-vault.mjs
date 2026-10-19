@@ -17,8 +17,24 @@ import os from 'node:os'
 import path from 'node:path'
 
 const args = process.argv.slice(2)
-const force = args.includes('--force')
-const target = path.resolve(args.find(a => !a.startsWith('--')) ?? path.join(os.homedir(), 'Documents', 'NoteGen-Test-Vault'))
+// --big N：在 90 Big/ 放 N 篇合成筆記（規則同 tests/perf/synthetic-vault.ts）。不加就不建立，既有樣本不動。
+let bigCount = 0
+const positional = []
+for (let i = 0; i < args.length; i++) {
+  const arg = args[i]
+  if (arg === '--big' || arg.startsWith('--big=')) {
+    const raw = arg === '--big' ? args[++i] : arg.slice('--big='.length)
+    bigCount = Number(raw)
+    if (!Number.isInteger(bigCount) || bigCount < 0) {
+      console.error('--big 需要一個非負整數，例如 --big 3000')
+      process.exit(1)
+    }
+  } else {
+    positional.push(arg)
+  }
+}
+const force = positional.includes('--force')
+const target = path.resolve(positional.find(a => !a.startsWith('--')) ?? path.join(os.homedir(), 'Documents', 'NoteGen-Test-Vault'))
 const MARKER = '.notegen-test-vault'
 
 if (fs.existsSync(target)) {
@@ -479,7 +495,76 @@ write('README.md', `# NoteGen 測試 vault
 | L8 關聯圖 | 開 雙鏈目標.md：1 層有 雙鏈來源、雙鏈表格、改名來源一…等連入與 區塊目標 連出；切 2 層再多一圈；點節點換中心 |
 | 自動完成 #／^ | 任一筆記打 \`[[區塊目標#\` 列 3 個標題；\`[[區塊目標#^\` 列 blk-1、item-1、row-1、sec-3；\`[[#\` 列本篇標題 |
 | 索引 #tag 規則 | 標籤B／標籤A：\`，#待辦\` 緊接全形標點也算；\`#12\` 純數字不算（筆記標籤樹不出現 12） |
+| 大 vault | \`90 Big/\`：加上 \`--big N\` 產生 N 篇合成筆記，用來量啟動時間；不加這個選項就不會建立 |
 `)
+
+// ---------- --big N：90 Big/ 合成筆記（不影響上面的樣本） ----------
+if (bigCount > 0) {
+  const BIG_FOLDERS = [
+    '00 Alpha/00 Notes',
+    '00 Alpha/01 Notes',
+    '01 Beta/00 Notes',
+    '01 Beta/01 Notes',
+    '02 Gamma/00 Notes',
+    '02 Gamma/01 Notes',
+    '03 Delta/00 Notes',
+    '03 Delta/01 Notes',
+    '04 Epsilon/00 Notes',
+    '04 Epsilon/01 Notes',
+  ]
+  const BIG_SEED = 20261019
+  const FILLER = 'Synthetic note padding for vault performance measurement. '
+  let bigState = BIG_SEED >>> 0
+  const bigRandom = () => {
+    bigState = (bigState + 0x6d2b79f5) >>> 0
+    let t = Math.imul(bigState ^ (bigState >>> 15), bigState | 1)
+    t = (t + Math.imul(t ^ (t >>> 7), t | 61)) ^ t
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+  const bigBase = index => (index < BIG_FOLDERS.length ? 'Note' : `N${index}`)
+  for (let index = 0; index < bigCount; index++) {
+    const base = bigBase(index)
+    const folder = BIG_FOLDERS[index % BIG_FOLDERS.length]
+    const other = (index + 1) % bigCount
+    const otherBase = bigBase(other)
+    const otherFolder = BIG_FOLDERS[other % BIG_FOLDERS.length]
+    const day = String(1 + (index % 28)).padStart(2, '0')
+    const lines = [
+      `title: "${base}"`,
+      `status: ${index % 2 === 0 ? 'active' : 'draft'}`,
+      `tags: [project/p${index % 4}, topic/t${index % 20}, status/s${index % 3}]`,
+    ]
+    if ((index + BIG_SEED) % 3 !== 0) lines.push(`aliases: [別名${index}]`)
+    if ((index + BIG_SEED) % 4 !== 0) lines.push(`priority: ${1 + (index % 5)}`)
+    if ((index + BIG_SEED) % 5 !== 0) lines.push(`due: 2026-10-${day}`)
+    let content = `---
+${lines.join('\n')}
+---
+
+# ${base}
+
+## 第二節
+
+- [ ] 未完成的任務 📅 2026-10-19
+- [x] 已完成的任務 📅 2026-10-18
+
+這裡提到 Note 與別名甲。
+- [[Note]]
+- [[Note|顯示${index}]]
+- [[Note#第二節]]
+- [[${otherBase}]]
+- [[${otherFolder}/${otherBase}]]
+
+區塊。 ^blk-${index}
+`
+    const targetLength = 1024 + Math.floor(bigRandom() * (3072 - 1024 + 1))
+    while (content.length < targetLength) {
+      const need = targetLength - content.length
+      content += need >= FILLER.length ? FILLER : FILLER.slice(0, need)
+    }
+    write(`90 Big/${folder}/${base}.md`, content)
+  }
+}
 
 fs.writeFileSync(path.join(target, MARKER), `created ${now.toISOString()}\n`)
 
