@@ -1759,3 +1759,121 @@
   outline: 2px solid hsl(var(--primary) / 0.6);
   outline-offset: 1px;
 }
+
+/* Fork (Phase 2-3a, A-2): `[[Note#^id]]` 跳轉後的 1.5 秒高亮（bg-primary/10）。 */
+.tiptap-editor .ProseMirror .notegen-wikilink-target {
+  background-color: hsl(var(--primary) / 0.1);
+  border-radius: 4px;
+  box-shadow: 0 0 0 4px hsl(var(--primary) / 0.1);
+  transition: background-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+/* Fork (Phase 2-3a, A-1): `![[嵌入]]` 轉入的內容。最外層是 inline atom 裡的 span，
+   用 inline-block + 100% 寬讓它看起來像區塊；巢狀的是 markdown-it 產生的 div。 */
+.tiptap-editor .ProseMirror .notegen-embed-host {
+  display: inline-block;
+  max-width: 100%;
+  vertical-align: top;
+}
+
+.tiptap-editor .ProseMirror .notegen-embed {
+  display: inline-block;
+  width: 100%;
+  margin: 0.25rem 0;
+  border-left: 2px solid hsl(var(--primary) / 0.5);
+  border-radius: 4px;
+  background: hsl(var(--muted) / 0.25);
+  vertical-align: top;
+  white-space: normal;
+}
+
+.tiptap-editor .ProseMirror .notegen-embed-host > .notegen-embed-loading,
+.tiptap-editor .ProseMirror .notegen-embed-host > .notegen-embed-missing,
+.tiptap-editor .ProseMirror .notegen-embed-host > .notegen-embed-image,
+.tiptap-editor .ProseMirror .notegen-embed-host > .notegen-embed-attachment {
+  width: auto;
+  margin: 0;
+  border-left: 0;
+  background: transparent;
+}
+
+.tiptap-editor .ProseMirror .notegen-embed-title {
+  display: block;
+  padding: 0.2rem 0.6rem 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: hsl(var(--muted-foreground));
+}
+
+.tiptap-editor .ProseMirror .notegen-embed-open {
+  all: unset;
+  cursor: pointer;
+  color: hsl(var(--primary));
+}
+
+.tiptap-editor .ProseMirror .notegen-embed-open:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.tiptap-editor .ProseMirror .notegen-embed-body {
+  display: block;
+  max-height: 24rem;
+  overflow: auto;
+  padding: 0.25rem 0.75rem 0.5rem;
+  overflow-wrap: anywhere;
+}
+
+.tiptap-editor .ProseMirror .notegen-embed-body > :first-child {
+  margin-top: 0;
+}
+
+.tiptap-editor .ProseMirror .notegen-embed-body > :last-child {
+  margin-bottom: 0;
+}
+
+.tiptap-editor .ProseMirror .notegen-embed-empty {
+  color: hsl(var(--muted-foreground));
+  font-size: 0.875rem;
+}
+
+.tiptap-editor .ProseMirror .notegen-embed-nested {
+  display: block;
+  margin: 0.5rem 0;
+}
+
+.tiptap-editor .ProseMirror .notegen-embed-nested .notegen-embed-body {
+  max-height: none;
+}
+
+.tiptap-editor .ProseMirror .notegen-embed-body a.notegen-wikilink {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+  text-decoration-color: hsl(var(--primary) / 0.5);
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.tiptap-editor .ProseMirror .notegen-embed-body .notegen-wikilink-unresolved {
+  opacity: 0.65;
+}
+
+.tiptap-editor .ProseMirror .notegen-embed-body table {
+  margin: 0.5rem 0;
+}
+
+.tiptap-editor .ProseMirror .notegen-embed-body pre {
+  white-space: pre-wrap;
+}
+
+.tiptap-editor .ProseMirror img.notegen-embed-img {
+  display: inline-block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+.tiptap-editor .ProseMirror .notegen-embed-host.ProseMirror-selectednode > .notegen-embed {
+  outline: 2px solid hsl(var(--primary) / 0.6);
+  outline-offset: 1px;
+}
