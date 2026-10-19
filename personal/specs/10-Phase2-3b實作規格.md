@@ -2,9 +2,9 @@
 title: Phase 2-3b 實作規格：Bases 子集、.canvas 相容、大 vault 效能
 filename: 10-Phase2-3b實作規格.md
 created: 2026-10-19 19:40 (Asia/Taipei)
-modified: 2026-10-19 19:40 (Asia/Taipei)
+modified: 2026-10-19 20:40 (Asia/Taipei)
 source_llm: Claude (Fable 5.1, Claude Code session，PM 角色)
-status: 派工中（2026-10-19）
+status: 程式完成（2026-10-19），待實機驗收
 ---
 
 # Phase 2-3b 實作規格
@@ -31,7 +31,7 @@ status: 派工中（2026-10-19）
 
 | 軌道 | 功能 | 執行者 | 可改的檔案 |
 |---|---|---|---|
-| **A** | Bases 子集 | Claude Code（子代理） | 新資料夾 `src/lib/bases/`（＋測試）、`src/app/core/main/bases/`（取代佔位，可加檔）、新檔 `src/app/core/main/editor/markdown/bases-block-extension.tsx`；掛載點 `tiptap-editor.tsx`（只准加 1 行 import 與 extensions 1 行，放在 `Wikilink,` 之後）；6 個語系檔：頂層 `bases`（插在 `localGraph` 之後、`settings` 之前） |
+| **A** | Bases 子集 | Claude Code（子代理） | 新資料夾 `src/lib/bases/`（＋測試）、`src/app/core/main/bases/`（取代佔位，可加檔）、新檔 `src/app/core/main/editor/markdown/bases-block-extension.tsx`；掛載點 `tiptap-editor.tsx`（只准加 1 行 import 與 extensions 1 行，放在 `Wikilink,` 之後）；6 個語系檔：頂層 `bases`（實作時放在 `settings` 之後，因既有測試鎖定 `localGraph` 後接 `settings`） |
 | **B** | `.canvas`（JSON Canvas）相容 | Codex | 新資料夾 `src/lib/obsidian-canvas/`（＋測試）、`src/app/core/main/obsidian-canvas/`（取代佔位，可加檔）；6 個語系檔：頂層 `obsidianCanvas`（插在頂層 `canvas` 之後） |
 | **C** | 大 vault 效能 | Grok | `src/lib/vault-index/service.ts`、`index-core.ts`、`links.ts`、`tags.ts`、`graph.ts`、`unlinked-mentions-scan.ts`、`src/stores/vault-index.ts`、`src/lib/wikilink-suggest-model.ts`、`src/lib/markdown/unlinked-mentions.ts`（只准做不改行為的效能修改，既有測試一項都不能改預期）；新檔 `tests/perf/vault-perf.test.ts`、`tests/perf/synthetic-vault.ts`；`personal/make-test-vault.mjs` 只准新增 `--big N` 選項那一段 |
 
