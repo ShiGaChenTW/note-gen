@@ -52,6 +52,8 @@ import { PluginDocumentPreview } from '@/components/plugins/plugin-document-prev
 import { PluginViewSurface } from '@/components/plugins/plugin-view-surface'
 import { parsePluginEditorTabPath } from '@/lib/plugins/editor-tab'
 import { UnsupportedFile } from './unsupported-file'
+import BasesPage from '@/app/core/main/bases/bases-page' // Fork (2-3b)
+import ObsidianCanvasPage from '@/app/core/main/obsidian-canvas/obsidian-canvas-page' // Fork (2-3b)
 import { MarkDetailPanel } from '../mark/mark-detail-panel'
 import { getRecordIdFromTabPath, isRecordTabPath } from '../mark/mark-record-tab'
 import { createCanvasTab, getCanvasIdFromTabPath, isCanvasTabPath } from '../canvas/canvas-tab'
@@ -639,11 +641,12 @@ export function EditorLayout() {
   const getRecordIdForTab = useCallback((tab: TabInfo) => tab.markId ?? getRecordIdFromTabPath(tab.path), [])
   const isFolderPath = useCallback((path: string) => !(path.split(/[\\/]/).pop() || '').includes('.'), [])
 
-  const getItemType = useCallback((path: string): 'markdown' | 'image' | 'folder' | 'unknown' => {
+  const getItemType = useCallback((path: string): 'markdown' | 'image' | 'folder' | 'unknown' | 'base' | 'canvas' => {
     if (!path) return 'unknown'
     if (findFolderInTree(path, fileTree)) return 'folder'
     const extension = path.split('.').pop()?.toLowerCase()
     if (!extension) return 'unknown'
+    if (extension === 'base' || extension === 'canvas') return extension // Fork (2-3b)：Obsidian Bases 與 JSON Canvas
     if (MARKDOWN_EXTENSIONS.has(extension)) return 'markdown'
     if (IMAGE_EXTENSIONS.has(extension)) return 'image'
     return 'unknown'
@@ -1801,6 +1804,8 @@ export function EditorLayout() {
             {itemType === 'image' && <ImageEditor filePath={tab.path} isActive={active} />}
             {itemType === 'markdown' && <MdEditor tabContentsRef={tabContentsRef} filePath={tab.path} isActive={active} disabled={detachingTabId === tab.id} />}
             {itemType === 'unknown' && <PluginDocumentPreview path={tab.path} isActive={active} />}
+            {itemType === 'base' && <BasesPage filePath={tab.path} isActive={active} />}
+            {itemType === 'canvas' && <ObsidianCanvasPage filePath={tab.path} isActive={active} />}
           </div>
           <PluginEmbeddedViews location="document-bottom" active={active && layout.activeGroupId === groupId && itemType !== 'folder'} contextKey={`${groupId}:${tab.id}:${tab.path}`} />
         </div>

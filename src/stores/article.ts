@@ -4101,7 +4101,7 @@ const useArticleStore = create<NoteState>((set, get) => ({
         file.isFile && 
         file.name !== '.DS_Store' && 
         !file.name.startsWith('.') && 
-        file.name.endsWith('.md')
+        /\.(?:md|base|canvas)$/i.test(file.name) // Fork (2-3b)：檔案樹也列 Obsidian 的 .base 與 .canvas
       )
       
       // 添加文件到结果列表
