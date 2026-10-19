@@ -202,6 +202,33 @@
     "notMarkdown": "Markdown ノートを開いてリンクを表示",
     "unresolved": "未作成"
   },
+  "properties": {
+    "title": "プロパティ",
+    "add": "プロパティを追加",
+    "empty": "このノートにはまだプロパティがありません",
+    "source": "ソース",
+    "apply": "適用",
+    "invalidYaml": "無効な YAML",
+    "keyPlaceholder": "プロパティ名",
+    "valuePlaceholder": "値を入力",
+    "remove": "削除",
+    "rename": "名前を変更",
+    "unsupported": "未対応の形式です。ソースで編集してください",
+    "notMarkdown": "Markdown ノートを開いてプロパティを表示してください",
+    "type": "プロパティの種類",
+    "keyExists": "同じ名前のプロパティがすでに存在します",
+    "saveFailed": "プロパティを保存できませんでした",
+    "types": {
+      "text": "テキスト",
+      "multitext": "リスト",
+      "number": "数値",
+      "checkbox": "チェックボックス",
+      "date": "日付",
+      "datetime": "日時",
+      "tags": "タグ",
+      "aliases": "エイリアス"
+    }
+  },
   "settings": {
     "defaultModels": {
       "title": "デフォルトモデル",

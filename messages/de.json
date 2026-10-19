@@ -202,6 +202,33 @@
     "notMarkdown": "Öffne eine Markdown-Notiz, um Links anzuzeigen",
     "unresolved": "Noch nicht erstellt"
   },
+  "properties": {
+    "title": "Eigenschaften",
+    "add": "Eigenschaft hinzufügen",
+    "empty": "Diese Notiz hat noch keine Eigenschaften",
+    "source": "Quelltext",
+    "apply": "Anwenden",
+    "invalidYaml": "Ungültiges YAML",
+    "keyPlaceholder": "Eigenschaftsname",
+    "valuePlaceholder": "Wert eingeben",
+    "remove": "Löschen",
+    "rename": "Umbenennen",
+    "unsupported": "Nicht unterstütztes Format; bitte im Quelltext bearbeiten",
+    "notMarkdown": "Öffne eine Markdown-Notiz, um Eigenschaften anzuzeigen",
+    "type": "Eigenschaftstyp",
+    "keyExists": "Eine Eigenschaft mit diesem Namen existiert bereits",
+    "saveFailed": "Eigenschaften konnten nicht gespeichert werden",
+    "types": {
+      "text": "Text",
+      "multitext": "Liste",
+      "number": "Zahl",
+      "checkbox": "Kontrollkästchen",
+      "date": "Datum",
+      "datetime": "Datum und Uhrzeit",
+      "tags": "Tags",
+      "aliases": "Aliasse"
+    }
+  },
   "settings": {
     "defaultModels": {
       "title": "Standardmodelle",
