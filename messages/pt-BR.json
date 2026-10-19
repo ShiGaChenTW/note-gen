@@ -202,6 +202,33 @@
     "notMarkdown": "Abra uma nota Markdown para ver os links",
     "unresolved": "Ainda não criada"
   },
+  "properties": {
+    "title": "Propriedades",
+    "add": "Adicionar propriedade",
+    "empty": "Esta nota ainda não tem propriedades",
+    "source": "Código-fonte",
+    "apply": "Aplicar",
+    "invalidYaml": "YAML inválido",
+    "keyPlaceholder": "Nome da propriedade",
+    "valuePlaceholder": "Insira um valor",
+    "remove": "Excluir",
+    "rename": "Renomear",
+    "unsupported": "Formato não suportado; edite no código-fonte",
+    "notMarkdown": "Abra uma nota Markdown para ver as propriedades",
+    "type": "Tipo de propriedade",
+    "keyExists": "Já existe uma propriedade com este nome",
+    "saveFailed": "Não foi possível salvar as propriedades",
+    "types": {
+      "text": "Texto",
+      "multitext": "Lista",
+      "number": "Número",
+      "checkbox": "Caixa de seleção",
+      "date": "Data",
+      "datetime": "Data e hora",
+      "tags": "Tags",
+      "aliases": "Apelidos"
+    }
+  },
   "settings": {
     "defaultModels": {
       "title": "Modelos Padrão",

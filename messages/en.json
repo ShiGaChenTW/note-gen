@@ -202,6 +202,33 @@
     "notMarkdown": "Open a Markdown note to view links",
     "unresolved": "Not created yet"
   },
+  "properties": {
+    "title": "Properties",
+    "add": "Add property",
+    "empty": "This note has no properties yet",
+    "source": "Source",
+    "apply": "Apply",
+    "invalidYaml": "Invalid YAML",
+    "keyPlaceholder": "Property name",
+    "valuePlaceholder": "Enter a value",
+    "remove": "Delete",
+    "rename": "Rename",
+    "unsupported": "Unsupported format; edit in source mode",
+    "notMarkdown": "Open a Markdown note to view properties",
+    "type": "Property type",
+    "keyExists": "A property with this name already exists",
+    "saveFailed": "Could not save properties",
+    "types": {
+      "text": "Text",
+      "multitext": "List",
+      "number": "Number",
+      "checkbox": "Checkbox",
+      "date": "Date",
+      "datetime": "Date and time",
+      "tags": "Tags",
+      "aliases": "Aliases"
+    }
+  },
   "settings": {
     "defaultModels": {
       "title": "Default Models",

@@ -202,6 +202,33 @@
     "notMarkdown": "请打开 Markdown 笔记以查看链接",
     "unresolved": "尚未创建"
   },
+  "properties": {
+    "title": "属性",
+    "add": "新增属性",
+    "empty": "这篇还没有属性",
+    "source": "源代码",
+    "apply": "应用",
+    "invalidYaml": "YAML 格式错误",
+    "keyPlaceholder": "属性名称",
+    "valuePlaceholder": "输入值",
+    "remove": "删除",
+    "rename": "重命名",
+    "unsupported": "不支持的格式，请用源代码编辑",
+    "notMarkdown": "请打开 Markdown 笔记以查看属性",
+    "type": "属性类型",
+    "keyExists": "属性名称已存在",
+    "saveFailed": "无法保存属性",
+    "types": {
+      "text": "文本",
+      "multitext": "列表",
+      "number": "数字",
+      "checkbox": "复选框",
+      "date": "日期",
+      "datetime": "日期与时间",
+      "tags": "标签",
+      "aliases": "别名"
+    }
+  },
   "settings": {
     "defaultModels": {
       "title": "默认模型",

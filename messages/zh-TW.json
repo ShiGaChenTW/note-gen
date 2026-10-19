@@ -202,6 +202,33 @@
     "notMarkdown": "請開啟 Markdown 筆記以查看連結",
     "unresolved": "尚未建立"
   },
+  "properties": {
+    "title": "屬性",
+    "add": "新增屬性",
+    "empty": "這篇還沒有屬性",
+    "source": "原始碼",
+    "apply": "套用",
+    "invalidYaml": "YAML 格式錯誤",
+    "keyPlaceholder": "屬性名稱",
+    "valuePlaceholder": "輸入值",
+    "remove": "刪除",
+    "rename": "重新命名",
+    "unsupported": "不支援的格式，請用原始碼編輯",
+    "notMarkdown": "請開啟 Markdown 筆記以查看屬性",
+    "type": "屬性型別",
+    "keyExists": "屬性名稱已存在",
+    "saveFailed": "無法儲存屬性",
+    "types": {
+      "text": "文字",
+      "multitext": "清單",
+      "number": "數字",
+      "checkbox": "核取方塊",
+      "date": "日期",
+      "datetime": "日期與時間",
+      "tags": "標籤",
+      "aliases": "別名"
+    }
+  },
   "settings": {
     "defaultModels": {
       "title": "預設模型",
