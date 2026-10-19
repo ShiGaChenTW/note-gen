@@ -2,7 +2,7 @@
 title: NoteGen Fork 偏離上游清單
 filename: FORK-CHANGES.md
 created: 2026-10-15 05:45 (Asia/Taipei)
-modified: 2026-10-19 05:00 (Asia/Taipei)
+modified: 2026-10-19 05:30 (Asia/Taipei)
 source_llm: Claude (Opus 5.5, Claude Code session)
 status: active
 ---
@@ -68,7 +68,7 @@ npx pnpm@9 install --frozen-lockfile
 | 2026-10-18 | `messages/*.json` | `today` 加 `calendarNav`、`quickAdd`、`timeBlocks`、`reminders` 等；`settings.daily` 加 `reminders` | D3、D4、D7、D8 |
 | 2026-10-19 | `personal/make-test-vault.mjs`（新） | 產生測試用 vault（預設 `~/Documents/NoteGen-Test-Vault`），日期以執行當天為今天，涵蓋 F1、D1–D8 的測試情境；只會覆寫自己建立的 vault | 驗收用，不動真正的 vault |
 | 2026-10-19 | `src/app/core/main/today/use-today-data.ts`（新）、`use-today-actions.ts`（新）、`today-page.tsx` | 重構：今日頁的資料讀取與寫回動作抽成兩個 hook，`TodayPage` 只負責畫面；行為不變 | graphify 指出 `TodayPage` 直接呼叫 37 個函式 |
-| 2026-10-19 | `src/lib/markdown/wikilink.ts`（新） | Phase 2 共用：`[[ ]]` 解析（別名、`\|`、`#標題`、`^block`、嵌入）、全文搜尋（跳過 code）、Obsidian「shortest path」目標解析與寫法 | Phase 2-1 三條軌道共用；規格 `docs/notegen-plan/07-Phase2-1實作規格.md`（`docs/` 未納入 git） |
+| 2026-10-19 | `src/lib/markdown/wikilink.ts`（新） | Phase 2 共用：`[[ ]]` 解析（別名、`\|`、`#標題`、`^block`、嵌入）、全文搜尋（跳過 code）、Obsidian「shortest path」目標解析與寫法 | Phase 2-1 三條軌道共用；規格 `personal/specs/07-Phase2-1實作規格.md`（`docs/notegen-plan/07` 的版控副本） |
 | 2026-10-19 | `src/lib/vault-index/index-note.ts`、新檔 `links.ts`、`src/stores/vault-index.ts` | 索引 `links`（wikilink＋相對 markdown 連結，含行號、上下文）、`aliases`、`tags`（frontmatter＋內文 `#tag`，允許 `-`／`_`）；`INDEX_SCHEMA_VERSION` 2，舊快取自動重建；`selectBacklinks`／`selectOutgoingLinks` 按路徑快取 | L3（Codex 實作） |
 | 2026-10-19 | `src/app/core/main/backlinks/`（新）、`src/components/plugins/plugin-right-sidebar.tsx` | 右側欄「反向連結」tab：連結到這篇（依來源筆記分組、強調連結文字、點擊開啟）、本篇連出（標示尚未建立）。掛載點：加 `@backlinks` tab，沒有外掛時也畫 Tabs（原本直接回 `<Chat />`） | L3 |
 | 2026-10-19 | `src/lib/wikilink-suggest-model.ts`（新）、`src/app/core/main/editor/markdown/wikilink-suggest.tsx`（新）、`tiptap-editor.tsx` | L2：輸入 `[[` 跳出筆記選單（名稱／別名前綴 > 子序列 > 路徑；空 query 列已開分頁），Enter／Tab 插入 `[[目標]]` 或 `[[目標|別名]]`，最後一列「建立」；`tiptap-editor.tsx` 只加 import 與掛載一行 | L2（Grok 實作） |
@@ -171,14 +171,14 @@ npx pnpm@9 tauri dev
 
 ### Phase 2-1 基本雙鏈（L1 wikilink、L2 自動完成、L3 反向連結）
 
-啟動方式同上。測試 vault 建議先加幾篇互相 `[[ ]]` 連結的筆記（`make-test-vault.mjs` 目前沒有這類樣本）。
+啟動方式同上。測試 vault：`node personal/make-test-vault.mjs --force`，雙鏈樣本在 `60 Notes/`（見該 vault 的 README）。
 
 **L1 wikilink**
 
 1. 開一篇含 `[[筆記]]`、`[[筆記|別名]]`、`[[筆記#標題]]`、`![[圖.png]]` 的筆記：連結顯示為琥珀色底線文字（別名優先），嵌入顯示 `⧉ 檔名` 的虛線框。
 2. 指向不存在筆記的連結是虛線、較淡；建好那篇筆記後幾秒內虛線消失（索引 watcher）。
 3. 點既有連結：左側檔案樹 reveal 並開啟那篇；點不存在的連結：在目前筆記同資料夾建立 `名稱.md`（內容 `# 名稱`）並開啟；`[[#標題]]` 與嵌入點了不動作。
-4. **存檔 diff 為空**：不改內容只按存檔，再用 git 或 Obsidian 比對；特別測表格列 `| [[A\|a]] | [[B]] |`、行內 code `` `[[x]]` ``、frontmatter `related: "[[Front]]"`。
+4. **存檔 diff 為空**：開 `60 Notes/雙鏈來源.md` 不改內容只按存檔，再用 git 或 Obsidian 比對，必須是空的（含行內 code `` `[[x]]` ``、frontmatter `related: "[[Front]]"`、markdown 相對連結）。`60 Notes/雙鏈表格.md`：只允許表格欄寬補空白與表前多一個空行，`[[A\|a]]` 的 `\|` 必須還在。
 5. 方向鍵會跳過整個連結，Backspace 整個刪掉。手動打 `[[新連結]]`，打完第二個 `]` 立刻變成節點。
 
 **L2 自動完成**
@@ -200,3 +200,5 @@ npx pnpm@9 tauri dev
 
 - 嵌入 `![[ ]]` 的內容轉入、`#標題` 捲動、block ref 跳轉（Phase 2-3）。
 - 跨連結套粗體／斜體的存檔差異（上游限制，見修改清單）。
+- **表格存檔會被重排**：上游 @tiptap/markdown 的表格序列化器會把欄寬補齊（`|---|---|` 變 `| --- | --- |`、儲存格補空白）並在表格前多放一個空行；不開 Wikilink 擴充也一樣，所有含表格的筆記都受影響，與 2-1 無關。要達成「表格也一字不差」需要另開小 PR 在存檔路徑還原原始表格文字。
+- **部分路徑不解析**：`resolveWikilinkTarget` 只認「從 vault 根目錄的完整路徑」或「純檔名」，`[[子資料夾/同名]]` 這種相對於本篇資料夾的部分路徑（Obsidian「Relative path to file」連結格式）會標成未建立。2-1 假設 vault 用 Obsidian 預設的「Shortest path when possible」；2-2 再補相對路徑解析。
