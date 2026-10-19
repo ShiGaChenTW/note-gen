@@ -246,6 +246,16 @@
       "aliases": "Aliases"
     }
   },
+  "localGraph": {
+    "title": "Local graph",
+    "depth1": "1 level",
+    "depth2": "2 levels",
+    "empty": "This note has no links yet",
+    "indexing": "Indexing…",
+    "notMarkdown": "Open a Markdown note to view its local graph",
+    "unresolved": "Not created yet",
+    "truncated": "Too many nodes; showing the first {count}. Switch back to 1 level"
+  },
   "settings": {
     "defaultModels": {
       "title": "Default Models",

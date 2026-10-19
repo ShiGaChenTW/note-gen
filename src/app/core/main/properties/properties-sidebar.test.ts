@@ -20,6 +20,7 @@ vi.mock('@/components/plugins/plugin-view-surface', () => ({ PluginViewSurface: 
 vi.mock('@/app/core/main/chat', () => ({ default: () => React.createElement('div', null, 'chat content') }))
 vi.mock('@/app/core/main/backlinks/backlinks-panel', () => ({ default: () => React.createElement('div', null, 'backlinks content') }))
 vi.mock('./properties-panel', () => ({ default: () => React.createElement('div', null, 'properties content') }))
+vi.mock('@/app/core/main/graph/local-graph-panel', () => ({ default: () => React.createElement('div', null, 'graph content') }))
 vi.mock('next-intl', () => ({ useLocale: () => 'zh-TW', useTranslations: (namespace: string) => (key: string) => `${namespace}.${key}` }))
 const { PluginRightSidebar } = await import('@/components/plugins/plugin-right-sidebar')
 let container: HTMLDivElement
@@ -40,8 +41,8 @@ describe('屬性面板掛載', () => {
   it('沒有外掛時仍依序顯示對話、反向連結、屬性，且切換時保留掛載', async () => {
     await act(async () => root.render(React.createElement(PluginRightSidebar)))
     const tabs = container.querySelectorAll('[role="tab"]')
-    expect([...tabs].map(tab => tab.getAttribute('aria-label'))).toEqual(['settings.plugins.ui.chat', 'backlinks.title', 'properties.title'])
-    expect(container.querySelectorAll('[role="tabpanel"]')).toHaveLength(3)
+    expect([...tabs].map(tab => tab.getAttribute('aria-label'))).toEqual(['settings.plugins.ui.chat', 'backlinks.title', 'properties.title', 'localGraph.title'])
+    expect(container.querySelectorAll('[role="tabpanel"]')).toHaveLength(4)
     expect(container.textContent).toContain('chat content')
     expect(container.textContent).toContain('backlinks content')
     expect(container.textContent).toContain('properties content')

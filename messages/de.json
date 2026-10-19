@@ -246,6 +246,16 @@
       "aliases": "Aliasse"
     }
   },
+  "localGraph": {
+    "title": "Lokaler Graph",
+    "depth1": "1 Ebene",
+    "depth2": "2 Ebenen",
+    "empty": "Diese Notiz hat noch keine Links",
+    "indexing": "Indizierung…",
+    "notMarkdown": "Öffne eine Markdown-Notiz, um ihren lokalen Graphen zu sehen",
+    "unresolved": "Noch nicht erstellt",
+    "truncated": "Zu viele Knoten; nur die ersten {count} werden angezeigt. Wechsle zurück auf 1 Ebene"
+  },
   "settings": {
     "defaultModels": {
       "title": "Standardmodelle",

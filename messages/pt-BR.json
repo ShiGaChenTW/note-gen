@@ -246,6 +246,16 @@
       "aliases": "Apelidos"
     }
   },
+  "localGraph": {
+    "title": "Grafo local",
+    "depth1": "1 nível",
+    "depth2": "2 níveis",
+    "empty": "Esta nota ainda não tem links",
+    "indexing": "Indexando…",
+    "notMarkdown": "Abra uma nota Markdown para ver o grafo local",
+    "unresolved": "Ainda não criada",
+    "truncated": "Nós demais; mostrando os primeiros {count}. Volte para 1 nível"
+  },
   "settings": {
     "defaultModels": {
       "title": "Modelos Padrão",
