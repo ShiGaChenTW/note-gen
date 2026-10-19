@@ -299,6 +299,106 @@ write('60 Notes/同名.md', '# 同名（根層）\n\n被 [[雙鏈來源]] 用 `[
 write('60 Notes/子資料夾/同名.md', '# 同名（子資料夾）\n\n只有 `[[子資料夾/同名]]` 會連到這篇。\n')
 write('60 Notes/孤兒.md', '# 孤兒\n\n沒有任何筆記連到這篇：反向連結面板應顯示「還沒有筆記連到這篇」。\n')
 
+// ---------- Phase 2-2：知識庫整理（L5 屬性、L7 改名改寫、L6 標籤、L4 未連結提及） ----------
+// Obsidian 的屬性型別設定：L5 要優先讀這份
+write('.obsidian/types.json', `{
+  "types": {
+    "due": "date",
+    "reviewed": "datetime",
+    "rating": "number",
+    "done": "checkbox",
+    "related": "multitext",
+    "tags": "tags",
+    "aliases": "aliases"
+  }
+}
+`)
+
+// L5：每種型別各一個；改任一屬性後，git diff 只能有那幾行（註解、引號、空行、順序都不能動）
+write('60 Notes/屬性樣本.md', `---
+title: "屬性樣本: 有冒號所以加引號"  # 行尾註解要留著
+due: 2026-10-25
+reviewed: 2026-10-19T09:30
+rating: 4
+done: false
+related:
+  - "[[雙鏈目標]]"
+  - "[[待改名]]"
+tags: [notegen, phase-2]
+aliases: [屬性別名]
+
+nested:
+  a: 1
+  b: 2
+---
+
+# 屬性樣本
+
+右側欄「屬性」tab 應列出 9 個屬性；\`nested\` 顯示為不支援、唯讀。
+Dataview 行內欄位不是屬性：status:: active
+`)
+
+// L6：標籤樹 專案/alpha、專案/beta、閱讀；大小寫視為同一個標籤
+write('60 Notes/標籤A.md', `---
+tags:
+  - 專案/alpha
+  - 閱讀
+---
+
+# 標籤 A
+
+內文標籤 #專案/alpha 重複不重複計算，#待辦 只在這篇。
+`)
+write('60 Notes/標籤B.md', '# 標籤 B\n\n#專案/beta 與 #閱讀，還有大寫的 #Reading（與下一篇的 #reading 是同一個）。\n')
+write('60 Notes/標籤C.md', '# 標籤 C\n\n#reading 與 #專案（只有父層）。\n\n`#code裡的不算`\n')
+
+// L7：改名「待改名」→ 任何新名字後，下面三篇的連結都要跟著改，且只有連結那幾行有 diff
+write('60 Notes/待改名.md', `# 待改名
+
+## 第一節
+
+改名這篇：連入的 [[改名來源一]]、[[改名來源二]]、[[改名來源三]] 都會跳出「更新連結」詢問。
+相對 markdown 連結，搬動本篇到別的資料夾後要重算：[雙鏈目標](雙鏈目標.md)
+`)
+write('60 Notes/改名來源一.md', `---
+related: "[[待改名]]"
+---
+
+# 改名來源一
+
+- 一般 [[待改名]]
+- 別名 [[待改名|顯示名]]
+- 標題 [[待改名#第一節]]
+- 嵌入 ![[待改名]]
+- 行內 code 不改：\`[[待改名]]\`
+`)
+write('60 Notes/改名來源二.md', `# 改名來源二
+
+| 欄位 | 連結 |
+|---|---|
+| 表格 | [[待改名\\|表格別名]] |
+
+markdown 相對連結：[待改名](待改名.md)
+`, { crlf: true })
+write('60 Notes/子資料夾/改名來源三.md', '# 改名來源三\n\n從子資料夾連：[[待改名]] 與 [連結](../待改名.md)\n')
+
+// L4：未連結提及。目標「提及目標」別名「提及別名」
+write('60 Notes/提及目標.md', `---
+aliases: [提及別名]
+---
+
+# 提及目標
+
+反向連結面板「未連結提及」應列出 3 筆（提及來源 2 筆、標籤A 0 筆、雙鏈來源 0 筆），一鍵「連結」後變成 [[提及目標]]。
+`)
+write('60 Notes/提及來源.md', `# 提及來源
+
+純文字提到提及目標一次，別名提及別名也算一次。
+已經是連結的 [[提及目標]] 不算，code 裡的 \`提及目標\` 不算，markdown 連結 [提及目標](提及目標.md) 不算。
+英文邊界：Note 不命中 Notes。
+`)
+write('60 Notes/提及來源二.md', '# 提及來源二\n\n標題裡也算：\n\n## 關於提及目標的筆記\n')
+
 write('README.md', `# NoteGen 測試 vault
 
 由 \`personal/make-test-vault.mjs\` 在 ${ymd(now)} ${pad(now.getHours())}:${pad(now.getMinutes())} 產生，日期都以那天為「今天」。
@@ -318,6 +418,10 @@ write('README.md', `# NoteGen 測試 vault
 | L1 wikilink | 60 Notes/雙鏈來源.md：各種寫法、虛線未建立；不改內容直接存檔，git diff 必須是空的。60 Notes/雙鏈表格.md：存檔後只允許表格欄寬補空白與表前多一個空行（上游序列化器），\`[[雙鏈目標\\|表格]]\` 的 \`\\|\` 必須還在 |
 | L2 自動完成 | 任一筆記打 \`[[\`：「雙鏈目標」用別名「目標別名」也找得到；「同名」有兩篇，選子資料夾那篇會寫 \`[[60 Notes/子資料夾/同名]]\` |
 | L3 反向連結 | 開 雙鏈目標.md：連結到這篇 6 筆（來源 5 筆含 frontmatter 與 markdown 相對連結、表格 1 筆；code 內的不算）；同名.md 2 筆、子資料夾/同名.md 1 筆、孤兒.md 空狀態 |
+| L5 屬性面板 | 60 Notes/屬性樣本.md：9 個屬性各型別（\`.obsidian/types.json\` 指定 due/reviewed/rating/done 型別），\`nested\` 唯讀；改任一值後 git diff 只有那幾行，行尾註解與引號要留著 |
+| L6 筆記標籤 | 左側欄「筆記標籤」：專案（3 篇：alpha 1、beta 1、只有父層 1）、閱讀 2、reading 2（大小寫合併）、待辦 1、notegen 等 frontmatter 標籤；code 裡的不算 |
+| L7 改名改寫 | 把 60 Notes/待改名.md 改名：跳出詢問「3 篇筆記共 9 個連結」；確認後 改名來源一（5 筆，code 內不改）、改名來源二（表格 \`\\|\` 與 markdown 連結，CRLF 要保留）、子資料夾/改名來源三（含 \`../\` 相對連結）只有連結那幾行有 diff；再把它拖進子資料夾，來源三的 \`[[待改名]]\` 不變、markdown 相對路徑要重算 |
+| L4 未連結提及 | 開 60 Notes/提及目標.md：未連結提及 3 筆（提及來源 2 筆：純文字＋別名；提及來源二 標題 1 筆）；已連結、code、markdown 連結不算；按「連結」後該筆消失、git diff 只有那一行 |
 `)
 
 fs.writeFileSync(path.join(target, MARKER), `created ${now.toISOString()}\n`)

@@ -2,7 +2,7 @@
 title: NoteGen 個人 Fork 開發計畫
 filename: PLAN.md
 created: 2026-10-15 05:10 (Asia/Taipei)
-modified: 2026-10-19 16:20 (Asia/Taipei)
+modified: 2026-10-19 16:40 (Asia/Taipei)
 source_llm: Claude (Opus 5.5, Claude Code session)
 status: approved 2026-10-15（D1–D6 全採建議）
 supersedes: HANDOFF.md 第 1、3、9 節的「純 CSS / 插件沙箱」前提
@@ -100,6 +100,7 @@ supersedes: HANDOFF.md 第 1、3、9 節的「純 CSS / 插件沙箱」前提
 | Phase 1-1 CSS / 插件截圖驗收 | ⏳ 待 Scott | 原生今日頁完成後 NoteGen Today 插件預計停用，這項可能不再需要 |
 | Phase 3 今日工作區（文件 04 的 Phase 1：F1–F3、D1–D8） | ✅ 程式完成 2026-10-18，PR #2、#3 已合併 `dev` | 實機驗收待 Scott，步驟見 FORK-CHANGES「測試步驟」；測試 vault：`node personal/make-test-vault.mjs` |
 | Phase 2-1 基本雙鏈（L1 wikilink、L2 自動完成、L3 反向連結） | ✅ 已合併 `dev`（PR #4，2026-10-19 16:14） | 規格 `personal/specs/07-Phase2-1實作規格.md`；共用模組 `src/lib/markdown/wikilink.ts`；三條軌道由 Claude Code（L1）、Codex（索引＋L3）、Grok（L2）分 worktree 開發，PM（Claude）整合；worktree 與分支已清；實機驗收步驟見 FORK-CHANGES「Phase 2-1 基本雙鏈」；後續：存檔路徑還原表格原文（上游序列化器重排）、2-2 補相對路徑解析 |
+| Phase 2-2 知識庫整理（L5 屬性面板、L7 改名改寫連結、L6 筆記標籤、L4 未連結提及） | 🔧 派工中 2026-10-19（先用預設前置設定） | 規格 `personal/specs/08-Phase2-2實作規格.md`；共用模組 `src/lib/note-rewrite.ts`；整合分支 `feat/p2-2-knowledge-base`；三軌：Claude Code（L7＋L4）、Codex（L5）、Grok（L6）在 `../note-gen-wt/{a,b,c}`；整合順序 C→B→A |
 | Phase 2 啟動前三問（手機、必要外掛、vault 規模） | ⏳ 待 Scott | 2-1 先採假設：手機續用 Obsidian；2-2 之前要回答 |
 
 ## 6. 同意後的第一步
