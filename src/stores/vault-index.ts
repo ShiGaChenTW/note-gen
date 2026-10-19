@@ -1,7 +1,7 @@
 // Fork (F3): in-memory vault index. Filled by src/lib/vault-index/service.ts.
 import { create } from 'zustand'
 import { collectTasks, type TaskRef } from '@/lib/vault-index/index-core'
-import { collectBacklinks, collectOutgoingLinks, type BacklinkRef, type OutgoingLink } from '@/lib/vault-index/links'
+import { buildLinkLookup, buildVaultLinkIndex, type BacklinkRef, type OutgoingLink } from '@/lib/vault-index/links'
 import { buildTagTree, type TagNode } from '@/lib/vault-index/tags'
 import type { IndexedNote } from '@/lib/vault-index/index-note'
 
@@ -82,31 +82,52 @@ export function selectAllTasks(state: Pick<VaultIndexState, 'notes' | 'revision'
   return taskCache.tasks
 }
 
-let linkRevision = -1
-let linkNotes: Map<string, IndexedNote> | null = null
-const backlinkCache = new Map<string, BacklinkRef[]>()
-const outgoingCache = new Map<string, OutgoingLink[]>()
-
 type LinkState = Pick<VaultIndexState, 'notes' | 'revision'>
 
-function refreshLinkCache(state: LinkState) {
-  if (linkRevision === state.revision && linkNotes === state.notes) return
-  linkRevision = state.revision
-  linkNotes = state.notes
-  backlinkCache.clear()
-  outgoingCache.clear()
+interface RevisionLinkIndex {
+  revision: number
+  notes: Map<string, IndexedNote>
+  backlinks: Map<string, BacklinkRef[]>
+  outgoing: Map<string, OutgoingLink[]>
+  /** 查詢字串原文 → 結果，讓同一個路徑重複呼叫回傳同一個陣列 */
+  backlinkHits: Map<string, BacklinkRef[]>
+  outgoingHits: Map<string, OutgoingLink[]>
+}
+
+let linkIndex: RevisionLinkIndex | null = null
+
+/** 同一個 revision、同一份 notes 只建一次對照表與反向索引，兩個 selector 共用。 */
+function ensureLinkIndex(state: LinkState): RevisionLinkIndex {
+  if (linkIndex && linkIndex.revision === state.revision && linkIndex.notes === state.notes) return linkIndex
+  const lookup = buildLinkLookup(state.notes.keys())
+  const built = buildVaultLinkIndex(state.notes.values(), lookup)
+  linkIndex = {
+    revision: state.revision,
+    notes: state.notes,
+    backlinks: built.backlinks,
+    outgoing: built.outgoing,
+    backlinkHits: new Map(),
+    outgoingHits: new Map(),
+  }
+  return linkIndex
 }
 
 export function selectBacklinks(state: LinkState, targetPath: string): BacklinkRef[] {
-  refreshLinkCache(state)
-  if (!backlinkCache.has(targetPath)) backlinkCache.set(targetPath, collectBacklinks(targetPath, state.notes.values()))
-  return backlinkCache.get(targetPath)!
+  const index = ensureLinkIndex(state)
+  const hit = index.backlinkHits.get(targetPath)
+  if (hit) return hit
+  const found = index.backlinks.get(targetPath.toLowerCase()) ?? []
+  index.backlinkHits.set(targetPath, found)
+  return found
 }
 
 export function selectOutgoingLinks(state: LinkState, path: string): OutgoingLink[] {
-  refreshLinkCache(state)
-  if (!outgoingCache.has(path)) outgoingCache.set(path, collectOutgoingLinks(path, state.notes.values()))
-  return outgoingCache.get(path)!
+  const index = ensureLinkIndex(state)
+  const hit = index.outgoingHits.get(path)
+  if (hit) return hit
+  const found = index.outgoing.get(path) ?? []
+  index.outgoingHits.set(path, found)
+  return found
 }
 
 let tagCache: { revision: number, tree: TagNode[] } | null = null
