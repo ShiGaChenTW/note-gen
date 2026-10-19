@@ -2,7 +2,7 @@
 title: NoteGen 個人 Fork 開發計畫
 filename: PLAN.md
 created: 2026-10-15 05:10 (Asia/Taipei)
-modified: 2026-10-15 07:00 (Asia/Taipei)
+modified: 2026-10-19 05:30 (Asia/Taipei)
 source_llm: Claude (Opus 5.5, Claude Code session)
 status: approved 2026-10-15（D1–D6 全採建議）
 supersedes: HANDOFF.md 第 1、3、9 節的「純 CSS / 插件沙箱」前提
@@ -97,7 +97,10 @@ supersedes: HANDOFF.md 第 1、3、9 節的「純 CSS / 插件沙箱」前提
 |---|---|---|
 | Phase 0 | ✅ 完成 2026-10-15 | commit `26c82718`、`b62bbb73`；本機 build `NoteGen (Scott).app` 成功（需 stable Rust，見 FORK-CHANGES） |
 | Phase 1-2 slash menu 鍵盤 | ✅ fork 版無法重現 2026-10-15 | 隔離測試：乾淨環境、+custom CSS、+NoteGen Today 皆正常。疑似由上游 `a79486cb`（AI 續寫浮窗跨編輯器攔截 Enter/Escape，v0.38.2 之後才修）解決；`%name%` 是其他插件 manifest 的在地化 key 沒有翻譯。再出現時先查舊環境裝的其他插件 |
-| Phase 1-1 CSS / 插件截圖驗收 | ⏳ 待 Scott | |
+| Phase 1-1 CSS / 插件截圖驗收 | ⏳ 待 Scott | 原生今日頁完成後 NoteGen Today 插件預計停用，這項可能不再需要 |
+| Phase 3 今日工作區（文件 04 的 Phase 1：F1–F3、D1–D8） | ✅ 程式完成 2026-10-18，PR #2、#3 已合併 `dev` | 實機驗收待 Scott，步驟見 FORK-CHANGES「測試步驟」；測試 vault：`node personal/make-test-vault.mjs` |
+| Phase 2-1 基本雙鏈（L1 wikilink、L2 自動完成、L3 反向連結） | ✅ 程式完成 2026-10-19，PR #4 待 Scott 驗收後合併 `dev` | 規格 `personal/specs/07-Phase2-1實作規格.md`；共用模組 `src/lib/markdown/wikilink.ts`；三條軌道由 Claude Code（L1）、Codex（索引＋L3）、Grok（L2）在 `../note-gen-wt/{l1,l3,l2}` worktree 開發，PM（Claude）整合；實機驗收步驟見 FORK-CHANGES「Phase 2-1 基本雙鏈」；合併後清掉 worktree 與分支 |
+| Phase 2 啟動前三問（手機、必要外掛、vault 規模） | ⏳ 待 Scott | 2-1 先採假設：手機續用 Obsidian；2-2 之前要回答 |
 
 ## 6. 同意後的第一步
 

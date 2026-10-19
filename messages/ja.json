@@ -193,6 +193,15 @@
       "summaryTitle": "{count} 件のタスクリマインダー"
     }
   },
+  "backlinks": {
+    "title": "バックリンク",
+    "linked": "このノートへのリンク",
+    "outgoing": "このノートからのリンク",
+    "empty": "このノートへのリンクはまだありません",
+    "indexing": "インデックス作成中…",
+    "notMarkdown": "Markdown ノートを開いてリンクを表示",
+    "unresolved": "未作成"
+  },
   "settings": {
     "defaultModels": {
       "title": "デフォルトモデル",
@@ -5539,6 +5548,11 @@
       "actions": "操作",
       "enhance": "高精度で検索",
       "searching": "関連ファイルを検索中..."
+    },
+    "wikilinkSuggest": {
+      "create": "「{name}」を作成",
+      "alias": "別名",
+      "noResults": "一致するノートがありません"
     },
     "outline": {
       "title": "アウトライン",

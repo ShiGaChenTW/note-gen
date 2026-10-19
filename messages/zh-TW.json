@@ -193,6 +193,15 @@
       "summaryTitle": "{count} 個任務提醒"
     }
   },
+  "backlinks": {
+    "title": "反向連結",
+    "linked": "連結到這篇",
+    "outgoing": "本篇連出",
+    "empty": "還沒有筆記連到這篇",
+    "indexing": "索引中…",
+    "notMarkdown": "請開啟 Markdown 筆記以查看連結",
+    "unresolved": "尚未建立"
+  },
   "settings": {
     "defaultModels": {
       "title": "預設模型",
@@ -5529,6 +5538,11 @@
       "actions": "操作",
       "enhance": "增強搜尋",
       "searching": "正在搜尋相關檔案..."
+    },
+    "wikilinkSuggest": {
+      "create": "建立「{name}」",
+      "alias": "別名",
+      "noResults": "沒有符合的筆記"
     },
     "outline": {
       "title": "大綱",

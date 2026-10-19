@@ -34,6 +34,7 @@ import { InlineMath, BlockMath } from './math-extension'
 import { MermaidDiagram } from './mermaid-extension'
 import { encodeFrontmatterForEditor, Frontmatter } from './frontmatter-extension'
 import { RecurringTask } from './recurring-task-extension'
+import { Wikilink } from './wikilink-extension'
 import { SearchReplacePanel } from './search-replace-panel'
 import { useEffect, useId, useLayoutEffect, useRef, useCallback, useMemo, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type UIEvent as ReactUIEvent, type WheelEvent as ReactWheelEvent } from 'react'
 import { createPortal } from 'react-dom'
@@ -134,6 +135,7 @@ import { isAiSuggestionShortcutVisible } from '@/lib/ai-suggestion-shortcut-stat
 import { getFileManagerDragPath, hasFileManagerDragData } from '@/app/core/main/file/file-dnd'
 import { getMarkLocalAssetPath, type Mark } from '@/db/marks'
 import { SmartFileLink } from './smart-file-link'
+import { WikilinkSuggest } from './wikilink-suggest'
 import { isLargeMarkdownDocument } from './large-markdown'
 import {
   activateImageSource as activateDeferredImageSource,
@@ -2464,6 +2466,7 @@ export function TipTapEditor({
         nested: true,
       }),
       RecurringTask,
+      Wikilink,
       StableCodeBlockLowlight.configure({
         shouldHighlight: () => !isSourceViewRef.current,
       }),
@@ -8080,6 +8083,7 @@ export function TipTapEditor({
             ) : null}
             <EditorContent editor={editor} className={cn("relative select-text", scrollable && "h-full")}>
               <SmartFileLink editor={editor} activeFilePath={activeFilePath} />
+              <WikilinkSuggest editor={editor} activeFilePath={activeFilePath} />
 
               {!readOnly && !isMobile && <ImageBubbleMenu editor={editor} pluginsEnabled={exposeToPluginHost} />}
 

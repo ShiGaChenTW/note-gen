@@ -193,6 +193,15 @@
       "summaryTitle": "{count} lembretes de tarefas"
     }
   },
+  "backlinks": {
+    "title": "Links de retorno",
+    "linked": "Links para esta nota",
+    "outgoing": "Links desta nota",
+    "empty": "Nenhuma nota aponta para esta nota ainda",
+    "indexing": "Indexando…",
+    "notMarkdown": "Abra uma nota Markdown para ver os links",
+    "unresolved": "Ainda não criada"
+  },
   "settings": {
     "defaultModels": {
       "title": "Modelos Padrão",
@@ -5518,6 +5527,11 @@
       "actions": "Ações",
       "enhance": "Aprimorar busca",
       "searching": "Buscando arquivos relacionados..."
+    },
+    "wikilinkSuggest": {
+      "create": "Criar \"{name}\"",
+      "alias": "Alias",
+      "noResults": "Nenhuma nota correspondente"
     },
     "outline": {
       "title": "Sumário",
