@@ -4,7 +4,7 @@ import { buildTagTree, collectNotesForTag, filterTagTree, normalizeTag, sortTagT
 import useVaultIndexStore, { selectTagTree } from '@/stores/vault-index'
 
 function note(path: string, tags: string[]): IndexedNote {
-  return { path, mtime: 1, frontmatter: null, tasks: [], links: [], aliases: [], tags }
+  return { path, mtime: 1, frontmatter: null, tasks: [], links: [], aliases: [], tags, headings: [], blockIds: [] }
 }
 
 describe('normalizeTag', () => {

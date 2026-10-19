@@ -5585,7 +5585,11 @@
     "wikilinkSuggest": {
       "create": "Criar \"{name}\"",
       "alias": "Alias",
-      "noResults": "Nenhuma nota correspondente"
+      "noResults": "Nenhuma nota correspondente",
+      "headings": "Títulos",
+      "blocks": "Blocos",
+      "noHeadings": "Esta nota não tem títulos",
+      "noBlocks": "Esta nota não tem IDs de bloco"
     },
     "outline": {
       "title": "Sumário",

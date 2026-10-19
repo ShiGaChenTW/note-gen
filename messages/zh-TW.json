@@ -5596,7 +5596,11 @@
     "wikilinkSuggest": {
       "create": "建立「{name}」",
       "alias": "別名",
-      "noResults": "沒有符合的筆記"
+      "noResults": "沒有符合的筆記",
+      "headings": "標題",
+      "blocks": "區塊",
+      "noHeadings": "這篇沒有標題",
+      "noBlocks": "這篇沒有區塊 id"
     },
     "outline": {
       "title": "大綱",

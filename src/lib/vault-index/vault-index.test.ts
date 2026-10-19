@@ -76,7 +76,7 @@ describe('indexNote', () => {
 
   it('keeps absent link metadata empty', () => {
     const note = indexNote('a.md', 'x', 1)
-    expect([note.links, note.aliases, note.tags]).toEqual([[], [], []])
+    expect([note.links, note.aliases, note.tags, note.headings, note.blockIds]).toEqual([[], [], [], [], []])
   })
 })
 
@@ -144,7 +144,7 @@ describe('toIndexablePath', () => {
 describe('Phase 2 index metadata', () => {
   it('indexes wikilinks including frontmatter, aliases, headings, blocks and embeds with whole-file lines', () => {
     const note = indexNote('a.md', '---\nrelated: "[[Front]]"\n---\n[[Note|別名]] ![[Note#段落]] [[Note#^id]] [[#本篇]]', 1)
-    expect(INDEX_SCHEMA_VERSION).toBe(2)
+    expect(INDEX_SCHEMA_VERSION).toBe(3)
     expect(note.links.map(link => [link.kind, link.target, link.alias, link.heading, link.embed, link.line])).toEqual([
       ['wikilink', 'Front', '', '', false, 1],
       ['wikilink', 'Note', '別名', '', false, 3],
@@ -182,5 +182,100 @@ describe('Phase 2 index metadata', () => {
     const note = indexNote('a.md', '- 上層 #follow-up\n    - 巢狀 #my_tag [連結](b.md)\n\t- tab 巢狀 #a-b/c_d', 1)
     expect(note.tags).toEqual(['follow-up', 'my_tag', 'a-b/c_d'])
     expect(note.links.map(link => [link.kind, link.target, link.line])).toEqual([['markdown', 'b.md', 1]])
+  })
+
+  it('accepts tags after CJK punctuation and rejects numeric tags in the body and frontmatter', () => {
+    const note = indexNote('a.md', '---\ntags: ["#12", "2026/10", "ok", "#年/1", 8]\n---\n甲，#標籤、#第二；#第三：#第四。#第五 (#六) #12 #2026/10 #2026/10/11 #2026/10a #12b #12-3\n# 標題不是標籤\n```\n#略過\n```\n', 1)
+    expect(note.tags).toEqual(['ok', '年/1', '標籤', '第二', '第三', '第四', '第五', '六', '2026/10a', '12b', '12-3'])
+  })
+
+  it('indexes ATX headings, skipping frontmatter, code, quotes and setext, and strips trailing hashes', () => {
+    const content = [
+      '---',
+      '# 不是標題: 1',
+      '---',
+      '# 一',
+      '## 二 ##',
+      '###  三  ',
+      '#### 四 #',
+      '##### 五',
+      '###### 六',
+      '####### 七不是',
+      '> # 引言',
+      'Setext',
+      '===',
+      '    # 縮排四格',
+      '```md',
+      '# 假',
+      '```',
+      '`# 行內`',
+      '# 標題 ^sec',
+    ].join('\n')
+    const note = indexNote('a.md', content, 1)
+    expect(note.headings).toEqual([
+      { level: 1, text: '一', line: 3 },
+      { level: 2, text: '二', line: 4 },
+      { level: 3, text: '三', line: 5 },
+      { level: 4, text: '四', line: 6 },
+      { level: 5, text: '五', line: 7 },
+      { level: 6, text: '六', line: 8 },
+      { level: 1, text: '標題', line: 18 },
+    ])
+    expect(note.blockIds).toEqual([{ id: 'sec', line: 18, context: '# 標題 ^sec' }])
+  })
+
+  it('indexes block ids on paragraphs, list items and table rows, including a task line', () => {
+    const content = [
+      '段落 ^block-1',
+      '- 項目 ^item',
+      '* 星號 ^star',
+      '1. 編號 ^num',
+      '| a | b |',
+      '| --- | --- |',
+      '| 1 | 2 | ^row',
+      '| 3 | 4 |^skip',
+      '- [ ] 買牛奶 ^buy',
+      'ok ^Ab-9',
+      'bad ^has_underscore',
+      'bad ^中文',
+      '^alone',
+      'see [[Note#^ref]]',
+      '```',
+      '程式 ^no',
+      '```',
+      '`行內 ^no`',
+    ].join('\n')
+    const note = indexNote('a.md', content, 1)
+    expect(note.blockIds.map(block => [block.id, block.line, block.context])).toEqual([
+      ['block-1', 0, '段落 ^block-1'],
+      ['item', 1, '- 項目 ^item'],
+      ['star', 2, '* 星號 ^star'],
+      ['num', 3, '1. 編號 ^num'],
+      ['row', 6, '| 1 | 2 | ^row'],
+      ['buy', 8, '- [ ] 買牛奶 ^buy'],
+      ['Ab-9', 9, 'ok ^Ab-9'],
+      ['alone', 12, '^alone'],
+    ])
+    expect(note.tasks.map(task => [task.line, task.title])).toEqual([[8, '買牛奶 ^buy']])
+    expect(note.links.map(link => [link.target, link.line])).toEqual([['Note', 13]])
+    expect(note.blockIds.map(block => block.id)).not.toContain('ref')
+  })
+
+  it('keeps the first 60 characters of a block line and handles CRLF line numbers', () => {
+    const long = `${'欄'.repeat(70)} ^id`
+    const crlf = '---\r\ntags: [daily]\r\n---\r\n# 標題 #\r\n\r\n段落 ^block-1\r\n- 項目 ^item\r\n| a | b |\r\n| --- | --- |\r\n| 1 | 2 | ^row\r\n甲，#標籤\r\n#12\r\n'
+    expect(indexNote('a.md', long, 1).blockIds).toEqual([
+      { id: 'id', line: 0, context: '欄'.repeat(60) },
+    ])
+    const note = indexNote('a.md', crlf, 1)
+    expect(note.headings).toEqual([{ level: 1, text: '標題', line: 3 }])
+    expect(note.blockIds).toEqual([
+      { id: 'block-1', line: 5, context: '段落 ^block-1' },
+      { id: 'item', line: 6, context: '- 項目 ^item' },
+      { id: 'row', line: 9, context: '| 1 | 2 | ^row' },
+    ])
+    expect(note.tags).toEqual(['daily', '標籤'])
+    expect(note.blockIds.every(block => !block.context.includes('\r'))).toBe(true)
+    expect(note.headings[0].text.includes('\r')).toBe(false)
   })
 })

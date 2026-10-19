@@ -5606,7 +5606,11 @@
     "wikilinkSuggest": {
       "create": "「{name}」を作成",
       "alias": "別名",
-      "noResults": "一致するノートがありません"
+      "noResults": "一致するノートがありません",
+      "headings": "見出し",
+      "blocks": "ブロック",
+      "noHeadings": "このノートに見出しはありません",
+      "noBlocks": "このノートにブロック ID はありません"
     },
     "outline": {
       "title": "アウトライン",

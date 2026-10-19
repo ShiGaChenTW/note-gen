@@ -5697,7 +5697,11 @@
     "wikilinkSuggest": {
       "create": "建立「{name}」",
       "alias": "别名",
-      "noResults": "没有符合的笔记"
+      "noResults": "没有符合的笔记",
+      "headings": "标题",
+      "blocks": "区块",
+      "noHeadings": "这篇没有标题",
+      "noBlocks": "这篇没有区块 id"
     },
     "outline": {
       "title": "大纲",

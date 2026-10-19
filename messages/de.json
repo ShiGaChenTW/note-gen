@@ -5555,7 +5555,11 @@
     "wikilinkSuggest": {
       "create": "„{name}“ erstellen",
       "alias": "Alias",
-      "noResults": "Keine passenden Notizen"
+      "noResults": "Keine passenden Notizen",
+      "headings": "Überschriften",
+      "blocks": "Blöcke",
+      "noHeadings": "Diese Notiz hat keine Überschriften",
+      "noBlocks": "Diese Notiz hat keine Block-IDs"
     },
     "outline": {
       "title": "Gliederung",
