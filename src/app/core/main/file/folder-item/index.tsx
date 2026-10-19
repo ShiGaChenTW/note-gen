@@ -50,6 +50,7 @@ import { getFileTreeSyncStatus, validateFileTreeName, type FileTreeSyncStatus } 
 import { FileTreeDecorations } from "../file-tree-decorations";
 import { moveEntryToSystemTrash } from '../system-trash'
 import { rewriteWorkspaceMarkdownMediaPaths } from '@/lib/markdown-media-path'
+import { requestLinkRewrite } from '../../link-rewrite/link-rewrite-store' // Fork L7
 import {
   activeEditorPathIsAffected,
   prepareActiveEditorPathMutationDurably,
@@ -513,6 +514,8 @@ export function FolderItem({
           await syncOpenTabsForPathChange(targetRelativePath, path)
           throw error
         }
+        // Fork L7：資料夾改名成功後詢問是否改寫連入的連結；內部自行 catch，不觸發上面的 rollback
+        await requestLinkRewrite([{ sourcePath: path, targetPath: targetRelativePath }])
       } catch (error) {
         setRenameError(error instanceof Error ? error.message : String(error))
         setTimeout(() => inputRef.current?.focus(), 0)

@@ -193,6 +193,15 @@
       "summaryTitle": "{count} 個任務提醒"
     }
   },
+  "linkRewrite": {
+    "title": "更新連結",
+    "description": "{files} 篇筆記共 {links} 個連結指向被改名的檔案，要一併改寫嗎？",
+    "obsidianHint": "Obsidian 同時開著這個 vault 時，它也可能改到同一批檔案。",
+    "confirm": "改寫",
+    "skip": "不改寫",
+    "done": "已更新 {files} 篇筆記",
+    "failed": "改寫失敗，檔案已還原"
+  },
   "backlinks": {
     "title": "反向連結",
     "linked": "連結到這篇",
@@ -200,7 +209,15 @@
     "empty": "還沒有筆記連到這篇",
     "indexing": "索引中…",
     "notMarkdown": "請開啟 Markdown 筆記以查看連結",
-    "unresolved": "尚未建立"
+    "unresolved": "尚未建立",
+    "unlinked": "未連結提及",
+    "scan": "掃描",
+    "scanning": "掃描中…",
+    "linkOne": "連結",
+    "linkAll": "全部連結",
+    "unlinkedEmpty": "沒有未連結的提及",
+    "linkDone": "已轉成連結",
+    "linkFailed": "轉成連結失敗，檔案已還原"
   },
   "settings": {
     "defaultModels": {

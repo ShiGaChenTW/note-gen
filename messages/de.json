@@ -193,6 +193,15 @@
       "summaryTitle": "{count} Aufgabenerinnerungen"
     }
   },
+  "linkRewrite": {
+    "title": "Links aktualisieren",
+    "description": "{links} Links in {files} Notizen zeigen auf die umbenannte Datei. Auch aktualisieren?",
+    "obsidianHint": "Wenn Obsidian diesen Vault geöffnet hat, ändert es möglicherweise dieselben Dateien.",
+    "confirm": "Aktualisieren",
+    "skip": "Nicht aktualisieren",
+    "done": "{files} Notizen aktualisiert",
+    "failed": "Aktualisierung fehlgeschlagen, Dateien wurden wiederhergestellt"
+  },
   "backlinks": {
     "title": "Rückverweise",
     "linked": "Links zu dieser Notiz",
@@ -200,7 +209,15 @@
     "empty": "Noch keine Links zu dieser Notiz",
     "indexing": "Indizierung…",
     "notMarkdown": "Öffne eine Markdown-Notiz, um Links anzuzeigen",
-    "unresolved": "Noch nicht erstellt"
+    "unresolved": "Noch nicht erstellt",
+    "unlinked": "Unverlinkte Erwähnungen",
+    "scan": "Suchen",
+    "scanning": "Suche läuft…",
+    "linkOne": "Verlinken",
+    "linkAll": "Alle verlinken",
+    "unlinkedEmpty": "Keine unverlinkten Erwähnungen",
+    "linkDone": "In Link umgewandelt",
+    "linkFailed": "Verlinken fehlgeschlagen, Datei wurde wiederhergestellt"
   },
   "settings": {
     "defaultModels": {
