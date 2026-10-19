@@ -26,8 +26,12 @@ import {
   renderFencedCodeBlockNode,
 } from '@/app/core/main/editor/markdown/code-block-markdown'
 import {
+  clearPendingWikilinkScroll,
+  findWikilinkAnchor,
   matchWikilinkAtStart,
   openWikilink,
+  queueWikilinkScroll,
+  scrollToWikilinkAnchor,
   tokenizeTableCellsWithWikilinks,
   Wikilink,
   wikilinkNewNotePath,
@@ -414,5 +418,164 @@ describe('L1: click behaviour (openWikilink)', () => {
     expect(wikilinkNewNotePath('2026.10', 'folder/x.md')).toBe('folder/2026.10.md')
     expect(wikilinkNewNotePath('圖.png', 'folder/x.md')).toBeNull()
     expect(wikilinkNewNotePath('  ', 'folder/x.md')).toBeNull()
+  })
+})
+
+// A-2 (Phase 2-3a): `[[Note#標題]]` / `[[Note#^id]]` / `[[#標題]]` scroll to the target.
+describe('A-2: heading / block jumps', () => {
+  const doc = '# 第一章\n\n內文。\n\n## Hello World [[A]]\n\n段落一 ^para-1\n\n- 清單項 ^item-1\n\n| a |\n|---|\n| 1 ^row-1 |\n\n## 第二章\n\n結尾。'
+  const scrollIntoView = vi.fn()
+  const setActiveFilePath = vi.fn(async (path: string) => {
+    useArticleStore.setState({ activeFilePath: path } as never)
+  })
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.useFakeTimers()
+    clearPendingWikilinkScroll()
+    Element.prototype.scrollIntoView = scrollIntoView
+    setIndex(['Current.md', 'Other.md'])
+    useArticleStore.setState({ activeFilePath: 'Current.md', setActiveFilePath } as never)
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+    useArticleStore.setState({ activeFilePath: '' })
+  })
+
+  it('findWikilinkAnchor: headings by normalized text (wikilink display text included)', () => {
+    const editor = createEditor()
+    load(editor, doc)
+    const d = editor.state.doc
+    expect(findWikilinkAnchor(d, { heading: '第一章', blockId: '' })?.node.type.name).toBe('heading')
+    expect(findWikilinkAnchor(d, { heading: '  hello   world a ', blockId: '' })?.node.textContent).toBe('Hello World ')
+    expect(findWikilinkAnchor(d, { heading: '第二章', blockId: '' })?.node.textContent).toBe('第二章')
+    expect(findWikilinkAnchor(d, { heading: '沒有', blockId: '' })).toBeNull()
+    expect(findWikilinkAnchor(d, { heading: '', blockId: '' })).toBeNull()
+    editor.destroy()
+  })
+
+  it('findWikilinkAnchor: block ids in paragraphs, list items and table cells', () => {
+    const editor = createEditor()
+    load(editor, doc)
+    const d = editor.state.doc
+    expect(findWikilinkAnchor(d, { heading: '', blockId: 'para-1' })?.node.textContent).toBe('段落一 ^para-1')
+    expect(findWikilinkAnchor(d, { heading: '', blockId: 'ITEM-1' })?.node.textContent).toBe('清單項 ^item-1')
+    expect(findWikilinkAnchor(d, { heading: '', blockId: 'row-1' })?.node.textContent).toBe('1 ^row-1')
+    expect(findWikilinkAnchor(d, { heading: '', blockId: 'para' })).toBeNull()
+    editor.destroy()
+  })
+
+  it('scrollToWikilinkAnchor: scrolls the heading into view and moves the cursor there', () => {
+    const editor = createEditor()
+    load(editor, doc)
+    expect(scrollToWikilinkAnchor(editor.view, { heading: '第二章', blockId: '' })).toBe(true)
+    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' })
+    const { $from } = editor.state.selection
+    expect($from.parent.type.name).toBe('heading')
+    expect($from.parent.textContent).toBe('第二章')
+    expect(scrollToWikilinkAnchor(editor.view, { heading: '沒有', blockId: '' })).toBe(false)
+    editor.destroy()
+  })
+
+  it('scrollToWikilinkAnchor: block ids get a 1.5 s highlight decoration', () => {
+    const editor = createEditor()
+    load(editor, doc)
+    expect(scrollToWikilinkAnchor(editor.view, { heading: '', blockId: 'para-1' })).toBe(true)
+    const highlighted = () => Array.from(editor.view.dom.querySelectorAll('.notegen-wikilink-target')).map(el => el.textContent)
+    expect(highlighted()).toEqual(['段落一 ^para-1'])
+    vi.advanceTimersByTime(1400)
+    expect(highlighted()).toEqual(['段落一 ^para-1'])
+    vi.advanceTimersByTime(200)
+    expect(highlighted()).toEqual([])
+    // the highlight is a decoration: nothing reaches the file (this harness has no A-3 table
+    // extension, so only the paragraph is compared)
+    const out = save(editor)
+    expect(out).toContain('段落一 ^para-1')
+    expect(out).not.toContain('notegen-wikilink-target')
+    editor.destroy()
+  })
+
+  it('[[#標題]] scrolls in the clicked editor without touching files', async () => {
+    const editor = createEditor()
+    load(editor, doc)
+    await openWikilink(parseWikilink('[[#第二章]]')!, editor.view)
+    expect(scrollIntoView).toHaveBeenCalledTimes(1)
+    expect(editor.state.selection.$from.parent.textContent).toBe('第二章')
+    expect(setActiveFilePath).not.toHaveBeenCalled()
+    expect(vi.mocked(noteIo).revealInFileTree).not.toHaveBeenCalled()
+    editor.destroy()
+  })
+
+  it('[[Current#^id]] (target is this note) only scrolls', async () => {
+    const editor = createEditor()
+    load(editor, doc)
+    await openWikilink(parseWikilink('[[Current#^item-1]]')!, editor.view)
+    expect(scrollIntoView).toHaveBeenCalledTimes(1)
+    expect(setActiveFilePath).not.toHaveBeenCalled()
+    expect(editor.view.dom.querySelectorAll('.notegen-wikilink-target')).toHaveLength(1)
+    editor.destroy()
+  })
+
+  it('[[Other#標題]]: opens the note, then scrolls once its editor has loaded the content', async () => {
+    const source = createEditor()
+    load(source, '來源 [[Other#第二章]]')
+    const target = createEditor()
+    load(target, '空的')
+
+    await openWikilink(parseWikilink('[[Other#第二章]]')!, source.view)
+    expect(setActiveFilePath).toHaveBeenCalledWith('Other.md')
+    expect(scrollIntoView).not.toHaveBeenCalled()
+
+    // the target tab's editor loads the file (doc change while activeFilePath === Other.md)
+    load(target, doc)
+    vi.advanceTimersByTime(0)
+    expect(scrollIntoView).toHaveBeenCalledTimes(1)
+    expect(target.state.selection.$from.parent.textContent).toBe('第二章')
+    // nothing scrolled in the source editor
+    expect(source.state.selection.$from.parent.textContent).not.toBe('第二章')
+
+    // one-shot: a later reload of the same note does not scroll again
+    load(target, doc)
+    vi.advanceTimersByTime(0)
+    expect(scrollIntoView).toHaveBeenCalledTimes(1)
+    source.destroy()
+    target.destroy()
+  })
+
+  it('[[Other#標題]]: target tab already open and visible → scrolls after the open resolves', async () => {
+    const source = createEditor()
+    load(source, '來源')
+    const target = createEditor()
+    load(target, doc)
+    document.body.appendChild(target.view.dom)
+    ;(target.view.dom as HTMLElement).getClientRects = () => [{} as DOMRect] as unknown as DOMRectList
+
+    await openWikilink(parseWikilink('[[Other#第二章]]')!, source.view)
+    vi.advanceTimersByTime(1000)
+    expect(scrollIntoView).toHaveBeenCalledTimes(1)
+    expect(target.state.selection.$from.parent.textContent).toBe('第二章')
+    target.view.dom.remove()
+    source.destroy()
+    target.destroy()
+  })
+
+  it('a missing heading in the target only opens the note; the pending jump expires', async () => {
+    const target = createEditor()
+    load(target, '空的')
+    await openWikilink(parseWikilink('[[Other#沒有]]')!)
+    expect(setActiveFilePath).toHaveBeenCalledWith('Other.md')
+    load(target, doc)
+    vi.advanceTimersByTime(0)
+    expect(scrollIntoView).not.toHaveBeenCalled()
+    target.destroy()
+  })
+
+  it('queueWikilinkScroll: a pending jump is ignored while another note is active', () => {
+    const editor = createEditor()
+    queueWikilinkScroll('Other.md', { heading: '第二章', blockId: '' })
+    load(editor, doc) // activeFilePath is Current.md
+    vi.advanceTimersByTime(0)
+    expect(scrollIntoView).not.toHaveBeenCalled()
+    editor.destroy()
   })
 })

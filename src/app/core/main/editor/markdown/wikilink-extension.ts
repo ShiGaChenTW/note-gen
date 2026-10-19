@@ -7,10 +7,15 @@
 //
 // Whether a link resolves to an existing note is shown with ProseMirror decorations
 // computed from the vault index (never stored in attrs, which would leak into the file).
+//
+// Phase 2-3a (A-1, A-2): `![[嵌入]]` 以 React node view 轉入目標內容（wikilink-embed-view.tsx；
+// 沒有 React 的環境仍走 renderHTML 的 `⧉ 名稱`）；點 `[[Note#標題]]`／`[[Note#^id]]` 開檔後
+// 捲到該標題或區塊，`[[#標題]]` 在本篇捲動。
 import { Extension, mergeAttributes, Node, nodeInputRule } from '@tiptap/core'
-import type { MarkdownToken } from '@tiptap/core'
+import type { MarkdownToken, NodeViewRenderer } from '@tiptap/core'
+import { ReactNodeViewRenderer } from '@tiptap/react'
 import type { Node as PMNode } from '@tiptap/pm/model'
-import { Plugin, PluginKey, type EditorState } from '@tiptap/pm/state'
+import { Plugin, PluginKey, TextSelection, type EditorState } from '@tiptap/pm/state'
 import { Decoration, DecorationSet, type EditorView } from '@tiptap/pm/view'
 import {
   noteKeyOf,
@@ -19,9 +24,11 @@ import {
   wikilinkDisplayText,
   type Wikilink as WikilinkData,
 } from '@/lib/markdown/wikilink'
+import { normalizeHeadingText } from '@/lib/markdown/note-section'
 import { noteExists, revealInFileTree, writeNote } from '@/lib/daily/note-io'
 import useArticleStore from '@/stores/article'
 import useVaultIndexStore from '@/stores/vault-index'
+import { WikilinkEmbedView } from './wikilink-embed-view'
 
 export const WIKILINK_NODE_NAME = 'wikilink'
 const TOKEN_NAME = 'notegen_wikilink'
@@ -158,19 +165,209 @@ export function wikilinkNewNotePath(target: string, sourcePath: string): string 
   return slash < 0 ? file : `${sourcePath.slice(0, slash)}/${file}`
 }
 
-/** 點擊連結：有對應筆記就開啟，沒有就建立再開啟；`[[#標題]]` 與嵌入不動作。 */
-export async function openWikilink(link: WikilinkData): Promise<void> {
-  if (link.embed || !link.target) return
+/**
+ * 點擊連結：有對應筆記就開啟，沒有就建立再開啟；嵌入不動作。
+ * `[[#標題]]`／`[[#^id]]` 在本篇捲動；`[[Note#標題]]`／`[[Note#^id]]` 開啟後捲到目標
+ * （目標就是本篇時只捲動）。`view` 是點擊發生的編輯器，本篇捲動用它。
+ */
+export async function openWikilink(link: WikilinkData, view?: EditorView): Promise<void> {
+  if (link.embed) return
+  const anchor: WikilinkAnchor = { heading: link.heading, blockId: link.blockId }
+  const hasAnchor = Boolean(anchor.heading || anchor.blockId)
   const sourcePath = useArticleStore.getState().activeFilePath
+  if (!link.target) {
+    if (hasAnchor) scrollToWikilinkAnchorInView(anchor, view)
+    return
+  }
   const paths = useVaultIndexStore.getState().notes.keys()
   let path = resolveWikilinkTarget(link.target, paths, sourcePath)
+  if (path && hasAnchor && path === sourcePath) {
+    scrollToWikilinkAnchorInView(anchor, view)
+    return
+  }
   if (!path) {
     path = wikilinkNewNotePath(link.target, sourcePath)
     if (!path) return
     if (!await noteExists(path)) await writeNote(path, `# ${noteKeyOf(path)}\n`)
   }
+  if (hasAnchor) queueWikilinkScroll(path, anchor, view)
   await revealInFileTree(path)
   await useArticleStore.getState().setActiveFilePath(path)
+  if (hasAnchor) flushPendingScrollLater()
+}
+
+// ---------------------------------------------------------------------------
+// Jumping to `#標題` / `^id` (A-2)
+//
+// 同一個分頁只有一個編輯器，但每個分頁的編輯器都掛著（非作用中的 display:none），
+// 所以這裡記住所有活著的 view：本篇捲動直接用點擊時的 view；跨篇時先排一個待辦
+// （路徑＋目標），目標筆記的 view 載入內容（doc 變動）或分頁切到它（可見）時再捲。
+
+export interface WikilinkAnchor { heading: string, blockId: string }
+
+const HIGHLIGHT_CLASS = 'notegen-wikilink-target'
+const HIGHLIGHT_MS = 1500
+const PENDING_SCROLL_MS = 10_000
+const FLUSH_DELAYS_MS = [0, 100, 300, 1000]
+
+const scrollKey = new PluginKey<DecorationSet>('notegenWikilinkScroll')
+const liveViews = new Set<EditorView>()
+
+interface PendingScroll { path: string, anchor: WikilinkAnchor, origin: EditorView | undefined, expires: number }
+let pendingScroll: PendingScroll | null = null
+
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+/** 標題節點的文字：wikilink 原子節點用它的顯示文字。 */
+function headingTextOf(node: PMNode): string {
+  return node.textBetween(0, node.content.size, '', leaf => (
+    leaf.type.name === WIKILINK_NODE_NAME ? wikilinkDisplayText(leaf.attrs as WikilinkData) : ''
+  ))
+}
+
+/**
+ * 在文件裡找目標：`#標題` 比對 heading 節點（正規化後相同），`^id` 找行尾有 `^id` 的文字區塊
+ * （段落、清單項的段落、表格格子）。找不到回傳 null。
+ */
+export function findWikilinkAnchor(doc: PMNode, anchor: WikilinkAnchor): { pos: number, node: PMNode } | null {
+  let found: { pos: number, node: PMNode } | null = null
+  if (anchor.blockId) {
+    const re = new RegExp(`(?:^|\\s)\\^${escapeRegExp(anchor.blockId.trim())}\\s*$`, 'i')
+    doc.descendants((node, pos) => {
+      if (found) return false
+      if (!node.isTextblock) return true
+      if (re.test(node.textContent)) found = { pos, node }
+      return false
+    })
+    return found
+  }
+  const wanted = normalizeHeadingText(anchor.heading)
+  if (!wanted) return null
+  doc.descendants((node, pos) => {
+    if (found) return false
+    if (node.type.name !== 'heading') return true
+    if (normalizeHeadingText(headingTextOf(node)) === wanted) found = { pos, node }
+    return false
+  })
+  return found
+}
+
+/** 捲到目標並（區塊時）短暫高亮；找不到回傳 false。 */
+export function scrollToWikilinkAnchor(view: EditorView, anchor: WikilinkAnchor): boolean {
+  const hit = findWikilinkAnchor(view.state.doc, anchor)
+  if (!hit) return false
+  const { pos, node } = hit
+  // 游標放到目標開頭（不搶焦點），之後的輸入落在那裡；區塊再加 1.5 秒高亮
+  const tr = view.state.tr.setSelection(TextSelection.create(view.state.doc, pos + 1))
+  if (anchor.blockId) tr.setMeta(scrollKey, { highlight: { from: pos, to: pos + node.nodeSize } })
+  view.dispatch(tr)
+  const dom = view.nodeDOM(pos)
+  if (dom instanceof HTMLElement && typeof dom.scrollIntoView === 'function') {
+    dom.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  } else {
+    view.dispatch(view.state.tr.scrollIntoView())
+  }
+  if (anchor.blockId) {
+    setTimeout(() => {
+      if (liveViews.has(view)) view.dispatch(view.state.tr.setMeta(scrollKey, { clear: true }))
+    }, HIGHLIGHT_MS)
+  }
+  return true
+}
+
+function isVisibleView(view: EditorView): boolean {
+  const dom = view.dom
+  if (!dom.isConnected) return false
+  return typeof dom.getClientRects !== 'function' || dom.getClientRects().length > 0
+}
+
+/** 本篇捲動：優先用點擊的 view，沒有就用目前看得到的那個。 */
+function scrollToWikilinkAnchorInView(anchor: WikilinkAnchor, view?: EditorView): boolean {
+  if (view && liveViews.has(view)) return scrollToWikilinkAnchor(view, anchor)
+  for (const candidate of liveViews) {
+    if (isVisibleView(candidate) && scrollToWikilinkAnchor(candidate, anchor)) return true
+  }
+  return false
+}
+
+/** 排一個「開檔後捲動」的待辦；只會有一個，新的蓋掉舊的。 */
+export function queueWikilinkScroll(path: string, anchor: WikilinkAnchor, origin?: EditorView): void {
+  pendingScroll = { path, anchor, origin, expires: Date.now() + PENDING_SCROLL_MS }
+}
+
+/** 給測試用：清掉待辦。 */
+export function clearPendingWikilinkScroll(): void {
+  pendingScroll = null
+}
+
+/**
+ * 這個 view 的內容若已是待辦的那篇（作用中路徑相同且找得到目標）就捲過去。
+ * 從 plugin view 的 update 呼叫時正在套用 transaction，所以捲動延後一個 tick。
+ */
+function tryPendingScroll(view: EditorView, { requireVisible = false } = {}): boolean {
+  const pending = pendingScroll
+  if (!pending) return false
+  if (Date.now() > pending.expires) {
+    pendingScroll = null
+    return false
+  }
+  if (useArticleStore.getState().activeFilePath !== pending.path) return false
+  if (requireVisible && !isVisibleView(view)) return false
+  if (!findWikilinkAnchor(view.state.doc, pending.anchor)) return false
+  pendingScroll = null
+  setTimeout(() => {
+    if (liveViews.has(view)) scrollToWikilinkAnchor(view, pending.anchor)
+  }, 0)
+  return true
+}
+
+/**
+ * 開檔完成後：目標分頁本來就開著時 doc 不會變，所以改在看得到的 view 上試幾次
+ * （React 切分頁要等下一次 commit）。點擊來源的 view 先跳過，避免兩篇有同名標題時捲錯。
+ */
+function flushPendingScrollLater(): void {
+  const attempt = () => {
+    const pending = pendingScroll
+    if (!pending) return
+    const others = Array.from(liveViews).filter(view => view !== pending.origin)
+    for (const view of others) {
+      if (tryPendingScroll(view, { requireVisible: true })) return
+    }
+  }
+  for (const delay of FLUSH_DELAYS_MS) setTimeout(attempt, delay)
+}
+
+function createWikilinkScrollPlugin() {
+  return new Plugin<DecorationSet>({
+    key: scrollKey,
+    state: {
+      init: () => DecorationSet.empty,
+      apply: (tr, old) => {
+        const meta = tr.getMeta(scrollKey) as { highlight?: { from: number, to: number }, clear?: boolean } | undefined
+        if (meta?.clear) return DecorationSet.empty
+        if (meta?.highlight) {
+          const { from, to } = meta.highlight
+          return DecorationSet.create(tr.doc, [Decoration.node(from, to, { class: HIGHLIGHT_CLASS })])
+        }
+        return tr.docChanged ? old.map(tr.mapping, tr.doc) : old
+      },
+    },
+    props: {
+      decorations: state => scrollKey.getState(state),
+    },
+    view: (view: EditorView) => {
+      liveViews.add(view)
+      tryPendingScroll(view)
+      return {
+        update: (current, prev) => {
+          if (current.state.doc !== prev.doc) tryPendingScroll(current)
+        },
+        destroy: () => { liveViews.delete(view) },
+      }
+    },
+  })
 }
 
 // ---------------------------------------------------------------------------
@@ -230,12 +427,13 @@ function createWikilinkPlugin() {
     },
     props: {
       decorations: state => pluginKey.getState(state),
-      handleClickOn: (_view, _pos, node, _nodePos, event, direct) => {
+      handleClickOn: (view, _pos, node, _nodePos, event, direct) => {
         if (!direct || node.type.name !== WIKILINK_NODE_NAME || event.button !== 0) return false
         const attrs = node.attrs as WikilinkData
-        if (attrs.embed || !attrs.target) return false
+        // 嵌入由它的 node view 自己處理；`[[#標題]]` 沒有 target 但要在本篇捲動
+        if (attrs.embed || !(attrs.target || attrs.heading || attrs.blockId)) return false
         event.preventDefault()
-        void openWikilink(attrs).catch(error => console.error('[wikilink] open failed', error))
+        void openWikilink(attrs, view).catch(error => console.error('[wikilink] open failed', error))
         return true
       },
     },
@@ -315,7 +513,15 @@ export const Wikilink = Node.create({
   },
 
   addProseMirrorPlugins() {
-    return [createWikilinkPlugin()]
+    return [createWikilinkPlugin(), createWikilinkScrollPlugin()]
+  },
+
+  // 只有嵌入走 React node view；一般連結與沒有 React（EditorContent）的環境回傳空物件，
+  // ProseMirror 就退回 renderHTML（ReactNodeViewRenderer 本身在沒有 contentComponent 時也是如此）
+  addNodeView() {
+    const renderEmbed = ReactNodeViewRenderer(WikilinkEmbedView, { as: 'span', className: 'notegen-embed-host' })
+    const fallback = {} as ReturnType<NodeViewRenderer>
+    return props => ((props.node.attrs as WikilinkData).embed ? renderEmbed(props) : fallback)
   },
 
   // 手動打完 `]]`（或 L2 之外的輸入）時，把 `[[...]]` 文字換成節點；不合法的照原樣留著
