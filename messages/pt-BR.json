@@ -3437,6 +3437,20 @@
     "noSearchResults": "Nenhuma configuração encontrada",
     "title": "Configurações"
   },
+  "bases": {
+    "title": "Bases",
+    "views": "Visualizações",
+    "refresh": "Atualizar",
+    "source": "Código-fonte",
+    "unsupportedView": "Tipo de visualização {type} não suportado; exibido como tabela",
+    "more": "Mais {count}",
+    "empty": "Nenhuma nota correspondente",
+    "parseError": "Formato de Bases inválido: {message}",
+    "exprError": "Erro na expressão: ",
+    "indexing": "Indexando…",
+    "edit": "Editar",
+    "done": "Concluído"
+  },
   "record": {
     "tagging": {
       "manage": "Gerenciar tags",
