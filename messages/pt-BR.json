@@ -4809,6 +4809,16 @@
       "description": "Crie uma tela para organizar ideias com diagramas e desenho livre."
     }
   },
+  "obsidianCanvas": {
+    "title": "Canvas",
+    "addText": "Adicionar texto",
+    "delete": "Excluir",
+    "parseError": "Erro no formato do canvas: {message}",
+    "openAsText": "Abrir como texto",
+    "externalChange": "O arquivo foi modificado externamente. Abra-o novamente.",
+    "untitledGroup": "Grupo sem título",
+    "readOnly": "Somente leitura"
+  },
   "navigation": {
     "canvases": "Tela",
     "chat": "Conversa",

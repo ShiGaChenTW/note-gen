@@ -4909,6 +4909,16 @@
       "description": "Create a canvas to organize ideas with diagrams and freehand drawing."
     }
   },
+  "obsidianCanvas": {
+    "title": "Canvas",
+    "addText": "Add text",
+    "delete": "Delete",
+    "parseError": "Canvas format error: {message}",
+    "openAsText": "Open as text",
+    "externalChange": "The file was modified externally. Please reopen it.",
+    "untitledGroup": "Untitled group",
+    "readOnly": "Read only"
+  },
   "navigation": {
     "canvases": "Canvas",
     "chat": "Chat",

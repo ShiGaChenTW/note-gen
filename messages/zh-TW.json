@@ -4816,6 +4816,16 @@
       "description": "建立畫布，用結構圖和自由繪畫整理想法。"
     }
   },
+  "obsidianCanvas": {
+    "title": "畫布",
+    "addText": "新增文字",
+    "delete": "刪除",
+    "parseError": "畫布格式錯誤：{message}",
+    "openAsText": "以文字開啟",
+    "externalChange": "檔案在外部被修改，請重新開啟。",
+    "untitledGroup": "未命名群組",
+    "readOnly": "唯讀"
+  },
   "navigation": {
     "canvases": "畫布",
     "chat": "對話",

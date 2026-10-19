@@ -4797,6 +4797,16 @@
       "description": "図とフリーハンド描画でアイデアを整理できます。"
     }
   },
+  "obsidianCanvas": {
+    "title": "キャンバス",
+    "addText": "テキストを追加",
+    "delete": "削除",
+    "parseError": "キャンバス形式エラー：{message}",
+    "openAsText": "テキストとして開く",
+    "externalChange": "ファイルが外部で変更されました。開き直してください。",
+    "untitledGroup": "無題のグループ",
+    "readOnly": "読み取り専用"
+  },
   "navigation": {
     "canvases": "キャンバス",
     "chat": "チャット",
