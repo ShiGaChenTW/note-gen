@@ -1,7 +1,7 @@
 'use client'
 
 import type { Editor } from '@tiptap/react'
-import { FilePlus2, FileText } from 'lucide-react'
+import { FilePlus2, FileText, Hash, Heading } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
@@ -21,7 +21,12 @@ import {
   buildWikilinkInsertion,
   findWikilinkInputContext,
   isExactNoteName,
+  rankBlockSuggestions,
+  rankHeadingSuggestions,
   rankWikilinkSuggestions,
+  type WikilinkAnchorResult,
+  type WikilinkBlockSuggestion,
+  type WikilinkHeadingSuggestion,
   type WikilinkSuggestNote,
   type WikilinkSuggestion,
 } from '@/lib/wikilink-suggest-model'
@@ -38,6 +43,8 @@ interface WikilinkSuggestProps {
 
 interface OpenContext {
   query: string
+  noteQuery: string
+  mode: 'note' | 'heading' | 'block'
   /** `[[` 的編輯器 position */
   from: number
   cursor: number
@@ -46,7 +53,12 @@ interface OpenContext {
 
 type MenuEntry =
   | { id: string, type: 'note', suggestion: WikilinkSuggestion }
+  | { id: string, type: 'heading', suggestion: WikilinkHeadingSuggestion }
+  | { id: string, type: 'block', suggestion: WikilinkBlockSuggestion }
   | { id: string, type: 'create', query: string }
+
+/** 標題層級縮排。第 1 層不縮。 */
+const HEADING_INDENT = ['w-0', 'w-3', 'w-6', 'w-9', 'w-12', 'w-14'] as const
 
 export function WikilinkSuggest({ editor, activeFilePath }: WikilinkSuggestProps) {
   const t = useTranslations('editor.wikilinkSuggest')
@@ -102,6 +114,8 @@ export function WikilinkSuggest({ editor, activeFilePath }: WikilinkSuggestProps
 
     setContext({
       query: found.query,
+      noteQuery: found.noteQuery,
+      mode: found.mode,
       from: cursor - (textBefore.length - found.from),
       cursor,
       hasClosingBrackets: textAfter.startsWith(']]'),
@@ -175,13 +189,15 @@ export function WikilinkSuggest({ editor, activeFilePath }: WikilinkSuggestProps
         path: note.path,
         aliases: note.aliases ?? [],
         mtime: note.mtime,
+        headings: note.headings ?? [],
+        blockIds: note.blockIds ?? [],
       })
     }
     return list
   }, [fallbackNotes, notes, revision, status])
 
   const suggestions = useMemo(() => {
-    if (!context) return []
+    if (!context || context.mode !== 'note') return []
     return rankWikilinkSuggestions({
       query: context.query,
       notes: indexedNotes,
@@ -191,11 +207,46 @@ export function WikilinkSuggest({ editor, activeFilePath }: WikilinkSuggestProps
     })
   }, [context, currentPath, indexedNotes, recentPaths])
 
+  const headingResult = useMemo<WikilinkAnchorResult<WikilinkHeadingSuggestion> | null>(() => {
+    if (!context || context.mode !== 'heading') return null
+    return rankHeadingSuggestions({
+      noteQuery: context.noteQuery,
+      query: context.query,
+      notes: indexedNotes,
+      currentPath,
+    })
+  }, [context, currentPath, indexedNotes])
+
+  const blockResult = useMemo<WikilinkAnchorResult<WikilinkBlockSuggestion> | null>(() => {
+    if (!context || context.mode !== 'block') return null
+    return rankBlockSuggestions({
+      noteQuery: context.noteQuery,
+      query: context.query,
+      notes: indexedNotes,
+      currentPath,
+    })
+  }, [context, currentPath, indexedNotes])
+
   const showCreate = !!context
+    && context.mode === 'note'
     && context.query.length > 0
     && !indexedNotes.some(note => isExactNoteName(context.query, note.path))
 
   const entries = useMemo<MenuEntry[]>(() => {
+    if (context?.mode === 'heading') {
+      return (headingResult?.suggestions ?? []).map(suggestion => ({
+        id: `heading:${suggestion.path}:${suggestion.line}`,
+        type: 'heading' as const,
+        suggestion,
+      }))
+    }
+    if (context?.mode === 'block') {
+      return (blockResult?.suggestions ?? []).map(suggestion => ({
+        id: `block:${suggestion.path}:${suggestion.line}:${suggestion.id}`,
+        type: 'block' as const,
+        suggestion,
+      }))
+    }
     const noteEntries: MenuEntry[] = suggestions.map(suggestion => ({
       id: `note:${suggestion.path}`,
       type: 'note',
@@ -206,11 +257,11 @@ export function WikilinkSuggest({ editor, activeFilePath }: WikilinkSuggestProps
       ...noteEntries,
       { id: 'create', type: 'create', query: context.query },
     ]
-  }, [context, showCreate, suggestions])
+  }, [blockResult, context, headingResult, showCreate, suggestions])
 
   useEffect(() => {
     setSelectedIndex(0)
-  }, [context?.query, context?.from])
+  }, [context?.query, context?.noteQuery, context?.mode, context?.from])
 
   useEffect(() => {
     setSelectedIndex(previous => Math.min(previous, Math.max(entries.length - 1, 0)))
@@ -239,6 +290,26 @@ export function WikilinkSuggest({ editor, activeFilePath }: WikilinkSuggestProps
     if (entry.type === 'create') {
       const created = buildCreateInsertion(entry.query)
       insertText(context.hasClosingBrackets ? created.slice(0, -2) : created)
+      return
+    }
+    if (entry.type === 'heading') {
+      insertText(buildWikilinkInsertion({
+        suggestion: { path: entry.suggestion.path, matchedAlias: null },
+        allPaths: indexedNotes.map(note => note.path),
+        hasClosingBrackets: context.hasClosingBrackets,
+        heading: entry.suggestion.text,
+        self: entry.suggestion.target === '',
+      }))
+      return
+    }
+    if (entry.type === 'block') {
+      insertText(buildWikilinkInsertion({
+        suggestion: { path: entry.suggestion.path, matchedAlias: null },
+        allPaths: indexedNotes.map(note => note.path),
+        hasClosingBrackets: context.hasClosingBrackets,
+        blockId: entry.suggestion.id,
+        self: entry.suggestion.target === '',
+      }))
       return
     }
     insertText(buildWikilinkInsertion({
@@ -290,7 +361,7 @@ export function WikilinkSuggest({ editor, activeFilePath }: WikilinkSuggestProps
     >
       <Command value={entries[selectedIndex]?.id ?? ''} shouldFilter={false} className="border shadow-lg">
         <CommandList className="max-h-72 overflow-y-auto">
-          {suggestions.length > 0 && (
+          {context.mode === 'note' && suggestions.length > 0 && (
             <CommandGroup>
               {suggestions.map((suggestion, index) => (
                 <CommandItem
@@ -316,8 +387,54 @@ export function WikilinkSuggest({ editor, activeFilePath }: WikilinkSuggestProps
             </CommandGroup>
           )}
 
-          {suggestions.length === 0 && (
+          {context.mode === 'note' && suggestions.length === 0 && (
             <div className="px-3 py-2 text-sm text-muted-foreground">{t('noResults')}</div>
+          )}
+
+          {context.mode === 'heading' && (headingResult?.suggestions.length ?? 0) > 0 && (
+            <CommandGroup heading={t('headings')}>
+              {headingResult?.suggestions.map((suggestion, index) => (
+                <CommandItem
+                  key={`${suggestion.path}:${suggestion.line}`}
+                  value={`heading:${suggestion.path}:${suggestion.line}`}
+                  onSelect={() => selectEntry(entries[index])}
+                  onMouseEnter={() => setSelectedIndex(index)}
+                >
+                  <span aria-hidden className={cn('shrink-0', HEADING_INDENT[suggestion.level - 1])} />
+                  <Heading className="text-primary" />
+                  <span className="min-w-0 flex-1 truncate">{suggestion.text}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
+
+          {context.mode === 'heading' && (headingResult?.suggestions.length ?? 0) === 0 && (
+            <div className="px-3 py-2 text-sm text-muted-foreground">
+              {headingResult?.notePath && headingResult.total === 0 ? t('noHeadings') : t('noResults')}
+            </div>
+          )}
+
+          {context.mode === 'block' && (blockResult?.suggestions.length ?? 0) > 0 && (
+            <CommandGroup heading={t('blocks')}>
+              {blockResult?.suggestions.map((suggestion, index) => (
+                <CommandItem
+                  key={`${suggestion.path}:${suggestion.line}:${suggestion.id}`}
+                  value={`block:${suggestion.path}:${suggestion.line}:${suggestion.id}`}
+                  onSelect={() => selectEntry(entries[index])}
+                  onMouseEnter={() => setSelectedIndex(index)}
+                >
+                  <Hash className="text-primary" />
+                  <span className="shrink-0 rounded bg-primary/10 px-1 font-mono text-primary">^{suggestion.id}</span>
+                  <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">{suggestion.context}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
+
+          {context.mode === 'block' && (blockResult?.suggestions.length ?? 0) === 0 && (
+            <div className="px-3 py-2 text-sm text-muted-foreground">
+              {blockResult?.notePath && blockResult.total === 0 ? t('noBlocks') : t('noResults')}
+            </div>
           )}
 
           {showCreate && context.query && (

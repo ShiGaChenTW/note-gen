@@ -5697,7 +5697,11 @@
     "wikilinkSuggest": {
       "create": "Create \"{name}\"",
       "alias": "Alias",
-      "noResults": "No matching notes"
+      "noResults": "No matching notes",
+      "headings": "Headings",
+      "blocks": "Blocks",
+      "noHeadings": "This note has no headings",
+      "noBlocks": "This note has no block IDs"
     },
     "outline": {
       "title": "Outline",
