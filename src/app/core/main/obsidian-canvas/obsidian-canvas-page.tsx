@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useMemo, useReducer, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import { ReactFlow, Background, Controls, Handle, Position, NodeResizer, applyNodeChanges, applyEdgeChanges, type NodeProps } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import MarkdownIt from 'markdown-it'
@@ -53,8 +53,9 @@ function CanvasContent({ filePath, isActive = true }: { filePath: string; isActi
   const t = useTranslations('obsidianCanvas'), { toast } = useToast()
   const [, render] = useReducer(n => n + 1, 0)
   const [source, setSource] = useState(false)
-  const [selection, setSelection] = useState<{ nodes: string[]; edges: string[] }>({ nodes: [], edges: [] })
-  const session = useMemo(() => new CanvasSession({ read: () => readNote(filePath), rewrite: async fn => { const result = await rewriteNote(filePath, fn); if (!result) throw new Error('externalChange') } }, render, () => toast({ title: t('externalChange'), variant: 'destructive' })), [filePath, t, toast])
+  // t 與 toast 每次 render 可能是新函式，放進 ref 讓 session 只跟 filePath 綁定，否則會無限重建（Maximum update depth）
+  const notifyRef = useRef({ t, toast }); notifyRef.current = { t, toast }
+  const session = useMemo(() => new CanvasSession({ read: () => readNote(filePath), rewrite: async fn => { const result = await rewriteNote(filePath, fn); if (!result) throw new Error('externalChange') } }, render, () => notifyRef.current.toast({ title: notifyRef.current.t('externalChange'), variant: 'destructive' })), [filePath])
   useEffect(() => { if (isActive) void session.load() }, [session, isActive])
   useEffect(() => () => session.dispose(), [session])
   const doc = session.doc
@@ -62,28 +63,33 @@ function CanvasContent({ filePath, isActive = true }: { filePath: string; isActi
   const [display, setDisplay] = useState(flow)
   useEffect(() => { setDisplay(flow) }, [flow])
   const edit = (next: CanvasDocument) => session.edit(next)
+  // 選取狀態只有一個來源：xyflow 透過 onNodesChange／onEdgesChange 寫進 display 的 selected 旗標
+  const selectedNodeIds = useMemo(() => new Set(display.nodes.filter(n => n.selected).map(n => n.id)), [display.nodes])
+  const selectedEdgeIds = useMemo(() => new Set(display.edges.filter(e => e.selected).map(e => e.id)), [display.edges])
+  const hasSelection = selectedNodeIds.size > 0 || selectedEdgeIds.size > 0
   const remove = () => {
     if (!doc) return
-    const nodes = doc.nodes.filter(n => !selection.nodes.includes(n.id))
-    edit({ ...doc, nodes, edges: doc.edges.filter(e => !selection.edges.includes(e.id) && nodes.some(n => n.id === e.fromNode) && nodes.some(n => n.id === e.toNode)) })
+    const nodes = doc.nodes.filter(n => !selectedNodeIds.has(n.id))
+    edit({ ...doc, nodes, edges: doc.edges.filter(e => !selectedEdgeIds.has(e.id) && nodes.some(n => n.id === e.fromNode) && nodes.some(n => n.id === e.toNode)) })
   }
   return <div className="flex h-full min-h-0 flex-col" aria-label={t('title')}>
     <div className="flex items-center gap-2 border-b p-2">
       <span className="mr-auto truncate text-sm">{filePath}</span>
-      {doc && <><Button size="sm" variant="ghost" disabled={session.blocked} onClick={() => edit({ ...doc, nodes: [...doc.nodes, { id: crypto.randomUUID(), type: 'text', x: 0, y: 0, width: 260, height: 180, text: '', extra: {} }] })}>{t('addText')}</Button><Button size="sm" variant="ghost" disabled={session.blocked || !selection.nodes.length && !selection.edges.length} onClick={remove}>{t('delete')}</Button></>}
+      {doc && <><Button size="sm" variant="ghost" disabled={session.blocked} onClick={() => edit({ ...doc, nodes: [...doc.nodes, { id: crypto.randomUUID(), type: 'text', x: 0, y: 0, width: 260, height: 180, text: '', extra: {} }] })}>{t('addText')}</Button><Button size="sm" variant="ghost" disabled={session.blocked || !hasSelection} onClick={remove}>{t('delete')}</Button></>}
       <Button size="sm" variant="ghost" onClick={() => setSource(!source)}>{t('openAsText')}</Button>
     </div>
     {session.errors.length > 0 && <p role="alert" className="p-3 text-sm text-destructive">{t('parseError', { message: session.errors.join('; ') })}</p>}
     {session.blocked && <p role="alert" className="p-3 text-sm text-muted-foreground">{t('externalChange')}</p>}
     {source || !doc ? <><p className="px-3 text-sm text-muted-foreground">{t('readOnly')}</p><textarea aria-label={t('openAsText')} className="min-h-0 flex-1 resize-none bg-background p-3 font-mono text-xs" readOnly value={session.original} /></> : <Editing.Provider value={(id, text) => edit({ ...doc, nodes: doc.nodes.map(n => n.id === id ? { ...n, text } : n) })}>
-      <div className="min-h-0 flex-1"><ReactFlow nodes={display.nodes.map(n => ({ ...n, selected: selection.nodes.includes(n.id) }))} edges={display.edges.map(e => ({ ...e, selected: selection.edges.includes(e.id) }))} nodeTypes={nodeTypes} fitView minZoom={0.05} nodesDraggable={!session.blocked} nodesConnectable={!session.blocked} elementsSelectable={!session.blocked} edgesReconnectable={false} deleteKeyCode={null}
-        onSelectionChange={({ nodes, edges }) => setSelection({ nodes: nodes.map(n => n.id), edges: edges.map(e => e.id) })}
+      <div className="min-h-0 flex-1"><ReactFlow nodes={display.nodes} edges={display.edges} nodeTypes={nodeTypes} fitView minZoom={0.05} nodesDraggable={!session.blocked} nodesConnectable={!session.blocked} elementsSelectable={!session.blocked} edgesReconnectable={false} deleteKeyCode={null}
         onNodesChange={changes => {
-          const nodes = applyNodeChanges(changes, display.nodes)
-          setDisplay({ ...display, nodes })
-          if (doc && !session.blocked && changes.some(c => c.type === 'position' || c.type === 'dimensions' && c.resizing)) edit(fromFlow(doc, nodes, display.edges))
+          setDisplay(current => {
+            const nodes = applyNodeChanges(changes, current.nodes)
+            if (doc && !session.blocked && changes.some(c => c.type === 'position' || c.type === 'dimensions' && c.resizing)) edit(fromFlow(doc, nodes, current.edges))
+            return { ...current, nodes }
+          })
         }}
-        onEdgesChange={changes => { setDisplay({ ...display, edges: applyEdgeChanges(changes, display.edges) }) }}
+        onEdgesChange={changes => { setDisplay(current => ({ ...current, edges: applyEdgeChanges(changes, current.edges) })) }}
         onConnect={connection => {
           if (!connection.source || !connection.target || session.blocked) return
           edit({ ...doc, edges: [...doc.edges, { id: crypto.randomUUID(), fromNode: connection.source, toNode: connection.target, fromSide: connection.sourceHandle?.replace('source-', '') as Side, toSide: connection.targetHandle?.replace('target-', '') as 'top', toEnd: 'arrow', extra: {} }] })

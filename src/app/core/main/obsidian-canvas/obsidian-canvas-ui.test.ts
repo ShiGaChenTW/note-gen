@@ -48,7 +48,7 @@ describe('Canvas 頁面操作', () => {
     await act(async () => vi.advanceTimersByTimeAsync(500))
     expect(JSON.parse(h.disk).nodes[0]).toMatchObject({ x: 42, y: 8, width: 240, height: 160 })
     expect(JSON.parse(h.disk).edges[0]).toMatchObject({ fromSide: 'right', toSide: 'left', toEnd: 'arrow' })
-    await act(async () => { flow.onSelectionChange!({ nodes: [flow.nodes![1]], edges: [] }) })
+    await act(async () => { flow.onNodesChange!([{ type: 'select', id: flow.nodes![1].id, selected: true }]) })
     await click('delete'); await act(async () => vi.advanceTimersByTimeAsync(500))
     expect(JSON.parse(h.disk).nodes).toHaveLength(1); expect(JSON.parse(h.disk).edges).toEqual([])
   })
