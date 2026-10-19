@@ -1,5 +1,6 @@
 /**
- * F3 vault 索引的狀態運算：比對快取與目前檔案、快取格式檢查、任務查詢。純函式、無 I/O。
+ * F3 vault 索引的狀態運算：比對快取與目前檔案、快取格式檢查、任務查詢。
+ * 另含索引服務的讀檔並行數，以及快取寫入的 idle／timer 排程（不讀檔）。
  */
 
 import { INDEX_SCHEMA_VERSION, type IndexedNote, type IndexedTask } from './index-note'
@@ -65,6 +66,31 @@ export function collectTasks(notes: Iterable<IndexedNote>): TaskRef[] {
     for (const task of note.tasks) out.push({ ...task, path: note.path })
   }
   return out.sort((a, b) => (a.path === b.path ? a.line - b.line : a.path < b.path ? -1 : 1))
+}
+
+/** 讀內容重建索引的並行數：50 篇以內用 4，再多才用 8。 */
+export function indexReadConcurrency(fileCount: number): number {
+  if (fileCount <= 0) return 0
+  return Math.min(fileCount, fileCount <= 50 ? 4 : 8)
+}
+
+/** 列出檔案後補 mtime 的並行數。不讀檔案內容。 */
+export function listStatConcurrency(fileCount: number): number {
+  if (fileCount <= 0) return 0
+  return Math.min(32, fileCount)
+}
+
+/**
+ * 有 requestIdleCallback 就等閒置（最遲 timeoutMs）再寫快取；沒有就用 setTimeout。
+ * 回傳取消函式。
+ */
+export function scheduleVaultIndexSave(run: () => void, timeoutMs: number): () => void {
+  if (typeof requestIdleCallback === 'function') {
+    const handle = requestIdleCallback(() => run(), { timeout: timeoutMs })
+    return () => cancelIdleCallback(handle)
+  }
+  const timer = setTimeout(run, timeoutMs)
+  return () => clearTimeout(timer)
 }
 
 /** 監看事件的路徑整理：只留 vault 內、非隱藏的 .md 相對路徑。 */

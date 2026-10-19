@@ -3444,6 +3444,20 @@
     "noSearchResults": "該当する設定がありません",
     "title": "設定"
   },
+  "bases": {
+    "title": "Bases",
+    "views": "ビュー",
+    "refresh": "更新",
+    "source": "ソース",
+    "unsupportedView": "未対応のビュー種別 {type} のため表で表示します",
+    "more": "あと {count} 件",
+    "empty": "該当するノートはありません",
+    "parseError": "Bases の形式エラー：{message}",
+    "exprError": "式のエラー：",
+    "indexing": "インデックス作成中…",
+    "edit": "編集",
+    "done": "完了"
+  },
   "record": {
     "tagging": {
       "manage": "タグを管理",
@@ -4796,6 +4810,16 @@
       "title": "キャンバスはまだありません",
       "description": "図とフリーハンド描画でアイデアを整理できます。"
     }
+  },
+  "obsidianCanvas": {
+    "title": "キャンバス",
+    "addText": "テキストを追加",
+    "delete": "削除",
+    "parseError": "キャンバス形式エラー：{message}",
+    "openAsText": "テキストとして開く",
+    "externalChange": "ファイルが外部で変更されました。開き直してください。",
+    "untitledGroup": "無題のグループ",
+    "readOnly": "読み取り専用"
   },
   "navigation": {
     "canvases": "キャンバス",

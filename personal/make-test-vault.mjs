@@ -17,8 +17,24 @@ import os from 'node:os'
 import path from 'node:path'
 
 const args = process.argv.slice(2)
-const force = args.includes('--force')
-const target = path.resolve(args.find(a => !a.startsWith('--')) ?? path.join(os.homedir(), 'Documents', 'NoteGen-Test-Vault'))
+// --big N：在 90 Big/ 放 N 篇合成筆記（規則同 tests/perf/synthetic-vault.ts）。不加就不建立，既有樣本不動。
+let bigCount = 0
+const positional = []
+for (let i = 0; i < args.length; i++) {
+  const arg = args[i]
+  if (arg === '--big' || arg.startsWith('--big=')) {
+    const raw = arg === '--big' ? args[++i] : arg.slice('--big='.length)
+    bigCount = Number(raw)
+    if (!Number.isInteger(bigCount) || bigCount < 0) {
+      console.error('--big 需要一個非負整數，例如 --big 3000')
+      process.exit(1)
+    }
+  } else {
+    positional.push(arg)
+  }
+}
+const force = positional.includes('--force')
+const target = path.resolve(positional.find(a => !a.startsWith('--')) ?? path.join(os.homedir(), 'Documents', 'NoteGen-Test-Vault'))
 const MARKER = '.notegen-test-vault'
 
 if (fs.existsSync(target)) {
@@ -445,6 +461,72 @@ write('60 Notes/嵌入來源.md', `# 嵌入來源
 巢狀：![[嵌入中層]]
 `)
 write('60 Notes/嵌入中層.md', '# 嵌入中層\n\n第二層：![[區塊目標#第一節]]\n\n第三層不轉入：![[雙鏈目標]]\n')
+
+// ---------- Phase 2-3b：Bases 子集、.canvas 相容 ----------
+write('60 Notes/筆記查詢.base', `filters:
+  and:
+    - file.inFolder("60 Notes")
+formulas:
+  days_left: 'if(due, (date(due) - today()).days, "")'
+properties:
+  note.rating: { displayName: 評分 }
+  formula.days_left: { displayName: 剩餘天數 }
+views:
+  - type: table
+    name: 全部
+    order: [file.name, tags, rating, due, formula.days_left]
+    sort: [{ property: file.name, direction: ASC }]
+  - type: table
+    name: 高分
+    filters: { and: ['rating > 3', 'file.hasTag("notegen")'] }
+    order: [file.name, done, formula.days_left]
+  - type: list
+    name: 連到雙鏈目標
+    filters: { and: ['file.hasLink("雙鏈目標")'] }
+    order: [file.name]
+    limit: 3
+  - type: cards
+    name: 不支援的檢視
+`)
+
+write('60 Notes/Bases 區塊.md', `# Bases 區塊
+
+筆記裡直接放查詢（不改內容存檔，diff 必須是空的）：
+
+\`\`\`base
+filters:
+  and:
+    - file.hasTag("專案")
+views:
+  - type: table
+    name: 專案筆記
+    order: [file.name, tags]
+\`\`\`
+
+下面這個省略 views，當作單一 table：
+
+\`\`\`base
+filters:
+  and:
+    - 'file.name.startsWith("標籤")'
+\`\`\`
+`)
+
+// JSON Canvas 1.0：Tab 縮排、結尾換行與 Obsidian 寫法相同；extraField 是未知欄位，改圖後要還在
+write('60 Notes/白板.canvas', `{
+\t"nodes":[
+\t\t{"id":"8132d4d894c80cf6","type":"group","x":-240,"y":-360,"width":600,"height":320,"label":"研究","color":"4"},
+\t\t{"id":"754a8ef995a366e6","type":"file","file":"60 Notes/雙鏈目標.md","x":-220,"y":-320,"width":260,"height":120},
+\t\t{"id":"cf5b61eb8c6e1b4a","type":"text","text":"# 想法\\n\\n連到 [[雙鏈來源]]","x":80,"y":-320,"width":260,"height":120,"color":"#ff8800","extraField":true},
+\t\t{"id":"be0b8f7c6a4c9e22","type":"link","url":"https://obsidian.md","x":-220,"y":-160,"width":260,"height":80},
+\t\t{"id":"a1b2c3d4e5f60718","type":"text","text":"群組外的卡片","x":480,"y":-200,"width":200,"height":100,"color":"2"}
+\t],
+\t"edges":[
+\t\t{"id":"2a7f6b0e9d1c4e5f","fromNode":"754a8ef995a366e6","fromSide":"right","toNode":"cf5b61eb8c6e1b4a","toSide":"left","toEnd":"arrow","label":"參考","color":"2"},
+\t\t{"id":"3b8c7d1f0e2a5b6c","fromNode":"cf5b61eb8c6e1b4a","fromSide":"bottom","toNode":"a1b2c3d4e5f60718","toSide":"top"}
+\t]
+}
+`)
 // 1×1 透明 PNG（嵌入圖片用）
 fs.mkdirSync(path.join(target, '60 Notes'), { recursive: true })
 fs.writeFileSync(path.join(target, '60 Notes/附件.png'), Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64'))
@@ -479,7 +561,79 @@ write('README.md', `# NoteGen 測試 vault
 | L8 關聯圖 | 開 雙鏈目標.md：1 層有 雙鏈來源、雙鏈表格、改名來源一…等連入與 區塊目標 連出；切 2 層再多一圈；點節點換中心 |
 | 自動完成 #／^ | 任一筆記打 \`[[區塊目標#\` 列 3 個標題；\`[[區塊目標#^\` 列 blk-1、item-1、row-1、sec-3；\`[[#\` 列本篇標題 |
 | 索引 #tag 規則 | 標籤B／標籤A：\`，#待辦\` 緊接全形標點也算；\`#12\` 純數字不算（筆記標籤樹不出現 12） |
+| 大 vault | \`90 Big/\`：加上 \`--big N\` 產生 N 篇合成筆記，用來量啟動時間；不加這個選項就不會建立 |
+| Bases | 60 Notes/筆記查詢.base：四個 view（全部 21 筆、高分只有屬性樣本、連到雙鏈目標 list 顯示 3 筆並提示還有更多、cards 退回 table 並提示）；剩餘天數欄＝due 減今天 |
+| Bases 區塊 | 60 Notes/Bases 區塊.md：兩個 \`\`\`base 區塊在筆記內渲染（專案筆記 3 篇、標籤開頭 3 篇）；不改內容存檔 diff 為空；雙擊可編輯 |
+| .canvas | 60 Notes/白板.canvas：群組、檔案、文字（含 [[連結]]）、網址四種節點與兩條邊；不動直接關閉 diff 為空；拖一張卡片後只有那個節點的 x/y 變、extraField 還在、Tab 縮排維持；Obsidian 開同一檔正常 |
 `)
+
+// ---------- --big N：90 Big/ 合成筆記（不影響上面的樣本） ----------
+if (bigCount > 0) {
+  const BIG_FOLDERS = [
+    '00 Alpha/00 Notes',
+    '00 Alpha/01 Notes',
+    '01 Beta/00 Notes',
+    '01 Beta/01 Notes',
+    '02 Gamma/00 Notes',
+    '02 Gamma/01 Notes',
+    '03 Delta/00 Notes',
+    '03 Delta/01 Notes',
+    '04 Epsilon/00 Notes',
+    '04 Epsilon/01 Notes',
+  ]
+  const BIG_SEED = 20261019
+  const FILLER = 'Synthetic note padding for vault performance measurement. '
+  let bigState = BIG_SEED >>> 0
+  const bigRandom = () => {
+    bigState = (bigState + 0x6d2b79f5) >>> 0
+    let t = Math.imul(bigState ^ (bigState >>> 15), bigState | 1)
+    t = (t + Math.imul(t ^ (t >>> 7), t | 61)) ^ t
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+  const bigBase = index => (index < BIG_FOLDERS.length ? 'Note' : `N${index}`)
+  for (let index = 0; index < bigCount; index++) {
+    const base = bigBase(index)
+    const folder = BIG_FOLDERS[index % BIG_FOLDERS.length]
+    const other = (index + 1) % bigCount
+    const otherBase = bigBase(other)
+    const otherFolder = BIG_FOLDERS[other % BIG_FOLDERS.length]
+    const day = String(1 + (index % 28)).padStart(2, '0')
+    const lines = [
+      `title: "${base}"`,
+      `status: ${index % 2 === 0 ? 'active' : 'draft'}`,
+      `tags: [project/p${index % 4}, topic/t${index % 20}, status/s${index % 3}]`,
+    ]
+    if ((index + BIG_SEED) % 3 !== 0) lines.push(`aliases: [別名${index}]`)
+    if ((index + BIG_SEED) % 4 !== 0) lines.push(`priority: ${1 + (index % 5)}`)
+    if ((index + BIG_SEED) % 5 !== 0) lines.push(`due: 2026-10-${day}`)
+    let content = `---
+${lines.join('\n')}
+---
+
+# ${base}
+
+## 第二節
+
+- [ ] 未完成的任務 📅 2026-10-19
+- [x] 已完成的任務 📅 2026-10-18
+
+這裡提到 Note 與別名甲。
+- [[Note]]
+- [[Note|顯示${index}]]
+- [[Note#第二節]]
+- [[${otherBase}]]
+- [[${otherFolder}/${otherBase}]]
+
+區塊。 ^blk-${index}
+`
+    const targetLength = 1024 + Math.floor(bigRandom() * (3072 - 1024 + 1))
+    while (content.length < targetLength) {
+      const need = targetLength - content.length
+      content += need >= FILLER.length ? FILLER : FILLER.slice(0, need)
+    }
+    write(`90 Big/${folder}/${base}.md`, content)
+  }
+}
 
 fs.writeFileSync(path.join(target, MARKER), `created ${now.toISOString()}\n`)
 

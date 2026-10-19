@@ -18,19 +18,21 @@ import {
   type WatchEvent,
 } from '@tauri-apps/plugin-fs'
 import { getAllMarkdownFiles } from '@/lib/files'
-import { getFilePathOptions } from '@/lib/workspace'
+import { getFilePathOptions, getWorkspacePath } from '@/lib/workspace'
 import useVaultIndexStore from '@/stores/vault-index'
 import { indexNote, type IndexedNote } from './index-note'
 import {
+  indexReadConcurrency,
+  listStatConcurrency,
   planScan,
   restoreIndexCache,
+  scheduleVaultIndexSave,
   serializeIndexCache,
   toIndexablePath,
   type ListedFile,
 } from './index-core'
 
 const CACHE_DIR = 'vault-index'
-const READ_CONCURRENCY = 8
 const CACHE_SAVE_DELAY_MS = 2000
 
 function cacheFileName(workspace: string): string {
@@ -77,6 +79,8 @@ async function readNote(relativePath: string): Promise<{ content: string, mtime:
 async function indexPaths(paths: string[]): Promise<{ indexed: IndexedNote[], missing: string[] }> {
   const indexed: IndexedNote[] = []
   const missing: string[] = []
+  const workers = indexReadConcurrency(paths.length)
+  if (workers === 0) return { indexed, missing }
   let cursor = 0
   async function worker() {
     while (cursor < paths.length) {
@@ -86,16 +90,44 @@ async function indexPaths(paths: string[]): Promise<{ indexed: IndexedNote[], mi
       else missing.push(path)
     }
   }
-  await Promise.all(Array.from({ length: Math.min(READ_CONCURRENCY, paths.length) }, worker))
+  await Promise.all(Array.from({ length: workers }, worker))
   return { indexed, missing }
 }
 
+function mtimeMs(mtime: Date | null | undefined): number {
+  if (!mtime) return 0
+  const ms = new Date(mtime).getTime()
+  return Number.isNaN(ms) ? 0 : ms
+}
+
+/** 只 stat mtime，不讀內容。路徑規則與 getFilePathOptions 的相對路徑相同。 */
+async function readListedMtime(workspace: { path: string, isCustom: boolean }, relativePath: string): Promise<number> {
+  try {
+    const info = workspace.isCustom
+      ? await stat(await join(workspace.path, relativePath))
+      : await stat(`article/${relativePath}`, { baseDir: BaseDirectory.AppData })
+    return mtimeMs(info.mtime)
+  } catch {
+    return 0
+  }
+}
+
 async function listVault(): Promise<ListedFile[]> {
-  const files = await getAllMarkdownFiles(true)
-  return files.map(file => ({
-    path: file.relativePath,
-    mtime: file.metadata?.modifiedAt ? new Date(file.metadata.modifiedAt).getTime() : 0,
-  }))
+  const files = await getAllMarkdownFiles(false)
+  const workers = listStatConcurrency(files.length)
+  if (workers === 0) return []
+  const workspace = await getWorkspacePath()
+  const listed: ListedFile[] = new Array(files.length)
+  let cursor = 0
+  async function worker() {
+    while (cursor < files.length) {
+      const index = cursor++
+      const relativePath = files[index].relativePath
+      listed[index] = { path: relativePath, mtime: await readListedMtime(workspace, relativePath) }
+    }
+  }
+  await Promise.all(Array.from({ length: workers }, () => worker()))
+  return listed
 }
 
 /** 資料夾被刪除、改名或搬入時，事件只帶資料夾路徑，要整份比對才能找出底下的筆記 */
@@ -131,13 +163,13 @@ export async function startVaultIndex(workspacePath: string): Promise<VaultIndex
   store.reset(workspaceKey)
 
   let stopped = false
-  let saveTimer: ReturnType<typeof setTimeout> | null = null
+  let cancelSave: (() => void) | null = null
   let scanning: Promise<void> | null = null
 
   const scheduleSave = () => {
-    if (saveTimer) clearTimeout(saveTimer)
-    saveTimer = setTimeout(() => {
-      saveTimer = null
+    cancelSave?.()
+    cancelSave = scheduleVaultIndexSave(() => {
+      cancelSave = null
       if (stopped) return
       void saveCache(workspaceKey, useVaultIndexStore.getState().notes)
         .catch(error => console.warn('[vault-index] cache save failed:', error))
@@ -229,9 +261,9 @@ export async function startVaultIndex(workspacePath: string): Promise<VaultIndex
       stopped = true
       if (useVaultIndexStore.getState().rescan === rescan) useVaultIndexStore.getState().setRescan(null)
       unwatch?.()
-      if (saveTimer) {
-        clearTimeout(saveTimer)
-        saveTimer = null
+      if (cancelSave) {
+        cancelSave()
+        cancelSave = null
         void saveCache(workspaceKey, useVaultIndexStore.getState().notes).catch(() => undefined)
       }
     },

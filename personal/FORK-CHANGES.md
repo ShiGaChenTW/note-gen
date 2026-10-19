@@ -2,7 +2,7 @@
 title: NoteGen Fork 偏離上游清單
 filename: FORK-CHANGES.md
 created: 2026-10-15 05:45 (Asia/Taipei)
-modified: 2026-10-19 19:00 (Asia/Taipei)
+modified: 2026-10-19 20:40 (Asia/Taipei)
 source_llm: Claude (Opus 5.5, Claude Code session)
 status: active
 ---
@@ -92,6 +92,12 @@ npx pnpm@9 install --frozen-lockfile
 | 2026-10-19 | `src/app/core/main/editor/markdown/wikilink-embed-view.tsx`（新）、`src/lib/markdown/note-section.ts`（新） | `![[嵌入]]` 轉入：整篇／`#標題` 段／`^id` 區塊／圖片（`\|寬`）／附件，markdown-it 渲染（`html: false`）、巢狀 2 層、依 mtime 快取；介面文字 `editor.wikilinkEmbed` | 同上 |
 | 2026-10-19 | `messages/*.json` | `localGraph`（`properties` 之後）、`editor.wikilinkSuggest` 加 4 key、`editor.wikilinkEmbed`（`wikilinkSuggest` 之後） | 2-3a |
 | 2026-10-19 | `personal/make-test-vault.mjs` | `60 Notes/` 加 2-3a 樣本：區塊目標（標題＋`^id`）、嵌入來源／嵌入中層、`附件.png`；標籤樣本改驗新規則 | 驗收用 |
+| 2026-10-19 | `src/stores/article.ts`、`src/app/core/main/editor/editor-layout.tsx` | 2-3b 掛載點：檔案樹也列 `.base` 與 `.canvas`（第 4104 行過濾）；`getItemType` 多 `base`／`canvas`，分頁對應 `BasesPage`／`ObsidianCanvasPage` | PM；注意上游同步功能可能會把 `.base`／`.canvas` 當一般檔案處理 |
+| 2026-10-19 | `src/lib/vault-index/links.ts`、`graph.ts`、`index-core.ts`、`service.ts`、`src/stores/vault-index.ts`、`src/lib/wikilink-suggest-model.ts`、`src/lib/markdown/unlinked-mentions.ts`、`tests/perf/`（新） | 大 vault 效能（行為不變）：store 每 revision 建一次反向連結索引（3,000 篇反向連結 11 s → 25 ms，關聯圖 11 s → 26 ms）、預建解析對照表、鄰接表快取、未連結提及合併 RegExp、建議模型 WeakMap 快取；`service.ts` 讀檔並行數依檔案數、`listVault` 只 stat mtime、快取寫入改 `requestIdleCallback`；合成 vault 基準測試 | Grok 實作；`listVault` 改動走 Tauri fs，只能實機驗 |
+| 2026-10-19 | `src/lib/obsidian-canvas/`（新）、`src/app/core/main/obsidian-canvas/`（新） | Obsidian `.canvas`（JSON Canvas 1.0）：解析驗證、未知欄位保留、沒動過輸出原文、改動後 Tab 縮排序列化；xyflow 編輯頁（四種節點、群組、各側邊線、拖曳縮放、文字雙擊編輯、檔案節點預覽與開啟、新增文字、刪除、拉邊），500 ms 防抖寫回走 `rewriteNote`，外部變更保護 | Codex 實作；與上游 NoteGen 自己的畫布（AppData、`canvas://` 分頁）無關 |
+| 2026-10-19 | `src/lib/bases/`（新）、`src/app/core/main/bases/`（新）、`src/app/core/main/editor/markdown/bases-block-extension.tsx`（新）、`tiptap-editor.tsx` | Obsidian Bases 子集：自寫運算式語言（`file.*`、`note.*`、`formula.*`、最小函式集、方法寫法、日期差）、filters and/or/not、sort、limit、table／list view（其他型別退回 table）；`.base` 整頁（view 切換、表頭排序、原始碼唯讀）與筆記內 ```` ```base ```` 區塊（沒改時輸出原文）；`tiptap-editor.tsx` 加 import 與 extensions 各一行 | Claude Code 子代理實作；本段只讀不寫 `.base` |
+| 2026-10-19 | `messages/*.json` | `obsidianCanvas`（頂層 `canvas` 之後）、`bases`（`settings` 之後，因既有測試鎖定 `localGraph` 後接 `settings`） | 2-3b |
+| 2026-10-19 | `personal/make-test-vault.mjs` | `60 Notes/` 加 `筆記查詢.base`、`Bases 區塊.md`、`白板.canvas`；`--big N` 產生 `90 Big/` 合成筆記量啟動時間 | 驗收用 |
 
 ## 刻意不改的東西
 
@@ -296,3 +302,35 @@ npx pnpm@9 tauri dev
 - 表格：只改儲存格對齊屬性而不改內容時仍輸出原文；含字面 `&nbsp;` 的表格列仍被上游換成空格。
 - 關聯圖：超過 150 節點只畫前 150；不畫標籤節點。
 - L1 的連結解析仍不認「相對本篇資料夾的部分路徑」（L7 已認），兩邊統一待之後。
+
+### Phase 2-3b Bases 子集、.canvas 相容、大 vault 效能
+
+啟動方式同上。測試 vault：`node personal/make-test-vault.mjs --force`（要量大 vault 加 `--big 3000`），樣本在 `60 Notes/`。
+
+**Bases**
+
+1. 檔案樹看得到 `60 Notes/筆記查詢.base`，點開是整頁表格，上方四個 view：「全部」21 筆、「高分」只有屬性樣本、「連到雙鏈目標」是 list 顯示 3 筆並提示還有更多、「不支援的檢視」提示退回表格。「剩餘天數」欄是 due 減今天的天數。
+2. 點表頭切換排序（ASC → DESC → 取消），不會寫回檔案。「原始碼」顯示 YAML 唯讀；在 Obsidian 改這個 `.base` 後按「重新整理」會更新。
+3. 開 `Bases 區塊.md`：兩個區塊在筆記內渲染成表格（專案筆記 3 篇、標籤開頭 3 篇）；不改內容直接存檔 `git diff` 為空；雙擊區塊可編輯 YAML，⌘Enter 完成。
+4. 在 Obsidian 開同一個 `.base`：Obsidian 自己的 Bases 也能讀（本段只讀不寫，所以檔案不會被改）。
+
+**`.canvas`**
+
+1. 檔案樹看得到 `60 Notes/白板.canvas`，點開是畫布：群組「研究」框住檔案節點與文字節點，文字節點裡的 `[[雙鏈來源]]`、網址節點、群組外的卡片、兩條邊（一條有箭頭與標籤）。
+2. 不動直接關閉：`git diff` 為空。拖一張卡片：500 ms 後寫檔，`git diff` 只有那個節點的 `x`／`y`，`extraField` 還在、Tab 縮排與結尾換行維持。
+3. 雙擊文字節點編輯、雙擊檔案節點開筆記、點網址節點開瀏覽器、從節點拉到另一節點產生邊、「新增文字」、選取後 Delete 刪除。
+4. Obsidian 同時開著同一個 `.canvas` 並改動：NoteGen 切回該分頁時若自己沒有未存變更就重讀；有未存變更則 toast「檔案在外部被修改」並停止寫入。
+5. 改完後在 Obsidian 開：節點位置一致。
+
+**大 vault 效能**
+
+1. `node personal/make-test-vault.mjs --force --big 3000` 後啟動：Console 的 `[vault-index]` 第一次掃描時間（目標 3 秒內，含讀檔）；第二次啟動（快取命中）1 秒內。
+2. 開任一 `90 Big/` 筆記：反向連結、關聯圖 2 層、`[[` 自動完成、筆記標籤樹都應即時（不到 0.1 秒）。
+3. 改一篇筆記存檔：索引 1 秒內更新，不會卡住輸入。
+4. `--big 10000` 仍可用，上述時間 4 倍以內。
+
+**這份步驟沒涵蓋的**
+
+- Bases：cards／kanban／map view、summary 列、寫回 `.base`、UI 編輯 filter、`file.embeds`、`format()` 日期格式化、正規表示式；`.base` 不在索引 watcher 內，外部改動要重新整理。
+- canvas：undo／redo、群組新增、顏色選擇、圖片節點、群組背景圖；顏色 6（紫）在 UI 用琥珀顯示但寫檔保留原值。
+- 效能：索引仍在主執行緒，10,000 篇以上再評估 worker 或 Rust 端。

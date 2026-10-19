@@ -35,6 +35,7 @@ import { MermaidDiagram } from './mermaid-extension'
 import { encodeFrontmatterForEditor, Frontmatter } from './frontmatter-extension'
 import { RecurringTask } from './recurring-task-extension'
 import { Wikilink } from './wikilink-extension'
+import { BasesBlock } from './bases-block-extension' // Fork (2-3b)：```base 區塊
 import { withRawTableRoundtrip } from './table-raw-extension'
 import { SearchReplacePanel } from './search-replace-panel'
 import { useEffect, useId, useLayoutEffect, useRef, useCallback, useMemo, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type UIEvent as ReactUIEvent, type WheelEvent as ReactWheelEvent } from 'react'
@@ -2469,6 +2470,7 @@ export function TipTapEditor({
       }),
       RecurringTask,
       Wikilink,
+      BasesBlock, // Fork (2-3b)
       StableCodeBlockLowlight.configure({
         shouldHighlight: () => !isSourceViewRef.current,
       }),

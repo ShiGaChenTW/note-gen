@@ -3307,6 +3307,20 @@
     "noSearchResults": "Keine passenden Einstellungen gefunden",
     "title": "Einstellungen"
   },
+  "bases": {
+    "title": "Bases",
+    "views": "Ansichten",
+    "refresh": "Aktualisieren",
+    "source": "Quelltext",
+    "unsupportedView": "Nicht unterstützter Ansichtstyp {type}; wird als Tabelle angezeigt",
+    "more": "{count} weitere",
+    "empty": "Keine passenden Notizen",
+    "parseError": "Ungültiges Bases-Format: {message}",
+    "exprError": "Ausdrucksfehler: ",
+    "indexing": "Indizierung…",
+    "edit": "Bearbeiten",
+    "done": "Fertig"
+  },
   "record": {
     "tagging": {
       "manage": "Tags verwalten",
@@ -4767,6 +4781,16 @@
       "title": "Noch keine Canvases",
       "description": "Erstelle ein Canvas, um Ideen mit Diagrammen und Freihandzeichnungen zu organisieren."
     }
+  },
+  "obsidianCanvas": {
+    "title": "Canvas",
+    "addText": "Text hinzufügen",
+    "delete": "Löschen",
+    "parseError": "Canvas-Formatfehler: {message}",
+    "openAsText": "Als Text öffnen",
+    "externalChange": "Die Datei wurde extern geändert. Bitte erneut öffnen.",
+    "untitledGroup": "Unbenannte Gruppe",
+    "readOnly": "Schreibgeschützt"
   },
   "navigation": {
     "canvases": "Canvas",

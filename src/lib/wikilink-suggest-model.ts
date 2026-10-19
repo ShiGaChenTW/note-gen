@@ -252,7 +252,12 @@ interface PreparedNote {
   blockIds: SuggestBlock[]
 }
 
+/** 以 notes 陣列參考為鍵。索引 revision 不變時自動完成重用同一份整理結果。 */
+const preparedByNotes = new WeakMap<WikilinkSuggestNote[], PreparedNote[]>()
+
 function prepareNotes(notes: WikilinkSuggestNote[]): PreparedNote[] {
+  const cached = preparedByNotes.get(notes)
+  if (cached) return cached
   const byPath = new Map<string, PreparedNote>()
   for (const note of notes) {
     const path = normalizePath(note.path)
@@ -272,7 +277,9 @@ function prepareNotes(notes: WikilinkSuggestNote[]): PreparedNote[] {
       blockIds: note.blockIds ?? [],
     })
   }
-  return [...byPath.values()]
+  const prepared = [...byPath.values()]
+  preparedByNotes.set(notes, prepared)
+  return prepared
 }
 
 function pathKey(path: string): string {
