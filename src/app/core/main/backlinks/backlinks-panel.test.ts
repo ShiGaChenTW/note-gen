@@ -17,7 +17,9 @@ const { reveal, activate, order } = vi.hoisted(() => ({
 }))
 const article = create(() => ({ activeFilePath: 'Target.md', setActiveFilePath: activate }))
 vi.mock('@/stores/article', () => ({ default: article }))
-vi.mock('@/lib/daily/note-io', () => ({ revealInFileTree: reveal }))
+vi.mock('@/lib/daily/note-io', () => ({ revealInFileTree: reveal, readNote: vi.fn(async () => null) }))
+vi.mock('@/lib/note-rewrite', () => ({ rewriteNote: vi.fn() }))
+vi.mock('@/hooks/use-toast', () => ({ toast: vi.fn() }))
 vi.mock('next-intl', () => ({ useTranslations: () => (key: keyof typeof messages.backlinks) => messages.backlinks[key] }))
 
 // 動態載入，讓 mock store 先完成初始化。
@@ -49,12 +51,17 @@ function ready(contents: Array<[string, string]>) {
 }
 
 describe('backlinks panel', () => {
-  it('provides all seven translations immediately after today in every locale', () => {
+  it('provides all translations after today and linkRewrite in every locale', () => {
     for (const locale of [messages, en, zh, ja, de, pt]) {
-      expect(Object.keys(locale.backlinks).sort()).toEqual(['title', 'linked', 'outgoing', 'empty', 'indexing', 'notMarkdown', 'unresolved'].sort())
+      // 2-1 的七個 key 在前，2-2 L4 的八個 key 追加在 backlinks 物件尾端
+      expect(Object.keys(locale.backlinks)).toEqual([
+        'title', 'linked', 'outgoing', 'empty', 'indexing', 'notMarkdown', 'unresolved',
+        'unlinked', 'scan', 'scanning', 'linkOne', 'linkAll', 'unlinkedEmpty', 'linkDone', 'linkFailed',
+      ])
       expect(Object.values(locale.backlinks).every(value => value.trim().length > 0)).toBe(true)
       const namespaces = Object.keys(locale)
-      expect(namespaces[namespaces.indexOf('today') + 1]).toBe('backlinks')
+      // 2-2 L7 的 linkRewrite 插在 today 之後、backlinks 之前
+      expect(namespaces.slice(namespaces.indexOf('today') + 1, namespaces.indexOf('today') + 3)).toEqual(['linkRewrite', 'backlinks'])
     }
   })
 

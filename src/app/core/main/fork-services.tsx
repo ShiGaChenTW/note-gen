@@ -8,6 +8,7 @@ import { startVaultIndex, type VaultIndexHandle } from '@/lib/vault-index/servic
 import { DailyNoteAutoOpen } from './daily-note-auto-open'
 import { DailyNavShortcuts } from './daily/daily-nav-shortcuts'
 import { ReminderService } from './daily/reminder-service'
+import { LinkRewritePrompt } from './link-rewrite/link-rewrite-prompt'
 
 /** F3: keep the vault index in sync with the active workspace. */
 function VaultIndexService() {
@@ -38,6 +39,7 @@ export function ForkServices() {
       <DailyNoteAutoOpen />
       <DailyNavShortcuts />
       <ReminderService />
+      <LinkRewritePrompt />
     </>
   )
 }
