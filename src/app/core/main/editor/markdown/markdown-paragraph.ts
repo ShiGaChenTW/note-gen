@@ -92,7 +92,7 @@ export const MarkdownParagraph = Node.create<MarkdownParagraphOptions>({
     return helpers.createNode('paragraph', undefined, content)
   },
 
-  renderMarkdown: (node, h) => {
+  renderMarkdown: (node, h, context) => {
     if (!node) {
       return ''
     }
@@ -100,6 +100,11 @@ export const MarkdownParagraph = Node.create<MarkdownParagraphOptions>({
     const content = Array.isArray(node.content) ? node.content : []
 
     if (content.length === 0) {
+      // Fork (2-4, Issue #18)：清單項裡的空段落不輸出 &nbsp;——空項目在 Obsidian 是 `- `，
+      // 存成 `- &nbsp;` 會多一個實際字元。
+      if (context?.parentType === 'listItem' || context?.parentType === 'taskItem') {
+        return ''
+      }
       return EMPTY_PARAGRAPH_MARKDOWN
     }
 
