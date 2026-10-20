@@ -98,6 +98,7 @@ npx pnpm@9 install --frozen-lockfile
 | 2026-10-19 | `src/lib/bases/`（新）、`src/app/core/main/bases/`（新）、`src/app/core/main/editor/markdown/bases-block-extension.tsx`（新）、`tiptap-editor.tsx` | Obsidian Bases 子集：自寫運算式語言（`file.*`、`note.*`、`formula.*`、最小函式集、方法寫法、日期差）、filters and/or/not、sort、limit、table／list view（其他型別退回 table）；`.base` 整頁（view 切換、表頭排序、原始碼唯讀）與筆記內 ```` ```base ```` 區塊（沒改時輸出原文）；`tiptap-editor.tsx` 加 import 與 extensions 各一行 | Claude Code 子代理實作；本段只讀不寫 `.base` |
 | 2026-10-19 | `messages/*.json` | `obsidianCanvas`（頂層 `canvas` 之後）、`bases`（`settings` 之後，因既有測試鎖定 `localGraph` 後接 `settings`） | 2-3b |
 | 2026-10-19 | `personal/make-test-vault.mjs` | `60 Notes/` 加 `筆記查詢.base`、`Bases 區塊.md`、`白板.canvas`；`--big N` 產生 `90 Big/` 合成筆記量啟動時間 | 驗收用 |
+| 2026-10-20 | `src/app/core/main/editor/markdown/block-roundtrip-extension.ts`（新）、`tiptap-editor.tsx`、`markdown-paragraph.ts`、`frontmatter-extension.ts` | 頂層區塊原文往返與區塊間空行（Issue #18）：載入時把 marked 的 `token.raw` 與內容簽章存進段落／標題／清單／引用／程式碼／分隔線節點，並從 raw 結尾算出每個頂層區塊前面幾個空行（`gapBefore`）；存檔時沒動過就輸出原文，區塊之間的空行數照載入時的（0 個只在 CommonMark 不會改變結構時採用，例如標題後緊接清單）；`doc` 節點改用 `BlockRoundtripDocument`（`StarterKit` 設 `document: false`）；清單項裡的空段落輸出空字串而不是 `&nbsp;`；frontmatter 的 marker 保留本文前原有的空行數 | 解掉「標題後清單多一空行」「空清單項變 `&nbsp;`」，順帶 `*` 項目符號、tab 縮排、`1)`、setext 標題、`***`、混合清單都不再被重排；PM 自己實作 |
 
 ## 刻意不改的東西
 
@@ -302,6 +303,12 @@ npx pnpm@9 tauri dev
 - 表格：只改儲存格對齊屬性而不改內容時仍輸出原文；含字面 `&nbsp;` 的表格列仍被上游換成空格。
 - 關聯圖：超過 150 節點只畫前 150；不畫標籤節點。
 - L1 的連結解析仍不認「相對本篇資料夾的部分路徑」（L7 已認），兩邊統一待之後。
+
+### Phase 2-4 試用期修正：頂層區塊原文往返（Issue #18）
+
+1. 開 `00 System/05 templates/Daily.md`，在任一 MIT 項目尾端打一個字再存：`diff` 只有那一行；`## 🎯 唯一要務` 下面的 `-` 仍是單獨一個 `-`，標題與清單之間沒有多出空行。
+2. 開任一篇日記（例如 `20 Journal/21 Daily/20261020.md`，「捕捉軌」是一般項目接任務項目的混合清單）同樣打一個字再存：`diff` 只有那一行。
+3. 不動內容的筆記：`* ` 項目符號、tab 縮排的巢狀清單、`1)` 編號、setext 標題、`***` 分隔線、連續兩個空行都要原樣保留（單元測試 `tests/block-roundtrip.test.ts` 已鎖定）。
 
 ### Phase 2-3b Bases 子集、.canvas 相容、大 vault 效能
 

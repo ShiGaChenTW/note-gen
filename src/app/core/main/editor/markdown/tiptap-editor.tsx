@@ -97,6 +97,7 @@ import {
   stripUnsupportedMarkdownControlCharacters,
 } from './markdown-paragraph'
 import { GitHubAlertBlockquoteEditor } from './github-alert-blockquote-view'
+import { BlockRoundtrip, BlockRoundtripDocument } from './block-roundtrip-extension' // Fork (2-4, Issue #18)
 import { StableCodeBlockLowlight } from './code-block-extension'
 import { shouldTransformImageSrcToWorkspaceAsset } from './image-src'
 import useSettingStore from '@/stores/setting'
@@ -2444,7 +2445,9 @@ export function TipTapEditor({
       }),
       GitHubAlertBlockquoteEditor,
       Frontmatter,
+      BlockRoundtripDocument, // Fork (2-4, Issue #18)：取代 StarterKit 的 Document
       StarterKit.configure({
+        document: false, // Fork (2-4, Issue #18)
         blockquote: false,
         heading: {
           levels: [1, 2, 3, 4, 5, 6],
@@ -2551,6 +2554,7 @@ export function TipTapEditor({
           size: 2,
         },
       }),
+      BlockRoundtrip, // Fork (2-4, Issue #18)：頂層區塊原文往返與區塊間空行
       SlashCommand.configure({
         suggestion: suggestionOptions,
       }),
