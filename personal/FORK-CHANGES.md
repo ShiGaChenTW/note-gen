@@ -2,7 +2,7 @@
 title: NoteGen Fork 偏離上游清單
 filename: FORK-CHANGES.md
 created: 2026-10-15 05:45 (Asia/Taipei)
-modified: 2026-10-19 20:40 (Asia/Taipei)
+modified: 2026-10-25 01:00 (Asia/Taipei)
 source_llm: Claude (Opus 5.5, Claude Code session)
 status: active
 ---
@@ -30,6 +30,14 @@ git checkout upstream-dev && git merge --ff-only upstream/dev
 git checkout dev && git merge upstream-dev   # 或 cherry-pick 個別 commit
 npx pnpm@9 install --frozen-lockfile
 ```
+
+### 同步紀錄
+
+| 日期 | 上游 | 結果 |
+|---|---|---|
+| 2026-10-25 | `upstream/dev` `ab0f5bf9`（39 個 commit，v0.38.3）→ PR #25 | 10 個衝突已解（見修改清單）。**`section-document*`／`sectioned-markdown-editor.tsx` 被上游移除**（#1299 改用 markdown-lexer worker），fork 曾在 `section-document.ts` 為大文件保留 frontmatter（F1），隨之消失。**上游的背景 tokenize 在 fork 自動停用**：`parsePreparedMarkdown` 要求編輯器的 tokenizer 名單與上游固定清單完全相同，fork 加了 frontmatter／wikilink 等自訂 tokenizer，會退回編輯器解析，所以 `trySetMarkdownContent` 的退回路徑必須先 `encodeFrontmatterForEditor`；代價是拿不到上游的大文件效能優化。同步後 `dev` 領先 `upstream-dev` 105、落後 0 |
+
+下次同步前先看：上游若新增 markdown tokenizer 或改動 `schema-markdown.ts`／`markdown-tokenizers.ts`，要確認 fork 的自訂 tokenizer（`notegen_frontmatter`、wikilink、表格原文、Bases）仍走得通。
 
 ## 修改清單
 
@@ -99,6 +107,11 @@ npx pnpm@9 install --frozen-lockfile
 | 2026-10-19 | `messages/*.json` | `obsidianCanvas`（頂層 `canvas` 之後）、`bases`（`settings` 之後，因既有測試鎖定 `localGraph` 後接 `settings`） | 2-3b |
 | 2026-10-19 | `personal/make-test-vault.mjs` | `60 Notes/` 加 `筆記查詢.base`、`Bases 區塊.md`、`白板.canvas`；`--big N` 產生 `90 Big/` 合成筆記量啟動時間 | 驗收用 |
 | 2026-10-20 | `src/app/core/main/editor/markdown/block-roundtrip-extension.ts`（新）、`tiptap-editor.tsx`、`markdown-paragraph.ts`、`frontmatter-extension.ts` | 頂層區塊原文往返與區塊間空行（Issue #18）：載入時把 marked 的 `token.raw` 與內容簽章存進段落／標題／清單／引用／程式碼／分隔線節點，並從 raw 結尾算出每個頂層區塊前面幾個空行（`gapBefore`）；存檔時沒動過就輸出原文，區塊之間的空行數照載入時的（0 個只在 CommonMark 不會改變結構時採用，例如標題後緊接清單）；`doc` 節點改用 `BlockRoundtripDocument`（`StarterKit` 設 `document: false`）；清單項裡的空段落輸出空字串而不是 `&nbsp;`；frontmatter 的 marker 保留本文前原有的空行數 | 解掉「標題後清單多一空行」「空清單項變 `&nbsp;`」，順帶 `*` 項目符號、tab 縮排、`1)`、setext 標題、`***`、混合清單都不再被重排；PM 自己實作 |
+| 2026-10-24 | `src/app/core/main/editor/markdown/frontmatter-card-view.tsx`（新）、`frontmatter-create-button.tsx`（新）、`frontmatter-extension.ts`、`tiptap-editor.tsx` | 編輯區頂端 frontmatter 改成 React node view 卡片（取代唯讀 `<pre>`）：閱讀模式純展示、編輯模式依型別換元件並只改被改的那一行、整塊收合（全域一個）、沒有屬性時一鍵建立範本；游標在卡片後按 Backspace 不再刪整塊。卡片只 `updateAttributes({raw})`，磁碟寫入沿用編輯器防抖存檔，**不呼叫 `rewriteNote`**；刪光屬性或「移除全部」時移除整個節點。`tiptap-editor.tsx` 只掛 `FrontmatterCreateButton` | PR #24，Scott 要「格式不動、只改 UI」，參考 MetaEdit／Meta Bind |
+| 2026-10-24 | `src/lib/markdown/frontmatter-edit.ts`、`frontmatter-template.ts`（新）、`src/stores/setting.ts`、`src/app/core/setting/editor/frontmatter-templates.tsx`（新）、`setting/editor/page.tsx`、`mobile/setting/pages/editor/page.tsx`、`properties-model.ts` | `applyFrontmatterEdit` 編輯 flow 清單（`tags: [a, b]`）維持 flow 寫法；新增 `applyFrontmatterEditToBlock`（刪光回傳空字串）、`yamlScalarText`；範本在 設定 → 編輯器 → 屬性範本 維護（`{{title}}` 預填檔名、`{{date}}`、`{{datetime}}`，存檔前驗證 YAML）；store 新增 `frontmatterTemplates`、`frontmatterDefaultTemplateId`、`frontmatterCollapsed`；`properties-model.ts` 加日期格式化與選項清單 | PR #24 |
+| 2026-10-24 | `messages/*.json` | `properties` 加卡片用 17 個 key；`settings.editor.frontmatter`（`sourceLineNumbers` 之前）；六語系皆有翻譯 | PR #24 |
+| 2026-10-25 | `src-tauri/tauri.conf.json`、`.gitignore`、`editor-layout.tsx`、`markdown/style.css`、`main-status-bar.tsx`、`file-dnd.ts`、`file-item.tsx`、`folder-item/index.tsx`、`tiptap-editor.tsx` | 同步上游 39 個 commit（v0.38.3）的衝突解法：`tauri.conf.json` 保留 productName／identifier、採上游版本號；status bar 採上游 rank 制，fork 的 daily-nav／today 改為 rank 86／87；檔案樹改名與搬動採上游同步日誌流程，L7 改寫連結詢問接在交易之外；表格採上游對齊與 `<br>` 儲存格換行但仍包 `withRawTableRoundtrip`；`setContent` 對字串保留 `encodeFrontmatterForEditor` | PR #25 |
+| 2026-10-25 | `src/lib/sync/remote-mutation-recovery.ts`、`file-manager.tsx`、`mobile/writing/custom-header.tsx`、`src/lib/sync/auto-sync.ts` | 修上游 dev 在 v0.38.3 之後無法 `next build` 的問題：`reconcile` 型別加 `NoInfer<T>`（消除 `src/lib/sync` 56 個型別錯誤）、移除 4 處未使用變數；不改執行行為 | PR #25；純 `upstream-dev` 以同一套依賴重現，若上游已修可丟掉這個 commit |
 
 ## 刻意不改的東西
 
@@ -109,6 +122,7 @@ npx pnpm@9 install --frozen-lockfile
 ## 開發環境注意
 
 - **pnpm 用 9 版**（跟上游 CI 一致）：`npx pnpm@9 install --frozen-lockfile`。pnpm 10+ 會擋 build script，而且會忽略 `package.json` 的 `pnpm.overrides`（`@lezer/common`），改寫 lockfile。
+- 2026-10-25 同步時全域 pnpm 較新，`--frozen-lockfile` 因 `pnpm.overrides` 不符失敗；我改用非凍結安裝補套件，再把 `pnpm-lock.yaml` 還原成合併結果。**沒用 `pnpm@9` 重試**，下次同步請先照上面的 `npx pnpm@9 install --frozen-lockfile`。
 - 桌面版 build 需要 Rust（`rustup`）。
 - **Rust 用 stable，不用 repo 指定的 1.88.0**：macOS 27 的 dyld 拒絕載入 1.88.0 編出的 proc-macro（`sqlx-macros` 報 `mis-aligned LINKEDIT string pool`）。本機用 `rustup override set stable` 蓋過 `rust-toolchain.toml`，不改 repo 檔案。1.99.0 驗證可 build。
 - 本機 build：`npx pnpm@9 tauri build --bundles app` → `src-tauri/target/release/bundle/macos/NoteGen (Scott).app`。
@@ -341,3 +355,14 @@ npx pnpm@9 tauri dev
 - Bases：cards／kanban／map view、summary 列、寫回 `.base`、UI 編輯 filter、`file.embeds`、`format()` 日期格式化、正規表示式；`.base` 不在索引 watcher 內，外部改動要重新整理。
 - canvas：undo／redo、群組新增、顏色選擇、圖片節點、群組背景圖；顏色 6（紫）在 UI 用琥珀顯示但寫檔保留原值。
 - 效能：索引仍在主執行緒，10,000 篇以上再評估 worker 或 Rust 端。
+
+### Phase 2-4 屬性卡片（PR #24）與上游同步（PR #25）
+
+啟動方式：`pnpm tauri dev`（若 `/Applications` 的 NoteGen 開著，dev 版會立刻結束，先關舊版）。測試筆記：`60 Notes/屬性樣本.md`。
+
+1. 預設是閱讀模式：沒有輸入框，日期顯示成中文、`done` 顯示「✗ 否」、`[[連結]]` 可點、`nested` 維持原文。
+2. 按「編輯」：切換 `done`，再看原始碼，只有那一行變；`tags` 新增標籤仍是 `[a, b, c]` 寫法，行尾註解 `# 行尾註解要留著` 還在。
+3. 點標題或箭頭收合，只剩一行摘要；開另一篇筆記狀態相同（全域一個）。
+4. 開沒有屬性的筆記：頂端出現「一鍵建立 Frontmatter 範本」，title 是檔名；▾ 可換範本；設定 → 編輯器 → 屬性範本 可改範本。
+5. 「移除全部」或刪光屬性：整個 frontmatter 消失，本文不變。
+6. 同步後回歸：雙鏈顯示與點擊、表格不改直接存檔位元組相同、改名被連結的筆記仍跳出「改寫連結」詢問、帶 frontmatter 的長筆記存檔後 frontmatter 不變。

@@ -103,7 +103,9 @@ supersedes: HANDOFF.md 第 1、3、9 節的「純 CSS / 插件沙箱」前提
 | Phase 2-2 知識庫整理（L5 屬性面板、L7 改名改寫連結、L6 筆記標籤、L4 未連結提及） | ✅ 已合併 `dev`（PR #5，2026-10-19） | 規格 `personal/specs/08-Phase2-2實作規格.md`；共用模組 `src/lib/note-rewrite.ts`；整合分支 `feat/p2-2-knowledge-base`；三軌：Claude Code（L7＋L4）、Codex（L5）、Grok（L6）在 `../note-gen-wt/{a,b,c}`；三軌已整合，worktree 與分支已清；實機驗收步驟見 FORK-CHANGES「Phase 2-2 知識庫整理」；後續：索引 `#tag` 規則、表格序列化小 PR、2-3 前先答三問 |
 | Phase 2-3a 嵌入與跳轉、local graph、索引標題與區塊、表格原文往返 | ✅ 已合併 `dev`（PR #6，2026-10-19） | 規格 `personal/specs/09-Phase2-3a實作規格.md`；整合分支 `feat/p2-3a`；三軌：Claude Code（嵌入／跳轉／表格）、Codex（L8 graph）、Grok（索引＋自動完成）三軌已整合，worktree 與分支已清；驗收步驟見 FORK-CHANGES「Phase 2-3a」；下一步 2-3b（Bases 子集、.canvas、大 vault 效能） |
 | Phase 2-3b Bases 子集、.canvas 相容、大 vault 效能 | ✅ 已合併 `dev`（PR #7，2026-10-19） | 規格 `personal/specs/10-Phase2-3b實作規格.md`；整合分支 `feat/p2-3b`；三軌已整合，worktree 與分支已清；驗收步驟見 FORK-CHANGES「Phase 2-3b」；Phase 2 功能完成，進 2-4 試用期 |
-| Phase 2-4 試用期 | ⏳ 待開始 | Scott 拿 NoteGen 當主力用兩週，依 FORK-CHANGES 各段驗收步驟與日常使用記下缺口，交由 PM 排修；之後決定是否停用桌面版 Obsidian |
+| Phase 2-4 試用期 | 🔄 進行中（2026-10-20 起） | Scott 拿 NoteGen 當主力用兩週，依 FORK-CHANGES 各段驗收步驟與日常使用記下缺口，交由 PM 排修；之後決定是否停用桌面版 Obsidian |
+| Phase 2-4 屬性卡片：編輯區頂端 frontmatter 卡片、一鍵範本、設定頁範本 | ✅ 已合併 `dev`（PR #24，2026-10-24） | 只改 UI、格式不動；卡片只改節點 attr、不走 `rewriteNote`；`applyFrontmatterEdit` 保留 flow 清單寫法；驗收步驟見 FORK-CHANGES「Phase 2-4 屬性卡片」；codex 額度恢復後補審 |
+| Phase 4 上游同步 #1（v0.38.3，39 個 commit） | ✅ 已合併 `dev`（PR #25，2026-10-25） | 10 個衝突已解；上游移除分節大文件、背景 tokenize 在 fork 自動停用；順帶修上游 dev 無法 build 的型別問題；實機回歸待 Scott（見 FORK-CHANGES 同步紀錄） |
 | Phase 2 啟動前三問（手機、必要外掛、vault 規模） | ⏳ 待 Scott | 2-1 先採假設：手機續用 Obsidian；2-2 之前要回答 |
 
 ## 6. 同意後的第一步
