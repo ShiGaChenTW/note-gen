@@ -171,7 +171,6 @@ export function FileManager({
     setPendingFileRevealPath,
     fileTree,
     loadFileTree,
-    setActiveFilePath,
     addFile,
     newFolder,
     setFileTree,
