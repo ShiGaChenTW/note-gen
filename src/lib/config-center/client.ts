@@ -1,4 +1,5 @@
 import { fetch as httpFetch } from '@tauri-apps/plugin-http'
+import { Store } from '@tauri-apps/plugin-store'
 
 import type {
   ConfigCenterConfigKey,
@@ -129,10 +130,21 @@ export async function fetchConfigCenterManifest(): Promise<ConfigCenterManifest>
   return manifest
 }
 
+/**
+ * Fork (#16)：設定中心預設不連線（打 download.notegen.top，3 秒逾時，fork 用不到）。
+ * 在 store.json 設 `upstreamConfigCenterEnabled: true` 才會連。
+ * 回傳 not-modified，呼叫端就沿用快取或內建設定。
+ */
+async function isConfigCenterEnabled(): Promise<boolean> {
+  const store = await Store.load('store.json')
+  return (await store.get<boolean>('upstreamConfigCenterEnabled')) === true
+}
+
 export async function fetchConfigCenterConfig(
   configKey: ConfigCenterConfigKey,
   cachedVersionCode?: number | null,
 ): Promise<ConfigCenterFetchResult> {
+  if (!(await isConfigCenterEnabled())) return { status: 'not-modified' }
   const manifest = await fetchConfigCenterManifest()
   const entry = manifest.configs[configKey]
 

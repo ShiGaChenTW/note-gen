@@ -26,7 +26,7 @@ let drainPromise: Promise<void> | null = null
 
 async function isAutoIndexEnabled() {
   const store = await Store.load('store.json')
-  return await store.get<boolean>('autoVectorEnabled') ?? true
+  return await store.get<boolean>('autoVectorEnabled') ?? false // Fork (#16)：與 stores/vector.ts 同一個預設
 }
 
 async function hasStructuredIndexConsent() {

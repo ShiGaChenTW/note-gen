@@ -135,6 +135,21 @@ function stripBlockIdMarker(line: string): string {
   return line.replace(/\s*\^[A-Za-z0-9-]+(?=\s*\|?\s*$)/, '').replace(/\s+$/, '')
 }
 
+/**
+ * 顯示用：隱藏行尾的區塊 id（` ^blk-1`）與單獨一行的 `^id`，像 Obsidian 閱讀模式。
+ * 只用在渲染前，不動檔案；程式碼區塊裡的內容不處理，`x^2` 這種沒有空白的不算區塊 id。
+ */
+export function hideBlockIds(markdown: string): string {
+  const lines = splitLines(markdown)
+  const out: string[] = []
+  for (const { line, inFence } of walkLines(lines)) {
+    if (inFence) { out.push(line); continue }
+    if (/^\^[A-Za-z0-9-]+$/.test(line.trim())) continue
+    out.push(BLOCK_ID_RE.test(line) ? stripBlockIdMarker(line) : line)
+  }
+  return out.join('\n')
+}
+
 function indentOf(line: string): number {
   return /^\s*/.exec(line)?.[0].length ?? 0
 }

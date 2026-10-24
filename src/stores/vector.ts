@@ -38,7 +38,8 @@ interface VectorState {
 }
 
 const useVectorStore = create<VectorState>((set, get) => ({
-  isAutoVectorEnabled: true,
+  // Fork (#16)：預設不在儲存後自動算向量（預設嵌入模型打上游官方 API，fork 用不到，會每次存檔跳錯誤）；要用的人到 RAG 設定打開
+  isAutoVectorEnabled: false,
   isProcessing: false,
   lastProcessTime: null,
   hasRerankModel: false,
@@ -63,7 +64,7 @@ const useVectorStore = create<VectorState>((set, get) => ({
 
       // 读取用户设置
       const store = await Store.load('store.json');
-      const isAutoVectorEnabled = await store.get<boolean>('autoVectorEnabled') ?? true;
+      const isAutoVectorEnabled = await store.get<boolean>('autoVectorEnabled') ?? false; // Fork (#16)
       const lastProcessTime = await store.get<number>('lastVectorProcessTime') || null;
       const structuredKnowledgeConsent = await store.get<boolean>('ragStructuredKnowledgeConsent') ?? false;
 

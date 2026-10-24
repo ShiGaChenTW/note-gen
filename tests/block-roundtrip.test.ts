@@ -321,3 +321,53 @@ describe('區塊間距的安全規則', () => {
     expect(blockSignature(task(false))).not.toBe(blockSignature(task(true)))
   })
 })
+
+describe('空段落不存成 &nbsp;（Issue #17）', () => {
+  function insertEmptyParagraphAfter(editor: Editor, blockIndex: number) {
+    let pos = 0
+    editor.state.doc.forEach((child, offset, index) => { if (index === blockIndex) pos = offset + child.nodeSize })
+    editor.chain().insertContentAt(pos, { type: 'paragraph' }).run()
+  }
+
+  it('在編輯器新建的空段落存成多一個空行，不出現 &nbsp;', () => {
+    const editor = createEditor()
+    load(editor, 'A\n\nB\n')
+    insertEmptyParagraphAfter(editor, 0)
+    const out = save(editor)
+    editor.destroy()
+    expect(out).not.toContain('&nbsp;')
+    expect(out).toBe('A\n\n\nB\n')
+  })
+
+  it('連續兩個空段落多兩個空行；結尾的空段落省略', () => {
+    const editor = createEditor()
+    load(editor, 'A\n\nB\n')
+    insertEmptyParagraphAfter(editor, 0)
+    insertEmptyParagraphAfter(editor, 0)
+    insertEmptyParagraphAfter(editor, 3) // 在 B 後面再加一個，結尾的空段落要省略
+    const out = save(editor)
+    editor.destroy()
+    expect(out).toBe('A\n\n\n\nB\n')
+  })
+
+  it('存檔後再載入、再存檔，位元組相同（空行由 gapBefore 接手）', () => {
+    const editor = createEditor()
+    load(editor, 'A\n\nB\n')
+    insertEmptyParagraphAfter(editor, 0)
+    const first = save(editor)
+    editor.destroy()
+    expect(roundTrip(first)).toBe(first)
+  })
+
+  it('檔案裡原本就有的 &nbsp; 行維持原樣', () => {
+    const raw = 'A\n\n&nbsp;\n\nB\n'
+    expect(roundTrip(raw)).toBe(raw)
+  })
+
+  it('清單項裡的空段落與沒有空段落的檔案不受影響', () => {
+    const raw = '- a\n-\n- b\n'
+    expect(roundTrip(raw)).toBe(raw)
+    expect(roundTrip('A\n\n\nB\n')).toBe('A\n\n\nB\n')
+  })
+})
+
