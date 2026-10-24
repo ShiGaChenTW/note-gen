@@ -3,6 +3,7 @@ import {
   extractBlock,
   extractSection,
   findBlockIdLine,
+  hideBlockIds,
   listHeadings,
   normalizeHeadingText,
   parseAtxHeading,
@@ -141,3 +142,25 @@ describe('note-section: extractBlock', () => {
     expect(findBlockIdLine(body, 'y')).toBeNull()
   })
 })
+
+describe('hideBlockIds（Issue #15：嵌入顯示時隱藏區塊 id）', () => {
+  it('隱藏行尾的 ^id，保留其他文字', () => {
+    expect(hideBlockIds('段落內容 ^blk-1\n\n- 項目 ^item-1\n- 另一項')).toBe('段落內容\n\n- 項目\n- 另一項')
+  })
+  it('單獨一行的 ^id 整行移除', () => {
+    expect(hideBlockIds('| a | b |\n|---|---|\n| 1 | 2 |\n\n^row-1\n')).toBe('| a | b |\n|---|---|\n| 1 | 2 |\n\n')
+  })
+  it('表格列尾的 ^id 保留管線符號', () => {
+    expect(hideBlockIds('| 1 | 2 | ^row-1')).toBe('| 1 | 2 |')
+  })
+  it('程式碼區塊內與沒有空白的 x^2 不處理', () => {
+    const code = '```\nvalue ^not-an-id\n```'
+    expect(hideBlockIds(code)).toBe(code)
+    expect(hideBlockIds('面積是 x^2')).toBe('面積是 x^2')
+    expect(hideBlockIds('這是 ^ 符號')).toBe('這是 ^ 符號')
+  })
+  it('沒有區塊 id 的內容原樣輸出', () => {
+    expect(hideBlockIds('# 標題\n\n內文')).toBe('# 標題\n\n內文')
+  })
+})
+

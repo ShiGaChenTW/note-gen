@@ -285,6 +285,14 @@ export function canBeTight(prev: JSONContent, next: JSONContent): boolean {
   }
 }
 
+/**
+ * 在編輯器裡新建的空段落（沒有內容、也不是載入時帶著原文的）。
+ * 載入時就存在的 `&nbsp;` 行有原文，仍原樣輸出，既有檔案不會被改動。
+ */
+function isNewEmptyParagraph(node: JSONContent): boolean {
+  return node.type === 'paragraph' && !(node.content?.length) && rawBlockMarkdownIfUnchanged(node) === null
+}
+
 /** 區塊之間要放的換行：依 `gapBefore`，0 只在不改變結構時採用。 */
 export function blockSeparator(prev: JSONContent, next: JSONContent): string {
   const gap = (next.attrs as Record<string, unknown> | undefined)?.[BLOCK_GAP_ATTR]
@@ -306,9 +314,15 @@ export const BlockRoundtripDocument = Node.create({
     const children = node.content ?? []
     let output = ''
     let previous: JSONContent | null = null
+    // Fork (#17)：編輯器裡按 Enter 留下的空段落不再存成 `&nbsp;` 行，改成多一個空行
+    // （Obsidian 開起來是單純的空行）。結尾的空段落直接省略。
+    let extraBlankLines = 0
     for (const child of children) {
+      if (isNewEmptyParagraph(child)) { extraBlankLines++; continue }
       const rendered = rawBlockMarkdownIfUnchanged(child) ?? helpers.renderChildren([child])
-      if (previous) output += blockSeparator(previous, child)
+      if (previous) output += blockSeparator(previous, child) + '\n'.repeat(extraBlankLines)
+      else output += '\n'.repeat(extraBlankLines)
+      extraBlankLines = 0
       output += rendered
       previous = child
     }

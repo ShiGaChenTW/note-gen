@@ -2,7 +2,7 @@
 title: NoteGen Fork 偏離上游清單
 filename: FORK-CHANGES.md
 created: 2026-10-15 05:45 (Asia/Taipei)
-modified: 2026-10-25 01:00 (Asia/Taipei)
+modified: 2026-10-25 02:00 (Asia/Taipei)
 source_llm: Claude (Opus 5.5, Claude Code session)
 status: active
 ---
@@ -112,6 +112,9 @@ npx pnpm@9 install --frozen-lockfile
 | 2026-10-24 | `messages/*.json` | `properties` 加卡片用 17 個 key；`settings.editor.frontmatter`（`sourceLineNumbers` 之前）；六語系皆有翻譯 | PR #24 |
 | 2026-10-25 | `src-tauri/tauri.conf.json`、`.gitignore`、`editor-layout.tsx`、`markdown/style.css`、`main-status-bar.tsx`、`file-dnd.ts`、`file-item.tsx`、`folder-item/index.tsx`、`tiptap-editor.tsx` | 同步上游 39 個 commit（v0.38.3）的衝突解法：`tauri.conf.json` 保留 productName／identifier、採上游版本號；status bar 採上游 rank 制，fork 的 daily-nav／today 改為 rank 86／87；檔案樹改名與搬動採上游同步日誌流程，L7 改寫連結詢問接在交易之外；表格採上游對齊與 `<br>` 儲存格換行但仍包 `withRawTableRoundtrip`；`setContent` 對字串保留 `encodeFrontmatterForEditor` | PR #25 |
 | 2026-10-25 | `src/lib/sync/remote-mutation-recovery.ts`、`file-manager.tsx`、`mobile/writing/custom-header.tsx`、`src/lib/sync/auto-sync.ts` | 修上游 dev 在 v0.38.3 之後無法 `next build` 的問題：`reconcile` 型別加 `NoInfer<T>`（消除 `src/lib/sync` 56 個型別錯誤）、移除 4 處未使用變數；不改執行行為 | PR #25；純 `upstream-dev` 以同一套依賴重現，若上游已修可丟掉這個 commit |
+| 2026-10-25 | `src/stores/vector.ts`、`src/lib/knowledge-index.ts`、`src/lib/config-center/client.ts` | 停用上游對外連線（Issue #16）：儲存後自動算向量預設改為關（`autoVectorEnabled ?? false`，預設嵌入模型打 `api.notegen.top`，每次存檔跳錯誤；要用的人到 RAG 設定打開）；設定中心預設不連線（`fetchConfigCenterConfig` 回傳 `not-modified`，沿用快取與內建設定），要連就在 `store.json` 設 `upstreamConfigCenterEnabled: true`。沒有加設定介面 | 每次存檔都跳 toast 很吵；啟動時 `download.notegen.top` 逾時 3 秒 |
+| 2026-10-25 | `src/lib/markdown/note-section.ts`（`hideBlockIds`）、`wikilink-embed-view.tsx` | 嵌入顯示時隱藏行尾的 ` ^blk-1` 與單獨一行的 `^id`（程式碼區塊與 `x^2` 不處理），只影響顯示、不動檔案（Issue #15） | 像 Obsidian 閱讀模式 |
+| 2026-10-25 | `src/app/core/main/editor/markdown/block-roundtrip-extension.ts` | 編輯器裡新建的空段落（Enter 留下的、沒有原文的）存檔不再輸出 `&nbsp;` 行，改成多一個空行，結尾的空段落省略（Issue #17）；載入時就存在的 `&nbsp;` 行有原文，仍原樣輸出。存檔後重新開檔，這些空段落會變成區塊之間的空行（`gapBefore`），畫面上不再有空段落，位元組不變 | Obsidian 開起來看到字面的 `&nbsp;` |
 
 ## 刻意不改的東西
 
@@ -366,3 +369,10 @@ npx pnpm@9 tauri dev
 4. 開沒有屬性的筆記：頂端出現「一鍵建立 Frontmatter 範本」，title 是檔名；▾ 可換範本；設定 → 編輯器 → 屬性範本 可改範本。
 5. 「移除全部」或刪光屬性：整個 frontmatter 消失，本文不變。
 6. 同步後回歸：雙鏈顯示與點擊、表格不改直接存檔位元組相同、改名被連結的筆記仍跳出「改寫連結」詢問、帶 frontmatter 的長筆記存檔後 frontmatter 不變。
+
+### Phase 2-4 小缺口 #15、#16、#17
+
+1. #16：全新環境存檔、啟動後不再跳「Request failed … api.notegen.top/v1/embeddings」，console 也沒有 `config-manifest.json` 逾時；要恢復用 RAG 設定打開自動向量、`store.json` 設 `upstreamConfigCenterEnabled: true`。
+2. #15：`![[區塊目標]]`、`![[區塊目標#^blk-1]]` 的嵌入裡看不到行尾的 `^blk-1`；被嵌入的檔案本身不變。
+3. #17：新筆記按 Enter 留下空段落再存檔，檔案裡是空行、沒有 `&nbsp;`；用 Obsidian 開同一檔沒有字面 `&nbsp;`；重開檔案後再存，`diff` 為空。含既有 `&nbsp;` 行的檔案存檔不變。
+

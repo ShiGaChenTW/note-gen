@@ -30,7 +30,7 @@ import {
   wikilinkDisplayText,
   type Wikilink,
 } from '@/lib/markdown/wikilink'
-import { extractBlock, extractSection, stripFrontmatter } from '@/lib/markdown/note-section'
+import { extractBlock, extractSection, hideBlockIds, stripFrontmatter } from '@/lib/markdown/note-section'
 import { resolveImagePathFromMarkdown } from '@/lib/markdown-image-path'
 import { noteExists, readNote, revealInFileTree } from '@/lib/daily/note-io'
 import { convertImageByWorkspace } from '@/lib/utils'
@@ -330,7 +330,8 @@ md.renderer.rules.image = (tokens, index, options, envRaw, self) => {
 
 /** 把一篇（或一段）嵌入內容轉成 HTML；`depth` 是這段內容的層數（最外層 1）。 */
 export function renderEmbedHtml(note: EmbedNote, depth = 1, text: EmbedText = EMBED_TEXT): string {
-  return md.render(note.markdown, { note, depth, text } satisfies EmbedEnv)
+  // Fork (#15)：行尾的 ^區塊id 只對 Obsidian 有意義，嵌入顯示時隱藏
+  return md.render(hideBlockIds(note.markdown), { note, depth, text } satisfies EmbedEnv)
 }
 
 // ---------------------------------------------------------------------------
