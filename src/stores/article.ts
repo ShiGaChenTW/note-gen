@@ -1192,7 +1192,9 @@ const useArticleStore = create<NoteState>((set, get) => ({
 
   setLoading: (loading: boolean) => { set({ loading }) },
 
-  sortType: 'none',
+  // Fork (#19)：上游預設 'none' 只把資料夾排前面，檔案照目錄讀取順序；改成與 Obsidian 一樣預設依名稱。
+  // 使用者在檔案工具列選過的排序仍由 initSortSettings 從 store 讀回來覆蓋。
+  sortType: 'name',
   sortDirection: 'asc',
   initSortSettings: async () => {
     const store = await getStore()

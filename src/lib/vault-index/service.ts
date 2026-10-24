@@ -53,6 +53,22 @@ async function loadCache(workspace: string): Promise<Map<string, IndexedNote>> {
   }
 }
 
+/**
+ * Issue #22：正式 build 看不到 console，把每次掃描與增量更新的時間寫到快取旁的
+ * `<hash>.stats.json`，量啟動與索引效能時直接讀檔。`sinceLoadMs` 是網頁載入到這一刻的毫秒數。
+ */
+async function saveStats(workspace: string, stats: Record<string, unknown>): Promise<void> {
+  try {
+    if (!await exists(CACHE_DIR, { baseDir: BaseDirectory.AppData })) {
+      await mkdir(CACHE_DIR, { baseDir: BaseDirectory.AppData, recursive: true })
+    }
+    const payload = { ...stats, at: new Date().toISOString(), sinceLoadMs: Math.round(performance.now()) }
+    await writeTextFile(cacheFileName(workspace).replace(/\.json$/, '.stats.json'), JSON.stringify(payload, null, 2), { baseDir: BaseDirectory.AppData })
+  } catch (error) {
+    console.warn('[vault-index] stats save failed:', error)
+  }
+}
+
 async function saveCache(workspace: string, notes: Map<string, IndexedNote>): Promise<void> {
   if (!await exists(CACHE_DIR, { baseDir: BaseDirectory.AppData })) {
     await mkdir(CACHE_DIR, { baseDir: BaseDirectory.AppData, recursive: true })
@@ -203,6 +219,7 @@ export async function startVaultIndex(workspacePath: string): Promise<VaultIndex
     }
     state.setLastScan(stats)
     console.info(`[vault-index] ${stats.files} files in ${stats.ms}ms (${stats.indexed} read, cache ${fromCache ? 'hit' : 'miss'})`)
+    void saveStats(workspaceKey, { kind: 'scan', ...stats })
     if (indexed.length > 0 || plan.toRemove.length > 0 || missing.length > 0) scheduleSave()
   }
 
@@ -227,11 +244,13 @@ export async function startVaultIndex(workspacePath: string): Promise<VaultIndex
       .map(path => toIndexablePath(path, workspaceKey))
       .filter((path): path is string => path !== null))]
     if (paths.length === 0) return
+    const started = performance.now()
     const { indexed, missing } = await indexPaths(paths)
     if (stopped) return
     const state = useVaultIndexStore.getState()
     state.remove(missing)
     state.upsert(indexed)
+    void saveStats(workspaceKey, { kind: 'event', ms: Math.round(performance.now() - started), paths: paths.length, indexed: indexed.length, missing: missing.length })
     scheduleSave()
   }
 
