@@ -2,7 +2,7 @@
 title: NoteGen Fork 偏離上游清單
 filename: FORK-CHANGES.md
 created: 2026-10-15 05:45 (Asia/Taipei)
-modified: 2026-10-25 02:00 (Asia/Taipei)
+modified: 2026-10-25 03:10 (Asia/Taipei)
 source_llm: Claude (Opus 5.5, Claude Code session)
 status: active
 ---
@@ -115,6 +115,9 @@ npx pnpm@9 install --frozen-lockfile
 | 2026-10-25 | `src/stores/vector.ts`、`src/lib/knowledge-index.ts`、`src/lib/config-center/client.ts` | 停用上游對外連線（Issue #16）：儲存後自動算向量預設改為關（`autoVectorEnabled ?? false`，預設嵌入模型打 `api.notegen.top`，每次存檔跳錯誤；要用的人到 RAG 設定打開）；設定中心預設不連線（`fetchConfigCenterConfig` 回傳 `not-modified`，沿用快取與內建設定），要連就在 `store.json` 設 `upstreamConfigCenterEnabled: true`。沒有加設定介面 | 每次存檔都跳 toast 很吵；啟動時 `download.notegen.top` 逾時 3 秒 |
 | 2026-10-25 | `src/lib/markdown/note-section.ts`（`hideBlockIds`）、`wikilink-embed-view.tsx` | 嵌入顯示時隱藏行尾的 ` ^blk-1` 與單獨一行的 `^id`（程式碼區塊與 `x^2` 不處理），只影響顯示、不動檔案（Issue #15） | 像 Obsidian 閱讀模式 |
 | 2026-10-25 | `src/app/core/main/editor/markdown/block-roundtrip-extension.ts` | 編輯器裡新建的空段落（Enter 留下的、沒有原文的）存檔不再輸出 `&nbsp;` 行，改成多一個空行，結尾的空段落省略（Issue #17）；載入時就存在的 `&nbsp;` 行有原文，仍原樣輸出。存檔後重新開檔，這些空段落會變成區塊之間的空行（`gapBefore`），畫面上不再有空段落，位元組不變 | Obsidian 開起來看到字面的 `&nbsp;` |
+| 2026-10-25 | `src/stores/article.ts` | `sortType` 初始值 `'none'` → `'name'`（一行）：上游預設只把資料夾排前面、檔案照目錄讀取順序，fork 改成與 Obsidian 一樣預設依名稱（數字自然排序），資料夾仍在前；使用者在檔案工具列選過的排序照舊從 store 讀回覆蓋（Issue #19） | 上游選單只有名稱／建立／修改三種，`'none'` 只是沒選過的預設 |
+| 2026-10-25 | `src/app/core/main/editor/markdown/wikilink-extension.ts` | wikilink plugin 的 view 在 `view.dom` 的 capture 階段攔 `mousedown`（左鍵、無 Shift／Alt、目標是 `a[data-type="wikilink"]`）並 `preventDefault`，再在 `click` 開啟；原本編輯器有焦點時瀏覽器會把 DOM 游標放進 atom 文字，ProseMirror 從 selectionchange 讀回來成了 NodeSelection（黃框），`handleClickOn` 那一輪拿不到點擊，要點第二下（Issue #20）。嵌入（`span`）與 ⌘／Ctrl 點擊不受影響，`handleClickOn` 保留當後援 | 單擊一律開啟，與 Obsidian 一致 |
+| 2026-10-25 | `src/lib/vault-index/service.ts` | 每次掃描與增量更新後把統計寫到快取旁的 `vault-index/<hash>.stats.json`（`kind`、`ms`、`files`、`indexed`、`fromCache`、`sinceLoadMs`＝網頁載入到索引就緒的毫秒數、`at`）；只寫 AppData，不碰 vault（Issue #22） | 正式 build 看不到 console，量效能要有地方讀 |
 
 ## 刻意不改的東西
 
@@ -376,3 +379,8 @@ npx pnpm@9 tauri dev
 2. #15：`![[區塊目標]]`、`![[區塊目標#^blk-1]]` 的嵌入裡看不到行尾的 `^blk-1`；被嵌入的檔案本身不變。
 3. #17：新筆記按 Enter 留下空段落再存檔，檔案裡是空行、沒有 `&nbsp;`；用 Obsidian 開同一檔沒有字面 `&nbsp;`；重開檔案後再存，`diff` 為空。含既有 `&nbsp;` 行的檔案存檔不變。
 
+### Phase 2-4 小缺口 #19、#20、#22
+
+1. #19：沒選過排序的工作區（`store.json` 沒有 `sortType`）打開後，檔案樹每一層都是資料夾在前、檔案依名稱（`1.md`、`2.md`、`10.md`）；新建或改名的檔案落在正確位置。檔案工具列「⋯」選過「建立時間」的工作區不受影響。
+2. #20：先點進編輯器內文讓它有焦點，再單擊 `[[雙鏈目標]]`：第一下就開啟目標，連結不會先變成黃框；`![[附件.png]]` 嵌入與 ⌘＋點擊行為不變；Shift＋點擊仍是 ProseMirror 的選取。
+3. #22：`~/Library/Application Support/tw.scottchen.NoteGen/vault-index/<hash>.stats.json` 在每次掃描（`kind: "scan"`）與改檔（`kind: "event"`）後更新，`sinceLoadMs` 是這次網頁載入到索引就緒的時間；量測結果見 `personal/2-4-試用期紀錄.md`。
