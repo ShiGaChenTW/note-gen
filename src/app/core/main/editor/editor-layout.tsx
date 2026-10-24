@@ -16,7 +16,6 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core'
 import { Store } from '@tauri-apps/plugin-store'
-import { listen } from '@tauri-apps/api/event'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { platform } from '@tauri-apps/plugin-os'
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable'
@@ -26,6 +25,7 @@ import { toast } from 'sonner'
 import { useShallow } from 'zustand/react/shallow'
 import { cn } from '@/lib/utils'
 import { checkIsTauri } from '@/lib/check'
+import { listenTauriEvent } from '@/lib/tauri-event-listener'
 import emitter, { type Events } from '@/lib/emitter'
 import useArticleStore, { findFolderInTree, type DirTree } from '@/stores/article'
 import useMarkStore from '@/stores/mark'
@@ -1105,15 +1105,18 @@ export function EditorLayout() {
     }
   }, [activateTab, activeTabId, canDeactivateActiveEditor, openTabs, removeGlobalTabIfUnused, setLayout])
 
+  const handleCloseTabRef = useRef(handleCloseTab)
+  handleCloseTabRef.current = handleCloseTab
+
   useEffect(() => {
     if (!checkIsTauri()) return
 
     let disposed = false
-    const unlistenPromise = listen('editor-close-tab-requested', () => {
+    const unlistenPromise = listenTauriEvent('editor-close-tab-requested', () => {
       if (disposed) return
       const currentLayout = layoutRef.current
       const group = currentLayout.groups[currentLayout.activeGroupId]
-      const tab = openTabs.find(item => item.id === group?.activeTabId)
+      const tab = useArticleStore.getState().openTabs.find(item => item.id === group?.activeTabId)
       const onlyPlaceholder = group?.tabIds.length === 1
         && tab?.kind === 'blank'
         && tab.autoCreated
@@ -1122,14 +1125,15 @@ export function EditorLayout() {
         void getCurrentWindow().hide()
         return
       }
-      handleCloseTab(group.id, group.activeTabId)
+      handleCloseTabRef.current(group.id, group.activeTabId)
     })
+    void unlistenPromise.catch(error => console.error('Failed to listen for editor close requests:', error))
 
     return () => {
       disposed = true
-      void unlistenPromise.then(unlisten => unlisten())
+      void unlistenPromise.then(unlisten => unlisten()).catch(() => undefined)
     }
-  }, [handleCloseTab, openTabs])
+  }, [])
 
   const handleKeepTabs = useCallback((groupId: string, keptTabIds: string[]) => {
     const group = layoutRef.current.groups[groupId]
@@ -1303,12 +1307,14 @@ export function EditorLayout() {
   // Fork (D2): open the Today tab on request (status bar, commands).
   const tToday = useTranslations('today')
   useTodayTabOpener({ layoutReady, layoutRef, setLayout, activateTab, canDeactivateActiveEditor, title: tToday('title') })
+  const handleNewBrowserRef = useRef(handleNewBrowser)
+  handleNewBrowserRef.current = handleNewBrowser
 
   useEffect(() => {
     if (!layoutReady || !checkIsTauri()) return
     let disposed = false
     let unlisten: (() => void) | undefined
-    void import('@tauri-apps/api/event').then(({ listen }) => listen<BrowserNewWindow>('browser:new-window', event => {
+    void listenTauriEvent<BrowserNewWindow>('browser:new-window', event => {
       if (disposed) return
       const { sourceTabId, url } = event.payload
       try {
@@ -1322,8 +1328,8 @@ export function EditorLayout() {
       const group = current.groups[current.activeGroupId]?.tabIds.includes(sourceTabId)
         ? current.groups[current.activeGroupId]
         : Object.values(current.groups).find(item => item.tabIds.includes(sourceTabId))
-      if (group) handleNewBrowser(group.id, url)
-    })).then(stop => {
+      if (group) handleNewBrowserRef.current(group.id, url)
+    }).then(stop => {
       if (disposed) stop()
       else unlisten = stop
     }).catch(error => console.error('Failed to listen for browser new-window requests:', error))
@@ -1331,7 +1337,7 @@ export function EditorLayout() {
       disposed = true
       unlisten?.()
     }
-  }, [handleNewBrowser, layoutReady])
+  }, [layoutReady])
 
   useEffect(() => {
     if (!layoutReady || openTabs.length > 0) return

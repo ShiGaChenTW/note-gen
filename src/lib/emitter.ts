@@ -69,6 +69,7 @@ interface Events {
   'toolbar-shortcut-recording': unknown;
   'mobile-dock-swipe': 'previous' | 'next';
   'toolbar-shortcut-scan': unknown;
+  'desktop-screenshot-trigger': unknown;
   'toolbar-shortcut-text': unknown;
   'toolbar-shortcut-link': unknown;
   'latest-commit-info': {
@@ -83,6 +84,9 @@ interface Events {
   'sync-content-updated': { path: string; content: string; workspaceRoot?: string };
   'sync-push-started': { path: string };
   'sync-push-completed': { path: string; success: boolean; sha?: string };
+  'sync-pulled': { path: string };
+  'sync-directory-completed': { path: string; workspacePath: string; provider: string; success: boolean; error?: string };
+  'sync-engine-completed': { provider: 'selfHosted'; errors: string[] };
   'sync-sha-mismatch': {
     path: string
     workspacePath: string
@@ -138,6 +142,7 @@ interface Events {
   };
   'start-ai-streaming': {
     originalText: string;
+    originalPreserved?: boolean;
     type: string;
     position: { top: number; left: number; right: number; bottom: number };
     controller?: AbortController;

@@ -12,6 +12,8 @@ import {
   testOneDriveConnection,
 } from './onedrive'
 import type { CloudFolderConfig } from '@/types/sync'
+import type { RemoteWriteCondition } from './write-condition'
+import { withRemotePathWriteLock } from './remote-write-lock'
 
 export interface CloudFolderObject {
   key: string
@@ -180,6 +182,10 @@ function requirePath(config: CloudFolderConfig): string {
   return path
 }
 
+export function getAndroidCloudFolderWorkspaceWriteIdentity(config: CloudFolderConfig): string {
+  return JSON.stringify(['androidCloudFolder', requirePath(config), 'workspace'])
+}
+
 async function authorizedPath(config: CloudFolderConfig): Promise<string> {
   if (!config.bookmarkBase64 || platform() !== 'ios') return requirePath(config)
   return (await restoreIOSSyncFolder(config.bookmarkBase64)).path
@@ -208,11 +214,13 @@ export async function cloudFolderUpload(
   config: CloudFolderConfig,
   key: string,
   content: string | Uint8Array,
+  condition?: RemoteWriteCondition,
 ): Promise<CloudFolderObject> {
   if (isOneDriveConfig(config)) {
-    const result = await oneDriveUpload(config, oneDriveSyncKey(key), content)
+    const result = await oneDriveUpload(config, oneDriveSyncKey(key), content, condition)
     return fromOneDriveSyncObject(result)
   }
+  if (condition) throw new Error('SYNC_SWITCH_CONDITIONAL_UNSUPPORTED')
   const root = await authorizedPath(config)
   if (platform() === 'android') {
     return invoke<CloudFolderObject>('write_android_cloud_folder_file', {
@@ -277,8 +285,9 @@ export async function cloudFolderHeadObject(
   return files.find(file => file.key === key) ?? null
 }
 
-export async function cloudFolderDelete(config: CloudFolderConfig, key: string): Promise<boolean> {
-  if (isOneDriveConfig(config)) return oneDriveDelete(config, oneDriveSyncKey(key))
+export async function cloudFolderDelete(config: CloudFolderConfig, key: string, condition?: RemoteWriteCondition): Promise<boolean> {
+  if (isOneDriveConfig(config)) return oneDriveDelete(config, oneDriveSyncKey(key), condition)
+  if (condition) throw new Error('SYNC_SWITCH_CONDITIONAL_UNSUPPORTED')
   const root = await authorizedPath(config)
   if (platform() === 'android') {
     return invoke<boolean>('delete_android_cloud_folder_file', {
@@ -319,13 +328,16 @@ export async function androidCloudFolderWorkspaceUpload(
   config: CloudFolderConfig,
   key: string,
   content: string | Uint8Array,
+  condition?: RemoteWriteCondition,
+  beforeWrite?: () => Promise<void>,
 ): Promise<CloudFolderObject> {
-  if (isOneDriveConfig(config)) return oneDriveUpload(config, key, content)
-  return invoke<CloudFolderObject>('write_android_cloud_folder_file', {
-    rootUri: requirePath(config),
-    key,
-    contentBase64: encodeContent(content),
-    scope: 'workspace',
+  if (isOneDriveConfig(config)) return oneDriveUpload(config, key, content, condition, beforeWrite)
+  if (condition) throw new Error('SYNC_SWITCH_CONDITIONAL_UNSUPPORTED')
+  return withRemotePathWriteLock(getAndroidCloudFolderWorkspaceWriteIdentity(config), [key], async () => {
+    await beforeWrite?.()
+    return invoke<CloudFolderObject>('write_android_cloud_folder_file', {
+      rootUri: requirePath(config), key, contentBase64: encodeContent(content), scope: 'workspace',
+    })
   })
 }
 
@@ -376,12 +388,16 @@ export async function androidCloudFolderWorkspaceHead(
 export async function androidCloudFolderWorkspaceDelete(
   config: CloudFolderConfig,
   key: string,
+  condition?: RemoteWriteCondition,
+  beforeWrite?: () => Promise<void>,
 ): Promise<boolean> {
-  if (isOneDriveConfig(config)) return oneDriveDelete(config, key)
-  return invoke<boolean>('delete_android_cloud_folder_file', {
-    rootUri: requirePath(config),
-    key,
-    scope: 'workspace',
+  if (isOneDriveConfig(config)) return oneDriveDelete(config, key, condition, beforeWrite)
+  if (condition) throw new Error('SYNC_SWITCH_CONDITIONAL_UNSUPPORTED')
+  return withRemotePathWriteLock(getAndroidCloudFolderWorkspaceWriteIdentity(config), [key], async () => {
+    await beforeWrite?.()
+    return invoke<boolean>('delete_android_cloud_folder_file', {
+      rootUri: requirePath(config), key, scope: 'workspace',
+    })
   })
 }
 

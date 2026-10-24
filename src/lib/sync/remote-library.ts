@@ -1,10 +1,12 @@
+import type { RemoteWriteCondition } from './write-condition'
+import { mutateFileConditionally as mutateGitlabFileConditionally } from './gitlab'
 import { exists, mkdir, readDir, readFile, writeFile } from '@tauri-apps/plugin-fs'
 import { dirname } from '@tauri-apps/api/path'
 import { Store } from '@tauri-apps/plugin-store'
-import { deleteFile as deleteGithubFile, getFiles as getGithubFiles, uploadFile as uploadGithubFile } from './github'
-import { deleteFile as deleteGiteeFile, getFiles as getGiteeFiles, uploadFile as uploadGiteeFile } from './gitee'
-import { deleteFile as deleteGitlabFile, getFileContent as getGitlabFileContent, getFiles as getGitlabFiles, uploadFile as uploadGitlabFile } from './gitlab'
-import { deleteFile as deleteGiteaFile, getFileContent as getGiteaFileContent, getFiles as getGiteaFiles, uploadFile as uploadGiteaFile } from './gitea'
+import { deleteFile as deleteGithubFile, getDirectoryFiles as getGithubDirectoryFiles, getFiles as getGithubFiles, uploadFile as uploadGithubFile } from './github'
+import { deleteFile as deleteGiteeFile, getDirectoryFiles as getGiteeDirectoryFiles, getFiles as getGiteeFiles, uploadFile as uploadGiteeFile } from './gitee'
+import { deleteFile as deleteGitlabFile, getFileContent as getGitlabFileContent, getDirectoryFiles as getGitlabDirectoryFiles, uploadFile as uploadGitlabFile } from './gitlab'
+import { deleteFile as deleteGiteaFile, getFileContent as getGiteaFileContent, getDirectoryFiles as getGiteaDirectoryFiles, uploadFile as uploadGiteaFile } from './gitea'
 import { s3Delete, s3DownloadBytes, s3HeadObject, s3ListObjects, s3Upload } from './s3'
 import { webdavDelete, webdavDownloadBytes, webdavHeadObject, webdavListObjects, webdavUpload } from './webdav'
 import {
@@ -16,6 +18,7 @@ import {
   cloudFolderDelete,
   cloudFolderDownloadBytes,
   cloudFolderHeadObject,
+  cloudFolderListObjects,
   cloudFolderUpload,
   supportsCloudFolderWorkspace,
 } from './cloud-folder'
@@ -25,6 +28,11 @@ import { getFilePathOptions } from '@/lib/workspace'
 import { decodeBase64ToBytes, getRemoteFileContent } from './remote-file'
 import type { CloudFolderConfig, S3Config, SyncPlatform, WebDAVConfig } from '@/types/sync'
 import { recordSyncTiming } from './sync-timing'
+import { prepareWorkspacePathUpload, retryWorkspacePathMoves } from './workspace-path-moves'
+import { captureWorkspaceRemoteWriteGuard } from './workspace-remote-write-guard'
+import { getCurrentEditorWorkspaceRoot, runEditorPathWriteTransaction } from '@/lib/editor-deactivation'
+import { getFileDeletionRevision, isFileDeletionPending } from '@/stores/file-deletion'
+import useSettingStore from '@/stores/setting'
 import {
   createStaticAssetSyncMarker,
   rememberStaticAssetSyncMarker,
@@ -76,6 +84,8 @@ const STATIC_ASSET_CONTENT_TYPES: Record<string, string> = {
 export type RemoteLibraryOptions = {
   includeStaticAssets?: boolean
   platform?: SyncPlatform
+  scope?: RemoteRepositoryScope
+  onListProgress?: (path: string, files: number) => void
 }
 
 export type RemoteRepositoryScope = 'workspace' | 'data'
@@ -142,6 +152,8 @@ async function getGitRepository(
 }
 
 function isLibraryPath(path: string, options: RemoteLibraryOptions): boolean {
+  if (path.endsWith('/')) return false
+  if (options.scope === 'data') return path.startsWith('.data/') && !path.split('/').includes('..')
   if (!path || path.startsWith('.') || path.split('/').some(part => part.startsWith('.'))) {
     return false
   }
@@ -161,7 +173,8 @@ async function listGitRemoteFiles(
   platform: Exclude<SyncPlatform, 'local' | 's3' | 'webdav' | 'cloudFolder' | 'selfHosted'>,
   options: RemoteLibraryOptions
 ): Promise<RemoteLibraryFile[]> {
-  const repo = await getSyncRepoName(platform)
+  const repo = await getGitRepository(platform, options.scope || 'workspace')
+  const directoryCache = new Map<string, Promise<unknown>>()
   const queue = ['']
   const visited = new Set<string>()
   const files: RemoteLibraryFile[] = []
@@ -170,29 +183,30 @@ async function listGitRemoteFiles(
     const path = queue.shift() || ''
     if (visited.has(path)) continue
     visited.add(path)
+    options.onListProgress?.(path, files.length)
 
     let result: unknown
     switch (platform) {
       case 'github':
-        result = await getGithubFiles({ path, repo })
+        result = await getGithubDirectoryFiles({ path, repo, cache: directoryCache })
         break
       case 'gitee':
-        result = await getGiteeFiles({ path, repo })
+        result = await getGiteeDirectoryFiles({ path, repo, cache: directoryCache })
         break
       case 'gitlab':
-        result = await getGitlabFiles({ path, repo })
+        result = await getGitlabDirectoryFiles({ path, repo })
         break
       case 'gitea':
-        result = await getGiteaFiles({ path, repo })
+        result = await getGiteaDirectoryFiles({ path, repo })
         break
     }
 
     for (const entry of normalizeGitEntries(result)) {
       const entryPath = entry.path || (path ? `${path}/${entry.name || ''}` : entry.name || '')
-      if (!entryPath || entryPath.split('/').some(part => part.startsWith('.'))) continue
+      if (!entryPath || (options.scope !== 'data' && entryPath.split('/').some(part => part.startsWith('.')))) continue
 
       if (entry.type === 'dir' || entry.type === 'tree') {
-        queue.push(entryPath)
+        if (options.scope !== 'data' || entryPath === '.data' || entryPath.startsWith('.data/')) queue.push(entryPath)
         continue
       }
 
@@ -217,7 +231,7 @@ async function listObjectStorageFiles(
   if (platform === 's3') {
     const config = await store.get<S3Config>('s3SyncConfig')
     if (!config) throw new Error('S3 未配置')
-    const objects = await s3ListObjects(config, '')
+    const objects = await s3ListObjects(config, options.scope === 'data' ? '.data/' : '')
     return objects
       .filter(object => isLibraryPath(object.key, options))
       .map(object => ({
@@ -238,6 +252,7 @@ async function listObjectStorageFiles(
     const path = queue.shift() || ''
     if (visited.has(path)) continue
     visited.add(path)
+    options.onListProgress?.(path, files.length)
     const objects = await webdavListObjects(config, path)
 
     for (const object of objects) {
@@ -247,7 +262,7 @@ async function listObjectStorageFiles(
         : relativeObjectPath.replace(/\/$/, '')
 
       if (object.key.endsWith('/')) {
-        queue.push(objectPath)
+        if (options.scope !== 'data' || objectPath === '.data' || objectPath.startsWith('.data/')) queue.push(objectPath)
       } else if (isLibraryPath(objectPath, options)) {
         files.push({
           path: objectPath,
@@ -268,8 +283,9 @@ async function listRemoteLibraryFilesRaw(options: RemoteLibraryOptions): Promise
   if (platform === 'selfHosted' || platform === 'local') return []
   if (platform === 'cloudFolder') {
     const config = await store.get<CloudFolderConfig>('cloudFolderSyncConfig')
-    if (!config?.path || !supportsCloudFolderWorkspace(config)) return []
-    return (await androidCloudFolderWorkspaceList(config))
+    if (!config?.path) throw new Error('Cloud folder is not configured')
+    if (options.scope !== 'data' && !supportsCloudFolderWorkspace(config)) return []
+    return (await (options.scope === 'data' ? cloudFolderListObjects(config, '.data/') : androidCloudFolderWorkspaceList(config)))
       .filter(object => isLibraryPath(object.key, options))
       .map(object => ({
         path: object.key,
@@ -325,6 +341,7 @@ export async function pullAllRemoteLibraryFiles(
   options: RemoteLibraryOptions = {},
   onProgress?: (progress: PullAllProgress) => void
 ): Promise<PullAllResult> {
+  await retryWorkspacePathMoves()
   const startedAt = Date.now()
   onProgress?.({ phase: 'listing', current: 0, total: 0 })
   const files = await listRemoteLibraryFiles(options)
@@ -342,6 +359,7 @@ export async function pullRemoteLibraryFolder(
   folderPath: string,
   onProgress?: (progress: PullAllProgress) => void
 ): Promise<PullAllResult> {
+  await retryWorkspacePathMoves()
   onProgress?.({ phase: 'listing', current: 0, total: 0 })
   const normalizedFolderPath = folderPath.replace(/^\/+|\/+$/g, '')
   const files = (await listRemoteLibraryFiles({ includeStaticAssets: true }))
@@ -361,6 +379,8 @@ async function pullRemoteLibraryFiles(
   let started = 0
 
   await runWithConcurrency(files, concurrency, async file => {
+    const workspacePath = useSettingStore.getState().workspacePath || ''
+    const deletionRevision = getFileDeletionRevision(file.path, workspacePath)
     started += 1
     onProgress?.({ phase: 'downloading', current: started, total: files.length, path: file.path })
 
@@ -372,7 +392,15 @@ async function pullRemoteLibraryFiles(
         }
 
         const content = await downloadRemoteBytes(file.path)
-        await saveLocalBytes(file.path, content, { operationKey })
+        await saveLocalBytes(file.path, content, {
+          operationKey,
+          beforeWrite: () => {
+            if (isFileDeletionPending(file.path, workspacePath)
+              || getFileDeletionRevision(file.path, workspacePath) !== deletionRevision) {
+              throw new Error('The file was deleted during download')
+            }
+          },
+        })
         result.downloaded += 1
       })
     } catch (error) {
@@ -388,12 +416,22 @@ async function pullRemoteLibraryFiles(
 }
 
 export async function downloadRemoteLibraryFile(path: string): Promise<void> {
+  const workspacePath = useSettingStore.getState().workspacePath || ''
+  const deletionRevision = getFileDeletionRevision(path, workspacePath)
+  if (isFileDeletionPending(path, workspacePath)) throw new Error('The file is being deleted')
+  await retryWorkspacePathMoves()
   await withStaticAssetSyncLock(path, async operationKey => {
     const pathOptions = await getFilePathOptions(path)
     const content = await downloadRemoteBytes(path)
     await saveLocalBytes(path, content, {
       operationKey,
       resolvedPathOptions: pathOptions,
+      beforeWrite: () => {
+        if (isFileDeletionPending(path, workspacePath)
+          || getFileDeletionRevision(path, workspacePath) !== deletionRevision) {
+          throw new Error('The file was deleted during download')
+        }
+      },
     })
   })
 }
@@ -425,6 +463,7 @@ export async function uploadLocalLibraryFolder(
 
 export async function uploadLocalLibraryFile(path: string): Promise<string> {
   return await withStaticAssetSyncLock(path, async operationKey => {
+    await prepareWorkspacePathUpload(path)
     const pathOptions = await getFilePathOptions(path)
     const content = pathOptions.baseDir
       ? await readFile(pathOptions.path, { baseDir: pathOptions.baseDir })
@@ -509,47 +548,60 @@ export async function listLocalLibraryFiles(
   return await collectLocalLibraryFiles('', options)
 }
 
-async function saveLocalBytes(
+export async function saveLocalBytes(
   path: string,
   content: Uint8Array,
   options: {
     operationKey?: string
+    platform?: SyncPlatform
     resolvedPathOptions?: Awaited<ReturnType<typeof getFilePathOptions>>
+    beforeWrite?: () => void
   } = {},
 ): Promise<void> {
-  const { operationKey, resolvedPathOptions } = options
-  if (!resolvedPathOptions) {
-    await ensureDirectoryExists(path)
-  }
-  const pathOptions = resolvedPathOptions ?? await getFilePathOptions(path)
-  const marker = await createStaticAssetSyncMarker(path, content, operationKey)
-  if (resolvedPathOptions) {
-    const parentPath = await dirname(pathOptions.path)
-    if (pathOptions.baseDir) {
-      await mkdir(parentPath, { baseDir: pathOptions.baseDir, recursive: true })
-    } else {
-      await mkdir(parentPath, { recursive: true })
+  const workspaceRoot = await getCurrentEditorWorkspaceRoot()
+  await runEditorPathWriteTransaction(path, async () => {
+    options.beforeWrite?.()
+    if (isFileDeletionPending(path)) throw new Error('The file is being deleted')
+    const { operationKey, resolvedPathOptions } = options
+    if (!resolvedPathOptions) {
+      await ensureDirectoryExists(path)
     }
-  }
-  if (pathOptions.baseDir) {
-    await writeFile(pathOptions.path, content, { baseDir: pathOptions.baseDir })
-  } else {
-    await writeFile(pathOptions.path, content)
-  }
-  rememberStaticAssetSyncMarker(marker)
+    const pathOptions = resolvedPathOptions ?? await getFilePathOptions(path)
+    const marker = await createStaticAssetSyncMarker(path, content, operationKey, options.platform)
+    if (resolvedPathOptions) {
+      const parentPath = await dirname(pathOptions.path)
+      if (pathOptions.baseDir) {
+        await mkdir(parentPath, { baseDir: pathOptions.baseDir, recursive: true })
+      } else {
+        await mkdir(parentPath, { recursive: true })
+      }
+    }
+    options.beforeWrite?.()
+    if (isFileDeletionPending(path)) throw new Error('The file is being deleted')
+    if (pathOptions.baseDir) {
+      await writeFile(pathOptions.path, content, { baseDir: pathOptions.baseDir })
+    } else {
+      await writeFile(pathOptions.path, content)
+    }
+    rememberStaticAssetSyncMarker(marker)
+    return true
+  }, workspaceRoot)
 }
 
 async function downloadRemoteBytesRaw(
   path: string,
   scope: RemoteRepositoryScope = 'workspace',
+  target?: SyncPlatform,
+  onVersion?: (version: string) => void,
 ): Promise<Uint8Array> {
   const store = await Store.load('store.json')
-  const platform = await getPlatform(store)
+  const platform = target ?? await getPlatform(store)
 
   if (platform === 's3') {
     const config = await store.get<S3Config>('s3SyncConfig')
     const file = config ? await s3DownloadBytes(config, path) : null
     if (!file) throw new Error('S3 下载失败')
+    onVersion?.(file.etag)
     return file.content
   }
 
@@ -557,6 +609,7 @@ async function downloadRemoteBytesRaw(
     const config = await store.get<WebDAVConfig>('webdavSyncConfig')
     const file = config ? await webdavDownloadBytes(config, path) : null
     if (!file) throw new Error('WebDAV 下载失败')
+    onVersion?.(file.etag)
     return file.content
   }
 
@@ -570,6 +623,7 @@ async function downloadRemoteBytesRaw(
           : null
       : null
     if (!file) throw new Error('云盘文件夹下载失败')
+    onVersion?.(file.etag)
     return file.content
   }
 
@@ -587,30 +641,39 @@ async function downloadRemoteBytesRaw(
       file = await getGiteeFiles({ path, repo })
       break
     case 'gitlab':
-      file = await getGitlabFileContent({ path, ref: 'main', repo })
+      file = await getGitlabFileContent({ path, repo })
       break
     case 'gitea':
-      file = await getGiteaFileContent({ path, ref: 'main', repo })
+      file = await getGiteaFileContent({ path, repo })
       break
   }
 
+  if (file && typeof file === 'object' && 'sha' in file && typeof file.sha === 'string') onVersion?.(file.sha)
   return decodeBase64ToBytes(getRemoteFileContent(file, path))
 }
 
 export async function downloadRemoteBytes(
+  path: string, scope: RemoteRepositoryScope = 'workspace', platform?: SyncPlatform,
+): Promise<Uint8Array> {
+  return (await downloadRemoteBytesWithVersion(path, scope, platform)).content
+}
+
+export async function downloadRemoteBytesWithVersion(
   path: string,
   scope: RemoteRepositoryScope = 'workspace',
-): Promise<Uint8Array> {
+  platform?: SyncPlatform,
+): Promise<{ content: Uint8Array; version?: string }> {
   const startedAt = Date.now()
   try {
-    const content = await downloadRemoteBytesRaw(path, scope)
+    let version: string | undefined
+    const content = await downloadRemoteBytesRaw(path, scope, platform, value => { version = value })
     recordSyncTiming('fileDownload', startedAt, {
       path,
       scope,
       bytes: content.byteLength,
       success: true,
     })
-    return content
+    return { content, version }
   } catch (error) {
     recordSyncTiming('fileDownload', startedAt, {
       path,
@@ -622,26 +685,24 @@ export async function downloadRemoteBytes(
   }
 }
 
-async function getExistingRemoteSha(platform: Exclude<SyncPlatform, 'local' | 's3' | 'webdav' | 'cloudFolder' | 'selfHosted'>, path: string, repo: string) {
-  let entry: unknown
+async function getGitRemoteFileMetadata(
+  platform: Exclude<SyncPlatform, 'local' | 's3' | 'webdav' | 'cloudFolder' | 'selfHosted'>,
+  path: string, repo: string,
+): Promise<{ version: string; size?: number } | null> {
+  const parent = path.split('/').slice(0, -1).join('/')
+  let files: unknown
   switch (platform) {
-    case 'github':
-      entry = await getGithubFiles({ path, repo })
-      break
-    case 'gitee':
-      entry = await getGiteeFiles({ path, repo })
-      break
-    case 'gitlab':
-      entry = await getGitlabFiles({ path, repo })
-      break
-    case 'gitea':
-      entry = await getGiteaFiles({ path, repo })
-      break
+    case 'github': files = await getGithubDirectoryFiles({ path: parent, repo }); break
+    case 'gitee': files = await getGiteeDirectoryFiles({ path: parent, repo }); break
+    case 'gitlab': files = await getGitlabDirectoryFiles({ path: parent, repo }); break
+    case 'gitea': files = await getGiteaDirectoryFiles({ path: parent, repo }); break
   }
+  const entry = normalizeGitEntries(files).find(file => file.path === path && file.type !== 'dir')
+  return entry ? { version: entry.sha || '', size: entry.size } : null
+}
 
-  return entry && !Array.isArray(entry) && typeof entry === 'object'
-    ? (entry as { sha?: string }).sha
-    : undefined
+async function getExistingRemoteSha(platform: Exclude<SyncPlatform, 'local' | 's3' | 'webdav' | 'cloudFolder' | 'selfHosted'>, path: string, repo: string) {
+  return (await getGitRemoteFileMetadata(platform, path, repo))?.version
 }
 
 function getUploadedRemoteVersion(response: unknown): string {
@@ -672,31 +733,45 @@ async function uploadRemoteContentRaw(
   message: string,
   contentType?: string,
   scope: RemoteRepositoryScope = 'workspace',
+  condition?: RemoteWriteCondition,
+  target?: SyncPlatform,
+  suppliedBeforeWrite?: () => Promise<void>,
 ): Promise<string> {
   const store = await Store.load('store.json')
-  const platform = await getPlatform(store)
+  const platform = target ?? await getPlatform(store)
+  // Platform-switch recovery owns its explicit target and version checks.
+  const switchingTarget = target !== undefined && Boolean(await store.get('platformSwitchRecovery'))
+  // A manual editor push supplies its own canonical-content guard; that
+  // snapshot may legitimately precede the debounced disk save.
+  const capturedGuard = scope === 'workspace' && !switchingTarget
+    ? await captureWorkspaceRemoteWriteGuard(path, platform, true, suppliedBeforeWrite ? undefined : content) : undefined
+  const beforeWrite = capturedGuard || suppliedBeforeWrite ? async () => {
+    await capturedGuard?.()
+    await suppliedBeforeWrite?.()
+  } : undefined
 
   if (platform === 's3') {
     const config = await store.get<S3Config>('s3SyncConfig')
-    const result = config ? await s3Upload(config, path, content, undefined, contentType) : null
+    const result = config ? await s3Upload(config, path, content, undefined, contentType, condition, beforeWrite) : null
     if (!result) throw new Error('S3 上传失败')
     return result.etag || `uploaded:${path}`
   }
 
   if (platform === 'webdav') {
     const config = await store.get<WebDAVConfig>('webdavSyncConfig')
-    const result = config ? await webdavUpload(config, path, content, undefined, contentType) : null
+    const result = config ? await webdavUpload(config, path, content, undefined, contentType, condition, beforeWrite) : null
     if (!result) throw new Error('WebDAV 上传失败')
     return result.etag || `uploaded:${path}`
   }
 
   if (platform === 'cloudFolder') {
     const config = await store.get<CloudFolderConfig>('cloudFolderSyncConfig')
+    if (condition && config?.provider !== 'oneDrive') throw new Error('SYNC_SWITCH_CONDITIONAL_UNSUPPORTED')
     const result = config?.path
       ? scope === 'workspace' && supportsCloudFolderWorkspace(config)
-        ? await androidCloudFolderWorkspaceUpload(config, path, content)
+        ? await androidCloudFolderWorkspaceUpload(config, path, content, condition, beforeWrite)
         : scope === 'data'
-          ? await cloudFolderUpload(config, path, content)
+          ? await cloudFolderUpload(config, path, content, condition)
           : null
       : null
     if (!result) throw new Error('云盘文件夹上传失败')
@@ -708,22 +783,26 @@ async function uploadRemoteContentRaw(
   }
 
   const repo = await getGitRepository(platform, scope)
-  const sha = await getExistingRemoteSha(platform, path, repo)
+  const sha = condition ? condition.version || undefined : await getExistingRemoteSha(platform, path, repo)
   const filename = path.split('/').pop() || path
   let response: unknown
 
   switch (platform) {
     case 'github':
-      response = await uploadGithubFile({ file: content, filename, path, repo, sha, message })
+      response = await uploadGithubFile({ file: content, filename, path, repo, sha, message, guarded: Boolean(condition), beforeWrite })
       break
     case 'gitee':
-      response = await uploadGiteeFile({ file: content, filename, path, repo, sha, message })
+      response = await uploadGiteeFile({ file: content, filename, path, repo, sha, message, guarded: Boolean(condition), beforeWrite })
       break
     case 'gitlab':
-      response = await uploadGitlabFile({ file: content, filename, path, repo, sha, message })
+      if (condition) {
+        await mutateGitlabFileConditionally(path, repo, condition, typeof content === 'string' ? new TextEncoder().encode(content) : content, beforeWrite)
+        return '' // The final listing supplies the new blob version.
+      }
+      response = await uploadGitlabFile({ file: content, filename, path, repo, sha, message, beforeWrite })
       break
     case 'gitea':
-      response = await uploadGiteaFile({ file: content, filename, path, repo, sha, message })
+      response = await uploadGiteaFile({ file: content, filename, path, repo, sha, message, guarded: Boolean(condition), beforeWrite })
       break
   }
 
@@ -737,13 +816,16 @@ async function uploadRemoteContent(
   message: string,
   contentType?: string,
   scope: RemoteRepositoryScope = 'workspace',
+  condition?: RemoteWriteCondition,
+  target?: SyncPlatform,
+  beforeWrite?: () => Promise<void>,
 ): Promise<string> {
   const startedAt = Date.now()
   const bytes = typeof content === 'string'
     ? new TextEncoder().encode(content).byteLength
     : content.byteLength
   try {
-    const version = await uploadRemoteContentRaw(path, content, message, contentType, scope)
+    const version = await uploadRemoteContentRaw(path, content, message, contentType, scope, condition, target, beforeWrite)
     recordSyncTiming('fileUpload', startedAt, { path, scope, bytes, success: true })
     return version
   } catch (error) {
@@ -752,8 +834,15 @@ async function uploadRemoteContent(
   }
 }
 
-export async function uploadRemoteText(path: string, content: string, message: string): Promise<string> {
-  return await uploadRemoteContent(path, content, message)
+export async function uploadRemoteText(path: string, content: string, message: string, beforeWrite?: () => Promise<void>): Promise<string> {
+  return await uploadRemoteContent(path, content, message, undefined, 'workspace', undefined, undefined, beforeWrite)
+}
+
+/** Keep attachment existence checks create-only when backed by OneDrive. */
+export async function getOneDriveCreateOnlyCondition(): Promise<RemoteWriteCondition | undefined> {
+  const store = await Store.load('store.json')
+  if (await getPlatform(store) !== 'cloudFolder') return undefined
+  return (await store.get<CloudFolderConfig>('cloudFolderSyncConfig'))?.provider === 'oneDrive' ? { version: null } : undefined
 }
 
 export async function uploadRemoteBytes(
@@ -762,8 +851,11 @@ export async function uploadRemoteBytes(
   message: string,
   contentType: string,
   scope: RemoteRepositoryScope = 'workspace',
+  condition?: RemoteWriteCondition,
+  target?: SyncPlatform,
+  beforeWrite?: () => Promise<void>,
 ): Promise<string> {
-  return await uploadRemoteContent(path, content, message, contentType, scope)
+  return await uploadRemoteContent(path, content, message, contentType, scope, condition, target, beforeWrite)
 }
 
 export async function downloadRemoteText(path: string): Promise<string> {
@@ -817,51 +909,94 @@ export async function remoteFileExists(
   }
 }
 
+/** Read current version information without requesting the file's body. */
+export async function getRemoteFileMetadata(
+  path: string, scope: RemoteRepositoryScope = 'workspace', target?: SyncPlatform,
+): Promise<{ version: string; size?: number } | null> {
+  const store = await Store.load('store.json')
+  const platform = target ?? await getPlatform(store)
+  if (platform === 's3') {
+    const config = await store.get<S3Config>('s3SyncConfig')
+    if (!config) throw new Error('S3 未配置')
+    const file = await s3HeadObject(config, path)
+    return file ? { version: file.etag } : null
+  }
+  if (platform === 'webdav') {
+    const config = await store.get<WebDAVConfig>('webdavSyncConfig')
+    if (!config) throw new Error('WebDAV 未配置')
+    const file = await webdavHeadObject(config, path)
+    return file ? { version: file.etag } : null
+  }
+  if (platform === 'cloudFolder') {
+    const config = await store.get<CloudFolderConfig>('cloudFolderSyncConfig')
+    if (!config?.path) throw new Error('云盘文件夹未配置')
+    const file = scope === 'workspace' && supportsCloudFolderWorkspace(config)
+      ? await androidCloudFolderWorkspaceHead(config, path)
+      : await cloudFolderHeadObject(config, path)
+    return file ? { version: file.etag, size: file.size } : null
+  }
+  if (platform === 'local' || platform === 'selfHosted') return null
+  const repo = await getGitRepository(platform, scope)
+  return getGitRemoteFileMetadata(platform, path, repo)
+}
+
 export async function deleteRemoteFile(
   path: string,
   scope: RemoteRepositoryScope = 'workspace',
+  condition?: RemoteWriteCondition,
+  target?: SyncPlatform,
+  beforeDelete?: () => Promise<void>,
 ): Promise<boolean> {
+  await beforeDelete?.()
   const store = await Store.load('store.json')
-  const platform = await getPlatform(store)
+  const platform = target ?? await getPlatform(store)
+  const switchingTarget = target !== undefined && Boolean(await store.get('platformSwitchRecovery'))
+  const capturedGuard = scope === 'workspace' && !switchingTarget
+    ? await captureWorkspaceRemoteWriteGuard(path, platform, false) : undefined
+  const beforeWrite = beforeDelete || capturedGuard
+    ? async () => { await beforeDelete?.(); await capturedGuard?.() }
+    : undefined
 
   if (platform === 's3') {
     const config = await store.get<S3Config>('s3SyncConfig')
     if (!config) return false
-    if (!await s3HeadObject(config, path)) return true
-    return s3Delete(config, path)
+    if (!condition && !await s3HeadObject(config, path)) return true
+    return s3Delete(config, path, undefined, condition, beforeWrite)
   }
 
   if (platform === 'webdav') {
     const config = await store.get<WebDAVConfig>('webdavSyncConfig')
     if (!config) return false
-    if (!await webdavHeadObject(config, path)) return true
-    return webdavDelete(config, path)
+    if (!condition && !await webdavHeadObject(config, path)) return true
+    return webdavDelete(config, path, undefined, condition, beforeWrite)
   }
 
   if (platform === 'cloudFolder') {
     const config = await store.get<CloudFolderConfig>('cloudFolderSyncConfig')
+    if (condition && config?.provider !== 'oneDrive') throw new Error('SYNC_SWITCH_CONDITIONAL_UNSUPPORTED')
     if (!config?.path) return false
     if (scope === 'workspace' && supportsCloudFolderWorkspace(config)) {
-      return androidCloudFolderWorkspaceDelete(config, path)
+      return androidCloudFolderWorkspaceDelete(config, path, condition, beforeWrite)
     }
-    if (scope === 'data') return cloudFolderDelete(config, path)
+    if (scope === 'data') return cloudFolderDelete(config, path, condition)
     return false
   }
 
   if (platform === 'selfHosted' || platform === 'local') return false
 
   const repo = await getGitRepository(platform, scope)
-  const sha = await getExistingRemoteSha(platform, path, repo)
-  if (!sha) return true
+  const sha = condition ? condition.version || undefined : await getExistingRemoteSha(platform, path, repo)
+  if (!sha) { if (condition) throw new Error('SYNC_SWITCH_STALE'); return true }
 
   switch (platform) {
     case 'github':
-      return Boolean(await deleteGithubFile({ path, sha, repo }))
+      return Boolean(await deleteGithubFile({ path, sha, repo, guarded: Boolean(condition), beforeWrite }))
     case 'gitee':
-      return Boolean(await deleteGiteeFile({ path, sha, repo }))
+      return Boolean(await deleteGiteeFile({ path, sha, repo, guarded: Boolean(condition), beforeWrite }))
     case 'gitlab':
-      return Boolean(await deleteGitlabFile({ path, repo }))
+      if (condition) return mutateGitlabFileConditionally(path, repo, condition, undefined, beforeWrite)
+      return Boolean(await deleteGitlabFile({ path, repo, beforeWrite }))
     case 'gitea':
-      return Boolean(await deleteGiteaFile({ path, sha, repo }))
+      return Boolean(await deleteGiteaFile({ path, sha, repo, guarded: Boolean(condition), beforeWrite }))
   }
 }

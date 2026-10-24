@@ -54,17 +54,11 @@ import {
 } from '@/components/ui/drawer'
 import { Input } from '@/components/ui/input'
 import { useTranslations } from 'next-intl'
+import useSettingStore from '@/stores/setting'
+import type { EditorEvents } from '@tiptap/core'
+import { OutlineHeadingIndex, type HeadingItem } from './outline-index'
 
 const COLLAPSIBLE_HEADING_LEVELS = new Set([2, 3])
-
-interface HeadingItem {
-  level: number
-  rawText: string
-  text: string
-  id: string
-  pos: number
-  nodeSize: number
-}
 
 interface OutlineProps {
   editor: Editor
@@ -135,7 +129,8 @@ function OutlineHeadingEditInput({
       value={value}
       placeholder={placeholder}
       aria-label={ariaLabel}
-      className="h-7 min-w-0 flex-1 bg-background px-2 py-1 text-sm font-normal text-foreground shadow-none"
+      className="h-7 min-w-0 flex-1 bg-background px-2 py-1 font-normal text-foreground shadow-none"
+      style={{ fontSize: 'inherit' }}
       onChange={(event) => onChange(event.target.value)}
       onClick={(event) => event.stopPropagation()}
       onDoubleClick={(event) => event.stopPropagation()}
@@ -249,7 +244,7 @@ function SortableOutlineItem({
     >
       <div
         className={cn(
-          'group flex min-w-0 items-start rounded text-sm transition-colors',
+          'group flex min-w-0 items-start rounded transition-colors',
           isActive
             ? 'bg-accent text-accent-foreground'
             : 'hover:bg-muted',
@@ -380,6 +375,7 @@ function OutlineItems({
   onDragEnd: (event: DragEndEvent) => void
 }) {
   const t = useTranslations('editor')
+  const textSize = useSettingStore(state => state.fileManagerTextSize)
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -409,7 +405,7 @@ function OutlineItems({
         items={headings.map((heading) => heading.id)}
         strategy={verticalListSortingStrategy}
       >
-        <ul className="flex flex-col gap-1 p-2">
+        <ul className={cn('flex flex-col gap-1 p-2', `text-${textSize}`)}>
           {headings.map((heading) => (
             <SortableOutlineItem
               key={heading.id}
@@ -459,8 +455,8 @@ export function Outline({
   const t = useTranslations('editor')
   // Use ref to always get latest headings in event handlers
   const headingsRef = useRef<HeadingItem[]>([])
-  const headingIdsRef = useRef(new WeakMap<object, string>())
-  const nextHeadingIdRef = useRef(0)
+  const headingIndexRef = useRef<OutlineHeadingIndex | null>(null)
+  if (!headingIndexRef.current) headingIndexRef.current = new OutlineHeadingIndex()
   const outlineScrollContainerRef = useRef<HTMLDivElement>(null)
   const lastAutoExpandedActiveHeadingIdRef = useRef<string | null>(null)
   // Track if editor is ready - use both ref and state
@@ -469,7 +465,7 @@ export function Outline({
   const outlineWidth = normalizeOutlineWidth(width)
 
   const getEditorScrollContainer = useCallback((): HTMLElement | null => {
-    if (!editor?.view?.dom) return null
+    if (!editor || editor.isDestroyed) return null
 
     const root = editor.view.dom.closest('.tiptap-editor')
     const scrollContainer = root?.querySelector('.overflow-y-auto')
@@ -483,16 +479,25 @@ export function Outline({
 
   // Check if editor is ready - wait for view to be available
   useEffect(() => {
+    isEditorReadyRef.current = false
+    setIsReady(false)
     if (!editor) {
-      isEditorReadyRef.current = false
       return
     }
 
+    let cancelled = false
+    let retryTimer: ReturnType<typeof setTimeout> | undefined
+    const resetReadiness = () => {
+      clearTimeout(retryTimer)
+      isEditorReadyRef.current = false
+      setIsReady(false)
+    }
     // Check periodically if editor view is available
     const checkEditor = () => {
-      // Check if editor is destroyed
-      if (!editor || ('isDestroyed' in editor && editor.isDestroyed)) {
-        isEditorReadyRef.current = false
+      clearTimeout(retryTimer)
+      if (cancelled) return
+      if (editor.isDestroyed) {
+        resetReadiness()
         return
       }
 
@@ -507,103 +512,102 @@ export function Outline({
         } catch {
           isEditorReadyRef.current = false
           setIsReady(false)
-          setTimeout(checkEditor, 50)
+          retryTimer = setTimeout(checkEditor, 50)
           return
         }
       } else {
         isEditorReadyRef.current = false
         setIsReady(false)
-        setTimeout(checkEditor, 50)
+        retryTimer = setTimeout(checkEditor, 50)
       }
     }
 
+    editor.on('mount', checkEditor)
+    editor.on('unmount', resetReadiness)
+    editor.on('destroy', resetReadiness)
     checkEditor()
+    return () => {
+      cancelled = true
+      clearTimeout(retryTimer)
+      editor.off('mount', checkEditor)
+      editor.off('unmount', resetReadiness)
+      editor.off('destroy', resetReadiness)
+      isEditorReadyRef.current = false
+    }
   }, [editor])
 
-  // Keep ref in sync with state
-  useEffect(() => {
-    headingsRef.current = headings
-  }, [headings])
+  const publishHeadings = useCallback((nextHeadings: HeadingItem[]) => {
+    const previousHeadings = headingsRef.current
+    if (previousHeadings === nextHeadings) return
+    headingsRef.current = nextHeadings
 
-  // Extract headings from the editor with position info
-  const extractHeadings = useCallback(() => {
-    if (!editor) return []
+    // Body edits only move positions. Keep those in the ref without rendering
+    // the entire outline again on every keystroke.
+    const changed = previousHeadings.length !== nextHeadings.length
+      || nextHeadings.some((heading, index) => {
+        const previous = previousHeadings[index]
+        return heading.id !== previous.id
+          || heading.level !== previous.level
+          || heading.rawText !== previous.rawText
+          || heading.text !== previous.text
+      })
 
-    const items: HeadingItem[] = []
-    editor.state.doc.descendants((node, pos) => {
-      if (node.type.name === 'heading') {
-        const rawLevel = node.attrs.level
-        const level = typeof rawLevel === 'number' ? rawLevel : Number(rawLevel) || 1
-        const rawText = node.textContent.trim()
-        const text = rawText || t('outline.untitledHeading', { level })
-        let id = headingIdsRef.current.get(node)
-        if (!id) {
-          id = `heading-${nextHeadingIdRef.current}`
-          nextHeadingIdRef.current += 1
-          headingIdsRef.current.set(node, id)
-        }
-        const nodeSize = node.nodeSize
-        items.push({
-          level,
-          rawText,
-          text,
-          id,
-          pos,
-          nodeSize,
-        })
-      }
-    })
-
-    return items
-  }, [editor, t])
+    if (changed) setHeadings(nextHeadings)
+  }, [])
 
   // Find the active heading based on cursor position
   const findActiveHeading = useCallback((cursorPos: number): string | null => {
-    if (headings.length === 0) return null
+    const currentHeadings = headingsRef.current
+    if (currentHeadings.length === 0) return null
 
-    let activeId: string | null = null
-
-    for (const heading of headings) {
-      if (heading.pos <= cursorPos) {
-        activeId = heading.id
-        continue
-      }
-
-      break
+    let from = 0
+    let to = currentHeadings.length
+    while (from < to) {
+      const middle = Math.floor((from + to) / 2)
+      if (currentHeadings[middle].pos <= cursorPos) from = middle + 1
+      else to = middle
     }
 
-    return activeId || headings[0]?.id || null
-  }, [headings])
+    return currentHeadings[Math.max(0, from - 1)]?.id ?? null
+  }, [])
 
   // Update headings when editor content changes
   useEffect(() => {
     // Check if editor is fully initialized
-    if (!isOpen || !editor || !editor.view || !editor.view.dom) {
+    if (!isOpen || !isReady || !editor || editor.isDestroyed) {
       return
     }
 
+    const headingIndex = headingIndexRef.current
+    if (!headingIndex) return
+    const untitledHeading = (level: number) => t('outline.untitledHeading', { level })
+
     // Initial extraction
     try {
-      setHeadings(extractHeadings())
+      publishHeadings(headingIndex.rebuild(editor.state.doc, untitledHeading))
     } catch (e) {
-      console.error('[Outline] Error in extractHeadings:', e)
+      console.error('[Outline] Error building heading index:', e)
     }
 
-    // Listen to editor update events to keep headings in sync
-    const handleUpdate = () => {
+    // Transaction events also include silent setContent and appended changes.
+    const handleTransaction = ({ transaction, appendedTransactions }: EditorEvents['transaction']) => {
       try {
-        setHeadings(extractHeadings())
+        publishHeadings(headingIndex.update(
+          editor.state.doc,
+          [transaction, ...appendedTransactions],
+          untitledHeading,
+        ))
       } catch (e) {
-        console.error('[Outline] Error in extractHeadings on update:', e)
+        console.error('[Outline] Error updating heading index:', e)
       }
     }
 
-    editor.on('update', handleUpdate)
+    editor.on('transaction', handleTransaction)
 
     return () => {
-      editor.off('update', handleUpdate)
+      editor.off('transaction', handleTransaction)
     }
-  }, [editor, extractHeadings, isOpen])
+  }, [documentKey, editor, isOpen, isReady, publishHeadings, t])
 
   const outlineMeta = useMemo<OutlineMeta>(() => {
     const ancestorIdsById = new Map<string, string[]>()
@@ -767,8 +771,7 @@ export function Outline({
     editor.commands.focus()
     setActiveHeadingId(id)
     cancelHeadingEdit()
-    setHeadings(extractHeadings())
-  }, [cancelHeadingEdit, editingHeadingText, editor, extractHeadings])
+  }, [cancelHeadingEdit, editingHeadingText, editor])
 
   const moveHeadingSection = useCallback((event: DragEndEvent) => {
     if (!event.over || event.active.id === event.over.id || !editor.isEditable) return
@@ -816,16 +819,6 @@ export function Outline({
     cancelHeadingEdit()
     setCollapsedHeadingIds(new Set())
   }, [cancelHeadingEdit, documentKey])
-
-  useEffect(() => {
-    if (!isOpen) return
-
-    try {
-      setHeadings(extractHeadings())
-    } catch (error) {
-      console.error('[Outline] Error reloading headings:', error)
-    }
-  }, [documentKey, extractHeadings, isOpen])
 
   useEffect(() => {
     if (!editingHeadingId) return
@@ -902,38 +895,47 @@ export function Outline({
   // Find active heading based on scroll position (viewport)
   const findActiveHeadingByScroll = useCallback((): string | null => {
     // Check if editor is fully initialized - use isEditorReadyRef
-    if (!isEditorReadyRef.current || headings.length === 0) return null
+    const currentHeadings = headingsRef.current
+    if (!isEditorReadyRef.current || currentHeadings.length === 0) return null
 
     const scrollContainer = getEditorScrollContainer()
     if (!scrollContainer) return null
 
-    const viewportTop = scrollContainer.getBoundingClientRect().top + 100
-    let activeId: string | null = null
+    const viewport = scrollContainer.getBoundingClientRect()
+    const editorBounds = editor.view.dom.getBoundingClientRect()
+    const viewportTop = Math.min(viewport.top + 100, viewport.bottom - 1, editorBounds.bottom - 1)
+    const hit = editor.view.posAtCoords({
+      left: Math.max(viewport.left, editorBounds.left) + 8,
+      top: Math.max(viewportTop, editorBounds.top + 1),
+    })
+    if (!hit) return null
 
-    // Use the last heading above the viewport top as the current section.
-    for (const heading of headings) {
-      const domNode = editor.view.nodeDOM(heading.pos)
-      if (!(domNode instanceof HTMLElement)) {
-        continue
-      }
-
-      if (domNode.getBoundingClientRect().top <= viewportTop) {
-        activeId = heading.id
-        continue
-      }
-
-      break
+    // Hit-test the visible line, then search the position index. Measuring all
+    // preceding headings makes scrolling near the end depend on document size.
+    let from = 0
+    let to = currentHeadings.length
+    while (from < to) {
+      const middle = Math.floor((from + to) / 2)
+      if (currentHeadings[middle].pos <= hit.pos) from = middle + 1
+      else to = middle
     }
-
-    return activeId || headings[0]?.id || null
-  }, [editor, getEditorScrollContainer, headings])
+    let index = Math.max(0, from - 1)
+    const domNode = editor.view.nodeDOM(currentHeadings[index].pos)
+    if (index > 0 && domNode instanceof HTMLElement && domNode.getBoundingClientRect().top > viewportTop) {
+      index -= 1
+    }
+    return currentHeadings[index]?.id ?? null
+  }, [editor, getEditorScrollContainer])
 
   // Update active heading when selection or scroll changes
   useEffect(() => {
     // Check if editor is fully initialized
-    if (!isOpen || !editor || !editor.view || !editor.view.dom) return
+    if (!isOpen || !editor || editor.isDestroyed) return
+
+    let scrollFrame: number | null = null
 
     const updateActiveHeading = () => {
+      if (editor.isDestroyed) return
       // First try to get heading from cursor position
       const { from } = editor.state.selection
       const activeId = findActiveHeading(from)
@@ -942,10 +944,13 @@ export function Outline({
 
     // Handle scroll - update based on viewport position
     const handleScroll = () => {
-      const scrollActiveId = findActiveHeadingByScroll()
-      if (scrollActiveId) {
-        setActiveHeadingId(scrollActiveId)
-      }
+      if (scrollFrame !== null) return
+      scrollFrame = window.requestAnimationFrame(() => {
+        scrollFrame = null
+        if (editor.isDestroyed) return
+        const scrollActiveId = findActiveHeadingByScroll()
+        if (scrollActiveId) setActiveHeadingId(scrollActiveId)
+      })
     }
 
     updateActiveHeading()
@@ -956,18 +961,19 @@ export function Outline({
     scrollContainer?.addEventListener('scroll', handleScroll, { passive: true })
 
     return () => {
+      if (scrollFrame !== null) window.cancelAnimationFrame(scrollFrame)
       editor.off('selectionUpdate', updateActiveHeading)
       editor.off('transaction', updateActiveHeading)
       scrollContainer?.removeEventListener('scroll', handleScroll)
     }
-  }, [editor, findActiveHeading, findActiveHeadingByScroll, getEditorScrollContainer, headings, isOpen])
+  }, [documentKey, editor, findActiveHeading, findActiveHeadingByScroll, getEditorScrollContainer, isOpen, isReady])
 
   // Scroll to heading when clicked
   const scrollToHeading = useCallback((id: string) => {
     // Use ref to get latest headings to avoid stale closure
     const currentHeadings = headingsRef.current
     const heading = currentHeadings.find(h => h.id === id)
-    if (heading && editor) {
+    if (heading && editor && !editor.isDestroyed) {
       // Use stored position directly - it's calculated from current document
       const targetPos = heading.pos
 
@@ -980,7 +986,9 @@ export function Outline({
 
       // Then scroll into view
       // Use setTimeout to ensure the selection is applied first
+      const documentSnapshot = editor.state.doc
       setTimeout(() => {
+        if (editor.isDestroyed || editor.state.doc !== documentSnapshot || targetPos > documentSnapshot.content.size) return
         const domNode = editor.view.nodeDOM(targetPos)
         if (domNode instanceof HTMLElement) {
           domNode.scrollIntoView({ behavior: 'smooth', block: 'start' })

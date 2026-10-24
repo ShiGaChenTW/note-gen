@@ -1,5 +1,5 @@
 import { BaseDirectory, readFile } from '@tauri-apps/plugin-fs'
-import { platform } from '@tauri-apps/plugin-os'
+import { resolveConversationAssetPath } from '@/lib/conversation-assets'
 import { analyzeImagesWithVlm } from '@/lib/ai/description'
 import {
   getImageAnalysisCache,
@@ -92,23 +92,6 @@ function throwIfAborted(signal?: AbortSignal) {
   if (signal?.aborted) throw abortError()
 }
 
-function resolveLocalImagePath(imageUrl: string): string | null {
-  if (imageUrl.startsWith('data:image')) return null
-
-  try {
-    const url = new URL(imageUrl)
-    let filePath = decodeURIComponent(url.pathname)
-    if (filePath.startsWith('//') && platform() !== 'windows') {
-      filePath = filePath.slice(1)
-    }
-    return platform() === 'windows' && filePath.startsWith('/')
-      ? filePath.slice(1)
-      : filePath
-  } catch {
-    return imageUrl
-  }
-}
-
 function inferMimeType(name: string, fallback = 'image/png') {
   const extension = name.split('.').pop()?.toLowerCase()
   if (extension === 'jpg' || extension === 'jpeg') return 'image/jpeg'
@@ -124,11 +107,9 @@ async function readImageBlob(attachment: ChatImageAttachment) {
     return await fetch(attachment.url).then(response => response.blob())
   }
 
-  const filePath = resolveLocalImagePath(attachment.url)
+  const filePath = resolveConversationAssetPath(attachment.url)
   if (!filePath) throw new Error('IMAGE_PATH_UNAVAILABLE')
-  const bytes = filePath.startsWith('/')
-    ? await readFile(filePath)
-    : await readFile(filePath, { baseDir: BaseDirectory.AppData })
+  const bytes = await readFile(filePath, { baseDir: BaseDirectory.AppData })
   return new Blob([new Uint8Array(bytes)], {
     type: inferMimeType(attachment.name || filePath),
   })

@@ -7,13 +7,10 @@ import { Kbd } from "@/components/ui/kbd";
 import useArticleStore, { DirTree } from "@/stores/article";
 import { BaseDirectory, exists, rename, writeTextFile } from "@tauri-apps/plugin-fs";
 import { moveSelfHostedWorkspacePath } from '@/lib/self-hosted-sync/files'
-import { Copy, Database, Download, ExternalLink, File, FileCode, FileJson, FileLock, FileText, FileUp, FolderOpen, ImageIcon, LoaderCircle, RefreshCwOff, Trash2 } from "lucide-react"
+import { withWorkspacePathMove } from '@/lib/sync/workspace-path-moves'
+import { Copy, Database, Download, ExternalLink, File, FileCode, FileJson, FileLock, FileText, FileUp, FolderOpen, ImageIcon, LoaderCircle, Trash2 } from "lucide-react"
 import { useEffect, useRef, useState, useCallback } from "react";
-import { ask } from '@tauri-apps/plugin-dialog';
 import { platform } from '@tauri-apps/plugin-os';
-import { Store } from '@tauri-apps/plugin-store';
-import { RepoNames } from "@/lib/sync/github.types";
-import { S3Config, WebDAVConfig } from "@/types/sync";
 import { cloneDeep } from "lodash-es";
 import { openPath, revealItemInDir } from "@tauri-apps/plugin-opener";
 import { computedParentPath, getCurrentFolder } from "@/lib/path";
@@ -21,13 +18,6 @@ import { toast } from "@/hooks/use-toast";
 import { useTranslations } from "next-intl";
 import useClipboardStore from "@/stores/clipboard";
 import { appDataDir, join } from '@tauri-apps/api/path';
-import { deleteFile } from "@/lib/sync/github";
-import { deleteFile as deleteGiteeFile } from "@/lib/sync/gitee";
-import { deleteFile as deleteGitlabFile } from "@/lib/sync/gitlab";
-import { deleteFile as deleteGiteaFile } from "@/lib/sync/gitea";
-import { s3Delete } from "@/lib/sync/s3";
-import { webdavDelete } from "@/lib/sync/webdav";
-import { getSyncRepoName } from "@/lib/sync/repo-utils";
 import { generateUniqueFilename } from "@/lib/default-filename";
 import { MobileActionMenu, MobileMenuItem, MobileSeparator } from "./mobile-action-menu";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -38,16 +28,15 @@ import { exportMarkdownFile, type MarkdownExportFormat } from "../editor/markdow
 import { setFileManagerDragData } from "./file-dnd";
 import { debugSyncPath } from "@/lib/sync/remote-file";
 import { BatchSelectionContextMenu } from "./batch-selection-context-menu";
-import { getTopLevelSelectionEntries, type FileSelectionEntry } from "./file-selection";
+import { getTopLevelSelectionEntries, toFileSelectionEntry, type FileSelectionEntry } from "./file-selection";
 import { pasteIntoFolder } from "./folder-item/paste-into-folder";
 import { downloadRemoteLibraryFile, uploadLocalLibraryFile } from "@/lib/sync/remote-library";
 import { useShallow } from 'zustand/react/shallow';
-import { FileTreeRow, type FileTreeItemProps } from "./file-tree-row";
+import { FileTreeRenameProgress, FileTreeRow, type FileTreeItemProps } from "./file-tree-row";
 import { Badge } from '@/components/ui/badge'
 import { getFileTreeSyncStatus, getSyncConfiguration, validateFileTreeName, type FileTreeSyncStatus } from "./file-tree-action-policy";
 import { useSettingsDialogStore } from "@/stores/settings-dialog";
 import { FileTreeDecorations } from "./file-tree-decorations";
-import { moveEntryToSystemTrash } from './system-trash'
 import { rewriteWorkspaceMarkdownMediaPaths } from '@/lib/markdown-media-path'
 import { requestLinkRewrite } from '../link-rewrite/link-rewrite-store' // Fork L7
 import {
@@ -55,6 +44,8 @@ import {
   prepareActiveEditorPathMutationDurably,
 } from '@/lib/editor-deactivation'
 import { canOpenInEditorWindow, openEditorWindow } from '@/lib/editor-windows'
+import { useFileDeletion } from './use-file-deletion'
+import useFileDeletionStore, { isFileDeletionPending } from '@/stores/file-deletion'
 import { PluginFileMenuItems } from '@/components/plugins/plugin-file-menu-items'
 
 type Platform = 'macos' | 'windows' | 'linux' | 'unknown'
@@ -111,6 +102,9 @@ export function FileItem({
   const [isEditing, setIsEditing] = useState(item.isEditing)
   const [name, setName] = useState(item.name)
   const [renameError, setRenameError] = useState<string | null>(null)
+  const [isRenaming, setIsRenaming] = useState(false)
+  const renameInProgressRef = useRef(false)
+  const renameCancelledRef = useRef(false)
   const [, setIsComposing] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const {
@@ -129,8 +123,7 @@ export function FileItem({
     setEntryLoading,
     setEntrySyncError,
     markFileLocal,
-    reconcileLocalFile,
-    clearFileRemoteState,
+    pendingFileTreeRenames,
   } = useArticleStore(useShallow((state) => ({
     activeFilePath: state.activeFilePath,
     setActiveFilePath: state.setActiveFilePath,
@@ -147,11 +140,12 @@ export function FileItem({
     setEntryLoading: state.setEntryLoading,
     setEntrySyncError: state.setEntrySyncError,
     markFileLocal: state.markFileLocal,
-    reconcileLocalFile: state.reconcileLocalFile,
-    clearFileRemoteState: state.clearFileRemoteState,
+    pendingFileTreeRenames: state.pendingFileTreeRenames,
   })))
   const { setClipboardItem, clipboardItem, clipboardItems, clipboardOperation } = useClipboardStore()
-  const { fileManagerTextSize, primaryBackupMethod } = useSettingStore()
+  const { fileManagerTextSize, workspacePath } = useSettingStore()
+  const deleteEntries = useFileDeletion()
+  const pendingDeletionPaths = useFileDeletionStore(state => state.pendingPaths)
   const t = useTranslations('article.file')
   const tCommon = useTranslations('common')
   const tTabs = useTranslations('tabContext')
@@ -166,6 +160,11 @@ export function FileItem({
   }
 
   const path = computedParentPath(item)
+  const pendingRenameTarget = Object.entries(pendingFileTreeRenames)
+    .find(([source, target]) => source === path || target === path)?.[1]
+  const renamePending = isRenaming || Boolean(pendingRenameTarget)
+  const deletionPending = pendingDeletionPaths.length > 0 && isFileDeletionPending(path, workspacePath)
+  const operationPending = renamePending || deletionPending
 
   const readingWorkspacePath = useSettingStore(state => state.workspacePath)
   const tReading = useTranslations('editor.readingMode')
@@ -276,6 +275,7 @@ export function FileItem({
   }, [])
 
   async function handleSelectFile(readOnly = false) {
+    if (operationPending || item.loading) return
     // 让文件管理器获得焦点，以便响应快捷键
     focusSidebar?.()
     const currentPath = computedParentPath(item)
@@ -332,6 +332,7 @@ export function FileItem({
   }
 
   async function handleOpenInNewWindow() {
+    if (operationPending) return
     const opened = await openEditorWindow({
       ...standaloneTab,
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
@@ -340,128 +341,15 @@ export function FileItem({
   }
 
   async function handleDeleteFile() {
-    // 添加确认弹窗
-    const answer = await ask(t('deleteConfirm'), {
-      title: item.name,
-      kind: 'warning',
-    });
-    // 如果用户确认删除，则继续执行
-    if (answer) {
-      try {
-        // 使用当前路径，而不是重新计算的路径
-        const currentPath = computedParentPath(item)
-        if (!await prepareActiveEditorPathMutationDurably(activeFilePath, [currentPath])) return
-        const trashed = await moveEntryToSystemTrash(currentPath)
-
-        reconcileLocalFile(currentPath, false)
-        await cleanTabsByDeletedFile(currentPath)
-        if (vectorIndexedFiles.has(currentPath)) {
-          const nextVectorIndexedFiles = new Map(useArticleStore.getState().vectorIndexedFiles)
-          nextVectorIndexedFiles.delete(currentPath)
-          useArticleStore.setState({ vectorIndexedFiles: nextVectorIndexedFiles })
-        }
-        toast({
-          title: t('context.movedToTrash', { count: trashed ? 1 : 0 }),
-        })
-      } catch (error) {
-        console.error('Delete file failed:', error)
-        toast({
-          title: t('context.deleteLocalFile'),
-          description: '删除文件失败: ' + error,
-          variant: 'destructive'
-        })
-      }
-    }
-  }
-
-  async function handleDeleteSyncFile() {
-    const answer = await ask(t('context.deleteSyncFile') + '?', {
-      title: item.name,
-      kind: 'warning',
-    });
-    if (answer) {
-      const currentPath = computedParentPath(item)
-
-      setEntryLoading(currentPath, true)
-
-      try {
-        // 获取当前主要备份方式
-        const store = await Store.load('store.json');
-        const backupMethod = await store.get<'local' | 'github' | 'gitee' | 'gitlab' | 'gitea' | 's3' | 'webdav' | 'cloudFolder' | 'selfHosted'>('primaryBackupMethod') || 'github';
-        if (backupMethod === 'local' || backupMethod === 'cloudFolder' || backupMethod === 'selfHosted') {
-          setEntryLoading(currentPath, false)
-          return
-        }
-        const repoName = backupMethod === 's3' || backupMethod === 'webdav'
-          ? RepoNames.sync
-          : await getSyncRepoName(backupMethod)
-
-        let success = false
-        switch (backupMethod) {
-          case 'github': {
-            const result = await deleteFile({ path: currentPath, sha: item.sha as string, repo: repoName });
-            success = !!result
-            break;
-          }
-          case 'gitee': {
-            const result = await deleteGiteeFile({ path: currentPath, sha: item.sha as string, repo: repoName });
-            success = result !== false
-            break;
-          }
-          case 'gitlab': {
-            const result = await deleteGitlabFile({ path: currentPath, sha: item.sha as string, repo: repoName });
-            success = !!result
-            break;
-          }
-          case 'gitea': {
-            const result = await deleteGiteaFile({ path: currentPath, sha: item.sha as string, repo: repoName });
-            success = !!result
-            break;
-          }
-          case 's3': {
-            const s3Config = await store.get<S3Config>('s3SyncConfig')
-            if (s3Config) {
-              const result = await s3Delete(s3Config, currentPath)
-              success = result
-            }
-            break;
-          }
-          case 'webdav': {
-            const webdavConfig = await store.get<WebDAVConfig>('webdavSyncConfig')
-            if (webdavConfig) {
-              const result = await webdavDelete(webdavConfig, currentPath)
-              success = result
-            }
-            break;
-          }
-        }
-
-        if (success) {
-          clearFileRemoteState(currentPath)
-
-          toast({
-            title: t('context.delete'),
-            description: t('context.deleteSyncFileSuccess'),
-          });
-        } else {
-          setEntryLoading(currentPath, false)
-          throw new Error('删除操作返回失败')
-        }
-      } catch (error) {
-        setEntryLoading(currentPath, false)
-        console.error('[handleDeleteSyncFile] 删除远程文件失败:', error);
-        toast({
-          title: t('context.delete'),
-          description: t('context.deleteSyncFileError'),
-          variant: 'destructive',
-        });
-      }
-    }
+    if (operationPending || item.loading || item.name === '') return
+    await deleteEntries([toFileSelectionEntry(item)])
   }
 
   async function handleStartRename() {
+    if (operationPending) return
     // 延迟执行，确保上下文菜单完全关闭
     setTimeout(() => {
+      renameCancelledRef.current = false
       setIsEditing(true)
       setRenameError(null)
       setTimeout(() => {
@@ -481,6 +369,21 @@ export function FileItem({
   }
 
   async function handleRename() {
+    if (renameInProgressRef.current || renameCancelledRef.current || pendingRenameTarget) return
+    renameInProgressRef.current = true
+    setIsRenaming(true)
+    try {
+      await commitRename()
+    } catch (error) {
+      setRenameError(error instanceof Error ? error.message : String(error))
+    } finally {
+      renameInProgressRef.current = false
+      setIsRenaming(false)
+      setTimeout(() => inputRef.current?.focus(), 0)
+    }
+  }
+
+  async function commitRename() {
     // 获取工作区路径信息
     const { getFilePathOptions, getWorkspacePath } = await import('@/lib/workspace')
     const workspace = await getWorkspacePath()
@@ -531,13 +434,13 @@ export function FileItem({
       }
       
       // 更新缓存树中的名称
-      if (nextFolder && nextFolder.children) {
+      if (operation === 'create' && nextFolder && nextFolder.children) {
         const fileIndex = nextFolder?.children?.findIndex(file => file.name === originalName)
         if (fileIndex !== undefined && fileIndex !== -1) {
           nextFolder.children[fileIndex].name = displayName
           nextFolder.children[fileIndex].isEditing = false
         }
-      } else {
+      } else if (operation === 'create') {
         const fileIndex = nextTree.findIndex(file => file.name === originalName)
         if (fileIndex !== -1 && fileIndex !== undefined) {
           nextTree[fileIndex].name = displayName
@@ -560,46 +463,57 @@ export function FileItem({
         }
         
         // 根据工作区类型执行重命名操作
+        const renameOperationId = useArticleStore.getState().beginFileTreeRename(path, targetRelativePath)
+        if (!renameOperationId) {
+          setRenameError(tCommon('loading'))
+          return
+        }
         try {
-          if (await moveSelfHostedWorkspacePath(path, targetRelativePath)) {
-            // Rust journal already completed the atomic move.
-          } else if (workspace.isCustom) {
-            await rename(oldPathOptions.path, newPathOptions.path)
-          } else {
-            await rename(oldPathOptions.path, newPathOptions.path, {
-              newPathBaseDir: BaseDirectory.AppData,
-              oldPathBaseDir: BaseDirectory.AppData
-            })
-          }
-          await syncOpenTabsForPathChange(path, targetRelativePath)
-          try {
-            await rewriteWorkspaceMarkdownMediaPaths([{
-              sourcePath: path,
-              targetPath: targetRelativePath,
-            }])
-          } catch (error) {
-            if (await moveSelfHostedWorkspacePath(targetRelativePath, path)) {
-              // Rust journal already completed the rollback.
+          await withWorkspacePathMove(path, targetRelativePath, async () => {
+            if (await moveSelfHostedWorkspacePath(path, targetRelativePath)) {
+              // Rust journal already completed the atomic move.
             } else if (workspace.isCustom) {
-              await rename(newPathOptions.path, oldPathOptions.path)
+              await rename(oldPathOptions.path, newPathOptions.path)
             } else {
-              await rename(newPathOptions.path, oldPathOptions.path, {
+              await rename(oldPathOptions.path, newPathOptions.path, {
                 newPathBaseDir: BaseDirectory.AppData,
-                oldPathBaseDir: BaseDirectory.AppData,
+                oldPathBaseDir: BaseDirectory.AppData
               })
             }
-            await syncOpenTabsForPathChange(targetRelativePath, path)
-            throw error
-          }
-          // Fork L7：改名成功後詢問是否改寫連入的連結；內部自行 catch，不觸發上面的 rollback
+            await syncOpenTabsForPathChange(path, targetRelativePath, false)
+            try {
+              await rewriteWorkspaceMarkdownMediaPaths([{
+                sourcePath: path,
+                targetPath: targetRelativePath,
+              }])
+            } catch (error) {
+              if (await moveSelfHostedWorkspacePath(targetRelativePath, path)) {
+                // Rust journal already completed the rollback.
+              } else if (workspace.isCustom) {
+                await rename(newPathOptions.path, oldPathOptions.path)
+              } else {
+                await rename(newPathOptions.path, oldPathOptions.path, {
+                  newPathBaseDir: BaseDirectory.AppData,
+                  oldPathBaseDir: BaseDirectory.AppData,
+                })
+              }
+              await syncOpenTabsForPathChange(targetRelativePath, path, false)
+              throw error
+            }
+            useArticleStore.getState().completeFileTreeRename(path, targetRelativePath, renameOperationId)
+            setIsEditing(false)
+          })
+          const { renameVectorDocumentsByFilename } = await import('@/db/vector')
+          await renameVectorDocumentsByFilename(path, targetRelativePath)
+          // Fork L7：改名成功後詢問是否改寫連入的連結；內部自行 catch，不影響上面的改名結果
           await requestLinkRewrite([{ sourcePath: path, targetPath: targetRelativePath }])
         } catch (error) {
           setRenameError(error instanceof Error ? error.message : String(error))
           setTimeout(() => inputRef.current?.focus(), 0)
           return
+        } finally {
+          useArticleStore.getState().finishFileTreeRename(path, targetRelativePath, renameOperationId)
         }
-        const { renameVectorDocumentsByFilename } = await import('@/db/vector')
-        await renameVectorDocumentsByFilename(path, targetRelativePath)
       } else {
         // 创建新文件
         const pathOptions = await getFilePathOptions(targetRelativePath)
@@ -625,7 +539,7 @@ export function FileItem({
           }
         }
       }
-      setFileTree(nextTree)
+      if (operation === 'create') setFileTree(nextTree)
       
       // 构建新文件的完整路径用于激活文件
       let newPath = targetRelativePath
@@ -633,11 +547,13 @@ export function FileItem({
       if (newPath.startsWith('/')) {
         newPath = newPath.slice(1)
       }
-      await setActiveFilePath(
-        newPath,
-        shouldAutoSyncOnInitialRead({ isNewFile: true }),
-        { deactivationAlreadyPrepared: true },
-      )
+      if (operation === 'create') {
+        await setActiveFilePath(
+          newPath,
+          shouldAutoSyncOnInitialRead({ isNewFile: true }),
+          { deactivationAlreadyPrepared: true },
+        )
+      }
     } else {
       // 处理取消创建或无变更的情况
       if (originalName === '') {
@@ -697,6 +613,10 @@ export function FileItem({
   }
 
   function handleDragStart(ev: React.DragEvent<HTMLElement>) {
+    if (operationPending) {
+      ev.preventDefault()
+      return
+    }
     const selectedPaths = selectedPathSet.has(path)
       ? getTopLevelSelectionEntries(selectionEntries).map(entry => entry.path)
       : [path]
@@ -704,6 +624,7 @@ export function FileItem({
   }
 
   async function handleCopyFile() {
+    if (isFileDeletionPending(path, workspacePath)) return
     setClipboardItem({
       path,
       name: item.name,
@@ -715,6 +636,7 @@ export function FileItem({
   }
 
   async function handleCutFile() {
+    if (isFileDeletionPending(path, workspacePath)) return
     setClipboardItem({
       path,
       name: item.name,
@@ -726,6 +648,7 @@ export function FileItem({
   }
 
   async function handlePasteFile() {
+    if (isFileDeletionPending(path, workspacePath)) return
     const targetDir = path.includes('/') ? path.split('/').slice(0, -1).join('/') : ''
     await pasteIntoFolder({
       clipboardItem,
@@ -743,6 +666,7 @@ export function FileItem({
   }
 
   async function handleExportFile(format: MarkdownExportFormat) {
+    if (isFileDeletionPending(path, workspacePath)) return
     try {
       setExportingFormat(format)
       const exported = await exportMarkdownFile(
@@ -767,7 +691,7 @@ export function FileItem({
   }
 
   async function handleUploadFile() {
-    if (isUploading || !item.isLocale || item.name === '') return
+    if (operationPending || item.loading || isUploading || !item.isLocale || item.name === '') return
     const sync = await getSyncConfiguration()
     if (!sync.configured) {
       toast({
@@ -811,6 +735,8 @@ export function FileItem({
   }
 
   async function handleEditEnd() {
+    if (renameInProgressRef.current || pendingRenameTarget) return
+    renameCancelledRef.current = true
     if (currentFolder && currentFolder.children) {
       const index = currentFolder?.children?.findIndex(item => item.name === '')
       if (index !== undefined && index !== -1 && currentFolder?.children) {
@@ -831,11 +757,12 @@ export function FileItem({
 
   useEffect(() => {
     if (item.isEditing) {
+      renameCancelledRef.current = false
       setIsEditing(true)
       setName(item.name)
       setTimeout(() => inputRef.current?.focus(), 300);
     }
-  }, [item])
+  }, [item.isEditing, item.name])
 
   // 监听文件管理器统一快捷键触发的自定义事件
   useEffect(() => {
@@ -904,12 +831,29 @@ export function FileItem({
             level={level}
             active={path === activeFilePath}
             selected={isSelected}
+            aria-busy={operationPending}
+            className={renamePending ? 'pointer-events-none' : undefined}
             treeItemProps={treeItemProps}
-            onActivate={handleFileClick}
-            onContextMenu={handleFileContextMenu}
+            onActivate={operationPending ? undefined : handleFileClick}
+            onContextMenu={event => {
+              if (operationPending) event.preventDefault()
+              else handleFileContextMenu(event)
+            }}
+            onKeyDownCapture={event => {
+              if (!operationPending) return
+              event.preventDefault()
+              event.stopPropagation()
+            }}
           >
             {
-              isEditing ? 
+              renamePending ? (
+                <FileTreeRenameProgress
+                  name={pendingRenameTarget?.split('/').pop() || name || item.name}
+                  label={tCommon('loading')}
+                  icon={<File className={`${iconSize} shrink-0`} />}
+                  className={`text-${fileManagerTextSize}`}
+                />
+              ) : isEditing ?
               <div className="flex min-w-0 w-full items-center gap-1 select-none">
                 <File className={`${iconSize} shrink-0`} />
                 <Input
@@ -929,8 +873,12 @@ export function FileItem({
                       e.stopPropagation()
                     }
                     if (e.code === 'Enter' && !e.nativeEvent.isComposing) {
+                      e.preventDefault()
+                      e.stopPropagation()
                       handleRename()
                     } else if (e.code === 'Escape') {
+                      e.preventDefault()
+                      e.stopPropagation()
                       handleEditEnd()
                     }
                   }}
@@ -989,13 +937,8 @@ export function FileItem({
                     <MobileMenuItem disabled={!item.isLocale} onClick={handleStartRename}>
                       {t('context.rename')}
                     </MobileMenuItem>
-                    {primaryBackupMethod !== 'cloudFolder' ? (
-                      <MobileMenuItem disabled={!item.sha} className="text-red-600" onClick={handleDeleteSyncFile}>
-                        {t('context.deleteSyncFile')}
-                      </MobileMenuItem>
-                    ) : null}
-                    <MobileMenuItem disabled={!item.isLocale || item.name === ''} className="text-red-600" onClick={handleDeleteFile}>
-                      {t('context.deleteLocalFile')}
+                    <MobileMenuItem disabled={operationPending || item.loading || item.name === ''} className="text-destructive" onClick={handleDeleteFile}>
+                      {t('context.delete')}
                     </MobileMenuItem>
                   </MobileActionMenu>
                 )}
@@ -1047,13 +990,8 @@ export function FileItem({
                     <MobileMenuItem disabled={!item.isLocale} onClick={handleStartRename}>
                       {t('context.rename')}
                     </MobileMenuItem>
-                    {primaryBackupMethod !== 'cloudFolder' ? (
-                      <MobileMenuItem disabled={!item.sha} className="text-red-600" onClick={handleDeleteSyncFile}>
-                        {t('context.deleteSyncFile')}
-                      </MobileMenuItem>
-                    ) : null}
-                    <MobileMenuItem disabled={!item.isLocale || item.name === ''} className="text-red-600" onClick={handleDeleteFile}>
-                      {t('context.deleteLocalFile')}
+                    <MobileMenuItem disabled={operationPending || item.loading || item.name === ''} className="text-destructive" onClick={handleDeleteFile}>
+                      {t('context.delete')}
                     </MobileMenuItem>
                   </MobileActionMenu>
                 )}
@@ -1061,7 +999,18 @@ export function FileItem({
             }
           </FileTreeRow>
         </ContextMenuTrigger>
-        <ContextMenuContent>
+        <ContextMenuContent
+          onClickCapture={event => {
+            if (!operationPending) return
+            event.preventDefault()
+            event.stopPropagation()
+          }}
+          onKeyDownCapture={event => {
+            if (!operationPending) return
+            event.preventDefault()
+            event.stopPropagation()
+          }}
+        >
           {useSelectionMenu ? (
             <BatchSelectionContextMenu entries={selectionEntries} modKey={modKey} deleteKey={deleteKey} />
           ) : (
@@ -1182,15 +1131,9 @@ export function FileItem({
                   <Kbd>{renameKey}</Kbd>
                 </ContextMenuShortcut>
               </ContextMenuItem>
-              {primaryBackupMethod !== 'cloudFolder' ? (
-                <ContextMenuItem disabled={!item.sha} inset className="text-red-900" onClick={handleDeleteSyncFile} menuType="file">
-                  <RefreshCwOff className="mr-2 h-4 w-4" />
-                  {t('context.deleteSyncFile')}
-                </ContextMenuItem>
-              ) : null}
-              <ContextMenuItem disabled={!item.isLocale || item.name === ''} inset className="text-red-900" onClick={handleDeleteFile} menuType="file">
+              <ContextMenuItem disabled={operationPending || item.loading || item.name === ''} inset className="text-destructive" onClick={handleDeleteFile} menuType="file">
                 <Trash2 className="mr-2 h-4 w-4" />
-                {t('context.deleteLocalFile')}
+                {t('context.delete')}
                 <ContextMenuShortcut menuType="file">
                   <Kbd>{deleteKey}</Kbd>
                 </ContextMenuShortcut>

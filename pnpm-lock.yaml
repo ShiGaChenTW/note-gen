@@ -60,8 +60,8 @@ importers:
         specifier: ^0.6.0
         version: 0.6.0
       '@notegen/plugin-api':
-        specifier: 0.1.11
-        version: 0.1.11
+        specifier: 0.1.12
+        version: 0.1.12
       '@sereneinserenade/tiptap-search-and-replace':
         specifier: ^0.1.1
         version: 0.1.1(@tiptap/core@3.19.0(@tiptap/pm@3.19.0))(@tiptap/pm@3.19.0)
@@ -157,6 +157,9 @@ importers:
         version: 3.19.0(@tiptap/core@3.19.0(@tiptap/pm@3.19.0))
       '@tiptap/extension-link':
         specifier: ^3.19.0
+        version: 3.19.0(@tiptap/core@3.19.0(@tiptap/pm@3.19.0))(@tiptap/pm@3.19.0)
+      '@tiptap/extension-list':
+        specifier: 3.19.0
         version: 3.19.0(@tiptap/core@3.19.0(@tiptap/pm@3.19.0))(@tiptap/pm@3.19.0)
       '@tiptap/extension-node-range':
         specifier: 3.19.0
@@ -272,6 +275,9 @@ importers:
       markdown-it:
         specifier: ^14.1.0
         version: 14.1.0
+      marked:
+        specifier: 17.0.1
+        version: 17.0.1
       mermaid:
         specifier: ^11.12.2
         version: 11.12.2
@@ -1230,8 +1236,8 @@ packages:
     resolution: {integrity: sha512-nn5ozdjYQpUCZlWGuxcJY/KpxkWQs4DcbMCmKojjyrYDEAGy4Ce19NN4v5MduafTwJlbKc99UA8YhSVqq9yPZA==}
     engines: {node: '>=12.4.0'}
 
-  '@notegen/plugin-api@0.1.11':
-    resolution: {integrity: sha512-9Pw1C3++IoeVrV7jnwyMj26Tyu6KsgS5ifn3MZ+Yg1ykoN/f3Ge9sF+FN9u13FF8csG5oskkyBNmpLMygJplng==}
+  '@notegen/plugin-api@0.1.12':
+    resolution: {integrity: sha512-4gxMW+iOvZijUxJKzdzM5gy9nAj3x284OptxyVaHCrmsojtmza1ZaUmqQf7hv+l5OY4+i03+Xs5G9ob7ceg0Fg==}
     engines: {node: '>=20'}
 
   '@parcel/watcher-android-arm64@2.5.6':
@@ -7856,7 +7862,7 @@ snapshots:
 
   '@nolyfill/is-core-module@1.0.39': {}
 
-  '@notegen/plugin-api@0.1.11':
+  '@notegen/plugin-api@0.1.12':
     dependencies:
       yaml: 2.8.0
 

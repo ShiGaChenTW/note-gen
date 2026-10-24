@@ -6,8 +6,10 @@ import { getCurrentFolder } from '@/lib/path'
 import { getFilePathOptions } from '@/lib/workspace'
 import useArticleStore from '@/stores/article'
 import useSettingStore from '@/stores/setting'
+import useFileDeletionStore, { isFileDeletionPending } from '@/stores/file-deletion'
 
 import { isSyncConfigured } from './sync-manager'
+import { prepareWorkspacePathUpload } from './workspace-path-moves'
 import {
   downloadRemoteBytes,
   getRemoteContentType,
@@ -43,6 +45,19 @@ let flushTimer: ReturnType<typeof setTimeout> | null = null
 let activeFlush: Promise<void> | null = null
 let workspaceSwitchPauseDepth = 0
 let syncEpoch = 0
+
+let watchingFileDeletions = false
+
+function watchFileDeletions() {
+  if (watchingFileDeletions) return
+  watchingFileDeletions = true
+  useFileDeletionStore.subscribe(state => {
+    if (!state.progress) return
+    for (const [key, task] of pendingTasks) {
+      if (isFileDeletionPending(task.path, task.workspaceKey)) pendingTasks.delete(key)
+    }
+  })
+}
 
 function normalizeRelativePath(path: string): string {
   return path
@@ -184,6 +199,7 @@ async function uploadChangedStaticAsset(task: StaticAssetTask): Promise<void> {
     && task.workspaceKey === getCurrentWorkspaceKey()
     && task.epoch === syncEpoch
     && useArticleStore.getState().syncStaticAssets
+    && !isFileDeletionPending(task.path, task.workspaceKey)
   )
   if (!isTaskCurrent()) return
 
@@ -198,6 +214,7 @@ async function uploadChangedStaticAsset(task: StaticAssetTask): Promise<void> {
   }
 
   await withStaticAssetSyncLock(task.path, async operationKey => {
+    await prepareWorkspacePathUpload(task.path)
     const localBytes = await readLocalBytes(task.path)
     if (!localBytes || !isTaskCurrent()) return
     if (await matchesRememberedStaticAssetContent(task.path, localBytes, operationKey)) {
@@ -209,15 +226,15 @@ async function uploadChangedStaticAsset(task: StaticAssetTask): Promise<void> {
     try {
       remoteBytes = await downloadRemoteBytes(task.path)
       if (!isTaskCurrent()) return
-      if (bytesEqual(localBytes, remoteBytes)) {
-        rememberStaticAssetSyncMarker(
-          await createStaticAssetSyncMarker(task.path, localBytes, operationKey),
-        )
-        markTaskRemote(task.path)
-        return
-      }
     } catch {
       // A missing or temporarily unreadable remote file still needs an upload attempt.
+    }
+    if (remoteBytes && bytesEqual(localBytes, remoteBytes)) {
+      rememberStaticAssetSyncMarker(
+        await createStaticAssetSyncMarker(task.path, localBytes, operationKey),
+      )
+      markTaskRemote(task.path)
+      return
     }
 
     if (!isTaskCurrent()) return
@@ -325,6 +342,7 @@ async function drainPendingTasks(force: boolean): Promise<void> {
         || task.workspaceKey !== getCurrentWorkspaceKey()
         || task.epoch !== syncEpoch
         || !useArticleStore.getState().syncStaticAssets
+        || isFileDeletionPending(task.path, task.workspaceKey)
       ) {
         continue
       }
@@ -348,9 +366,11 @@ export function enqueueStaticAssetSync(
   path: string,
   source = captureStaticAssetSyncSource(),
 ): void {
+  watchFileDeletions()
   if (!isSourceCurrent(source)) return
 
   const normalizedPath = normalizeRelativePath(path)
+  if (isFileDeletionPending(normalizedPath, source.workspaceKey)) return
   if (!isEligibleStaticImagePath(normalizedPath)) return
   if (!useArticleStore.getState().syncStaticAssets) return
 
@@ -370,9 +390,11 @@ export async function uploadStaticAssetNow(
   path: string,
   source = captureStaticAssetSyncSource(),
 ): Promise<string | undefined> {
+  watchFileDeletions()
   if (!isSourceCurrent(source)) return undefined
 
   const normalizedPath = normalizeRelativePath(path)
+  if (isFileDeletionPending(normalizedPath, source.workspaceKey)) return undefined
   if (!isEligibleStaticImagePath(normalizedPath)) return undefined
 
   const workspaceKey = source.workspaceKey

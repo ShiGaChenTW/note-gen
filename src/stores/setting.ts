@@ -15,6 +15,7 @@ import type { SpeechMode } from '@/lib/speech/types'
 import { applyNoteGenDefaultConfig, loadNoteGenDefaultConfig } from '@/lib/ai/notegen-default-models-runtime'
 import { excludeBuiltInOpenAIProviders, isMainlandChinaAppStore } from '@/lib/ai/storefront-policy'
 import { enqueueAutoDataSync, isAutoDataSyncApplyingRemote } from '@/lib/sync/auto-data-sync-queue'
+import type { InitialDataSyncStrategy } from '@/lib/sync/auto-data-sync-queue'
 import { shouldExcludeFromSync } from '@/config/sync-exclusions'
 import {
   AGENT_CORE_PROMPT_VERSION,
@@ -23,7 +24,10 @@ import {
 import { APP_FONT_SYSTEM_VALUE, applyAppFontFamily } from '@/lib/font-settings'
 import { prepareActiveEditorDeactivation } from '@/lib/editor-deactivation'
 import type { AgentPermissionMode } from '@/lib/agent/types'
+import type { SyncPlatform } from '@/types/sync'
 import { getWorkspaceSyncRepos, setWorkspaceSyncRepo } from '@/lib/sync/workspace-repos'
+import { restoreInterruptedPrimaryPlatform, withPrimaryPlatformLock, type PlatformSwitchRecovery } from '@/lib/sync/platform-switch-recovery'
+import { syncStaleError } from '@/lib/sync/sync-stale-error'
 import {
   DEFAULT_EDITOR_CONTENT_WIDTH,
   DEFAULT_EDITOR_LINE_HEIGHT,
@@ -104,8 +108,32 @@ export interface GenTemplate {
 
 export type CloseBehavior = 'minimize' | 'quit' | 'ask'
 
+interface SettingsHydrationState {
+  status: 'loading' | 'ready' | 'error'
+}
+
+export const useSettingsHydrationStore = create<SettingsHydrationState>(() => ({
+  status: 'loading',
+}))
+
+async function withSettingsHydration(load: () => Promise<void>): Promise<void> {
+  if (useSettingsHydrationStore.getState().status === 'error') {
+    useSettingsHydrationStore.setState({ status: 'loading' })
+  }
+
+  try {
+    await load()
+    useSettingsHydrationStore.setState({ status: 'ready' })
+  } catch (error) {
+    if (useSettingsHydrationStore.getState().status !== 'ready') {
+      useSettingsHydrationStore.setState({ status: 'error' })
+    }
+    throw error
+  }
+}
+
 interface SettingState {
-  initSettingData: () => Promise<void>
+  initSettingData: (options?: { hydrateOnly?: boolean }) => Promise<void>
 
   version: string
   setVersion: () => Promise<void>
@@ -268,7 +296,10 @@ interface SettingState {
 
   // 主要备份方式设置
   primaryBackupMethod: 'local' | 'github' | 'gitee' | 'gitlab' | 'gitea' | 's3' | 'webdav' | 'cloudFolder' | 'selfHosted'
-  setPrimaryBackupMethod: (method: 'local' | 'github' | 'gitee' | 'gitlab' | 'gitea' | 's3' | 'webdav' | 'cloudFolder' | 'selfHosted') => Promise<void>
+  setPrimaryBackupMethod: (method: SettingState['primaryBackupMethod']) => Promise<void>
+  /** Internal final commit; only the verified platform-switch coordinator calls this. */
+  commitVerifiedPrimaryBackupMethod: (method: 'local' | 'github' | 'gitee' | 'gitlab' | 'gitea' | 's3' | 'webdav' | 'cloudFolder' | 'selfHosted', onProgress?: (step: 'preparing' | 'saving' | 'starting' | 'reconciling') => void, strategy?: InitialDataSyncStrategy, reconcile?: () => Promise<void>, assertActive?: () => void) => Promise<void>
+  commitUnverifiedPrimaryBackupMethod: (method: SyncPlatform, assertActive: () => Promise<void>) => Promise<void>
 
   lastSettingPage: string
   setLastSettingPage: (page: string) => Promise<void>
@@ -446,7 +477,9 @@ function getChangedSettingKeys(current: SettingState, previous: SettingState): s
   const previousRecord = previous as unknown as Record<string, unknown>
 
   return Object.keys(currentRecord).filter((key) => {
-    if (typeof currentRecord[key] === 'function') {
+    // Primary selection is persisted only by its final-commit action. A stale
+    // debounced settings snapshot must never overwrite a newer selection.
+    if (key === 'primaryBackupMethod' || typeof currentRecord[key] === 'function') {
       return false
     }
 
@@ -513,7 +546,7 @@ function scheduleChangedSettingsPersist(
   }, SETTING_LOCAL_PERSIST_DEBOUNCE_MS)
 }
 
-async function flushChangedSyncableSettingsPersist() {
+export async function flushChangedSyncableSettingsPersist() {
   if (pendingSettingPersistTimer) {
     clearTimeout(pendingSettingPersistTimer)
     pendingSettingPersistTimer = null
@@ -544,6 +577,7 @@ async function persistChangedSettings(
   const stateRecord = state as unknown as Record<string, unknown>
 
   for (const key of changedKeys) {
+    if (key === 'primaryBackupMethod' || key === 'platformSwitchRecovery') continue
     await store.set(key, stateRecord[key])
   }
 
@@ -555,8 +589,30 @@ async function persistChangedSettings(
 
 
 const useSettingStore = create<SettingState>((set, get) => ({
-  initSettingData: async () => {
+  initSettingData: (options) => withSettingsHydration(async () => {
     const store = await Store.load('store.json');
+    await restoreInterruptedPrimaryPlatform(store)
+    if (options?.hydrateOnly) {
+      // Platform switching has already normalized and persisted its snapshot.
+      // Do not refill defaults or migrate unrelated preferences during verify.
+      const current = get() as unknown as Record<string, unknown>
+      const hydrated: Record<string, unknown> = {}
+      for (const [key, value] of await store.entries()) {
+        if (key in current && typeof current[key] !== 'function' && key !== 'version') hydrated[key] = value
+      }
+      const extension = await store.get<string>('agentSystemPromptExtension')
+      if (typeof extension === 'string') hydrated.systemPrompt = extension
+      await withPrimaryPlatformLock(async () => {
+        hydrated.primaryBackupMethod = await store.get('primaryBackupMethod') || get().primaryBackupMethod
+        const wasReady = settingAutoSyncReady
+        settingAutoSyncReady = false
+        try { set(hydrated as Partial<SettingState>) }
+        finally { settingAutoSyncReady = wasReady }
+      })
+      initSettingAutoSyncSubscription()
+      settingAutoSyncReady = true
+      return
+    }
     await get().setVersion()
 
     const legacyAutoDataSyncEnabled = await store.get<boolean>('autoDataSyncEnabled')
@@ -932,17 +988,20 @@ const useSettingStore = create<SettingState>((set, get) => ({
       : get().workspacePath
     const workspaceRepos = await getWorkspaceSyncRepos(workspacePath)
 
-    set({
-      ...hydratedSettings,
-      githubCustomSyncRepo: workspaceRepos.github || '',
-      giteeCustomSyncRepo: workspaceRepos.gitee || '',
-      gitlabCustomSyncRepo: workspaceRepos.gitlab || '',
-      giteaCustomSyncRepo: workspaceRepos.gitea || '',
-    } as Partial<SettingState>)
+    await withPrimaryPlatformLock(async () => {
+      hydratedSettings.primaryBackupMethod = await store.get('primaryBackupMethod') || get().primaryBackupMethod
+      set({
+        ...hydratedSettings,
+        githubCustomSyncRepo: workspaceRepos.github || '',
+        giteeCustomSyncRepo: workspaceRepos.gitee || '',
+        gitlabCustomSyncRepo: workspaceRepos.gitlab || '',
+        giteaCustomSyncRepo: workspaceRepos.gitea || '',
+      } as Partial<SettingState>)
+    })
 
     initSettingAutoSyncSubscription()
     settingAutoSyncReady = true
-  },
+  }),
 
   version: '',
   setVersion: async () => {
@@ -1470,30 +1529,111 @@ const useSettingStore = create<SettingState>((set, get) => ({
 
   // 默认使用 GitHub 作为主要备份方式
   primaryBackupMethod: 'github',
-  setPrimaryBackupMethod: async (method: 'local' | 'github' | 'gitee' | 'gitlab' | 'gitea' | 's3' | 'webdav' | 'cloudFolder' | 'selfHosted') => {
-    if (method === get().primaryBackupMethod) return
+  setPrimaryBackupMethod: async (method) => {
+    const { switchSyncPlatform } = await import('./sync-platform-switch')
+    await switchSyncPlatform(method)
+  },
+  commitVerifiedPrimaryBackupMethod: async (method: 'local' | 'github' | 'gitee' | 'gitlab' | 'gitea' | 's3' | 'webdav' | 'cloudFolder' | 'selfHosted', onProgress?: (step: 'preparing' | 'saving' | 'starting' | 'reconciling') => void, strategy: InitialDataSyncStrategy = 'auto', reconcile?: () => Promise<void>, assertActive?: () => void) => {
+    assertActive?.()
+    const pendingRecovery = await (await Store.load('store.json')).get<PlatformSwitchRecovery>('platformSwitchRecovery')
+    if (pendingRecovery && (pendingRecovery.commitPlatform ?? pendingRecovery.platform) !== method) throw syncStaleError({ stage: 'verify', path: 'platformSwitchRecovery / commitPlatform', check: 'configuration' })
+    if (method === get().primaryBackupMethod && !reconcile && (pendingRecovery?.commitPlatform ?? pendingRecovery?.platform) !== method) return
 
     const [{ getSyncPushQueue }, autoDataSyncQueue] = await Promise.all([
       import('@/lib/sync/sync-push-queue'),
       import('@/lib/sync/auto-data-sync-queue'),
     ])
     const syncPushQueue = getSyncPushQueue()
+    onProgress?.('preparing')
     await Promise.all([
       syncPushQueue.prepareForWorkspaceSwitch(),
       autoDataSyncQueue.prepareAutoDataSyncForRepositoryChange(),
     ])
 
+    const previous = get().primaryBackupMethod
+    const store = await Store.load('store.json')
+    let committed = false
     try {
-      const store = await Store.load('store.json')
-      await store.set('primaryBackupMethod', method)
-      await store.save()
-      set({ primaryBackupMethod: method })
+      // Reconciliation uses an explicit target. Keep the visible primary until
+      // reconciliation and runtime preparation have both completed.
+      await reconcile?.()
+      onProgress?.('starting')
       const { refreshSelfHostedSyncRuntime } = await import('@/lib/self-hosted-sync/lifecycle')
-      await refreshSelfHostedSyncRuntime()
+      await refreshSelfHostedSyncRuntime(method)
+      onProgress?.('saving')
+      await withPrimaryPlatformLock(async () => {
+        assertActive?.()
+        if (get().primaryBackupMethod !== previous) throw syncStaleError({ stage: 'verify', path: 'primaryBackupMethod', check: 'configuration' })
+        const recovery = await store.get<PlatformSwitchRecovery>('platformSwitchRecovery')
+        if (await store.get('primaryBackupMethod') !== previous) throw syncStaleError({ stage: 'verify', path: 'primaryBackupMethod / store.json', check: 'configuration' })
+        if (recovery && (recovery.commitPlatform ?? recovery.platform) !== method) throw syncStaleError({ stage: 'verify', path: 'platformSwitchRecovery / commitPlatform', check: 'configuration' })
+        if (pendingRecovery && (!recovery || recovery.startedAt !== pendingRecovery.startedAt || recovery.platform !== pendingRecovery.platform)) throw syncStaleError({ stage: 'verify', path: 'platformSwitchRecovery', check: 'configuration' })
+        assertActive?.()
+        const completesSwitch = (recovery?.commitPlatform ?? recovery?.platform) === method
+        let changed = false
+        try {
+          await store.set('primaryBackupMethod', method)
+          changed = true
+          if (completesSwitch) await store.delete('platformSwitchRecovery')
+          assertActive?.()
+          await store.save()
+          // No fallible asynchronous activation after this durable commit.
+          set({ primaryBackupMethod: method })
+          committed = true
+        } catch (error) {
+          if (changed) {
+            await store.set('primaryBackupMethod', previous)
+            if (completesSwitch && recovery) await store.set('platformSwitchRecovery', recovery)
+            await store.save()
+            set({ primaryBackupMethod: previous })
+          }
+          throw error
+        }
+      })
+    } catch (error) {
+      if (method === 'selfHosted') (await import('@/lib/self-hosted-sync/runtime')).getSelfHostedSyncRuntime().stop()
+      throw error
     } finally {
       syncPushQueue.finishWorkspaceSwitch()
-      autoDataSyncQueue.finishAutoDataSyncRepositoryChange()
+      await autoDataSyncQueue.finishAutoDataSyncRepositoryChange(committed ? strategy : 'deferred').catch(error => {
+        console.warn('Platform switch queue cleanup failed', error)
+      })
     }
+  },
+
+
+  commitUnverifiedPrimaryBackupMethod: async (method, assertActive) => {
+    const store = await Store.load('store.json')
+    const previous = get().primaryBackupMethod
+    await withPrimaryPlatformLock(async () => {
+      await assertActive()
+      const recovery = await store.get<PlatformSwitchRecovery>('platformSwitchRecovery')
+      if (!recovery || recovery.platform !== method || !recovery.error
+        || get().primaryBackupMethod !== previous || await store.get('primaryBackupMethod') !== previous) throw syncStaleError({ stage: 'validate', path: 'platformSwitchRecovery / primaryBackupMethod', check: 'configuration' })
+      const skipped: PlatformSwitchRecovery = {
+        ...recovery, resolution: 'skipped', originalPlatform: method, commitPlatform: undefined,
+        skippedFromPlatform: recovery.skippedFromPlatform ?? recovery.originalPlatform ?? previous,
+      }
+      let changed = false
+      try {
+        await assertActive()
+        await store.set('primaryBackupMethod', method)
+        changed = true
+        await store.set('platformSwitchRecovery', skipped)
+        await assertActive()
+        await store.save()
+        // The durable unresolved marker deliberately keeps all sync engines paused.
+        set({ primaryBackupMethod: method })
+      } catch (error) {
+        if (changed) {
+          await store.set('primaryBackupMethod', previous)
+          await store.set('platformSwitchRecovery', recovery)
+          await store.save()
+          set({ primaryBackupMethod: previous })
+        }
+        throw error
+      }
+    })
   },
 
   assetsPath: 'assets',
