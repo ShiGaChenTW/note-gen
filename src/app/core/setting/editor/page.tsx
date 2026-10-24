@@ -11,6 +11,7 @@ import { ItemGroup } from '@/components/ui/item';
 import EditorMode from './editor-mode';
 import ShowSourceLineNumbers from './show-source-line-numbers';
 import SourceWrap from './source-wrap';
+import FrontmatterTemplates from './frontmatter-templates';
 import useSettingStore from '@/stores/setting';
 
 export default function EditorSettingPage() {
@@ -38,6 +39,9 @@ export default function EditorSettingPage() {
           <Outline />
           <ShowUndoRedo />
         </ItemGroup>
+      </SettingSection>
+      <SettingSection title={t('frontmatter.title')} desc={t('frontmatter.desc')}>
+        <FrontmatterTemplates />
       </SettingSection>
     </div>
   </SettingType>

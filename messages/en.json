@@ -220,6 +220,23 @@
     "linkFailed": "Linking failed, the file was restored"
   },
   "properties": {
+    "edit": "Edit",
+    "done": "Done",
+    "collapse": "Collapse properties",
+    "expand": "Expand properties",
+    "removeAll": "Remove all",
+    "createTemplate": "Create frontmatter from template",
+    "chooseTemplate": "Choose another template",
+    "emptyHint": "This note has no properties yet",
+    "collapsedHint": "Collapsed — click the title to expand",
+    "count": "{count} items",
+    "yes": "Yes",
+    "no": "No",
+    "nestedHint": "Nested structure, shown as-is. Use Source to change it",
+    "errorHint": "Invalid YAML. Switch to Source to fix it",
+    "addPlaceholder": "Add…",
+    "suggestions": "Values used in other notes",
+    "templateCreated": "Created from \"{name}\"",
     "title": "Properties",
     "add": "Add property",
     "empty": "This note has no properties yet",
@@ -1302,6 +1319,25 @@
       "sourceMode": {
         "visual": "WYSIWYG",
         "source": "Source mode"
+      },
+      "frontmatter": {
+        "title": "Property templates",
+        "desc": "Templates used when creating frontmatter with one click at the top of a note",
+        "help": "For notes without properties, one click at the top of the editor applies the default template. A template is only the YAML body, without the --- fences.",
+        "vars": {
+          "title": "note file name",
+          "date": "today (YYYY-MM-DD)",
+          "datetime": "now (YYYY-MM-DDTHH:mm)"
+        },
+        "name": "Template name",
+        "yaml": "Template YAML",
+        "makeDefault": "Set as default",
+        "isDefault": "Default",
+        "delete": "Delete template",
+        "invalid": "Invalid YAML",
+        "newName": "New template",
+        "add": "Add template",
+        "reset": "Restore built-in templates"
       },
       "sourceLineNumbers": {
         "title": "Source line numbers",

@@ -220,6 +220,23 @@
     "linkFailed": "轉成連結失敗，檔案已還原"
   },
   "properties": {
+    "edit": "編輯",
+    "done": "完成",
+    "collapse": "收合屬性",
+    "expand": "展開屬性",
+    "removeAll": "移除全部",
+    "createTemplate": "一鍵建立 Frontmatter 範本",
+    "chooseTemplate": "選擇其他範本",
+    "emptyHint": "這篇筆記還沒有屬性",
+    "collapsedHint": "已收合，點標題展開",
+    "count": "{count} 項",
+    "yes": "是",
+    "no": "否",
+    "nestedHint": "巢狀結構，維持原文；要修改請用「原始碼」",
+    "errorHint": "YAML 有誤，請切到「原始碼」修正",
+    "addPlaceholder": "新增…",
+    "suggestions": "vault 內其他筆記用過的值",
+    "templateCreated": "已建立「{name}」範本",
     "title": "屬性",
     "add": "新增屬性",
     "empty": "這篇還沒有屬性",
@@ -881,6 +898,25 @@
       "sourceMode": {
         "visual": "所見即所得",
         "source": "原始碼模式"
+      },
+      "frontmatter": {
+        "title": "屬性範本",
+        "desc": "在筆記頂部一鍵建立 Frontmatter 時使用的範本",
+        "help": "沒有屬性的筆記，可在編輯器頂部一鍵套用預設範本。範本只寫 YAML 內文，不含 ---。",
+        "vars": {
+          "title": "筆記檔名",
+          "date": "今天（YYYY-MM-DD）",
+          "datetime": "現在（YYYY-MM-DDTHH:mm）"
+        },
+        "name": "範本名稱",
+        "yaml": "範本 YAML",
+        "makeDefault": "設為預設",
+        "isDefault": "預設",
+        "delete": "刪除範本",
+        "invalid": "YAML 格式錯誤",
+        "newName": "新範本",
+        "add": "新增範本",
+        "reset": "還原內建範本"
       },
       "sourceLineNumbers": {
         "title": "原始碼行號",

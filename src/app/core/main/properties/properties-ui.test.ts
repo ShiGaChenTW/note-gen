@@ -88,10 +88,10 @@ describe('屬性面板互動', () => {
     const field = container.querySelector('input[aria-label="tags"]')!
     await input(field as HTMLInputElement, 'new')
     await act(async () => field.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })))
-    expect(article.getState().currentArticle).toBe('---\ntags:\n  - old\n  - new\ndone: false\n' + tail)
+    expect(article.getState().currentArticle).toBe('---\ntags: [old, new]\ndone: false\n' + tail)
     await click(container.querySelector(`button[aria-label="${messages.properties.remove} old"]`)!)
     await click(container.querySelector('[role="checkbox"]')!)
-    expect(article.getState().currentArticle).toBe('---\ntags:\n  - new\ndone: true\n' + tail)
+    expect(article.getState().currentArticle).toBe('---\ntags: [new]\ndone: true\n' + tail)
   })
   it('數字失焦寫回、雙擊改名，保留未觸及的行', async () => {
     const tail = 'keep: "原樣" # 註解\n---\nbody'

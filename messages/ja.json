@@ -220,6 +220,23 @@
     "linkFailed": "リンクへの変換に失敗しました。ファイルは元に戻しました"
   },
   "properties": {
+    "edit": "編集",
+    "done": "完了",
+    "collapse": "プロパティを折りたたむ",
+    "expand": "プロパティを展開",
+    "removeAll": "すべて削除",
+    "createTemplate": "テンプレートから Frontmatter を作成",
+    "chooseTemplate": "別のテンプレートを選択",
+    "emptyHint": "このノートにはまだプロパティがありません",
+    "collapsedHint": "折りたたみ中。タイトルをクリックで展開",
+    "count": "{count} 件",
+    "yes": "はい",
+    "no": "いいえ",
+    "nestedHint": "入れ子構造は原文のまま表示します。変更はソースで行ってください",
+    "errorHint": "YAML が正しくありません。ソースで修正してください",
+    "addPlaceholder": "追加…",
+    "suggestions": "他のノートで使われている値",
+    "templateCreated": "「{name}」から作成しました",
     "title": "プロパティ",
     "add": "プロパティを追加",
     "empty": "このノートにはまだプロパティがありません",
@@ -881,6 +898,25 @@
       "sourceMode": {
         "visual": "WYSIWYG",
         "source": "ソースモード"
+      },
+      "frontmatter": {
+        "title": "プロパティテンプレート",
+        "desc": "ノート上部でワンクリックで Frontmatter を作るときのテンプレート",
+        "help": "プロパティのないノートでは、エディタ上部のボタンで既定のテンプレートを適用できます。テンプレートは --- を含まない YAML 本文だけを書きます。",
+        "vars": {
+          "title": "ノートのファイル名",
+          "date": "今日（YYYY-MM-DD）",
+          "datetime": "現在（YYYY-MM-DDTHH:mm）"
+        },
+        "name": "テンプレート名",
+        "yaml": "テンプレート YAML",
+        "makeDefault": "既定にする",
+        "isDefault": "既定",
+        "delete": "テンプレートを削除",
+        "invalid": "YAML の形式エラー",
+        "newName": "新しいテンプレート",
+        "add": "テンプレートを追加",
+        "reset": "組み込みテンプレートに戻す"
       },
       "sourceLineNumbers": {
         "title": "ソースの行番号",

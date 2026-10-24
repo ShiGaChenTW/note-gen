@@ -33,6 +33,7 @@ import 'katex/dist/katex.min.css'
 import { InlineMath, BlockMath } from './math-extension'
 import { MermaidDiagram } from './mermaid-extension'
 import { encodeFrontmatterForEditor, Frontmatter } from './frontmatter-extension'
+import { FrontmatterCreateButton } from './frontmatter-create-button'
 import { RecurringTask } from './recurring-task-extension'
 import { Wikilink } from './wikilink-extension'
 import { BasesBlock } from './bases-block-extension' // Fork (2-3b)：```base 區塊
@@ -8089,6 +8090,7 @@ export function TipTapEditor({
               />,
               editorDragHandleElement,
             ) : null}
+            {!readOnly && !isSectionScope && editor ? <FrontmatterCreateButton editor={editor} path={activeFilePath} /> : null}
             <EditorContent editor={editor} className={cn("relative select-text", scrollable && "h-full")}>
               <SmartFileLink editor={editor} activeFilePath={activeFilePath} />
               <WikilinkSuggest editor={editor} activeFilePath={activeFilePath} />

@@ -6,7 +6,9 @@
 // marker that only this node's tokenizer understands; the node keeps the original
 // YAML text and renderMarkdown() writes it back unchanged.
 import { mergeAttributes, Node } from '@tiptap/core'
+import { ReactNodeViewRenderer } from '@tiptap/react'
 import { splitFrontmatter } from '@/lib/markdown/frontmatter-split'
+import { FrontmatterCardView } from './frontmatter-card-view'
 
 const MARKER_PREFIX = '<!--notegen:frontmatter:'
 const MARKER_SUFFIX = '-->'
@@ -25,12 +27,28 @@ export const Frontmatter = Node.create({
   name: 'frontmatter',
   group: 'block',
   atom: true,
-  selectable: false, // 點選後打字會整塊取代 frontmatter（2-3b 驗收誤觸過一次），一律從屬性面板或原始碼改
+  selectable: false, // 點選後打字會整塊取代 frontmatter（2-3b 驗收誤觸過一次）；改值走卡片、屬性面板或原始碼
   draggable: false,
 
   addAttributes() {
     return {
       raw: { default: '' },
+    }
+  },
+
+  // 卡片取代唯讀 <pre>；renderHTML／parseHTML 不動，複製與匯出路徑照舊。
+  addNodeView() {
+    return ReactNodeViewRenderer(FrontmatterCardView)
+  },
+
+  addKeyboardShortcuts() {
+    return {
+      // 游標在卡片後面的第一個字元前按 Backspace，不要把整塊 frontmatter 刪掉。
+      Backspace: ({ editor }) => {
+        const { selection, doc } = editor.state
+        if (!selection.empty || selection.$from.parentOffset !== 0) return false
+        return doc.resolve(selection.$from.before()).nodeBefore?.type.name === this.name
+      },
     }
   },
 
