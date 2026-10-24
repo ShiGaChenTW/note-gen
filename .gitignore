@@ -107,8 +107,9 @@ docs/.vitepress/cache
 # Local Remotion video workspace
 /remotion/*
 
-# Generated browser plugin worker
+# Generated browser workers
 /public/plugin-runtime.js
+/public/markdown-lexer.js
 
 # graft's local graph cache — regenerable, not committed (run `graft build`).
 /graft/

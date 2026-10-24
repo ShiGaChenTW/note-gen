@@ -16,20 +16,20 @@ export function MainStatusBar() {
   const loadOrder = useStatusBarOrder(state => state.load)
   useEffect(() => { void loadOrder() }, [loadOrder])
   return (
-    <footer className="scrollbar-hide flex h-6 min-h-6 shrink-0 items-center gap-2 overflow-x-auto overflow-y-hidden border-t border-border bg-background px-1 text-xs text-muted-foreground">
+    <footer className="scrollbar-hide flex h-7 min-h-7 shrink-0 items-center gap-2 overflow-x-auto overflow-y-hidden border-t border-border bg-background px-2 text-xs text-muted-foreground">
       <StatusBarItem id="system:sync" rank={0}><UnifiedSyncStatus /></StatusBarItem>
       <StatusBarItem id="system:workspace" rank={10}>
         <FileFooter />
       </StatusBarItem>
+      <StatusBarSpacer id="spacer:before-plugins" rank={15} />
       <div
         id={EDITOR_STATUS_SLOT_ID}
         className="contents"
       />
-      <StatusBarSpacer id="spacer:before-plugins" rank={45} />
       <PluginStatusBarCenter />
-      <StatusBarSpacer id="spacer:after-plugins" rank={56} />
-      <StatusBarItem id="fork:daily-nav" rank={57}><DailyNavStatusItem /></StatusBarItem>
-      <StatusBarItem id="fork:today" rank={58}><TodayStatusItem /></StatusBarItem>
+      <StatusBarSpacer id="spacer:after-plugins" rank={85} />
+      <StatusBarItem id="fork:daily-nav" rank={86}><DailyNavStatusItem /></StatusBarItem>
+      <StatusBarItem id="fork:today" rank={87}><TodayStatusItem /></StatusBarItem>
       <ChatFooter embedded />
     </footer>
   )

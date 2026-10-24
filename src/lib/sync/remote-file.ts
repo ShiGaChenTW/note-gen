@@ -1,3 +1,6 @@
+import { redactSensitiveText } from '@/lib/diagnostics/runtime-log-buffer'
+import { isSyncStaleError, readSyncStaleDetails, syncStaleError, type SyncStaleVersion } from './sync-stale-error'
+
 function encodePath(path: string) {
   return path
     .split('/')
@@ -116,7 +119,7 @@ export function getRemoteFileContent(file: unknown, path: string) {
 }
 
 export function isMissingRemoteFileError(message: string) {
-  return message.includes('远程文件不存在') || message.includes('远程路径指向的是目录')
+  return message.includes('远程文件不存在')
 }
 
 export function hasEmptyRemoteFileContent(file: unknown) {
@@ -153,4 +156,98 @@ export function encodeRemoteFileContent(content: string | Uint8Array): string {
   return typeof content === 'string'
     ? Buffer.from(content, 'utf-8').toString('base64')
     : Buffer.from(content).toString('base64')
+}
+
+// Missing files are represented by null by the transport. Present but empty or
+// malformed snapshots must never become an authoritative empty collection.
+export function syncDataError(kind: 'EMPTY_JSON' | 'INVALID_JSON' | 'INVALID_SCHEMA', path: string) {
+  return new Error(`SYNC_DATA_${kind}: ${path}`)
+}
+
+export function parseSyncJson<T>(content: string, path: string, shape?: 'array' | 'object'): T {
+  const normalized = content.replace(/^\uFEFF/, '')
+  if (!normalized.trim()) throw syncDataError('EMPTY_JSON', path)
+  let parsed: unknown
+  try { parsed = JSON.parse(normalized) }
+  catch { throw syncDataError('INVALID_JSON', path) }
+  if ((shape === 'array' && !Array.isArray(parsed))
+    || (shape === 'object' && (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)))) {
+    throw syncDataError('INVALID_SCHEMA', path)
+  }
+  return parsed as T
+}
+
+export function sanitizeSyncErrorMessage(error: unknown): string {
+  const message = error instanceof Error ? error.message
+    : error && typeof error === 'object' && 'message' in error && typeof error.message === 'string' ? error.message
+      : String(error)
+  const details = readSyncStaleDetails(message)
+  if (details) return syncStaleError(details).message
+  if (message.includes('\n')) return message.split('\n').map(line => sanitizeSyncErrorMessage(line)).join('\n')
+  return redactSensitiveText(message)
+}
+
+export function formatSyncDataError(message: string, translate: (key: string, values: { path: string }) => string): string {
+  message = sanitizeSyncErrorMessage(message)
+  if (message.includes('\n')) return message.split('\n').map(line => formatSyncDataError(line, translate)).join('\n')
+  const giteeRequest = /^SYNC_GITEE_(CONNECTION|REQUEST)_FAILED: ([^\n]+)$/.exec(message)
+  if (giteeRequest) return translate(giteeRequest[1] === 'CONNECTION' ? 'giteeConnectionFailed' : 'giteeRequestFailed', { path: giteeRequest[2] })
+  // Old recovery records may contain native errors with credentials in URLs.
+  if (/error sending request for url/i.test(message)) {
+    const giteeUrl = /https:\/\/gitee\.com\/[^\s)]*/i.exec(message)
+    if (giteeUrl) {
+      try {
+        const url = new URL(giteeUrl[0])
+        return translate('giteeConnectionFailed', { path: `${url.origin}${url.pathname}` })
+      } catch { /* Keep the sanitized original error if the URL is malformed. */ }
+    }
+  }
+  if (message.includes('SYNC_ONEDRIVE_UPLOAD_CONNECTION')) return translate('oneDriveUploadConnection', { path: '' })
+  if (message.includes('SYNC_ONEDRIVE_UPLOAD_PENDING')) return translate('oneDriveUploadPending', { path: '' })
+  if (isSyncStaleError(message)) {
+    const details = readSyncStaleDetails(message)
+    const summary = details?.check === 'unindexed'
+      ? translate('unindexedItemConflict', { path: details.path || '' })
+      : translate('stale', { path: '' })
+    if (!details) return summary
+    const label = (key: string, path = '') => translate(`staleDetails.${key}`, { path })
+    const unknown = label('unknown')
+    const version = (value: SyncStaleVersion | undefined) => [
+      ...(typeof value?.exists === 'boolean' ? [label(value.exists ? 'present' : 'absent')] : []),
+      // Non-Git providers may use opaque ETags instead of object hashes.
+      label(value?.sha && !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/i.test(value.sha) ? 'version' : 'sha', value?.sha ?? unknown),
+      label('size', value?.size != null ? `${value.size} B` : unknown),
+    ].join(' · ')
+    return [
+      summary,
+      label('stage', [label(`stages.${details.stage}`), ...(details.source ? [label(`source.${details.source}`)] : [])].join(' / ')),
+      label('file', details.path || label('unspecifiedPath')),
+      ...(details.check ? [label('check', label(`checks.${details.check === 'unindexed' ? 'content' : details.check}`))] : []),
+      label('expected', version(details.expected)),
+      label('actual', version(details.actual)),
+    ].join('\n')
+  }
+  if (message === 'SYNC_SWITCH_CONDITIONAL_UNSUPPORTED') return translate('conditionalUnsupported', { path: '' })
+  if (message === 'SYNC_SWITCH_RECOVERY_CHANGED') return translate('recoveryChanged', { path: '' })
+  // This guard only exists in older bundles and saved recovery markers. Keep
+  // the error visible, with instructions that can reach the Git upload path.
+  const legacyEmptyUpload = /^SYNC_SWITCH_EMPTY_UPLOAD_UNSUPPORTED: ([^\n]+)$/.exec(message)
+  if (legacyEmptyUpload) return translate('emptyUploadUnsupported', { path: legacyEmptyUpload[1] })
+  const localModule = /^SYNC_SWITCH_LOCAL_VERIFY: (records|tags|canvases|conversations|settings|memories)(?: \/ ([^\n]+))?$/.exec(message)
+  if (localModule) {
+    const moduleLabel = translate(`modules.${localModule[1]}`, { path: '' })
+    return translate('localVerificationFailed', { path: localModule[2] ? `${moduleLabel} / ${localModule[2]}` : moduleLabel })
+  }
+  const match = message.match(/SYNC_(?:DATA|SWITCH)_(EMPTY_JSON|INVALID_JSON|INVALID_SCHEMA): ([^\n]+)/)
+  if (!match) return message
+  const key = match[1] === 'EMPTY_JSON' ? 'emptyJsonFile' : match[1] === 'INVALID_JSON' ? 'invalidJsonFile' : 'invalidSchemaFile'
+  return translate(key, { path: match[2] })
+}
+
+// Keep the native Response.json contract for existing provider result types,
+// while reporting malformed API bodies through the shared error vocabulary.
+export async function readSyncResponseJson(response: Response, path: string): ReturnType<Response['json']> {
+  const value = parseSyncJson<unknown>(await response.text(), path)
+  if (value === null || typeof value !== 'object') throw syncDataError('INVALID_SCHEMA', path)
+  return value
 }

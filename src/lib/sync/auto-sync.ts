@@ -1,3 +1,5 @@
+import { retryWorkspacePathMoves } from './workspace-path-moves'
+import { normalizeRemoteVersion } from './remote-content-cache'
 import { Store } from '@tauri-apps/plugin-store'
 import { fetch, Proxy } from '@tauri-apps/plugin-http'
 import { decodeBase64ToString, getFiles as getGithubFiles, getFileCommits as getGithubFileCommits } from '@/lib/sync/github'
@@ -28,9 +30,9 @@ import {
 } from './conflict-resolution'
 import { sanitizeFilePath, hasInvalidFileNameChars } from './filename-utils'
 import { useSyncConfirmStore } from '@/stores/sync-confirm'
-import useSyncStore from '@/stores/sync'
 import emitter from '@/lib/emitter'
 import useArticleStore from '@/stores/article'
+import { isFileDeletionPending } from '@/stores/file-deletion'
 import {
   markEditorPathMutation,
   prepareActiveEditorDeactivation,
@@ -74,7 +76,7 @@ export async function getLocalRecordedSha(filePath: string): Promise<string | nu
   const store = await getStore()
   const syncedShas = await store.get<Record<string, string>>('syncedFileShas') || {}
   const scopedKey = await getSyncMetadataKey(filePath)
-  if (syncedShas[scopedKey]) return syncedShas[scopedKey]
+  if (Object.prototype.hasOwnProperty.call(syncedShas, scopedKey)) return syncedShas[scopedKey] || null
 
   const context = await getCurrentSyncContext()
   return context.workspaceKey === '__default__' ? syncedShas[filePath] || null : null
@@ -315,6 +317,7 @@ export async function compareFileVersions(path: string): Promise<SyncResult> {
   // 检查当前平台是否是 S3
   const store = await getStore()
   const platform = await store.get<string>('primaryBackupMethod')
+  await retryWorkspacePathMoves()
 
   if (platform === 's3') {
     return compareS3FileVersions(path)
@@ -583,6 +586,7 @@ export async function ensureDirectoryExists(filePath: string): Promise<void> {
  * 保存文件到本地（增强版，处理文件名兼容性和目录创建）
  */
 export async function saveLocalFile(path: string, content: string): Promise<void> {
+  if (isFileDeletionPending(path)) throw new Error('The file is being deleted')
   const workspace = await getWorkspacePath()
   
   // 检查并清理文件名
@@ -594,7 +598,8 @@ export async function saveLocalFile(path: string, content: string): Promise<void
   await ensureDirectoryExists(path)
   
   const pathOptions = await getFilePathOptions(path)
-  
+  if (isFileDeletionPending(path)) throw new Error('The file is being deleted')
+
   try {
     if (workspace.isCustom) {
       await writeTextFile(pathOptions.path, content)
@@ -1128,9 +1133,8 @@ export async function compareS3FileVersions(path: string): Promise<SyncResult> {
   // 获取本地文件的元数据
   const localMeta = await getLocalFileMetadata(path)
 
-  // 从 sync store 获取本地记录的云端 ETag
-  const syncStoreState = useSyncStore.getState()
-  const localRecordedEtag = syncStoreState.s3FileEtags[path]
+  // Keep the accepted version across app restarts and remote path changes.
+  const localRecordedEtag = normalizeRemoteVersion(await getLocalRecordedSha(path) || undefined)
 
   // 获取远程文件的 ETag
   const remoteInfo = await s3HeadObject(config, path, proxy)
@@ -1156,8 +1160,9 @@ export async function compareS3FileVersions(path: string): Promise<SyncResult> {
     }
   }
 
+  const remoteEtag = normalizeRemoteVersion(remoteInfo.etag)
   // 比较 ETag
-  if (localRecordedEtag && localRecordedEtag !== remoteInfo.etag) {
+  if (localRecordedEtag && remoteEtag && localRecordedEtag !== remoteEtag) {
     return {
       shouldUpdate: true,
       action: 'pull',
@@ -1166,7 +1171,7 @@ export async function compareS3FileVersions(path: string): Promise<SyncResult> {
   }
 
   // ETag 匹配
-  if (localRecordedEtag === remoteInfo.etag) {
+  if (localRecordedEtag && localRecordedEtag === remoteEtag) {
     return {
       shouldUpdate: false,
       action: 'none',
@@ -1213,9 +1218,8 @@ export async function compareWebDAVFileVersions(path: string): Promise<SyncResul
   // 获取本地文件的元数据
   const localMeta = await getLocalFileMetadata(path)
 
-  // 从 sync store 获取本地记录的云端 ETag
-  const syncStoreState = useSyncStore.getState()
-  const localRecordedEtag = syncStoreState.webdavFileEtags[path]
+  // Use the durable baseline so a restart or rename does not forget it.
+  const localRecordedEtag = normalizeRemoteVersion(await getLocalRecordedSha(path) || undefined)
 
   // 获取远程文件的 ETag
   const remoteInfo = await webdavHeadObject(config, path, proxy)
@@ -1241,8 +1245,9 @@ export async function compareWebDAVFileVersions(path: string): Promise<SyncResul
     }
   }
 
+  const remoteEtag = normalizeRemoteVersion(remoteInfo.etag)
   // 比较 ETag
-  if (localRecordedEtag && localRecordedEtag !== remoteInfo.etag) {
+  if (localRecordedEtag && remoteEtag && localRecordedEtag !== remoteEtag) {
     return {
       shouldUpdate: true,
       action: 'pull',
@@ -1251,7 +1256,7 @@ export async function compareWebDAVFileVersions(path: string): Promise<SyncResul
   }
 
   // ETag 匹配
-  if (localRecordedEtag === remoteInfo.etag) {
+  if (localRecordedEtag && localRecordedEtag === remoteEtag) {
     return {
       shouldUpdate: false,
       action: 'none',

@@ -1,5 +1,72 @@
 /* Markdown Editor Styles */
 
+.tiptap-editor .heading-fold-control {
+  /* Keep the end-of-heading anchor in the text flow without a layout box.
+     Only the absolutely positioned button has dimensions. */
+  display: inline;
+  position: relative;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.tiptap-editor .heading-fold-toggle {
+  position: absolute;
+  inset-inline-start: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: hsl(var(--muted-foreground));
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.tiptap-editor .heading-foldable:hover .heading-fold-toggle,
+.tiptap-editor .heading-fold-toggle:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.tiptap-editor .heading-fold-toggle svg {
+  width: 14px;
+  height: 14px;
+}
+
+.tiptap-editor .heading-fold-toggle:hover,
+.tiptap-editor .heading-fold-toggle[aria-expanded='false'] {
+  color: hsl(var(--foreground));
+  background: hsl(var(--muted));
+}
+
+.tiptap-editor .heading-fold-toggle:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  border-radius: 3px;
+}
+
+.tiptap-editor .heading-fold-hidden {
+  display: none !important;
+}
+
+@media print {
+  .tiptap-editor .heading-fold-hidden {
+    display: revert !important;
+  }
+  .tiptap-editor .heading-fold-control {
+    display: none;
+  }
+}
+
 /* ========================
    Tiptap 编辑器核心样式
    ======================== */
@@ -50,44 +117,11 @@
   background-color: var(--scrollbar-thumb-active);
 }
 
-/* Large-document section host: inactive sections use static markup while the
-   single active Tiptap instance stays in normal document flow for measurement. */
-.tiptap-editor .sectioned-markdown-editor .sectioned-markdown-preview-content {
-  min-height: 0;
-  padding: 0;
-  overflow-wrap: anywhere;
-}
-
-.tiptap-editor .sectioned-markdown-editor .sectioned-markdown-preview-content > :first-child {
-  margin-top: 0;
-}
-
-.tiptap-editor .sectioned-markdown-editor .sectioned-markdown-preview-content > :last-child {
-  margin-bottom: 0;
-}
-
-.tiptap-editor .sectioned-markdown-editor .sectioned-markdown-image-placeholder {
-  display: inline-flex;
-  min-height: 3rem;
-  align-items: center;
-  border: 1px dashed hsl(var(--border));
-  border-radius: 0.375rem;
-  background: hsl(var(--muted) / 0.25);
-  padding: 0.5rem 0.75rem;
-  color: hsl(var(--muted-foreground));
-  font-size: 0.75rem;
-}
-
-.tiptap-editor .sectioned-markdown-editor .tiptap-editor {
-  height: auto;
-  min-height: 0;
-}
-
 .tiptap-editor .ProseMirror {
   outline: none;
   min-height: 100%;
   padding: 24px 16px;
-  font-size: 16px;
+  font-size: var(--editor-font-size, 16px);
   line-height: var(--editor-line-height);
   color: hsl(var(--foreground));
 }
@@ -102,13 +136,27 @@
 
 .tiptap-editor .ProseMirror .agent-diff-preview-inserted {
   display: block;
-  width: fit-content;
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-wrap: anywhere;
   margin-block: 0.25rem;
   border-radius: 0.2rem;
   background: color-mix(in srgb, #22c55e 18%, transparent);
-  box-decoration-break: clone;
   color: #15803d;
-  white-space: pre-wrap;
+  white-space: normal;
+}
+
+.tiptap-editor .ProseMirror .agent-diff-preview-inserted > :first-child {
+  margin-top: 0;
+}
+
+.tiptap-editor .ProseMirror .agent-diff-preview-inserted > :last-child {
+  margin-bottom: 0;
+}
+
+.tiptap-editor .ProseMirror .agent-diff-preview-inserted [data-type="block-math"] {
+  overflow-x: auto;
 }
 
 .dark .tiptap-editor .ProseMirror .agent-diff-preview-inserted {
@@ -268,7 +316,8 @@
 }
 
 .tiptap-editor .ProseMirror .code-block-language-trigger {
-  width: 78px;
+  width: 144px;
+  flex-shrink: 0;
   height: 26px;
   min-height: 26px;
   padding: 0 6px;
@@ -295,6 +344,7 @@
 
 .code-block-language-trigger-label {
   min-width: 0;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -693,9 +743,23 @@
    ======================== */
 
 /* 表格容器 */
+.editor-table-scrollbar {
+  z-index: 30;
+  border-radius: 4px;
+  background-color: hsl(var(--background) / 0.95);
+  box-shadow: 0 0 0 1px hsl(var(--border)), 0 2px 6px hsl(var(--foreground) / 0.08);
+}
+
+.editor-table-scrollbar:focus-within {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
 .tiptap-editor .ProseMirror .tableWrapper {
   margin: 1em 0;
   overflow-x: auto;
+  width: 100%;
+  min-width: 0;
   max-width: 100%;
 }
 
@@ -764,31 +828,38 @@
   text-align: left;
 }
 
-/* 表格调整大小手柄 */
-.tiptap-editor .ProseMirror .tableResizeHandle {
+/* 表格列宽拖拽边界 */
+.tiptap-editor .ProseMirror.resize-cursor {
+  cursor: col-resize;
+}
+
+.tiptap-editor .ProseMirror .column-resize-handle {
   position: absolute;
-  right: -4px;
+  z-index: 2;
+  right: -3px;
   top: 0;
   bottom: 0;
-  width: 8px;
+  width: 6px;
   cursor: col-resize;
   background-color: transparent;
+  pointer-events: none;
 }
 
-.tiptap-editor .ProseMirror .tableResizeHandle:hover {
-  background-color: hsl(var(--primary) / 0.5);
-}
-
-.tiptap-editor .ProseMirror .tableResizeHandle::before {
+.tiptap-editor .ProseMirror .column-resize-handle::after {
   content: '';
   position: absolute;
   left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 4px;
-  height: 20px;
-  background-color: hsl(var(--primary) / 0.3);
-  border-radius: 2px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  transform: translateX(-50%);
+  background-color: hsl(var(--primary) / 0.65);
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.tiptap-editor .ProseMirror.resize-cursor .column-resize-handle::after {
+  opacity: 1;
 }
 
 /* 表格工具栏样式 */
@@ -876,7 +947,7 @@
 
 .tiptap-editor .ProseMirror ul[data-type="taskList"] li {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   line-height: var(--editor-line-height);
 }
@@ -888,8 +959,10 @@
   user-select: none;
   cursor: pointer;
   width: 16px;
-  height: 16px;
+  /* Align with the first text line, regardless of nested lists or wrapping. */
+  height: calc(1em * var(--editor-line-height));
   min-width: 16px;
+  flex-shrink: 0;
 }
 
 .tiptap-editor .ProseMirror ul[data-type="taskList"] li > label input[type="checkbox"],
@@ -961,6 +1034,11 @@
 /* 任务列表内容区域 */
 .tiptap-editor .ProseMirror ul[data-type="taskList"] li > div {
   flex: 1;
+  min-width: 0;
+}
+
+.tiptap-editor .ProseMirror ul[data-type="taskList"] li > div > p:first-child {
+  margin-top: 0;
 }
 
 /* 嵌套任务列表 */
@@ -1042,6 +1120,13 @@
   touch-action: none;
 }
 
+.tiptap-drag-handle [data-slot="button"]:focus-visible {
+  /* Keep keyboard focus visible without the full-size toolbar button ring. */
+  outline: none;
+  border-color: transparent;
+  box-shadow: inset 0 0 0 1px hsl(var(--muted-foreground) / 0.45);
+}
+
 .tiptap-drag-handle[data-dragging="true"] [data-editor-block-drag-trigger] {
   cursor: grabbing;
 }
@@ -1050,14 +1135,29 @@
   visibility: hidden;
 }
 
-.tiptap-editor .ProseMirror .tiptap-block-drag-preview-source {
-  display: none;
+.tiptap-editor .tiptap-block-drag-preview {
+  position: fixed;
+  z-index: 60;
+  margin: 0;
+  padding: 0;
+  min-height: 0;
+  box-sizing: border-box;
+
+  pointer-events: none;
 }
 
-.tiptap-editor .ProseMirror .tiptap-block-drag-preview {
-  opacity: 0.72;
-  filter: saturate(0.8);
+.tiptap-editor .tiptap-block-drop-indicator {
+  position: fixed;
+  z-index: 61;
+  height: 2px;
+  border-radius: 1px;
+  background: hsl(var(--primary));
   pointer-events: none;
+}
+
+.editor-block-dragging,
+.editor-block-dragging * {
+  cursor: grabbing !important;
 }
 
 /* 搜索高亮 */
@@ -1083,6 +1183,12 @@
 
 .tiptap-editor .ProseMirror ::selection {
   background-color: hsl(var(--primary) / 0.24);
+}
+
+/* A blurred range is drawn by its decoration, without a second native layer. */
+.tiptap-editor .ProseMirror:not(.ProseMirror-focused):not(:focus-within):has(.tiptap-blur-selection)::selection,
+.tiptap-editor .ProseMirror:not(.ProseMirror-focused):not(:focus-within):has(.tiptap-blur-selection) ::selection {
+  background-color: transparent;
 }
 
 .tiptap-editor .ProseMirror .tiptap-blur-selection {
@@ -1876,4 +1982,44 @@
 .tiptap-editor .ProseMirror .notegen-embed-host.ProseMirror-selectednode > .notegen-embed {
   outline: 2px solid hsl(var(--primary) / 0.6);
   outline-offset: 1px;
+}
+
+/* The preview is presentation only; the original code content stays mounted. */
+.tiptap-editor .ProseMirror .code-block-wrapper:has(.plugin-code-block-preview) > .code-block-controls > .code-block-toolbar {
+  top: auto;
+  bottom: 8px;
+}
+.tiptap-editor .ProseMirror .code-block-wrapper:has(.plugin-code-block-preview) pre {
+  padding-bottom: 42px;
+  padding-top: 16px;
+}
+.tiptap-editor .ProseMirror .code-block-wrapper:has(.plugin-code-block-discovery) > .code-block-controls > .code-block-toolbar {
+  position: static;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  padding: 8px;
+  gap: 6px;
+}
+.tiptap-editor .ProseMirror .code-block-toolbar .plugin-code-block-discovery {
+  padding: 0;
+  min-width: 0;
+  max-width: 100%;
+}
+.tiptap-editor .ProseMirror .code-block-toolbar .plugin-code-block-discovery button {
+  height: auto;
+  min-height: 26px;
+  white-space: normal;
+}
+.tiptap-editor .ProseMirror .code-block-wrapper:has(.plugin-code-block-discovery) pre {
+  padding-top: 16px;
+}
+.tiptap-editor .ProseMirror .plugin-code-block-preview {
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  background: hsl(var(--card));
+}
+.tiptap-editor .ProseMirror .plugin-code-block-preview img {
+  margin: 0 auto;
+  border: 0;
+  border-radius: 0;
 }
