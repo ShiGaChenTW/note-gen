@@ -220,6 +220,23 @@
     "linkFailed": "转成链接失败，文件已还原"
   },
   "properties": {
+    "edit": "编辑",
+    "done": "完成",
+    "collapse": "收合属性",
+    "expand": "展开属性",
+    "removeAll": "移除全部",
+    "createTemplate": "一键建立 Frontmatter 范本",
+    "chooseTemplate": "选择其他范本",
+    "emptyHint": "这篇笔记还没有属性",
+    "collapsedHint": "已收合，点标题展开",
+    "count": "{count} 项",
+    "yes": "是",
+    "no": "否",
+    "nestedHint": "嵌套结构，保持原文；要修改请用「源代码」",
+    "errorHint": "YAML 有误，请切到「源代码」修正",
+    "addPlaceholder": "新增…",
+    "suggestions": "库内其他笔记用过的值",
+    "templateCreated": "已建立「{name}」范本",
     "title": "属性",
     "add": "新增属性",
     "empty": "这篇还没有属性",
@@ -1302,6 +1319,25 @@
       "sourceMode": {
         "visual": "所见即所得",
         "source": "源码模式"
+      },
+      "frontmatter": {
+        "title": "属性范本",
+        "desc": "在笔记顶部一键建立 Frontmatter 时使用的范本",
+        "help": "没有属性的笔记，可在编辑器顶部一键套用默认范本。范本只写 YAML 内文，不含 ---。",
+        "vars": {
+          "title": "笔记文件名",
+          "date": "今天（YYYY-MM-DD）",
+          "datetime": "现在（YYYY-MM-DDTHH:mm）"
+        },
+        "name": "范本名称",
+        "yaml": "范本 YAML",
+        "makeDefault": "设为默认",
+        "isDefault": "默认",
+        "delete": "删除范本",
+        "invalid": "YAML 格式错误",
+        "newName": "新范本",
+        "add": "新增范本",
+        "reset": "恢复内置范本"
       },
       "sourceLineNumbers": {
         "title": "源码行号",

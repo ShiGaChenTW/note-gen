@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { applyFrontmatterEdit as edit, inferPropertyType, listProperties, validatePropertySource, type PropertyType } from './frontmatter-edit'
+import { applyFrontmatterEdit as edit, applyFrontmatterEditToBlock, inferPropertyType, listProperties, validatePropertySource, yamlScalarText, type PropertyType } from './frontmatter-edit'
 
 const cases: Array<[PropertyType, unknown]> = [
   ['text', '文字'], ['multitext', ['a', 'b']], ['number', 42], ['checkbox', true],
@@ -29,10 +29,10 @@ describe('逐 key 編輯', () => {
         expect(listProperties(added.slice(0, added.indexOf(tail) + 3 + eol.length)).at(-1)?.value).toEqual(value)
       })
     }
-    it('flow 清單改 block，其他行保留', () => {
+    it('flow 清單維持 flow 寫法，其他行保留', () => {
       const original = `---${eol}target: [a, b] # 同行${eol}${preserve}${tail}`
       const next = edit(original, { kind: 'set', key: 'target', value: ['[[連結]]', 'a: b'], type: 'multitext' })
-      expect(next).toBe(`---${eol}target: # 同行${eol}  - "[[連結]]"${eol}  - "a: b"${eol}${preserve}${tail}`)
+      expect(next).toBe(`---${eol}target: ["[[連結]]", "a: b"] # 同行${eol}${preserve}${tail}`)
     })
   }
   it.each(['[[連結]]', 'a # b', 'a: b', 'true', '123', '[a]', '"quoted', "'quoted", ''])('字串往返 %s', value => {
@@ -103,5 +103,43 @@ describe('保守處理多行與特殊 YAML', () => {
     const content = `---${eol}a: &shared [one, two]${eol}b: *shared${eol}c: old${eol}---${eol}body`
     expect(listProperties(content.slice(0, content.indexOf('body'))).slice(0, 2).map(p => p.editable)).toEqual([false, false])
     expect(edit(content, { kind: 'set', key: 'c', type: 'text', value: 'new' })).toBe(content.replace('c: old', 'c: new'))
+  })
+})
+
+describe('flow 清單保持原本寫法（只改 UI，格式不動）', () => {
+  it.each(['\n', '\r\n'])('改 tags: [a, b] 仍是 flow，行尾註解保留 %j', eol => {
+    const content = `---${eol}tags: [notegen, phase-2]  # 註解${eol}other: 1${eol}---${eol}body`
+    expect(edit(content, { kind: 'set', key: 'tags', type: 'tags', value: ['notegen', 'phase-2', 'x'] }))
+      .toBe(`---${eol}tags: [notegen, phase-2, x]  # 註解${eol}other: 1${eol}---${eol}body`)
+    expect(edit(content, { kind: 'set', key: 'tags', type: 'tags', value: [] }))
+      .toBe(`---${eol}tags: []  # 註解${eol}other: 1${eol}---${eol}body`)
+  })
+  it('項目含逗號或括號時加引號，block 清單維持逐行寫法', () => {
+    expect(edit('---\na: [x]\n---\n', { kind: 'set', key: 'a', type: 'multitext', value: ['x', 'y, z', '[[連結]]'] }))
+      .toBe('---\na: [x, "y, z", "[[連結]]"]\n---\n')
+    expect(edit('---\na:\n  - x\n---\n', { kind: 'set', key: 'a', type: 'multitext', value: ['x', 'y'] }))
+      .toBe('---\na:\n  - x\n  - y\n---\n')
+  })
+})
+
+describe('applyFrontmatterEditToBlock（編輯器卡片用）', () => {
+  it('只回傳區塊，改值時其他行原樣', () => {
+    const block = '---\ntitle: "a: b"  # 註解\ndone: false\n\nz: 1\n---\n'
+    expect(applyFrontmatterEditToBlock(block, { kind: 'set', key: 'done', type: 'checkbox', value: true }))
+      .toBe(block.replace('done: false', 'done: true'))
+  })
+  it('刪掉最後一個屬性回傳空字串，呼叫端據此移除節點', () => {
+    expect(applyFrontmatterEditToBlock('---\na: 1\n---\n', { kind: 'remove', key: 'a' })).toBe('')
+  })
+  it('沒有結尾換行的區塊（檔尾）也能改', () => {
+    expect(applyFrontmatterEditToBlock('---\na: 1\n---', { kind: 'set', key: 'a', type: 'number', value: 2 })).toBe('---\na: 2\n---')
+  })
+  it('非 frontmatter 內容會丟錯', () => {
+    expect(() => applyFrontmatterEditToBlock('body', { kind: 'remove', key: 'a' })).toThrow()
+  })
+  it('yamlScalarText 為特殊字元加引號', () => {
+    expect(yamlScalarText('筆記')).toBe('筆記')
+    expect(yamlScalarText('a: b')).toBe('"a: b"')
+    expect(yamlScalarText('true')).toBe('"true"')
   })
 })

@@ -13,6 +13,7 @@ import SourceWrap from '@/app/core/setting/editor/source-wrap'
 import ShowUndoRedo from '@/app/core/setting/editor/show-undo-redo'
 import ShowMobileToolbar from '@/app/core/setting/editor/show-mobile-toolbar'
 import ShowEditorStats from '@/app/core/setting/editor/show-editor-stats'
+import FrontmatterTemplates from '@/app/core/setting/editor/frontmatter-templates'
 import { ContentTextScaleSettings } from '@/app/core/setting/general/interface-settings/content-text-scale'
 import useSettingStore from '@/stores/setting'
 
@@ -47,6 +48,9 @@ export default function EditorPage() {
           <Outline showPosition={false} />
           <ShowEditorStats />
         </ItemGroup>
+      </SettingSection>
+      <SettingSection title={t('frontmatter.title')} desc={t('frontmatter.desc')}>
+        <FrontmatterTemplates />
       </SettingSection>
     </SettingType>
   )

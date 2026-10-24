@@ -9,6 +9,7 @@ import { noteGenDefaultModels, noteGenModelKeys } from '@/app/model-config'
 import { CustomThemeColors } from '@/types/theme'
 import { applyThemeColors, removeThemeColors } from '@/lib/theme-utils'
 import { getNormalizedImageHosting } from '@/lib/image-hosting-config'
+import { DEFAULT_FRONTMATTER_TEMPLATES, DEFAULT_FRONTMATTER_TEMPLATE_ID, type FrontmatterTemplate } from '@/lib/markdown/frontmatter-template'
 import { normalizeSpeechMode } from '@/lib/speech/preferences'
 import type { SpeechMode } from '@/lib/speech/types'
 import { applyNoteGenDefaultConfig, loadNoteGenDefaultConfig } from '@/lib/ai/notegen-default-models-runtime'
@@ -364,6 +365,13 @@ interface SettingState {
 
   showSourceLineNumbers: boolean
   setShowSourceLineNumbers: (show: boolean) => Promise<void>
+  // Fork：Frontmatter 範本與屬性卡片收合狀態（全域一個）
+  frontmatterTemplates: FrontmatterTemplate[]
+  setFrontmatterTemplates: (templates: FrontmatterTemplate[]) => Promise<void>
+  frontmatterDefaultTemplateId: string
+  setFrontmatterDefaultTemplateId: (id: string) => Promise<void>
+  frontmatterCollapsed: boolean
+  setFrontmatterCollapsed: (collapsed: boolean) => Promise<void>
 
   editorSourceWrap: boolean
   setEditorSourceWrap: (wrap: boolean) => Promise<void>
@@ -1779,6 +1787,28 @@ const useSettingStore = create<SettingState>((set, get) => ({
     set({ showSourceLineNumbers })
     const store = await Store.load('store.json')
     await store.set('showSourceLineNumbers', showSourceLineNumbers)
+    await store.save()
+  },
+
+  frontmatterTemplates: DEFAULT_FRONTMATTER_TEMPLATES.map(item => ({ ...item })),
+  setFrontmatterTemplates: async (frontmatterTemplates) => {
+    set({ frontmatterTemplates })
+    const store = await Store.load('store.json')
+    await store.set('frontmatterTemplates', frontmatterTemplates)
+    await store.save()
+  },
+  frontmatterDefaultTemplateId: DEFAULT_FRONTMATTER_TEMPLATE_ID,
+  setFrontmatterDefaultTemplateId: async (frontmatterDefaultTemplateId) => {
+    set({ frontmatterDefaultTemplateId })
+    const store = await Store.load('store.json')
+    await store.set('frontmatterDefaultTemplateId', frontmatterDefaultTemplateId)
+    await store.save()
+  },
+  frontmatterCollapsed: false,
+  setFrontmatterCollapsed: async (frontmatterCollapsed) => {
+    set({ frontmatterCollapsed })
+    const store = await Store.load('store.json')
+    await store.set('frontmatterCollapsed', frontmatterCollapsed)
     await store.save()
   },
 

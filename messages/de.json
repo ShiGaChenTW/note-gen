@@ -220,6 +220,23 @@
     "linkFailed": "Verlinken fehlgeschlagen, Datei wurde wiederhergestellt"
   },
   "properties": {
+    "edit": "Bearbeiten",
+    "done": "Fertig",
+    "collapse": "Eigenschaften einklappen",
+    "expand": "Eigenschaften ausklappen",
+    "removeAll": "Alle entfernen",
+    "createTemplate": "Frontmatter aus Vorlage erstellen",
+    "chooseTemplate": "Andere Vorlage wählen",
+    "emptyHint": "Diese Notiz hat noch keine Eigenschaften",
+    "collapsedHint": "Eingeklappt – Titel anklicken zum Ausklappen",
+    "count": "{count} Einträge",
+    "yes": "Ja",
+    "no": "Nein",
+    "nestedHint": "Verschachtelte Struktur, unverändert angezeigt. Zum Ändern die Quelle verwenden",
+    "errorHint": "Ungültiges YAML. In der Quelle korrigieren",
+    "addPlaceholder": "Hinzufügen…",
+    "suggestions": "In anderen Notizen verwendete Werte",
+    "templateCreated": "Aus „{name}“ erstellt",
     "title": "Eigenschaften",
     "add": "Eigenschaft hinzufügen",
     "empty": "Diese Notiz hat noch keine Eigenschaften",
@@ -1302,6 +1319,25 @@
       "sourceMode": {
         "visual": "WYSIWYG",
         "source": "Quelltextmodus"
+      },
+      "frontmatter": {
+        "title": "Eigenschaftsvorlagen",
+        "desc": "Vorlagen für das Frontmatter, das mit einem Klick am Notizanfang erstellt wird",
+        "help": "Bei Notizen ohne Eigenschaften wendet ein Klick oben im Editor die Standardvorlage an. Eine Vorlage besteht nur aus dem YAML-Inhalt ohne die ---.",
+        "vars": {
+          "title": "Dateiname der Notiz",
+          "date": "heute (YYYY-MM-DD)",
+          "datetime": "jetzt (YYYY-MM-DDTHH:mm)"
+        },
+        "name": "Vorlagenname",
+        "yaml": "Vorlagen-YAML",
+        "makeDefault": "Als Standard festlegen",
+        "isDefault": "Standard",
+        "delete": "Vorlage löschen",
+        "invalid": "Ungültiges YAML",
+        "newName": "Neue Vorlage",
+        "add": "Vorlage hinzufügen",
+        "reset": "Integrierte Vorlagen wiederherstellen"
       },
       "sourceLineNumbers": {
         "title": "Quellcode-Zeilennummern",

@@ -80,6 +80,29 @@ function scalar(value: unknown): string {
   return value
 }
 
+/** flow 清單項目含逗號或括號時必須加引號，否則會被拆成多項。 */
+function flowList(items: unknown[]): string {
+  return `[${items.map(item => {
+    const text = scalar(item)
+    return typeof item === 'string' && /[,\[\]{}]/.test(item) && !text.startsWith('"') ? JSON.stringify(item) : text
+  }).join(', ')}]`
+}
+
+/** 回傳可直接寫進 YAML 的字串值（必要時加引號），供範本替換 `{{title}}` 用。 */
+export function yamlScalarText(value: string): string { return scalar(value) }
+
+/**
+ * 對「只含 frontmatter 的區塊原文」做同樣的局部改寫（編輯器卡片用，不讀寫檔案）。
+ * 回傳新的區塊原文；刪掉最後一個屬性時回傳空字串，呼叫端應移除整個 frontmatter 節點。
+ */
+export function applyFrontmatterEditToBlock(block: string, edit: FrontmatterEdit, typeMap: Record<string, PropertyType> = {}): string {
+  const { block: head, body } = splitFrontmatter(block)
+  if (!head) throw new Error('不是 frontmatter 區塊')
+  const next = applyFrontmatterEdit(head, edit, typeMap)
+  // 區塊之後不應有內容；有的話原樣接回，避免吞掉資料。
+  return next + body
+}
+
 function serializedValue(value: unknown, type: PropertyType, eol: string): string {
   if (type === 'unsupported') throw new Error('請使用原始碼編輯')
   if (['multitext', 'tags', 'aliases'].includes(type)) {
@@ -131,6 +154,12 @@ export function applyFrontmatterEdit(content: string, edit: FrontmatterEdit, typ
       const colon = yaml.indexOf(':', keyNode.range[1])
       const node = pair.value
       const isListType = ['multitext', 'tags', 'aliases'].includes(edit.type)
+      if (isListType && isSeq(node) && node.flow && node.range && Array.isArray(edit.value)) {
+        // flow 清單（`[a, b]`）：只換掉括號內文字，維持原本寫法；值之後的空白與註解原樣保留。
+        yaml = yaml.slice(0, node.range[0]) + flowList(edit.value) + yaml.slice(node.range[1])
+        const result = parts.opening + yaml + parts.closing
+        return block ? result + body : (content.startsWith('﻿') ? '﻿' : '') + result + content.slice(content.startsWith('﻿') ? 1 : 0)
+      }
       if (!isListType && isScalar(node) && node.range && node.range[1] > node.range[0]) {
         // 純量：只換掉值本身的文字範圍，值之後到行尾（空白與註解）原樣保留（Issue #11）
         yaml = yaml.slice(0, node.range[0]) + value.replace(/^ /, '') + yaml.slice(node.range[1])

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { AlignLeft, List, Binary, CheckSquare, Calendar, Clock, Hash, Users, FileCode } from 'lucide-react'
-import { chipValues, initialPropertyValue, propertiesForArticle, propertyIcons, rankPropertyKeys, yamlSourceOf } from './properties-model'
+import { chipValues, formatPropertyDate, initialPropertyValue, propertiesForArticle, propertyIcons, rankPropertyKeys, suggestPropertyValues, yamlSourceOf } from './properties-model'
 import en from '../../../../../messages/en.json'
 import zh from '../../../../../messages/zh.json'
 import tw from '../../../../../messages/zh-TW.json'
@@ -34,11 +34,33 @@ describe('屬性面板資料轉換', () => {
     expect(yamlSourceOf(`\uFEFF---${eol}a: 'x' # 註解${eol}${eol}...${eol}body`)).toBe(`a: 'x' # 註解${eol}`)
     expect(yamlSourceOf('body')).toBe('')
   })
+  it('閱讀模式日期依語系輸出，格式不符或不存在的日期原樣顯示', () => {
+    expect(formatPropertyDate('2026-10-25', 'zh-TW')).toContain('2026')
+    expect(formatPropertyDate('2026-10-19T09:30', 'en')).toMatch(/9:30/)
+    expect(formatPropertyDate('2026-02-31', 'en')).toBe('2026-02-31')
+    expect(formatPropertyDate('昨天', 'en')).toBe('昨天')
+    expect(formatPropertyDate(null, 'en')).toBe('')
+  })
+  it('選項清單：依次數排序、排除自己與非純量、限制筆數', () => {
+    const notes = [
+      { path: 'a.md', frontmatter: { status: 'draft', tags: ['x'] } },
+      { path: 'b.md', frontmatter: { status: 'done', n: 3 } },
+      { path: 'c.md', frontmatter: { status: 'draft' } },
+      { path: 'me.md', frontmatter: { status: 'mine' } },
+      { path: 'd.md', frontmatter: null },
+    ]
+    expect(suggestPropertyValues(notes, 'status', 'me.md')).toEqual(['draft', 'done'])
+    expect(suggestPropertyValues(notes, 'status', 'me.md', 1)).toEqual(['draft'])
+    expect(suggestPropertyValues(notes, 'tags')).toEqual([])
+    expect(suggestPropertyValues(notes, 'n')).toEqual(['3'])
+  })
   it('六語系提供相同 key，位於 backlinks 與 settings 之間', () => {
     for (const locale of [en, zh, tw, ja, de, pt]) {
       const data = locale as unknown as Record<string, Record<string, unknown>>
       expect(data.properties).toBeDefined()
-      expect(Object.keys(data.properties).sort()).toEqual(['title', 'add', 'empty', 'source', 'apply', 'invalidYaml', 'keyPlaceholder', 'valuePlaceholder', 'remove', 'rename', 'unsupported', 'notMarkdown', 'types', 'type', 'keyExists', 'saveFailed'].sort())
+      expect(Object.keys(data.properties).sort()).toEqual(['title', 'add', 'empty', 'source', 'apply', 'invalidYaml', 'keyPlaceholder', 'valuePlaceholder', 'remove', 'rename', 'unsupported', 'notMarkdown', 'types', 'type', 'keyExists', 'saveFailed',
+        // 編輯器內的屬性卡片
+        'edit', 'done', 'collapse', 'expand', 'removeAll', 'createTemplate', 'chooseTemplate', 'emptyHint', 'collapsedHint', 'count', 'yes', 'no', 'nestedHint', 'errorHint', 'addPlaceholder', 'suggestions', 'templateCreated'].sort())
       expect(Object.keys(data.properties.types as object).sort()).toEqual(['text', 'multitext', 'number', 'checkbox', 'date', 'datetime', 'tags', 'aliases'].sort())
       const keys = Object.keys(locale)
       expect(keys[keys.indexOf('backlinks') + 1]).toBe('properties')

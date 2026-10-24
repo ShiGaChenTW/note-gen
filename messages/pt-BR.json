@@ -220,6 +220,23 @@
     "linkFailed": "Falha ao vincular, o arquivo foi restaurado"
   },
   "properties": {
+    "edit": "Editar",
+    "done": "Concluir",
+    "collapse": "Recolher propriedades",
+    "expand": "Expandir propriedades",
+    "removeAll": "Remover tudo",
+    "createTemplate": "Criar frontmatter a partir de um modelo",
+    "chooseTemplate": "Escolher outro modelo",
+    "emptyHint": "Esta nota ainda não tem propriedades",
+    "collapsedHint": "Recolhido — clique no título para expandir",
+    "count": "{count} itens",
+    "yes": "Sim",
+    "no": "Não",
+    "nestedHint": "Estrutura aninhada, exibida como está. Use o Código-fonte para alterar",
+    "errorHint": "YAML inválido. Corrija no Código-fonte",
+    "addPlaceholder": "Adicionar…",
+    "suggestions": "Valores usados em outras notas",
+    "templateCreated": "Criado a partir de \"{name}\"",
     "title": "Propriedades",
     "add": "Adicionar propriedade",
     "empty": "Esta nota ainda não tem propriedades",
@@ -881,6 +898,25 @@
       "sourceMode": {
         "visual": "WYSIWYG",
         "source": "Modo de código-fonte"
+      },
+      "frontmatter": {
+        "title": "Modelos de propriedades",
+        "desc": "Modelos usados ao criar o frontmatter com um clique no topo da nota",
+        "help": "Em notas sem propriedades, um clique no topo do editor aplica o modelo padrão. O modelo contém apenas o corpo YAML, sem os ---.",
+        "vars": {
+          "title": "nome do arquivo da nota",
+          "date": "hoje (YYYY-MM-DD)",
+          "datetime": "agora (YYYY-MM-DDTHH:mm)"
+        },
+        "name": "Nome do modelo",
+        "yaml": "YAML do modelo",
+        "makeDefault": "Definir como padrão",
+        "isDefault": "Padrão",
+        "delete": "Excluir modelo",
+        "invalid": "YAML inválido",
+        "newName": "Novo modelo",
+        "add": "Adicionar modelo",
+        "reset": "Restaurar modelos integrados"
       },
       "sourceLineNumbers": {
         "title": "Números de linha",
