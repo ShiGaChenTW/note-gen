@@ -6597,7 +6597,10 @@
       "unfinished": "未完了",
       "resume": "続ける",
       "signal": "お知らせ",
-      "handoff": "Agent に任せる"
+      "handoff": "Agent に任せる",
+      "unsummarized": "未要約の会話",
+      "summarize": "要約",
+      "messages": "{count} 件のメッセージ"
     },
     "handoff": {
       "title": "Agent に任せる",
@@ -6673,7 +6676,9 @@
       "empty": "実行中のタスクはありません",
       "cancel": "キャンセル",
       "conversations": "最近の会話",
-      "noConversations": "会話はまだありません"
+      "noConversations": "会話はまだありません",
+      "summarize": "要約",
+      "summarized": "要約済み"
     },
     "recent": {
       "title": "最近のノート",
@@ -6686,6 +6691,41 @@
       "created": "作成",
       "modified": "編集",
       "reread": "再読"
+    }
+  },
+  "conversationSummary": {
+    "button": "会話の要約",
+    "title": "会話の要約",
+    "description": "この会話をノートにまとめて vault に保存し、知識レポートの資料にします。内容とパスは編集でき、「保存」を押すまで書き込まれません。",
+    "descriptionUpdate": "この会話にはすでに要約があります。保存すると同じノートを更新します。",
+    "loading": "会話を要約しています…",
+    "path": "保存先",
+    "content": "内容",
+    "save": "保存",
+    "update": "要約を更新",
+    "cancel": "キャンセル",
+    "retry": "再試行",
+    "saved": "会話の要約を保存しました",
+    "updated": "会話の要約を更新しました",
+    "language": "日本語",
+    "labels": {
+      "me": "私",
+      "ai": "AI"
+    },
+    "headings": {
+      "myQuestions": "私の質問",
+      "myViews": "私の考えと理解",
+      "aiPoints": "AI の回答の要点",
+      "decisions": "結論と決定",
+      "openQuestions": "未解決の問題",
+      "related": "関連ノート",
+      "none": "（なし）"
+    },
+    "errors": {
+      "empty": "この会話にはまだ内容がありません",
+      "parse": "AI の返答が想定した形式ではありません。再試行してください。",
+      "notFound": "会話が見つかりません",
+      "exists": "{path} には別のノートがあります。別のパスを選んでください"
     }
   }
 }

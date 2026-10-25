@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import { MessageSquareDashed, MessageSquarePlus, ChevronDown, Search, Trash2 } from "lucide-react"
 import { TooltipButton } from "@/components/tooltip-button"
+import { ConversationSummaryButton } from "../conversation-summary/summary-dialog" // Fork #33
 import useChatStore from "@/stores/chat"
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -165,6 +166,7 @@ export function ChatHeader() {
 
       {/* 右侧：临时会话与新建对话 */}
       <div className="flex items-center gap-1">
+        <ConversationSummaryButton conversationId={isTemporaryConversation ? null : currentConversationId} disabled={loading} />
         <TooltipButton
           icon={<MessageSquareDashed />}
           tooltipText={t('record.chat.input.temporaryChat')}

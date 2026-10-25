@@ -6688,7 +6688,10 @@
       "unfinished": "Unfinished",
       "resume": "Continue",
       "signal": "Nudge",
-      "handoff": "Hand off"
+      "handoff": "Hand off",
+      "unsummarized": "Not summarized",
+      "summarize": "Summarize",
+      "messages": "{count} messages"
     },
     "handoff": {
       "title": "Hand off to Agent",
@@ -6764,7 +6767,9 @@
       "empty": "Nothing running right now",
       "cancel": "Cancel",
       "conversations": "Recent conversations",
-      "noConversations": "No conversations yet"
+      "noConversations": "No conversations yet",
+      "summarize": "Summarize",
+      "summarized": "Summarized"
     },
     "recent": {
       "title": "Recent notes",
@@ -6777,6 +6782,41 @@
       "created": "Written",
       "modified": "Edited",
       "reread": "Reread"
+    }
+  },
+  "conversationSummary": {
+    "button": "Conversation summary",
+    "title": "Conversation summary",
+    "description": "Condense this conversation into a note in the vault, as a source for knowledge reports. Edit the content and path; nothing is written until you press Save.",
+    "descriptionUpdate": "This conversation already has a summary; saving updates that note.",
+    "loading": "Summarizing this conversation…",
+    "path": "Save to",
+    "content": "Content",
+    "save": "Save",
+    "update": "Update summary",
+    "cancel": "Cancel",
+    "retry": "Retry",
+    "saved": "Saved as conversation summary",
+    "updated": "Conversation summary updated",
+    "language": "English",
+    "labels": {
+      "me": "Me",
+      "ai": "AI"
+    },
+    "headings": {
+      "myQuestions": "My questions",
+      "myViews": "My views and understanding",
+      "aiPoints": "AI's key points",
+      "decisions": "Conclusions and decisions",
+      "openQuestions": "Open questions",
+      "related": "Related notes",
+      "none": "(none)"
+    },
+    "errors": {
+      "empty": "This conversation has no messages yet",
+      "parse": "The AI reply was not in the expected format. Please retry.",
+      "notFound": "Conversation not found",
+      "exists": "{path} already holds another note; choose a different path"
     }
   }
 }

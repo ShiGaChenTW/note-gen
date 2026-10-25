@@ -6564,7 +6564,10 @@
       "unfinished": "Inacabada",
       "resume": "Continuar",
       "signal": "Lembrete",
-      "handoff": "Entregar"
+      "handoff": "Entregar",
+      "unsummarized": "Sem resumo",
+      "summarize": "Resumir",
+      "messages": "{count} mensagens"
     },
     "handoff": {
       "title": "Entregar ao Agent",
@@ -6640,7 +6643,9 @@
       "empty": "Nada em execução agora",
       "cancel": "Cancelar",
       "conversations": "Conversas recentes",
-      "noConversations": "Nenhuma conversa ainda"
+      "noConversations": "Nenhuma conversa ainda",
+      "summarize": "Resumir",
+      "summarized": "Resumida"
     },
     "recent": {
       "title": "Notas recentes",
@@ -6653,6 +6658,41 @@
       "created": "Escritas",
       "modified": "Editadas",
       "reread": "Relidas"
+    }
+  },
+  "conversationSummary": {
+    "button": "Resumo da conversa",
+    "title": "Resumo da conversa",
+    "description": "Condense esta conversa em uma nota no vault, como fonte para os relatórios de conhecimento. Edite o conteúdo e o caminho; nada é gravado até você clicar em Salvar.",
+    "descriptionUpdate": "Esta conversa já tem um resumo; salvar atualiza essa nota.",
+    "loading": "Resumindo a conversa…",
+    "path": "Salvar em",
+    "content": "Conteúdo",
+    "save": "Salvar",
+    "update": "Atualizar resumo",
+    "cancel": "Cancelar",
+    "retry": "Tentar de novo",
+    "saved": "Salvo como resumo da conversa",
+    "updated": "Resumo da conversa atualizado",
+    "language": "português do Brasil",
+    "labels": {
+      "me": "Eu",
+      "ai": "IA"
+    },
+    "headings": {
+      "myQuestions": "Minhas perguntas",
+      "myViews": "Minhas ideias e entendimento",
+      "aiPoints": "Pontos principais da IA",
+      "decisions": "Conclusões e decisões",
+      "openQuestions": "Questões em aberto",
+      "related": "Notas relacionadas",
+      "none": "(nenhum)"
+    },
+    "errors": {
+      "empty": "Esta conversa ainda não tem mensagens",
+      "parse": "A resposta da IA não veio no formato esperado. Tente de novo.",
+      "notFound": "Conversa não encontrada",
+      "exists": "Já existe outra nota em {path}; escolha outro caminho"
     }
   }
 }

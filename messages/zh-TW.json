@@ -6587,7 +6587,10 @@
       "unfinished": "沒做完",
       "resume": "繼續",
       "signal": "提醒",
-      "handoff": "交給 Agent"
+      "handoff": "交給 Agent",
+      "unsummarized": "未摘要對話",
+      "summarize": "摘要",
+      "messages": "{count} 則訊息"
     },
     "handoff": {
       "title": "交給 Agent",
@@ -6663,7 +6666,9 @@
       "empty": "目前沒有進行中的任務",
       "cancel": "取消",
       "conversations": "最近對話",
-      "noConversations": "還沒有對話"
+      "noConversations": "還沒有對話",
+      "summarize": "摘要",
+      "summarized": "已摘要"
     },
     "recent": {
       "title": "最近筆記",
@@ -6676,6 +6681,41 @@
       "created": "寫下",
       "modified": "修改",
       "reread": "重讀"
+    }
+  },
+  "conversationSummary": {
+    "button": "對話摘要",
+    "title": "對話摘要",
+    "description": "整理成一則筆記存進 vault，作為知識報告的資料來源。內容和路徑都可以改，按「存檔」才寫入。",
+    "descriptionUpdate": "這個對話已經有摘要，存檔會更新同一份筆記。",
+    "loading": "正在整理這段對話…",
+    "path": "存放路徑",
+    "content": "內容",
+    "save": "存檔",
+    "update": "更新摘要",
+    "cancel": "取消",
+    "retry": "重試",
+    "saved": "已存成對話摘要",
+    "updated": "已更新對話摘要",
+    "language": "繁體中文",
+    "labels": {
+      "me": "我",
+      "ai": "AI"
+    },
+    "headings": {
+      "myQuestions": "我的問題",
+      "myViews": "我的觀點與理解",
+      "aiPoints": "AI 的解答重點",
+      "decisions": "結論與決定",
+      "openQuestions": "還沒解決的問題",
+      "related": "相關筆記",
+      "none": "（無）"
+    },
+    "errors": {
+      "empty": "這個對話還沒有內容",
+      "parse": "AI 回傳的格式不對，請重試",
+      "notFound": "找不到這個對話",
+      "exists": "{path} 已經有別的筆記，請換一個路徑"
     }
   }
 }
