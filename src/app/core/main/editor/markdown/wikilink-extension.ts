@@ -443,7 +443,46 @@ function createWikilinkPlugin() {
         if (state.revision === prev.revision) return
         view.dispatch(view.state.tr.setMeta(pluginKey, true))
       })
-      return { destroy: unsubscribe }
+      // Issue #20：編輯器有焦點時，mousedown 的瀏覽器預設動作會把 DOM 游標放進這個 atom 的
+      // 文字裡，ProseMirror 從 selectionchange 讀回來就變成 NodeSelection（黃框），handleClickOn
+      // 在那一輪拿不到點擊，要點第二下才開。這裡在 capture 階段攔下 mousedown（不改游標、
+      // 不讓 ProseMirror 建立 MouseDown），再在 click 開啟，單擊一律開啟，與 Obsidian 一致。
+      const anchorOf = (event: MouseEvent) => {
+        const target = event.target
+        return target instanceof Element ? target.closest<HTMLElement>('a[data-type="wikilink"]') : null
+      }
+      let pending: HTMLElement | null = null
+      const onMouseDown = (event: MouseEvent) => {
+        if (event.button !== 0 || event.shiftKey || event.altKey) { pending = null; return }
+        const anchor = anchorOf(event)
+        if (!anchor || !view.dom.contains(anchor)) { pending = null; return }
+        pending = anchor
+        event.preventDefault()
+        event.stopPropagation()
+      }
+      const onClick = (event: MouseEvent) => {
+        const anchor = anchorOf(event)
+        const armed = pending
+        pending = null
+        if (!anchor || anchor !== armed || event.button !== 0) return
+        event.preventDefault()
+        event.stopPropagation()
+        const pos = view.posAtDOM(anchor, 0)
+        const node = view.state.doc.nodeAt(pos)
+        if (!node || node.type.name !== WIKILINK_NODE_NAME) return
+        const attrs = node.attrs as WikilinkData
+        if (attrs.embed || !(attrs.target || attrs.heading || attrs.blockId)) return
+        void openWikilink(attrs, view).catch(error => console.error('[wikilink] open failed', error))
+      }
+      view.dom.addEventListener('mousedown', onMouseDown, true)
+      view.dom.addEventListener('click', onClick, true)
+      return {
+        destroy: () => {
+          unsubscribe()
+          view.dom.removeEventListener('mousedown', onMouseDown, true)
+          view.dom.removeEventListener('click', onClick, true)
+        },
+      }
     },
   })
 }

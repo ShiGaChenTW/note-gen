@@ -434,6 +434,84 @@ describe('L1: click behaviour (openWikilink)', () => {
   })
 })
 
+// Issue #20: a single mouse click must open the link even when the editor is focused.
+describe('#20: single click opens the link', () => {
+  const setActiveFilePath = vi.fn(async () => undefined)
+
+  // jsdom has no layout: let ProseMirror's own mouse handling bail out instead of throwing
+  const emptyRects = () => [] as unknown as DOMRectList
+  beforeEach(() => {
+    vi.clearAllMocks()
+    setIndex(['folder/Note.md', 'Other.md'])
+    useArticleStore.setState({ activeFilePath: 'folder/Current.md', setActiveFilePath } as never)
+    document.elementFromPoint = () => null
+    Element.prototype.getClientRects = emptyRects
+    Range.prototype.getClientRects = emptyRects
+    const zeroRect = () => ({ left: 0, top: 0, right: 0, bottom: 0, width: 0, height: 0, x: 0, y: 0, toJSON: () => ({}) }) as DOMRect
+    ;(Node.prototype as unknown as { getBoundingClientRect: () => DOMRect }).getBoundingClientRect = zeroRect
+    Range.prototype.getBoundingClientRect = zeroRect
+  })
+  afterEach(() => { useArticleStore.setState({ activeFilePath: '' }) })
+
+  function mount(raw: string) {
+    const editor = createEditor()
+    document.body.append(editor.view.dom)
+    load(editor, raw)
+    return editor
+  }
+
+  function click(el: Element, init: MouseEventInit = {}) {
+    const down = new MouseEvent('mousedown', { bubbles: true, cancelable: true, button: 0, ...init })
+    el.dispatchEvent(down)
+    el.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, button: 0, ...init }))
+    el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, button: 0, ...init }))
+    return down
+  }
+
+  it('mousedown is swallowed before ProseMirror and click opens, with the editor focused', async () => {
+    const editor = mount('前 [[Note|別名]] 後')
+    editor.commands.focus('start')
+    const anchor = editor.view.dom.querySelector('a[data-type="wikilink"]')!
+    const down = click(anchor)
+    expect(down.defaultPrevented).toBe(true)
+    await vi.waitFor(() => expect(setActiveFilePath).toHaveBeenCalledWith('folder/Note.md'))
+    expect(setActiveFilePath).toHaveBeenCalledTimes(1)
+    // the atom did not become a NodeSelection
+    expect(editor.state.selection.constructor.name).not.toBe('NodeSelection')
+    editor.view.dom.remove()
+    editor.destroy()
+  })
+
+  it('leaves embeds, shift-clicks and text outside links to ProseMirror', async () => {
+    const editor = mount('前 ![[圖.png]] [[Note]] 後')
+    const embed = editor.view.dom.querySelector('[data-type="wikilink"].notegen-wikilink-embed, span[data-type="wikilink"]')!
+    expect(click(embed).defaultPrevented).toBe(false)
+    const anchor = editor.view.dom.querySelector('a[data-type="wikilink"]')!
+    expect(click(anchor, { shiftKey: true }).defaultPrevented).toBe(false)
+    expect(click(editor.view.dom.querySelector('p')!).defaultPrevented).toBe(false)
+    await new Promise(resolve => setTimeout(resolve, 0))
+    expect(setActiveFilePath).not.toHaveBeenCalled()
+    editor.view.dom.remove()
+    editor.destroy()
+  })
+})
+
+// Issue #19: the fork sorts the file tree by name unless the user picked another order.
+describe('#19: file tree default sort', () => {
+  it('defaults to name', () => {
+    expect(useArticleStore.getState().sortType).toBe('name')
+    const tree = useArticleStore.getState().sortFileTree([
+      { name: 'b.md', isFile: true, isDirectory: false } as never,
+      { name: 'a.md', isFile: true, isDirectory: false } as never,
+      { name: 'z folder', isFile: false, isDirectory: true, children: [
+        { name: '2.md', isFile: true, isDirectory: false }, { name: '10.md', isFile: true, isDirectory: false }, { name: '1.md', isFile: true, isDirectory: false },
+      ] } as never,
+    ])
+    expect(tree.map(item => item.name)).toEqual(['z folder', 'a.md', 'b.md'])
+    expect(tree[0].children!.map(item => item.name)).toEqual(['1.md', '2.md', '10.md'])
+  })
+})
+
 // A-2 (Phase 2-3a): `[[Note#標題]]` / `[[Note#^id]]` / `[[#標題]]` scroll to the target.
 describe('A-2: heading / block jumps', () => {
   const doc = '# 第一章\n\n內文。\n\n## Hello World [[A]]\n\n段落一 ^para-1\n\n- 清單項 ^item-1\n\n| a |\n|---|\n| 1 ^row-1 |\n\n## 第二章\n\n結尾。'
