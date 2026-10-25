@@ -56,7 +56,7 @@ export function ConversationSummaryDialog() {
   return (
     <Dialog open={conversationId !== null} onOpenChange={open => { if (!open && phase !== 'saving') close() }}>
       <DialogContent className="flex max-h-[85vh] flex-col sm:max-w-2xl">
-        <DialogHeader>
+        <DialogHeader className="shrink-0">
           <DialogTitle>{t('title')}</DialogTitle>
           <DialogDescription>{draft?.existingPath ? t('descriptionUpdate') : t('description')}</DialogDescription>
         </DialogHeader>
@@ -80,7 +80,7 @@ export function ConversationSummaryDialog() {
           </div>
         )}
 
-        <DialogFooter>
+        <DialogFooter className="shrink-0">
           <Button variant="ghost" disabled={phase === 'saving'} onClick={close}>{t('cancel')}</Button>
           {phase === 'error' && <Button variant="secondary" onClick={() => setPhase('loading', { error: null })}>{t('retry')}</Button>}
           <Button disabled={!draft || phase !== 'ready' || !draft.path.trim()} onClick={() => void save()}>
