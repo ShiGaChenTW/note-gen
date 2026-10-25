@@ -1,11 +1,16 @@
 'use client'
 
 // Fork（#32）：Agent 任務卡。主欄顯示背景任務四組狀態與最近對話；
-// 「需要你處理」放待審草稿與沒做完的任務。#33 完成前不顯示「摘要」按鈕。
+// 「需要你處理」放待審草稿、沒做完的任務，以及最近有新內容卻還沒摘要的對話。
 import { useTranslations } from 'next-intl'
+import { useMemo } from 'react'
 import { MessageSquare } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { agentTaskCenter, useAgentTaskStore } from '@/lib/agent-tasks'
+import { openConversationSummary } from '@/lib/conversation-summary'
+import { conversationKey, summarizedConversations } from '@/lib/conversation-summary/model'
+import type { Conversation } from '@/db/conversations'
+import useVaultIndexStore from '@/stores/vault-index'
 import type { AgentTaskStatus } from '@/lib/agent-tasks/types'
 import { cn } from '@/lib/utils'
 import useChatStore from '@/stores/chat'
@@ -24,9 +29,28 @@ const STATUS_TONE: Record<AgentTaskStatus, string> = {
   cancelled: 'text-muted-foreground',
 }
 
+/** 對話識別 → 摘要最後修改時間（從索引裡 type: 對話摘要 的筆記讀）。 */
+function useSummarized() {
+  const notes = useVaultIndexStore(state => state.notes)
+  const revision = useVaultIndexStore(state => state.revision)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  return useMemo(() => summarizedConversations(notes.values()), [notes, revision])
+}
+
+/** 摘要比對話舊（之後又聊了）也算還沒摘要；留一分鐘緩衝給存檔時間差。 */
+function needsSummary(conversation: Conversation, summarized: Map<string, number>) {
+  const at = summarized.get(conversationKey(conversation))
+  return at === undefined || at < conversation.updatedAt - 60_000
+}
+
+const RECENT_DAYS = 3
+const MIN_MESSAGES = 4
+
 export function useTaskNeeds(): NeedItem[] {
   const t = useTranslations('home.needs')
   const tasks = useAgentTaskStore(state => state.tasks)
+  const conversations = useChatStore(state => state.conversations)
+  const summarized = useSummarized()
   const out: NeedItem[] = []
   for (const task of tasks) {
     if (task.status === 'awaiting_review') {
@@ -35,6 +59,19 @@ export function useTaskNeeds(): NeedItem[] {
     } else if (task.status === 'interrupted' || task.status === 'failed') {
       out.push({ key: `task:${task.id}`, label: t('unfinished'), tone: 'destructive', text: task.title, meta: task.error, action: t('resume'), onAction: () => void agentTaskCenter.resume(task.id) })
     }
+  }
+  const since = Date.now() - RECENT_DAYS * 86_400_000
+  for (const conversation of conversations) {
+    if (conversation.updatedAt < since || conversation.messageCount < MIN_MESSAGES || !needsSummary(conversation, summarized)) continue
+    out.push({
+      key: `conversation:${conversation.id}`,
+      label: t('unsummarized'),
+      tone: 'muted',
+      text: conversation.title,
+      meta: t('messages', { count: conversation.messageCount }),
+      action: t('summarize'),
+      onAction: () => openConversationSummary(conversation.id),
+    })
   }
   return out
 }
@@ -49,6 +86,7 @@ export function TasksSection() {
   const tStatus = useTranslations('agentTasks.status')
   const tasks = useAgentTaskStore(state => state.tasks)
   const conversations = useChatStore(state => state.conversations)
+  const summarized = useSummarized()
   const hide = useHomeStore(state => state.hide)
   // 進行中＋今天完成的；等你回應與沒做完的已經在「需要你處理」
   const shown = tasks
@@ -91,12 +129,15 @@ export function TasksSection() {
         : (
           <ul className="grid gap-0.5">
             {recent.map(conversation => (
-              <li key={conversation.id}>
-                <button type="button" className="flex w-full items-center gap-2 rounded-md px-1 py-1.5 text-left text-sm hover:bg-muted" onClick={() => void openConversation(conversation.id)}>
+              <li key={conversation.id} className="flex items-center gap-1">
+                <button type="button" className="flex min-w-0 flex-1 items-center gap-2 rounded-md px-1 py-1.5 text-left text-sm hover:bg-muted" onClick={() => void openConversation(conversation.id)}>
                   <MessageSquare className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
                   <span className="min-w-0 flex-1 truncate">{conversation.title}</span>
                   <span className="text-xs text-muted-foreground">{new Date(conversation.updatedAt).toLocaleDateString()}</span>
                 </button>
+                {needsSummary(conversation, summarized)
+                  ? <Button size="sm" variant="secondary" className="h-6 px-2 text-xs" onClick={() => openConversationSummary(conversation.id)}>{t('summarize')}</Button>
+                  : <span className="px-2 text-xs text-emerald-600 dark:text-emerald-400">{t('summarized')}</span>}
               </li>
             ))}
           </ul>

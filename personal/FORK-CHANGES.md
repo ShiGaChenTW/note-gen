@@ -126,6 +126,8 @@ npx pnpm@9 install --frozen-lockfile
 | 2026-10-26 | `src/app/core/main/page.tsx`、`fork-services.tsx`、`messages/*.json` | 掛載點：`/core/main` 根元素加 `relative`（首頁定位用）；`ForkServices` 掛 `HomeService`；頂層新增 `home`，`today.status.aria` 改成「開啟首頁」，六語系皆有翻譯 | #31 |
 | 2026-10-26 | `src/app/core/main/home/cards/`（新）、`src/lib/home/signals.ts`、`activity.ts`、`capture.ts`（新）、`src/stores/home-activity.ts`（新）、`src/stores/home.ts`、`home-cards.tsx`、`home-screen.tsx`、`home-edit-sheet.tsx`、`home-service.tsx` | 首頁卡片（#32）：快速記錄（top；Enter 存成 `inboxFolder` 裡的新筆記、⌘Enter 交給背景任務）、需要你處理（主欄最上方，由卡片的 `useNeeds` 提供）、可以交給 Agent（五類規則，設定在 `store.json` 的 `homeSignalRules`，顯示在編輯首頁該卡片下方；按下先開預填指令對話框）、Agent 任務、最近筆記、本週足跡（預設關，`home-activity.json` 只記日期／路徑／事件，留 60 天）。`normalizePrefs` 改成把新卡片插在登記表裡下一張既有卡片之前 | #32 |
 | 2026-10-26 | `src/stores/vault-index.ts` | 新增 `selectLinklessPaths`（沒有進出連結的筆記，可排除資料夾），共用既有的反向索引快取 | #32「缺連結」規則 |
+| 2026-10-26 | `src/lib/conversation-summary/`（新）、`src/app/core/main/conversation-summary/`（新）、`home/cards/tasks-card.tsx` | 對話摘要（#33）：依對話 id 從 `chats` 讀訊息，逐字稿標「我」（role `user`）與「AI」（role `system`），模型回傳 JSON 後輸出固定分節的 Markdown；frontmatter `type: 對話摘要`、`conversation`（syncId 優先）、`date`、`topics`。再按一次依 `conversation` 找到既有摘要更新；目的路徑若是別的筆記不覆蓋。首頁最近對話旁顯示「摘要／已摘要」，最近 3 天、4 則以上、未摘要（或摘要比對話舊）的對話列進「需要你處理」 | Scott 要把對話收斂成知識報告的證據 |
+| 2026-10-26 | `src/app/core/main/chat/chat-header.tsx`、`fork-services.tsx`、`messages/*.json` | 掛載點：標題列右側（臨時對話按鈕前）加 `ConversationSummaryButton`；`ForkServices` 掛 `ConversationSummaryDialog`；頂層新增 `conversationSummary`，六語系皆有翻譯 | #33 |
 
 ## 刻意不改的東西
 
@@ -421,3 +423,11 @@ npx pnpm@9 tauri dev
 4. 編輯首頁：「可以交給 Agent」下方可以開關每條規則、調門檻；改了之後提醒立刻跟著變。
 5. 最近筆記：最新一篇有摘要；點任一篇會打開並回到工作區。
 6. 本週足跡（先在編輯首頁打開）：新增、修改、打開筆記後，今天的長條跟著變；資料在 `~/Library/Application Support/tw.scottchen.NoteGen/home-activity.json`。
+
+### Phase 3-4 對話摘要（#33）
+
+1. 在右側對話問一題並帶一句自己的看法，等 AI 回答後按標題列的「對話摘要」：出現預覽，路徑是 `對話摘要/YYYY/MM/YYYY-MM-DD <主旨>.md`；「我的觀點與理解」只有自己說的話，AI 的說明在「AI 的解答重點」。
+2. 改內容或路徑後按「存檔」：vault 出現該檔；用 Obsidian 開，屬性與分節正常。
+3. 同一對話再按一次：按鈕變「更新摘要」、路徑沿用既有那份；存檔後仍只有一個檔案。
+4. 對話用到過的筆記（RAG 來源、Agent 讀過的檔案）列在「相關筆記」為雙鏈。
+5. 首頁「Agent 任務」卡：最近對話旁顯示「摘要」或「已摘要」；點對話會切過去並回到工作區。

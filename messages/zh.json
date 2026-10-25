@@ -6688,7 +6688,10 @@
       "unfinished": "未完成",
       "resume": "继续",
       "signal": "提醒",
-      "handoff": "交给 Agent"
+      "handoff": "交给 Agent",
+      "unsummarized": "未摘要对话",
+      "summarize": "摘要",
+      "messages": "{count} 条消息"
     },
     "handoff": {
       "title": "交给 Agent",
@@ -6764,7 +6767,9 @@
       "empty": "目前没有进行中的任务",
       "cancel": "取消",
       "conversations": "最近对话",
-      "noConversations": "还没有对话"
+      "noConversations": "还没有对话",
+      "summarize": "摘要",
+      "summarized": "已摘要"
     },
     "recent": {
       "title": "最近笔记",
@@ -6777,6 +6782,41 @@
       "created": "写下",
       "modified": "修改",
       "reread": "重读"
+    }
+  },
+  "conversationSummary": {
+    "button": "对话摘要",
+    "title": "对话摘要",
+    "description": "整理成一则笔记存进 vault，作为知识报告的资料来源。内容和路径都可以修改，按“保存”才写入。",
+    "descriptionUpdate": "这个对话已有摘要，保存会更新同一则笔记。",
+    "loading": "正在整理这段对话…",
+    "path": "保存路径",
+    "content": "内容",
+    "save": "保存",
+    "update": "更新摘要",
+    "cancel": "取消",
+    "retry": "重试",
+    "saved": "已保存为对话摘要",
+    "updated": "已更新对话摘要",
+    "language": "简体中文",
+    "labels": {
+      "me": "我",
+      "ai": "AI"
+    },
+    "headings": {
+      "myQuestions": "我的问题",
+      "myViews": "我的观点与理解",
+      "aiPoints": "AI 的解答要点",
+      "decisions": "结论与决定",
+      "openQuestions": "尚未解决的问题",
+      "related": "相关笔记",
+      "none": "（无）"
+    },
+    "errors": {
+      "empty": "这个对话还没有内容",
+      "parse": "AI 返回的格式不正确，请重试",
+      "notFound": "找不到这个对话",
+      "exists": "{path} 已有其他笔记，请换一个路径"
     }
   }
 }

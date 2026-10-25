@@ -11,6 +11,7 @@ import { ReminderService } from './daily/reminder-service'
 import { LinkRewritePrompt } from './link-rewrite/link-rewrite-prompt'
 import { AgentTaskService } from './agent-tasks/agent-task-service'
 import { HomeService } from './home/home-service'
+import { ConversationSummaryDialog } from './conversation-summary/summary-dialog'
 
 /** F3: keep the vault index in sync with the active workspace. */
 function VaultIndexService() {
@@ -44,6 +45,7 @@ export function ForkServices() {
       <LinkRewritePrompt />
       <AgentTaskService />
       <HomeService />
+      <ConversationSummaryDialog />
     </>
   )
 }

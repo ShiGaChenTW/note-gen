@@ -6548,7 +6548,10 @@
       "unfinished": "Unvollständig",
       "resume": "Fortsetzen",
       "signal": "Hinweis",
-      "handoff": "Übergeben"
+      "handoff": "Übergeben",
+      "unsummarized": "Nicht zusammengefasst",
+      "summarize": "Zusammenfassen",
+      "messages": "{count} Nachrichten"
     },
     "handoff": {
       "title": "An den Agent übergeben",
@@ -6624,7 +6627,9 @@
       "empty": "Gerade läuft nichts",
       "cancel": "Abbrechen",
       "conversations": "Letzte Unterhaltungen",
-      "noConversations": "Noch keine Unterhaltungen"
+      "noConversations": "Noch keine Unterhaltungen",
+      "summarize": "Zusammenfassen",
+      "summarized": "Zusammengefasst"
     },
     "recent": {
       "title": "Zuletzt bearbeitet",
@@ -6637,6 +6642,41 @@
       "created": "Geschrieben",
       "modified": "Bearbeitet",
       "reread": "Erneut gelesen"
+    }
+  },
+  "conversationSummary": {
+    "button": "Gesprächszusammenfassung",
+    "title": "Gesprächszusammenfassung",
+    "description": "Fasse dieses Gespräch als Notiz im Vault zusammen – als Quelle für Wissensberichte. Inhalt und Pfad sind bearbeitbar; geschrieben wird erst beim Speichern.",
+    "descriptionUpdate": "Für dieses Gespräch gibt es schon eine Zusammenfassung; Speichern aktualisiert diese Notiz.",
+    "loading": "Gespräch wird zusammengefasst…",
+    "path": "Speichern unter",
+    "content": "Inhalt",
+    "save": "Speichern",
+    "update": "Zusammenfassung aktualisieren",
+    "cancel": "Abbrechen",
+    "retry": "Erneut versuchen",
+    "saved": "Als Gesprächszusammenfassung gespeichert",
+    "updated": "Gesprächszusammenfassung aktualisiert",
+    "language": "Deutsch",
+    "labels": {
+      "me": "Ich",
+      "ai": "KI"
+    },
+    "headings": {
+      "myQuestions": "Meine Fragen",
+      "myViews": "Meine Sicht und mein Verständnis",
+      "aiPoints": "Kernpunkte der KI",
+      "decisions": "Ergebnisse und Entscheidungen",
+      "openQuestions": "Offene Fragen",
+      "related": "Verwandte Notizen",
+      "none": "(keine)"
+    },
+    "errors": {
+      "empty": "Dieses Gespräch hat noch keine Nachrichten",
+      "parse": "Die Antwort der KI hatte nicht das erwartete Format. Bitte erneut versuchen.",
+      "notFound": "Gespräch nicht gefunden",
+      "exists": "Unter {path} liegt bereits eine andere Notiz; wähle einen anderen Pfad"
     }
   }
 }
