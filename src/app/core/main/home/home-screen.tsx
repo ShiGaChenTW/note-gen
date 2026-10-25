@@ -1,6 +1,6 @@
 'use client'
 
-// Fork（#31）：首頁。蓋在三欄工作區上方（不卸載工作區），⌘⇧H 切換。
+// Fork（#31）：首頁。蓋在編輯器與右側欄上方、留著左側欄（不卸載工作區），⌘⇧H 切換。
 // 版型 D：頂部列＋指令區、主欄、右欄；卡片由 home-cards.tsx 登記。
 import { Fragment } from 'react'
 import { useTranslations } from 'next-intl'
@@ -38,7 +38,7 @@ export function HomeScreen() {
   const empty = HOME_CARDS.every(card => !isCardVisible(prefs, card))
 
   return (
-    <div className="absolute inset-x-0 top-0 bottom-7 z-30 overflow-y-auto bg-card" role="region" aria-label={t('title')}>
+    <div className="@container absolute top-0 right-0 bottom-7 left-(--home-left) z-30 overflow-y-auto bg-card" role="region" aria-label={t('title')}>
       <TodayProvider onNavigate={hide}>
         <div className="mx-auto flex max-w-[1400px] flex-col gap-4 p-5">
           <header className="flex flex-wrap items-center gap-x-5 gap-y-3">
@@ -65,7 +65,7 @@ export function HomeScreen() {
             </div>
           )}
 
-          <div className="grid grid-cols-[minmax(0,1fr)_400px] items-start gap-4 max-[1100px]:grid-cols-1">
+          <div className="grid grid-cols-[minmax(0,1fr)_400px] items-start gap-4 @max-[900px]:grid-cols-1">
             <div className="flex min-w-0 flex-col gap-4">
               <NeedsList cards={HOME_CARDS} />
               <Slot slot="main" className="flex min-w-0 flex-col gap-4" />

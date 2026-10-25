@@ -77,7 +77,7 @@ export function LeftSidebar() {
   const searchTab = isBuiltInLeftSidebarTab(leftSidebarTab) && leftSidebarTab !== 'noteTags' ? leftSidebarTab : 'files'
 
   return (
-    <div className="w-full h-full flex flex-col">
+    <div className="w-full h-full flex flex-col" data-left-sidebar>
       <Tabs value={leftSidebarTab} className="h-full w-full gap-0 overflow-hidden">
         <div className="flex h-12 w-full shrink-0 items-center justify-between border-b px-2">
           <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">

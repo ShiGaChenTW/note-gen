@@ -6,7 +6,7 @@ import { EditorLayout } from './editor/editor-layout'
 import { PluginRightSidebar } from '@/components/plugins/plugin-right-sidebar'
 import dynamic from 'next/dynamic'
 import { useSidebarStore } from "@/stores/sidebar"
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, type CSSProperties } from 'react'
 import { Store } from '@tauri-apps/plugin-store'
 import { Layout, PanelImperativeHandle } from 'react-resizable-panels'
 import { restoreEditorWindows } from '@/lib/editor-windows'
@@ -36,9 +36,9 @@ function getDefaultLayout(layoutKey: string) {
   // 根据布局组合返回默认值，但始终返回3个面板的尺寸
   switch (layoutKey) {
     case 'left-center-right':
-      return [20, 50, 30]
+      return [16, 54, 30] // Fork：原本 20，左側欄太寬
     case 'left-center':
-      return [30, 70, 0] // 右侧折叠
+      return [20, 80, 0] // 右侧折叠（Fork：原本 30）
     case 'center-right':
       return [0, 60, 40] // 左侧折叠
     case 'left-right':
@@ -68,7 +68,7 @@ function ResizableWrapper() {
   const centerPanelRef = useRef<PanelImperativeHandle>(null)
   const rightPanelRef = useRef<PanelImperativeHandle>(null)
   
-  const MIN_LEFT_SIDEBAR_WIDTH_PX = 320
+  const MIN_LEFT_SIDEBAR_WIDTH_PX = 260 // Fork：原本 320，左側欄太寬；再窄分頁列會被切掉
   const MIN_RIGHT_SIDEBAR_WIDTH_PX = 280
   const MIN_EDITOR_WIDTH_PX = 400
   const [minLeftSidebarSize, setMinLeftSidebarSize] = useState(24)
@@ -76,6 +76,7 @@ function ResizableWrapper() {
   const [minEditorSize, setMinEditorSize] = useState(30)
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(!leftSidebarVisible)
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(!rightSidebarVisible)
+  const [leftPanelWidth, setLeftPanelWidth] = useState(0)
 
   useEffect(() => {
     void restoreEditorWindows()
@@ -92,7 +93,7 @@ function ResizableWrapper() {
   const calculateMinSizes = () => {
     const windowWidth = window.innerWidth
     const preferredSizes = {
-      left: Math.min(Math.max(18, (MIN_LEFT_SIDEBAR_WIDTH_PX / windowWidth) * 100), 40),
+      left: Math.min(Math.max(12, (MIN_LEFT_SIDEBAR_WIDTH_PX / windowWidth) * 100), 40),
       center: Math.min(Math.max(25, (MIN_EDITOR_WIDTH_PX / windowWidth) * 100), 50),
       right: Math.min(Math.max(15, (MIN_RIGHT_SIDEBAR_WIDTH_PX / windowWidth) * 100), 40),
     }
@@ -217,7 +218,10 @@ function ResizableWrapper() {
         minSize={`${minLeftSidebarSize}%`}
         collapsible={true}
         collapsedSize="0%"
-        onResize={(size) => setLeftPanelCollapsed(size.asPercentage < 0.1)}
+        onResize={(size) => {
+          setLeftPanelCollapsed(size.asPercentage < 0.1)
+          setLeftPanelWidth(size.inPixels)
+        }}
       >
         <LeftSidebar />
       </ResizablePanel>
@@ -290,7 +294,11 @@ function ResizableWrapper() {
   }
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col">{/* Fork #31: relative 讓首頁蓋住三欄 */}
+    <div
+      className="relative flex h-full min-h-0 flex-col"
+      // Fork #31: relative 讓首頁蓋住編輯器與右側欄；--home-left 讓它避開左側欄（含 1px 分隔條）
+      style={{ '--home-left': leftSidebarVisible && !leftPanelCollapsed ? `${leftPanelWidth + 1}px` : '0px' } as CSSProperties}
+    >
       <ResizablePanelGroup
         orientation="horizontal"
         onLayoutChanged={onLayout}
