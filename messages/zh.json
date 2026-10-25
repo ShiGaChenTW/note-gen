@@ -6583,5 +6583,73 @@
     "loadError": "无法读取记录设置，请重试。",
     "saveError": "暂未确认保存成功，请重试确认；草稿已保留，不会重复保存。",
     "retry": "重试"
+  },
+  "agentTasks": {
+    "title": "后台任务",
+    "description": "交给 AI 在后台做的事。修改都先存成草稿，你收下后才写入 vault。",
+    "empty": "目前没有后台任务",
+    "open": "后台任务",
+    "sendToBackground": "放到后台执行",
+    "sent": {
+      "title": "已交给后台任务",
+      "description": "完成后会通知你，修改会等你审核",
+      "failed": "无法创建后台任务"
+    },
+    "status": {
+      "queued": "排队中",
+      "running": "进行中",
+      "awaiting_review": "等你审核",
+      "interrupted": "未完成（应用关闭时中断）",
+      "failed": "未完成（执行失败）",
+      "completed": "已完成",
+      "cancelled": "已取消"
+    },
+    "group": {
+      "waiting": "等你处理",
+      "running": "进行中",
+      "unfinished": "未完成",
+      "done": "已完成"
+    },
+    "pendingDrafts": "{count} 项草稿待审",
+    "tokens": "{count} tokens",
+    "actions": {
+      "review": "审核",
+      "cancel": "取消",
+      "resume": "继续",
+      "remove": "移除",
+      "accept": "接受",
+      "overwrite": "仍要覆盖",
+      "discard": "丢弃",
+      "acceptBulk": "接受可批量的 {count} 项",
+      "discardAll": "全部丢弃"
+    },
+    "kind": {
+      "create": "新建",
+      "update": "修改",
+      "delete": "删除",
+      "move": "移动",
+      "copy": "复制",
+      "folder": "文件夹"
+    },
+    "draftState": {
+      "applied": "已接受",
+      "discarded": "已丢弃",
+      "failed": "未写入"
+    },
+    "individual": "逐项确认",
+    "conflict": "任务执行期间该文件被修改过，请先查看内容再决定",
+    "showContent": "查看内容",
+    "hideContent": "收起内容",
+    "contentBefore": "原内容",
+    "contentNow": "当前 vault 中的内容",
+    "contentAfter": "草稿内容",
+    "back": "返回任务列表",
+    "reviewHint": "以下修改都还在草稿中，vault 尚未变动。移动、删除和有冲突的项目需要逐项确认。",
+    "applyFailed": "写入失败",
+    "notify": {
+      "awaiting_review": "后台任务完成，等你审核",
+      "completed": "后台任务已完成",
+      "failed": "后台任务执行失败"
+    }
   }
 }

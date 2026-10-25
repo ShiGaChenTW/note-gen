@@ -6482,5 +6482,73 @@
     "loadError": "無法讀取記錄設定，請重試。",
     "saveError": "尚未確認儲存成功，請重試確認；草稿已保留，不會重複儲存。",
     "retry": "重試"
+  },
+  "agentTasks": {
+    "title": "背景任務",
+    "description": "交給 AI 在背景做的事。修改都先存成草稿，你收下後才寫入 vault。",
+    "empty": "目前沒有背景任務",
+    "open": "背景任務",
+    "sendToBackground": "丟到背景執行",
+    "sent": {
+      "title": "已交給背景任務",
+      "description": "做完後會通知你，修改會等你審核",
+      "failed": "無法建立背景任務"
+    },
+    "status": {
+      "queued": "排隊中",
+      "running": "進行中",
+      "awaiting_review": "等你審核",
+      "interrupted": "沒做完（app 關閉時中斷）",
+      "failed": "沒做完（執行失敗）",
+      "completed": "已完成",
+      "cancelled": "已取消"
+    },
+    "group": {
+      "waiting": "等你回應",
+      "running": "進行中",
+      "unfinished": "沒做完",
+      "done": "已完成"
+    },
+    "pendingDrafts": "{count} 項草稿待審",
+    "tokens": "{count} tokens",
+    "actions": {
+      "review": "審核",
+      "cancel": "取消",
+      "resume": "繼續",
+      "remove": "移除",
+      "accept": "收下",
+      "overwrite": "仍要覆蓋",
+      "discard": "丟掉",
+      "acceptBulk": "收下可整批的 {count} 項",
+      "discardAll": "全部丟掉"
+    },
+    "kind": {
+      "create": "新增",
+      "update": "修改",
+      "delete": "刪除",
+      "move": "搬移",
+      "copy": "複製",
+      "folder": "資料夾"
+    },
+    "draftState": {
+      "applied": "已收下",
+      "discarded": "已丟掉",
+      "failed": "未寫入"
+    },
+    "individual": "逐條確認",
+    "conflict": "任務執行期間這個檔案被改過，請先看內容再決定",
+    "showContent": "看內容",
+    "hideContent": "收起內容",
+    "contentBefore": "原本內容",
+    "contentNow": "目前 vault 裡的內容",
+    "contentAfter": "草稿內容",
+    "back": "回到任務清單",
+    "reviewHint": "以下修改都還在草稿裡，vault 尚未變動。搬移、刪除與有衝突的項目要逐條確認。",
+    "applyFailed": "寫入失敗",
+    "notify": {
+      "awaiting_review": "背景任務完成，等你審核",
+      "completed": "背景任務已完成",
+      "failed": "背景任務執行失敗"
+    }
   }
 }
