@@ -7,7 +7,7 @@ node_modules
 /packages/*/dist/
 dist-ssr
 plans/
-docs/
+docs/*
 src-tauri/gen/*
 !src-tauri/gen/android/
 src-tauri/gen/android/**
@@ -36,6 +36,11 @@ target/*
 .superpowers/*
 .agents/*
 /docs/*/*
+# 保留 agent 設定與 ADR 進版控（其餘規劃文件仍忽略）
+!/docs/agents/
+!/docs/agents/*
+!/docs/adr/
+!/docs/adr/*
 skills-lock.json
 src-tauri/resources/ocr/*
 src-tauri/resources/calendar/*
@@ -96,6 +101,8 @@ docs/.vitepress/cache
 /*.md
 !README.md
 !README.zh-CN.md
+!AGENTS.md
+!GLOSSARY.md
 
 # backup files
 *.backup
@@ -113,3 +120,5 @@ docs/.vitepress/cache
 
 # graft's local graph cache — regenerable, not committed (run `graft build`).
 /graft/
+# Orbit per-user state — not a repository artifact.
+.orbit/
