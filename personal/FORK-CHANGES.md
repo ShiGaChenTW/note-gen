@@ -128,6 +128,7 @@ npx pnpm@9 install --frozen-lockfile
 | 2026-10-26 | `src/stores/vault-index.ts` | 新增 `selectLinklessPaths`（沒有進出連結的筆記，可排除資料夾），共用既有的反向索引快取 | #32「缺連結」規則 |
 | 2026-10-26 | `src/lib/conversation-summary/`（新）、`src/app/core/main/conversation-summary/`（新）、`home/cards/tasks-card.tsx` | 對話摘要（#33）：依對話 id 從 `chats` 讀訊息，逐字稿標「我」（role `user`）與「AI」（role `system`），模型回傳 JSON 後輸出固定分節的 Markdown；frontmatter `type: 對話摘要`、`conversation`（syncId 優先）、`date`、`topics`。再按一次依 `conversation` 找到既有摘要更新；目的路徑若是別的筆記不覆蓋。首頁最近對話旁顯示「摘要／已摘要」，最近 3 天、4 則以上、未摘要（或摘要比對話舊）的對話列進「需要你處理」 | Scott 要把對話收斂成知識報告的證據 |
 | 2026-10-26 | `src/app/core/main/chat/chat-header.tsx`、`fork-services.tsx`、`messages/*.json` | 掛載點：標題列右側（臨時對話按鈕前）加 `ConversationSummaryButton`；`ForkServices` 掛 `ConversationSummaryDialog`；頂層新增 `conversationSummary`，六語系皆有翻譯 | #33 |
+| 2026-10-26 | `src/lib/knowledge-report/`（新） | 知識報告（一）（#34）：主題清單筆記 `報告/主題清單.md`（`## 主題` ＋ `- 標籤／MOC／資料夾／筆記／狀態／備註：`，「狀態：待確認」是提議）；候選主題取第一層標籤與 MOC；掌握度公式 `mastery.ts`（七個分項合計 100，等級＝分數區間且門檻全過，否則壓在下一級起點之下；附離下一級的缺口）；資料來源：筆記（自己寫的字／摘抄、結構、總結、心得）、每日筆記的連結、對話摘要條數、筆記連到的 PDF（`parseLocalDocument`）、本週足跡、`active` 記憶（只讀）；排除資料夾存在 `store.json` 的 `knowledgeReportExcludeFolders`，`報告/` 永遠排除；增量快取在 AppData `knowledge-report/<hash>.json`（依 mtime 重讀、記修改日、PDF 字數、主題摘要指紋）。只有 lib，沒有畫面（畫面在 #35） | 規格 §3.1–§3.3 |
 
 ## 刻意不改的東西
 
@@ -431,3 +432,9 @@ npx pnpm@9 tauri dev
 3. 同一對話再按一次：按鈕變「更新摘要」、路徑沿用既有那份；存檔後仍只有一個檔案。
 4. 對話用到過的筆記（RAG 來源、Agent 讀過的檔案）列在「相關筆記」為雙鏈。
 5. 首頁「Agent 任務」卡：最近對話旁顯示「摘要」或「已摘要」；點對話會切過去並回到工作區。
+
+### Phase 3-5 知識報告（一）（#34）
+
+沒有畫面，驗收在 #35 的報告卡一起做。本 PR 以單元測試（`src/lib/knowledge-report/knowledge-report.test.ts`）與對測試 vault 的一次唯讀試算確認。
+1. 用 Obsidian 手機版打開 `報告/主題清單.md`，改一個主題的標籤或刪掉「狀態：待確認」：下次報告依新清單計算。
+2. 權重校準：用真實 vault 跑一次，看各主題的等級是否符合自己的感覺，再調 `DEFAULT_MASTERY_CONFIG`。
