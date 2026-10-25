@@ -16,7 +16,8 @@ export function HomeService() {
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       if (!(event.metaKey || event.ctrlKey) || !event.shiftKey || event.altKey) return
-      if (event.code !== 'KeyH') return
+      // 注音等輸入法下 key 可能不是 h，所以也看實體鍵位。
+      if (event.code !== 'KeyH' && event.key.toLowerCase() !== 'h' && event.keyCode !== 72) return
       event.preventDefault()
       useHomeStore.getState().toggle()
     }

@@ -121,6 +121,9 @@ npx pnpm@9 install --frozen-lockfile
 | 2026-10-26 | `src/lib/agent-tasks/`（新）、`src/db/agent-tasks.ts`（新）、`src/app/core/main/agent-tasks/`（新） | Agent 任務中心（#30，ADR 0001）：重用 `AgentRuntime`，每個任務各自一份狀態與草稿，不經過 `chat-send.tsx`／`useChatStore`。背景任務只拿到唯讀工具（排除 editor／canvas／attachment／image／chat 類與 `note_open_file`、`ask_user_question`）＋包成草稿的 `note_create/update/delete/rename/move/copy_file`、`folder_create`；`folder_delete`、記憶寫入、標籤／記錄寫入、腳本、MCP 都不提供。草稿收下時用原工具寫入，寫入前比對衝突；搬移、刪除、衝突逐條確認。並行上限讀 `store.json` 的 `agentTaskConcurrency`（預設 2）；啟動時把 running／queued 標成 interrupted | Scott 要 AI 能在背景做事，修改先存草稿最後一起審 |
 | 2026-10-26 | `src/lib/agent/types.ts`、`src/lib/agent/runtime.ts` | 掛載點：`AgentRuntimeInput.transformTools?`；`run()` 組好工具清單後若有就套用（1 行，標 `// Fork #30`）。上游同步時要確認這段仍在、工具清單的組法沒變 | #30 |
 | 2026-10-26 | `src/app/core/main/chat/chat-input.tsx`、`src/app/core/main/fork-services.tsx`、`messages/*.json` | 掛載點：輸入框右側（`AgentPermissionModeSelect` 後）加 `BackgroundTaskControls`（丟到背景、背景任務清單，桌面才顯示）；`ForkServices` 掛 `AgentTaskService`；頂層新增 `agentTasks`，六語系皆有翻譯 | #30 |
+| 2026-10-26 | `src/app/core/main/home/`（新）、`src/lib/home/cards.ts`（新）、`src/stores/home.ts`（新） | 首頁（#31，版型 D）：蓋在三欄工作區上方（`absolute`，保留狀態列，不卸載工作區），⌘⇧H 切換（比對 `code`／`key`／`keyCode`，注音輸入法下才穩定）；卡片登記在 `home-cards.tsx`，可放進 header／top／main／side，開關與排序存在 `store.json` 的 `homeCards`，啟動是否顯示存在 `homeShowOnStartup`（預設是） | Scott 要「全新首頁」當第二大腦與日程的入口 |
+| 2026-10-26 | `src/app/core/main/today/today-page.tsx`、`today-tab.tsx`（原 `.ts`）、`src/app/core/main/editor/editor-layout.tsx` | Today 分頁退役：`TodayPage` 拆成 `TodayProvider`＋`TodayTitle`／`TodayWeekNav`／`TodayFocus`／`TodayTasks`／`TodayAgenda`／`TodayFootprint`，組成首頁「日程」卡片；從首頁開筆記後自動回工作區。`openTodayTab()` 改為打開首頁；`editor-layout.tsx` 拿掉 `useTodayTabOpener`，舊版存下的 `blank://fork-today` 分頁改顯示 `TodayMovedNotice` | #31 |
+| 2026-10-26 | `src/app/core/main/page.tsx`、`fork-services.tsx`、`messages/*.json` | 掛載點：`/core/main` 根元素加 `relative`（首頁定位用）；`ForkServices` 掛 `HomeService`；頂層新增 `home`，`today.status.aria` 改成「開啟首頁」，六語系皆有翻譯 | #31 |
 
 ## 刻意不改的東西
 
@@ -399,3 +402,11 @@ npx pnpm@9 tauri dev
 5. 衝突：丟一個修改某檔的任務，任務完成後、審核前先用外部編輯器改那個檔案；審核畫面該項顯示衝突提示，按鈕變「仍要覆蓋」。
 6. 並行：連續丟三個任務，清單裡兩個進行中、一個排隊。取消進行中的那個：沒有草稿的變「已取消」。
 7. 任務進行中關掉 app 再開：該任務在「沒做完」，按「繼續」重新執行，已存的草稿還在、不會重複。
+
+### Phase 3-2 首頁骨架（#31）
+
+1. 啟動後先看到首頁：頂部日期、週列、開啟 Daily Note；主欄今日焦點與任務；右欄今日進程與今日足跡（內容與原 Today 相同）。
+2. ⌘⇧H 切到工作區，原本開著的分頁與捲動位置都在；再按一次回首頁。狀態列「今日／需處理」也會打開首頁。
+3. 在首頁點任務下方的來源檔名：打開該筆記並回到工作區。
+4. 「編輯首頁」關掉日程：首頁顯示「所有卡片都關掉了」；關掉「啟動時顯示首頁」後重開 app 直接進工作區；兩個設定重開後都保留。
+5. 舊版存下的「今日」分頁：內容改成「今日頁已經移到首頁」與「打開首頁」按鈕。

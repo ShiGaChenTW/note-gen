@@ -199,7 +199,7 @@
     "status": {
       "open": "Today",
       "need": "{count} to handle",
-      "aria": "{count} items to handle, open the Today tab"
+      "aria": "{count} items to handle, open Home"
     },
     "undo": "Undo",
     "undoStale": "The file changed elsewhere, so it can’t be undone",
@@ -6665,6 +6665,7 @@
     "moveUp": "Move up",
     "moveDown": "Move down",
     "showOnStartup": "Show Home on startup",
-    "todayMoved": "The Today page has moved to the Schedule card on Home."
+    "todayMoved": "The Today page has moved to the Schedule card on Home.",
+    "empty": "All cards are turned off."
   }
 }

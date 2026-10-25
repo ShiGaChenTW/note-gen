@@ -199,7 +199,7 @@
     "status": {
       "open": "Hoje",
       "need": "{count} pendentes",
-      "aria": "{count} itens pendentes, abrir a aba Hoje"
+      "aria": "{count} itens pendentes, abrir o Início"
     },
     "undo": "Desfazer",
     "undoStale": "O arquivo mudou em outro lugar e não pode ser desfeito",
@@ -6541,6 +6541,7 @@
     "moveUp": "Mover para cima",
     "moveDown": "Mover para baixo",
     "showOnStartup": "Mostrar o Início ao abrir o app",
-    "todayMoved": "A página Hoje agora é o cartão Agenda no Início."
+    "todayMoved": "A página Hoje agora é o cartão Agenda no Início.",
+    "empty": "Todos os cartões estão desativados."
   }
 }

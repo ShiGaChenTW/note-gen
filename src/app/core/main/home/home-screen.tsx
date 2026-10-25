@@ -6,7 +6,7 @@ import { Fragment } from 'react'
 import { useTranslations } from 'next-intl'
 import { PanelsTopLeft, Settings2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { cardsForSlot, type HomeSlot } from '@/lib/home/cards'
+import { cardsForSlot, isCardVisible, type HomeSlot } from '@/lib/home/cards'
 import useHomeStore from '@/stores/home'
 import { TodayProvider, TodayTitle } from '../today/today-page'
 import { HOME_CARDS } from './home-cards'
@@ -32,7 +32,9 @@ export function HomeScreen() {
   const loaded = useHomeStore(state => state.loaded)
   const hide = useHomeStore(state => state.hide)
   const setEditing = useHomeStore(state => state.setEditing)
+  const prefs = useHomeStore(state => state.prefs)
   if (!loaded || !visible) return null
+  const empty = HOME_CARDS.every(card => !isCardVisible(prefs, card))
 
   return (
     <div className="absolute inset-x-0 top-0 bottom-7 z-30 overflow-y-auto bg-card" role="region" aria-label={t('title')}>
@@ -54,6 +56,13 @@ export function HomeScreen() {
           </header>
 
           <Slot slot="top" className="flex flex-col gap-3" />
+
+          {empty && (
+            <div className="grid place-items-center gap-3 rounded-xl border border-dashed py-16 text-center">
+              <p className="text-sm text-muted-foreground">{t('empty')}</p>
+              <Button variant="secondary" onClick={() => setEditing(true)}>{t('edit')}</Button>
+            </div>
+          )}
 
           <div className="grid grid-cols-[minmax(0,1fr)_400px] items-start gap-4 max-[1100px]:grid-cols-1">
             <Slot slot="main" className="flex min-w-0 flex-col gap-4" />

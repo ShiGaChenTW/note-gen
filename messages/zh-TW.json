@@ -199,7 +199,7 @@
     "status": {
       "open": "今日",
       "need": "需處理 {count}",
-      "aria": "需處理 {count} 項，開啟今日分頁"
+      "aria": "需處理 {count} 項，開啟首頁"
     },
     "undo": "復原",
     "undoStale": "檔案已在別處修改，無法復原",
@@ -6564,6 +6564,7 @@
     "moveUp": "上移",
     "moveDown": "下移",
     "showOnStartup": "啟動時顯示首頁",
-    "todayMoved": "今日頁已經移到首頁的「日程」卡片。"
+    "todayMoved": "今日頁已經移到首頁的「日程」卡片。",
+    "empty": "所有卡片都關掉了。"
   }
 }

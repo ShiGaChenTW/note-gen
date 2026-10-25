@@ -199,7 +199,7 @@
     "status": {
       "open": "Heute",
       "need": "{count} zu erledigen",
-      "aria": "{count} Punkte zu erledigen, Heute-Tab öffnen"
+      "aria": "{count} Punkte zu erledigen, Startseite öffnen"
     },
     "undo": "Rückgängig",
     "undoStale": "Die Datei wurde anderswo geändert und kann nicht zurückgesetzt werden",
@@ -6525,6 +6525,7 @@
     "moveUp": "Nach oben",
     "moveDown": "Nach unten",
     "showOnStartup": "Startseite beim Start anzeigen",
-    "todayMoved": "Die Heute-Seite ist jetzt die Zeitplan-Karte auf der Startseite."
+    "todayMoved": "Die Heute-Seite ist jetzt die Zeitplan-Karte auf der Startseite.",
+    "empty": "Alle Karten sind ausgeschaltet."
   }
 }
