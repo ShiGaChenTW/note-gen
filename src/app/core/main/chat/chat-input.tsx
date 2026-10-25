@@ -13,6 +13,7 @@ import { useTranslations } from 'next-intl'
 import { useLocalStorage } from 'react-use';
 import { getDefaultArticleAbsolutePath, getFilePathOptions, getWorkspacePath } from "@/lib/workspace"
 import { ChatSend, type ChatSendHandle } from "./chat-send"
+import { BackgroundTaskControls } from "../agent-tasks/background-task-controls" // Fork #30
 import { isLinkedFolder, LinkedResource, MarkdownFile, LinkedFolder } from "@/lib/files"
 import emitter from "@/lib/emitter"
 import { ChatToolsDrawer } from "@/app/mobile/chat/components/chat-tools-drawer"
@@ -1606,6 +1607,7 @@ ${previewLines.join('\n')}
               imageCount={attachedImages.length}
             />
             <AgentPermissionModeSelect />
+            {!isMobile && <BackgroundTaskControls text={text} onSent={() => setText('')} />}
             <ChatSend
               inputValue={text}
               preparingAttachments={pendingFolderAttachments > 0}

@@ -6443,5 +6443,73 @@
     "loadError": "Aufnahmeeinstellungen konnten nicht geladen werden. Bitte erneut versuchen.",
     "saveError": "Speicherung nicht bestätigt. Erneut versuchen; der Entwurf bleibt erhalten und wird nicht doppelt gespeichert.",
     "retry": "Erneut versuchen"
+  },
+  "agentTasks": {
+    "title": "Hintergrundaufgaben",
+    "description": "Arbeit, die die KI im Hintergrund erledigt. Änderungen werden als Entwürfe gespeichert und erst nach deiner Zustimmung in den Vault geschrieben.",
+    "empty": "Noch keine Hintergrundaufgaben",
+    "open": "Hintergrundaufgaben",
+    "sendToBackground": "Im Hintergrund ausführen",
+    "sent": {
+      "title": "An den Hintergrund übergeben",
+      "description": "Du wirst benachrichtigt, wenn sie fertig ist; Änderungen warten auf deine Prüfung",
+      "failed": "Hintergrundaufgabe konnte nicht erstellt werden"
+    },
+    "status": {
+      "queued": "In der Warteschlange",
+      "running": "Läuft",
+      "awaiting_review": "Wartet auf deine Prüfung",
+      "interrupted": "Unvollständig (beim Schließen der App unterbrochen)",
+      "failed": "Unvollständig (fehlgeschlagen)",
+      "completed": "Abgeschlossen",
+      "cancelled": "Abgebrochen"
+    },
+    "group": {
+      "waiting": "Wartet auf dich",
+      "running": "Läuft",
+      "unfinished": "Unvollständig",
+      "done": "Erledigt"
+    },
+    "pendingDrafts": "{count} Entwürfe zu prüfen",
+    "tokens": "{count} Tokens",
+    "actions": {
+      "review": "Prüfen",
+      "cancel": "Abbrechen",
+      "resume": "Fortsetzen",
+      "remove": "Entfernen",
+      "accept": "Übernehmen",
+      "overwrite": "Trotzdem überschreiben",
+      "discard": "Verwerfen",
+      "acceptBulk": "{count} gesammelt übernehmen",
+      "discardAll": "Alle verwerfen"
+    },
+    "kind": {
+      "create": "Neu",
+      "update": "Bearbeiten",
+      "delete": "Löschen",
+      "move": "Verschieben",
+      "copy": "Kopieren",
+      "folder": "Ordner"
+    },
+    "draftState": {
+      "applied": "Übernommen",
+      "discarded": "Verworfen",
+      "failed": "Nicht geschrieben"
+    },
+    "individual": "Einzeln bestätigen",
+    "conflict": "Diese Datei wurde während der Aufgabe geändert. Prüfe den Inhalt, bevor du entscheidest.",
+    "showContent": "Inhalt anzeigen",
+    "hideContent": "Inhalt ausblenden",
+    "contentBefore": "Ursprünglicher Inhalt",
+    "contentNow": "Aktueller Inhalt im Vault",
+    "contentAfter": "Entwurfsinhalt",
+    "back": "Zurück zu den Aufgaben",
+    "reviewHint": "Diese Änderungen sind noch Entwürfe; der Vault ist unverändert. Verschieben, Löschen und Konflikte müssen einzeln bestätigt werden.",
+    "applyFailed": "Schreiben fehlgeschlagen",
+    "notify": {
+      "awaiting_review": "Hintergrundaufgabe fertig – bitte prüfen",
+      "completed": "Hintergrundaufgabe abgeschlossen",
+      "failed": "Hintergrundaufgabe fehlgeschlagen"
+    }
   }
 }

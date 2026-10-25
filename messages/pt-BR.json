@@ -6459,5 +6459,73 @@
     "loadError": "Não foi possível carregar as configurações. Tente novamente.",
     "saveError": "Salvamento não confirmado. Tente novamente; o rascunho será mantido e não será salvo duas vezes.",
     "retry": "Tentar novamente"
+  },
+  "agentTasks": {
+    "title": "Tarefas em segundo plano",
+    "description": "Trabalho entregue à IA em segundo plano. As alterações ficam como rascunhos e só são gravadas no vault depois que você aceitar.",
+    "empty": "Nenhuma tarefa em segundo plano",
+    "open": "Tarefas em segundo plano",
+    "sendToBackground": "Executar em segundo plano",
+    "sent": {
+      "title": "Enviado para segundo plano",
+      "description": "Você será avisado quando terminar; as alterações aguardam sua revisão",
+      "failed": "Não foi possível criar a tarefa em segundo plano"
+    },
+    "status": {
+      "queued": "Na fila",
+      "running": "Em execução",
+      "awaiting_review": "Aguardando sua revisão",
+      "interrupted": "Inacabada (interrompida ao fechar o app)",
+      "failed": "Inacabada (falhou)",
+      "completed": "Concluída",
+      "cancelled": "Cancelada"
+    },
+    "group": {
+      "waiting": "Precisa de você",
+      "running": "Em execução",
+      "unfinished": "Inacabadas",
+      "done": "Concluídas"
+    },
+    "pendingDrafts": "{count} rascunhos para revisar",
+    "tokens": "{count} tokens",
+    "actions": {
+      "review": "Revisar",
+      "cancel": "Cancelar",
+      "resume": "Continuar",
+      "remove": "Remover",
+      "accept": "Aceitar",
+      "overwrite": "Sobrescrever mesmo assim",
+      "discard": "Descartar",
+      "acceptBulk": "Aceitar {count} em lote",
+      "discardAll": "Descartar tudo"
+    },
+    "kind": {
+      "create": "Criar",
+      "update": "Editar",
+      "delete": "Excluir",
+      "move": "Mover",
+      "copy": "Copiar",
+      "folder": "Pasta"
+    },
+    "draftState": {
+      "applied": "Aceito",
+      "discarded": "Descartado",
+      "failed": "Não gravado"
+    },
+    "individual": "Confirmar um por um",
+    "conflict": "Este arquivo mudou enquanto a tarefa rodava. Veja o conteúdo antes de decidir.",
+    "showContent": "Ver conteúdo",
+    "hideContent": "Ocultar conteúdo",
+    "contentBefore": "Conteúdo original",
+    "contentNow": "Conteúdo atual no vault",
+    "contentAfter": "Conteúdo do rascunho",
+    "back": "Voltar às tarefas",
+    "reviewHint": "Estas alterações ainda são rascunhos; o vault não mudou. Movimentações, exclusões e conflitos precisam ser confirmados um por um.",
+    "applyFailed": "Falha ao gravar",
+    "notify": {
+      "awaiting_review": "Tarefa em segundo plano concluída — revise",
+      "completed": "Tarefa em segundo plano concluída",
+      "failed": "Tarefa em segundo plano falhou"
+    }
   }
 }

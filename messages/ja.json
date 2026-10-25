@@ -6492,5 +6492,73 @@
     "loadError": "記録設定を読み込めませんでした。再試行してください。",
     "saveError": "保存を確認できませんでした。再試行してください。下書きは保持され、重複して保存されません。",
     "retry": "再試行"
+  },
+  "agentTasks": {
+    "title": "バックグラウンドタスク",
+    "description": "AI にバックグラウンドで任せた作業です。変更は下書きとして保存され、承認するまで vault には書き込まれません。",
+    "empty": "バックグラウンドタスクはありません",
+    "open": "バックグラウンドタスク",
+    "sendToBackground": "バックグラウンドで実行",
+    "sent": {
+      "title": "バックグラウンドに送りました",
+      "description": "完了したら通知します。変更はあなたの確認を待ちます",
+      "failed": "バックグラウンドタスクを作成できませんでした"
+    },
+    "status": {
+      "queued": "待機中",
+      "running": "実行中",
+      "awaiting_review": "確認待ち",
+      "interrupted": "未完了（アプリ終了で中断）",
+      "failed": "未完了（失敗）",
+      "completed": "完了",
+      "cancelled": "キャンセル済み"
+    },
+    "group": {
+      "waiting": "あなたの対応待ち",
+      "running": "実行中",
+      "unfinished": "未完了",
+      "done": "完了"
+    },
+    "pendingDrafts": "確認待ちの下書き {count} 件",
+    "tokens": "{count} トークン",
+    "actions": {
+      "review": "確認",
+      "cancel": "キャンセル",
+      "resume": "続ける",
+      "remove": "削除",
+      "accept": "承認",
+      "overwrite": "それでも上書き",
+      "discard": "破棄",
+      "acceptBulk": "一括承認できる {count} 件を承認",
+      "discardAll": "すべて破棄"
+    },
+    "kind": {
+      "create": "新規",
+      "update": "編集",
+      "delete": "削除",
+      "move": "移動",
+      "copy": "コピー",
+      "folder": "フォルダ"
+    },
+    "draftState": {
+      "applied": "承認済み",
+      "discarded": "破棄済み",
+      "failed": "未書き込み"
+    },
+    "individual": "1 件ずつ確認",
+    "conflict": "タスク実行中にこのファイルが変更されました。内容を確認してから決めてください。",
+    "showContent": "内容を表示",
+    "hideContent": "内容を閉じる",
+    "contentBefore": "元の内容",
+    "contentNow": "現在の vault の内容",
+    "contentAfter": "下書きの内容",
+    "back": "タスク一覧に戻る",
+    "reviewHint": "以下の変更はまだ下書きで、vault は変わっていません。移動・削除・競合のある項目は 1 件ずつ確認してください。",
+    "applyFailed": "書き込みに失敗しました",
+    "notify": {
+      "awaiting_review": "バックグラウンドタスクが完了しました。確認してください",
+      "completed": "バックグラウンドタスクが完了しました",
+      "failed": "バックグラウンドタスクが失敗しました"
+    }
   }
 }

@@ -6583,5 +6583,73 @@
     "loadError": "Could not load capture settings. Please retry.",
     "saveError": "Save not confirmed. Retry to confirm; your draft is kept and will not be saved twice.",
     "retry": "Retry"
+  },
+  "agentTasks": {
+    "title": "Background tasks",
+    "description": "Work handed to AI in the background. Changes are saved as drafts and only written to the vault after you accept them.",
+    "empty": "No background tasks yet",
+    "open": "Background tasks",
+    "sendToBackground": "Run in background",
+    "sent": {
+      "title": "Sent to background",
+      "description": "You'll be notified when it's done; changes wait for your review",
+      "failed": "Could not create background task"
+    },
+    "status": {
+      "queued": "Queued",
+      "running": "Running",
+      "awaiting_review": "Waiting for your review",
+      "interrupted": "Unfinished (interrupted when the app closed)",
+      "failed": "Unfinished (failed)",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "group": {
+      "waiting": "Needs you",
+      "running": "Running",
+      "unfinished": "Unfinished",
+      "done": "Done"
+    },
+    "pendingDrafts": "{count} drafts to review",
+    "tokens": "{count} tokens",
+    "actions": {
+      "review": "Review",
+      "cancel": "Cancel",
+      "resume": "Continue",
+      "remove": "Remove",
+      "accept": "Accept",
+      "overwrite": "Overwrite anyway",
+      "discard": "Discard",
+      "acceptBulk": "Accept {count} batchable",
+      "discardAll": "Discard all"
+    },
+    "kind": {
+      "create": "Create",
+      "update": "Edit",
+      "delete": "Delete",
+      "move": "Move",
+      "copy": "Copy",
+      "folder": "Folder"
+    },
+    "draftState": {
+      "applied": "Accepted",
+      "discarded": "Discarded",
+      "failed": "Not written"
+    },
+    "individual": "Review one by one",
+    "conflict": "This file changed while the task was running. Check the content before deciding.",
+    "showContent": "Show content",
+    "hideContent": "Hide content",
+    "contentBefore": "Original content",
+    "contentNow": "Current content in the vault",
+    "contentAfter": "Draft content",
+    "back": "Back to tasks",
+    "reviewHint": "These changes are still drafts; the vault has not changed. Moves, deletions and conflicts must be accepted one by one.",
+    "applyFailed": "Write failed",
+    "notify": {
+      "awaiting_review": "Background task done — ready for review",
+      "completed": "Background task completed",
+      "failed": "Background task failed"
+    }
   }
 }

@@ -242,6 +242,8 @@ export interface AgentRuntimeInput {
   conversationId?: number
   workspaceId?: string
   useMemories?: boolean
+  /** Fork（#30）：背景任務用來替換可用工具（唯讀＋草稿版檔案操作）。 */
+  transformTools?: (tools: AgentTool[]) => AgentTool[]
 }
 
 export interface AgentSteeringPayload {

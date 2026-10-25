@@ -802,11 +802,12 @@ export class AgentRuntime {
     })
 
     const ragAgentPolicy = await getRagAgentPolicy()
-    const allTools = [...agentToolRegistry.listTools(), ...mcpToolCatalog.directTools]
+    const baseTools = [...agentToolRegistry.listTools(), ...mcpToolCatalog.directTools]
       .filter(tool =>
         (ragAgentPolicy.automaticSearchEnabled || tool.name !== 'knowledge_search')
         && (aiConfig.enableWebSearch === true || tool.category !== 'web')
       )
+    const allTools = input.transformTools ? input.transformTools(baseTools) : baseTools // Fork #30
     const toolMap = new Map(allTools.map((tool) => [tool.name, tool]))
     let tools = selectToolsForContext(context, allTools, input.permissionMode)
     const customSystemPrompt = await getSystemPromptContent()

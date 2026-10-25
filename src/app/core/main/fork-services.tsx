@@ -9,6 +9,7 @@ import { DailyNoteAutoOpen } from './daily-note-auto-open'
 import { DailyNavShortcuts } from './daily/daily-nav-shortcuts'
 import { ReminderService } from './daily/reminder-service'
 import { LinkRewritePrompt } from './link-rewrite/link-rewrite-prompt'
+import { AgentTaskService } from './agent-tasks/agent-task-service'
 
 /** F3: keep the vault index in sync with the active workspace. */
 function VaultIndexService() {
@@ -40,6 +41,7 @@ export function ForkServices() {
       <DailyNavShortcuts />
       <ReminderService />
       <LinkRewritePrompt />
+      <AgentTaskService />
     </>
   )
 }
