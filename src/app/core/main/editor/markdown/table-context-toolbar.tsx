@@ -21,6 +21,7 @@ import { ButtonGroup, ButtonGroupSeparator } from '@/components/ui/button-group'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 import { PluginEditorToolbar } from '@/components/plugins/plugin-editor-toolbar'
+import useHomeStore from '@/stores/home'
 
 interface TableContextToolbarProps {
   editor: Editor
@@ -192,6 +193,8 @@ export function TableContextToolbar({ editor, pluginsEnabled = false }: TableCon
     editor.chain().focus().deleteColumn().run()
   }, [editor])
 
+  const homeVisible = useHomeStore(state => state.visible)
+
   const deleteRow = useCallback(() => {
     editor.chain().focus().deleteRow().run()
   }, [editor])
@@ -205,7 +208,8 @@ export function TableContextToolbar({ editor, pluginsEnabled = false }: TableCon
     editor.chain().focus().setCellAttribute('align', alignment).run()
   }, [editor])
 
-  if (!tableState?.active) return null
+  // Fork #31：工具列掛在 body 上、z-50 會浮到首頁上方，首頁開著時不顯示。
+  if (!tableState?.active || homeVisible) return null
 
   return createPortal(
     <div
