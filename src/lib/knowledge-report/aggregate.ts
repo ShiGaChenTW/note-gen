@@ -225,3 +225,23 @@ export function aggregateTopics(input: AggregateInput): TopicResult[] {
     }
   })
 }
+
+/** 知識庫健康的統計（只算一般筆記；排除的資料夾、每日筆記、對話摘要、報告不算）。 */
+export function vaultStats(input: Pick<AggregateInput, 'notes' | 'daily' | 'excludeFolders'>, inboxFolder: string) {
+  const regular = input.notes.filter(note => noteRole(note, input) === 'note')
+  const lookup = buildLinkLookup(input.notes.map(note => note.path))
+  const { outgoing, backlinks } = buildVaultLinkIndex(input.notes, lookup)
+  const inbox = inboxFolder.replace(/^\/+|\/+$/g, '')
+  let unlinked = 0
+  let orphans = 0
+  let inboxCount = 0
+  for (const note of regular) {
+    const hasOut = (outgoing.get(note.path) ?? []).some(link => link.resolved !== null && link.resolved !== note.path)
+    // 報告引用證據的雙鏈不算
+    const hasIn = (backlinks.get(note.path.toLowerCase()) ?? []).some(ref => !ref.sourcePath.startsWith(`${REPORT_FOLDER}/`))
+    if (!hasOut) unlinked++
+    if (!hasOut && !hasIn) orphans++
+    if (inbox && note.path.startsWith(`${inbox}/`)) inboxCount++
+  }
+  return { notes: regular.length, unlinked, orphans, inbox: inboxCount }
+}

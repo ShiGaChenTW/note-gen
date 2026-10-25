@@ -13,7 +13,7 @@ import type { IndexedNote } from '@/lib/vault-index/index-note'
 import { aggregateTopics, noteRole, type AggregateInput, type PdfInput, type TopicResult } from './aggregate'
 import { applyRefresh, editDaysOf, normalizeCache, planRefresh, type NoteUpdate, type ReportCache } from './cache'
 import { analyzeNote, analyzeSummary, countWords } from './note-signals'
-import { candidateTopics, confirmedTopics, parseTopicList, TOPIC_LIST_PATH, uncoveredNotes, type Topic, type TopicList } from './topics'
+import { assignTopics, candidateTopics, confirmedTopics, parseTopicList, TOPIC_LIST_PATH, uncoveredNotes, type Topic, type TopicList } from './topics'
 
 /** store.json：知識報告排除的資料夾（vault 相對路徑）。被排除的內容永遠不送給模型。 */
 export const EXCLUDE_FOLDERS_KEY = 'knowledgeReportExcludeFolders'
@@ -231,6 +231,7 @@ export async function computeKnowledgeSnapshot(): Promise<KnowledgeSnapshot> {
   const regular = input.notes.filter(note => noteRole(note, input) === 'note')
   const known = new Set((sources.topicList?.topics ?? []).map(topic => topic.name.toLowerCase()))
   const candidates = candidateTopics(regular).filter(topic => !known.has(topic.name.toLowerCase()))
-  const assignment = new Map(results.map(result => [result.topic.name, new Set(result.paths)]))
+  // 清單裡（含待確認）與候選主題已涵蓋的都不算未歸類，AI 只提議剩下的
+  const assignment = assignTopics([...(sources.topicList?.topics ?? []), ...candidates], regular)
   return { results, candidates, uncovered: uncoveredNotes(regular, assignment), sources }
 }

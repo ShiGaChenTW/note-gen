@@ -143,3 +143,18 @@ export function analyzeSummary(content: string): SummaryCounts {
   }
   return counts
 }
+
+/** 對話摘要「我的觀點與理解」（第 2 個 `##`）各條的文字，給報告評語參考。 */
+export function summaryViews(content: string): string[] {
+  const out: string[] = []
+  let section = 0
+  for (const line of splitFrontmatter(content).body.replace(/\r\n?/g, '\n').split('\n')) {
+    if (/^##\s/.test(line)) {
+      section++
+      continue
+    }
+    const item = section === 2 && line.match(/^\s*[-*]\s+(.*)$/)
+    if (item && !NONE_ITEM_RE.test(item[1].trim())) out.push(item[1].trim())
+  }
+  return out
+}

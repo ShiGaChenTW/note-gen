@@ -8,6 +8,7 @@ import { TodayAgenda, TodayFocus, TodayFootprint, TodayTasks, TodayWeekNav } fro
 import { CaptureBar } from './cards/capture-bar'
 import { FootprintCard } from './cards/footprint-card'
 import { RecentNotes } from './cards/recent-card'
+import { HealthCard, ReportSettingsPanel, ReportStrip, useReportNeeds } from './cards/report-card'
 import { SignalRulesSettings, useSignalNeeds } from './cards/signals-card'
 import { TasksSection, useTaskNeeds } from './cards/tasks-card'
 
@@ -52,9 +53,11 @@ function ScheduleSide() {
 
 export const HOME_CARDS: HomeCardDef[] = [
   { key: 'capture', defaultOn: true, slots: { top: CaptureBar } },
+  { key: 'report', defaultOn: true, slots: { top: ReportStrip }, useNeeds: useReportNeeds, Settings: ReportSettingsPanel },
   { key: 'signals', defaultOn: true, slots: {}, useNeeds: useSignalNeeds, Settings: SignalRulesSettings },
   { key: 'tasks', defaultOn: true, slots: { main: TasksSection }, useNeeds: useTaskNeeds },
   { key: 'schedule', defaultOn: true, slots: { header: TodayWeekNav, main: ScheduleMain, side: ScheduleSide } },
   { key: 'recent', defaultOn: true, slots: { side: RecentNotes } },
   { key: 'footprint', defaultOn: false, slots: { side: FootprintCard } },
+  { key: 'health', defaultOn: false, slots: { side: HealthCard } },
 ]

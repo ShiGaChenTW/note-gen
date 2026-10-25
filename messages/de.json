@@ -6525,7 +6525,9 @@
       "signals": "An den Agent übergeben",
       "tasks": "Agent-Aufgaben",
       "recent": "Zuletzt bearbeitet",
-      "footprint": "Diese Woche"
+      "footprint": "Diese Woche",
+      "report": "Wissensbericht",
+      "health": "Zustand der Wissensbasis"
     },
     "moveUp": "Nach oben",
     "moveDown": "Nach unten",
@@ -6677,6 +6679,130 @@
       "parse": "Die Antwort der KI hatte nicht das erwartete Format. Bitte erneut versuchen.",
       "notFound": "Gespräch nicht gefunden",
       "exists": "Unter {path} liegt bereits eine andere Notiz; wähle einen anderen Pfad"
+    }
+  },
+  "knowledgeReport": {
+    "language": "Deutsch",
+    "taskTitle": "Wissensbericht {period} erstellen",
+    "levels": {
+      "contact": "Kennengelernt",
+      "organized": "Geordnet",
+      "internalized": "Verinnerlicht",
+      "integrated": "Vernetzt",
+      "up": "Besser als im letzten Zeitraum",
+      "down": "Schlechter als im letzten Zeitraum"
+    },
+    "metrics": {
+      "notes": "Notizen",
+      "structure": "strukturierte Notizen",
+      "internalLinks": "Links innerhalb des Themas",
+      "ownRatio": "Anteil eigener Worte",
+      "ownViews": "Gedanken / Zusammenfassungen / eigene Sicht",
+      "revisedNotes": "überarbeitete Notizen",
+      "crossLinks": "Links zu anderen Themen",
+      "applied": "tatsächlich angewendet",
+      "spanDays": "Tage am Stück"
+    },
+    "note": {
+      "title": "Wissensbericht {period}",
+      "topics": "Beherrschung nach Thema",
+      "suggestions": "Verbesserungsvorschläge",
+      "stats": "Statistik",
+      "previous": "zuletzt: {level}",
+      "firstTime": "erster Zeitraum",
+      "scoreLine": "{score} Punkte · {notes} Notizen",
+      "gapLabel": "Es fehlt noch: ",
+      "topLevel": "Bereits auf der höchsten Stufe",
+      "noComment": "Das Modell hat nicht geantwortet, daher gibt es diesmal keinen Kommentar",
+      "noSuggestions": "(keine)",
+      "or": "oder",
+      "points": "noch {points} Punkte",
+      "footer": "Erstellt von note-gen. Beim Erstellen eines Berichts wird nur diese Notiz hinzugefügt; andere Notizen werden nie geändert. Der Bearbeitungsstand der Vorschläge steht in der Eigenschaft suggestions."
+    },
+    "stats": {
+      "notes": "Notizen",
+      "unlinked": "Ohne Links",
+      "orphans": "Verwaiste Notizen",
+      "inbox": "Rückstand im Inbox"
+    },
+    "card": {
+      "title": "Wissensbericht",
+      "period": "Bericht {period}",
+      "empty": "Noch kein Wissensbericht",
+      "open": "Ganzer Bericht",
+      "generate": "Jetzt erstellen",
+      "generating": "Wird erstellt · {tokens} Tokens",
+      "baseline": "Ausgangsbasis festlegen"
+    },
+    "needs": {
+      "report": "Bericht",
+      "confirm": "Der Bericht {period} braucht etwa {tokens} Tokens und liegt über dem Limit von {limit}",
+      "confirmAction": "Trotzdem erstellen",
+      "suggestion": "Vorschlag",
+      "handoff": "An Agent übergeben"
+    },
+    "toast": {
+      "started": "Der Wissensbericht wird im Hintergrund erstellt",
+      "estimate": "Etwa {tokens} Tokens",
+      "busy": "Es wird bereits ein Bericht erstellt",
+      "needsConfirm": "Über dem Token-Limit; bitte unter „Braucht dich“ bestätigen",
+      "failed": "Der Wissensbericht konnte nicht erstellt werden"
+    },
+    "settings": {
+      "frequency": "Häufigkeit",
+      "frequencies": {
+        "daily": "Täglich",
+        "weekly": "Wöchentlich",
+        "monthly": "Monatlich",
+        "off": "Nicht automatisch"
+      },
+      "tokenLimit": "Token-Limit pro Bericht",
+      "model": "Modell für Berichte",
+      "defaultModel": "Standardmodell verwenden",
+      "remind": "Offene Vorschläge unter „Braucht dich“ anzeigen",
+      "exclude": "Ausgeschlossene Ordner (einer pro Zeile, werden nie an das Modell gesendet)",
+      "excludePlaceholder": "z. B. Privat/Tagebuch"
+    },
+    "health": {
+      "title": "Zustand der Wissensbasis",
+      "empty": "Wird nach dem ersten Wissensbericht angezeigt",
+      "from": "Aus dem Bericht {period}"
+    },
+    "drawer": {
+      "title": "Wissensbericht {period}",
+      "emptyTitle": "Wissensbericht",
+      "description": "Beherrschung, Kommentare und Vorschläge je Thema",
+      "empty": "Noch kein Wissensbericht. Beginne auf dem Startbildschirm mit „Ausgangsbasis festlegen“.",
+      "meta": "{path} · erstellt {generated} · etwa {tokens} Tokens · Berichte ändern keine anderen Notizen",
+      "openNote": "Notiz öffnen",
+      "topics": "Beherrschung nach Thema",
+      "score": "{score} Punkte · {notes} Notizen",
+      "gap": "Es fehlt noch: {gap}",
+      "topLevel": "Bereits auf der höchsten Stufe",
+      "suggestions": "Verbesserungsvorschläge",
+      "noSuggestions": "Diesmal keine Vorschläge",
+      "handoff": "An Agent übergeben",
+      "dismiss": "Vorschlag überspringen",
+      "handed": "An Agent übergeben",
+      "done": "Erledigt",
+      "baselineTitle": "Ausgangsbasis festlegen",
+      "baselineDescription": "Themen wählen, bestätigen, Token-Schätzung ansehen und dann den ersten Bericht starten"
+    },
+    "baseline": {
+      "loading": "Tags und MOCs werden gesammelt…",
+      "step1": "Wähle die Themen, die verfolgt werden sollen (aus vorhandenen Tags und MOCs). Beim Speichern werden sie in {path} geschrieben; du kannst die Liste auch in Obsidian bearbeiten.",
+      "notes": "{count} Notizen",
+      "sourceAi": "KI-Vorschlag: {reason}",
+      "noCandidates": "Kein Tag und kein MOC hat genug Notizen. Du kannst die KI um Vorschläge bitten.",
+      "propose": "KI um weitere Themen bitten ({count} nicht zugeordnete Notizen)",
+      "noProposals": "Die KI hat keine neuen Themen vorgeschlagen",
+      "proposeFailed": "KI-Vorschlag fehlgeschlagen",
+      "save": "Themenliste speichern ({count})",
+      "saveFailed": "Die Themenliste konnte nicht gespeichert werden",
+      "estimate": "Der erste Bericht braucht etwa {tokens} Tokens (Limit {limit}).",
+      "overLimit": "Über dem Limit; „Starten“ erstellt ihn trotzdem.",
+      "later": "Später",
+      "start": "Starten"
     }
   }
 }

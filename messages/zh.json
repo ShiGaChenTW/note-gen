@@ -6665,7 +6665,9 @@
       "signals": "可以交给 Agent",
       "tasks": "Agent 任务",
       "recent": "最近笔记",
-      "footprint": "本周足迹"
+      "footprint": "本周足迹",
+      "report": "知识报告",
+      "health": "知识库健康"
     },
     "moveUp": "上移",
     "moveDown": "下移",
@@ -6817,6 +6819,130 @@
       "parse": "AI 返回的格式不正确，请重试",
       "notFound": "找不到这个对话",
       "exists": "{path} 已有其他笔记，请换一个路径"
+    }
+  },
+  "knowledgeReport": {
+    "language": "简体中文",
+    "taskTitle": "生成 {period} 知识报告",
+    "levels": {
+      "contact": "接触",
+      "organized": "整理",
+      "internalized": "内化",
+      "integrated": "融会",
+      "up": "比上期进步",
+      "down": "比上期退步"
+    },
+    "metrics": {
+      "notes": "笔记数",
+      "structure": "有结构的笔记",
+      "internalLinks": "主题内链接",
+      "ownRatio": "自己写的比例",
+      "ownViews": "心得／总结／我的观点",
+      "revisedNotes": "改写过的笔记",
+      "crossLinks": "跨主题链接",
+      "applied": "实际用过",
+      "spanDays": "持续天数"
+    },
+    "note": {
+      "title": "{period} 知识报告",
+      "topics": "各主题掌握度",
+      "suggestions": "优化建议",
+      "stats": "统计",
+      "previous": "上期 {level}",
+      "firstTime": "第一期",
+      "scoreLine": "{score} 分 · {notes} 篇",
+      "gapLabel": "还差：",
+      "topLevel": "已是最高级",
+      "noComment": "模型没有回应，这一期没有评语",
+      "noSuggestions": "（无）",
+      "or": "或",
+      "points": "分数还差 {points} 分",
+      "footer": "这份报告由 note-gen 生成；生成报告只会新增这则笔记，不会修改其他笔记。建议的处理状态记录在属性 suggestions。"
+    },
+    "stats": {
+      "notes": "笔记",
+      "unlinked": "缺少链接",
+      "orphans": "孤立笔记",
+      "inbox": "Inbox 积压"
+    },
+    "card": {
+      "title": "知识报告",
+      "period": "{period} 知识报告",
+      "empty": "还没有知识报告",
+      "open": "完整报告",
+      "generate": "立即生成",
+      "generating": "生成中 · {tokens} tokens",
+      "baseline": "建立基准"
+    },
+    "needs": {
+      "report": "知识报告",
+      "confirm": "{period} 报告估算 {tokens} tokens，超过上限 {limit}",
+      "confirmAction": "确认生成",
+      "suggestion": "优化建议",
+      "handoff": "交给 Agent"
+    },
+    "toast": {
+      "started": "已在后台生成知识报告",
+      "estimate": "估算约 {tokens} tokens",
+      "busy": "已经有一份报告正在生成",
+      "needsConfirm": "估算超过上限，请在「需要你处理」确认",
+      "failed": "无法生成知识报告"
+    },
+    "settings": {
+      "frequency": "生成频率",
+      "frequencies": {
+        "daily": "每天",
+        "weekly": "每周",
+        "monthly": "每月",
+        "off": "不自动生成"
+      },
+      "tokenLimit": "每期 token 上限",
+      "model": "报告使用的模型",
+      "defaultModel": "沿用默认模型",
+      "remind": "未处理的优化建议列入「需要你处理」",
+      "exclude": "排除的文件夹（每行一个，永远不发送给模型）",
+      "excludePlaceholder": "例如：私人/日记"
+    },
+    "health": {
+      "title": "知识库健康",
+      "empty": "生成第一期知识报告后显示",
+      "from": "取自 {period} 知识报告"
+    },
+    "drawer": {
+      "title": "{period} 知识报告",
+      "emptyTitle": "知识报告",
+      "description": "各主题的掌握度、评语与优化建议",
+      "empty": "还没有知识报告，先在首页点「建立基准」。",
+      "meta": "{path} · 生成于 {generated} · 约 {tokens} tokens · 报告不会修改其他笔记",
+      "openNote": "打开笔记",
+      "topics": "各主题掌握度",
+      "score": "{score} 分 · {notes} 篇",
+      "gap": "还差：{gap}",
+      "topLevel": "已是最高级",
+      "suggestions": "优化建议",
+      "noSuggestions": "这一期没有优化建议",
+      "handoff": "交给 Agent",
+      "dismiss": "忽略这条建议",
+      "handed": "已交给 Agent",
+      "done": "已处理",
+      "baselineTitle": "建立基准",
+      "baselineDescription": "整理主题清单、确认后估算 token，再开始第一期报告"
+    },
+    "baseline": {
+      "loading": "正在整理标签与 MOC…",
+      "step1": "勾选要追踪的主题（取自现有的标签与 MOC）。保存后写入 {path}，之后也可以在 Obsidian 修改。",
+      "notes": "{count} 篇",
+      "sourceAi": "AI 提议：{reason}",
+      "noCandidates": "没有找到足够笔记的标签或 MOC，可以请 AI 提议。",
+      "propose": "请 AI 提议其他主题（{count} 篇未归类）",
+      "noProposals": "AI 没有提出新的主题",
+      "proposeFailed": "AI 提议失败",
+      "save": "保存主题清单（{count} 个）",
+      "saveFailed": "无法保存主题清单",
+      "estimate": "第一期报告估算约 {tokens} tokens（上限 {limit}）。",
+      "overLimit": "超过上限；点「开始」仍会生成。",
+      "later": "稍后再说",
+      "start": "开始"
     }
   }
 }

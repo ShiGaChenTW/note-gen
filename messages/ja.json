@@ -6574,7 +6574,9 @@
       "signals": "Agent に任せる",
       "tasks": "Agent タスク",
       "recent": "最近のノート",
-      "footprint": "今週の足跡"
+      "footprint": "今週の足跡",
+      "report": "ナレッジレポート",
+      "health": "ナレッジベースの健康度"
     },
     "moveUp": "上へ",
     "moveDown": "下へ",
@@ -6726,6 +6728,130 @@
       "parse": "AI の返答が想定した形式ではありません。再試行してください。",
       "notFound": "会話が見つかりません",
       "exists": "{path} には別のノートがあります。別のパスを選んでください"
+    }
+  },
+  "knowledgeReport": {
+    "language": "日本語",
+    "taskTitle": "{period} のナレッジレポートを作成",
+    "levels": {
+      "contact": "接触",
+      "organized": "整理",
+      "internalized": "内化",
+      "integrated": "融合",
+      "up": "前回より上昇",
+      "down": "前回より低下"
+    },
+    "metrics": {
+      "notes": "ノート数",
+      "structure": "構造のあるノート",
+      "internalLinks": "トピック内のリンク",
+      "ownRatio": "自分の言葉の割合",
+      "ownViews": "感想／まとめ／自分の考え",
+      "revisedNotes": "書き直したノート",
+      "crossLinks": "他トピックへのリンク",
+      "applied": "実際に使った回数",
+      "spanDays": "継続日数"
+    },
+    "note": {
+      "title": "{period} ナレッジレポート",
+      "topics": "トピック別の習熟度",
+      "suggestions": "改善提案",
+      "stats": "統計",
+      "previous": "前回 {level}",
+      "firstTime": "初回",
+      "scoreLine": "{score} 点 · {notes} 件",
+      "gapLabel": "あと必要なもの：",
+      "topLevel": "最高レベルです",
+      "noComment": "モデルから応答がなく、今回はコメントがありません",
+      "noSuggestions": "（なし）",
+      "or": "または",
+      "points": "あと {points} 点",
+      "footer": "このレポートは note-gen が作成しました。レポートの作成はこのノートを追加するだけで、ほかのノートは変更しません。提案の処理状況はプロパティ suggestions に記録されます。"
+    },
+    "stats": {
+      "notes": "ノート",
+      "unlinked": "リンクなし",
+      "orphans": "孤立ノート",
+      "inbox": "Inbox の滞留"
+    },
+    "card": {
+      "title": "ナレッジレポート",
+      "period": "{period} レポート",
+      "empty": "まだナレッジレポートがありません",
+      "open": "レポート全体",
+      "generate": "今すぐ作成",
+      "generating": "作成中 · {tokens} tokens",
+      "baseline": "基準を作成"
+    },
+    "needs": {
+      "report": "レポート",
+      "confirm": "{period} のレポートは約 {tokens} tokens で、上限 {limit} を超えています",
+      "confirmAction": "作成する",
+      "suggestion": "改善提案",
+      "handoff": "Agent に任せる"
+    },
+    "toast": {
+      "started": "バックグラウンドでナレッジレポートを作成しています",
+      "estimate": "約 {tokens} tokens",
+      "busy": "すでにレポートを作成中です",
+      "needsConfirm": "上限を超えています。「対応が必要」で確認してください",
+      "failed": "ナレッジレポートを作成できませんでした"
+    },
+    "settings": {
+      "frequency": "作成頻度",
+      "frequencies": {
+        "daily": "毎日",
+        "weekly": "毎週",
+        "monthly": "毎月",
+        "off": "自動作成しない"
+      },
+      "tokenLimit": "1 回あたりの token 上限",
+      "model": "レポートに使うモデル",
+      "defaultModel": "既定のモデルを使う",
+      "remind": "未処理の改善提案を「対応が必要」に表示",
+      "exclude": "除外するフォルダ（1 行に 1 つ、モデルには送信されません）",
+      "excludePlaceholder": "例：私用/日記"
+    },
+    "health": {
+      "title": "ナレッジベースの健康度",
+      "empty": "最初のナレッジレポートの作成後に表示されます",
+      "from": "{period} のレポートより"
+    },
+    "drawer": {
+      "title": "{period} ナレッジレポート",
+      "emptyTitle": "ナレッジレポート",
+      "description": "トピックごとの習熟度、コメント、改善提案",
+      "empty": "まだナレッジレポートがありません。ホームの「基準を作成」から始めてください。",
+      "meta": "{path} · {generated} 作成 · 約 {tokens} tokens · レポートはほかのノートを変更しません",
+      "openNote": "ノートを開く",
+      "topics": "トピック別の習熟度",
+      "score": "{score} 点 · {notes} 件",
+      "gap": "あと必要なもの：{gap}",
+      "topLevel": "最高レベルです",
+      "suggestions": "改善提案",
+      "noSuggestions": "今回は改善提案がありません",
+      "handoff": "Agent に任せる",
+      "dismiss": "この提案をスキップ",
+      "handed": "Agent に任せました",
+      "done": "処理済み",
+      "baselineTitle": "基準を作成",
+      "baselineDescription": "トピックを選んで確認し、token の見積もりを見てから初回のレポートを始めます"
+    },
+    "baseline": {
+      "loading": "タグと MOC を集めています…",
+      "step1": "追跡するトピックを選んでください（既存のタグと MOC から）。保存すると {path} に書き込まれ、あとで Obsidian でも編集できます。",
+      "notes": "{count} 件",
+      "sourceAi": "AI の提案：{reason}",
+      "noCandidates": "十分なノートがあるタグや MOC が見つかりません。AI に提案を頼めます。",
+      "propose": "AI にほかのトピックを提案してもらう（未分類 {count} 件）",
+      "noProposals": "AI から新しいトピックの提案はありませんでした",
+      "proposeFailed": "AI の提案に失敗しました",
+      "save": "トピック一覧を保存（{count} 個）",
+      "saveFailed": "トピック一覧を保存できませんでした",
+      "estimate": "初回のレポートは約 {tokens} tokens の見込みです（上限 {limit}）。",
+      "overLimit": "上限を超えていますが、「開始」を押すと作成します。",
+      "later": "あとで",
+      "start": "開始"
     }
   }
 }

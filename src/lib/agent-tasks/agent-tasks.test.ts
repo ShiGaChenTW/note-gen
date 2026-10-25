@@ -324,4 +324,23 @@ describe('任務中心', () => {
     await flush(); await flush()
     expect(center.get(created.id)!.tokens).toBe(35)
   })
+
+  it('固定流程：等執行器註冊才開始，不用 runtime，可取消', async () => {
+    const { center, runtimes, notified } = setup(async () => done())
+    const created = await center.enqueue({ prompt: '產生報告', kind: 'report' })
+    await flush()
+    expect(center.get(created.id)!.status).toBe('queued')
+    center.registerRunner('report', async (_task, ctx) => { ctx.setTokens(42); return { result: '報告/2026-W44 知識報告.md' } })
+    await flush(); await flush()
+    expect(center.get(created.id)).toMatchObject({ status: 'completed', tokens: 42, result: '報告/2026-W44 知識報告.md' })
+    expect(runtimes).toHaveLength(0)
+    expect(notified).toEqual([`completed:${created.id}`])
+
+    center.registerRunner('report', (_task, ctx) => new Promise((_resolve, reject) => ctx.signal.addEventListener('abort', () => reject(new Error('aborted')))))
+    const second = await center.enqueue({ prompt: '再一次', kind: 'report' })
+    await flush()
+    await center.cancel(second.id)
+    await flush(); await flush()
+    expect(center.get(second.id)!.status).toBe('cancelled')
+  })
 })

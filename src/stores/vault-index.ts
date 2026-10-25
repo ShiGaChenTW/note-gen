@@ -112,16 +112,20 @@ function ensureLinkIndex(state: LinkState): RevisionLinkIndex {
   return linkIndex
 }
 
-/** Fork（#32）：沒有任何進出連結的筆記（排除指定資料夾，例如每日筆記、Inbox）。 */
-export function selectLinklessPaths(state: LinkState, excludeFolders: string[] = []): string[] {
+/**
+ * Fork（#32）：沒有任何進出連結的筆記（排除指定資料夾，例如每日筆記、Inbox）。
+ * #35：`ignoreSourceFolders` 裡的筆記連進來不算（知識報告引用證據的雙鏈不該讓筆記變得「有連結」）。
+ */
+export function selectLinklessPaths(state: LinkState, excludeFolders: string[] = [], ignoreSourceFolders: string[] = []): string[] {
   const index = ensureLinkIndex(state)
   const prefixes = excludeFolders.map(folder => folder.replace(/^\/+|\/+$/g, '')).filter(Boolean).map(folder => `${folder}/`)
+  const ignored = ignoreSourceFolders.map(folder => folder.replace(/^\/+|\/+$/g, '')).filter(Boolean).map(folder => `${folder}/`)
   const out: string[] = []
   for (const path of state.notes.keys()) {
     if (!path.toLowerCase().endsWith('.md') || prefixes.some(prefix => path.startsWith(prefix))) continue
     const outgoing = index.outgoing.get(path) ?? []
     if (outgoing.some(link => link.resolved)) continue
-    if ((index.backlinks.get(path.toLowerCase()) ?? []).length > 0) continue
+    if ((index.backlinks.get(path.toLowerCase()) ?? []).some(ref => !ignored.some(prefix => ref.sourcePath.startsWith(prefix)))) continue
     out.push(path)
   }
   return out
