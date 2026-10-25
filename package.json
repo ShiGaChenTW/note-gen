@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "prototype:home": "echo 開 http://localhost:3456/prototype-home?variant=A && next dev --turbopack -p 3456",
     "dev": "pnpm plugin-runtime:build && pnpm markdown-lexer:build && next dev --turbopack -p 3456 -H 0.0.0.0",
     "build": "pnpm plugin-runtime:build && pnpm markdown-lexer:build && next build --turbopack && pnpm build:prune-maps",
     "plugin-runtime:build": "esbuild src/lib/plugins/runtime/plugin-runtime.worker.ts --bundle --format=esm --platform=browser --target=es2022 --minify --outfile=public/plugin-runtime.js",
