@@ -11,6 +11,7 @@ import { groupTasks } from '@/lib/today/today-model'
 import useDailySettingsStore from '@/stores/daily-settings'
 import useHomeStore from '@/stores/home'
 import useVaultIndexStore, { selectAllTasks, selectLinklessPaths } from '@/stores/vault-index'
+import { REPORT_FOLDER } from '@/lib/knowledge-report/topics'
 import type { NeedItem } from '../home-cards'
 
 /** 每分鐘前進的「現在」，讓「晚上 6 點後」這類規則會自己出現。 */
@@ -44,8 +45,9 @@ export function useSignalNeeds(): NeedItem[] {
       hasDailyNote: daysAgo => notes.has(dailyNotePath(new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysAgo), dailyFolder, dailyPattern)),
       inbox,
       inboxFolder,
-      linklessCount: selectLinklessPaths({ notes, revision }, [dailyFolder, inboxFolder]).length,
-      weeklyReviewDone: [...notes.keys()].some(path => path.includes(week)),
+      linklessCount: selectLinklessPaths({ notes, revision }, [dailyFolder, inboxFolder], [REPORT_FOLDER]).length,
+      // 知識報告的週報（報告/2026-W44 知識報告.md）不是複盤
+      weeklyReviewDone: [...notes.keys()].some(path => path.includes(week) && !path.startsWith(`${REPORT_FOLDER}/`)),
     }, rules)
   }, [now, rules, notes, revision, status, dailyFolder, dailyPattern, inboxFolder])
 

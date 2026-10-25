@@ -6564,7 +6564,9 @@
       "signals": "可以交給 Agent",
       "tasks": "Agent 任務",
       "recent": "最近筆記",
-      "footprint": "本週足跡"
+      "footprint": "本週足跡",
+      "report": "知識報告",
+      "health": "知識庫健康"
     },
     "moveUp": "上移",
     "moveDown": "下移",
@@ -6716,6 +6718,130 @@
       "parse": "AI 回傳的格式不對，請重試",
       "notFound": "找不到這個對話",
       "exists": "{path} 已經有別的筆記，請換一個路徑"
+    }
+  },
+  "knowledgeReport": {
+    "language": "繁體中文",
+    "taskTitle": "產生 {period} 知識報告",
+    "levels": {
+      "contact": "接觸",
+      "organized": "整理",
+      "internalized": "內化",
+      "integrated": "融會",
+      "up": "比上期進步",
+      "down": "比上期退步"
+    },
+    "metrics": {
+      "notes": "筆記數",
+      "structure": "有結構的筆記",
+      "internalLinks": "主題內連結",
+      "ownRatio": "自己寫的比例",
+      "ownViews": "心得／總結／我的觀點",
+      "revisedNotes": "改寫過的筆記",
+      "crossLinks": "跨主題連結",
+      "applied": "實際用過",
+      "spanDays": "持續天數"
+    },
+    "note": {
+      "title": "{period} 知識報告",
+      "topics": "各主題掌握度",
+      "suggestions": "優化建議",
+      "stats": "統計",
+      "previous": "上期 {level}",
+      "firstTime": "第一期",
+      "scoreLine": "{score} 分 · {notes} 篇",
+      "gapLabel": "還差：",
+      "topLevel": "已是最高級",
+      "noComment": "模型沒有回應，這一期沒有評語",
+      "noSuggestions": "（無）",
+      "or": "或",
+      "points": "分數還差 {points} 分",
+      "footer": "這則報告由 note-gen 產生；產生報告只會新增這則筆記，不會修改其他筆記。建議的處理狀態記在屬性 suggestions。"
+    },
+    "stats": {
+      "notes": "筆記",
+      "unlinked": "缺少連結",
+      "orphans": "孤立筆記",
+      "inbox": "Inbox 積壓"
+    },
+    "card": {
+      "title": "知識報告",
+      "period": "{period} 知識報告",
+      "empty": "還沒有知識報告",
+      "open": "完整報告",
+      "generate": "立即產生",
+      "generating": "產生中 · {tokens} tokens",
+      "baseline": "建立基準"
+    },
+    "needs": {
+      "report": "知識報告",
+      "confirm": "{period} 報告估算 {tokens} tokens，超過上限 {limit}",
+      "confirmAction": "確認產生",
+      "suggestion": "優化建議",
+      "handoff": "交給 Agent"
+    },
+    "toast": {
+      "started": "已在背景產生知識報告",
+      "estimate": "估算約 {tokens} tokens",
+      "busy": "已經有一份報告正在產生",
+      "needsConfirm": "估算超過上限，請在「需要你處理」確認",
+      "failed": "無法產生知識報告"
+    },
+    "settings": {
+      "frequency": "產生頻率",
+      "frequencies": {
+        "daily": "每天",
+        "weekly": "每週",
+        "monthly": "每月",
+        "off": "不自動產生"
+      },
+      "tokenLimit": "每期 token 上限",
+      "model": "報告使用的模型",
+      "defaultModel": "沿用預設模型",
+      "remind": "未處理的優化建議列進「需要你處理」",
+      "exclude": "排除的資料夾（每行一個，永遠不送給模型）",
+      "excludePlaceholder": "例如：私人/日記"
+    },
+    "health": {
+      "title": "知識庫健康",
+      "empty": "產生第一期知識報告後顯示",
+      "from": "取自 {period} 知識報告"
+    },
+    "drawer": {
+      "title": "{period} 知識報告",
+      "emptyTitle": "知識報告",
+      "description": "各主題的掌握度、評語與優化建議",
+      "empty": "還沒有知識報告，先在首頁按「建立基準」。",
+      "meta": "{path} · 產出 {generated} · 約 {tokens} tokens · 報告不會修改其他筆記",
+      "openNote": "開啟筆記",
+      "topics": "各主題掌握度",
+      "score": "{score} 分 · {notes} 篇",
+      "gap": "還差：{gap}",
+      "topLevel": "已是最高級",
+      "suggestions": "優化建議",
+      "noSuggestions": "這一期沒有優化建議",
+      "handoff": "交給 Agent",
+      "dismiss": "略過這條建議",
+      "handed": "已交給 Agent",
+      "done": "已處理",
+      "baselineTitle": "建立基準",
+      "baselineDescription": "整理主題清單、確認後估算 token，再開始第一期報告"
+    },
+    "baseline": {
+      "loading": "正在整理標籤與 MOC…",
+      "step1": "勾選要追蹤的主題（取自現有的標籤與 MOC）。儲存後寫進 {path}，之後也可以在 Obsidian 修改。",
+      "notes": "{count} 篇",
+      "sourceAi": "AI 提議：{reason}",
+      "noCandidates": "沒有找到夠多筆記的標籤或 MOC，可以請 AI 提議。",
+      "propose": "請 AI 提議其他主題（{count} 篇未歸類）",
+      "noProposals": "AI 沒有提出新的主題",
+      "proposeFailed": "AI 提議失敗",
+      "save": "儲存主題清單（{count} 個）",
+      "saveFailed": "無法儲存主題清單",
+      "estimate": "第一期報告估算約 {tokens} tokens（上限 {limit}）。",
+      "overLimit": "超過上限；按「開始」仍會產生。",
+      "later": "稍後再說",
+      "start": "開始"
     }
   }
 }

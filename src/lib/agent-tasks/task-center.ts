@@ -21,6 +21,17 @@ export interface RuntimeLike {
 
 export type TaskEvent = 'awaiting_review' | 'completed' | 'failed'
 
+/**
+ * Fork（#35）：不走 AgentRuntime 的固定流程（例如產出知識報告）。照樣排隊、可取消、
+ * 會通知、app 關掉後標成「沒做完」可以繼續；沒有草稿，直接完成。
+ */
+export interface TaskRunnerContext {
+  signal: AbortSignal
+  setTokens: (tokens: number) => void
+}
+
+export type TaskRunner = (task: AgentTask, context: TaskRunnerContext) => Promise<{ result: string }>
+
 export interface TaskCenterDeps {
   createRuntime: () => RuntimeLike
   persist: (task: AgentTask) => Promise<void>
@@ -33,6 +44,9 @@ export interface TaskCenterDeps {
 }
 
 export const DEFAULT_CONCURRENCY = 2
+
+/** 只能用固定流程執行的任務類型。 */
+const RUNNER_KINDS: Partial<Record<AgentTaskKind, true>> = { report: true }
 
 const BACKGROUND_SYSTEM_NOTE = [
   '你正在背景執行一個 Agent 任務，使用者不在對話視窗前，無法即時回答問題。',
@@ -55,6 +69,8 @@ export class AgentTaskCenter {
   private cancelled = new Set<string>()
   private listeners = new Set<(tasks: AgentTask[]) => void>()
   private pumping: Promise<void> | null = null
+  private runners = new Map<AgentTaskKind, TaskRunner>()
+  private aborts = new Map<string, AbortController>()
 
   constructor(private readonly deps: TaskCenterDeps) {}
 
@@ -70,6 +86,13 @@ export class AgentTaskCenter {
 
   get(id: string) {
     return this.tasks.get(id)
+  }
+
+  /** 讓某一類任務改用固定流程執行；回傳解除註冊的函式。 */
+  registerRunner(kind: AgentTaskKind, runner: TaskRunner) {
+    this.runners.set(kind, runner)
+    void this.pump()
+    return () => { if (this.runners.get(kind) === runner) this.runners.delete(kind) }
   }
 
   /** 啟動時載入；上次還在跑或排隊的任務標成「沒做完」，草稿保留。 */
@@ -113,6 +136,7 @@ export class AgentTaskCenter {
     if (task.status === 'running') {
       this.cancelled.add(id)
       this.runtimes.get(id)?.stop()
+      this.aborts.get(id)?.abort()
     }
   }
 
@@ -161,7 +185,10 @@ export class AgentTaskCenter {
     }
     this.pumping = (async () => {
       const limit = Math.max(1, await this.deps.concurrency())
-      for (const task of pickRunnable([...this.tasks.values()], limit)) {
+      // 固定流程的任務要等它的執行器註冊好才開始（例如畫面還沒掛上）
+      const waiting = [...this.tasks.values()].filter(task => task.kind in RUNNER_KINDS && !this.runners.has(task.kind) && task.status === 'queued')
+      const candidates = [...this.tasks.values()].filter(task => !waiting.includes(task))
+      for (const task of pickRunnable(candidates, limit)) {
         this.tasks.set(task.id, { ...task, status: 'running' })
         void this.run(task.id)
       }
@@ -175,9 +202,46 @@ export class AgentTaskCenter {
     return this.pumping
   }
 
+  private async runFixed(id: string, runner: TaskRunner) {
+    const initial = this.tasks.get(id)
+    if (!initial) return
+    const controller = new AbortController()
+    this.aborts.set(id, controller)
+    await this.save({ ...initial, status: 'running', error: undefined, updatedAt: this.deps.now() })
+    let result: string | undefined
+    let error: string | undefined
+    try {
+      result = (await runner(initial, {
+        signal: controller.signal,
+        setTokens: tokens => {
+          const current = this.tasks.get(id)
+          if (current && current.tokens !== tokens) {
+            this.tasks.set(id, { ...current, tokens })
+            this.emit()
+          }
+        },
+      })).result
+    } catch (caught) {
+      error = caught instanceof Error ? caught.message : String(caught)
+    } finally {
+      this.aborts.delete(id)
+    }
+    const current = this.tasks.get(id) ?? initial
+    const now = this.deps.now()
+    let next: AgentTask
+    if (this.cancelled.delete(id)) next = { ...current, status: 'cancelled', updatedAt: now, finishedAt: now }
+    else if (error !== undefined) next = { ...current, status: 'failed', error, updatedAt: now }
+    else next = { ...current, status: 'completed', result, updatedAt: now, finishedAt: now }
+    await this.save(next)
+    if (next.status === 'completed' || next.status === 'failed') this.deps.notify(next.status, next)
+    void this.pump()
+  }
+
   private async run(id: string) {
     const initial = this.tasks.get(id)
     if (!initial) return
+    const runner = this.runners.get(initial.kind)
+    if (runner) return this.runFixed(id, runner)
     let drafts = initial.drafts
     const sink: DraftSink = {
       drafts: () => drafts,

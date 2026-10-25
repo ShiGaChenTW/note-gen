@@ -74,6 +74,7 @@ export function HandoffDialog() {
     if (!handoff || !prompt.trim()) return
     try {
       const task = await agentTaskCenter.enqueue({ prompt: prompt.trim(), title: handoff.title, kind: handoff.kind })
+      handoff.onStarted?.(task.id)
       setHandoff(null)
       toast({ title: t('started'), description: task.title })
     } catch (error) {

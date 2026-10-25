@@ -196,7 +196,7 @@ export function AgentTasksSheet() {
 
   return (
     <Sheet open={sheetOpen} onOpenChange={open => { if (!open) closeSheet() }}>
-      <SheetContent side="right" className="flex w-[520px] flex-col gap-0 p-5 sm:max-w-[520px]">
+      <SheetContent side="right" className="flex flex-col gap-0 p-5 data-[side=right]:w-[520px] data-[side=right]:sm:max-w-[520px]">
         <SheetHeader className="mb-3 p-0">
           <SheetTitle>{t('title')}</SheetTitle>
           <SheetDescription>{t('description')}</SheetDescription>

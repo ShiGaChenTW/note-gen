@@ -13,6 +13,8 @@ export interface HandoffDraft {
   title: string
   prompt: string
   kind: 'signal' | 'suggestion' | 'chat'
+  /** 任務建立後呼叫（#35：記下優化建議交給了哪個任務）。 */
+  onStarted?: (taskId: string) => void
 }
 
 interface HomeState {

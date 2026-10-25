@@ -129,6 +129,9 @@ npx pnpm@9 install --frozen-lockfile
 | 2026-10-26 | `src/lib/conversation-summary/`（新）、`src/app/core/main/conversation-summary/`（新）、`home/cards/tasks-card.tsx` | 對話摘要（#33）：依對話 id 從 `chats` 讀訊息，逐字稿標「我」（role `user`）與「AI」（role `system`），模型回傳 JSON 後輸出固定分節的 Markdown；frontmatter `type: 對話摘要`、`conversation`（syncId 優先）、`date`、`topics`。再按一次依 `conversation` 找到既有摘要更新；目的路徑若是別的筆記不覆蓋。首頁最近對話旁顯示「摘要／已摘要」，最近 3 天、4 則以上、未摘要（或摘要比對話舊）的對話列進「需要你處理」 | Scott 要把對話收斂成知識報告的證據 |
 | 2026-10-26 | `src/app/core/main/chat/chat-header.tsx`、`fork-services.tsx`、`messages/*.json` | 掛載點：標題列右側（臨時對話按鈕前）加 `ConversationSummaryButton`；`ForkServices` 掛 `ConversationSummaryDialog`；頂層新增 `conversationSummary`，六語系皆有翻譯 | #33 |
 | 2026-10-26 | `src/lib/knowledge-report/`（新） | 知識報告（一）（#34）：主題清單筆記 `報告/主題清單.md`（`## 主題` ＋ `- 標籤／MOC／資料夾／筆記／狀態／備註：`，「狀態：待確認」是提議）；候選主題取第一層標籤與 MOC；掌握度公式 `mastery.ts`（七個分項合計 100，等級＝分數區間且門檻全過，否則壓在下一級起點之下；附離下一級的缺口）；資料來源：筆記（自己寫的字／摘抄、結構、總結、心得）、每日筆記的連結、對話摘要條數、筆記連到的 PDF（`parseLocalDocument`）、本週足跡、`active` 記憶（只讀）；排除資料夾存在 `store.json` 的 `knowledgeReportExcludeFolders`，`報告/` 永遠排除；增量快取在 AppData `knowledge-report/<hash>.json`（依 mtime 重讀、記修改日、PDF 字數、主題摘要指紋）。只有 lib，沒有畫面（畫面在 #35） | 規格 §3.1–§3.3 |
+| 2026-10-26 | `src/lib/knowledge-report/report.ts`、`generate.ts`、`index.ts`（新）、`home/cards/report-card.tsx`、`report-drawer.tsx`（新） | 知識報告（二）（#35）：報告筆記 `報告/<期別> 知識報告.md`，frontmatter 存結構化資料（主題等級／分數／上期、缺口、評語、證據、建議與處理狀態、統計），內文給人讀；引文在內文壓成一行並中和任務／雙鏈／標籤語法。逐主題問模型（JSON），引文必須逐字出現在摘錄的筆記裡才留下；主題指紋沒變就沿用上一期評語（0 token）。建立基準＝勾選標籤／MOC 候選＋AI 提議 → 寫主題清單 → 估 token → 開始。排程 30 分鐘檢查一次，已有基準且這一期還沒產出才產生；估算超過上限就在「需要你處理」等確認。設定 `store.json` 的 `knowledgeReportSettings`、模型 `knowledgeReportModel`。首頁卡片：知識報告（top：主題膠囊、立即產生／建立基準；優化建議與待確認進「需要你處理」）、知識庫健康（side，預設關） | 規格 §3.4–§3.5 |
+| 2026-10-26 | `src/lib/agent-tasks/task-center.ts` | 任務中心加「固定流程」執行器（`registerRunner`）：kind `report` 不走 AgentRuntime，照樣排隊、取消、通知、沒做完可繼續；執行器註冊前不開始 | #35 |
+| 2026-10-26 | `src/stores/vault-index.ts`、`home/cards/signals-card.tsx`、`stores/home.ts`、`needs-list.tsx`、`agent-tasks-sheet.tsx` | `selectLinklessPaths` 加 `ignoreSourceFolders`（報告引用不算連結）；每週複盤判斷排除 `報告/`（週報檔名含 W44）；`HandoffDraft.onStarted` 回報任務 id；任務抽屜寬度改用 `data-[side=right]:` 前綴才蓋得過 Sheet 預設的 `max-w-sm` | #35 |
 
 ## 刻意不改的東西
 
@@ -432,6 +435,15 @@ npx pnpm@9 tauri dev
 3. 同一對話再按一次：按鈕變「更新摘要」、路徑沿用既有那份；存檔後仍只有一個檔案。
 4. 對話用到過的筆記（RAG 來源、Agent 讀過的檔案）列在「相關筆記」為雙鏈。
 5. 首頁「Agent 任務」卡：最近對話旁顯示「摘要」或「已摘要」；點對話會切過去並回到工作區。
+
+### Phase 3-6 知識報告（二）（#35）
+
+1. 首頁頂部「知識報告　還沒有知識報告　[建立基準]」→ 抽屜列出標籤／MOC 候選；按「請 AI 提議其他主題」多出附理由的提議；勾選後「儲存主題清單」：vault 出現 `報告/主題清單.md`，接著顯示 token 估算。
+2. 按「開始」：背景任務「產生 <期別> 知識報告」→ 完成通知；首頁出現主題膠囊，「需要你處理」出現前 3 條優化建議；`報告/<期別> 知識報告.md` 的評語都附逐字引文與雙鏈，內文沒有 `- [ ]`。
+3. 「完整報告」抽屜：略過一條 → 劃線、frontmatter `dismissed`；交給 Agent 一條 → 抽屜先關、出現預填指令 → 開始後 `handed`＋任務 id；任務完成後自動變 `done`。
+4. 同一期再按「立即產生」：主題沒變就是 0 tokens，已處理的建議狀態保留。
+5. 編輯首頁：頻率、token 上限、模型、排除資料夾、提醒開關；把上限調低並刪掉 AppData `knowledge-report/` 快取 → 「立即產生」改為在「需要你處理」出現「估算 N tokens，超過上限」與「確認產生」。
+6. 打開「知識庫健康」：右欄顯示缺少連結／孤立筆記／Inbox 積壓／筆記數，取自最新一期。
 
 ### Phase 3-5 知識報告（一）（#34）
 

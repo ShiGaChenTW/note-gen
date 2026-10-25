@@ -6541,7 +6541,9 @@
       "signals": "Entregar ao Agent",
       "tasks": "Tarefas do Agent",
       "recent": "Notas recentes",
-      "footprint": "Esta semana"
+      "footprint": "Esta semana",
+      "report": "Relatório de conhecimento",
+      "health": "Saúde da base"
     },
     "moveUp": "Mover para cima",
     "moveDown": "Mover para baixo",
@@ -6693,6 +6695,130 @@
       "parse": "A resposta da IA não veio no formato esperado. Tente de novo.",
       "notFound": "Conversa não encontrada",
       "exists": "Já existe outra nota em {path}; escolha outro caminho"
+    }
+  },
+  "knowledgeReport": {
+    "language": "Português (Brasil)",
+    "taskTitle": "Gerar o relatório de conhecimento {period}",
+    "levels": {
+      "contact": "Contato",
+      "organized": "Organizado",
+      "internalized": "Internalizado",
+      "integrated": "Integrado",
+      "up": "Melhor que no período anterior",
+      "down": "Pior que no período anterior"
+    },
+    "metrics": {
+      "notes": "notas",
+      "structure": "notas estruturadas",
+      "internalLinks": "links dentro do tema",
+      "ownRatio": "proporção com suas palavras",
+      "ownViews": "reflexões / resumos / sua visão",
+      "revisedNotes": "notas reescritas",
+      "crossLinks": "links para outros temas",
+      "applied": "vezes aplicado",
+      "spanDays": "dias de continuidade"
+    },
+    "note": {
+      "title": "Relatório de conhecimento {period}",
+      "topics": "Domínio por tema",
+      "suggestions": "Sugestões de melhoria",
+      "stats": "Estatísticas",
+      "previous": "período anterior: {level}",
+      "firstTime": "primeiro período",
+      "scoreLine": "{score} pontos · {notes} notas",
+      "gapLabel": "Ainda falta: ",
+      "topLevel": "Já está no nível mais alto",
+      "noComment": "O modelo não respondeu, então não há comentário neste período",
+      "noSuggestions": "(nenhuma)",
+      "or": "ou",
+      "points": "faltam {points} pontos",
+      "footer": "Gerado pelo note-gen. Gerar um relatório só adiciona esta nota e nunca altera outras notas. O andamento das sugestões fica na propriedade suggestions."
+    },
+    "stats": {
+      "notes": "Notas",
+      "unlinked": "Sem links",
+      "orphans": "Notas órfãs",
+      "inbox": "Acúmulo no Inbox"
+    },
+    "card": {
+      "title": "Relatório de conhecimento",
+      "period": "Relatório {period}",
+      "empty": "Ainda não há relatório de conhecimento",
+      "open": "Relatório completo",
+      "generate": "Gerar agora",
+      "generating": "Gerando · {tokens} tokens",
+      "baseline": "Definir base"
+    },
+    "needs": {
+      "report": "Relatório",
+      "confirm": "O relatório {period} precisa de cerca de {tokens} tokens, acima do limite de {limit}",
+      "confirmAction": "Gerar mesmo assim",
+      "suggestion": "Sugestão",
+      "handoff": "Passar ao Agent"
+    },
+    "toast": {
+      "started": "Gerando o relatório de conhecimento em segundo plano",
+      "estimate": "Cerca de {tokens} tokens",
+      "busy": "Já há um relatório sendo gerado",
+      "needsConfirm": "Acima do limite de tokens; confirme em “Precisa de você”",
+      "failed": "Não foi possível gerar o relatório de conhecimento"
+    },
+    "settings": {
+      "frequency": "Frequência",
+      "frequencies": {
+        "daily": "Diária",
+        "weekly": "Semanal",
+        "monthly": "Mensal",
+        "off": "Nunca automaticamente"
+      },
+      "tokenLimit": "Limite de tokens por relatório",
+      "model": "Modelo dos relatórios",
+      "defaultModel": "Usar o modelo padrão",
+      "remind": "Mostrar sugestões abertas em “Precisa de você”",
+      "exclude": "Pastas excluídas (uma por linha, nunca enviadas ao modelo)",
+      "excludePlaceholder": "ex.: Pessoal/Diário"
+    },
+    "health": {
+      "title": "Saúde da base",
+      "empty": "Aparece depois do primeiro relatório de conhecimento",
+      "from": "Do relatório {period}"
+    },
+    "drawer": {
+      "title": "Relatório de conhecimento {period}",
+      "emptyTitle": "Relatório de conhecimento",
+      "description": "Domínio, comentários e sugestões de cada tema",
+      "empty": "Ainda não há relatório. Comece por “Definir base” na tela inicial.",
+      "meta": "{path} · gerado em {generated} · cerca de {tokens} tokens · relatórios nunca alteram outras notas",
+      "openNote": "Abrir nota",
+      "topics": "Domínio por tema",
+      "score": "{score} pontos · {notes} notas",
+      "gap": "Ainda falta: {gap}",
+      "topLevel": "Já está no nível mais alto",
+      "suggestions": "Sugestões de melhoria",
+      "noSuggestions": "Nenhuma sugestão neste período",
+      "handoff": "Passar ao Agent",
+      "dismiss": "Ignorar esta sugestão",
+      "handed": "Passada ao Agent",
+      "done": "Concluída",
+      "baselineTitle": "Definir base",
+      "baselineDescription": "Escolha os temas, confirme, veja a estimativa de tokens e inicie o primeiro relatório"
+    },
+    "baseline": {
+      "loading": "Reunindo tags e MOCs…",
+      "step1": "Marque os temas a acompanhar (das suas tags e MOCs). Ao salvar, eles são gravados em {path}, que você também pode editar no Obsidian.",
+      "notes": "{count} notas",
+      "sourceAi": "Proposta da IA: {reason}",
+      "noCandidates": "Nenhuma tag ou MOC tem notas suficientes. Você pode pedir propostas à IA.",
+      "propose": "Pedir mais temas à IA ({count} notas sem tema)",
+      "noProposals": "A IA não propôs novos temas",
+      "proposeFailed": "A proposta da IA falhou",
+      "save": "Salvar lista de temas ({count})",
+      "saveFailed": "Não foi possível salvar a lista de temas",
+      "estimate": "O primeiro relatório precisa de cerca de {tokens} tokens (limite {limit}).",
+      "overLimit": "Acima do limite; “Iniciar” gera mesmo assim.",
+      "later": "Depois",
+      "start": "Iniciar"
     }
   }
 }
