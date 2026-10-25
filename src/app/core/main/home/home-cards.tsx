@@ -53,8 +53,8 @@ function ScheduleSide() {
 export const HOME_CARDS: HomeCardDef[] = [
   { key: 'capture', defaultOn: true, slots: { top: CaptureBar } },
   { key: 'signals', defaultOn: true, slots: {}, useNeeds: useSignalNeeds, Settings: SignalRulesSettings },
-  { key: 'schedule', defaultOn: true, slots: { header: TodayWeekNav, main: ScheduleMain, side: ScheduleSide } },
   { key: 'tasks', defaultOn: true, slots: { main: TasksSection }, useNeeds: useTaskNeeds },
+  { key: 'schedule', defaultOn: true, slots: { header: TodayWeekNav, main: ScheduleMain, side: ScheduleSide } },
   { key: 'recent', defaultOn: true, slots: { side: RecentNotes } },
   { key: 'footprint', defaultOn: false, slots: { side: FootprintCard } },
 ]

@@ -25,12 +25,20 @@ function uniqueKnown(keys: unknown, known: Set<string>): string[] {
   return [...new Set(keys.filter((key): key is string => typeof key === 'string' && known.has(key)))]
 }
 
-/** 讀回設定：丟掉已不存在的卡片，新加入的卡片依登記順序補在最後。 */
+/**
+ * 讀回設定：丟掉已不存在的卡片。新加入的卡片插在登記表裡它後面第一張已存在卡片之前，
+ * 讓舊設定也照登記表的相對位置排（例如背景任務排在日程前）；後面都沒有就補在最後。
+ */
 export function normalizePrefs(saved: unknown, cards: HomeCardMeta[]): HomeCardPrefs {
   const known = new Set(cards.map(card => card.key))
   const value = (saved && typeof saved === 'object' ? saved : {}) as Partial<Record<keyof HomeCardPrefs, unknown>>
   const order = uniqueKnown(value.order, known)
-  for (const card of cards) if (!order.includes(card.key)) order.push(card.key)
+  cards.forEach((card, index) => {
+    if (order.includes(card.key)) return
+    const next = cards.slice(index + 1).find(other => order.includes(other.key))
+    if (next) order.splice(order.indexOf(next.key), 0, card.key)
+    else order.push(card.key)
+  })
   return { order, hidden: uniqueKnown(value.hidden, known), shown: uniqueKnown(value.shown, known) }
 }
 

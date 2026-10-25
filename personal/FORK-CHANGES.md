@@ -124,6 +124,8 @@ npx pnpm@9 install --frozen-lockfile
 | 2026-10-26 | `src/app/core/main/home/`（新）、`src/lib/home/cards.ts`（新）、`src/stores/home.ts`（新） | 首頁（#31，版型 D）：蓋在三欄工作區上方（`absolute`，保留狀態列，不卸載工作區），⌘⇧H 切換（比對 `code`／`key`／`keyCode`，注音輸入法下才穩定）；卡片登記在 `home-cards.tsx`，可放進 header／top／main／side，開關與排序存在 `store.json` 的 `homeCards`，啟動是否顯示存在 `homeShowOnStartup`（預設是） | Scott 要「全新首頁」當第二大腦與日程的入口 |
 | 2026-10-26 | `src/app/core/main/today/today-page.tsx`、`today-tab.tsx`（原 `.ts`）、`src/app/core/main/editor/editor-layout.tsx` | Today 分頁退役：`TodayPage` 拆成 `TodayProvider`＋`TodayTitle`／`TodayWeekNav`／`TodayFocus`／`TodayTasks`／`TodayAgenda`／`TodayFootprint`，組成首頁「日程」卡片；從首頁開筆記後自動回工作區。`openTodayTab()` 改為打開首頁；`editor-layout.tsx` 拿掉 `useTodayTabOpener`，舊版存下的 `blank://fork-today` 分頁改顯示 `TodayMovedNotice` | #31 |
 | 2026-10-26 | `src/app/core/main/page.tsx`、`fork-services.tsx`、`messages/*.json` | 掛載點：`/core/main` 根元素加 `relative`（首頁定位用）；`ForkServices` 掛 `HomeService`；頂層新增 `home`，`today.status.aria` 改成「開啟首頁」，六語系皆有翻譯 | #31 |
+| 2026-10-26 | `src/app/core/main/home/cards/`（新）、`src/lib/home/signals.ts`、`activity.ts`、`capture.ts`（新）、`src/stores/home-activity.ts`（新）、`src/stores/home.ts`、`home-cards.tsx`、`home-screen.tsx`、`home-edit-sheet.tsx`、`home-service.tsx` | 首頁卡片（#32）：快速記錄（top；Enter 存成 `inboxFolder` 裡的新筆記、⌘Enter 交給背景任務）、需要你處理（主欄最上方，由卡片的 `useNeeds` 提供）、可以交給 Agent（五類規則，設定在 `store.json` 的 `homeSignalRules`，顯示在編輯首頁該卡片下方；按下先開預填指令對話框）、Agent 任務、最近筆記、本週足跡（預設關，`home-activity.json` 只記日期／路徑／事件，留 60 天）。`normalizePrefs` 改成把新卡片插在登記表裡下一張既有卡片之前 | #32 |
+| 2026-10-26 | `src/stores/vault-index.ts` | 新增 `selectLinklessPaths`（沒有進出連結的筆記，可排除資料夾），共用既有的反向索引快取 | #32「缺連結」規則 |
 
 ## 刻意不改的東西
 
@@ -410,3 +412,12 @@ npx pnpm@9 tauri dev
 3. 在首頁點任務下方的來源檔名：打開該筆記並回到工作區。
 4. 「編輯首頁」關掉日程：首頁顯示「所有卡片都關掉了」；關掉「啟動時顯示首頁」後重開 app 直接進工作區；兩個設定重開後都保留。
 5. 舊版存下的「今日」分頁：內容改成「今日頁已經移到首頁」與「打開首頁」按鈕。
+
+### Phase 3-3 首頁卡片（#32）
+
+1. 首頁頂部指令列打一句話按 Enter：日記設定的 Inbox 資料夾多一則 `YYYY-MM-DD HHmm <開頭文字>.md`；「需要你處理」裡 Inbox 的數字跟著變。
+2. 指令列打一句話按 ⌘Enter：不建立筆記，「背景任務」出現一個進行中的任務。
+3. 「需要你處理」：有逾期待辦、Inbox 積壓、沒連結的筆記時出現對應提醒；按「交給 Agent」先跳出預填指令，可以修改，按「開始」才建立任務。有待審草稿或沒做完的任務時也列在這裡，按鈕是「審核」／「繼續」。
+4. 編輯首頁：「可以交給 Agent」下方可以開關每條規則、調門檻；改了之後提醒立刻跟著變。
+5. 最近筆記：最新一篇有摘要；點任一篇會打開並回到工作區。
+6. 本週足跡（先在編輯首頁打開）：新增、修改、打開筆記後，今天的長條跟著變；資料在 `~/Library/Application Support/tw.scottchen.NoteGen/home-activity.json`。
