@@ -199,7 +199,7 @@
     "status": {
       "open": "Hoje",
       "need": "{count} pendentes",
-      "aria": "{count} itens pendentes, abrir a aba Hoje"
+      "aria": "{count} itens pendentes, abrir o Início"
     },
     "undo": "Desfazer",
     "undoStale": "O arquivo mudou em outro lugar e não pode ser desfeito",
@@ -6527,5 +6527,21 @@
       "completed": "Tarefa em segundo plano concluída",
       "failed": "Tarefa em segundo plano falhou"
     }
+  },
+  "home": {
+    "title": "Início",
+    "open": "Abrir Início",
+    "backToWorkspace": "Voltar ao espaço de trabalho",
+    "edit": "Editar Início",
+    "editDescription": "Ative ou desative cartões e reordene arrastando ou com as setas. As configurações ficam neste computador, não no vault.",
+    "cardsLabel": "Cartões do Início",
+    "cards": {
+      "schedule": "Agenda"
+    },
+    "moveUp": "Mover para cima",
+    "moveDown": "Mover para baixo",
+    "showOnStartup": "Mostrar o Início ao abrir o app",
+    "todayMoved": "A página Hoje agora é o cartão Agenda no Início.",
+    "empty": "Todos os cartões estão desativados."
   }
 }

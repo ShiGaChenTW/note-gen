@@ -199,7 +199,7 @@
     "status": {
       "open": "今日",
       "need": "需处理 {count}",
-      "aria": "需处理 {count} 项，打开今日标签页"
+      "aria": "需处理 {count} 项，打开首页"
     },
     "undo": "撤销",
     "undoStale": "文件已在别处修改，无法撤销",
@@ -6651,5 +6651,21 @@
       "completed": "后台任务已完成",
       "failed": "后台任务执行失败"
     }
+  },
+  "home": {
+    "title": "首页",
+    "open": "打开首页",
+    "backToWorkspace": "回到工作区",
+    "edit": "编辑首页",
+    "editDescription": "开关卡片、拖动或用箭头调整顺序。设置只保存在这台电脑，不写入 vault。",
+    "cardsLabel": "首页卡片",
+    "cards": {
+      "schedule": "日程"
+    },
+    "moveUp": "上移",
+    "moveDown": "下移",
+    "showOnStartup": "启动时显示首页",
+    "todayMoved": "今日页已移到首页的“日程”卡片。",
+    "empty": "所有卡片都已关闭。"
   }
 }

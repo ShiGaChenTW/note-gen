@@ -10,6 +10,7 @@ import { DailyNavShortcuts } from './daily/daily-nav-shortcuts'
 import { ReminderService } from './daily/reminder-service'
 import { LinkRewritePrompt } from './link-rewrite/link-rewrite-prompt'
 import { AgentTaskService } from './agent-tasks/agent-task-service'
+import { HomeService } from './home/home-service'
 
 /** F3: keep the vault index in sync with the active workspace. */
 function VaultIndexService() {
@@ -42,6 +43,7 @@ export function ForkServices() {
       <ReminderService />
       <LinkRewritePrompt />
       <AgentTaskService />
+      <HomeService />
     </>
   )
 }
