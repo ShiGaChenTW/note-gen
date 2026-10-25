@@ -390,7 +390,7 @@ npx pnpm@9 tauri dev
 
 ### Phase 3-1 Agent 任務中心（#30）
 
-啟動方式：`npx pnpm@9 tauri dev`（先關 `/Applications` 的 NoteGen）。需要已設定可用的 AI 模型。
+啟動方式：`npx pnpm@9 tauri dev`（先關 `/Applications` 的 NoteGen）。需要已設定可用的 AI 模型。在 `note-gen-wt/` 的 worktree 裡（`node_modules` 是指回主 repo 的符號連結）Turbopack 會報「Next.js package not found」，改成先 `npx next dev -p 3456`（webpack），再 `CARGO_TARGET_DIR=<主 repo>/src-tauri/target npx pnpm@9 tauri dev --config '{"build":{"beforeDevCommand":""}}'`。
 
 1. 對話輸入框打「在 Inbox 新增一篇 測試.md，內容寫 hello」，按輸入框右側的「丟到背景執行」：輸入框清空、跳出「已交給背景任務」，右側清單按鈕出現數字。
 2. 任務跑完前 vault 沒有 `Inbox/測試.md`（`ls` 確認）；跑完跳「背景任務完成，等你審核」。

@@ -92,7 +92,7 @@ function DraftRow({ view, taskId, onChanged }: { view: DraftReviewView; taskId: 
     <div className="rounded-md border p-3">
       <div className="flex items-center gap-2">
         <span className={`rounded px-1.5 py-0.5 text-xs ${kindTone}`}>{t(`kind.${draft.kind}`)}</span>
-        <span className="min-w-0 flex-1 truncate font-mono text-xs">{draft.targetPath ? `${draft.path} → ${draft.targetPath}` : draft.path}</span>
+        <span className="flex-1" />
         {draft.state !== 'pending' ? (
           <span className={`text-xs ${draft.state === 'failed' ? 'text-destructive' : 'text-muted-foreground'}`}>{t(`draftState.${draft.state}`)}</span>
         ) : (
@@ -107,6 +107,7 @@ function DraftRow({ view, taskId, onChanged }: { view: DraftReviewView; taskId: 
           </>
         )}
       </div>
+      <div className="mt-1.5 break-all font-mono text-xs">{draft.targetPath ? `${draft.path} → ${draft.targetPath}` : draft.path}</div>
       {draft.state === 'failed' && draft.error && <div className="mt-1.5 text-xs text-destructive">{draft.error === 'CONFLICT' ? t('conflict') : draft.error}</div>}
       {conflict && draft.state === 'pending' && (
         <div className="mt-2 flex items-center gap-1.5 rounded bg-primary/10 px-2 py-1 text-xs text-primary"><AlertTriangle className="size-3.5" />{t('conflict')}</div>

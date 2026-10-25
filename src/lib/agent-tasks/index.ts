@@ -49,11 +49,24 @@ function replaceDraft(task: AgentTask, next: AgentTask['drafts'][number]) {
   return task.drafts.map(draft => (draft.id === next.id ? next : draft))
 }
 
+/**
+ * 檔案正開在編輯器時，修改工具改的是編輯器內容，磁碟要等編輯器的延遲存檔。
+ * 等到磁碟與草稿一致（最多 3 秒），之後的衝突比對才不會讀到舊內容。
+ */
+async function waitForDisk(draft: AgentTask['drafts'][number]) {
+  if (draft.state !== 'applied' || (draft.kind !== 'create' && draft.kind !== 'update') || draft.content === undefined) return
+  for (let waited = 0; waited < 3000; waited += 150) {
+    if (await readNote(draft.path) === draft.content) return
+    await new Promise(resolve => setTimeout(resolve, 150))
+  }
+}
+
 export async function applyTaskDraft(taskId: string, draftId: string, confirmedConflict = false) {
   const task = agentTaskCenter.get(taskId)
   const draft = task?.drafts.find(item => item.id === draftId)
   if (!task || !draft) return
-  const next = await applyDraft(draft, reviewDeps, confirmedConflict)
+  const next = await applyDraft(draft, reviewDeps, confirmedConflict, task.drafts)
+  await waitForDisk(next)
   await agentTaskCenter.updateDrafts(taskId, replaceDraft(agentTaskCenter.get(taskId) ?? task, next))
 }
 
@@ -61,6 +74,7 @@ export async function applyTaskDraftsInBulk(taskId: string) {
   const task = agentTaskCenter.get(taskId)
   if (!task) return
   const results = await applyBulk(await inspectTaskDrafts(task), reviewDeps)
+  for (const draft of results) await waitForDisk(draft)
   await agentTaskCenter.updateDrafts(taskId, results)
 }
 

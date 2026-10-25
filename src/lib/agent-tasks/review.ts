@@ -1,6 +1,6 @@
 // Fork（#30）：審核草稿。收下時用原本的工具真正寫入 vault；寫入前先比對衝突。
 import type { AgentTool, AgentToolResult } from '@/lib/agent/types'
-import { hasConflict, requiresIndividualReview } from './draft'
+import { dependsOnPendingDraft, hasConflict, requiresIndividualReview } from './draft'
 import type { DraftChange } from './types'
 
 export interface ReviewDeps {
@@ -19,8 +19,9 @@ export interface DraftReviewView {
 export async function inspectDrafts(drafts: DraftChange[], deps: Pick<ReviewDeps, 'readFile'>): Promise<DraftReviewView[]> {
   return Promise.all(drafts.map(async draft => {
     const currentContent = draft.kind === 'folder' ? null : await deps.readFile(draft.path)
-    const conflict = draft.state === 'pending' && hasConflict(draft, currentContent)
-    return { draft, conflict, individual: requiresIndividualReview(draft, conflict), currentContent }
+    const conflict = draft.state === 'pending' && hasConflict(draft, currentContent, drafts)
+    const individual = requiresIndividualReview(draft, conflict) || dependsOnPendingDraft(draft, drafts)
+    return { draft, conflict, individual, currentContent }
   }))
 }
 
@@ -28,10 +29,10 @@ export async function inspectDrafts(drafts: DraftChange[], deps: Pick<ReviewDeps
  * 收下一筆草稿。confirmedConflict 為 true 表示使用者看過差異、仍要覆蓋。
  * 回傳更新後的草稿（state 變成 applied 或 failed）。
  */
-export async function applyDraft(draft: DraftChange, deps: ReviewDeps, confirmedConflict = false): Promise<DraftChange> {
+export async function applyDraft(draft: DraftChange, deps: ReviewDeps, confirmedConflict = false, siblings: DraftChange[] = []): Promise<DraftChange> {
   if (draft.state !== 'pending') return draft
   const currentContent = draft.kind === 'folder' ? null : await deps.readFile(draft.path)
-  if (hasConflict(draft, currentContent) && !confirmedConflict) {
+  if (hasConflict(draft, currentContent, siblings) && !confirmedConflict) {
     return { ...draft, state: 'failed', error: 'CONFLICT' }
   }
   const tool = deps.getTool(draft.toolName)
@@ -58,7 +59,7 @@ export async function applyBulk(views: DraftReviewView[], deps: ReviewDeps): Pro
       results.push(view.draft)
       continue
     }
-    results.push(await applyDraft(view.draft, deps))
+    results.push(await applyDraft(view.draft, deps, false, results))
   }
   return results
 }

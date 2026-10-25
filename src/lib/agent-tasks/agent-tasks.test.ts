@@ -5,6 +5,7 @@ vi.mock('@/lib/daily/note-io', () => ({ readNote: vi.fn(async () => null) }))
 import type { AgentRuntimeCallbacks, AgentRuntimeInput, AgentRuntimeResult, AgentTool } from '@/lib/agent/types'
 import {
   buildResumeNote,
+  dependsOnPendingDraft,
   describeDraftTarget,
   hasConflict,
   markInterrupted,
@@ -70,6 +71,24 @@ describe('草稿規則', () => {
     expect(hasConflict(draft({ baseContent: 'old' }), 'phone edit')).toBe(true)
     expect(hasConflict(draft({ kind: 'create', baseContent: null, content: 'x' }), null)).toBe(false)
     expect(hasConflict(draft({ kind: 'create', baseContent: null, content: 'x' }), 'someone else')).toBe(true)
+  })
+
+  it('同一任務已收下的修改不算衝突（先改內容再改名）', () => {
+    const edit = draft({ id: 'e', path: 'a.md', baseContent: 'old', content: 'new', state: 'applied' })
+    const move = draft({ id: 'm', kind: 'move', toolName: 'note_rename_file', path: 'a.md', baseContent: 'old' })
+    expect(hasConflict(move, 'new', [edit, move])).toBe(false)
+    expect(hasConflict(move, 'phone edit', [edit, move])).toBe(true)
+    expect(hasConflict(move, 'new', [{ ...edit, state: 'pending' }, move])).toBe(true)
+  })
+
+  it('改名後再改內容：讀得到新路徑、收下時依序處理', () => {
+    const rename = draft({ id: 'r', kind: 'move', toolName: 'note_rename_file', path: 'a.md', targetPath: 'b.md', content: 'hi', baseContent: 'hi' })
+    const edit = draft({ id: 'e', path: 'b.md', baseContent: null, content: 'hi\nworld' })
+    expect(readThroughDrafts([rename], 'b.md')).toEqual({ found: true, content: 'hi' })
+    expect(readThroughDrafts([rename], 'a.md')).toEqual({ found: true, content: null })
+    expect(dependsOnPendingDraft(edit, [rename, edit])).toBe(true)
+    expect(dependsOnPendingDraft(edit, [{ ...rename, state: 'applied' }, edit])).toBe(false)
+    expect(hasConflict(edit, 'hi', [{ ...rename, state: 'applied' }, edit])).toBe(false)
   })
 
   it('同一路徑的草稿合併成一筆', () => {
@@ -149,6 +168,14 @@ describe('草稿版工具', () => {
     expect((await update.execute({ filePath: 'n.md', content: 'v2' }, { runId: 'r', context: { userInput: '' } })).ok).toBe(true)
     expect(sink.list).toHaveLength(1)
     expect(sink.list[0]).toMatchObject({ kind: 'create', content: 'v2' })
+  })
+
+  it('改名之後可以修改新路徑的檔案', async () => {
+    const sink = sinkOf()
+    const [rename, update] = buildBackgroundTools([tool('note_rename_file', 'note', 'file-update'), tool('note_update_file', 'note', 'file-update')], sink, async p => (p === 'x/a.md' ? 'hi' : null))
+    await rename.execute({ filePath: 'x/a.md', newName: 'b.md' }, { runId: 'r', context: { userInput: '' } })
+    expect((await update.execute({ filePath: 'x/b.md', content: 'hi\nworld' }, { runId: 'r', context: { userInput: '' } })).ok).toBe(true)
+    expect(sink.list.map(d => [d.kind, d.path, d.targetPath, d.content])).toEqual([['move', 'x/a.md', 'x/b.md', 'hi'], ['update', 'x/b.md', undefined, 'hi\nworld']])
   })
 
   it('讀檔先看草稿', async () => {

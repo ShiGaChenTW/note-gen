@@ -111,14 +111,24 @@ export function requiresIndividualReview(draft: DraftChange, conflict: boolean):
 /**
  * 衝突：建立草稿後，vault 裡的檔案又被改過（例如手機同步進來）。
  * currentContent 為 null 表示目前檔案不存在。
+ * siblings 是同一任務的其他草稿：已收下的新增／修改產生的內容不算外部改動。
  */
-export function hasConflict(draft: DraftChange, currentContent: string | null): boolean {
+export function hasConflict(draft: DraftChange, currentContent: string | null, siblings: DraftChange[] = []): boolean {
   if (draft.kind === 'folder') return false
   if (draft.kind === 'create') return currentContent !== null && currentContent !== draft.content
-  return currentContent !== draft.baseContent
+  if (currentContent === draft.baseContent) return false
+  return !siblings.some(other =>
+    other.id !== draft.id
+    && other.state === 'applied'
+    && other.content === currentContent
+    && (
+      ((other.kind === 'create' || other.kind === 'update') && other.path === draft.path)
+      || ((other.kind === 'move' || other.kind === 'copy') && other.targetPath === draft.path)
+    )
+  )
 }
 
-/** 任務執行中讀檔時，先看草稿：同一路徑最後一筆草稿的結果才是任務「看到」的內容。 */
+/** 任務執行中讀檔時，先看草稿：同一路徑最後一筆草稿的結果才是任務「看到」的內容（含搬移、複製的目的地）。 */
 export function readThroughDrafts(drafts: DraftChange[], path: string): { found: boolean; content: string | null } {
   let found = false
   let content: string | null = null
@@ -131,8 +141,20 @@ export function readThroughDrafts(drafts: DraftChange[], path: string): { found:
       found = true
       content = null
     }
+    if ((draft.kind === 'move' || draft.kind === 'copy') && draft.targetPath === path) {
+      found = true
+      content = draft.content ?? ''
+    }
   }
   return { found, content }
+}
+
+/** 這筆草稿是不是建立在前面某筆還沒收下的搬移／複製之上（例如改名後再改內容）。 */
+export function dependsOnPendingDraft(draft: DraftChange, drafts: DraftChange[]): boolean {
+  const index = drafts.findIndex(other => other.id === draft.id)
+  return drafts.slice(0, index === -1 ? drafts.length : index).some(other =>
+    other.state === 'pending' && (other.kind === 'move' || other.kind === 'copy') && other.targetPath === draft.path
+  )
 }
 
 /** 審核結束後的任務狀態：還有沒處理的草稿就繼續等你。 */

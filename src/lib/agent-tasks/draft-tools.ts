@@ -43,7 +43,8 @@ function wrapAsDraft(tool: AgentTool, sink: DraftSink, readFile: (path: string) 
         kind,
         path,
         targetPath,
-        content,
+        // 搬移、複製記下來源內容，之後任務讀目的地時才看得到。
+        content: kind === 'move' || kind === 'copy' ? visible ?? undefined : content,
         baseContent: onDisk,
         summary,
         state: 'pending',
