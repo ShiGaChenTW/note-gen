@@ -102,6 +102,7 @@ docs/.vitepress/cache
 !README.md
 !README.zh-CN.md
 !AGENTS.md
+!GLOSSARY.md
 
 # backup files
 *.backup
