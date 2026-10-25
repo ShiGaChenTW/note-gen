@@ -6569,12 +6569,123 @@
     "editDescription": "カードの表示を切り替え、ドラッグまたは矢印で並べ替えます。設定はこのコンピュータにのみ保存され、vault には入りません。",
     "cardsLabel": "ホームのカード",
     "cards": {
-      "schedule": "予定"
+      "schedule": "予定",
+      "capture": "クイックメモ",
+      "signals": "Agent に任せる",
+      "tasks": "Agent タスク",
+      "recent": "最近のノート",
+      "footprint": "今週の足跡"
     },
     "moveUp": "上へ",
     "moveDown": "下へ",
     "showOnStartup": "起動時にホームを表示",
     "todayMoved": "「今日」ページはホームの「予定」カードに移動しました。",
-    "empty": "すべてのカードがオフになっています。"
+    "empty": "すべてのカードがオフになっています。",
+    "capture": {
+      "label": "クイックメモ",
+      "placeholder": "メモを書いて Enter で {folder} に保存、⌘Enter で Agent にバックグラウンドで任せる",
+      "hint": "Enter で保存 · ⌘Enter で Agent",
+      "saved": "Inbox に保存しました",
+      "sentToAgent": "バックグラウンドに送りました",
+      "failed": "保存できませんでした"
+    },
+    "needs": {
+      "title": "対応が必要（{count}）",
+      "review": "下書き確認",
+      "reviewAction": "確認",
+      "drafts": "確認待ちの下書き {count} 件",
+      "unfinished": "未完了",
+      "resume": "続ける",
+      "signal": "お知らせ",
+      "handoff": "Agent に任せる"
+    },
+    "handoff": {
+      "title": "Agent に任せる",
+      "description": "指示を確認・編集してください。「開始」を押すとバックグラウンドで実行され、ファイルの変更は下書きとしてあなたの確認を待ちます。",
+      "prompt": "指示",
+      "start": "開始",
+      "cancel": "キャンセル",
+      "started": "バックグラウンドに送りました",
+      "failed": "バックグラウンドタスクを作成できませんでした"
+    },
+    "signals": {
+      "overdue": {
+        "text": "期限切れのタスクが {count} 件あります",
+        "prompt": "vault 内の期限切れタスク（Obsidian Tasks 形式で 📅 の日付を過ぎた未完了のもの）をノートごとに一覧にし、延期すべきものと削除してよいものを提案してください。タスクは直接編集しないでください。"
+      },
+      "overdueLong": {
+        "text": "{days} 日以上期限切れのタスクが {count} 件",
+        "prompt": "{days} 日以上期限切れのタスクを見つけ、それぞれまだ必要かを判断して延期か中止を提案し、提案を Inbox の新しいノートに書いてください。"
+      },
+      "dailyNoteToday": {
+        "text": "{hour} 時を過ぎましたが今日のデイリーノートがまだです",
+        "prompt": "今日 vault で作成・編集したノートをもとに、今日のデイリーノート（やったこと、考え、明日やること）を下書きし、今日のデイリーノートとして保存してください。"
+      },
+      "dailyNoteStreak": {
+        "text": "{days} 日続けてデイリーノートがありません",
+        "prompt": "直近 {days} 日に作成・編集したノートをもとに、各日の短いデイリーノートを下書きしてください。"
+      },
+      "inboxCount": {
+        "text": "{folder} に未整理が {count} 件",
+        "prompt": "{folder} のノートを整理してください：各ノートのテーマを判断し、移動先フォルダを提案し、関連するウィキリンクを追加し、まとめるべきものはまとめてください。"
+      },
+      "inboxOld": {
+        "text": "{folder} の最も古いメモが {days} 日放置されています",
+        "prompt": "{folder} で最も古いノートを見つけ、それぞれアーカイブ・既存ノートへの統合・削除のどれにするか理由とともに決めてください。"
+      },
+      "linkless": {
+        "text": "リンクのないノートが {count} 件",
+        "prompt": "リンクの出入りが一つもないノート（デイリーノートと Inbox を除く）を見つけ、それぞれに関連ノートへのウィキリンクを 1〜3 個追加してください。"
+      },
+      "weeklyReview": {
+        "text": "今週（{week}）の振り返りがまだです",
+        "prompt": "今週（{week}）のデイリーノート、完了したタスク、新しいノートをもとに週の振り返り（できたこと、学んだこと、来週の重点）を下書きし、ファイル名に {week} を含む新しいノートとして保存してください。"
+      }
+    },
+    "rules": {
+      "days": "日",
+      "overdue": {
+        "name": "期限切れタスク",
+        "long": "期限切れが"
+      },
+      "dailyNote": {
+        "name": "デイリーノート",
+        "after": "時以降",
+        "missing": "日未記入"
+      },
+      "inbox": {
+        "name": "Inbox の滞留",
+        "count": "件以上",
+        "hours": "時間以上"
+      },
+      "linkless": {
+        "name": "リンク不足",
+        "count": "件以上"
+      },
+      "weeklyReview": {
+        "name": "週末の振り返り",
+        "after": "時以降（金曜）"
+      }
+    },
+    "tasks": {
+      "title": "バックグラウンドタスク",
+      "viewAll": "すべてのタスク",
+      "empty": "実行中のタスクはありません",
+      "cancel": "キャンセル",
+      "conversations": "最近の会話",
+      "noConversations": "会話はまだありません"
+    },
+    "recent": {
+      "title": "最近のノート",
+      "empty": "ノートはまだありません"
+    },
+    "footprint": {
+      "title": "今週の足跡",
+      "summary": "作成 {created} · 編集 {modified} · 再読 {reread}",
+      "day": "{date}：作成 {created}、編集 {modified}、再読 {reread}",
+      "created": "作成",
+      "modified": "編集",
+      "reread": "再読"
+    }
   }
 }

@@ -6660,12 +6660,123 @@
     "editDescription": "Turn cards on or off and reorder them by dragging or with the arrows. Settings stay on this computer, not in the vault.",
     "cardsLabel": "Home cards",
     "cards": {
-      "schedule": "Schedule"
+      "schedule": "Schedule",
+      "capture": "Quick capture",
+      "signals": "Hand off to Agent",
+      "tasks": "Agent tasks",
+      "recent": "Recent notes",
+      "footprint": "This week"
     },
     "moveUp": "Move up",
     "moveDown": "Move down",
     "showOnStartup": "Show Home on startup",
     "todayMoved": "The Today page has moved to the Schedule card on Home.",
-    "empty": "All cards are turned off."
+    "empty": "All cards are turned off.",
+    "capture": {
+      "label": "Quick capture",
+      "placeholder": "Jot something down — Enter saves it to {folder}; ⌘Enter hands it to the Agent",
+      "hint": "Enter to save · ⌘Enter for Agent",
+      "saved": "Saved to Inbox",
+      "sentToAgent": "Sent to background",
+      "failed": "Could not save"
+    },
+    "needs": {
+      "title": "Needs you ({count})",
+      "review": "Drafts",
+      "reviewAction": "Review",
+      "drafts": "{count} drafts to review",
+      "unfinished": "Unfinished",
+      "resume": "Continue",
+      "signal": "Nudge",
+      "handoff": "Hand off"
+    },
+    "handoff": {
+      "title": "Hand off to Agent",
+      "description": "Check or edit the instruction. It only runs in the background after you press Start; file changes are saved as drafts for your review.",
+      "prompt": "Instruction",
+      "start": "Start",
+      "cancel": "Cancel",
+      "started": "Sent to background",
+      "failed": "Could not create background task"
+    },
+    "signals": {
+      "overdue": {
+        "text": "{count} tasks are overdue",
+        "prompt": "List every overdue task in the vault (Obsidian Tasks format, 📅 date passed and not done), grouped by source note, and suggest which to reschedule and which to drop. Do not edit the tasks."
+      },
+      "overdueLong": {
+        "text": "{count} tasks overdue by more than {days} days",
+        "prompt": "Find tasks overdue by more than {days} days, decide for each whether it still matters, suggest rescheduling or cancelling, and write the suggestions to a new note in the Inbox."
+      },
+      "dailyNoteToday": {
+        "text": "It's past {hour}:00 and today's daily note is empty",
+        "prompt": "Based on the notes created and edited in the vault today, draft today's daily note (what I did, thoughts, tomorrow) and save it as today's daily note draft."
+      },
+      "dailyNoteStreak": {
+        "text": "No daily note for {days} days in a row",
+        "prompt": "Based on the notes created and edited in the last {days} days, draft a short daily note for each of those days."
+      },
+      "inboxCount": {
+        "text": "{count} items waiting in {folder}",
+        "prompt": "Tidy the notes in {folder}: decide the topic of each, suggest a folder to move it to, add relevant wikilinks, and merge notes that belong together."
+      },
+      "inboxOld": {
+        "text": "The oldest item in {folder} has waited {days} days",
+        "prompt": "Find the oldest notes in {folder} and decide for each whether to archive it, merge it into an existing note, or delete it, with a reason."
+      },
+      "linkless": {
+        "text": "{count} notes have no links",
+        "prompt": "Find notes with no incoming or outgoing links (excluding daily notes and the Inbox) and add 1–3 wikilinks to related notes for each."
+      },
+      "weeklyReview": {
+        "text": "No weekly review yet for {week}",
+        "prompt": "Using this week's ({week}) daily notes, completed tasks and new notes, draft a weekly review: what got done, what I learned, next week's focus. Save it as a new note whose name contains {week}."
+      }
+    },
+    "rules": {
+      "days": "days",
+      "overdue": {
+        "name": "Overdue tasks",
+        "long": "overdue by more than"
+      },
+      "dailyNote": {
+        "name": "Daily note",
+        "after": ":00 or later",
+        "missing": "days missing"
+      },
+      "inbox": {
+        "name": "Inbox backlog",
+        "count": "items or more",
+        "hours": "hours or older"
+      },
+      "linkless": {
+        "name": "Missing links",
+        "count": "notes or more"
+      },
+      "weeklyReview": {
+        "name": "Weekly review",
+        "after": ":00 on Friday or later"
+      }
+    },
+    "tasks": {
+      "title": "Background tasks",
+      "viewAll": "All tasks",
+      "empty": "Nothing running right now",
+      "cancel": "Cancel",
+      "conversations": "Recent conversations",
+      "noConversations": "No conversations yet"
+    },
+    "recent": {
+      "title": "Recent notes",
+      "empty": "No notes yet"
+    },
+    "footprint": {
+      "title": "This week",
+      "summary": "Written {created} · Edited {modified} · Reread {reread}",
+      "day": "{date}: written {created}, edited {modified}, reread {reread}",
+      "created": "Written",
+      "modified": "Edited",
+      "reread": "Reread"
+    }
   }
 }

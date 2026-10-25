@@ -6660,12 +6660,123 @@
     "editDescription": "开关卡片、拖动或用箭头调整顺序。设置只保存在这台电脑，不写入 vault。",
     "cardsLabel": "首页卡片",
     "cards": {
-      "schedule": "日程"
+      "schedule": "日程",
+      "capture": "快速记录",
+      "signals": "可以交给 Agent",
+      "tasks": "Agent 任务",
+      "recent": "最近笔记",
+      "footprint": "本周足迹"
     },
     "moveUp": "上移",
     "moveDown": "下移",
     "showOnStartup": "启动时显示首页",
     "todayMoved": "今日页已移到首页的“日程”卡片。",
-    "empty": "所有卡片都已关闭。"
+    "empty": "所有卡片都已关闭。",
+    "capture": {
+      "label": "快速记录",
+      "placeholder": "记一笔，按 Enter 存到 {folder}；⌘Enter 交给 Agent 在后台做",
+      "hint": "Enter 记录 · ⌘Enter 交给 Agent",
+      "saved": "已存到 Inbox",
+      "sentToAgent": "已交给后台任务",
+      "failed": "保存失败"
+    },
+    "needs": {
+      "title": "需要你处理（{count}）",
+      "review": "待审草稿",
+      "reviewAction": "审核",
+      "drafts": "{count} 项草稿待审",
+      "unfinished": "未完成",
+      "resume": "继续",
+      "signal": "提醒",
+      "handoff": "交给 Agent"
+    },
+    "handoff": {
+      "title": "交给 Agent",
+      "description": "确认或修改要交代的事，按“开始”才会在后台执行；改文件会先存成草稿等你审核。",
+      "prompt": "要交代的事",
+      "start": "开始",
+      "cancel": "取消",
+      "started": "已交给后台任务",
+      "failed": "无法创建后台任务"
+    },
+    "signals": {
+      "overdue": {
+        "text": "有 {count} 项待办逾期",
+        "prompt": "列出 vault 中所有逾期的待办（Obsidian Tasks 格式，📅 日期已过且未完成），按来源笔记分组，并建议哪些该改期、哪些可以删除。不要直接修改任务。"
+      },
+      "overdueLong": {
+        "text": "{count} 项待办逾期超过 {days} 天",
+        "prompt": "找出逾期超过 {days} 天的待办，逐项判断是否还要做，提出改期或取消的建议，并把建议写成一则新笔记放在 Inbox。"
+      },
+      "dailyNoteToday": {
+        "text": "已经 {hour} 点了，今天还没写每日笔记",
+        "prompt": "根据今天 vault 中新增和修改的笔记，草拟今天的每日笔记（做了什么、想法、明天要做），存成今天的每日笔记草稿。"
+      },
+      "dailyNoteStreak": {
+        "text": "已经连续 {days} 天没写每日笔记",
+        "prompt": "根据最近 {days} 天 vault 中新增和修改的笔记，为这几天各草拟一份简短的每日笔记。"
+      },
+      "inboxCount": {
+        "text": "{folder} 有 {count} 则待整理",
+        "prompt": "整理 {folder} 文件夹中的笔记：判断每则属于哪个主题，建议移到哪个文件夹，补上相关的双链；需要合并的就合并。"
+      },
+      "inboxOld": {
+        "text": "{folder} 最久的一则已经放了 {days} 天",
+        "prompt": "找出 {folder} 中放得最久的笔记，逐则决定归档、合并到现有笔记还是删除，并说明理由。"
+      },
+      "linkless": {
+        "text": "{count} 篇笔记没有任何链接",
+        "prompt": "找出 vault 中没有任何进出链接的笔记（不含每日笔记和 Inbox），为每篇建议 1–3 个相关笔记并补上双链。"
+      },
+      "weeklyReview": {
+        "text": "本周（{week}）还没做复盘",
+        "prompt": "根据本周（{week}）的每日笔记、完成的待办和新增的笔记，草拟一份周复盘：完成了什么、学到了什么、下周重点。存成文件名包含 {week} 的新笔记。"
+      }
+    },
+    "rules": {
+      "days": "天",
+      "overdue": {
+        "name": "待办逾期",
+        "long": "逾期超过"
+      },
+      "dailyNote": {
+        "name": "每日笔记",
+        "after": "点后",
+        "missing": "天没写"
+      },
+      "inbox": {
+        "name": "Inbox 积压",
+        "count": "则以上",
+        "hours": "小时以上"
+      },
+      "linkless": {
+        "name": "缺少链接",
+        "count": "篇以上"
+      },
+      "weeklyReview": {
+        "name": "周末复盘",
+        "after": "点后（周五）"
+      }
+    },
+    "tasks": {
+      "title": "后台任务",
+      "viewAll": "全部任务",
+      "empty": "目前没有进行中的任务",
+      "cancel": "取消",
+      "conversations": "最近对话",
+      "noConversations": "还没有对话"
+    },
+    "recent": {
+      "title": "最近笔记",
+      "empty": "还没有笔记"
+    },
+    "footprint": {
+      "title": "本周足迹",
+      "summary": "写下 {created} · 修改 {modified} · 重读 {reread}",
+      "day": "{date}：写下 {created}、修改 {modified}、重读 {reread}",
+      "created": "写下",
+      "modified": "修改",
+      "reread": "重读"
+    }
   }
 }

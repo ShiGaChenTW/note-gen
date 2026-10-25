@@ -6559,12 +6559,123 @@
     "editDescription": "開關卡片、拖曳或用箭頭調整順序。設定只存在這台電腦，不進 vault。",
     "cardsLabel": "首頁卡片",
     "cards": {
-      "schedule": "日程"
+      "schedule": "日程",
+      "capture": "快速記錄",
+      "signals": "可以交給 Agent",
+      "tasks": "Agent 任務",
+      "recent": "最近筆記",
+      "footprint": "本週足跡"
     },
     "moveUp": "上移",
     "moveDown": "下移",
     "showOnStartup": "啟動時顯示首頁",
     "todayMoved": "今日頁已經移到首頁的「日程」卡片。",
-    "empty": "所有卡片都關掉了。"
+    "empty": "所有卡片都關掉了。",
+    "capture": {
+      "label": "快速記錄",
+      "placeholder": "記一筆，按 Enter 存進 {folder}；⌘Enter 交給 Agent 在背景做",
+      "hint": "Enter 記錄 · ⌘Enter 交給 Agent",
+      "saved": "已存進 Inbox",
+      "sentToAgent": "已交給背景任務",
+      "failed": "沒有存成功"
+    },
+    "needs": {
+      "title": "需要你處理（{count}）",
+      "review": "待審草稿",
+      "reviewAction": "審核",
+      "drafts": "{count} 項草稿待審",
+      "unfinished": "沒做完",
+      "resume": "繼續",
+      "signal": "提醒",
+      "handoff": "交給 Agent"
+    },
+    "handoff": {
+      "title": "交給 Agent",
+      "description": "確認或修改要交代的事，按「開始」才會在背景執行；改檔會先存成草稿等你審核。",
+      "prompt": "要交代的事",
+      "start": "開始",
+      "cancel": "取消",
+      "started": "已交給背景任務",
+      "failed": "無法建立背景任務"
+    },
+    "signals": {
+      "overdue": {
+        "text": "有 {count} 項待辦逾期",
+        "prompt": "列出 vault 裡所有逾期的待辦（Obsidian Tasks 格式，📅 日期已過且未完成），依來源筆記分組，並建議哪些該改期、哪些可以刪掉。不要直接修改任務。"
+      },
+      "overdueLong": {
+        "text": "{count} 項待辦逾期超過 {days} 天",
+        "prompt": "找出逾期超過 {days} 天的待辦，逐項判斷還要不要做，提出改期或取消的建議，並把建議寫成一則新筆記放在 Inbox。"
+      },
+      "dailyNoteToday": {
+        "text": "{hour} 點了，今天還沒寫每日筆記",
+        "prompt": "根據今天 vault 裡新增與修改的筆記，草擬今天的每日筆記內容（做了什麼、想法、明天要做），存成今天的每日筆記草稿。"
+      },
+      "dailyNoteStreak": {
+        "text": "已經連續 {days} 天沒寫每日筆記",
+        "prompt": "根據最近 {days} 天 vault 裡新增與修改的筆記，替這幾天各草擬一份簡短的每日筆記。"
+      },
+      "inboxCount": {
+        "text": "{folder} 有 {count} 則待整理",
+        "prompt": "整理 {folder} 資料夾裡的筆記：判斷每則屬於哪個主題，建議搬到哪個資料夾，補上相關的雙鏈；需要合併的就合併。"
+      },
+      "inboxOld": {
+        "text": "{folder} 最久的一則已經放了 {days} 天",
+        "prompt": "找出 {folder} 裡放最久的筆記，逐則決定要歸檔、合併到既有筆記，還是刪除，並說明理由。"
+      },
+      "linkless": {
+        "text": "{count} 篇筆記沒有任何連結",
+        "prompt": "找出 vault 裡沒有任何進出連結的筆記（不含每日筆記與 Inbox），為每篇建議 1–3 個相關筆記並補上雙鏈。"
+      },
+      "weeklyReview": {
+        "text": "這週（{week}）還沒做複盤",
+        "prompt": "根據本週（{week}）的每日筆記、完成的待辦與新增的筆記，草擬一份週複盤：完成了什麼、學到什麼、下週重點。存成檔名含 {week} 的新筆記。"
+      }
+    },
+    "rules": {
+      "days": "天",
+      "overdue": {
+        "name": "待辦逾期",
+        "long": "逾期超過"
+      },
+      "dailyNote": {
+        "name": "每日筆記",
+        "after": "點後",
+        "missing": "天沒寫"
+      },
+      "inbox": {
+        "name": "Inbox 積壓",
+        "count": "則以上",
+        "hours": "小時以上"
+      },
+      "linkless": {
+        "name": "缺少連結",
+        "count": "篇以上"
+      },
+      "weeklyReview": {
+        "name": "週末複盤",
+        "after": "點後（週五）"
+      }
+    },
+    "tasks": {
+      "title": "背景任務",
+      "viewAll": "全部任務",
+      "empty": "目前沒有進行中的任務",
+      "cancel": "取消",
+      "conversations": "最近對話",
+      "noConversations": "還沒有對話"
+    },
+    "recent": {
+      "title": "最近筆記",
+      "empty": "還沒有筆記"
+    },
+    "footprint": {
+      "title": "本週足跡",
+      "summary": "寫下 {created} · 修改 {modified} · 重讀 {reread}",
+      "day": "{date}：寫下 {created}、修改 {modified}、重讀 {reread}",
+      "created": "寫下",
+      "modified": "修改",
+      "reread": "重讀"
+    }
   }
 }

@@ -112,6 +112,21 @@ function ensureLinkIndex(state: LinkState): RevisionLinkIndex {
   return linkIndex
 }
 
+/** Fork（#32）：沒有任何進出連結的筆記（排除指定資料夾，例如每日筆記、Inbox）。 */
+export function selectLinklessPaths(state: LinkState, excludeFolders: string[] = []): string[] {
+  const index = ensureLinkIndex(state)
+  const prefixes = excludeFolders.map(folder => folder.replace(/^\/+|\/+$/g, '')).filter(Boolean).map(folder => `${folder}/`)
+  const out: string[] = []
+  for (const path of state.notes.keys()) {
+    if (!path.toLowerCase().endsWith('.md') || prefixes.some(prefix => path.startsWith(prefix))) continue
+    const outgoing = index.outgoing.get(path) ?? []
+    if (outgoing.some(link => link.resolved)) continue
+    if ((index.backlinks.get(path.toLowerCase()) ?? []).length > 0) continue
+    out.push(path)
+  }
+  return out
+}
+
 export function selectBacklinks(state: LinkState, targetPath: string): BacklinkRef[] {
   const index = ensureLinkIndex(state)
   const hit = index.backlinkHits.get(targetPath)

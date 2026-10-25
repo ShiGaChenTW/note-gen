@@ -20,15 +20,15 @@ export function HomeEditSheet() {
 
   return (
     <Sheet open={editing} onOpenChange={setEditing}>
-      <SheetContent side="right" className="flex w-[420px] flex-col gap-0 p-5 sm:max-w-[420px]">
+      <SheetContent side="right" className="flex w-[460px] flex-col gap-0 overflow-y-auto p-5 sm:max-w-[460px]">
         <SheetHeader className="mb-4 p-0">
           <SheetTitle>{t('edit')}</SheetTitle>
           <SheetDescription>{t('editDescription')}</SheetDescription>
         </SheetHeader>
         <ul className="grid gap-1" aria-label={t('cardsLabel')}>
           {ordered.map((card, index) => (
-            <li
-              key={card.key}
+            <li key={card.key} className="grid gap-0">
+            <div
               draggable
               onDragStart={event => { setDragging(card.key); event.dataTransfer.effectAllowed = 'move' }}
               onDragOver={event => { if (dragging) event.preventDefault() }}
@@ -53,6 +53,8 @@ export function HomeEditSheet() {
                 onCheckedChange={checked => void setPrefs(setCardVisible(prefs, card, checked))}
                 aria-label={t(`cards.${card.key}`)}
               />
+            </div>
+            {card.Settings && isCardVisible(prefs, card) && <card.Settings />}
             </li>
           ))}
         </ul>

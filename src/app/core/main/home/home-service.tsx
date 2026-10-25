@@ -5,6 +5,7 @@ import { useEffect } from 'react'
 import useHomeStore from '@/stores/home'
 import { HOME_CARDS } from './home-cards'
 import { HomeScreen } from './home-screen'
+import { ActivityTracker } from './cards/footprint-card'
 
 export function HomeService() {
   const init = useHomeStore(state => state.init)
@@ -25,5 +26,10 @@ export function HomeService() {
     return () => window.removeEventListener('keydown', onKeyDown, true)
   }, [])
 
-  return <HomeScreen />
+  return (
+    <>
+      <ActivityTracker />
+      <HomeScreen />
+    </>
+  )
 }
