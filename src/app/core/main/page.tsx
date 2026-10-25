@@ -290,7 +290,7 @@ function ResizableWrapper() {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    <div className="relative flex h-full min-h-0 flex-col">{/* Fork #31: relative 讓首頁蓋住三欄 */}
       <ResizablePanelGroup
         orientation="horizontal"
         onLayoutChanged={onLayout}

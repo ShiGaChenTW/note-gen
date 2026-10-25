@@ -6511,5 +6511,20 @@
       "completed": "Hintergrundaufgabe abgeschlossen",
       "failed": "Hintergrundaufgabe fehlgeschlagen"
     }
+  },
+  "home": {
+    "title": "Startseite",
+    "open": "Startseite öffnen",
+    "backToWorkspace": "Zurück zum Arbeitsbereich",
+    "edit": "Startseite bearbeiten",
+    "editDescription": "Karten ein- oder ausschalten und per Ziehen oder mit den Pfeilen sortieren. Die Einstellungen bleiben auf diesem Computer, nicht im Vault.",
+    "cardsLabel": "Karten der Startseite",
+    "cards": {
+      "schedule": "Zeitplan"
+    },
+    "moveUp": "Nach oben",
+    "moveDown": "Nach unten",
+    "showOnStartup": "Startseite beim Start anzeigen",
+    "todayMoved": "Die Heute-Seite ist jetzt die Zeitplan-Karte auf der Startseite."
   }
 }

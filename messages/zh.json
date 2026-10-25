@@ -6651,5 +6651,20 @@
       "completed": "后台任务已完成",
       "failed": "后台任务执行失败"
     }
+  },
+  "home": {
+    "title": "首页",
+    "open": "打开首页",
+    "backToWorkspace": "回到工作区",
+    "edit": "编辑首页",
+    "editDescription": "开关卡片、拖动或用箭头调整顺序。设置只保存在这台电脑，不写入 vault。",
+    "cardsLabel": "首页卡片",
+    "cards": {
+      "schedule": "日程"
+    },
+    "moveUp": "上移",
+    "moveDown": "下移",
+    "showOnStartup": "启动时显示首页",
+    "todayMoved": "今日页已移到首页的“日程”卡片。"
   }
 }

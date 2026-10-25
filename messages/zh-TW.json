@@ -6550,5 +6550,20 @@
       "completed": "背景任務已完成",
       "failed": "背景任務執行失敗"
     }
+  },
+  "home": {
+    "title": "首頁",
+    "open": "打開首頁",
+    "backToWorkspace": "回到工作區",
+    "edit": "編輯首頁",
+    "editDescription": "開關卡片、拖曳或用箭頭調整順序。設定只存在這台電腦，不進 vault。",
+    "cardsLabel": "首頁卡片",
+    "cards": {
+      "schedule": "日程"
+    },
+    "moveUp": "上移",
+    "moveDown": "下移",
+    "showOnStartup": "啟動時顯示首頁",
+    "todayMoved": "今日頁已經移到首頁的「日程」卡片。"
   }
 }

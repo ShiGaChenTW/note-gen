@@ -6651,5 +6651,20 @@
       "completed": "Background task completed",
       "failed": "Background task failed"
     }
+  },
+  "home": {
+    "title": "Home",
+    "open": "Open Home",
+    "backToWorkspace": "Back to workspace",
+    "edit": "Edit Home",
+    "editDescription": "Turn cards on or off and reorder them by dragging or with the arrows. Settings stay on this computer, not in the vault.",
+    "cardsLabel": "Home cards",
+    "cards": {
+      "schedule": "Schedule"
+    },
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "showOnStartup": "Show Home on startup",
+    "todayMoved": "The Today page has moved to the Schedule card on Home."
   }
 }

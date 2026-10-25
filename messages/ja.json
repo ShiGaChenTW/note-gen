@@ -6560,5 +6560,20 @@
       "completed": "バックグラウンドタスクが完了しました",
       "failed": "バックグラウンドタスクが失敗しました"
     }
+  },
+  "home": {
+    "title": "ホーム",
+    "open": "ホームを開く",
+    "backToWorkspace": "ワークスペースに戻る",
+    "edit": "ホームを編集",
+    "editDescription": "カードの表示を切り替え、ドラッグまたは矢印で並べ替えます。設定はこのコンピュータにのみ保存され、vault には入りません。",
+    "cardsLabel": "ホームのカード",
+    "cards": {
+      "schedule": "予定"
+    },
+    "moveUp": "上へ",
+    "moveDown": "下へ",
+    "showOnStartup": "起動時にホームを表示",
+    "todayMoved": "「今日」ページはホームの「予定」カードに移動しました。"
   }
 }
