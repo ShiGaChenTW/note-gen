@@ -8,9 +8,15 @@ const cards = [
 ]
 
 describe('首頁卡片設定', () => {
+  it('新卡片照登記表的相對位置插入舊設定', () => {
+    const registry = [{ key: 'capture', defaultOn: true }, { key: 'tasks', defaultOn: true }, { key: 'schedule', defaultOn: true }, { key: 'recent', defaultOn: true }]
+    expect(normalizePrefs({ order: ['schedule'] }, registry).order).toEqual(['capture', 'tasks', 'schedule', 'recent'])
+    expect(normalizePrefs({ order: ['recent', 'schedule'] }, registry).order).toEqual(['recent', 'capture', 'tasks', 'schedule'])
+  })
+
   it('讀回時丟掉不存在的卡片、補上新卡片', () => {
     expect(normalizePrefs({ order: ['gone', 'recent', 'recent'], hidden: ['gone', 'recent'] }, cards)).toEqual({
-      order: ['recent', 'schedule', 'footprint'],
+      order: ['schedule', 'recent', 'footprint'],
       hidden: ['recent'],
       shown: [],
     })

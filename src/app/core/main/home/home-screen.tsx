@@ -11,6 +11,7 @@ import useHomeStore from '@/stores/home'
 import { TodayProvider, TodayTitle } from '../today/today-page'
 import { HOME_CARDS } from './home-cards'
 import { HomeEditSheet } from './home-edit-sheet'
+import { HandoffDialog, NeedsList } from './cards/needs-list'
 
 function Slot({ slot, className }: { slot: HomeSlot; className?: string }) {
   const prefs = useHomeStore(state => state.prefs)
@@ -65,12 +66,16 @@ export function HomeScreen() {
           )}
 
           <div className="grid grid-cols-[minmax(0,1fr)_400px] items-start gap-4 max-[1100px]:grid-cols-1">
-            <Slot slot="main" className="flex min-w-0 flex-col gap-4" />
+            <div className="flex min-w-0 flex-col gap-4">
+              <NeedsList cards={HOME_CARDS} />
+              <Slot slot="main" className="flex min-w-0 flex-col gap-4" />
+            </div>
             <Slot slot="side" className="flex min-w-0 flex-col gap-4" />
           </div>
         </div>
       </TodayProvider>
       <HomeEditSheet />
+      <HandoffDialog />
     </div>
   )
 }

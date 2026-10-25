@@ -6520,12 +6520,123 @@
     "editDescription": "Karten ein- oder ausschalten und per Ziehen oder mit den Pfeilen sortieren. Die Einstellungen bleiben auf diesem Computer, nicht im Vault.",
     "cardsLabel": "Karten der Startseite",
     "cards": {
-      "schedule": "Zeitplan"
+      "schedule": "Zeitplan",
+      "capture": "Schnellnotiz",
+      "signals": "An den Agent übergeben",
+      "tasks": "Agent-Aufgaben",
+      "recent": "Zuletzt bearbeitet",
+      "footprint": "Diese Woche"
     },
     "moveUp": "Nach oben",
     "moveDown": "Nach unten",
     "showOnStartup": "Startseite beim Start anzeigen",
     "todayMoved": "Die Heute-Seite ist jetzt die Zeitplan-Karte auf der Startseite.",
-    "empty": "Alle Karten sind ausgeschaltet."
+    "empty": "Alle Karten sind ausgeschaltet.",
+    "capture": {
+      "label": "Schnellnotiz",
+      "placeholder": "Etwas notieren – Enter speichert in {folder}; ⌘Enter übergibt es dem Agent",
+      "hint": "Enter speichern · ⌘Enter an den Agent",
+      "saved": "In der Inbox gespeichert",
+      "sentToAgent": "An den Hintergrund übergeben",
+      "failed": "Speichern fehlgeschlagen"
+    },
+    "needs": {
+      "title": "Wartet auf dich ({count})",
+      "review": "Entwürfe",
+      "reviewAction": "Prüfen",
+      "drafts": "{count} Entwürfe zu prüfen",
+      "unfinished": "Unvollständig",
+      "resume": "Fortsetzen",
+      "signal": "Hinweis",
+      "handoff": "Übergeben"
+    },
+    "handoff": {
+      "title": "An den Agent übergeben",
+      "description": "Prüfe oder ändere die Anweisung. Sie läuft erst nach „Starten“ im Hintergrund; Dateiänderungen werden als Entwürfe zur Prüfung gespeichert.",
+      "prompt": "Anweisung",
+      "start": "Starten",
+      "cancel": "Abbrechen",
+      "started": "An den Hintergrund übergeben",
+      "failed": "Hintergrundaufgabe konnte nicht erstellt werden"
+    },
+    "signals": {
+      "overdue": {
+        "text": "{count} Aufgaben sind überfällig",
+        "prompt": "Liste alle überfälligen Aufgaben im Vault (Obsidian-Tasks-Format, 📅-Datum vorbei und nicht erledigt) nach Quellnotiz gruppiert auf und schlage vor, welche verschoben und welche gestrichen werden können. Ändere die Aufgaben nicht direkt."
+      },
+      "overdueLong": {
+        "text": "{count} Aufgaben seit mehr als {days} Tagen überfällig",
+        "prompt": "Finde Aufgaben, die seit mehr als {days} Tagen überfällig sind, entscheide jeweils, ob sie noch wichtig sind, schlage Verschieben oder Streichen vor und schreibe die Vorschläge in eine neue Notiz in der Inbox."
+      },
+      "dailyNoteToday": {
+        "text": "Es ist nach {hour} Uhr und die heutige Tagesnotiz fehlt",
+        "prompt": "Entwirf anhand der heute im Vault erstellten und bearbeiteten Notizen die heutige Tagesnotiz (was ich gemacht habe, Gedanken, morgen) und speichere sie als heutige Tagesnotiz."
+      },
+      "dailyNoteStreak": {
+        "text": "Seit {days} Tagen keine Tagesnotiz",
+        "prompt": "Entwirf anhand der in den letzten {days} Tagen erstellten und bearbeiteten Notizen für jeden dieser Tage eine kurze Tagesnotiz."
+      },
+      "inboxCount": {
+        "text": "{count} Einträge warten in {folder}",
+        "prompt": "Räume die Notizen in {folder} auf: bestimme das Thema jeder Notiz, schlage einen Zielordner vor, ergänze passende Wikilinks und führe zusammengehörige Notizen zusammen."
+      },
+      "inboxOld": {
+        "text": "Der älteste Eintrag in {folder} wartet seit {days} Tagen",
+        "prompt": "Finde die ältesten Notizen in {folder} und entscheide jeweils mit Begründung, ob sie archiviert, in eine bestehende Notiz übernommen oder gelöscht werden."
+      },
+      "linkless": {
+        "text": "{count} Notizen haben keine Links",
+        "prompt": "Finde Notizen ohne ein- oder ausgehende Links (ohne Tagesnotizen und Inbox) und ergänze für jede 1–3 Wikilinks zu verwandten Notizen."
+      },
+      "weeklyReview": {
+        "text": "Noch kein Wochenrückblick für {week}",
+        "prompt": "Entwirf anhand der Tagesnotizen, erledigten Aufgaben und neuen Notizen dieser Woche ({week}) einen Wochenrückblick: was erledigt wurde, was ich gelernt habe, Schwerpunkte der nächsten Woche. Speichere ihn als neue Notiz, deren Name {week} enthält."
+      }
+    },
+    "rules": {
+      "days": "Tage",
+      "overdue": {
+        "name": "Überfällige Aufgaben",
+        "long": "überfällig seit mehr als"
+      },
+      "dailyNote": {
+        "name": "Tagesnotiz",
+        "after": "Uhr oder später",
+        "missing": "Tage fehlend"
+      },
+      "inbox": {
+        "name": "Inbox-Rückstau",
+        "count": "Einträge oder mehr",
+        "hours": "Stunden oder älter"
+      },
+      "linkless": {
+        "name": "Fehlende Links",
+        "count": "Notizen oder mehr"
+      },
+      "weeklyReview": {
+        "name": "Wochenrückblick",
+        "after": "Uhr am Freitag oder später"
+      }
+    },
+    "tasks": {
+      "title": "Hintergrundaufgaben",
+      "viewAll": "Alle Aufgaben",
+      "empty": "Gerade läuft nichts",
+      "cancel": "Abbrechen",
+      "conversations": "Letzte Unterhaltungen",
+      "noConversations": "Noch keine Unterhaltungen"
+    },
+    "recent": {
+      "title": "Zuletzt bearbeitet",
+      "empty": "Noch keine Notizen"
+    },
+    "footprint": {
+      "title": "Diese Woche",
+      "summary": "Geschrieben {created} · Bearbeitet {modified} · Erneut gelesen {reread}",
+      "day": "{date}: geschrieben {created}, bearbeitet {modified}, erneut gelesen {reread}",
+      "created": "Geschrieben",
+      "modified": "Bearbeitet",
+      "reread": "Erneut gelesen"
+    }
   }
 }

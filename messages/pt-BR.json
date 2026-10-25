@@ -6536,12 +6536,123 @@
     "editDescription": "Ative ou desative cartões e reordene arrastando ou com as setas. As configurações ficam neste computador, não no vault.",
     "cardsLabel": "Cartões do Início",
     "cards": {
-      "schedule": "Agenda"
+      "schedule": "Agenda",
+      "capture": "Anotação rápida",
+      "signals": "Entregar ao Agent",
+      "tasks": "Tarefas do Agent",
+      "recent": "Notas recentes",
+      "footprint": "Esta semana"
     },
     "moveUp": "Mover para cima",
     "moveDown": "Mover para baixo",
     "showOnStartup": "Mostrar o Início ao abrir o app",
     "todayMoved": "A página Hoje agora é o cartão Agenda no Início.",
-    "empty": "Todos os cartões estão desativados."
+    "empty": "Todos os cartões estão desativados.",
+    "capture": {
+      "label": "Anotação rápida",
+      "placeholder": "Anote algo — Enter salva em {folder}; ⌘Enter entrega ao Agent",
+      "hint": "Enter para salvar · ⌘Enter para o Agent",
+      "saved": "Salvo na Inbox",
+      "sentToAgent": "Enviado para segundo plano",
+      "failed": "Não foi possível salvar"
+    },
+    "needs": {
+      "title": "Precisa de você ({count})",
+      "review": "Rascunhos",
+      "reviewAction": "Revisar",
+      "drafts": "{count} rascunhos para revisar",
+      "unfinished": "Inacabada",
+      "resume": "Continuar",
+      "signal": "Lembrete",
+      "handoff": "Entregar"
+    },
+    "handoff": {
+      "title": "Entregar ao Agent",
+      "description": "Confira ou edite a instrução. Ela só roda em segundo plano depois de você clicar em Iniciar; alterações em arquivos ficam como rascunhos para sua revisão.",
+      "prompt": "Instrução",
+      "start": "Iniciar",
+      "cancel": "Cancelar",
+      "started": "Enviado para segundo plano",
+      "failed": "Não foi possível criar a tarefa em segundo plano"
+    },
+    "signals": {
+      "overdue": {
+        "text": "{count} tarefas atrasadas",
+        "prompt": "Liste todas as tarefas atrasadas do vault (formato Obsidian Tasks, data 📅 vencida e não concluída), agrupadas por nota de origem, e sugira quais reagendar e quais descartar. Não edite as tarefas."
+      },
+      "overdueLong": {
+        "text": "{count} tarefas atrasadas há mais de {days} dias",
+        "prompt": "Encontre tarefas atrasadas há mais de {days} dias, decida para cada uma se ainda importa, sugira reagendar ou cancelar e escreva as sugestões em uma nova nota na Inbox."
+      },
+      "dailyNoteToday": {
+        "text": "Já passa das {hour}h e a nota diária de hoje está vazia",
+        "prompt": "Com base nas notas criadas e editadas hoje no vault, rascunhe a nota diária de hoje (o que fiz, ideias, amanhã) e salve como a nota diária de hoje."
+      },
+      "dailyNoteStreak": {
+        "text": "{days} dias seguidos sem nota diária",
+        "prompt": "Com base nas notas criadas e editadas nos últimos {days} dias, rascunhe uma nota diária curta para cada um desses dias."
+      },
+      "inboxCount": {
+        "text": "{count} itens esperando em {folder}",
+        "prompt": "Organize as notas de {folder}: defina o tema de cada uma, sugira uma pasta de destino, adicione wikilinks relevantes e junte as que pertencem juntas."
+      },
+      "inboxOld": {
+        "text": "O item mais antigo de {folder} espera há {days} dias",
+        "prompt": "Encontre as notas mais antigas de {folder} e decida, com justificativa, se cada uma deve ser arquivada, incorporada a uma nota existente ou excluída."
+      },
+      "linkless": {
+        "text": "{count} notas sem nenhum link",
+        "prompt": "Encontre notas sem links de entrada ou saída (exceto notas diárias e Inbox) e adicione de 1 a 3 wikilinks para notas relacionadas em cada uma."
+      },
+      "weeklyReview": {
+        "text": "Ainda sem revisão semanal de {week}",
+        "prompt": "Com base nas notas diárias, tarefas concluídas e notas novas desta semana ({week}), rascunhe uma revisão semanal: o que foi feito, o que aprendi, foco da próxima semana. Salve como nova nota cujo nome contenha {week}."
+      }
+    },
+    "rules": {
+      "days": "dias",
+      "overdue": {
+        "name": "Tarefas atrasadas",
+        "long": "atrasadas há mais de"
+      },
+      "dailyNote": {
+        "name": "Nota diária",
+        "after": "h ou mais tarde",
+        "missing": "dias sem nota"
+      },
+      "inbox": {
+        "name": "Acúmulo na Inbox",
+        "count": "itens ou mais",
+        "hours": "horas ou mais"
+      },
+      "linkless": {
+        "name": "Notas sem links",
+        "count": "notas ou mais"
+      },
+      "weeklyReview": {
+        "name": "Revisão semanal",
+        "after": "h de sexta ou mais tarde"
+      }
+    },
+    "tasks": {
+      "title": "Tarefas em segundo plano",
+      "viewAll": "Todas as tarefas",
+      "empty": "Nada em execução agora",
+      "cancel": "Cancelar",
+      "conversations": "Conversas recentes",
+      "noConversations": "Nenhuma conversa ainda"
+    },
+    "recent": {
+      "title": "Notas recentes",
+      "empty": "Nenhuma nota ainda"
+    },
+    "footprint": {
+      "title": "Esta semana",
+      "summary": "Escritas {created} · Editadas {modified} · Relidas {reread}",
+      "day": "{date}: escritas {created}, editadas {modified}, relidas {reread}",
+      "created": "Escritas",
+      "modified": "Editadas",
+      "reread": "Relidas"
+    }
   }
 }
