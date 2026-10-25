@@ -185,16 +185,116 @@ export function VariantA({ enabled, setOpen }: Props) {
   )
 }
 
-/* ---------- B：收件匣工作台（單一「需要你處理」清單 + 右側欄） ---------- */
-export function VariantB({ enabled, setOpen }: Props) {
-  type Item = { kind: string; text: string; meta: string; act: string; onClick?: () => void; tone: string }
-  const items: Item[] = [
+/* ---------- B 與 C 的共用片段 ---------- */
+type Item = { kind: string; text: string; meta: string; act: string; onClick?: () => void; tone: string }
+
+function inboxItems({ enabled, setOpen }: Props): Item[] {
+  return [
     ...(enabled.tasks ? agentTasks.filter(t => t.state === '等你回應' || t.state === '沒做完').map(t => ({ kind: t.state === '等你回應' ? '待審草稿' : '沒做完', text: t.title, meta: t.detail, act: t.state === '等你回應' ? '審核' : '繼續', onClick: () => setOpen('review'), tone: stateStyle[t.state] })) : []),
     ...(enabled.schedule ? todos.filter(t => t.overdueDays).map(t => ({ kind: '逾期待辦', text: t.text, meta: `逾期 ${t.overdueDays} 天 · ${t.note}`, act: '完成', tone: 'text-destructive' })) : []),
     ...(enabled.report ? report.suggestions.filter(s => !s.done).map(s => ({ kind: '優化建議', text: s.text, meta: `${s.topic} · ${report.title}`, act: '交給 Agent', tone: 'text-primary' })) : []),
     ...(enabled.signals ? signals.filter(s => s.id !== 'g2' && s.id !== 'g4').map(s => ({ kind: '提醒', text: s.text, meta: '規則提醒', act: '交給 Agent', tone: 'text-muted-foreground' })) : []),
     ...(enabled.tasks ? conversations.filter(c => !c.summarized).map(c => ({ kind: '未摘要對話', text: c.title, meta: c.when, act: '摘要', onClick: () => setOpen('summary'), tone: 'text-muted-foreground' })) : []),
   ]
+}
+
+function InboxList({ items, narrow }: { items: Item[]; narrow?: boolean }) {
+  return (
+    <div className="divide-y divide-border rounded-lg border border-border bg-card">
+      {items.map((it, i) => (
+        <div key={i} className={`flex items-center gap-3 ${narrow ? 'px-3 py-2' : 'px-4 py-2.5'}`}>
+          {!narrow && <span className={`w-20 shrink-0 text-xs ${it.tone}`}>{it.kind}</span>}
+          <div className="min-w-0 flex-1">
+            {narrow && <div className={`text-[11px] ${it.tone}`}>{it.kind}</div>}
+            <div className="truncate text-sm">{it.text}</div>
+            <div className="truncate text-xs text-muted-foreground">{it.meta}</div>
+          </div>
+          <button onClick={it.onClick} className="shrink-0 rounded bg-secondary px-2.5 py-1 text-xs hover:bg-accent">{it.act}</button>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function TodayHeader({ enabled, setOpen, pending }: Props & { pending: number }) {
+  return (
+    <div className="border-b border-border px-6 py-5">
+      <div className="mb-3 flex items-baseline gap-3">
+        <div className="text-2xl font-semibold">{today.weekday}，10 月 26 日</div>
+        <div className="text-sm text-muted-foreground">{today.week} · {events.length} 個行程 · {todos.length} 件待辦 · 需要你處理 {pending} 項</div>
+        <span className="ml-auto rounded border border-border px-1.5 py-0.5 text-xs text-muted-foreground">⌘⇧H 回工作區</span>
+        <button onClick={() => setOpen('edit')} className="flex items-center gap-1 rounded-md bg-secondary px-2.5 py-1.5 text-sm hover:bg-accent"><Settings2 className="size-4" />編輯首頁</button>
+      </div>
+      {enabled.capture && (
+        <div className="flex items-center gap-2 rounded-lg border border-input bg-muted px-3 py-2.5">
+          <span className="text-primary">›</span>
+          <input placeholder="記一筆（存進 Inbox）· 輸入 / 交代 Agent 背景去做 · ⌘K 搜尋" className="flex-1 bg-transparent text-sm outline-none" />
+          <span className="text-xs text-muted-foreground">Enter 記錄 · ⌘Enter 交給 Agent</span>
+        </div>
+      )}
+      {enabled.report && (
+        <div className="mt-3 flex items-center gap-2 overflow-x-auto">
+          <span className="shrink-0 text-xs text-muted-foreground">掌握度</span>
+          {report.topics.map(t => (
+            <button key={t.name} onClick={() => setOpen('report')} className="flex shrink-0 items-center gap-2 rounded-full border border-border bg-card px-3 py-1 hover:bg-accent"><span className="text-sm">{t.name}</span><LevelBadge level={t.level} prev={t.prev} /></button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function Timeline({ enabled, setOpen, compact }: Props & { compact?: boolean }) {
+  type Slot = { time: string; kind: 'event' | 'todo' | 'task' | 'now'; text: string; meta?: string; onClick?: () => void }
+  const slots: Slot[] = [
+    ...(enabled.schedule ? events.map(e => ({ time: e.time, kind: 'event' as const, text: e.title, meta: `${e.time}–${e.end} · ${e.calendar}` })) : []),
+    ...(enabled.schedule ? todos.filter(t => t.time).map(t => ({ time: t.time!, kind: 'todo' as const, text: t.text, meta: '⏰ 待辦' })) : []),
+    ...(enabled.tasks ? [
+      { time: '09:40', kind: 'task' as const, text: '「整理 Inbox」完成，草稿 6 項待審', meta: 'Agent 任務', onClick: () => setOpen('review') },
+      { time: '13:00', kind: 'task' as const, text: '預計：W44 知識報告產出完成', meta: 'Agent 任務 · 62%' },
+    ] : []),
+    { time: '11:24', kind: 'now' as const, text: '現在' },
+  ].sort((a, b) => a.time.localeCompare(b.time))
+  const dot: Record<Slot['kind'], string> = { event: 'bg-sky-400', todo: 'bg-foreground', task: 'bg-primary', now: 'bg-destructive' }
+  return (
+    <div>
+      <div className="relative border-l border-border pl-6">
+        {slots.map((s, i) => (
+          <div key={i} className={`relative ${compact ? 'mb-2' : 'mb-4'}`} onClick={s.onClick}>
+            <span className={`absolute -left-[29px] top-1.5 size-2.5 rounded-full ${dot[s.kind]}`} />
+            <div className="flex items-baseline gap-3">
+              <span className="w-12 shrink-0 text-xs text-muted-foreground">{s.time}</span>
+              {s.kind === 'now' ? <div className="h-px flex-1 bg-destructive/60" /> : (
+                <div className={`min-w-0 flex-1 rounded-md ${compact ? 'px-2 py-1.5' : 'px-3 py-2'} ${s.kind === 'task' ? 'cursor-pointer border border-primary/40 bg-primary/5' : 'bg-card'}`}>
+                  <div className="truncate text-sm">{s.text}</div><div className="text-xs text-muted-foreground">{s.meta}</div>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+      {enabled.schedule && (
+        <div className="mt-2"><div className="mb-1 text-xs text-muted-foreground">今天沒有時間的待辦</div>{todos.filter(t => !t.time && !t.overdueDays).map(t => <TodoRow key={t.id} t={t} />)}</div>
+      )}
+    </div>
+  )
+}
+
+function Extras({ enabled, setOpen, withSignals, withTasks }: Props & { withSignals?: boolean; withTasks?: boolean }) {
+  return (
+    <>
+      {withSignals && enabled.signals && <div><div className="mb-1.5 text-sm font-medium">可以交給 Agent</div><SignalList limit={4} /></div>}
+      {withTasks && enabled.tasks && <div><div className="mb-1.5 text-sm font-medium">背景任務</div><TaskList setOpen={setOpen} /><Conversations setOpen={setOpen} /></div>}
+      {enabled.recent && <div><div className="mb-1.5 text-sm font-medium">最近筆記</div>{recentNotes.map(n => <div key={n.title} className="flex items-center gap-2 py-0.5 text-sm"><CheckCircle2 className="size-3 text-muted-foreground" /><span className="flex-1">{n.title}</span><span className="text-xs text-muted-foreground">{n.when}</span></div>)}</div>}
+      {enabled.footprint && <div><div className="mb-1.5 text-sm font-medium">本週足跡</div><Footprint /></div>}
+      {enabled.health && <div><div className="mb-1.5 text-sm font-medium">知識庫健康</div><Health /></div>}
+    </>
+  )
+}
+
+/* ---------- B：收件匣工作台（單一「需要你處理」清單 + 右側欄） ---------- */
+export function VariantB({ enabled, setOpen }: Props) {
+  const items = inboxItems({ enabled, setOpen })
   return (
     <div>
       <Header setOpen={setOpen} subtitle={`需要你處理 ${items.length} 項`} />
@@ -202,15 +302,7 @@ export function VariantB({ enabled, setOpen }: Props) {
         <div className="flex-1">
           {enabled.capture && <div className="mb-5"><CaptureBox /></div>}
           <div className="mb-2 text-sm font-medium">需要你處理</div>
-          <div className="divide-y divide-border rounded-lg border border-border bg-card">
-            {items.map((it, i) => (
-              <div key={i} className="flex items-center gap-3 px-4 py-2.5">
-                <span className={`w-20 shrink-0 text-xs ${it.tone}`}>{it.kind}</span>
-                <div className="min-w-0 flex-1"><div className="truncate text-sm">{it.text}</div><div className="text-xs text-muted-foreground">{it.meta}</div></div>
-                <button onClick={it.onClick} className="rounded bg-secondary px-2.5 py-1 text-xs hover:bg-accent">{it.act}</button>
-              </div>
-            ))}
-          </div>
+          <InboxList items={items} />
           {enabled.recent && (
             <div className="mt-6">
               <div className="mb-2 text-sm font-medium">最近筆記</div>
@@ -231,72 +323,55 @@ export function VariantB({ enabled, setOpen }: Props) {
 }
 
 /* ---------- C：今日時間軸（指令列 + 主題條 + 一天的時間軸） ---------- */
-export function VariantC({ enabled, setOpen }: Props) {
-  type Slot = { time: string; kind: 'event' | 'todo' | 'task' | 'now'; text: string; meta?: string; onClick?: () => void }
-  const slots: Slot[] = [
-    ...(enabled.schedule ? events.map(e => ({ time: e.time, kind: 'event' as const, text: e.title, meta: `${e.time}–${e.end} · ${e.calendar}` })) : []),
-    ...(enabled.schedule ? todos.filter(t => t.time).map(t => ({ time: t.time!, kind: 'todo' as const, text: t.text, meta: '⏰ 待辦' })) : []),
-    ...(enabled.tasks ? [
-      { time: '09:40', kind: 'task' as const, text: '「整理 Inbox」完成，草稿 6 項待審', meta: 'Agent 任務', onClick: () => setOpen('review') },
-      { time: '13:00', kind: 'task' as const, text: '預計：W44 知識報告產出完成', meta: 'Agent 任務 · 62%' },
-    ] : []),
-    { time: '11:24', kind: 'now', text: '現在' },
-  ].sort((a, b) => a.time.localeCompare(b.time))
-  const dot: Record<Slot['kind'], string> = { event: 'bg-sky-400', todo: 'bg-foreground', task: 'bg-primary', now: 'bg-destructive' }
+export function VariantC(props: Props) {
+  const { enabled } = props
   return (
     <div>
-      <div className="border-b border-border px-6 py-5">
-        <div className="mb-3 flex items-baseline gap-3">
-          <div className="text-2xl font-semibold">{today.weekday}，10 月 26 日</div>
-          <div className="text-sm text-muted-foreground">{today.week} · 3 個行程 · {todos.length} 件待辦 · 1 份草稿等你</div>
-          <button onClick={() => setOpen('edit')} className="ml-auto flex items-center gap-1 rounded-md bg-secondary px-2.5 py-1.5 text-sm hover:bg-accent"><Settings2 className="size-4" />編輯首頁</button>
-        </div>
-        {enabled.capture && (
-          <div className="flex items-center gap-2 rounded-lg border border-input bg-muted px-3 py-2.5">
-            <span className="text-primary">›</span>
-            <input placeholder="記一筆（存進 Inbox）· 輸入 / 交代 Agent 背景去做 · ⌘K 搜尋" className="flex-1 bg-transparent text-sm outline-none" />
-            <span className="text-xs text-muted-foreground">Enter 記錄 · ⌘Enter 交給 Agent</span>
-          </div>
-        )}
-        {enabled.report && (
-          <div className="mt-3 flex items-center gap-2 overflow-x-auto">
-            <span className="shrink-0 text-xs text-muted-foreground">掌握度</span>
-            {report.topics.map(t => (
-              <button key={t.name} onClick={() => setOpen('report')} className="flex shrink-0 items-center gap-2 rounded-full border border-border bg-card px-3 py-1 hover:bg-accent"><span className="text-sm">{t.name}</span><LevelBadge level={t.level} prev={t.prev} /></button>
-            ))}
-          </div>
-        )}
-      </div>
+      <TodayHeader {...props} pending={inboxItems(props).length} />
       <div className="flex gap-8 px-6 py-5">
         <div className="flex-1">
           {enabled.schedule && todos.some(t => t.overdueDays) && (
             <div className="mb-4 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm">{todos.filter(t => t.overdueDays).map(t => <div key={t.id}>逾期：{t.text}（{t.overdueDays} 天）</div>)}</div>
           )}
-          <div className="relative border-l border-border pl-6">
-            {slots.map((s, i) => (
-              <div key={i} className={`relative mb-4 ${s.kind === 'now' ? 'text-destructive' : ''}`} onClick={s.onClick}>
-                <span className={`absolute -left-[29px] top-1.5 size-2.5 rounded-full ${dot[s.kind]}`} />
-                <div className="flex items-baseline gap-3">
-                  <span className="w-12 text-xs text-muted-foreground">{s.time}</span>
-                  {s.kind === 'now' ? <div className="h-px flex-1 bg-destructive/60" /> : (
-                    <div className={`flex-1 rounded-md px-3 py-2 ${s.kind === 'task' ? 'cursor-pointer border border-primary/40 bg-primary/5' : 'bg-card'}`}>
-                      <div className="text-sm">{s.text}</div><div className="text-xs text-muted-foreground">{s.meta}</div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-          {enabled.schedule && (
-            <div className="mt-2"><div className="mb-1 text-xs text-muted-foreground">今天沒有時間的待辦</div>{todos.filter(t => !t.time && !t.overdueDays).map(t => <TodoRow key={t.id} t={t} />)}</div>
-          )}
+          <Timeline {...props} />
         </div>
-        <aside className="w-96 shrink-0 space-y-5">
-          {enabled.signals && <div><div className="mb-1.5 text-sm font-medium">可以交給 Agent</div><SignalList limit={4} /></div>}
-          {enabled.tasks && <div><div className="mb-1.5 text-sm font-medium">背景任務</div><TaskList setOpen={setOpen} /><Conversations setOpen={setOpen} /></div>}
-          {enabled.recent && <div><div className="mb-1.5 text-sm font-medium">最近筆記</div>{recentNotes.map(n => <div key={n.title} className="flex items-center gap-2 py-0.5 text-sm"><CheckCircle2 className="size-3 text-muted-foreground" /><span className="flex-1">{n.title}</span><span className="text-xs text-muted-foreground">{n.when}</span></div>)}</div>}
-          {enabled.footprint && <div><div className="mb-1.5 text-sm font-medium">本週足跡</div><Footprint /></div>}
-          {enabled.health && <div><div className="mb-1.5 text-sm font-medium">知識庫健康</div><Health /></div>}
+        <aside className="w-96 shrink-0 space-y-5"><Extras {...props} withSignals withTasks /></aside>
+      </div>
+    </div>
+  )
+}
+
+/* ---------- D：B+C，「需要你處理」為主欄，時間軸在右 ---------- */
+export function VariantD(props: Props) {
+  const items = inboxItems(props)
+  return (
+    <div>
+      <TodayHeader {...props} pending={items.length} />
+      <div className="flex gap-6 px-6 py-5">
+        <div className="flex-1 space-y-6">
+          <div><div className="mb-2 text-sm font-medium">需要你處理</div><InboxList items={items} /></div>
+          {props.enabled.tasks && <div><div className="mb-1.5 text-sm font-medium">背景任務</div><TaskList setOpen={props.setOpen} /></div>}
+        </div>
+        <aside className="w-[380px] shrink-0 space-y-5">
+          <div><div className="mb-2 text-sm font-medium">今天</div><Timeline {...props} compact /></div>
+          <Extras {...props} />
+        </aside>
+      </div>
+    </div>
+  )
+}
+
+/* ---------- E：B+C，時間軸為主欄，「需要你處理」在右 ---------- */
+export function VariantE(props: Props) {
+  const items = inboxItems(props)
+  return (
+    <div>
+      <TodayHeader {...props} pending={items.length} />
+      <div className="flex gap-6 px-6 py-5">
+        <div className="flex-1"><div className="mb-2 text-sm font-medium">今天</div><Timeline {...props} /></div>
+        <aside className="w-[420px] shrink-0 space-y-5">
+          <div><div className="mb-2 text-sm font-medium">需要你處理（{items.length}）</div><InboxList items={items} narrow /></div>
+          <Extras {...props} />
         </aside>
       </div>
     </div>

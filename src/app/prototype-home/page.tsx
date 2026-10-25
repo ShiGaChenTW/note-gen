@@ -6,12 +6,14 @@ import { useSearchParams } from 'next/navigation'
 import { PrototypeSwitcher } from '@/components/prototype-switcher'
 import { CARDS, CardKey } from './data'
 import { Overlay, Overlays } from './overlays'
-import { VariantA, VariantB, VariantC } from './variants'
+import { VariantA, VariantB, VariantC, VariantD, VariantE } from './variants'
 
 const VARIANTS = [
   { key: 'A', name: 'Bento 卡片牆' },
   { key: 'B', name: '收件匣工作台' },
   { key: 'C', name: '今日時間軸' },
+  { key: 'D', name: 'B+C：清單為主' },
+  { key: 'E', name: 'B+C：時間軸為主' },
 ]
 
 // 取自 personal/notegen-obsidian-baseline.css 的深色琥珀主題
@@ -38,6 +40,8 @@ function Prototype() {
       {variant === 'A' && <VariantA {...props} />}
       {variant === 'B' && <VariantB {...props} />}
       {variant === 'C' && <VariantC {...props} />}
+      {variant === 'D' && <VariantD {...props} />}
+      {variant === 'E' && <VariantE {...props} />}
       <Overlays open={open} setOpen={setOpen} enabled={enabled} setEnabled={setEnabled} />
       <div className="fixed bottom-16 left-1/2 z-[100] -translate-x-1/2 rounded bg-black/70 px-2 py-1 font-mono text-[11px] text-white/70">
         開啟中的卡片：{CARDS.filter(c => enabled[c.key]).map(c => c.name).join('、')}{open ? ` · 浮層：${open}` : ''}
