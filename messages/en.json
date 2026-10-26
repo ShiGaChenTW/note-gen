@@ -3604,6 +3604,22 @@
         "title": "Assets Path",
         "desc": "Set the asset directory name. Local image insertion in the editor will use this directory name, such as `assets` or `images`.",
         "select": "Set the asset directory name, for example: assets"
+      },
+      "versionControl": {
+        "title": "Version Control",
+        "desc": "Create a local git history for the whole workspace so you can review every change offline; only .md, .canvas and .base text files are tracked — attachments never enter the history.",
+        "enable": "Enable version control",
+        "statusRepo": "Local git history is active",
+        "statusNotRepo": "No local git history yet",
+        "confirmTitle": "Enable version control?",
+        "confirmDescNew": "This creates .git and a default .gitignore at the workspace root, tracking only .md, .canvas and .base. Nothing is uploaded anywhere.",
+        "confirmDescExisting": "This workspace already has a .git (e.g. created by another tool). Enabling will reuse it as-is — NoteGen won't recreate it or change its existing settings.",
+        "toastEnabled": "Version control enabled",
+        "toastEnabledDesc": "A local git history was created for this workspace",
+        "toastReused": "Reused the workspace's existing local git history",
+        "toastError": "Failed to toggle version control",
+        "autoSnapshotLabel": "Auto snapshot",
+        "autoSnapshotDesc": "After a period of inactivity or when the app closes, automatically save a version of all tracked changes. Turn this off to stop automatic snapshots."
       }
     },
     "shortcuts": {

@@ -17,6 +17,7 @@ mod document_parser;
 mod file_open;
 mod fonts;
 mod fuzzy_search;
+mod git_versions;
 mod local_mcp;
 mod mcp;
 mod mcp_runtime;
@@ -58,6 +59,11 @@ use cloud_folder_sync::{
 use device::get_device_id;
 use fonts::list_system_fonts;
 use fuzzy_search::{fuzzy_search, fuzzy_search_parallel};
+use git_versions::{
+    git_version_commit, git_version_detect, git_version_diff, git_version_enable,
+    git_version_log, git_version_set_auto_snapshot_context, git_version_show,
+    git_version_status, GitVersionState,
+};
 use local_mcp::{
     create_local_mcp_connection, get_local_mcp_status, get_or_create_local_mcp_connection,
     list_local_mcp_connections, rename_local_mcp_connection, reset_local_mcp_access_token,
@@ -143,6 +149,7 @@ fn main() {
         .manage(plugin_terminal::PluginTerminalManager::default())
         .manage(WebClipperState::new())
         .manage(LocalMcpState::new())
+        .manage(GitVersionState::default())
         .manage(deep_link::PendingPluginInstallRequests::default())
         // 系统级插件
         .plugin(tauri_plugin_process::init())
@@ -330,6 +337,14 @@ fn main() {
             self_hosted_files::self_hosted_move_path,
             self_hosted_files::self_hosted_pending_file_journal,
             self_hosted_files::self_hosted_recover_file_journal,
+            git_version_detect,
+            git_version_enable,
+            git_version_status,
+            git_version_commit,
+            git_version_log,
+            git_version_show,
+            git_version_diff,
+            git_version_set_auto_snapshot_context,
         ])
         // 应用设置 - 在所有插件和命令注册后
         .setup(|app| {
@@ -357,6 +372,7 @@ fn main() {
                 screenshot::cleanup_desktop_screenshot_captures(&app_handle);
                 screenshot::cleanup_pinned_screenshot_cache(&app_handle);
                 screenshot_cleanup::flush_on_exit(&app_handle);
+                git_versions::flush_pending_snapshot_on_exit(&app_handle);
             }
             _ => {}
         });

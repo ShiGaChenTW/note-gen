@@ -83,6 +83,15 @@ export async function getFilePathOptions(relativePath: string): Promise<{ path: 
 }
 
 /**
+ * 取得目前工作區的絕對路徑（不論是否自訂）。
+ * 本機 git 版本管理（#52）等需要真實檔案系統路徑的功能用這個，而不是 getWorkspacePath()。
+ */
+export async function getWorkspaceAbsolutePath(): Promise<string> {
+  const workspace = await getWorkspacePath()
+  return workspace.isCustom ? workspace.path : await getDefaultArticleAbsolutePath('')
+}
+
+/**
  * 获取默认 AppData/article 下的绝对路径
  * 主要用于 skills/runtime、outputs 等特殊目录，避免某些 baseDir 写入限制
  */

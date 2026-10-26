@@ -37,6 +37,7 @@ import { resolveOpenedMarkdownPath } from "@/lib/opened-files"
 import { useToast } from "@/hooks/use-toast"
 import { initAutoDataSyncRuntime } from "@/lib/sync/auto-data-sync-queue"
 import { initManagedBackupRuntime } from "@/lib/backup/managed-backup"
+import { initGitVersionAutoSnapshotRuntime } from "@/lib/git-versions/auto-snapshot"
 import { useSidebarStore } from "@/stores/sidebar"
 import { useTranslations } from "next-intl"
 import { SettingsDialog } from "./setting/components/settings-dialog"
@@ -342,6 +343,7 @@ export default function RootLayout({
   useEffect(() => {
     let cancelled = false
     let stopManagedBackup: (() => void) | undefined
+    let stopGitVersionAutoSnapshot: (() => void) | undefined
     let stopQuickRecord: (() => void) | undefined
 
     void reportAppStart()
@@ -370,6 +372,7 @@ export default function RootLayout({
         await initAutoDataSyncRuntime()
         if (cancelled) return
         stopManagedBackup = initManagedBackupRuntime()
+        stopGitVersionAutoSnapshot = initGitVersionAutoSnapshotRuntime()
 
         void initShortcut().catch((error) => console.error('Failed to initialize global shortcuts:', error))
         initEditorShortcuts()
@@ -400,6 +403,7 @@ export default function RootLayout({
     return () => {
       cancelled = true
       stopManagedBackup?.()
+      stopGitVersionAutoSnapshot?.()
       stopQuickRecord?.()
     }
   }, [])
