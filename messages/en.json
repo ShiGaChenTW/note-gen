@@ -6689,7 +6689,7 @@
       "failed": "Could not save"
     },
     "needs": {
-      "title": "Needs you ({count})",
+      "title": "Needs you",
       "review": "Drafts",
       "reviewAction": "Review",
       "drafts": "{count} drafts to review",

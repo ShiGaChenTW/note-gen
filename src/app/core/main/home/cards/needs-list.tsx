@@ -12,6 +12,7 @@ import { isCardVisible } from '@/lib/home/cards'
 import { cn } from '@/lib/utils'
 import useHomeStore from '@/stores/home'
 import type { HomeCardDef, NeedItem } from '../home-cards'
+import { CARD, CARD_TITLE, Count } from '../../page-ui'
 
 const TONE: Record<NeedItem['tone'], string> = {
   primary: 'text-primary',
@@ -26,8 +27,9 @@ function NeedsFrom({ card, onCount }: { card: HomeCardDef; onCount: (key: string
   return (
     <>
       {items.map(item => (
-        <li key={item.key} className="flex items-center gap-3 px-4 py-2.5">
-          <span className={cn('w-20 shrink-0 text-xs', TONE[item.tone])}>{item.label}</span>
+        <li key={item.key} className="flex items-center gap-3 py-2.5">
+          {/* 分類字只佔自己的寬度，不再固定 w-20 */}
+          <span className={cn('shrink-0 rounded-md bg-muted px-1.5 py-0.5 text-xs', TONE[item.tone])}>{item.label}</span>
           <div className="min-w-0 flex-1">
             <div className="truncate text-sm">{item.text}</div>
             {item.meta && <div className="truncate text-xs text-muted-foreground">{item.meta}</div>}
@@ -53,9 +55,12 @@ export function NeedsList({ cards }: { cards: HomeCardDef[] }) {
   if (!sources.length) return null
 
   return (
-    <section aria-labelledby="home-needs" className={cn(total === 0 && 'hidden')}>
-      <h2 id="home-needs" className="mb-2 text-sm font-medium">{t('title', { count: total })}</h2>
-      <ul className="divide-y rounded-xl border bg-background">
+    <section aria-labelledby="home-needs" className={cn(CARD, total === 0 && 'hidden')}>
+      <header className="mb-1 flex items-center gap-2">
+        <h2 id="home-needs" className={CARD_TITLE}>{t('title')}</h2>
+        <Count value={total} />
+      </header>
+      <ul className="divide-y">
         {sources.map(card => <NeedsFrom key={card.key} card={card} onCount={onCount} />)}
       </ul>
     </section>

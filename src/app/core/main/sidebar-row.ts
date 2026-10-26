@@ -3,3 +3,6 @@
 export const SIDEBAR_ROW = 'cursor-pointer rounded-md outline-none transition-colors duration-100 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-sidebar-ring/65'
 
 export const SIDEBAR_ROW_ACTIVE = 'bg-sidebar-accent font-medium text-sidebar-accent-foreground'
+
+/** 次要選中：首頁或 Inbox 頁開著時，下半部顯示中的入口只用字色標示，不加底色。 */
+export const SIDEBAR_ROW_ACTIVE_SECONDARY = 'font-medium text-sidebar-foreground'

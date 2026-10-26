@@ -78,20 +78,23 @@ function ResizableWrapper() {
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(!rightSidebarVisible)
   const [leftPanelWidth, setLeftPanelWidth] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
-  const [leftSidebarRight, setLeftSidebarRight] = useState(0)
+  const [pageBox, setPageBox] = useState<PageBox | null>(null)
 
-  // Fork #46：首頁與 Inbox 頁的左緣對齊左側欄實際的右緣（面板寬度不含外框與分隔條，直接量元素）
+  // Fork（UI 一致性）：首頁與 Inbox 頁蓋在工作區面板上，位置與圓角跟工作區面板一致。
+  // 直接量元素：面板是平貼（預設）還是卡片（自訂 CSS 的內距與圓角）都對得上。
   useEffect(() => {
     const container = containerRef.current
-    const sidebar = container?.querySelector<HTMLElement>('[data-left-sidebar]')
-    if (!container || !sidebar) return
-    const measure = () => setLeftSidebarRight(Math.max(0, Math.ceil(sidebar.getBoundingClientRect().right - container.getBoundingClientRect().left)))
+    const group = container?.querySelector<HTMLElement>(':scope > [data-slot="resizable-panel-group"]')
+    if (!container || !group) return
+    const panels = [...group.querySelectorAll<HTMLElement>(':scope > [data-slot="resizable-panel"]')]
+    const measure = () => setPageBox(measurePageBox(container, group, panels))
     measure()
     const observer = new ResizeObserver(measure)
-    observer.observe(sidebar)
     observer.observe(container)
+    observer.observe(group)
+    panels.forEach(panel => observer.observe(panel))
     return () => observer.disconnect()
-  }, [leftPanelWidth, leftSidebarVisible])
+  }, [leftPanelWidth, leftSidebarVisible, centerPanelVisible, rightSidebarVisible, leftPanelCollapsed, rightPanelCollapsed])
 
   useEffect(() => {
     void restoreEditorWindows()
@@ -312,8 +315,8 @@ function ResizableWrapper() {
     <div
       ref={containerRef}
       className="relative flex h-full min-h-0 flex-col"
-      // Fork #31: relative 讓首頁蓋住編輯器與右側欄；--home-left 讓它避開左側欄
-      style={{ '--home-left': leftSidebarVisible && !leftPanelCollapsed ? `${leftSidebarRight + 1}px` : '0px' } as CSSProperties}
+      // Fork #31: relative 讓首頁、Inbox 頁蓋住編輯器與右側欄；--page-* 由 measurePageBox 量出來
+      style={pageBoxStyle(pageBox)}
     >
       <ResizablePanelGroup
         orientation="horizontal"
@@ -326,6 +329,43 @@ function ResizableWrapper() {
       <ForkServices />
     </div>
   )
+}
+
+interface PageBox { top: number, right: number, bottom: number, left: number, radius: string }
+
+/** 首頁／Inbox 頁的外框：左緣接在左側欄之後，上下緣與圓角跟第一個看得到的工作區面板一樣。 */
+function measurePageBox(container: HTMLElement, group: HTMLElement, panels: HTMLElement[]): PageBox {
+  const box = container.getBoundingClientRect()
+  const groupBox = group.getBoundingClientRect()
+  const groupStyle = getComputedStyle(group)
+  const visible = (panel: HTMLElement) => panel.getBoundingClientRect().width > 1
+  const sidebar = panels.find(panel => panel.querySelector('[data-left-sidebar]'))
+  const work = panels.find(panel => panel !== sidebar && visible(panel))
+  const contentLeft = groupBox.left + parseFloat(groupStyle.paddingLeft)
+  const contentRight = groupBox.right - parseFloat(groupStyle.paddingRight)
+  const left = work
+    ? work.getBoundingClientRect().left
+    : sidebar && visible(sidebar) ? sidebar.getBoundingClientRect().right + 1 : contentLeft
+  const reference = (work ?? sidebar)?.getBoundingClientRect()
+  return {
+    left: Math.max(0, Math.round(left - box.left)),
+    right: Math.max(0, Math.round(box.right - contentRight)),
+    top: reference ? Math.max(0, Math.round(reference.top - box.top)) : 0,
+    bottom: reference ? Math.max(0, Math.round(box.bottom - reference.bottom)) : 28,
+    radius: work ? getComputedStyle(work).borderTopLeftRadius : '0px',
+  }
+}
+
+function pageBoxStyle(box: PageBox | null): CSSProperties {
+  // 還沒量到之前：貼齊容器、留出狀態列（h-7）
+  const value = box ?? { top: 0, right: 0, bottom: 28, left: 0, radius: '0px' }
+  return {
+    '--page-top': `${value.top}px`,
+    '--page-right': `${value.right}px`,
+    '--page-bottom': `${value.bottom}px`,
+    '--page-left': `${value.left}px`,
+    '--page-radius': value.radius,
+  } as CSSProperties
 }
 
 function Page() {

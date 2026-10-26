@@ -10,6 +10,7 @@ import type { Mark } from '@/db/marks'
 import { openRecordInInbox } from '@/lib/inbox/actions'
 import { REPORT_FOLDER } from '@/lib/knowledge-report/topics'
 import { buildTimeline, hasOlderThan, type TimelineItem } from '@/lib/timeline/timeline'
+import { formatClock } from '@/lib/time-format'
 import { cn } from '@/lib/utils'
 import useArticleStore from '@/stores/article'
 import useDailySettingsStore from '@/stores/daily-settings'
@@ -17,6 +18,7 @@ import useInboxStore from '@/stores/inbox'
 import useVaultIndexStore from '@/stores/vault-index'
 import { getMarkListItemContent } from '../mark/mark-list-item-content'
 import { MARK_TYPE_ICONS, getMarkTypeIconClasses } from '../mark/mark-type-meta'
+import { Count } from '../page-ui'
 import { SIDEBAR_ROW } from '../sidebar-row'
 
 const WINDOW_DAYS = 30
@@ -28,7 +30,7 @@ function startOfDay(date: Date) {
 
 function Row({ item, locale, processedLabel }: { item: TimelineItem, locale: string, processedLabel: string }) {
   const Icon = item.kind === 'note' ? FileText : MARK_TYPE_ICONS[item.type as Mark['type']] ?? FileText
-  const time = new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit' }).format(item.time)
+  const time = formatClock(item.time, locale)
   const open = () => {
     if (item.kind === 'note') void useArticleStore.getState().setActiveFilePath(item.path)
     else void openRecordInInbox(item.id)
@@ -105,7 +107,7 @@ export function TimelineSidebar() {
         <section key={day.day} aria-label={heading(day.day)}>
           <h3 className="sticky top-0 z-10 flex items-center gap-2 bg-sidebar px-2 pt-3 pb-1 text-xs font-medium text-muted-foreground">
             <span className="shrink-0">{heading(day.day)}</span>
-            <span className="tabular-nums opacity-70">{day.items.length}</span>
+            <Count value={day.items.length} className="bg-sidebar-accent" />
           </h3>
           <div className="flex flex-col gap-px">
             {day.items.map(item => <Row key={item.key} item={item} locale={locale} processedLabel={t('processed')} />)}

@@ -4,11 +4,12 @@
 // 版型 D：頂部列＋指令區、主欄、右欄；卡片由 home-cards.tsx 登記。
 import { Fragment } from 'react'
 import { useTranslations } from 'next-intl'
-import { PanelsTopLeft, Settings2 } from 'lucide-react'
+import { Settings2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cardsForSlot, isCardVisible, type HomeSlot } from '@/lib/home/cards'
 import useHomeStore from '@/stores/home'
-import { TodayProvider, TodayTitle } from '../today/today-page'
+import { TodayProvider, useTodayTitle } from '../today/today-page'
+import { PageHeader, PageSurface } from '../page-ui'
 import { HOME_CARDS } from './home-cards'
 import { HomeEditSheet } from './home-edit-sheet'
 import { HandoffDialog, NeedsList } from './cards/needs-list'
@@ -27,6 +28,28 @@ function Slot({ slot, className }: { slot: HomeSlot; className?: string }) {
   )
 }
 
+function HomeHeader() {
+  const t = useTranslations('home')
+  const hide = useHomeStore(state => state.hide)
+  const setEditing = useHomeStore(state => state.setEditing)
+  const { title, subtitle } = useTodayTitle()
+  return (
+    <PageHeader
+      title={title}
+      subtitle={subtitle}
+      onBack={hide}
+      backShortcut="⌘⇧H"
+      actions={(
+        <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground" onClick={() => setEditing(true)}>
+          <Settings2 className="size-4" aria-hidden />{t('edit')}
+        </Button>
+      )}
+    >
+      <Slot slot="header" className="flex flex-wrap items-center gap-3" />
+    </PageHeader>
+  )
+}
+
 export function HomeScreen() {
   const t = useTranslations('home')
   const visible = useHomeStore(state => state.visible)
@@ -38,44 +61,32 @@ export function HomeScreen() {
   const empty = HOME_CARDS.every(card => !isCardVisible(prefs, card))
 
   return (
-    <div className="@container absolute top-0 right-0 bottom-7 left-(--home-left) z-30 overflow-y-auto bg-card" role="region" aria-label={t('title')}>
+    <PageSurface label={t('title')}>
       <TodayProvider onNavigate={hide}>
-        <div className="mx-auto flex max-w-[1400px] flex-col gap-4 p-5">
-          <header className="flex flex-wrap items-center gap-x-5 gap-y-3">
-            <TodayTitle />
-            <Slot slot="header" className="flex flex-wrap items-center gap-3" />
-            <div className="ml-auto flex items-center gap-2">
-              <Button variant="ghost" className="gap-2 text-muted-foreground" onClick={hide} title={t('backToWorkspace')}>
-                <PanelsTopLeft className="size-4" aria-hidden />
-                {t('backToWorkspace')}
-                <kbd className="rounded border px-1 text-[11px]">⌘⇧H</kbd>
-              </Button>
-              <Button variant="secondary" className="gap-2" onClick={() => setEditing(true)}>
-                <Settings2 className="size-4" aria-hidden />{t('edit')}
-              </Button>
-            </div>
-          </header>
+        <HomeHeader />
+        <div className="@container min-h-0 flex-1 overflow-y-auto">
+          <div className="mx-auto flex max-w-[1400px] flex-col gap-4 p-5">
+            <Slot slot="top" className="flex flex-col gap-3" />
 
-          <Slot slot="top" className="flex flex-col gap-3" />
+            {empty && (
+              <div className="grid place-items-center gap-3 rounded-xl border border-dashed py-16 text-center">
+                <p className="text-sm text-muted-foreground">{t('empty')}</p>
+                <Button variant="secondary" onClick={() => setEditing(true)}>{t('edit')}</Button>
+              </div>
+            )}
 
-          {empty && (
-            <div className="grid place-items-center gap-3 rounded-xl border border-dashed py-16 text-center">
-              <p className="text-sm text-muted-foreground">{t('empty')}</p>
-              <Button variant="secondary" onClick={() => setEditing(true)}>{t('edit')}</Button>
+            <div className="grid grid-cols-[minmax(0,1fr)_400px] items-start gap-4 @max-[900px]:grid-cols-1">
+              <div className="flex min-w-0 flex-col gap-4">
+                <NeedsList cards={HOME_CARDS} />
+                <Slot slot="main" className="flex min-w-0 flex-col gap-4" />
+              </div>
+              <Slot slot="side" className="flex min-w-0 flex-col gap-4" />
             </div>
-          )}
-
-          <div className="grid grid-cols-[minmax(0,1fr)_400px] items-start gap-4 @max-[900px]:grid-cols-1">
-            <div className="flex min-w-0 flex-col gap-4">
-              <NeedsList cards={HOME_CARDS} />
-              <Slot slot="main" className="flex min-w-0 flex-col gap-4" />
-            </div>
-            <Slot slot="side" className="flex min-w-0 flex-col gap-4" />
           </div>
         </div>
       </TodayProvider>
       <HomeEditSheet />
       <HandoffDialog />
-    </div>
+    </PageSurface>
   )
 }

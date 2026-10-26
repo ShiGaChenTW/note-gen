@@ -6565,7 +6565,7 @@
       "failed": "Não foi possível salvar"
     },
     "needs": {
-      "title": "Precisa de você ({count})",
+      "title": "Precisa de você",
       "review": "Rascunhos",
       "reviewAction": "Revisar",
       "drafts": "{count} rascunhos para revisar",
