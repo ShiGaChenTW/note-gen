@@ -1,7 +1,7 @@
 import React from 'react'
 import useChatStore from '@/stores/chat'
 import useTagStore from '@/stores/tag'
-import { BotMessageSquare, ChevronDown, X, Loader2, QuoteIcon } from 'lucide-react'
+import { BotMessageSquare, ChevronDown, Drama, X, Loader2, QuoteIcon } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Chat } from '@/db/chats'
 import ChatPreview from './chat-preview'
@@ -495,6 +495,25 @@ const Message = React.memo(function Message({ chat }: { chat: Chat }) {
               from: marker.fromModel,
               to: marker.toModel,
             })}
+          </TooltipContent>
+        </Tooltip>
+      )
+    }
+
+    case 'conversation_prompt': {
+      if (!chat.content) return null
+      return (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Marker role="status" className="min-w-0 py-1">
+              <MarkerIcon><Drama /></MarkerIcon>
+              <MarkerContent className="flex-1 truncate">
+                {t('record.chat.input.promptSelect.conversationPromptApplied')}
+              </MarkerContent>
+            </Marker>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-sm whitespace-pre-wrap">
+            {chat.content}
           </TooltipContent>
         </Tooltip>
       )

@@ -4436,7 +4436,8 @@
         },
         "promptSelect": {
           "tooltip": "プロンプトを選択",
-          "placeholder": "プロンプトを検索"
+          "placeholder": "プロンプトを検索",
+          "conversationPromptApplied": "この会話のシステムプロンプトはプロンプトから設定されました"
         },
         "clearChat": "会話をクリア",
         "clearContext": {
@@ -4704,11 +4705,19 @@
             "untitledRecord": "無題の記録",
             "recordFallback": "記録内容",
             "canvasSummary": "{nodes} ノード、{edges} エッジ"
+          },
+          "prompts": {
+            "title": "プロンプトライブラリ"
           }
         },
         "stopped": "对话已终止",
         "newChat": "新しいチャット",
-        "temporaryChat": "一時チャット"
+        "temporaryChat": "一時チャット",
+        "modelSuggestion": {
+          "apply": "このメッセージに適用",
+          "applied": "適用中。次のメッセージで元に戻ります",
+          "unavailable": "対応するモデル設定が見つかりません"
+        }
       },
       "header": {
         "configApiKey": "API KEY の設定",
@@ -6941,6 +6950,10 @@
     "copy": "コピー",
     "copied": "クリップボードにコピーしました",
     "copyFailed": "コピーに失敗しました",
-    "selectOption": "選択してください"
+    "selectOption": "選択してください",
+    "insertDialog": {
+      "insert": "入力欄に挿入",
+      "startNewConversation": "このプロンプトで新しい会話を開始"
+    }
   }
 }

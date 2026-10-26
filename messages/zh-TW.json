@@ -4433,7 +4433,8 @@
         },
         "promptSelect": {
           "tooltip": "選擇 Prompt",
-          "placeholder": "搜索 Prompt"
+          "placeholder": "搜索 Prompt",
+          "conversationPromptApplied": "此對話的系統提示詞已由一則提示詞設定"
         },
         "clearChat": "清空對話",
         "clearContext": {
@@ -4701,6 +4702,9 @@
             "untitledRecord": "未命名記錄",
             "recordFallback": "記錄內容",
             "canvasSummary": "{nodes} 個節點，{edges} 條連線"
+          },
+          "prompts": {
+            "title": "提示詞庫"
           }
         },
         "stopped": "对话已终止",
@@ -4708,7 +4712,12 @@
           "tooltip": "MCP 服务器"
         },
         "newChat": "開始新對話",
-        "temporaryChat": "臨時會話"
+        "temporaryChat": "臨時會話",
+        "modelSuggestion": {
+          "apply": "套用到這一則訊息",
+          "applied": "已套用，下一則訊息會恢復",
+          "unavailable": "找不到對應的模型設定"
+        }
       },
       "header": {
         "configApiKey": "配置 API KEY",
@@ -6931,6 +6940,10 @@
     "copy": "複製",
     "copied": "已複製到剪貼簿",
     "copyFailed": "複製失敗",
-    "selectOption": "選一個"
+    "selectOption": "選一個",
+    "insertDialog": {
+      "insert": "插入輸入框",
+      "startNewConversation": "用這個提示詞開新對話"
+    }
   }
 }

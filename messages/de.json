@@ -4424,7 +4424,8 @@
         },
         "promptSelect": {
           "tooltip": "Prompt auswählen",
-          "placeholder": "Prompts durchsuchen"
+          "placeholder": "Prompts durchsuchen",
+          "conversationPromptApplied": "Der Systemprompt dieser Unterhaltung wurde aus einem Prompt gesetzt"
         },
         "newChat": "Neuer Chat",
         "temporaryChat": "Temporärer Chat",
@@ -4749,11 +4750,19 @@
             "untitledRecord": "Unbenannte Aufzeichnung",
             "recordFallback": "Aufzeichnungsinhalt",
             "canvasSummary": "{nodes} Knoten, {edges} Kanten"
+          },
+          "prompts": {
+            "title": "Prompt-Bibliothek"
           }
         },
         "clearChat": "Chat leeren",
         "clearContext": {
           "tooltip": "Kontext leeren"
+        },
+        "modelSuggestion": {
+          "apply": "Auf diese Nachricht anwenden",
+          "applied": "Angewendet – wird bei der nächsten Nachricht zurückgesetzt",
+          "unavailable": "Keine passende Modelleinstellung gefunden"
         }
       },
       "header": {
@@ -6892,6 +6901,10 @@
     "copy": "Kopieren",
     "copied": "In die Zwischenablage kopiert",
     "copyFailed": "Kopieren fehlgeschlagen",
-    "selectOption": "Auswählen"
+    "selectOption": "Auswählen",
+    "insertDialog": {
+      "insert": "In Eingabe einfügen",
+      "startNewConversation": "Neue Unterhaltung mit diesem Prompt starten"
+    }
   }
 }
