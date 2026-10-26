@@ -1,0 +1,587 @@
+{
+  "version": "2.21",
+  "children": [
+    {
+      "type": "frame",
+      "id": "J0UmWG",
+      "x": 0,
+      "y": 0,
+      "name": "Login Page",
+      "clip": true,
+      "width": 1440,
+      "height": 900,
+      "fill": "$bg",
+      "children": [
+        {
+          "type": "frame",
+          "id": "MUxrA",
+          "name": "Brand Panel",
+          "width": 620,
+          "height": "fill_container",
+          "fill": "$ink",
+          "layout": "vertical",
+          "padding": [
+            56,
+            64
+          ],
+          "justifyContent": "space_between",
+          "children": [
+            {
+              "type": "frame",
+              "id": "aJHWJ",
+              "name": "Logo",
+              "gap": 10,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "LJjmj",
+                  "name": "Logo Icon",
+                  "width": 24,
+                  "height": 24,
+                  "icon": "notebook-pen",
+                  "library": "lucide",
+                  "fill": "$accent"
+                },
+                {
+                  "type": "text",
+                  "id": "M0VfRT",
+                  "name": "Logo Text",
+                  "fill": "$cream",
+                  "content": "NoteGen",
+                  "fontFamily": "Inter",
+                  "fontSize": 20,
+                  "fontWeight": "700"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "N7kfkL",
+              "name": "Pitch",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 28,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "nIc7h",
+                  "name": "Headline",
+                  "fill": "$cream",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "把想法寫下來，\n讓它們彼此連結。",
+                  "lineHeight": 1.35,
+                  "fontFamily": "Noto Serif TC",
+                  "fontSize": 44,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "oIhgS",
+                  "name": "Note Snippet",
+                  "width": "fill_container",
+                  "stroke": "$accent",
+                  "strokeWidth": {
+                    "left": 2
+                  },
+                  "layout": "vertical",
+                  "gap": 10,
+                  "padding": [
+                    4,
+                    0,
+                    4,
+                    20
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "KfTKx",
+                      "name": "Snippet Line",
+                      "fill": "#F2EDE4",
+                      "content": "## 今日筆記",
+                      "lineHeight": 1.5,
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "b0Cdi",
+                      "name": "Snippet Line",
+                      "fill": "#A39C90",
+                      "content": "讀完 [[卡片盒筆記法]]，想到可以接上",
+                      "lineHeight": 1.5,
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "qB5wu",
+                      "name": "Snippet Line",
+                      "fill": "#A39C90",
+                      "content": "上週的 [[專案回顧]]。 #想法 #待整理",
+                      "lineHeight": 1.5,
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "oEUMz",
+              "name": "Footer",
+              "fill": "#8A8378",
+              "content": "© 2026 NoteGen · 本機優先的筆記工具",
+              "fontFamily": "Noto Sans TC",
+              "fontSize": 13,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "rN4sP",
+          "name": "Form Area",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "CULQJ",
+              "name": "Login Form",
+              "width": 400,
+              "layout": "vertical",
+              "gap": 28,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "KnwVi",
+                  "name": "Heading",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 8,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "D8Buo",
+                      "name": "Title",
+                      "fill": "$ink",
+                      "content": "歡迎回來",
+                      "fontFamily": "Noto Serif TC",
+                      "fontSize": 32,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "w2RFB",
+                      "name": "Subtitle",
+                      "fill": "$ink-soft",
+                      "content": "登入以繼續整理你的筆記",
+                      "fontFamily": "Noto Sans TC",
+                      "fontSize": 15,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "sLzwA",
+                  "name": "Fields",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 18,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "obkRt",
+                      "name": "電子郵件 Field",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "E0c4y8",
+                          "name": "Label",
+                          "fill": "$ink",
+                          "content": "電子郵件",
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "KNdpG",
+                          "name": "Input",
+                          "width": "fill_container",
+                          "height": 48,
+                          "fill": "#FFFFFF",
+                          "cornerRadius": 8,
+                          "stroke": "$line",
+                          "strokeWidth": 1,
+                          "padding": [
+                            0,
+                            14
+                          ],
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "cxJnU",
+                              "name": "Placeholder",
+                              "fill": "#A39C90",
+                              "content": "you@example.com",
+                              "fontFamily": "Inter",
+                              "fontSize": 15,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "dRwnb",
+                      "name": "密碼 Field",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "BKjrx",
+                          "name": "Label",
+                          "fill": "$ink",
+                          "content": "密碼",
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "nZmKg",
+                          "name": "Input",
+                          "width": "fill_container",
+                          "height": 48,
+                          "fill": "#FFFFFF",
+                          "cornerRadius": 8,
+                          "stroke": "$line",
+                          "strokeWidth": 1,
+                          "padding": [
+                            0,
+                            14
+                          ],
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "d6VyK",
+                              "name": "Placeholder",
+                              "fill": "$ink",
+                              "content": "••••••••••",
+                              "fontFamily": "Inter",
+                              "fontSize": 15,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "icon",
+                              "id": "XtGkH",
+                              "name": "Toggle Icon",
+                              "width": 18,
+                              "height": 18,
+                              "icon": "eye",
+                              "library": "lucide",
+                              "fill": "$ink-soft"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ggf71",
+                      "name": "Options Row",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "hLkYF",
+                          "name": "Remember",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "Pl6ZZ",
+                              "name": "Checkbox",
+                              "width": 18,
+                              "height": 18,
+                              "fill": "$ink",
+                              "cornerRadius": 4,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "bT6YK",
+                                  "name": "Check",
+                                  "width": 12,
+                                  "height": 12,
+                                  "icon": "check",
+                                  "library": "lucide",
+                                  "fill": "$cream"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "llCLC",
+                              "name": "Remember Label",
+                              "fill": "$ink",
+                              "content": "記住我",
+                              "fontFamily": "Noto Sans TC",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "XPdQW",
+                          "name": "Forgot Link",
+                          "fill": "$accent",
+                          "content": "忘記密碼？",
+                          "fontFamily": "Noto Sans TC",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "glkQu",
+                  "name": "Sign In Button",
+                  "width": "fill_container",
+                  "height": 48,
+                  "fill": "$ink",
+                  "cornerRadius": 8,
+                  "gap": 8,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "hYDUA",
+                      "name": "Button Label",
+                      "fill": "$cream",
+                      "content": "登入",
+                      "fontFamily": "Noto Sans TC",
+                      "fontSize": 15,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "AIEHa",
+                      "name": "Arrow",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "arrow-right",
+                      "library": "lucide",
+                      "fill": "$cream"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "c8Tt3",
+                  "name": "Divider",
+                  "width": "fill_container",
+                  "gap": 14,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "Avas8",
+                      "name": "Line L",
+                      "fill": "$line",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "aK7TD",
+                      "name": "Divider Label",
+                      "fill": "$ink-soft",
+                      "content": "或使用其他方式",
+                      "fontFamily": "Noto Sans TC",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "XSFQ5",
+                      "name": "Line R",
+                      "fill": "$line",
+                      "width": "fill_container",
+                      "height": 1
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "WJvOm",
+                  "name": "Social Row",
+                  "width": "fill_container",
+                  "gap": 12,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Qo1cI",
+                      "name": "Google Button",
+                      "width": "fill_container",
+                      "height": 44,
+                      "cornerRadius": 8,
+                      "stroke": "$line",
+                      "strokeWidth": 1,
+                      "gap": 8,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "fM0Bm",
+                          "name": "Google Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "google-logo",
+                          "library": "phosphor",
+                          "fill": "$ink"
+                        },
+                        {
+                          "type": "text",
+                          "id": "xoVZD",
+                          "name": "Google Label",
+                          "fill": "$ink",
+                          "content": "Google",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "TWVzY",
+                      "name": "GitHub Button",
+                      "width": "fill_container",
+                      "height": 44,
+                      "cornerRadius": 8,
+                      "stroke": "$line",
+                      "strokeWidth": 1,
+                      "gap": 8,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "eogCZ",
+                          "name": "GitHub Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "github-logo",
+                          "library": "phosphor",
+                          "fill": "$ink"
+                        },
+                        {
+                          "type": "text",
+                          "id": "r4zwOU",
+                          "name": "GitHub Label",
+                          "fill": "$ink",
+                          "content": "GitHub",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Znjwq",
+                  "name": "Sign Up Row",
+                  "width": "fill_container",
+                  "gap": 6,
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "zxQHm",
+                      "name": "Sign Up Prompt",
+                      "fill": "$ink-soft",
+                      "content": "還沒有帳號？",
+                      "fontFamily": "Noto Sans TC",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "DUEck",
+                      "name": "Sign Up Link",
+                      "fill": "$accent",
+                      "content": "建立帳號",
+                      "fontFamily": "Noto Sans TC",
+                      "fontSize": 13,
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variables": {
+    "bg": {
+      "type": "color",
+      "value": "#F7F4EF"
+    },
+    "ink": {
+      "type": "color",
+      "value": "#1C1B19"
+    },
+    "ink-soft": {
+      "type": "color",
+      "value": "#6B655C"
+    },
+    "line": {
+      "type": "color",
+      "value": "#DDD7CD"
+    },
+    "accent": {
+      "type": "color",
+      "value": "#C2531F"
+    },
+    "cream": {
+      "type": "color",
+      "value": "#F2EDE4"
+    }
+  },
+  "fileToken": "9183a9ed-b030-4367-a52f-37a717b6cd5f"
+}

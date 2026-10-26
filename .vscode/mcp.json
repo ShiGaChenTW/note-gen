@@ -1,0 +1,14 @@
+{
+  "servers": {
+    "orbit": {
+      "command": "orbit",
+      "args": [
+        "mcp",
+        "serve",
+        "--operator",
+        "--workspace",
+        "ws_note-gen"
+      ]
+    }
+  }
+}

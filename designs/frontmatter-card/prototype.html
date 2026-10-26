@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Frontmatter 屬性卡片原型 v2</title>
+<style>
+:root{--bg:#1e1e1e;--panel:#252526;--fg:#d4d4d4;--mute:#8b8b8b;--line:#3a3a3c;--pri:#7aa2f7;--pri-bg:#7aa2f720;--ok:#3fb950;--bad:#f85149;--chg:#3fb95022;--warn:#d29922;--mono:ui-monospace,Menlo,monospace}
+@media (prefers-color-scheme:light){:root{--bg:#fff;--panel:#f6f6f7;--fg:#1f2328;--mute:#6b7280;--line:#d8dce1;--pri:#2457d6;--pri-bg:#2457d614;--chg:#2da44e22}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 system-ui,-apple-system,"PingFang TC",sans-serif}
+header{padding:14px 16px;border-bottom:1px solid var(--line)}
+header h1{margin:0;font-size:16px}header p{margin:4px 0 0;color:var(--mute);font-size:12px}
+.wrap{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;padding:16px;max-width:1200px;margin:auto}
+@media(max-width:820px){.wrap{grid-template-columns:1fr}}
+h2{font-size:12px;letter-spacing:.04em;color:var(--mute);margin:0 0 8px;font-weight:600}
+.bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;align-items:center}
+button,input,textarea,select{font:inherit;color:inherit}
+.btn{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:3px 10px;cursor:pointer}
+.btn:hover:not(:disabled){border-color:var(--pri)}.btn.on{background:var(--pri-bg);border-color:var(--pri);color:var(--pri)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.seg{display:inline-flex}.seg .btn{border-radius:0}.seg .btn:first-child{border-radius:6px 0 0 6px}.seg .btn:last-child{border-radius:0 6px 6px 0;border-left:0}
+.doc{border:1px solid var(--line);border-radius:8px;padding:12px;background:var(--panel)}
+.modelabel{font-size:11px;color:var(--mute);margin-bottom:6px}
+.card{border:1px solid var(--line);border-radius:8px;background:var(--bg);position:relative}
+.card.read{border-color:transparent;background:transparent}
+.card-h{display:flex;gap:6px;align-items:center;padding:4px 8px;color:var(--mute);font-size:12px}
+.card-h .tw{border:0;background:none;cursor:pointer;color:var(--mute);padding:0 4px;font-size:12px;transition:.15s}
+.card-h .tw.c{transform:rotate(-90deg)}
+.card-h .ttl{cursor:pointer;user-select:none}
+.card-h .sp{flex:1}
+.sum{padding:0 12px 8px 30px;color:var(--mute);font-size:12px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.sum b{color:var(--fg);font-weight:600}
+.row{display:grid;grid-template-columns:120px 1fr 22px;gap:8px;align-items:start;padding:4px 10px}
+.row:hover{background:var(--pri-bg)}
+.key{color:var(--mute);padding-top:3px;overflow-wrap:anywhere;display:flex;gap:6px}
+.ico{width:16px;text-align:center;color:var(--pri)}
+.val{min-width:0;position:relative}
+.val input[type=text],.val input[type=number],.val input[type=date],.val input[type=datetime-local],.add input,.tplsel{width:100%;background:transparent;border:1px solid transparent;border-radius:5px;padding:2px 6px}
+.val input:hover:not(:disabled){border-color:var(--line)}.val input:focus,.add input:focus{outline:none;border-color:var(--pri);background:var(--bg)}
+.del{opacity:0;border:0;background:none;color:var(--mute);cursor:pointer}.row:hover .del{opacity:1}
+.chips{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.chip{display:inline-flex;gap:4px;align-items:center;background:var(--pri-bg);color:var(--pri);border-radius:5px;padding:1px 7px;font-size:12px}
+.chip button{border:0;background:none;color:inherit;cursor:pointer;padding:0}
+.chip.link>span{cursor:pointer;text-decoration:underline;text-decoration-color:#7aa2f780}
+.chips input{width:90px;border:0;background:transparent;outline:none;padding:2px}
+.switch{width:34px;height:20px;border-radius:10px;background:var(--line);border:0;position:relative;cursor:pointer}
+.switch::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.15s}
+.switch.on{background:var(--ok)}.switch.on::after{left:16px}.switch:disabled{opacity:.5;cursor:not-allowed}
+.unsup{font:12px var(--mono);white-space:pre-wrap;color:var(--mute);background:var(--panel);border-radius:5px;padding:4px 8px;margin:0}
+.tag{font-size:11px;color:var(--mute);margin-top:2px}
+.sug{position:absolute;z-index:5;left:0;top:100%;min-width:140px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:3px;box-shadow:0 6px 18px #0006}
+.sug div{padding:2px 8px;border-radius:4px;cursor:pointer}.sug div:hover{background:var(--pri-bg);color:var(--pri)}
+.sug small{display:block;color:var(--mute);padding:0 8px}
+.add{padding:6px 10px;border-top:1px solid var(--line);position:relative}
+.add button{background:none;border:0;color:var(--pri);cursor:pointer;padding:0}
+.err{color:var(--bad);font-size:12px;padding:6px 10px;white-space:pre-wrap}
+textarea{width:100%;min-height:230px;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px;font:12px var(--mono)}
+/* 閱讀模式 */
+.rd{display:grid;grid-template-columns:max-content 1fr;gap:3px 16px;padding:2px 12px 10px 30px;font-size:13px}
+.rd .k{color:var(--mute)}.rd .v{min-width:0;overflow-wrap:anywhere}
+.rd .ok{color:var(--ok)}.rd .no{color:var(--mute)}
+.rd .pill{display:inline-block;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:0 8px;font-size:12px;margin:0 4px 2px 0}
+.rd a{color:var(--pri);cursor:pointer;text-decoration:underline;text-decoration-color:#7aa2f780}
+.rd .title{font-weight:600}
+/* 空狀態 */
+.empty{border:1px dashed var(--line);border-radius:8px;padding:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.empty .t{flex:1;min-width:160px;color:var(--mute);font-size:13px}
+.btn.pri{background:var(--pri);border-color:var(--pri);color:#fff}
+.tplmenu{position:relative;display:inline-block}
+.tplmenu .sug{left:auto;right:0}
+pre.src{margin:0;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 0;font:12.5px/1.6 var(--mono);overflow:auto}
+pre.src span{display:block;padding:0 12px;white-space:pre}
+pre.src span.chg{background:var(--chg);box-shadow:inset 3px 0 var(--ok)}
+.body{margin-top:12px;color:var(--mute)}.body h3{margin:0 0 4px;color:var(--fg)}
+.note{margin-top:10px;font-size:12px;color:var(--mute)}.note b{color:var(--fg)}
+ul.pts{margin:0;padding-left:18px;font-size:12px;color:var(--mute)}ul.pts li{margin:3px 0}ul.pts b{color:var(--fg)}
+.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--pri);color:#fff;border-radius:8px;padding:6px 14px;opacity:0;transition:.2s;pointer-events:none}
+.toast.show{opacity:1}
+.open{border:1px dashed var(--line);border-radius:8px;padding:8px 12px;margin-top:12px;font-size:12px}.open b{color:var(--warn)}
+.open ul{margin:4px 0 0;padding-left:18px}
+</style>
+</head>
+<body>
+<header>
+<h1>Frontmatter 屬性卡片 — 互動原型 v2</h1>
+<p>左邊是編輯區頂端的樣子，右邊是「磁碟上實際的 YAML」。操作時只有被改的行會亮綠色，行尾註解、空行、其他行都不動。這是示意，不是正式程式碼。</p>
+</header>
+<div class="wrap">
+<section>
+  <h2>編輯區（Tiptap）</h2>
+  <div class="bar">
+    <span class="seg"><button class="btn" id="v-read">閱讀模式</button><button class="btn on" id="v-edit">編輯模式</button></span>
+    <span style="flex:1"></span>
+    <button class="btn" id="t-ro">模擬唯讀文件</button>
+    <button class="btn" id="t-bad">模擬 YAML 錯誤</button>
+    <button class="btn" id="t-none">模擬沒有屬性</button>
+    <button class="btn" id="t-reset">還原範例</button>
+  </div>
+  <div class="doc">
+    <div class="modelabel" id="modelabel"></div>
+    <div id="fm"></div>
+    <div class="body"><h3>今天的筆記</h3>本文從這裡開始…游標在這裡打字不會影響上面的卡片。</div>
+  </div>
+  <div class="open">
+    <b>已確認</b>：正式版會修 <code>applyFrontmatterEdit</code>，編輯清單時保留 <code>[a, b]</code> 的寫法（原型已示範）。
+    <br><b>待你決定</b>：
+    <ul>
+      <li>範本來源：先內建「預設／日記／專案」三組；之後要不要改成讀 vault 內 Templates 資料夾的 frontmatter？</li>
+      <li>建立範本時，<code>title</code> 要不要預填檔名？</li>
+      <li>收合狀態是「每篇筆記各自記」，還是「全域一個」？（原型是全域）</li>
+    </ul>
+  </div>
+</section>
+<section>
+  <h2>磁碟上的 YAML（唯讀顯示）</h2>
+  <pre class="src" id="src"></pre>
+  <p class="note" id="diffnote"></p>
+  <h2 style="margin-top:16px">這版的重點</h2>
+  <ul class="pts">
+    <li><b>整塊可收縮</b>：點卡片標題或箭頭；收合後留一行摘要（標題、標籤）。</li>
+    <li><b>閱讀模式</b>：純展示，沒有輸入框。日期寫成中文、核取方塊顯示 ✓／✗、空值不顯示，[[連結]]可點。</li>
+    <li><b>編輯模式</b>：每個值換成可操作的元件（toggle、日期選擇、chip、選項清單），右上有「原始碼」。</li>
+    <li><b>一鍵建立範本</b>：沒有屬性時顯示按鈕，一按就在文件最上方建立；旁邊的小箭頭可換成日記或專案範本。</li>
+    <li><b>看不懂的不碰</b>：巢狀的 <code>nested</code> 維持原文唯讀；YAML 有錯時整張卡片退回紅字加原文。</li>
+    <li><b>刪光所有屬性</b>：整個 frontmatter 一起移除，回到「沒有屬性」的狀態。</li>
+  </ul>
+</section>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const SAMPLE=`title: "屬性樣本: 有冒號所以加引號"  # 行尾註解要留著
+due: 2026-10-25
+reviewed: 2026-10-19T09:30
+rating: 4
+done: false
+related:
+  - "[[雙鏈目標]]"
+  - "[[待改名]]"
+tags: [notegen, phase-2]
+aliases: [屬性別名]
+
+nested:
+  a: 1
+  b: 2`;
+const today=new Date().toISOString().slice(0,10);
+const TPL={'預設':['title:',`created: ${today}`,'tags: []','aliases: []'],'日記':[`date: ${today}`,'mood:','tags: [daily]'],'專案':['title:','status: draft','due:','tags: [project]']};
+const VAULT={rating:['5','4','3','2','1'],status:['draft','review','done'],title:[]};
+const KNOWN={done:'checkbox',status:'text',priority:'number',due:'date',tags:'tags'};
+let lines=SAMPLE.split('\n'),prev=lines.slice(),prevHas=true,has=true,view='edit',srcMode=false,collapsed=false,ro=false;
+const $=s=>document.querySelector(s);
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),1500)}
+
+/* ---- 極簡解析：只為示範「就地改一行」 ---- */
+function splitComment(s){let q=null;for(let i=0;i<s.length;i++){const c=s[i];if(q){if(c===q)q=null}else if(c==='"'||c==="'")q=c;else if(c==='#'&&(i===0||/\s/.test(s[i-1]))){const v=s.slice(0,i).replace(/\s+$/,'');return[v,s.slice(v.length)]}}return[s,'']}
+function unq(v){v=v.trim();if(/^"(.*)"$/.test(v)||/^'(.*)'$/.test(v))return v.slice(1,-1);return v}
+function req(v){return(!v||/#|: |^[\["'\-]|^\s|\s$/.test(v))?JSON.stringify(v):v}
+function parse(){
+  const out=[];let i=0;
+  while(i<lines.length){
+    const m=/^([^\s#:][^:]*):(\s*)(.*)$/.exec(lines[i]);
+    if(!m){i++;continue}
+    const [,key,sep,rest]=m;const [val,cmt]=splitComment(rest);
+    const start=i;i++;
+    while(i<lines.length&&/^\s+\S/.test(lines[i]))i++;
+    const block=lines.slice(start+1,i);
+    let type,value;
+    const flow=/^\[(.*)\]$/.exec(val.trim());
+    if(block.length&&block.every(b=>/^\s*-\s/.test(b))&&!val){type=key==='tags'?'tags':key==='aliases'?'aliases':'multitext';value=block.map(b=>unq(b.replace(/^\s*-\s*/,'')))}
+    else if(block.length){type='unsupported'}
+    else if(flow){type=key==='tags'?'tags':key==='aliases'?'aliases':'multitext';value=flow[1].trim()?flow[1].split(',').map(x=>unq(x)):[]}
+    else{const u=unq(val);value=u;
+      if(!val)type=KNOWN[key]==='number'?'number':KNOWN[key]==='date'?'date':'text';else if(/^(true|false)$/.test(val))type='checkbox';else if(/^-?\d+(\.\d+)?$/.test(val))type='number';
+      else if(/^\d{4}-\d{2}-\d{2}$/.test(u))type='date';else if(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/.test(u))type='datetime';else type='text'}
+    out.push({key,sep,start,end:i,val,cmt,type,value,flow:!!flow,block,quoted:/^["']/.test(val.trim()),raw:lines.slice(start,i).join('\n')});
+  }
+  return out;
+}
+const cmtPart=p=>p.cmt;
+function setScalar(p,v){const q=p.quoted?JSON.stringify(v):req(v);lines[p.start]=`${p.key}:${p.sep||' '}${q}${cmtPart(p)}`}
+function setBool(p,b){lines[p.start]=`${p.key}:${p.sep||' '}${b}${cmtPart(p)}`}
+function setList(p,arr){
+  if(p.flow||!p.block.length){lines[p.start]=`${p.key}:${p.sep||' '}[${arr.map(x=>/[,\[\]]/.test(x)?JSON.stringify(x):x).join(', ')}]${cmtPart(p)}`;return}
+  const ind=(p.block[0]&&/^\s*/.exec(p.block[0])[0])||'  ';
+  lines.splice(p.start+1,p.end-p.start-1,...arr.map(x=>`${ind}- ${/^\[\[/.test(x)?JSON.stringify(x):req(x)}`));
+}
+function removeProp(p){lines.splice(p.start,p.end-p.start);if(!lines.some(l=>/^[^\s#]/.test(l))){has=false;lines=[];collapsed=false;toast('已刪光屬性，整個 frontmatter 一併移除')}}
+function validate(src){
+  if(/^\t|\n\t/.test(src))return'縮排不能用 Tab，請改用空格';
+  for(const l of src.split('\n')){if((l.match(/"/g)||[]).length%2)return`引號沒有成對：${l.trim()}`}return''
+}
+
+/* ---- 渲染 ---- */
+const ICON={text:'≡',multitext:'☰',number:'#',checkbox:'☑',date:'📅',datetime:'🕘',tags:'#',aliases:'👥',unsupported:'{}'};
+const fmtDate=(s,t)=>{const d=new Date(s);return isNaN(d)?s:d.toLocaleDateString('zh-TW',{year:'numeric',month:'long',day:'numeric'})+(t?' '+d.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit',hour12:false}):'')};
+const linkEl=x=>{const a=document.createElement('a');a.textContent=x.replace(/^\[\[|\]\]$/g,'');a.onclick=()=>toast('開啟 '+x+'（沿用現有 wikilink 開啟邏輯）');return a};
+
+function render(){
+  const root=$('#fm');root.innerHTML='';
+  $('#v-read').classList.toggle('on',view==='read');$('#v-edit').classList.toggle('on',view==='edit');
+  $('#modelabel').textContent=view==='read'?'閱讀模式：純展示，不能改':'編輯模式：點一下就能改'+(ro?'（目前是唯讀文件，輸入已停用）':'');
+  if(!has){
+    if(view==='edit'&&!ro)root.append(emptyCard());
+    paintSrc();return;
+  }
+  const err=validate(lines.join('\n'));
+  const props=err?[]:parse();
+  const card=document.createElement('div');card.className='card'+(view==='read'?' read':'');
+  card.append(header(props,err));
+  if(collapsed){card.append(summary(props,err))}
+  else if(err){card.insertAdjacentHTML('beforeend',`<div class="err">YAML 有誤：${esc(err)}\n（卡片停用，請切到「原始碼」修正）</div><pre class="unsup" style="margin:0 10px 8px">${esc(lines.join('\n'))}</pre>`)}
+  else if(view==='read'){card.append(readBody(props))}
+  else if(srcMode){card.append(srcEditor())}
+  else{props.forEach(p=>card.append(row(p)));card.append(addRow(props))}
+  root.append(card);paintSrc();
+}
+function header(props,err){
+  const h=document.createElement('div');h.className='card-h';
+  const tw=document.createElement('button');tw.className='tw'+(collapsed?' c':'');tw.textContent='▾';tw.title=collapsed?'展開':'收合';
+  const ttl=document.createElement('span');ttl.className='ttl';ttl.textContent=`屬性 · ${err?'—':props.length+' 項'}`;
+  const toggle=()=>{collapsed=!collapsed;render()};tw.onclick=toggle;ttl.onclick=toggle;
+  const sp=document.createElement('span');sp.className='sp';
+  h.append(tw,ttl,sp);
+  if(view==='read'){const b=document.createElement('button');b.className='btn';b.textContent='✎ 編輯';b.onclick=()=>{view='edit';render()};b.disabled=ro;h.append(b)}
+  else{
+    if(!collapsed){
+      const s=document.createElement('button');s.className='btn'+(srcMode?' on':'');s.textContent='原始碼';s.onclick=()=>{srcMode=!srcMode;render()};h.append(s);
+      const rm=document.createElement('button');rm.className='btn';rm.textContent='移除全部';rm.disabled=ro;rm.onclick=()=>{if(confirm('移除整個 frontmatter？')){has=false;lines=[];srcMode=false;collapsed=false;render()}};h.append(rm);
+    }
+    const dn=document.createElement('button');dn.className='btn';dn.textContent='完成';dn.onclick=()=>{view='read';srcMode=false;render()};h.append(dn);
+  }
+  return h;
+}
+function summary(props,err){
+  const s=document.createElement('div');s.className='sum';
+  if(err){s.innerHTML='<span style="color:var(--bad)">YAML 有誤</span>';return s}
+  const t=props.find(p=>p.key==='title'&&p.value),tg=props.find(p=>p.type==='tags');
+  if(t)s.insertAdjacentHTML('beforeend',`<b>${esc(String(t.value))}</b>`);
+  if(tg)tg.value.forEach(x=>s.insertAdjacentHTML('beforeend',`<span class="chip">#${esc(x.replace(/^#/,''))}</span>`));
+  s.insertAdjacentHTML('beforeend',`<span>· 已收合，點標題展開</span>`);return s;
+}
+function readBody(props){
+  const g=document.createElement('div');g.className='rd';
+  props.forEach(p=>{
+    if(p.type!=='unsupported'&&(p.value===''||p.value==null||(Array.isArray(p.value)&&!p.value.length)))return;
+    const k=document.createElement('div');k.className='k';k.textContent=p.key;
+    const v=document.createElement('div');v.className='v';
+    if(p.type==='checkbox'){const on=p.value==='true'||p.value===true;v.innerHTML=on?'<span class="ok">✓ 是</span>':'<span class="no">✗ 否</span>'}
+    else if(p.type==='date')v.textContent=fmtDate(p.value);
+    else if(p.type==='datetime')v.textContent=fmtDate(p.value,true);
+    else if(Array.isArray(p.value))p.value.forEach(x=>{if(/^\[\[.*\]\]$/.test(x)){const s=document.createElement('span');s.className='pill';s.append(linkEl(x));v.append(s)}else v.insertAdjacentHTML('beforeend',`<span class="pill">${p.type==='tags'?'#'+esc(x.replace(/^#/,'')):esc(x)}</span>`)});
+    else if(p.type==='unsupported')v.innerHTML=`<pre class="unsup">${esc(p.raw)}</pre>`;
+    else if(/^\[\[.*\]\]$/.test(p.value))v.append(linkEl(p.value));
+    else{v.textContent=p.value;if(p.key==='title')v.classList.add('title')}
+    g.append(k,v);
+  });
+  if(!g.children.length)g.innerHTML='<div class="k" style="grid-column:1/-1">（沒有可顯示的值）</div>';
+  return g;
+}
+function srcEditor(){
+  const w=document.createElement('div');w.style.cssText='padding:0 10px 10px';
+  w.innerHTML=`<textarea id="ta" ${ro?'disabled':''}></textarea><div id="te" class="err"></div><button class="btn" id="apply" ${ro?'disabled':''}>套用</button>`;
+  w.querySelector('#ta').value=lines.join('\n');
+  w.querySelector('#apply').onclick=()=>{const v=w.querySelector('#ta').value;const e=validate(v);if(e){w.querySelector('#te').textContent='YAML 有誤：'+e;return}lines=v.split('\n');srcMode=false;render()};
+  return w;
+}
+function emptyCard(){
+  const e=document.createElement('div');e.className='empty';
+  e.innerHTML='<div class="t">這篇筆記還沒有屬性（Frontmatter）。</div>';
+  const mk=name=>{lines=TPL[name].slice();has=true;collapsed=false;srcMode=false;render();toast(`已建立「${name}」範本`)};
+  const main=document.createElement('button');main.className='btn pri';main.textContent='＋ 一鍵建立 Frontmatter 範本';main.onclick=()=>mk('預設');
+  const menuWrap=document.createElement('span');menuWrap.className='tplmenu';
+  const arrow=document.createElement('button');arrow.className='btn';arrow.textContent='▾';arrow.title='選擇其他範本';
+  arrow.onclick=ev=>{ev.stopPropagation();const old=menuWrap.querySelector('.sug');if(old){old.remove();return}
+    const m=document.createElement('div');m.className='sug';m.innerHTML='<small>選擇範本</small>';
+    Object.keys(TPL).forEach(n=>{const d=document.createElement('div');d.textContent=`${n}　· ${TPL[n].map(l=>l.split(':')[0]).join('、')}`;d.onclick=()=>mk(n);m.append(d)});menuWrap.append(m)};
+  menuWrap.append(arrow);e.append(main,menuWrap);return e;
+}
+function row(p){
+  const r=document.createElement('div');r.className='row';
+  const k=document.createElement('div');k.className='key';k.innerHTML=`<span class="ico">${ICON[p.type]}</span><span>${esc(p.key)}</span>`;
+  const v=document.createElement('div');v.className='val';const dis=ro;
+  if(p.type==='unsupported'){v.innerHTML=`<pre class="unsup">${esc(p.raw)}</pre><div class="tag">巢狀結構，維持原文；要改請用「原始碼」</div>`}
+  else if(p.type==='checkbox'){const b=document.createElement('button');b.className='switch'+(p.value==='true'||p.value===true?' on':'');b.disabled=dis;b.onclick=()=>{setBool(p,!b.classList.contains('on'));render()};v.append(b)}
+  else if(['multitext','tags','aliases'].includes(p.type)){
+    const c=document.createElement('div');c.className='chips';
+    p.value.forEach((x,i)=>{const isL=/^\[\[.*\]\]$/.test(x);const s=document.createElement('span');s.className='chip'+(isL?' link':'');
+      s.innerHTML=`<span>${p.type==='tags'?'#'+esc(x.replace(/^#/,'')):esc(x)}</span>`;
+      if(isL)s.firstChild.onclick=()=>toast('開啟 '+x);
+      if(!dis){const d=document.createElement('button');d.textContent='×';d.onclick=()=>{setList(p,p.value.filter((_,j)=>j!==i));render()};s.append(d)}c.append(s)});
+    const inp=document.createElement('input');inp.placeholder='新增…';inp.disabled=dis;
+    inp.onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing&&inp.value.trim()){e.preventDefault();setList(p,[...p.value,p.type==='tags'?inp.value.trim().replace(/^#/,''):inp.value.trim()]);render()}};
+    c.append(inp);v.append(c)}
+  else{
+    const inp=document.createElement('input');inp.disabled=dis;
+    inp.type=p.type==='number'?'number':p.type==='date'?'date':p.type==='datetime'?'datetime-local':'text';
+    if(p.type==='number')inp.step='any';
+    inp.value=p.value;
+    const sug=VAULT[p.key];let box=null;
+    const closeBox=()=>{box&&box.remove();box=null};
+    const commitVal=()=>{closeBox();if(inp.value===String(p.value))return;
+      if(p.type==='number'&&(inp.value===''||!isFinite(+inp.value))){inp.value=p.value;return}
+      if(p.type==='number')lines[p.start]=`${p.key}:${p.sep||' '}${+inp.value}${cmtPart(p)}`;else setScalar(p,inp.value);
+      render()};
+    inp.onfocus=()=>{if(sug&&sug.length&&!dis){box=document.createElement('div');box.className='sug';box.innerHTML='<small>vault 內其他筆記用過的值</small>';
+      sug.forEach(s=>{const d=document.createElement('div');d.textContent=s;d.onmousedown=e=>{e.preventDefault();inp.value=s;commitVal()};box.append(d)});v.append(box)}};
+    inp.onblur=commitVal;
+    inp.onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing)inp.blur();if(e.key==='Escape'){inp.value=p.value;inp.blur()}};
+    v.append(inp);
+  }
+  const d=document.createElement('button');d.className='del';d.textContent='⋯';d.title='刪除這個屬性';d.disabled=ro;
+  d.onclick=()=>{if(confirm('刪除「'+p.key+'」？')){removeProp(p);render()}};
+  r.append(k,v,d);return r;
+}
+function addRow(props){
+  const a=document.createElement('div');a.className='add';
+  if(ro){a.innerHTML='<span style="color:var(--mute)">唯讀中，無法新增</span>';return a}
+  a.innerHTML='<button>＋ 新增屬性</button>';
+  a.firstChild.onclick=()=>{
+    a.innerHTML='<input placeholder="屬性名稱（Enter 新增）">';const inp=a.firstChild;inp.focus();
+    const all=[...new Set(['status','priority','done',...Object.keys(VAULT)])].filter(k=>!props.some(p=>p.key===k));
+    const box=document.createElement('div');box.className='sug';box.innerHTML='<small>vault 常用屬性</small>';
+    const show=()=>{[...box.querySelectorAll('div')].forEach(x=>x.remove());all.filter(k=>k.includes(inp.value)).forEach(k=>{const d=document.createElement('div');d.textContent=k+'  ·  '+({checkbox:'核取方塊',number:'數字',date:'日期'}[KNOWN[k]]||'文字');d.onmousedown=e=>{e.preventDefault();inp.value=k;add()};box.append(d)})};
+    a.append(box);show();inp.oninput=show;
+    const add=()=>{const k=inp.value.trim();if(!k)return;if(props.some(p=>p.key===k)){toast('屬性已存在');return}
+      const t=KNOWN[k]||'text';const init=t==='checkbox'?' false':t==='number'?' 0':t==='tags'?' []':'';
+      lines.push(`${k}:${init}`);render()};
+    inp.onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing)add();if(e.key==='Escape')render()};
+    inp.onblur=()=>setTimeout(()=>{if(document.activeElement!==inp&&$('.add input'))render()},120);
+  };return a;
+}
+function paintSrc(){
+  const all=has?['---',...lines,'---']:[];
+  const old=prevHas?['---',...prev,'---']:[];
+  const pc={};old.forEach(l=>pc[l]=(pc[l]||0)+1);
+  let changed=0;
+  $('#src').innerHTML=all.length?all.map(l=>{const c=pc[l]>0?(pc[l]--,false):true;if(c)changed++;return`<span class="${c?'chg':''}">${esc(l)||' '}</span>`}).join(''):'<span style="color:var(--mute)">（這個檔案沒有 frontmatter，開頭直接是本文）</span>';
+  $('#diffnote').innerHTML=!all.length?(old.length?`整段 frontmatter 已移除（原本 <b>${old.length}</b> 行）。`:'沒有 frontmatter。'):changed?`相較於上一次操作，共 <b>${changed}</b> 行不同（綠色）。其餘 <b>${all.length-changed}</b> 行逐字相同，包含行尾註解與空行。`:'尚未改動：所有行逐字相同。';
+  prev=lines.slice();prevHas=has;
+}
+document.addEventListener('click',e=>{if(!e.target.closest('.tplmenu'))document.querySelectorAll('.tplmenu .sug').forEach(x=>x.remove())});
+$('#v-read').onclick=()=>{view='read';srcMode=false;render()};
+$('#v-edit').onclick=()=>{view='edit';render()};
+$('#t-ro').onclick=e=>{ro=!ro;e.target.classList.toggle('on',ro);render()};
+$('#t-bad').onclick=()=>{has=true;lines=SAMPLE.split('\n');lines.splice(1,0,'\tdue: 壞縮排');prev=lines.slice();prevHas=true;view='edit';srcMode=false;render()};
+$('#t-none').onclick=()=>{has=false;lines=[];view='edit';srcMode=false;render()};
+$('#t-reset').onclick=()=>{has=true;lines=SAMPLE.split('\n');prev=lines.slice();prevHas=true;view='edit';srcMode=false;collapsed=false;render()};
+render();
+</script>
+</body>
+</html>

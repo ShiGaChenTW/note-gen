@@ -1,9 +1,13 @@
 {
   "mcpServers": {
-    "graft": {
-      "command": "graft",
+    "orbit": {
+      "command": "orbit",
       "args": [
-        "mcp"
+        "mcp",
+        "serve",
+        "--operator",
+        "--workspace",
+        "ws_note-gen"
       ]
     }
   }
