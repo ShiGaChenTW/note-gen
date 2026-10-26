@@ -3167,6 +3167,22 @@
         "title": "Caminho dos Recursos",
         "desc": "Defina o nome do diretório de recursos. A inserção local de imagens no editor usará esse nome de diretório, como `assets` ou `images`.",
         "select": "Defina o nome do diretório de recursos, por exemplo: assets"
+      },
+      "versionControl": {
+        "title": "Controle de versão",
+        "desc": "Cria um histórico local do git para todo o espaço de trabalho, permitindo revisar cada alteração mesmo offline; apenas arquivos de texto .md, .canvas e .base são rastreados — anexos nunca entram no histórico.",
+        "enable": "Ativar controle de versão",
+        "statusRepo": "O histórico local do git está ativo",
+        "statusNotRepo": "Ainda não há histórico local do git",
+        "confirmTitle": "Ativar controle de versão?",
+        "confirmDescNew": "Isso cria .git e um .gitignore padrão na raiz do espaço de trabalho, rastreando apenas .md, .canvas e .base. Nada é enviado para lugar nenhum.",
+        "confirmDescExisting": "Este espaço de trabalho já tem um .git (por exemplo, criado por outra ferramenta). Ao ativar, ele será reutilizado como está — o NoteGen não vai recriá-lo nem alterar suas configurações existentes.",
+        "toastEnabled": "Controle de versão ativado",
+        "toastEnabledDesc": "Um histórico local do git foi criado para este espaço de trabalho",
+        "toastReused": "Histórico local do git existente do espaço de trabalho foi reutilizado",
+        "toastError": "Falha ao alternar o controle de versão",
+        "autoSnapshotLabel": "Snapshot automático",
+        "autoSnapshotDesc": "Depois de um período de inatividade ou ao fechar o app, salva automaticamente uma versão de todas as alterações rastreadas. Desative para parar os snapshots automáticos."
       }
     },
     "shortcuts": {

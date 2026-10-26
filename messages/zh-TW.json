@@ -3142,6 +3142,22 @@
         "title": "寫作資源路徑",
         "desc": "設置寫作資源目錄名稱。編輯器本地插入圖片時會使用該目錄名，例如 assets 或 images。",
         "select": "請設置資源目錄名稱，例如：assets"
+      },
+      "versionControl": {
+        "title": "版本管理",
+        "desc": "為整個工作區建立本機 git 版本記錄，離線也能回顧每次變更；只追蹤 .md、.canvas、.base 文字檔，附件不會進入版本記錄。",
+        "enable": "啟用版本管理",
+        "statusRepo": "本機 git 記錄運作中",
+        "statusNotRepo": "尚未建立本機 git 記錄",
+        "confirmTitle": "啟用版本管理？",
+        "confirmDescNew": "會在工作區根目錄建立 .git 與預設 .gitignore，只追蹤 .md、.canvas、.base，不會上傳到任何地方。",
+        "confirmDescExisting": "偵測到工作區已經有 .git（例如由其他工具建立），啟用後會沿用現有的本機 git 記錄，不會重新建立、也不會更改它既有的設定。",
+        "toastEnabled": "版本管理已啟用",
+        "toastEnabledDesc": "已在工作區建立本機 git 記錄",
+        "toastReused": "已沿用工作區現有的本機 git 記錄",
+        "toastError": "切換版本管理失敗",
+        "autoSnapshotLabel": "自動快照",
+        "autoSnapshotDesc": "閒置一段時間或關閉 App 時，自動為所有已追蹤的變更留下一筆版本；關閉後不再自動建立。"
       }
     },
     "shortcuts": {

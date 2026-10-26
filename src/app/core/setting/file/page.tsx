@@ -1,6 +1,7 @@
 'use client'
 import { SettingWorkspace } from "./setting-workspace"
 import { SettingAssets } from "./setting-assets"
+import { SettingVersionControl } from "./setting-version-control"
 import { SettingSection, SettingType } from "../components/setting-base"
 import { FolderOpen } from "lucide-react"
 import { useTranslations } from 'next-intl'
@@ -21,6 +22,9 @@ export default function SettingFilePage() {
         </SettingSection>
         <SettingSection title={t('assets.title')}>
           <SettingAssets showTitle={false} />
+        </SettingSection>
+        <SettingSection title={t('versionControl.title')}>
+          <SettingVersionControl />
         </SettingSection>
       </div>
     </SettingType>

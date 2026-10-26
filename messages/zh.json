@@ -3604,6 +3604,22 @@
         "title": "写作资源路径",
         "desc": "设置写作资源目录名称。编辑器本地插入图片时会使用该目录名，例如 assets 或 images。",
         "select": "请设置资源目录名称，例如：assets"
+      },
+      "versionControl": {
+        "title": "版本管理",
+        "desc": "为整个工作区建立本机 git 版本记录，离线也能回顾每次变更；只追踪 .md、.canvas、.base 文字档，附件不会进入版本记录。",
+        "enable": "启用版本管理",
+        "statusRepo": "本机 git 记录运作中",
+        "statusNotRepo": "尚未建立本机 git 记录",
+        "confirmTitle": "启用版本管理？",
+        "confirmDescNew": "会在工作区根目录建立 .git 与默认 .gitignore，只追踪 .md、.canvas、.base，不会上传到任何地方。",
+        "confirmDescExisting": "侦测到工作区已经有 .git（例如由其他工具建立），启用后会沿用现有的本机 git 记录，不会重新建立、也不会更改它既有的设置。",
+        "toastEnabled": "版本管理已启用",
+        "toastEnabledDesc": "已在工作区建立本机 git 记录",
+        "toastReused": "已沿用工作区现有的本机 git 记录",
+        "toastError": "切换版本管理失败",
+        "autoSnapshotLabel": "自动快照",
+        "autoSnapshotDesc": "闲置一段时间或关闭 App 时，自动为所有已追踪的变更留下一笔版本；关闭后不再自动建立。"
       }
     },
     "shortcuts": {

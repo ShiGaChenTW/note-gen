@@ -3465,6 +3465,22 @@
         "title": "Assets-Pfad",
         "desc": "Lege den Namen des Asset-Verzeichnisses fest. Die lokale Bildeinfügung im Editor verwendet diesen Verzeichnisnamen, wie `assets` oder `images`.",
         "select": "Lege den Namen des Asset-Verzeichnisses fest, zum Beispiel: assets"
+      },
+      "versionControl": {
+        "title": "Versionsverwaltung",
+        "desc": "Erstellt für den gesamten Arbeitsbereich einen lokalen Git-Verlauf, damit du jede Änderung auch offline nachvollziehen kannst; nur .md-, .canvas- und .base-Textdateien werden verfolgt — Anhänge gelangen nie in den Verlauf.",
+        "enable": "Versionsverwaltung aktivieren",
+        "statusRepo": "Lokaler Git-Verlauf ist aktiv",
+        "statusNotRepo": "Noch kein lokaler Git-Verlauf vorhanden",
+        "confirmTitle": "Versionsverwaltung aktivieren?",
+        "confirmDescNew": "Dadurch werden .git und eine Standard-.gitignore im Stammverzeichnis des Arbeitsbereichs angelegt; es werden nur .md, .canvas und .base verfolgt. Es wird nichts hochgeladen.",
+        "confirmDescExisting": "Dieser Arbeitsbereich hat bereits ein .git (z. B. von einem anderen Tool angelegt). Beim Aktivieren wird es unverändert weiterverwendet — NoteGen legt es nicht neu an und ändert keine bestehenden Einstellungen.",
+        "toastEnabled": "Versionsverwaltung aktiviert",
+        "toastEnabledDesc": "Für diesen Arbeitsbereich wurde ein lokaler Git-Verlauf angelegt",
+        "toastReused": "Vorhandenen lokalen Git-Verlauf des Arbeitsbereichs weiterverwendet",
+        "toastError": "Versionsverwaltung konnte nicht umgeschaltet werden",
+        "autoSnapshotLabel": "Automatischer Schnappschuss",
+        "autoSnapshotDesc": "Speichert nach einer Phase der Inaktivität oder beim Schließen der App automatisch eine Version aller verfolgten Änderungen. Zum Deaktivieren ausschalten."
       }
     },
     "shortcuts": {
