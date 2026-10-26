@@ -6744,7 +6744,7 @@
       "failed": "Could not save"
     },
     "needs": {
-      "title": "Needs you ({count})",
+      "title": "Needs you",
       "review": "Drafts",
       "reviewAction": "Review",
       "drafts": "{count} drafts to review",
@@ -7035,6 +7035,9 @@
     "processedNote": "Processed into:",
     "saved": "Saved to Inbox",
     "view": "View",
+    "pending": "{count} to process",
+    "deleted": "Moved to trash ({count})",
+    "undo": "Undo",
     "organizeIntoPrompt": "Organize into prompt",
     "organizePrompt": {
       "title": "Organize into a prompt",
@@ -7066,6 +7069,15 @@
       "saved": "Saved as prompt: {title}",
       "saveFailed": "Failed to save the prompt"
     }
+  },
+  "timeline": {
+    "empty": "No notes or records in the last {days} days",
+    "loadMore": "Load 30 earlier days",
+    "processed": "Processed"
+  },
+  "leftSidebar": {
+    "resize": "Resize sidebar sections",
+    "resizeHint": "Drag or use the arrow keys to resize; Enter or double-click to reset"
   },
   "promptLibrary": {
     "title": "Prompt Library",

@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { toast } from 'sonner'
-import { ArchiveRestore, CheckCheck, FilePlus2, FolderInput, Lightbulb, PanelsTopLeft, Sparkles, Tag, Trash2, Undo2 } from 'lucide-react'
+import { ArchiveRestore, CheckCheck, FilePlus2, FileText, FolderInput, Inbox, Lightbulb, MousePointerClick, Sparkles, Tag, Trash2, Undo2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -16,6 +16,7 @@ import type { Mark } from '@/db/marks'
 import { prepareActiveEditorPathMutationDurably } from '@/lib/editor-deactivation'
 import emitter from '@/lib/emitter'
 import { addTagToRecords, convertRecordsToNotes, notifyRecordSaved, restoreRecords, setRecordsProcessed, setRecordsUnprocessed, trashRecords } from '@/lib/inbox/actions'
+import { formatListTime } from '@/lib/time-format'
 import { cn } from '@/lib/utils'
 import useArticleStore from '@/stores/article'
 import useDailySettingsStore from '@/stores/daily-settings'
@@ -29,6 +30,7 @@ import { getMarkListItemContent } from '../mark/mark-list-item-content'
 import { MARK_TYPE_ICONS, getMarkTypeIconClasses } from '../mark/mark-type-meta'
 import { OrganizeNotes, type OpenOrganizeOptions } from '../mark/organize-notes'
 import { OrganizePromptDialog } from '../mark/organize-prompt-dialog'
+import { Count, EmptyState, PageHeader, PageSurface } from '../page-ui'
 
 /** 記錄有變動（新增、編輯、刪除）時重新載入 Inbox。 */
 function useInboxSync() {
@@ -56,11 +58,9 @@ function useRecordSavedToast() {
   }, [t])
 }
 
-function formatTime(value: number, locale: string) {
-  const date = new Date(value)
-  const sameDay = date.toDateString() === new Date().toDateString()
-  return new Intl.DateTimeFormat(locale, sameDay ? { hour: '2-digit', minute: '2-digit' } : { month: 'short', day: 'numeric' }).format(date)
-}
+/** 清單列共用的 hover 與鍵盤焦點。卡片底上用 accent：自訂深色主題裡 --muted 等於 --card。 */
+const ROW = 'transition-colors duration-100 hover:bg-accent/70'
+const ROW_BUTTON = 'cursor-pointer rounded-sm outline-none focus-visible:ring-1 focus-visible:ring-ring/65'
 
 function noteTitle(path: string) {
   return (path.split('/').pop() ?? path).replace(/\.md$/i, '')
@@ -71,7 +71,7 @@ function Section({ title, count, children, actions }: { title: string, count: nu
     <section className="flex flex-col">
       <div className="sticky top-0 z-10 flex h-9 items-center gap-2 border-b bg-card px-3 text-xs font-medium text-muted-foreground">
         <span>{title}</span>
-        <span className="tabular-nums">{count}</span>
+        <Count value={count} />
         <div className="ml-auto flex items-center gap-1">{actions}</div>
       </div>
       {children}
@@ -92,12 +92,15 @@ function RecordRow({ record, selected, focused, processed, locale, onToggle, onF
   const { title, preview } = getMarkListItemContent(record)
   const text = title || preview || record.url
   return (
-    <div className={cn('group flex items-center gap-2 border-b px-3 text-sm hover:bg-muted/60', focused && 'bg-primary/10 hover:bg-primary/15', processed && 'opacity-60')}>
+    <div className={cn('group relative flex items-center gap-2 border-b px-3 text-sm', ROW, selected && 'bg-accent/40', focused && 'bg-primary/10 hover:bg-primary/15')}>
+      {/* 目前展開的那筆：左側色條，不只靠底色 */}
+      {focused && <span className="absolute inset-y-1.5 left-0 w-0.5 rounded-full bg-primary" aria-hidden />}
       <Checkbox checked={selected} onCheckedChange={onToggle} aria-label={text} />
-      <button type="button" onClick={onFocus} className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 py-2 text-left">
-        <Icon className={cn('size-4 shrink-0', getMarkTypeIconClasses(record.type))} aria-hidden />
-        <span className="min-w-0 flex-1 truncate">{text}</span>
-        <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{formatTime(record.createdAt, locale)}</span>
+      <button type="button" onClick={onFocus} aria-current={focused ? 'true' : undefined} className={cn('flex min-w-0 flex-1 items-center gap-2 py-2 text-left', ROW_BUTTON)}>
+        <Icon className={cn('size-4 shrink-0', getMarkTypeIconClasses(record.type), processed && 'opacity-60')} aria-hidden />
+        <span className={cn('min-w-0 flex-1 truncate', processed && 'text-muted-foreground')}>{text}</span>
+        {processed && <CheckCheck className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />}
+        <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{formatListTime(record.createdAt, locale)}</span>
       </button>
     </div>
   )
@@ -223,26 +226,24 @@ export function InboxScreen() {
   const focusedProcessed = focusedMarkId !== null && processed.has(focusedMarkId)
 
   return (
-    <div className="absolute top-0 right-0 bottom-7 left-(--home-left) z-30 flex flex-col bg-card" role="region" aria-label="Inbox">
-      <header className="flex h-14 shrink-0 items-center gap-3 border-b px-5">
-        <h1 className="text-lg font-semibold">{trash ? t('trash') : 'Inbox'}</h1>
+    <PageSurface label="Inbox">
+      <PageHeader
+        title={trash ? t('trash') : 'Inbox'}
+        onBack={hide}
+        actions={(
+          <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground" onClick={() => setTrash(!trash)}>
+            {trash ? <Undo2 className="size-4" aria-hidden /> : <Trash2 className="size-4" aria-hidden />}
+            {trash ? t('backToInbox') : t('trash')}
+          </Button>
+        )}
+      >
         {!trash && (
           <label className="flex items-center gap-2 text-sm text-muted-foreground">
             <Switch checked={showProcessed} onCheckedChange={setShowProcessed} />
             {t('showProcessed')}
           </label>
         )}
-        <div className="ml-auto flex items-center gap-2">
-          <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground" onClick={() => setTrash(!trash)}>
-            {trash ? <Undo2 className="size-4" aria-hidden /> : <Trash2 className="size-4" aria-hidden />}
-            {trash ? t('backToInbox') : t('trash')}
-          </Button>
-          <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground" onClick={hide}>
-            <PanelsTopLeft className="size-4" aria-hidden />
-            {t('backToWorkspace')}
-          </Button>
-        </div>
-      </header>
+      </PageHeader>
 
       <div className="flex min-h-0 flex-1">
         <div className="flex w-[440px] min-w-[320px] shrink-0 flex-col border-r">
@@ -283,7 +284,7 @@ export function InboxScreen() {
                     </PopoverTrigger>
                     <PopoverContent align="end" className="max-h-72 w-56 overflow-y-auto p-1">
                       {tags.map(tag => (
-                        <button key={tag.id} type="button" className="flex w-full cursor-pointer items-center rounded px-2 py-1.5 text-left text-sm hover:bg-muted"
+                        <button key={tag.id} type="button" className="flex w-full cursor-pointer items-center rounded px-2 py-1.5 text-left text-sm outline-none hover:bg-accent focus-visible:bg-accent"
                           onClick={() => void run(() => addTagToRecords(selectedRecords, tag.id))}>
                           {tag.name}
                         </button>
@@ -297,7 +298,15 @@ export function InboxScreen() {
                     </Button>
                   )}
                   <Button variant="ghost" size="icon" className="size-7" disabled={busy || selected.size === 0} title={t('delete')} aria-label={t('delete')}
-                    onClick={() => void run(() => trashRecords([...selected]))}>
+                    onClick={() => {
+                      const ids = [...selected]
+                      void run(async () => {
+                        await trashRecords(ids)
+                        toast(t('deleted', { count: ids.length }), {
+                          action: { label: t('undo'), onClick: () => void restoreRecords(ids).catch(() => toast.error(t('failed'))) },
+                        })
+                      })
+                    }}>
                     <Trash2 className="size-3.5" aria-hidden />
                   </Button>
                 </>
@@ -308,7 +317,7 @@ export function InboxScreen() {
           <div className="min-h-0 flex-1 overflow-y-auto">
             <Section title={t('records')} count={list.length}>
               {list.length === 0 ? (
-                <p className="px-3 py-6 text-center text-sm text-muted-foreground">{trash ? t('trashEmpty') : t('empty')}</p>
+                <EmptyState icon={trash ? Trash2 : Inbox} text={trash ? t('trashEmpty') : t('empty')} />
               ) : list.map(record => (
                 <RecordRow
                   key={record.id}
@@ -326,13 +335,16 @@ export function InboxScreen() {
             {!trash && (
               <Section title={t('folderNotes', { folder: inboxFolder })} count={folderNotes.length}>
                 {folderNotes.length === 0 ? (
-                  <p className="px-3 py-6 text-center text-sm text-muted-foreground">{t('folderEmpty')}</p>
+                  <EmptyState icon={FolderInput} text={t('folderEmpty')} />
                 ) : folderNotes.map(note => (
-                  <div key={note.path} className="group flex items-center gap-2 border-b px-3 py-1.5 text-sm hover:bg-muted/60">
-                    <button type="button" className="min-w-0 flex-1 cursor-pointer truncate text-left" onClick={() => void openNote(note.path)} title={t('open')}>
-                      {noteTitle(note.path)}
+                  <div key={note.path} className={cn('group flex items-center gap-2 border-b px-3 text-sm', ROW)}>
+                    {/* 對齊記錄列：勾選框那一欄留空，再放檔案圖示 */}
+                    <span className="size-4 shrink-0" aria-hidden />
+                    <button type="button" className={cn('flex min-w-0 flex-1 items-center gap-2 py-2 text-left', ROW_BUTTON)} onClick={() => void openNote(note.path)} title={t('open')}>
+                      <FileText className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+                      <span className="min-w-0 flex-1 truncate">{noteTitle(note.path)}</span>
                     </button>
-                    {note.mtime > 0 && <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{formatTime(note.mtime, locale)}</span>}
+                    {note.mtime > 0 && <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{formatListTime(note.mtime, locale)}</span>}
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button variant="ghost" size="icon" className="size-7 shrink-0" title={t('moveTo')} aria-label={t('moveTo')}>
@@ -341,7 +353,7 @@ export function InboxScreen() {
                       </PopoverTrigger>
                       <PopoverContent align="end" className="max-h-72 w-64 overflow-y-auto p-1">
                         {['', ...folders].filter(folder => folder !== inboxFolder.replace(/^\/+|\/+$/g, '')).map(folder => (
-                          <button key={folder || '/'} type="button" className="flex w-full cursor-pointer items-center truncate rounded px-2 py-1.5 text-left text-sm hover:bg-muted"
+                          <button key={folder || '/'} type="button" className="flex w-full cursor-pointer items-center truncate rounded px-2 py-1.5 text-left text-sm outline-none hover:bg-accent focus-visible:bg-accent"
                             onClick={() => void moveNote(note.path, folder)}>
                             {folder || t('root')}
                           </button>
@@ -375,14 +387,14 @@ export function InboxScreen() {
               </div>
             </div>
           ) : (
-            <div className="grid h-full place-items-center text-sm text-muted-foreground">
-              {t('noSelection')}
+            <div className="grid h-full place-items-center">
+              <EmptyState icon={MousePointerClick} text={t('noSelection')} />
             </div>
           )}
         </div>
       </div>
       <OrganizeNotes ref={organizeRef} />
       <OrganizePromptDialog ref={organizePromptRef} />
-    </div>
+    </PageSurface>
   )
 }

@@ -10,6 +10,7 @@ import { Calendar } from '@/components/ui/calendar'
 import { toDateKey } from '@/lib/daily/format'
 import { cn } from '@/lib/utils'
 import useHomeStore from '@/stores/home'
+import { SIDEBAR_ROW } from '../sidebar-row'
 import { dayPickerLocale, openDailyNoteWithFeedback, useActiveDailyDate, useDailyDates, useDailyDayModifiers } from './daily-calendar'
 
 const COLLAPSED_KEY = 'leftSidebarCalendarCollapsed'
@@ -79,7 +80,7 @@ export function SidebarCalendar() {
     return !current
   })
 
-  const iconButton = 'grid size-6 shrink-0 cursor-pointer place-items-center rounded text-muted-foreground hover:bg-muted hover:text-foreground'
+  const iconButton = cn('grid size-6 shrink-0 place-items-center text-muted-foreground', SIDEBAR_ROW)
 
   return (
     <div className="px-2 pt-1.5 pb-1" data-sidebar-calendar>
@@ -87,7 +88,7 @@ export function SidebarCalendar() {
         <button type="button" className={iconButton} aria-label={t(collapsed ? 'prevWeek' : 'prevMonth')} title={t(collapsed ? 'prevWeek' : 'prevMonth')} onClick={() => step(-1)}>
           <ChevronLeft className="size-3.5" aria-hidden />
         </button>
-        <button type="button" className="min-w-0 flex-1 cursor-pointer truncate rounded px-1 text-left text-xs font-medium hover:bg-muted" title={t('today')} onClick={() => setView(new Date())}>
+        <button type="button" className={cn('h-6 min-w-0 flex-1 truncate px-1 text-left text-xs font-medium', SIDEBAR_ROW)} title={t('today')} onClick={() => setView(new Date())}>
           {label}
         </button>
         <button type="button" className={iconButton} aria-label={t(collapsed ? 'nextWeek' : 'nextMonth')} title={t(collapsed ? 'nextWeek' : 'nextMonth')} onClick={() => step(1)}>
@@ -106,11 +107,15 @@ export function SidebarCalendar() {
                 key={key}
                 type="button"
                 aria-label={new Intl.DateTimeFormat(locale, { dateStyle: 'full' }).format(day)}
+                aria-current={key === todayKey ? 'date' : undefined}
+                aria-pressed={key === activeKey}
                 onClick={() => open(day)}
                 className={cn(
-                  'relative flex h-10 cursor-pointer flex-col items-center justify-center rounded-md text-xs leading-none hover:bg-muted',
-                  key === todayKey && 'font-semibold text-primary',
-                  key === activeKey && 'bg-primary text-primary-foreground hover:bg-primary/90',
+                  'relative flex h-10 flex-col items-center justify-center text-xs leading-none',
+                  SIDEBAR_ROW,
+                  // 今天除了顏色再加一圈框，不只靠顏色辨認
+                  key === todayKey && 'font-semibold text-primary ring-1 ring-primary/40 ring-inset',
+                  key === activeKey && 'bg-primary text-primary-foreground ring-0 hover:bg-primary/90 hover:text-primary-foreground',
                 )}
               >
                 <span className="text-[10px] opacity-60">{weekdayFormat.format(day)}</span>

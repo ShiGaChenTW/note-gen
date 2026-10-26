@@ -6604,7 +6604,7 @@
       "failed": "Speichern fehlgeschlagen"
     },
     "needs": {
-      "title": "Wartet auf dich ({count})",
+      "title": "Wartet auf dich",
       "review": "Entwürfe",
       "reviewAction": "Prüfen",
       "drafts": "{count} Entwürfe zu prüfen",
@@ -6895,6 +6895,9 @@
     "processedNote": "Verarbeitet zu:",
     "saved": "In der Inbox gespeichert",
     "view": "Ansehen",
+    "pending": "{count} zu bearbeiten",
+    "deleted": "In den Papierkorb verschoben ({count})",
+    "undo": "Rückgängig",
     "organizeIntoPrompt": "Zu Prompt organisieren",
     "organizePrompt": {
       "title": "Zu einem Prompt organisieren",
@@ -6926,6 +6929,15 @@
       "saved": "Als Prompt gespeichert: {title}",
       "saveFailed": "Prompt konnte nicht gespeichert werden"
     }
+  },
+  "timeline": {
+    "empty": "Keine Notizen oder Einträge in den letzten {days} Tagen",
+    "loadMore": "30 frühere Tage laden",
+    "processed": "Bearbeitet"
+  },
+  "leftSidebar": {
+    "resize": "Bereichshöhe anpassen",
+    "resizeHint": "Ziehen oder Pfeiltasten zum Anpassen; Enter oder Doppelklick setzt zurück"
   },
   "promptLibrary": {
     "title": "Prompt-Bibliothek",

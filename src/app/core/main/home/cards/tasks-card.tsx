@@ -4,7 +4,7 @@
 // 「需要你處理」放待審草稿、沒做完的任務，以及最近有新內容卻還沒摘要的對話。
 import { useTranslations } from 'next-intl'
 import { useMemo } from 'react'
-import { MessageSquare } from 'lucide-react'
+import { Bot, MessageSquare } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { agentTaskCenter, useAgentTaskStore } from '@/lib/agent-tasks'
 import { openConversationSummary } from '@/lib/conversation-summary'
@@ -18,6 +18,7 @@ import useHomeStore from '@/stores/home'
 import { useSidebarStore } from '@/stores/sidebar'
 import type { NeedItem } from '../home-cards'
 import { openTasks } from './needs-list'
+import { EmptyState } from '../../page-ui'
 
 const STATUS_TONE: Record<AgentTaskStatus, string> = {
   awaiting_review: 'text-primary',
@@ -107,11 +108,11 @@ export function TasksSection() {
         <Button variant="ghost" size="sm" className="ml-auto text-xs" onClick={() => openTasks()}>{t('viewAll')}</Button>
       </header>
       {shown.length === 0
-        ? <p className="px-1 py-2 text-sm text-muted-foreground">{t('empty')}</p>
+        ? <EmptyState compact icon={Bot} text={t('empty')} />
         : (
           <ul className="grid gap-0.5">
             {shown.map(task => (
-              <li key={task.id} className="flex items-center gap-2 rounded-md px-1 py-1.5 text-sm hover:bg-muted">
+              <li key={task.id} className="flex items-center gap-2 rounded-md px-1 py-1.5 text-sm hover:bg-accent">
                 <span className={cn('w-16 shrink-0 text-xs', STATUS_TONE[task.status])}>{tStatus(task.status)}</span>
                 <button type="button" className="min-w-0 flex-1 truncate text-left" onClick={() => openTasks()}>{task.title}</button>
                 {task.tokens > 0 && <span className="text-xs tabular-nums text-muted-foreground">{task.tokens.toLocaleString()} tokens</span>}
@@ -125,12 +126,12 @@ export function TasksSection() {
 
       <h3 className="mt-3 mb-1 border-t pt-3 text-xs font-semibold text-muted-foreground">{t('conversations')}</h3>
       {recent.length === 0
-        ? <p className="px-1 py-1 text-sm text-muted-foreground">{t('noConversations')}</p>
+        ? <EmptyState compact icon={MessageSquare} text={t('noConversations')} />
         : (
           <ul className="grid gap-0.5">
             {recent.map(conversation => (
               <li key={conversation.id} className="flex items-center gap-1">
-                <button type="button" className="flex min-w-0 flex-1 items-center gap-2 rounded-md px-1 py-1.5 text-left text-sm hover:bg-muted" onClick={() => void openConversation(conversation.id)}>
+                <button type="button" className="flex min-w-0 flex-1 items-center gap-2 rounded-md px-1 py-1.5 text-left text-sm hover:bg-accent" onClick={() => void openConversation(conversation.id)}>
                   <MessageSquare className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
                   <span className="min-w-0 flex-1 truncate">{conversation.title}</span>
                   <span className="text-xs text-muted-foreground">{new Date(conversation.updatedAt).toLocaleDateString()}</span>

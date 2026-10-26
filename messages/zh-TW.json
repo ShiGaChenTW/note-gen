@@ -163,7 +163,7 @@
     },
     "tasks": {
       "title": "任務",
-      "counts": "待處理 {pending} · 今天完成 {done}",
+      "counts": "未完成 {pending} · 今天完成 {done}",
       "overdue": "逾期 · {count}",
       "day0": "今天 · {count}",
       "day1": "明天 · {count}",
@@ -6643,7 +6643,7 @@
       "failed": "沒有存成功"
     },
     "needs": {
-      "title": "需要你處理（{count}）",
+      "title": "需要你處理",
       "review": "待審草稿",
       "reviewAction": "審核",
       "drafts": "{count} 項草稿待審",
@@ -6934,6 +6934,9 @@
     "processedNote": "已整理，整理成：",
     "saved": "已存進 Inbox",
     "view": "查看",
+    "pending": "{count} 則待整理",
+    "deleted": "已移到垃圾桶（{count} 筆）",
+    "undo": "復原",
     "organizeIntoPrompt": "整理成提示詞",
     "organizePrompt": {
       "title": "整理成提示詞",
@@ -6965,6 +6968,15 @@
       "saved": "已存成提示詞：{title}",
       "saveFailed": "存成提示詞失敗"
     }
+  },
+  "timeline": {
+    "empty": "最近 {days} 天沒有筆記或記錄",
+    "loadMore": "載入更早的 30 天",
+    "processed": "已整理"
+  },
+  "leftSidebar": {
+    "resize": "調整上下區塊高度",
+    "resizeHint": "拖拉或用上下鍵調整高度，Enter 或雙擊恢復預設"
   },
   "promptLibrary": {
     "title": "提示詞庫",

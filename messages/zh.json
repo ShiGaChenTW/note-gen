@@ -163,7 +163,7 @@
     },
     "tasks": {
       "title": "任务",
-      "counts": "待处理 {pending} · 今天完成 {done}",
+      "counts": "未完成 {pending} · 今天完成 {done}",
       "overdue": "逾期 · {count}",
       "day0": "今天 · {count}",
       "day1": "明天 · {count}",
@@ -6744,7 +6744,7 @@
       "failed": "保存失败"
     },
     "needs": {
-      "title": "需要你处理（{count}）",
+      "title": "需要你处理",
       "review": "待审草稿",
       "reviewAction": "审核",
       "drafts": "{count} 项草稿待审",
@@ -7035,6 +7035,9 @@
     "processedNote": "已整理，整理成：",
     "saved": "已存进 Inbox",
     "view": "查看",
+    "pending": "{count} 条待整理",
+    "deleted": "已移到回收站（{count} 条）",
+    "undo": "撤销",
     "organizeIntoPrompt": "整理成提示词",
     "organizePrompt": {
       "title": "整理成提示词",
@@ -7066,6 +7069,15 @@
       "saved": "已存成提示词：{title}",
       "saveFailed": "存成提示词失败"
     }
+  },
+  "timeline": {
+    "empty": "最近 {days} 天没有笔记或记录",
+    "loadMore": "加载更早的 30 天",
+    "processed": "已整理"
+  },
+  "leftSidebar": {
+    "resize": "调整上下区块高度",
+    "resizeHint": "拖动或用上下键调整高度，Enter 或双击恢复默认"
   },
   "promptLibrary": {
     "title": "提示词库",

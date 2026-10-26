@@ -150,7 +150,7 @@ export function ReportStrip() {
         <button
           key={topic.name}
           type="button"
-          className="flex items-center gap-1.5 rounded-full border bg-background px-2.5 py-1 text-xs hover:bg-muted"
+          className="flex items-center gap-1.5 rounded-full border bg-background px-2.5 py-1 text-xs hover:bg-accent"
           onClick={() => openDrawer('report')}
         >
           <span>{topic.name}</span>
@@ -171,7 +171,7 @@ export function ReportStrip() {
             {t('generate')}
           </Button>
         ) : (
-          <Button size="sm" onClick={() => openDrawer('baseline')}>{t('baseline')}</Button>
+          <Button size="sm" variant="secondary" onClick={() => openDrawer('baseline')}>{t('baseline')}</Button>
         )}
       </div>
     </section>

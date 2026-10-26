@@ -6620,7 +6620,7 @@
       "failed": "Não foi possível salvar"
     },
     "needs": {
-      "title": "Precisa de você ({count})",
+      "title": "Precisa de você",
       "review": "Rascunhos",
       "reviewAction": "Revisar",
       "drafts": "{count} rascunhos para revisar",
@@ -6911,6 +6911,9 @@
     "processedNote": "Processado em:",
     "saved": "Salvo na Inbox",
     "view": "Ver",
+    "pending": "{count} para organizar",
+    "deleted": "Movido para a lixeira ({count})",
+    "undo": "Desfazer",
     "organizeIntoPrompt": "Organizar como prompt",
     "organizePrompt": {
       "title": "Organizar como um prompt",
@@ -6942,6 +6945,15 @@
       "saved": "Salvo como prompt: {title}",
       "saveFailed": "Falha ao salvar o prompt"
     }
+  },
+  "timeline": {
+    "empty": "Nenhuma nota ou registro nos últimos {days} dias",
+    "loadMore": "Carregar 30 dias anteriores",
+    "processed": "Organizado"
+  },
+  "leftSidebar": {
+    "resize": "Redimensionar seções da barra lateral",
+    "resizeHint": "Arraste ou use as setas para ajustar; Enter ou clique duplo para redefinir"
   },
   "promptLibrary": {
     "title": "Biblioteca de Prompts",
