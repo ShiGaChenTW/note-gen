@@ -9,44 +9,9 @@
          主題 JSON 可清空不用。
    ============================================================ */
 
-/* ---------- 0. 全域色票（對應 globals.css 的 .dark 變數） ---------- */
+/* ---------- 0–1. 色票與字型：已內建為預設視覺（src/app/fork-theme.css、src/lib/font-settings.ts）----------
+   這裡只留下面各節自用的變數。要調色請改設定裡的自訂主題，或改 fork-theme.css。 */
 :root.dark, .dark {
-  --background: 0 0% 12.5%;            /* #202020 面板卡片（v6.4 略提亮，靠亮度差而非描邊分界） */
-  --foreground: 0 0% 85.5%;            /* #dadada 主文字 */
-  --card: 0 0% 14.9%;                  /* #262626 */
-  --card-foreground: 0 0% 85.5%;
-  --popover: 0 0% 14.9%;               /* 浮層 / 選單 */
-  --popover-foreground: 0 0% 85.5%;
-  --primary: 43 96% 56%;               /* #fbbd23 琥珀強調色（v6.6 取代紫）*/
-  --primary-foreground: 0 0% 9.8%;     /* #191919 琥珀上用深字 */
-  --secondary: 0 0% 20.4%;             /* #343434 按鈕底 */
-  --secondary-foreground: 0 0% 85.5%;
-  --third: 0 0% 16.9%;                 /* #2b2b2b 選中列 */
-  --third-foreground: 0 0% 90.2%;
-  --muted: 0 0% 14.9%;                 /* #262626 */
-  --muted-foreground: 0 0% 60.4%;      /* #9a9a9a 次要文字 */
-  --accent: 0 0% 18.8%;                /* #303030 hover 底（shadcn 的 accent = hover） */
-  --accent-foreground: 0 0% 90.2%;
-  --destructive: 3 72% 64%;            /* #e5665f */
-  --destructive-foreground: 0 0% 100%;
-  --border: 0 0% 18.4%;                /* #2f2f2f */
-  --input: 0 0% 22.7%;                 /* #3a3a3a */
-  --ring: 43 96% 56%;
-  --radius: 0.5rem;                    /* 8px；lg=8 md=6 sm=4 xl≈11 */
-
-  --sidebar-background: 0 0% 12.5%;
-  --sidebar-foreground: 0 0% 85.5%;
-  --sidebar-primary: 43 96% 56%;       /* 檔案列 active 左側 2px 指示條 */
-  --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 0 0% 18.8%;        /* 檔案列 hover */
-  --sidebar-accent-foreground: 0 0% 90.2%;
-  --sidebar-border: 0 0% 18.4%;
-  --sidebar-ring: 43 96% 56%;
-
-  --scrollbar-thumb: 0 0% 22.7%;
-  --scrollbar-thumb-hover: 0 0% 29%;
-
-  /* 本檔自用 */
   --ob-shell: #161616;                 /* 卡片之外的底色（v6.4 對齊 Obsidian：#161616 底 / #202020 卡） */
   --ob-faint: #6e6e6e;
   --ob-toggle-on: 132 38% 50%;         /* #4fb062 */
@@ -54,14 +19,6 @@
   --ng-statusbar-h: 30px;              /* 原 24px */
   --ob-card-gap: 14px;                 /* v6.4 Obsidian 的卡片間距約 14–16px，分界靠留白 */
 }
-
-/* ---------- 1. 字體（app 用 inline style 設 --notegen-app-font-family，需 !important） ---------- */
-:root, :root.dark {
-  --notegen-app-font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
-    "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif !important;
-}
-body { -webkit-font-smoothing: antialiased; letter-spacing: -0.005em; }
-code, kbd, pre, samp { font-family: "SF Mono", Menlo, ui-monospace, Consolas, monospace; }
 
 /* ---------- 2. 標題列（title-bar.tsx: h-[36px] fixed；layout.tsx: main.mt-9 h-[calc(100vh-36px)]） ---------- */
 div.fixed.top-0[data-tauri-drag-region] {
@@ -265,15 +222,7 @@ main .rounded-lg.border.bg-primary-foreground {
 }
 main .rounded-lg.border.bg-primary-foreground:hover { border-color: hsl(var(--primary) / .6) !important; }
 
-/* ===== C. 琥珀：#fbbd23 底、深色字（預設，v6.6）===== */
-:root.dark, .dark {
-  --primary: 43 96% 56%;               /* #fbbd23 */
-  --primary-foreground: 0 0% 9.8%;     /* #191919 */
-  --secondary: 0 0% 20.4%;             /* #343434 secondary 按鈕底 */
-  --secondary-foreground: 0 0% 85.5%;
-  --ring: 43 96% 56%;
-  --sidebar-primary: 43 96% 56%;
-}
+/* ===== C. 琥珀（預設）：已內建於 src/app/fork-theme.css ===== */
 /* 要換成 Command Center 的 Braun 橘 #e8641b：--primary: 22 82% 51%; --primary-foreground: 0 0% 9.8%; */
 
 /* ===== A. 中性亮灰：主鍵 #e6e6e6 底深字（備用）=====
@@ -287,9 +236,9 @@ main .rounded-lg.border.bg-primary-foreground:hover { border-color: hsl(var(--pr
 
 /* ===== B. 中性灰：全部按鈕灰底亮字，強調色只留焦點與連結 =====
 :root.dark, .dark {
-  --primary: 0 0% 25%;                 /* #404040 */
-  --primary-foreground: 0 0% 92%;      /* #ebebeb */
-  --secondary: 0 0% 18.8%;             /* #303030 */
+  --primary: 0 0% 25%;                 (#404040)
+  --primary-foreground: 0 0% 92%;      (#ebebeb)
+  --secondary: 0 0% 18.8%;             (#303030)
   --secondary-foreground: 0 0% 80%;
   --ring: 43 96% 56%;
 }
