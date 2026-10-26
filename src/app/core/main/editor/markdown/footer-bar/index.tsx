@@ -10,6 +10,7 @@ import { OutlineToggle } from './outline-toggle'
 import { SyncButton } from '../sync/sync-button'
 import { PullButton } from '../sync/pull-button'
 import { HistorySheet } from '../sync/history-sheet'
+import { VersionHistorySheet } from '../history/version-history-sheet'
 import { isMobileDevice } from '@/lib/check'
 import { Button } from '@/components/ui/button'
 import useSettingStore from '@/stores/setting'
@@ -158,6 +159,9 @@ export function FooterBar({
             onToggleOutline={onToggleOutline}
           /></StatusBarItem> : <OutlineToggle editor={editor} outlineOpen={outlineOpen} onToggleOutline={onToggleOutline} />
         ) : null}
+        {embedded ? <StatusBarItem id="editor:version-history" rank={24}>
+          <VersionHistorySheet editor={editor} prepareExternalAction={prepareWriteAction} onMarkdownChange={onMarkdownChange} />
+        </StatusBarItem> : <VersionHistorySheet editor={editor} prepareExternalAction={prepareWriteAction} onMarkdownChange={onMarkdownChange} />}
       </div>
 
       {/* Right side: Sync tools */}
