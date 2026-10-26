@@ -6963,5 +6963,34 @@
       "insert": "In Eingabe einfügen",
       "startNewConversation": "Neue Unterhaltung mit diesem Prompt starten"
     }
+  },
+  "versionHistory": {
+    "footerButton": "Verlauf",
+    "title": "Versionsverlauf",
+    "description": "Lokaler Versionsverlauf für {fileName}",
+    "showAutoSnapshots": "Automatische Schnapschüsse anzeigen",
+    "loading": "Wird geladen…",
+    "empty": "Noch kein Versionsverlauf",
+    "notEnabledTitle": "Versionsverwaltung ist nicht aktiviert",
+    "notEnabledDesc": "Aktiviere die lokale Git-Versionsverwaltung in den Einstellungen, um den Verlauf dieser Notiz anzusehen und wiederherzustellen.",
+    "goToSettings": "Zu den Einstellungen",
+    "selectHint": "Wähle zwei Versionen zum Vergleich aus",
+    "selectedCount": "{count}/2 ausgewählt",
+    "diffTitle": "Unterschied",
+    "diffEmpty": "Wähle zwei Versionen zum Vergleich aus",
+    "diffLoading": "Diff wird geladen…",
+    "versionUnavailable": "Diese Notiz hat in dieser Version keinen Inhalt",
+    "restore": "Wiederherstellen",
+    "restoring": "Wird wiederhergestellt…",
+    "restoreConfirmTitle": "Diese Version wiederherstellen?",
+    "restoreConfirmDesc": "Dadurch wird der aktuelle Inhalt durch „{label}“ ersetzt und ein neuer Versionseintrag hinzugefügt; ältere Versionen bleiben erhalten.",
+    "restoreSuccess": "Wiederhergestellt",
+    "restoreSuccessDesc": "Zu „{label}“ wiederhergestellt und ein neuer Versionseintrag hinzugefügt",
+    "restoreNoChange": "Inhalt ist bereits identisch — es wurde keine neue Version hinzugefügt",
+    "restoreFailed": "Wiederherstellung fehlgeschlagen",
+    "loadFailed": "Versionsverlauf konnte nicht geladen werden",
+    "kindPromptVersion": "Prompt-Version",
+    "kindAutoSnapshot": "Automatischer Schnappschuss",
+    "kindUnknown": "Andere Version"
   }
 }

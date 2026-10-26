@@ -7103,5 +7103,34 @@
       "insert": "Insert into input",
       "startNewConversation": "Start a new conversation with this prompt"
     }
+  },
+  "versionHistory": {
+    "footerButton": "History",
+    "title": "Version History",
+    "description": "Local version history for {fileName}",
+    "showAutoSnapshots": "Show auto snapshots",
+    "loading": "Loading…",
+    "empty": "No version history yet",
+    "notEnabledTitle": "Version control isn't enabled",
+    "notEnabledDesc": "Enable local git version control in settings to view and restore this note's history.",
+    "goToSettings": "Go to settings",
+    "selectHint": "Select two versions to compare",
+    "selectedCount": "{count}/2 selected",
+    "diffTitle": "Diff",
+    "diffEmpty": "Select two versions to compare",
+    "diffLoading": "Loading diff…",
+    "versionUnavailable": "This note has no content in this version",
+    "restore": "Restore",
+    "restoring": "Restoring…",
+    "restoreConfirmTitle": "Restore this version?",
+    "restoreConfirmDesc": "This replaces the current content with “{label}” and adds a new version entry; older versions are kept.",
+    "restoreSuccess": "Restored",
+    "restoreSuccessDesc": "Restored to “{label}” and added a new version entry",
+    "restoreNoChange": "Content is already the same — no new version was added",
+    "restoreFailed": "Restore failed",
+    "loadFailed": "Failed to load version history",
+    "kindPromptVersion": "Prompt version",
+    "kindAutoSnapshot": "Auto snapshot",
+    "kindUnknown": "Other version"
   }
 }

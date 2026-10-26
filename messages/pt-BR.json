@@ -6979,5 +6979,34 @@
       "insert": "Inserir no campo de entrada",
       "startNewConversation": "Iniciar nova conversa com este prompt"
     }
+  },
+  "versionHistory": {
+    "footerButton": "Histórico",
+    "title": "Histórico de versões",
+    "description": "Histórico local de versões de {fileName}",
+    "showAutoSnapshots": "Mostrar snapshots automáticos",
+    "loading": "Carregando…",
+    "empty": "Ainda não há histórico de versões",
+    "notEnabledTitle": "O controle de versão não está ativado",
+    "notEnabledDesc": "Ative o controle de versão local do git nas configurações para ver e restaurar o histórico desta nota.",
+    "goToSettings": "Ir para as configurações",
+    "selectHint": "Selecione duas versões para comparar",
+    "selectedCount": "{count}/2 selecionadas",
+    "diffTitle": "Diferenças",
+    "diffEmpty": "Selecione duas versões para comparar",
+    "diffLoading": "Carregando diferenças…",
+    "versionUnavailable": "Esta nota não tem conteúdo nesta versão",
+    "restore": "Restaurar",
+    "restoring": "Restaurando…",
+    "restoreConfirmTitle": "Restaurar esta versão?",
+    "restoreConfirmDesc": "Isso substitui o conteúdo atual por “{label}” e adiciona uma nova versão; as versões antigas são mantidas.",
+    "restoreSuccess": "Restaurado",
+    "restoreSuccessDesc": "Restaurado para “{label}” e uma nova versão foi adicionada",
+    "restoreNoChange": "O conteúdo já é igual — nenhuma nova versão foi adicionada",
+    "restoreFailed": "Falha ao restaurar",
+    "loadFailed": "Falha ao carregar o histórico de versões",
+    "kindPromptVersion": "Versão de prompt",
+    "kindAutoSnapshot": "Snapshot automático",
+    "kindUnknown": "Outra versão"
   }
 }
