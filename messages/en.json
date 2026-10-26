@@ -6979,6 +6979,18 @@
     "noSelection": "Pick a record to see it here",
     "processedNote": "Processed into:",
     "saved": "Saved to Inbox",
-    "view": "View"
+    "view": "View",
+    "pending": "{count} to process",
+    "deleted": "Moved to trash ({count})",
+    "undo": "Undo"
+  },
+  "timeline": {
+    "empty": "No notes or records in the last {days} days",
+    "loadMore": "Load 30 earlier days",
+    "processed": "Processed"
+  },
+  "leftSidebar": {
+    "resize": "Resize sidebar sections",
+    "resizeHint": "Drag or use the arrow keys to resize; Enter or double-click to reset"
   }
 }

@@ -111,7 +111,7 @@ export function TasksSection() {
         : (
           <ul className="grid gap-0.5">
             {shown.map(task => (
-              <li key={task.id} className="flex items-center gap-2 rounded-md px-1 py-1.5 text-sm hover:bg-muted">
+              <li key={task.id} className="flex items-center gap-2 rounded-md px-1 py-1.5 text-sm hover:bg-accent">
                 <span className={cn('w-16 shrink-0 text-xs', STATUS_TONE[task.status])}>{tStatus(task.status)}</span>
                 <button type="button" className="min-w-0 flex-1 truncate text-left" onClick={() => openTasks()}>{task.title}</button>
                 {task.tokens > 0 && <span className="text-xs tabular-nums text-muted-foreground">{task.tokens.toLocaleString()} tokens</span>}
@@ -130,7 +130,7 @@ export function TasksSection() {
           <ul className="grid gap-0.5">
             {recent.map(conversation => (
               <li key={conversation.id} className="flex items-center gap-1">
-                <button type="button" className="flex min-w-0 flex-1 items-center gap-2 rounded-md px-1 py-1.5 text-left text-sm hover:bg-muted" onClick={() => void openConversation(conversation.id)}>
+                <button type="button" className="flex min-w-0 flex-1 items-center gap-2 rounded-md px-1 py-1.5 text-left text-sm hover:bg-accent" onClick={() => void openConversation(conversation.id)}>
                   <MessageSquare className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
                   <span className="min-w-0 flex-1 truncate">{conversation.title}</span>
                   <span className="text-xs text-muted-foreground">{new Date(conversation.updatedAt).toLocaleDateString()}</span>

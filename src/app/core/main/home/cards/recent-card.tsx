@@ -57,7 +57,7 @@ export function RecentNotes() {
       <h2 id="home-recent" className="mb-2 text-[15px] font-semibold">{t('title')}</h2>
       {!first && <p className="text-sm text-muted-foreground">{t('empty')}</p>}
       {first && (
-        <button type="button" className="mb-2 block w-full rounded-lg bg-muted p-3 text-left hover:bg-muted/70" onClick={() => open(first.path)}>
+        <button type="button" className="mb-2 block w-full rounded-lg bg-muted p-3 text-left hover:bg-accent" onClick={() => open(first.path)}>
           <div className="flex items-center gap-2 text-sm font-medium"><FileText className="size-3.5" aria-hidden />{title(first.path)}</div>
           {excerpt && <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{excerpt}</p>}
           <div className="mt-1 text-xs text-muted-foreground">{relative(first.mtime, locale)}</div>
@@ -66,7 +66,7 @@ export function RecentNotes() {
       <ul className="grid gap-0.5">
         {recent.slice(1).map(note => (
           <li key={note.path}>
-            <button type="button" className="flex w-full items-center gap-2 rounded-md px-1 py-1 text-left text-sm hover:bg-muted" onClick={() => open(note.path)}>
+            <button type="button" className="flex w-full items-center gap-2 rounded-md px-1 py-1 text-left text-sm hover:bg-accent" onClick={() => open(note.path)}>
               <span className="min-w-0 flex-1 truncate">{title(note.path)}</span>
               <span className="text-xs text-muted-foreground">{relative(note.mtime, locale)}</span>
             </button>

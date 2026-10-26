@@ -6855,6 +6855,18 @@
     "noSelection": "Escolha um registro para vê-lo aqui",
     "processedNote": "Processado em:",
     "saved": "Salvo na Inbox",
-    "view": "Ver"
+    "view": "Ver",
+    "pending": "{count} para organizar",
+    "deleted": "Movido para a lixeira ({count})",
+    "undo": "Desfazer"
+  },
+  "timeline": {
+    "empty": "Nenhuma nota ou registro nos últimos {days} dias",
+    "loadMore": "Carregar 30 dias anteriores",
+    "processed": "Organizado"
+  },
+  "leftSidebar": {
+    "resize": "Redimensionar seções da barra lateral",
+    "resizeHint": "Arraste ou use as setas para ajustar; Enter ou clique duplo para redefinir"
   }
 }

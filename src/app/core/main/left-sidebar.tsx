@@ -3,7 +3,7 @@
 import { isPluginDisplayVisible } from '@/lib/plugins/display-preferences'
 
 import { usePluginLocalization } from '@/lib/plugins/localization'
-import { useEffect, useRef, useState, type ComponentType, type PointerEvent as ReactPointerEvent } from 'react'
+import { useEffect, useRef, useState, type ComponentType, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react'
 import { Tabs, TabsContent } from "@/components/ui/tabs"
 import { CalendarCheck, ChevronDown, ChevronRight, Files, Hash, History, Inbox, LayoutDashboard, Palette } from "lucide-react"
 import { FileSidebar } from "./file"
@@ -23,6 +23,7 @@ import { resolvePluginViewTitle } from '@/app/core/setting/plugins/plugin-displa
 import useHomeStore from '@/stores/home'
 import useInboxStore from '@/stores/inbox'
 import { openDailyNoteFromSidebar, SidebarCalendar } from './daily/sidebar-calendar'
+import { SIDEBAR_ROW, SIDEBAR_ROW_ACTIVE } from './sidebar-row'
 
 // Fork（#45）：功能入口的標籤六種語言都用英文。記錄不再放在下半部，改由 Inbox 頁（#46）處理。
 const SIDEBAR_TABS = [
@@ -38,6 +39,8 @@ const TOP_HEIGHT_KEY = 'leftSidebarTopHeight'
 /** 上半部最少留月曆標題列＋週列＋一列入口。 */
 const MIN_TOP_HEIGHT = 112
 const MIN_BOTTOM_HEIGHT = 120
+/** 用鍵盤調整分隔條時每次移動的高度。 */
+const KEYBOARD_STEP = 16
 
 type LauncherTab = { id: string, title: string, icon: ComponentType<{ className?: string }> }
 
@@ -59,10 +62,14 @@ function writeTopHeight(value: number | null) {
   }
 }
 
-function LauncherButton({ icon: Icon, title, active, onClick }: {
+function LauncherButton({ icon: Icon, title, active, badge, badgeLabel, onClick, expanded }: {
   icon: ComponentType<{ className?: string }>
   title: string
   active?: boolean
+  /** 右側的待處理數；0 或沒給就不顯示。 */
+  badge?: number
+  badgeLabel?: string
+  expanded?: boolean
   onClick: () => void
 }) {
   return (
@@ -70,13 +77,20 @@ function LauncherButton({ icon: Icon, title, active, onClick }: {
       type="button"
       onClick={onClick}
       aria-current={active ? 'page' : undefined}
+      aria-expanded={expanded}
       className={cn(
-        "flex h-7 w-full cursor-pointer items-center gap-2 rounded-md px-2 text-left text-sm text-muted-foreground hover:bg-muted hover:text-foreground",
-        active && "bg-muted font-medium text-foreground",
+        "flex h-7 w-full items-center gap-2 px-2 text-left text-sm text-muted-foreground",
+        SIDEBAR_ROW,
+        active && SIDEBAR_ROW_ACTIVE,
       )}
     >
-      <Icon className="size-4 shrink-0" />
-      <span className="min-w-0 truncate">{title}</span>
+      <Icon className={cn("size-4 shrink-0", active && "text-sidebar-primary")} />
+      <span className="min-w-0 flex-1 truncate">{title}</span>
+      {badge ? (
+        <span className="shrink-0 rounded-full bg-sidebar-accent px-1.5 text-[11px] leading-4 font-medium tabular-nums text-muted-foreground" aria-label={badgeLabel}>
+          {badge > 99 ? '99+' : badge}
+        </span>
+      ) : null}
     </button>
   )
 }
@@ -117,7 +131,31 @@ function useTopHeight(containerRef: React.RefObject<HTMLDivElement | null>, topR
     writeTopHeight(null)
   }
 
-  return { height, onPointerDown, reset }
+  // 拖拉的替代操作：上下鍵每次 16px，Home／End 到最矮／最高，Enter 恢復預設。
+  const onKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    const container = containerRef.current
+    const top = topRef.current
+    if (!container || !top) return
+    const max = Math.max(MIN_TOP_HEIGHT, container.getBoundingClientRect().height - MIN_BOTTOM_HEIGHT)
+    const current = top.getBoundingClientRect().height
+    const target = event.key === 'ArrowUp' ? current - KEYBOARD_STEP
+      : event.key === 'ArrowDown' ? current + KEYBOARD_STEP
+        : event.key === 'Home' ? MIN_TOP_HEIGHT
+          : event.key === 'End' ? max
+            : null
+    if (event.key === 'Enter') {
+      event.preventDefault()
+      reset()
+      return
+    }
+    if (target === null) return
+    event.preventDefault()
+    const next = Math.min(max, Math.max(MIN_TOP_HEIGHT, target))
+    setHeight(next)
+    writeTopHeight(next)
+  }
+
+  return { height, onPointerDown, onKeyDown, reset }
 }
 
 export function LeftSidebar() {
@@ -128,6 +166,9 @@ export function LeftSidebar() {
   const showHome = useHomeStore(state => state.show)
   const inboxVisible = useInboxStore(state => state.visible)
   const showInbox = useInboxStore(state => state.show)
+  const inboxRecords = useInboxStore(state => state.records)
+  const inboxProcessed = useInboxStore(state => state.processed)
+  const inboxCount = inboxRecords.filter(record => !inboxProcessed.has(record.id)).length
   const pluginsInitialized = usePluginStore((state) => state.initialized)
   const displaySettings = usePluginStore(state => state.deviceSettings)
   const installed = usePluginStore((state) => state.installed)
@@ -173,16 +214,16 @@ export function LeftSidebar() {
         style={{ height: split.height ?? undefined, minHeight: MIN_TOP_HEIGHT, maxHeight: `calc(100% - ${MIN_BOTTOM_HEIGHT}px)` }}
       >
         <SidebarCalendar />
-        <nav className="flex flex-col gap-px px-2 pb-2" aria-label="Launcher">
+        <nav className="flex flex-col gap-px px-2 pt-1 pb-2" aria-label="Launcher">
           <LauncherButton icon={LayoutDashboard} title="Overview" active={homeVisible} onClick={showHome} />
           <LauncherButton icon={CalendarCheck} title="Today" onClick={() => openDailyNoteFromSidebar(new Date(), t('today.calendarNav.openFailed'))} />
-          <LauncherButton icon={Inbox} title="Inbox" active={inboxVisible} onClick={() => showInbox()} />
-          <div className="mx-2 my-1 border-t" role="separator" />
+          <LauncherButton icon={Inbox} title="Inbox" active={inboxVisible} badge={inboxCount} badgeLabel={t('inbox.pending', { count: inboxCount })} onClick={() => showInbox()} />
+          <div className="mx-2 my-1.5 border-t border-sidebar-border" role="separator" />
           {SIDEBAR_TABS.map(renderTab)}
           {visiblePluginTabs.map(renderTab)}
           {morePluginTabs.length > 0 && (
             <>
-              <LauncherButton icon={moreOpen ? ChevronDown : ChevronRight} title="More" active={!moreOpen && activeInMore} onClick={() => setMoreOpen(open => !open)} />
+              <LauncherButton icon={moreOpen ? ChevronDown : ChevronRight} title="More" active={!moreOpen && activeInMore} expanded={moreOpen} onClick={() => setMoreOpen(open => !open)} />
               {moreOpen && <div className="flex flex-col gap-px pl-3">{morePluginTabs.map(renderTab)}</div>}
             </>
           )}
@@ -190,9 +231,15 @@ export function LeftSidebar() {
       </div>
       <div
         role="separator"
+        tabIndex={0}
         aria-orientation="horizontal"
-        className="group relative h-px shrink-0 cursor-row-resize bg-border before:absolute before:inset-x-0 before:-top-1 before:-bottom-1 before:content-[''] hover:bg-primary/50"
+        aria-label={t('leftSidebar.resize')}
+        aria-valuenow={split.height === null ? undefined : Math.round(split.height)}
+        aria-valuemin={MIN_TOP_HEIGHT}
+        title={t('leftSidebar.resizeHint')}
+        className="relative z-10 h-px shrink-0 cursor-row-resize bg-sidebar-border outline-none transition-colors duration-150 before:absolute before:inset-x-0 before:-top-1.5 before:-bottom-1.5 before:content-[''] hover:bg-sidebar-primary/60 focus-visible:bg-sidebar-ring active:bg-sidebar-primary"
         onPointerDown={split.onPointerDown}
+        onKeyDown={split.onKeyDown}
         onDoubleClick={split.reset}
       />
       <Tabs value={leftSidebarTab} className="min-h-0 w-full flex-1 gap-0 overflow-hidden">

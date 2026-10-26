@@ -112,7 +112,7 @@ export function TodayWeekNav() {
               aria-label={t('week.day', { date: new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', weekday: 'short' }).format(date), open: day.open })}
               onClick={() => navigate(() => openDailyNote(date))}
               className={cn(
-                'flex h-12 w-11 cursor-pointer flex-col items-center justify-center gap-0.5 rounded-lg text-muted-foreground transition-colors hover:bg-muted',
+                'flex h-12 w-11 cursor-pointer flex-col items-center justify-center gap-0.5 rounded-lg text-muted-foreground transition-colors hover:bg-accent',
                 day.isToday && 'bg-primary/10 ring-1 ring-primary/50 ring-inset',
               )}
             >
@@ -127,7 +127,7 @@ export function TodayWeekNav() {
             type="button"
             aria-label={t('calendarNav.open')}
             title={t('calendarNav.open')}
-            className="grid h-12 w-11 cursor-pointer place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="grid h-12 w-11 cursor-pointer place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
             <CalendarDays className="size-4" aria-hidden />
           </button>
@@ -320,7 +320,7 @@ function TaskGroup({ heading, tasks, renderMeta, busy, onToggle, onOpen, onSched
               event.dataTransfer.setData(TASK_DRAG_MIME, taskDragKey(task))
               event.dataTransfer.effectAllowed = 'move'
             }}
-            className={cn('group grid min-h-11 grid-cols-[24px_minmax(0,1fr)_auto] items-center gap-2.5 rounded-lg px-2 py-1 transition-colors hover:bg-muted', !task.done && 'cursor-grab active:cursor-grabbing')}
+            className={cn('group grid min-h-11 grid-cols-[24px_minmax(0,1fr)_auto] items-center gap-2.5 rounded-lg px-2 py-1 transition-colors hover:bg-accent', !task.done && 'cursor-grab active:cursor-grabbing')}
           >
             <Checkbox
               className="size-[18px]"

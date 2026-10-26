@@ -6839,6 +6839,18 @@
     "noSelection": "Wähle einen Eintrag aus",
     "processedNote": "Verarbeitet zu:",
     "saved": "In der Inbox gespeichert",
-    "view": "Ansehen"
+    "view": "Ansehen",
+    "pending": "{count} zu bearbeiten",
+    "deleted": "In den Papierkorb verschoben ({count})",
+    "undo": "Rückgängig"
+  },
+  "timeline": {
+    "empty": "Keine Notizen oder Einträge in den letzten {days} Tagen",
+    "loadMore": "30 frühere Tage laden",
+    "processed": "Bearbeitet"
+  },
+  "leftSidebar": {
+    "resize": "Bereichshöhe anpassen",
+    "resizeHint": "Ziehen oder Pfeiltasten zum Anpassen; Enter oder Doppelklick setzt zurück"
   }
 }

@@ -6888,6 +6888,18 @@
     "noSelection": "記録を選ぶとここに表示されます",
     "processedNote": "整理済み：",
     "saved": "Inbox に保存しました",
-    "view": "表示"
+    "view": "表示",
+    "pending": "未整理 {count} 件",
+    "deleted": "ゴミ箱に移動しました（{count} 件）",
+    "undo": "元に戻す"
+  },
+  "timeline": {
+    "empty": "直近 {days} 日間のノートや記録はありません",
+    "loadMore": "さらに 30 日前を読み込む",
+    "processed": "整理済み"
+  },
+  "leftSidebar": {
+    "resize": "上下の領域の高さを調整",
+    "resizeHint": "ドラッグまたは上下キーで調整、Enter かダブルクリックで既定に戻す"
   }
 }

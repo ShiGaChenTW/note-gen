@@ -6979,6 +6979,18 @@
     "noSelection": "点一条记录查看内容",
     "processedNote": "已整理，整理成：",
     "saved": "已存进 Inbox",
-    "view": "查看"
+    "view": "查看",
+    "pending": "{count} 条待整理",
+    "deleted": "已移到回收站（{count} 条）",
+    "undo": "撤销"
+  },
+  "timeline": {
+    "empty": "最近 {days} 天没有笔记或记录",
+    "loadMore": "加载更早的 30 天",
+    "processed": "已整理"
+  },
+  "leftSidebar": {
+    "resize": "调整上下区块高度",
+    "resizeHint": "拖动或用上下键调整高度，Enter 或双击恢复默认"
   }
 }

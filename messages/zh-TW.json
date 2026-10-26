@@ -6878,6 +6878,18 @@
     "noSelection": "點一筆記錄看內容",
     "processedNote": "已整理，整理成：",
     "saved": "已存進 Inbox",
-    "view": "查看"
+    "view": "查看",
+    "pending": "{count} 則待整理",
+    "deleted": "已移到垃圾桶（{count} 筆）",
+    "undo": "復原"
+  },
+  "timeline": {
+    "empty": "最近 {days} 天沒有筆記或記錄",
+    "loadMore": "載入更早的 30 天",
+    "processed": "已整理"
+  },
+  "leftSidebar": {
+    "resize": "調整上下區塊高度",
+    "resizeHint": "拖拉或用上下鍵調整高度，Enter 或雙擊恢復預設"
   }
 }
