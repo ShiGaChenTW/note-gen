@@ -143,6 +143,8 @@ interface ChatState {
   toggleConversationPin: (id: number) => Promise<boolean> // 切换会话置顶状态
   startNewConversation: () => Promise<void> // 开始新对话（保存当前会话后创建新会话）
   startTemporaryConversation: () => void // 开始不保存记录的临时会话
+  // #57：「用这个提示词开新对话」——内容作为该对话的系统提示词，不写入对话角色清单（promptList）
+  startConversationWithSystemPrompt: (content: string) => Promise<void>
 }
 
 let nextTemporaryChatId = -1
@@ -702,6 +704,19 @@ const useChatStore = create<ChatState>((set, get) => ({
     })
     get().resetAgentState()
     get().clearMcpToolCalls()
+  },
+
+  startConversationWithSystemPrompt: async (content: string) => {
+    await get().startNewConversation()
+    await get().createConversation()
+    const { default: useTagStore } = await import('./tag')
+    await get().insert({
+      tagId: useTagStore.getState().currentTagId,
+      role: 'system',
+      type: 'conversation_prompt',
+      inserted: false,
+      content,
+    })
   },
 }))
 

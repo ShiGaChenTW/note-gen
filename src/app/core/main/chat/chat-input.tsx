@@ -19,7 +19,7 @@ import emitter from "@/lib/emitter"
 import { ChatToolsDrawer } from "@/app/mobile/chat/components/chat-tools-drawer"
 import { useIsMobile } from '@/hooks/use-mobile'
 import { ImageAttachments, ImageAttachment } from "./image-attachments"
-import { ImageIcon } from "lucide-react"
+import { ImageIcon, Sparkles } from "lucide-react"
 import { isMobileDevice } from '@/lib/check'
 import type { PendingQuote } from "@/stores/chat"
 import { AgentApprovalPanel } from "./agent-approval-panel"
@@ -46,6 +46,9 @@ import {
   type ChatComposerMenuHandle,
   type ComposerMenuMode,
 } from './chat-composer-menu'
+import { PromptLibraryInsertDialog, type PromptInsertResult } from './prompt-library-insert-dialog'
+import { Button } from '@/components/ui/button'
+import type { ResolvedPromptModelSuggestion } from '@/lib/prompt-library/chat-model-suggestion'
 import {
   ChatContextStrip,
   getBrowserContextKey,
@@ -228,6 +231,12 @@ export const ChatInput = React.memo(function ChatInput() {
     mode: ComposerMenuMode
     start: number
     query: string
+  } | null>(null)
+  const [promptInsertPath, setPromptInsertPath] = useState<string | null>(null)
+  const [promptSuggestion, setPromptSuggestion] = useState<{
+    modelRef: string
+    resolved: ResolvedPromptModelSuggestion | null
+    armed: boolean
   } | null>(null)
   const [selectedSkills, setSelectedSkills] = useState<SkillMetadata[]>([])
   const [activeTabContexts, setActiveTabContexts] = useState<MentionedContext[]>([])
@@ -464,6 +473,35 @@ export const ChatInput = React.memo(function ChatInput() {
       textareaRef.current?.focus()
       textareaRef.current?.setSelectionRange(nextCursor, nextCursor)
     })
+  }
+
+  function handlePromptMenuSelect(path: string) {
+    replaceComposerMenuToken()
+    setPromptInsertPath(path)
+  }
+
+  function insertTextAtCursor(toInsert: string) {
+    const textarea = textareaRef.current
+    const start = textarea?.selectionStart ?? text.length
+    const end = textarea?.selectionEnd ?? text.length
+    const nextText = `${text.slice(0, start)}${toInsert}${text.slice(end)}`
+    const nextCursor = start + toInsert.length
+    applyTypedText(nextText)
+    window.requestAnimationFrame(() => {
+      textareaRef.current?.focus()
+      textareaRef.current?.setSelectionRange(nextCursor, nextCursor)
+    })
+  }
+
+  function handlePromptInsert(result: PromptInsertResult) {
+    insertTextAtCursor(result.text)
+    setPromptSuggestion(result.modelRef ? { modelRef: result.modelRef, resolved: result.resolvedModel, armed: false } : null)
+    setPromptInsertPath(null)
+  }
+
+  async function handlePromptStartNewConversation(result: PromptInsertResult) {
+    setPromptInsertPath(null)
+    await useChatStore.getState().startConversationWithSystemPrompt(result.text)
   }
 
   function createRecordQuote(mark: Mark): MentionedRecord {
@@ -1126,6 +1164,7 @@ export const ChatInput = React.memo(function ChatInput() {
     setHistoryIndex(-1)
     setAttachedImages([])
     setFileAttachments([])
+    setPromptSuggestion(null)
     setSelectedSkills(current => current.filter(skill => lockedKeys.includes(getSkillContextKey(skill.id))))
     setMentionedContexts(current => current.filter(context => lockedKeys.includes(getMentionedContextKey(context))))
     if (!lockedQuote) clearPendingQuote()
@@ -1606,6 +1645,28 @@ ${previewLines.join('\n')}
               additionalContext={contextUsageAdditionalContext}
               imageCount={attachedImages.length}
             />
+            {promptSuggestion && (
+              <Button
+                type="button"
+                variant={promptSuggestion.armed ? "secondary" : "ghost"}
+                size="xs"
+                disabled={!promptSuggestion.resolved}
+                className="h-5 min-w-0 max-w-36 gap-1 px-1 text-xs font-normal text-muted-foreground"
+                title={promptSuggestion.resolved
+                  ? t(promptSuggestion.armed ? 'record.chat.input.modelSuggestion.applied' : 'record.chat.input.modelSuggestion.apply')
+                  : t('record.chat.input.modelSuggestion.unavailable')}
+                onClick={() => setPromptSuggestion(current => current && { ...current, armed: !current.armed })}
+              >
+                <Sparkles data-icon="inline-start" />
+                <span className="truncate">
+                  {promptSuggestion.resolved
+                    ? [promptSuggestion.resolved.modelLabel, promptSuggestion.resolved.temperature]
+                        .filter(part => part !== undefined && part !== null)
+                        .join(' · ')
+                    : promptSuggestion.modelRef}
+                </span>
+              </Button>
+            )}
             <AgentPermissionModeSelect />
             {!isMobile && <BackgroundTaskControls text={text} onSent={() => setText('')} />}
             <ChatSend
@@ -1618,6 +1679,7 @@ ${previewLines.join('\n')}
               quoteData={activeQuote}
               canvasSelectionContext={canvasSelectionContext}
               selectedSkillIds={selectedSkills.map(skill => skill.id)}
+              modelSuggestionOverride={promptSuggestion?.armed ? promptSuggestion.resolved : null}
               mentionedFiles={[
                 ...visibleActiveTabContexts,
                 ...visibleMentionedContexts,
@@ -1704,6 +1766,13 @@ ${previewLines.join('\n')}
           )
           replaceComposerMenuToken()
         }}
+        onPromptSelect={handlePromptMenuSelect}
+      />
+      <PromptLibraryInsertDialog
+        path={promptInsertPath}
+        onOpenChange={open => { if (!open) setPromptInsertPath(null) }}
+        onInsert={handlePromptInsert}
+        onStartNewConversation={result => { void handlePromptStartNewConversation(result) }}
       />
     </footer>
   )

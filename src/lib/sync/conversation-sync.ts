@@ -415,6 +415,7 @@ const chatTypes = new Set<ChatType>([
   'clear',
   'condensed',
   'model_change',
+  'conversation_prompt',
 ])
 const chatRoles = new Set<Role>(['system', 'user'])
 

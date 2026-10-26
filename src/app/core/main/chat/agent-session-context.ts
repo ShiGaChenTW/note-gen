@@ -6,6 +6,7 @@ import type { RuntimeChatAttachment } from '@/lib/chat-attachments'
 import type { CanvasSelectionContext } from '@/types/canvas'
 import type { ImageAttachment } from './image-attachments'
 import type { ChatReasoningOverride } from '@/lib/ai/chat-reasoning'
+import type { ResolvedPromptModelSuggestion } from '@/lib/prompt-library/chat-model-suggestion'
 import { invoke } from '@tauri-apps/api/core'
 
 interface BrowserPageContent {
@@ -52,6 +53,8 @@ export interface AgentQuoteData {
 
 export interface AgentRequestSnapshot {
   reasoningOverride?: ChatReasoningOverride | null
+  /** #57：插入提示詞時建議的模型／temperature，點了才套用到這一則訊息，送出後不留存。 */
+  modelOverride?: ResolvedPromptModelSuggestion | null
   inputValue: string
   requestText: string
   linkedResource?: LinkedResource | null

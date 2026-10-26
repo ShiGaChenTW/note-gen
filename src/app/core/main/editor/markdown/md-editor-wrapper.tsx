@@ -4,6 +4,7 @@ import useArticleStore from '@/stores/article'
 import { useEffect, useState, useCallback, useRef, RefObject } from 'react'
 import { TipTapEditor } from './tiptap-editor'
 import { Outline } from './outline'
+import { PromptVersionBanner } from './prompt-version-banner'
 import { Loader2, Download } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import emitter, { type Events } from '@/lib/emitter'
@@ -508,8 +509,10 @@ export function MdEditor({ tabContentsRef, filePath, isActive, disabled = false 
 
       {showOutline && outlinePosition === 'left' ? renderOutline() : null}
 
-      <div className="relative h-full min-w-0 flex-1">
+      <div className="relative flex h-full min-w-0 flex-1 flex-col">
+      {filePath ? <PromptVersionBanner filePath={filePath} content={initialContent ?? ''} /> : null}
       {/* Editor - initialContent only set once on mount */}
+      <div className="relative min-h-0 flex-1">
       <TipTapEditor
         initialContent={initialContent ?? ''}
         onChange={handleContentChange}
@@ -535,6 +538,7 @@ export function MdEditor({ tabContentsRef, filePath, isActive, disabled = false 
           }}
         }
       />
+      </div>
       </div>
 
       {showOutline && outlinePosition === 'right' ? renderOutline() : null}

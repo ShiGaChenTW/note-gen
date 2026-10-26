@@ -4,7 +4,7 @@ import { executeRecordTransaction, type RecordStatement } from './index'
 import { recordTagIds } from '@/lib/record-tags'
 import { normalizeTagSnapshot } from '@/lib/tag-sync'
 
-const recordTypes = new Set(['scan', 'text', 'image', 'link', 'file', 'recording', 'todo'])
+const recordTypes = new Set(['scan', 'text', 'image', 'link', 'file', 'recording', 'todo', 'prompt-draft'])
 const positiveId = (value: unknown): value is number => typeof value === 'number' && Number.isSafeInteger(value) && value > 0
 const nullableText = (value: unknown) => value == null || typeof value === 'string'
 

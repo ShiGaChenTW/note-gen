@@ -31,6 +31,9 @@ export function recordNoteContent(mark: Pick<Mark, 'type' | 'content' | 'desc' |
     case 'image':
       body = [desc && desc !== content ? desc : '', content].filter(Boolean).join('\n\n')
       break
+    case 'prompt-draft':
+      body = [content, url].filter(Boolean).join('\n\n')
+      break
     default:
       body = content || desc
   }

@@ -1277,6 +1277,9 @@
           },
           "todo": {
             "desc": "创建待办事项"
+          },
+          "promptDraft": {
+            "desc": "記錄一段 Prompt 原文"
           }
         }
       }
@@ -4060,7 +4063,8 @@
         "download": "下載記錄",
         "uploadTo": "從本地同步到 {provider}",
         "downloadFrom": "從 {provider} 同步到本地",
-        "recording": "录音"
+        "recording": "录音",
+        "prompt-draft": "Prompt 素材"
       },
       "note": {
         "organizeAs": "整理為",
@@ -4338,7 +4342,8 @@
         "link": "記錄連結",
         "file": "上傳文件",
         "todo": "待辦記錄",
-        "closeTrash": "關閉回收站"
+        "closeTrash": "關閉回收站",
+        "promptDraft": "記錄 Prompt 素材"
       },
       "list": {
         "title": "記錄",
@@ -4349,6 +4354,14 @@
       "imageGallery": {
         "expand": "展开",
         "collapse": "收起"
+      },
+      "promptDraft": {
+        "title": "記錄 Prompt 素材",
+        "description": "貼上提示詞原文，可選填來源網址；之後可以在 Inbox 整理成提示詞。",
+        "contentPlaceholder": "貼上提示詞原文…",
+        "source": "來源網址",
+        "sourcePlaceholder": "https://…（可留空）",
+        "save": "記錄"
       }
     },
     "chat": {
@@ -4433,7 +4446,8 @@
         },
         "promptSelect": {
           "tooltip": "選擇 Prompt",
-          "placeholder": "搜索 Prompt"
+          "placeholder": "搜索 Prompt",
+          "conversationPromptApplied": "此對話的系統提示詞已由一則提示詞設定"
         },
         "clearChat": "清空對話",
         "clearContext": {
@@ -4701,6 +4715,9 @@
             "untitledRecord": "未命名記錄",
             "recordFallback": "記錄內容",
             "canvasSummary": "{nodes} 個節點，{edges} 條連線"
+          },
+          "prompts": {
+            "title": "提示詞庫"
           }
         },
         "stopped": "对话已终止",
@@ -4708,7 +4725,12 @@
           "tooltip": "MCP 服务器"
         },
         "newChat": "開始新對話",
-        "temporaryChat": "臨時會話"
+        "temporaryChat": "臨時會話",
+        "modelSuggestion": {
+          "apply": "套用到這一則訊息",
+          "applied": "已套用，下一則訊息會恢復",
+          "unavailable": "找不到對應的模型設定"
+        }
       },
       "header": {
         "configApiKey": "配置 API KEY",
@@ -6381,6 +6403,19 @@
         "placeholder": "輸入 AI 指令",
         "submit": "執行"
       }
+    },
+    "promptVersion": {
+      "banner": "有未確認的修改",
+      "confirmButton": "確認為新版本",
+      "dialogTitle": "確認為新版本",
+      "dialogDesc": "AI 摘要了這次改了什麼、為什麼，你可以先改再確認；只會替這篇筆記建立一筆提示詞版本。",
+      "summaryLabel": "版本說明",
+      "summaryPlaceholder": "改了什麼、為什麼…",
+      "generating": "AI 摘要中…",
+      "cancel": "取消",
+      "confirm": "確認",
+      "committed": "已建立新的提示詞版本",
+      "commitFailed": "建立版本失敗"
     }
   },
   "editorWindow": {
@@ -6901,7 +6936,38 @@
     "view": "查看",
     "pending": "{count} 則待整理",
     "deleted": "已移到垃圾桶（{count} 筆）",
-    "undo": "復原"
+    "undo": "復原",
+    "organizeIntoPrompt": "整理成提示詞",
+    "organizePrompt": {
+      "title": "整理成提示詞",
+      "description": "AI 會提議標題、用途、適用情境、標籤、變數與來源；逐欄確認或修改後才會存成提示詞筆記。",
+      "generating": "AI 正在產生提議…",
+      "proposalFailedTitle": "產生提議失敗",
+      "proposalFailed": "AI 產生提議時發生錯誤，請重試。",
+      "aiNotConfigured": "尚未設定主要模型，請先到設定完成 AI 設定。",
+      "retry": "重試",
+      "fieldTitle": "標題",
+      "fieldSummary": "一句話用途",
+      "fieldScenarios": "適用情境（每行一項）",
+      "fieldScenariosPlaceholder": "例如：準備週報、整理讀書筆記",
+      "fieldTags": "標籤（逗號分隔）",
+      "fieldTagsPlaceholder": "例如：寫作, 摘要",
+      "fieldSource": "來源",
+      "fieldVariables": "變數",
+      "variableDescriptionPlaceholder": "這個變數代表什麼、要填什麼內容",
+      "fieldUnification": "變數統一",
+      "unificationHelp": "勾選的寫法會統一成 '{{...}}'；沒勾選的原文完全不變。",
+      "unificationCount": "共 {count} 處",
+      "fieldImprovements": "改進建議（僅供參考，不會套用到筆記）",
+      "improvementsHelp": "這些建議不會自動寫進筆記，想採用要自己編輯內文。",
+      "fieldPreview": "本文預覽（原文除勾選的變數替換外完全不變）",
+      "fieldCommitSummary": "提示詞版本摘要",
+      "commitSummaryHelp": "版本管理已啟用，確認後會留一筆提示詞版本；摘要可以修改。",
+      "cancel": "取消",
+      "confirm": "確認並存成提示詞",
+      "saved": "已存成提示詞：{title}",
+      "saveFailed": "存成提示詞失敗"
+    }
   },
   "timeline": {
     "empty": "最近 {days} 天沒有筆記或記錄",
@@ -6943,6 +7009,39 @@
     "copy": "複製",
     "copied": "已複製到剪貼簿",
     "copyFailed": "複製失敗",
-    "selectOption": "選一個"
+    "selectOption": "選一個",
+    "insertDialog": {
+      "insert": "插入輸入框",
+      "startNewConversation": "用這個提示詞開新對話"
+    }
+  },
+  "versionHistory": {
+    "footerButton": "版本歷史",
+    "title": "版本歷史",
+    "description": "{fileName} 的本機版本紀錄",
+    "showAutoSnapshots": "顯示自動快照",
+    "loading": "載入中…",
+    "empty": "還沒有版本紀錄",
+    "notEnabledTitle": "尚未啟用版本管理",
+    "notEnabledDesc": "到設定啟用本機 git 版本管理後，才能查看並回復這篇筆記的歷史版本。",
+    "goToSettings": "前往設定",
+    "selectHint": "勾選兩個版本來比較差異",
+    "selectedCount": "已選 {count}/2",
+    "diffTitle": "差異比較",
+    "diffEmpty": "勾選兩個版本來比較差異",
+    "diffLoading": "載入差異中…",
+    "versionUnavailable": "這個版本沒有這篇筆記的內容",
+    "restore": "回復",
+    "restoring": "回復中…",
+    "restoreConfirmTitle": "回復到這個版本？",
+    "restoreConfirmDesc": "會把目前內容換成「{label}」，並留下一筆新的版本紀錄；舊版本仍會保留。",
+    "restoreSuccess": "已回復",
+    "restoreSuccessDesc": "已回復到「{label}」，並新增一筆版本紀錄",
+    "restoreNoChange": "內容和目前一樣，沒有新增版本紀錄",
+    "restoreFailed": "回復失敗",
+    "loadFailed": "讀取版本紀錄失敗",
+    "kindPromptVersion": "提示詞版本",
+    "kindAutoSnapshot": "自動快照",
+    "kindUnknown": "其他版本"
   }
 }

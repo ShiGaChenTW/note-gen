@@ -30,6 +30,7 @@ export function MobileRecordTools({ onClose, onOrganize }: MobileRecordToolsProp
     { id: 'link' },
     { id: 'file' },
     { id: 'todo' },
+    { id: 'prompt-draft' },
   ]
 
   const createQuickWriteFile = async () => {

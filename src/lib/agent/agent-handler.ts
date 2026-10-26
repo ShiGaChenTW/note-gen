@@ -22,6 +22,7 @@ export interface AgentHandlerConfig {
   conversationId?: number
   workspaceId?: string
   useMemories?: boolean
+  systemPromptOverride?: string
   onThought?: (thought: string) => void
   onAction?: (action: string, params: Record<string, any>) => void
   onObservation?: (observation: string) => void
@@ -145,6 +146,7 @@ export class AgentHandler {
         conversationId: this.config.conversationId,
         workspaceId: this.config.workspaceId,
         useMemories: this.config.useMemories,
+        systemPromptOverride: this.config.systemPromptOverride,
       }, {
         onStatus: (status) => {
           stateAdapter.setState({

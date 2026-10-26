@@ -15,6 +15,7 @@ import {
   ListTree,
   Package,
   Palette,
+  ScrollText,
   Search,
   FilePlus2,
   WandSparkles,
@@ -30,9 +31,12 @@ import {
 import { Button } from "@/components/ui/button"
 import { getAllMarks, type Mark } from "@/db/marks"
 import { getAllMarkdownFiles, type MarkdownFile } from "@/lib/files"
+import { collectPromptNotes, promptTitle } from "@/lib/prompt-library/prompt-note"
 import { cn } from "@/lib/utils"
 import useCanvasStore from "@/stores/canvas"
+import useDailySettingsStore from "@/stores/daily-settings"
 import { useSkillsStore } from "@/stores/skills"
+import useVaultIndexStore from "@/stores/vault-index"
 import type { CanvasProject } from "@/types/canvas"
 import type { SkillMetadata } from "@/lib/skills/types"
 
@@ -53,6 +57,7 @@ interface ChatComposerMenuProps {
   onRecordSelect: (mark: Mark) => void
   onCanvasSelect: (project: CanvasProject) => void
   onSkillSelect: (skill: SkillMetadata) => void
+  onPromptSelect: (path: string) => void
 }
 
 interface ComposerMenuItem {
@@ -96,6 +101,7 @@ export const ChatComposerMenu = forwardRef<
   onRecordSelect,
   onCanvasSelect,
   onSkillSelect,
+  onPromptSelect,
 }, ref) {
   const t = useTranslations("record.chat.input.composerMenu")
   const projects = useCanvasStore(state => state.projects)
@@ -105,6 +111,13 @@ export const ChatComposerMenu = forwardRef<
   const skillsInitialized = useSkillsStore(state => state.initialized)
   const initSkills = useSkillsStore(state => state.initSkills)
   const refreshSkills = useSkillsStore(state => state.refreshSkills)
+  const promptFolder = useDailySettingsStore(state => state.promptFolder)
+  const vaultNotes = useVaultIndexStore(state => state.notes)
+  const vaultRevision = useVaultIndexStore(state => state.revision)
+  const promptNotes = useMemo(
+    () => collectPromptNotes(vaultNotes.values(), promptFolder),
+    [vaultNotes, vaultRevision, promptFolder], // eslint-disable-line react-hooks/exhaustive-deps
+  )
   const [files, setFiles] = useState<MarkdownFile[]>([])
   const [records, setRecords] = useState<Mark[]>([])
   const [loading, setLoading] = useState(false)
@@ -167,6 +180,15 @@ export const ChatComposerMenu = forwardRef<
           description: t(`commands.${key}.description`),
           icon,
           onSelect: () => onCommandSelect(t(`commands.${key}.prompt`)),
+        })),
+        ...promptNotes.map(note => ({
+          key: `prompt:${note.path}`,
+          group: t("prompts.title"),
+          label: promptTitle(note),
+          description: note.path,
+          searchText: note.path,
+          icon: ScrollText,
+          onSelect: () => onPromptSelect(note.path),
         })),
         ...(skillsEnabled ? skills : [])
           .filter(skill => skill.enabled !== false && skill.userInvocable !== false)
@@ -235,9 +257,11 @@ export const ChatComposerMenu = forwardRef<
     onCommandSelect,
     onFileSelect,
     onFolderSelect,
+    onPromptSelect,
     onRecordSelect,
     onSkillSelect,
     projects,
+    promptNotes,
     records,
     skills,
     skillsEnabled,
