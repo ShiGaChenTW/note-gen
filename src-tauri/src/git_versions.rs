@@ -14,6 +14,7 @@ use std::{
 use tauri::{AppHandle, Manager, State};
 
 const TRAILER_KEY: &str = "NoteGen-Version-Kind";
+const PATH_TRAILER_KEY: &str = "NoteGen-Version-Path";
 const FALLBACK_SNAPSHOT_SUMMARY: &str = "Auto snapshot";
 
 // 只追蹤文字筆記格式；附件與其他檔案不進入版本記錄（ADR 0003）。
@@ -148,8 +149,25 @@ fn has_git_repo(workspace_root: &Path) -> bool {
     Repository::open(workspace_root).is_ok()
 }
 
-fn format_commit_message(summary: &str, kind: VersionKind) -> String {
-    format!("{summary}\n\n{TRAILER_KEY}: {}", kind.as_str())
+fn format_commit_message(summary: &str, kind: VersionKind, paths: &[String]) -> String {
+    let mut message = format!("{summary}\n\n{TRAILER_KEY}: {}", kind.as_str());
+    for path in paths {
+        message.push_str(&format!("\n{PATH_TRAILER_KEY}: {path}"));
+    }
+    message
+}
+
+/// commit 明確指定的目標路徑（只有帶 paths 的 commit 才有，例如提示詞版本、回復）。
+fn trailer_paths(full_message: &str) -> Vec<String> {
+    let Some(index) = full_message.rfind("\n\n") else {
+        return Vec::new();
+    };
+    let prefix = format!("{PATH_TRAILER_KEY}: ");
+    full_message[index..]
+        .lines()
+        .filter_map(|line| line.strip_prefix(&prefix))
+        .map(|value| value.trim().to_string())
+        .collect()
 }
 
 /// commit() 寫入的訊息都是我們自己格式化的，所以用「最後一段」反解析是安全的；
@@ -182,6 +200,7 @@ fn commit_internal(
         .index()
         .map_err(|error| format!("Failed to read git index: {error}"))?;
 
+    let mut target_paths: Vec<String> = Vec::new();
     match paths {
         Some(paths) if !paths.is_empty() => {
             let validated = paths
@@ -195,6 +214,7 @@ fn commit_internal(
             index
                 .update_all(specs.iter(), None)
                 .map_err(|error| format!("Failed to stage removals: {error}"))?;
+            target_paths = validated;
         }
         _ => {
             index
@@ -231,7 +251,7 @@ fn commit_internal(
         .signature()
         .or_else(|_| Signature::now("NoteGen", "notegen@local"))
         .map_err(|error| format!("Failed to build commit signature: {error}"))?;
-    let message = format_commit_message(summary, kind);
+    let message = format_commit_message(summary, kind, &target_paths);
     let parents: Vec<&git2::Commit> = parent_commit.iter().collect();
     let oid = repo
         .commit(Some("HEAD"), &signature, &signature, &message, &tree, &parents)
@@ -248,11 +268,13 @@ fn commit_touches_path(repo: &Repository, commit: &git2::Commit, path: &str) -> 
         .tree()
         .map_err(|error| format!("Failed to read commit tree: {error}"))?;
 
-    // 提示詞版本一定是針對這個 path 明確確認的（#56 的 allow_empty 可能讓樹內容和上一筆
-    // 完全相同），不能只靠 diff 判斷有沒有「touch」，否則這種標記用的 commit 會從歷史裡消失。
-    let (_, kind) = split_trailer(commit.message().unwrap_or_default());
-    if kind == Some(VersionKind::PromptVersion) {
-        return Ok(tree.get_path(Path::new(path)).is_ok());
+    // 帶目標路徑的 commit（提示詞版本、回復）只屬於那些路徑：#56 的 allow_empty 可能讓樹內容
+    // 和上一筆完全相同，不能只靠 diff 判斷；也不能只看路徑在不在樹裡，否則 A 的提示詞版本
+    // 會出現在每一篇筆記的歷史裡。
+    let targets = trailer_paths(commit.message().unwrap_or_default());
+    if !targets.is_empty() {
+        let wanted = validate_relative_path(path).unwrap_or_else(|_| path.to_string());
+        return Ok(targets.iter().any(|target| *target == wanted));
     }
 
     let parent_tree = commit
@@ -751,6 +773,31 @@ mod tests {
     }
 
     #[test]
+    fn prompt_version_for_one_note_does_not_show_up_in_other_notes_history() {
+        let workspace = TempWorkspace::new();
+        git_version_enable(workspace.root()).unwrap();
+        fs::write(workspace.path.join("a.md"), "a\n").unwrap();
+        fs::write(workspace.path.join("b.md"), "b\n").unwrap();
+        git_version_commit(workspace.root(), "快照".to_string(), VersionKind::AutoSnapshot, None, false)
+            .unwrap()
+            .unwrap();
+        git_version_commit(
+            workspace.root(),
+            "確認 a".to_string(),
+            VersionKind::PromptVersion,
+            Some(vec!["a.md".to_string()]),
+            true,
+        )
+        .unwrap()
+        .unwrap();
+
+        let a_log = git_version_log(workspace.root(), Some("a.md".to_string()), None).unwrap();
+        assert_eq!(a_log[0].summary, "確認 a");
+        let b_log = git_version_log(workspace.root(), Some("b.md".to_string()), None).unwrap();
+        assert!(b_log.iter().all(|entry| entry.summary != "確認 a"));
+    }
+
+    #[test]
     fn log_filters_commits_by_path() {
         let workspace = TempWorkspace::new();
         git_version_enable(workspace.root()).unwrap();
@@ -817,7 +864,7 @@ mod tests {
 
     #[test]
     fn split_trailer_round_trips_through_format_commit_message() {
-        let message = format_commit_message("摘要", VersionKind::PromptVersion);
+        let message = format_commit_message("摘要", VersionKind::PromptVersion, &["a.md".to_string()]);
         let (summary, kind) = split_trailer(&message);
         assert_eq!(summary, "摘要");
         assert_eq!(kind, Some(VersionKind::PromptVersion));
