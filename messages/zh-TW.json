@@ -1189,6 +1189,10 @@
         "testBody": "看到這則通知，就代表提醒可以正常運作。",
         "denied": "沒有通知權限，請到「系統設定 → 通知」開啟 NoteGen",
         "sent": "已傳送測試通知"
+      },
+      "promptFolder": {
+        "title": "提示詞資料夾",
+        "desc": "提示詞庫的位置；資料夾內且 frontmatter 標 type: prompt 才算提示詞。"
       }
     },
     "record": {
@@ -6895,5 +6899,38 @@
     "processedNote": "已整理，整理成：",
     "saved": "已存進 Inbox",
     "view": "查看"
+  },
+  "promptLibrary": {
+    "title": "提示詞庫",
+    "newPrompt": "新增提示詞",
+    "backToWorkspace": "回到工作區",
+    "back": "返回",
+    "searchPlaceholder": "搜尋提示詞…",
+    "allTags": "所有標籤",
+    "sort": {
+      "recentlyUsed": "最近使用",
+      "mostUsed": "最常使用",
+      "title": "標題"
+    },
+    "empty": "還沒有提示詞",
+    "useCount": "用過 {count} 次",
+    "unlisted": "{count} 篇未納入",
+    "moveIn": "移入庫",
+    "moveFailed": "移動失敗",
+    "moved": "已移入提示詞庫",
+    "noSelection": "點一則提示詞看內容",
+    "untitled": "未命名提示詞",
+    "cancel": "取消",
+    "create": "建立",
+    "createFailed": "建立失敗",
+    "openNote": "開啟筆記",
+    "loading": "載入中…",
+    "loadFailed": "讀取失敗",
+    "preview": "預覽",
+    "missingRequired": "還有 {count} 個必填變數",
+    "copy": "複製",
+    "copied": "已複製到剪貼簿",
+    "copyFailed": "複製失敗",
+    "selectOption": "選一個"
   }
 }

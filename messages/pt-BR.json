@@ -1189,6 +1189,10 @@
         "testBody": "Se você está vendo isto, os lembretes estão funcionando.",
         "denied": "As notificações estão desativadas. Ative-as para o NoteGen em Ajustes do Sistema → Notificações",
         "sent": "Notificação de teste enviada"
+      },
+      "promptFolder": {
+        "title": "Pasta de prompts",
+        "desc": "Onde a biblioteca de prompts fica; uma nota só conta como prompt dentro desta pasta com frontmatter type: prompt."
       }
     },
     "record": {
@@ -6872,5 +6876,38 @@
     "processedNote": "Processado em:",
     "saved": "Salvo na Inbox",
     "view": "Ver"
+  },
+  "promptLibrary": {
+    "title": "Biblioteca de Prompts",
+    "newPrompt": "Novo prompt",
+    "backToWorkspace": "Voltar ao espaço de trabalho",
+    "back": "Voltar",
+    "searchPlaceholder": "Buscar prompts…",
+    "allTags": "Todas as tags",
+    "sort": {
+      "recentlyUsed": "Usados recentemente",
+      "mostUsed": "Mais usados",
+      "title": "Título"
+    },
+    "empty": "Ainda não há prompts",
+    "useCount": "Usado {count} vezes",
+    "unlisted": "{count} não incluído(s)",
+    "moveIn": "Mover para a biblioteca",
+    "moveFailed": "Falha ao mover",
+    "moved": "Movido para a biblioteca de prompts",
+    "noSelection": "Escolha um prompt para vê-lo aqui",
+    "untitled": "Prompt sem título",
+    "cancel": "Cancelar",
+    "create": "Criar",
+    "createFailed": "Falha ao criar",
+    "openNote": "Abrir nota",
+    "loading": "Carregando…",
+    "loadFailed": "Falha ao carregar",
+    "preview": "Pré-visualização",
+    "missingRequired": "Faltam {count} variável(is) obrigatória(s)",
+    "copy": "Copiar",
+    "copied": "Copiado para a área de transferência",
+    "copyFailed": "Falha ao copiar",
+    "selectOption": "Escolha uma opção"
   }
 }

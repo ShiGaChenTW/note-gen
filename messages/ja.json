@@ -1189,6 +1189,10 @@
         "testBody": "この通知が見えていれば、リマインダーは正常に動作しています。",
         "denied": "通知が許可されていません。システム設定 → 通知 で NoteGen を許可してください",
         "sent": "テスト通知を送信しました"
+      },
+      "promptFolder": {
+        "title": "プロンプトフォルダ",
+        "desc": "プロンプトライブラリの場所。このフォルダ内で frontmatter に type: prompt があるノートだけがプロンプトとして扱われます。"
       }
     },
     "record": {
@@ -6905,5 +6909,38 @@
     "processedNote": "整理済み：",
     "saved": "Inbox に保存しました",
     "view": "表示"
+  },
+  "promptLibrary": {
+    "title": "プロンプトライブラリ",
+    "newPrompt": "新規プロンプト",
+    "backToWorkspace": "ワークスペースに戻る",
+    "back": "戻る",
+    "searchPlaceholder": "プロンプトを検索…",
+    "allTags": "すべてのタグ",
+    "sort": {
+      "recentlyUsed": "最近使用",
+      "mostUsed": "よく使う",
+      "title": "タイトル"
+    },
+    "empty": "まだプロンプトがありません",
+    "useCount": "{count} 回使用",
+    "unlisted": "{count} 件未登録",
+    "moveIn": "取り込む",
+    "moveFailed": "移動に失敗しました",
+    "moved": "プロンプトライブラリに移動しました",
+    "noSelection": "プロンプトを選ぶとここに表示されます",
+    "untitled": "名称未設定のプロンプト",
+    "cancel": "キャンセル",
+    "create": "作成",
+    "createFailed": "作成に失敗しました",
+    "openNote": "ノートを開く",
+    "loading": "読み込み中…",
+    "loadFailed": "読み込みに失敗しました",
+    "preview": "プレビュー",
+    "missingRequired": "必須の変数が {count} 件残っています",
+    "copy": "コピー",
+    "copied": "クリップボードにコピーしました",
+    "copyFailed": "コピーに失敗しました",
+    "selectOption": "選択してください"
   }
 }

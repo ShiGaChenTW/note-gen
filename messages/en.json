@@ -1619,6 +1619,10 @@
         "testBody": "If you can see this, reminders are working.",
         "denied": "Notifications are off. Turn them on for NoteGen in System Settings → Notifications",
         "sent": "Test notification sent"
+      },
+      "promptFolder": {
+        "title": "Prompt folder",
+        "desc": "Where the prompt library lives; a note only counts as a prompt inside this folder with frontmatter type: prompt."
       }
     },
     "record": {
@@ -6996,5 +7000,38 @@
     "processedNote": "Processed into:",
     "saved": "Saved to Inbox",
     "view": "View"
+  },
+  "promptLibrary": {
+    "title": "Prompt Library",
+    "newPrompt": "New prompt",
+    "backToWorkspace": "Back to workspace",
+    "back": "Back",
+    "searchPlaceholder": "Search prompts…",
+    "allTags": "All tags",
+    "sort": {
+      "recentlyUsed": "Recently used",
+      "mostUsed": "Most used",
+      "title": "Title"
+    },
+    "empty": "No prompts yet",
+    "useCount": "Used {count} times",
+    "unlisted": "{count} not included",
+    "moveIn": "Move in",
+    "moveFailed": "Move failed",
+    "moved": "Moved into the prompt library",
+    "noSelection": "Pick a prompt to see it here",
+    "untitled": "Untitled prompt",
+    "cancel": "Cancel",
+    "create": "Create",
+    "createFailed": "Failed to create",
+    "openNote": "Open note",
+    "loading": "Loading…",
+    "loadFailed": "Failed to load",
+    "preview": "Preview",
+    "missingRequired": "{count} required variable(s) left",
+    "copy": "Copy",
+    "copied": "Copied to clipboard",
+    "copyFailed": "Copy failed",
+    "selectOption": "Pick one"
   }
 }

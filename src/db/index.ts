@@ -96,6 +96,14 @@ async function loadDatabase(): Promise<Database> {
       begin update marks set sourceId = sourceId where id = NEW.markId; end
     `)
   }
+  // Fork（#53）：提示詞的使用次數／最後使用時間，只存在本機，不寫進筆記。
+  await nextDatabase.execute(`
+    create table if not exists prompt_usage (
+      path text primary key,
+      useCount integer not null default 0,
+      lastUsedAt integer not null default 0
+    )
+  `)
 
   return nextDatabase
 }

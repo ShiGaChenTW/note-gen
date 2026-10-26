@@ -1619,6 +1619,10 @@
         "testBody": "看到这条通知，说明提醒可以正常工作。",
         "denied": "没有通知权限，请到「系统设置 → 通知」开启 NoteGen",
         "sent": "已发送测试通知"
+      },
+      "promptFolder": {
+        "title": "提示词文件夹",
+        "desc": "提示词库的位置；文件夹内且 frontmatter 标 type: prompt 才算提示词。"
       }
     },
     "record": {
@@ -6996,5 +7000,38 @@
     "processedNote": "已整理，整理成：",
     "saved": "已存进 Inbox",
     "view": "查看"
+  },
+  "promptLibrary": {
+    "title": "提示词库",
+    "newPrompt": "新增提示词",
+    "backToWorkspace": "回到工作区",
+    "back": "返回",
+    "searchPlaceholder": "搜索提示词…",
+    "allTags": "所有标签",
+    "sort": {
+      "recentlyUsed": "最近使用",
+      "mostUsed": "最常使用",
+      "title": "标题"
+    },
+    "empty": "还没有提示词",
+    "useCount": "用过 {count} 次",
+    "unlisted": "{count} 篇未纳入",
+    "moveIn": "移入库",
+    "moveFailed": "移动失败",
+    "moved": "已移入提示词库",
+    "noSelection": "点一条提示词查看内容",
+    "untitled": "未命名提示词",
+    "cancel": "取消",
+    "create": "创建",
+    "createFailed": "创建失败",
+    "openNote": "打开笔记",
+    "loading": "加载中…",
+    "loadFailed": "读取失败",
+    "preview": "预览",
+    "missingRequired": "还有 {count} 个必填变量",
+    "copy": "复制",
+    "copied": "已复制到剪贴板",
+    "copyFailed": "复制失败",
+    "selectOption": "选一个"
   }
 }
