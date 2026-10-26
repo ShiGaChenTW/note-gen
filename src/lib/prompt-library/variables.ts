@@ -174,7 +174,7 @@ export function declaredVariableNames(frontmatterVariables: unknown): Set<string
 export interface PromptVariableField {
   name: string
   declared: boolean
-  /** 未宣告的變數＝必填自由文字 */
+  /** 未宣告的變數、或有宣告但沒有預設值的變數＝必填 */
   required: boolean
   description: string
   defaultValue: string
@@ -191,10 +191,11 @@ export function resolvePromptFields(body: string, frontmatterVariables: unknown)
     .map(usage => {
       const isDeclared = declared.has(usage.name)
       const decl = declarations.get(usage.name)
+      const hasDefault = Boolean(decl?.defaultValue?.trim())
       return {
         name: usage.name,
         declared: isDeclared,
-        required: !isDeclared,
+        required: !isDeclared || !hasDefault,
         description: decl?.description ?? '',
         defaultValue: decl?.defaultValue ?? '',
         options: decl?.options ?? [],

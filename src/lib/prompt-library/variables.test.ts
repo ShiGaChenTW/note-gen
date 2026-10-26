@@ -130,11 +130,19 @@ describe('resolvePromptFields', () => {
     '- 預設值：寫作',
   ].join('\n')
 
-  it('marks declared variables as optional with their default/description, and others as required', () => {
+  it('marks declared variables with a default as optional, and others as required', () => {
     const fields = resolvePromptFields(body, ['topic'])
     expect(fields).toEqual([
       { name: 'topic', declared: true, required: false, description: '文章主題', defaultValue: '寫作', options: [] },
       { name: 'tone', declared: false, required: true, description: '', defaultValue: '', options: [] },
+    ])
+  })
+
+  it('keeps declared variables without a default value required', () => {
+    const fields = resolvePromptFields('{{topic}} {{tone}}\n\n## 變數\n\n### tone\n語氣\n', ['topic', 'tone'])
+    expect(fields.map(f => [f.name, f.declared, f.required])).toEqual([
+      ['topic', true, true],
+      ['tone', true, true],
     ])
   })
 
