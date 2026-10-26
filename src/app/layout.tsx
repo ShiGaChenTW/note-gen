@@ -1,6 +1,8 @@
 'use client'
 import { Toaster } from "@/components/ui/sonner"
 import "./globals.css";
+// Fork：預設視覺（色票、字型細節），要排在 globals.css 之後
+import "./fork-theme.css";
 import 'react-photo-view/dist/react-photo-view.css';
 import { Suspense, useEffect } from "react";
 import { NextIntlProvider } from "@/components/providers/NextIntlProvider";

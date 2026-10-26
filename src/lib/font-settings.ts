@@ -5,8 +5,9 @@ export const APP_FONT_SYSTEM_VALUE = '__notegen_system_font__'
 
 export const APP_FONT_GENERIC_FAMILIES = ['sans-serif', 'serif', 'monospace'] as const
 
+// Fork：預設視覺用 Inter，中文先找繁體字型（沒有就落回簡體與系統字型）。
 export const DEFAULT_APP_FONT_FAMILY =
-  '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans CJK SC", "WenQuanYi Micro Hei", Arial, sans-serif'
+  '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans CJK SC", "WenQuanYi Micro Hei", Arial, sans-serif'
 
 interface SystemFontPayload {
   family: string

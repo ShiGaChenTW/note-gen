@@ -1,0 +1,85 @@
+/* Fork：預設視覺（Obsidian baseline）。
+   深色色票來自 personal/notegen-obsidian-baseline.css 的第 0、11 節；淺色是對應的配色。
+   放在 globals.css 之後、不進 @layer，所以蓋過上游的預設值；
+   設定裡的自訂主題（theme-utils.ts 寫在 :root／:root.dark）仍然排在最後、優先於這裡。
+   只放色票與字型細節，結構類的調整改在元件裡做。 */
+
+:root {
+  --background: 0 0% 96.5%;            /* #f6f6f6 面板 */
+  --foreground: 0 0% 13.3%;            /* #222222 */
+  --card: 0 0% 100%;                   /* #ffffff 編輯區、卡片 */
+  --card-foreground: 0 0% 13.3%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 13.3%;
+  --primary: 31 92% 35%;               /* 深琥珀：白字 4.8:1、白底上當文字 4.8:1 */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 0 0% 92.5%;
+  --secondary-foreground: 0 0% 13.3%;
+  --third: 0 0% 90%;                   /* 選中列 */
+  --third-foreground: 0 0% 10%;
+  --muted: 0 0% 94%;
+  --muted-foreground: 0 0% 40%;        /* #666：白底 5.7:1 */
+  --accent: 0 0% 92%;                  /* hover 底 */
+  --accent-foreground: 0 0% 10%;
+  --destructive: 3 65% 48%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 0 0% 89%;
+  --input: 0 0% 84%;
+  --ring: 31 92% 35%;
+  --radius: 0.5rem;
+
+  --sidebar-background: 0 0% 96.5%;
+  --sidebar-foreground: 0 0% 13.3%;
+  --sidebar-primary: 31 92% 35%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 0 0% 92%;
+  --sidebar-accent-foreground: 0 0% 10%;
+  --sidebar-border: 0 0% 89%;
+  --sidebar-ring: 31 92% 35%;
+}
+
+.dark {
+  --background: 0 0% 12.5%;            /* #202020 面板 */
+  --foreground: 0 0% 85.5%;            /* #dadada */
+  --card: 0 0% 14.9%;                  /* #262626 */
+  --card-foreground: 0 0% 85.5%;
+  --popover: 0 0% 14.9%;
+  --popover-foreground: 0 0% 85.5%;
+  --primary: 43 96% 56%;               /* #fbbd23 琥珀 */
+  --primary-foreground: 0 0% 9.8%;     /* 琥珀上用深字 */
+  --secondary: 0 0% 20.4%;             /* #343434 */
+  --secondary-foreground: 0 0% 85.5%;
+  --third: 0 0% 16.9%;                 /* #2b2b2b 選中列 */
+  --third-foreground: 0 0% 90.2%;
+  --muted: 0 0% 14.9%;                 /* 與 --card 同色：卡片上的 hover 要用 accent */
+  --muted-foreground: 0 0% 60.4%;      /* #9a9a9a */
+  --accent: 0 0% 18.8%;                /* #303030 hover 底 */
+  --accent-foreground: 0 0% 90.2%;
+  --destructive: 3 72% 64%;            /* #e5665f */
+  --destructive-foreground: 0 0% 100%;
+  --border: 0 0% 18.4%;                /* #2f2f2f */
+  --input: 0 0% 22.7%;                 /* #3a3a3a */
+  --ring: 43 96% 56%;
+  --radius: 0.5rem;
+
+  --sidebar-background: 0 0% 12.5%;
+  --sidebar-foreground: 0 0% 85.5%;
+  --sidebar-primary: 43 96% 56%;
+  --sidebar-primary-foreground: 0 0% 9.8%;
+  --sidebar-accent: 0 0% 18.8%;
+  --sidebar-accent-foreground: 0 0% 90.2%;
+  --sidebar-border: 0 0% 18.4%;
+  --sidebar-ring: 43 96% 56%;
+
+  --scrollbar-thumb: hsl(0 0% 22.7%);
+  --scrollbar-thumb-hover: hsl(0 0% 29%);
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.005em;
+}
+
+code, kbd, pre, samp {
+  font-family: "SF Mono", Menlo, ui-monospace, Consolas, monospace;
+}
