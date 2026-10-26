@@ -28,6 +28,7 @@ import { getGitVersionWorkspaceSettings } from '@/lib/git-versions/workspace-set
 import type { GitVersionLogEntry } from '@/lib/git-versions/types'
 import {
   buildRestoreCommitSummary,
+  defaultShowAutoSnapshots,
   buildVersionDisplayLabel,
   filterVersionLogEntries,
   resolveDiffPair,
@@ -85,7 +86,7 @@ export function VersionHistorySheet({ editor, prepareExternalAction, onMarkdownC
   )
   const diffPair = useMemo(() => resolveDiffPair(selected, visibleEntries), [selected, visibleEntries])
 
-  const loadHistory = useCallback(async (path: string) => {
+  const loadHistory = useCallback(async (path: string, options: { resetFilter?: boolean } = {}) => {
     setLoading(true)
     setSelected([])
     setDiffContents(null)
@@ -100,6 +101,7 @@ export function VersionHistorySheet({ editor, prepareExternalAction, onMarkdownC
       }
       const log = await listGitVersionLog(root, { path })
       setEntries(log)
+      if (options.resetFilter) setShowAutoSnapshots(defaultShowAutoSnapshots(log))
     } catch (error) {
       console.error('讀取版本歷史失敗:', error)
       toast({
@@ -115,7 +117,7 @@ export function VersionHistorySheet({ editor, prepareExternalAction, onMarkdownC
 
   useEffect(() => {
     if (!open || !activeFilePath) return
-    void loadHistory(activeFilePath)
+    void loadHistory(activeFilePath, { resetFilter: true })
   }, [open, activeFilePath, loadHistory])
 
   useEffect(() => {

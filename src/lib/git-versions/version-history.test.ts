@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   buildRestoreCommitSummary,
   buildVersionDisplayLabel,
+  defaultShowAutoSnapshots,
   filterVersionLogEntries,
   resolveDiffPair,
   RESTORE_COMMIT_SUMMARY_PREFIX,
@@ -101,5 +102,16 @@ describe('git-versions/version-history', () => {
     it('falls back to the short id alone when there is no summary', () => {
       expect(buildVersionDisplayLabel({ shortId: 'ab12345', summary: '' })).toBe('ab12345')
     })
+  })
+})
+
+describe('defaultShowAutoSnapshots', () => {
+  it('shows auto snapshots when the note has no prompt versions', () => {
+    expect(defaultShowAutoSnapshots([entry({ kind: 'auto-snapshot' })])).toBe(true)
+    expect(defaultShowAutoSnapshots([])).toBe(true)
+  })
+
+  it('hides auto snapshots by default once a prompt version exists', () => {
+    expect(defaultShowAutoSnapshots([entry({ kind: 'auto-snapshot' }), entry({ kind: 'prompt-version' })])).toBe(false)
   })
 })

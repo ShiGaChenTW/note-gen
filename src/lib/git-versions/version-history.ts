@@ -19,6 +19,11 @@ export function filterVersionLogEntries(
  * 最多同時選兩筆去比較：已選的再點一次會取消；選了兩筆後再點第三筆，
  * 會丟掉最早選的那筆、留下最新點的兩筆（先選先丟）。
  */
+/** 打開面板時的預設篩選：沒有任何提示詞版本的筆記（一般筆記、剛建立的提示詞）直接顯示自動快照，否則面板會是空的。 */
+export function defaultShowAutoSnapshots(entries: Pick<GitVersionLogEntry, 'kind'>[]): boolean {
+  return !entries.some(entry => entry.kind === 'prompt-version')
+}
+
 export function toggleVersionSelection(selected: string[], id: string): string[] {
   if (selected.includes(id)) return selected.filter(existing => existing !== id)
   if (selected.length < MAX_DIFF_SELECTION) return [...selected, id]
