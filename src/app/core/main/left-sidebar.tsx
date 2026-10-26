@@ -5,7 +5,7 @@ import { isPluginDisplayVisible } from '@/lib/plugins/display-preferences'
 import { usePluginLocalization } from '@/lib/plugins/localization'
 import { useEffect, useRef, useState, type ComponentType, type PointerEvent as ReactPointerEvent } from 'react'
 import { Tabs, TabsContent } from "@/components/ui/tabs"
-import { CalendarCheck, ChevronDown, ChevronRight, Files, Hash, Inbox, LayoutDashboard, Palette } from "lucide-react"
+import { CalendarCheck, ChevronDown, ChevronRight, Files, Hash, History, Inbox, LayoutDashboard, Palette } from "lucide-react"
 import { FileSidebar } from "./file"
 import { FileActions } from "./file/file-actions"
 import { useLocale, useTranslations } from "next-intl"
@@ -13,6 +13,7 @@ import { isBuiltInLeftSidebarTab, useSidebarStore } from "@/stores/sidebar"
 import { cn } from "@/lib/utils"
 import { CanvasActions, CanvasSidebar } from './canvas/canvas-sidebar'
 import NoteTagsSidebar from './note-tags/note-tags-sidebar'
+import { TimelineSidebar } from './timeline/timeline-sidebar'
 import { SidebarSearch } from './sidebar-search'
 import { getPluginIcon } from '@/components/plugins/plugin-icon'
 import { PluginViewSurface, PluginViewToolbar } from '@/components/plugins/plugin-view-surface'
@@ -26,6 +27,7 @@ import { openDailyNoteFromSidebar, SidebarCalendar } from './daily/sidebar-calen
 // Fork（#45）：功能入口的標籤六種語言都用英文。記錄不再放在下半部，改由 Inbox 頁（#46）處理。
 const SIDEBAR_TABS = [
   { id: "files", title: "Notes", icon: Files },
+  { id: "timeline", title: "Timeline", icon: History },
   { id: "canvases", title: "Canvas", icon: Palette },
   { id: "noteTags", title: "Tags", icon: Hash },
 ] as const
@@ -157,8 +159,8 @@ export function LeftSidebar() {
   }, [activeTabAvailable, pluginsInitialized, setLeftSidebarTab])
 
   const activePluginTab = pluginTabs.find((tab) => tab.id === leftSidebarTab)
-  // 筆記標籤不進 SidebarSearch 的範圍（它只認筆記、記錄、畫布）。
-  const searchTab = isBuiltInLeftSidebarTab(leftSidebarTab) && leftSidebarTab !== 'noteTags' ? leftSidebarTab : 'files'
+  // 筆記標籤與時間軸不進 SidebarSearch 的範圍（它只認筆記、記錄、畫布）。
+  const searchTab = isBuiltInLeftSidebarTab(leftSidebarTab) && leftSidebarTab !== 'noteTags' && leftSidebarTab !== 'timeline' ? leftSidebarTab : 'files'
   const renderTab = (tab: LauncherTab) => (
     <LauncherButton key={tab.id} icon={tab.icon} title={tab.title} active={tab.id === leftSidebarTab} onClick={() => void setLeftSidebarTab(tab.id)} />
   )
@@ -225,6 +227,13 @@ export function LeftSidebar() {
               className="absolute inset-0 m-0 overflow-hidden data-[state=inactive]:hidden"
             >
               <CanvasSidebar />
+            </TabsContent>
+            <TabsContent
+              forceMount
+              value="timeline"
+              className="absolute inset-0 m-0 overflow-hidden data-[state=inactive]:hidden"
+            >
+              <TimelineSidebar />
             </TabsContent>
             <TabsContent
               forceMount
