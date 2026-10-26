@@ -5,6 +5,7 @@ import { getMarkById } from '@/db/marks'
 import { toast } from '@/hooks/use-toast'
 import emitter from '@/lib/emitter'
 import { handleRecordComplete } from '@/lib/record-navigation'
+import { openRecordInInbox } from '@/lib/inbox/actions'
 import { createRecordTab } from '@/app/core/main/mark/mark-record-tab'
 import useArticleStore from '@/stores/article'
 import useMarkStore from '@/stores/mark'
@@ -118,9 +119,11 @@ export function useRecordCompletion() {
       action: markId ? {
         label: t('record.capture.viewRecord'),
         onClick: () => {
-          void openRecordDetail(markId, tagId)
+          // Fork（#46）：桌面端的「查看」打開 Inbox 頁並展開這筆記錄
+          if (pathname.startsWith('/mobile')) void openRecordDetail(markId, tagId)
+          else void openRecordInInbox(markId)
         },
       } : undefined,
     })
-  }, [highlightSavedRecord, openRecordDetail, refreshRecords, t])
+  }, [highlightSavedRecord, openRecordDetail, pathname, refreshRecords, t])
 }

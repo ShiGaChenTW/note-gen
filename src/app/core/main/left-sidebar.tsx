@@ -7,9 +7,7 @@ import { useEffect, useRef, useState, type ComponentType, type PointerEvent as R
 import { Tabs, TabsContent } from "@/components/ui/tabs"
 import { CalendarCheck, ChevronDown, ChevronRight, Files, Hash, Inbox, LayoutDashboard, Palette } from "lucide-react"
 import { FileSidebar } from "./file"
-import { NoteSidebar } from "./mark"
 import { FileActions } from "./file/file-actions"
-import { MarkActions } from "./mark/mark-actions"
 import { useLocale, useTranslations } from "next-intl"
 import { isBuiltInLeftSidebarTab, useSidebarStore } from "@/stores/sidebar"
 import { cn } from "@/lib/utils"
@@ -22,11 +20,11 @@ import { isPluginEnabledInWorkspace } from '@/lib/plugins/internal-types'
 import { usePluginStore } from '@/stores/plugins'
 import { resolvePluginViewTitle } from '@/app/core/setting/plugins/plugin-display'
 import useHomeStore from '@/stores/home'
+import useInboxStore from '@/stores/inbox'
 import { openDailyNoteFromSidebar, SidebarCalendar } from './daily/sidebar-calendar'
 
-// Fork（#45）：功能入口的標籤六種語言都用英文。Inbox 暫時切到記錄分頁，#46 改成打開 Inbox 頁。
+// Fork（#45）：功能入口的標籤六種語言都用英文。記錄不再放在下半部，改由 Inbox 頁（#46）處理。
 const SIDEBAR_TABS = [
-  { id: "notes", title: "Inbox", icon: Inbox },
   { id: "files", title: "Notes", icon: Files },
   { id: "canvases", title: "Canvas", icon: Palette },
   { id: "noteTags", title: "Tags", icon: Hash },
@@ -126,6 +124,8 @@ export function LeftSidebar() {
   const locale = useLocale()
   const homeVisible = useHomeStore(state => state.visible)
   const showHome = useHomeStore(state => state.show)
+  const inboxVisible = useInboxStore(state => state.visible)
+  const showInbox = useInboxStore(state => state.show)
   const pluginsInitialized = usePluginStore((state) => state.initialized)
   const displaySettings = usePluginStore(state => state.deviceSettings)
   const installed = usePluginStore((state) => state.installed)
@@ -174,9 +174,9 @@ export function LeftSidebar() {
         <nav className="flex flex-col gap-px px-2 pb-2" aria-label="Launcher">
           <LauncherButton icon={LayoutDashboard} title="Overview" active={homeVisible} onClick={showHome} />
           <LauncherButton icon={CalendarCheck} title="Today" onClick={() => openDailyNoteFromSidebar(new Date(), t('today.calendarNav.openFailed'))} />
-          {renderTab(SIDEBAR_TABS[0])}
+          <LauncherButton icon={Inbox} title="Inbox" active={inboxVisible} onClick={() => showInbox()} />
           <div className="mx-2 my-1 border-t" role="separator" />
-          {SIDEBAR_TABS.slice(1).map(renderTab)}
+          {SIDEBAR_TABS.map(renderTab)}
           {visiblePluginTabs.map(renderTab)}
           {morePluginTabs.length > 0 && (
             <>
@@ -201,10 +201,8 @@ export function LeftSidebar() {
               <PluginViewToolbar viewKey={activePluginTab.id} />
             </div>
           ) : null}
-          {/* 三組操作按鈕一直掛著（記錄的篩選要在啟動時初始化），只切換顯示。 */}
           <div className={cn("shrink-0", activePluginTab && "hidden")}>
             <div className={cn(leftSidebarTab !== "files" && "hidden")}><FileActions /></div>
-            <div className={cn(leftSidebarTab !== "notes" && "hidden")}><MarkActions /></div>
             <div className={cn(leftSidebarTab !== "canvases" && "hidden")}><CanvasActions /></div>
           </div>
         </div>
@@ -220,13 +218,6 @@ export function LeftSidebar() {
               className="absolute inset-0 m-0 overflow-hidden data-[state=inactive]:hidden"
             >
               <FileSidebar />
-            </TabsContent>
-            <TabsContent
-              forceMount
-              value="notes"
-              className="absolute inset-0 m-0 overflow-hidden data-[state=inactive]:hidden"
-            >
-              <NoteSidebar />
             </TabsContent>
             <TabsContent
               forceMount

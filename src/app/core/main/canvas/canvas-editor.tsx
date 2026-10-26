@@ -97,7 +97,6 @@ import useCanvasStore from '@/stores/canvas'
 import useArticleStore from '@/stores/article'
 import useSettingStore from '@/stores/setting'
 import useMarkStore from '@/stores/mark'
-import { useSidebarStore } from '@/stores/sidebar'
 import { insertMark, type Mark } from '@/db/marks'
 import type {
   CanvasDocument,
@@ -1950,11 +1949,7 @@ function CanvasEditorInner({ canvasId, mobile = false, isActive = true }: Canvas
         useMarkStore.getState().fetchMarks(),
         useMarkStore.getState().fetchAllMarks(),
       ])
-      const sidebar = useSidebarStore.getState()
-      if (!sidebar.leftSidebarVisible) {
-        await sidebar.toggleLeftSidebar()
-      }
-      await sidebar.setLeftSidebarTab('notes')
+      emitter.emit('inbox-record-saved')
     } catch (error) {
       console.error('Failed to export canvas as an illustration record:', error)
       toast.error(t('footer.exportMenu.recordError'))

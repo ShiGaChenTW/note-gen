@@ -71,6 +71,8 @@ interface Events {
   'toolbar-shortcut-scan': unknown;
   'desktop-screenshot-trigger': unknown;
   'toolbar-shortcut-text': unknown;
+  /** Fork（#46）：快速記錄存好了；Inbox 頁跳出「已存進 Inbox · 查看」。 */
+  'inbox-record-saved': unknown;
   'toolbar-shortcut-link': unknown;
   'latest-commit-info': {
     sha: string;

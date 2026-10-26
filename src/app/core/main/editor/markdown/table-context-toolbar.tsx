@@ -22,6 +22,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 
 import { PluginEditorToolbar } from '@/components/plugins/plugin-editor-toolbar'
 import useHomeStore from '@/stores/home'
+import useInboxStore from '@/stores/inbox'
 
 interface TableContextToolbarProps {
   editor: Editor
@@ -194,6 +195,7 @@ export function TableContextToolbar({ editor, pluginsEnabled = false }: TableCon
   }, [editor])
 
   const homeVisible = useHomeStore(state => state.visible)
+  const inboxVisible = useInboxStore(state => state.visible)
 
   const deleteRow = useCallback(() => {
     editor.chain().focus().deleteRow().run()
@@ -209,7 +211,7 @@ export function TableContextToolbar({ editor, pluginsEnabled = false }: TableCon
   }, [editor])
 
   // Fork #31：工具列掛在 body 上、z-50 會浮到首頁上方，首頁開著時不顯示。
-  if (!tableState?.active || homeVisible) return null
+  if (!tableState?.active || homeVisible || inboxVisible) return null
 
   return createPortal(
     <div

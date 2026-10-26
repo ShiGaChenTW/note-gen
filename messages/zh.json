@@ -6950,5 +6950,35 @@
       "later": "稍后再说",
       "start": "开始"
     }
+  },
+  "inbox": {
+    "records": "记录",
+    "folderNotes": "{folder} 文件夹",
+    "showProcessed": "显示已整理",
+    "trash": "回收站",
+    "backToInbox": "回到 Inbox",
+    "backToWorkspace": "回到工作区",
+    "selectAll": "全选",
+    "selected": "已选 {count} 条",
+    "organize": "整理成笔记",
+    "convert": "转成笔记",
+    "addTag": "加标签",
+    "delete": "删除",
+    "restore": "还原",
+    "markUnprocessed": "标回未整理",
+    "empty": "没有待整理的记录",
+    "trashEmpty": "回收站是空的",
+    "folderEmpty": "文件夹是空的",
+    "open": "打开",
+    "moveTo": "移到…",
+    "root": "根目录",
+    "moved": "已移到 {folder}",
+    "moveFailed": "移动失败",
+    "converted": "已转成 {count} 篇笔记",
+    "failed": "操作失败",
+    "noSelection": "点一条记录查看内容",
+    "processedNote": "已整理，整理成：",
+    "saved": "已存进 Inbox",
+    "view": "查看"
   }
 }

@@ -2,6 +2,7 @@
 
 // Fork (D2): native Today page, design v2 (personal/notegen-today-d2-redesign.html).
 // #31：Today 分頁退役，內容拆成區塊放進首頁的「日程」卡片（版型 D）。
+import useInboxStore, { selectStaleRecords } from '@/stores/inbox'
 import { createContext, useContext, useState } from 'react'
 import {
   AlertTriangle,
@@ -278,14 +279,18 @@ export function TodayAgenda() {
 /** 今日足跡：捕捉、Inbox、復盤。 */
 export function TodayFootprint() {
   const t = useTranslations('today')
-  const { now, dailyNote, staleInbox, staleDays, openNote, navigate } = useToday()
+  const { now, dailyNote, staleInbox, staleDays, navigate } = useToday()
+  const records = useInboxStore(state => state.records)
+  const processed = useInboxStore(state => state.processed)
+  // Fork（#46）：Inbox 積壓＝Inbox 資料夾裡放太久的筆記＋放太久沒整理的記錄；「去整理」打開 Inbox 頁
+  const staleCount = staleInbox.length + selectStaleRecords({ records, processed }, staleDays, now).length
   return (
     <div className="grid gap-2.5">
       <Tile icon={<Zap className="size-4" aria-hidden />} value={String(dailyNote?.capture.total ?? 0)} label={t('capture.title')}
         detail={t('capture.detail', { flash: dailyNote?.capture.flash ?? 0, read: dailyNote?.capture.read ?? 0, task: dailyNote?.capture.task ?? 0 })} />
-      <Tile icon={<Inbox className="size-4" aria-hidden />} warn={staleInbox.length > 0} value={String(staleInbox.length)} label={t('inbox.title')}
+      <Tile icon={<Inbox className="size-4" aria-hidden />} warn={staleCount > 0} value={String(staleCount)} label={t('inbox.title')}
         detail={t('inbox.detail', { days: staleDays })}
-        action={staleInbox[0] ? { label: t('inbox.action'), onClick: () => openNote(staleInbox[0].path) } : undefined} />
+        action={staleCount > 0 ? { label: t('inbox.action'), onClick: () => useInboxStore.getState().show() } : undefined} />
       <Tile icon={<Moon className="size-4" aria-hidden />} value={dailyNote?.reflection.filled ? t('reflection.filled') : t('reflection.empty')} label={t('reflection.title')}
         detail={dailyNote?.reviewed ? t('reviewDone') : t('reflection.detail')}
         action={{ label: t('reflection.action'), onClick: () => navigate(() => openDailyNote(now)) }} />

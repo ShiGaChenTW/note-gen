@@ -6859,5 +6859,35 @@
       "later": "あとで",
       "start": "開始"
     }
+  },
+  "inbox": {
+    "records": "記録",
+    "folderNotes": "{folder} フォルダ",
+    "showProcessed": "整理済みを表示",
+    "trash": "ゴミ箱",
+    "backToInbox": "Inbox に戻る",
+    "backToWorkspace": "ワークスペースに戻る",
+    "selectAll": "すべて選択",
+    "selected": "{count} 件選択",
+    "organize": "ノートに整理",
+    "convert": "ノートに変換",
+    "addTag": "タグを追加",
+    "delete": "削除",
+    "restore": "復元",
+    "markUnprocessed": "未整理に戻す",
+    "empty": "整理待ちの記録はありません",
+    "trashEmpty": "ゴミ箱は空です",
+    "folderEmpty": "フォルダは空です",
+    "open": "開く",
+    "moveTo": "移動先…",
+    "root": "ルート",
+    "moved": "{folder} に移動しました",
+    "moveFailed": "移動に失敗しました",
+    "converted": "{count} 件のノートに変換しました",
+    "failed": "操作に失敗しました",
+    "noSelection": "記録を選ぶとここに表示されます",
+    "processedNote": "整理済み：",
+    "saved": "Inbox に保存しました",
+    "view": "表示"
   }
 }

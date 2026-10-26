@@ -201,7 +201,7 @@ export default function RootLayout({
       }
     }
 
-    const showSidebarTab = async (tab: 'files' | 'notes') => {
+    const showSidebarTab = async (tab: 'files') => {
       await navigateToMain()
 
       const sidebar = useSidebarStore.getState()
@@ -242,7 +242,7 @@ export default function RootLayout({
           await useArticleStore.getState().newFolder()
           break
         case 'record-audio':
-          await showSidebarTab('notes')
+          await navigateToMain()
           emitter.emit('toolbar-shortcut-recording')
           break
         case 'record-screenshot':
@@ -251,24 +251,24 @@ export default function RootLayout({
           break
         case 'record-text':
         case 'text':
-          await showSidebarTab('notes')
+          await navigateToMain()
           emitter.emit('toolbar-shortcut-text')
           break
         case 'record-link':
         case 'link':
-          await showSidebarTab('notes')
+          await navigateToMain()
           emitter.emit('toolbar-shortcut-link')
           break
         case 'record-image':
-          await showSidebarTab('notes')
+          await navigateToMain()
           emitter.emit('toolbar-shortcut-image')
           break
         case 'record-file':
-          await showSidebarTab('notes')
+          await navigateToMain()
           emitter.emit('toolbar-shortcut-file')
           break
         case 'record-todo':
-          await showSidebarTab('notes')
+          await navigateToMain()
           emitter.emit('toolbar-shortcut-todo')
           break
         case 'pin-window':

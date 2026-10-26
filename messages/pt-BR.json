@@ -6826,5 +6826,35 @@
       "later": "Depois",
       "start": "Iniciar"
     }
+  },
+  "inbox": {
+    "records": "Registros",
+    "folderNotes": "Pasta {folder}",
+    "showProcessed": "Mostrar processados",
+    "trash": "Lixeira",
+    "backToInbox": "Voltar à Inbox",
+    "backToWorkspace": "Voltar ao espaço de trabalho",
+    "selectAll": "Selecionar tudo",
+    "selected": "{count} selecionados",
+    "organize": "Organizar em nota",
+    "convert": "Converter em nota",
+    "addTag": "Adicionar tag",
+    "delete": "Excluir",
+    "restore": "Restaurar",
+    "markUnprocessed": "Marcar como não processado",
+    "empty": "Nada para processar",
+    "trashEmpty": "A lixeira está vazia",
+    "folderEmpty": "A pasta está vazia",
+    "open": "Abrir",
+    "moveTo": "Mover para…",
+    "root": "Raiz",
+    "moved": "Movido para {folder}",
+    "moveFailed": "Falha ao mover",
+    "converted": "Convertido em {count} notas",
+    "failed": "Algo deu errado",
+    "noSelection": "Escolha um registro para vê-lo aqui",
+    "processedNote": "Processado em:",
+    "saved": "Salvo na Inbox",
+    "view": "Ver"
   }
 }

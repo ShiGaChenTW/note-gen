@@ -1,5 +1,6 @@
 'use client'
 
+import { openRecordInInbox } from '@/lib/inbox/actions'
 import { Fragment, useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { debounce } from 'lodash-es'
 import {
@@ -370,8 +371,8 @@ export function SearchDialog({ open, onOpenChange, mobile = false }: SearchDialo
       }
 
       if (!isMobileRoute) {
-        // PC 端：切换到记录标签页
-        await setLeftSidebarTab('notes')
+        // PC 端（Fork #46）：打開 Inbox 頁並展開這筆記錄
+        if (item.markId) await openRecordInInbox(item.markId)
         if (!isDeferredFileActivationCurrent(activationIntent)) return
       } else {
         // 移动端：进入记录页

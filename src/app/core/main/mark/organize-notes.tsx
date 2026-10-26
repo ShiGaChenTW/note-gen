@@ -163,7 +163,13 @@ async function readLocalRecordImage(mark: Mark, localAssetPath: string) {
   }
 }
 
-export const OrganizeNotes = forwardRef<{ openOrganize: () => void }, OrganizeNotesProps>(({ inputValue }, ref) => {
+/** Fork（#46）：Inbox 頁帶入勾選的記錄，整理完成後回報新筆記路徑，好把記錄標成已整理。 */
+export interface OpenOrganizeOptions {
+  recordIds?: number[]
+  onOrganized?: (notePath: string, recordIds: number[]) => void
+}
+
+export const OrganizeNotes = forwardRef<{ openOrganize: (options?: OpenOrganizeOptions) => void }, OrganizeNotesProps>(({ inputValue }, ref) => {
   const [open, setOpen] = useState(false)
   const { primaryModel, templateList } = useSettingStore()
   const { marks, fetchAllMarks, allMarks } = useMarkStore()
@@ -191,6 +197,7 @@ export const OrganizeNotes = forwardRef<{ openOrganize: () => void }, OrganizeNo
   const [includeImages, setIncludeImages] = useState(true)
   const [includeReferences, setIncludeReferences] = useState(true)
   const [additionalRequirement, setAdditionalRequirement] = useState('')
+  const presetRef = useRef<OpenOrganizeOptions | null>(null)
   const t = useTranslations('record.chat.note')
   const tGlobal = useTranslations()
   const tMark = useTranslations('record.mark')
@@ -477,7 +484,8 @@ export const OrganizeNotes = forwardRef<{ openOrganize: () => void }, OrganizeNo
     }
   }, [])
 
-  const openOrganize = useCallback(() => {
+  const openOrganize = useCallback((options?: OpenOrganizeOptions) => {
+    presetRef.current = options ?? null
     const latestTemplates = useSettingStore.getState().templateList
     const enabledTemplates = latestTemplates.filter(item => item.status !== false)
     const nextTemplate = tab === NO_TEMPLATE_VALUE
@@ -505,6 +513,7 @@ export const OrganizeNotes = forwardRef<{ openOrganize: () => void }, OrganizeNo
 
     const quickMode = options?.quick === true
     const recordIdsToUse = new Set(quickMode ? marksByRange.map(item => item.id) : selectedRecordIds)
+    const onOrganized = presetRef.current?.onOrganized
 
     if (!primaryModel || recordIdsToUse.size === 0) return
 
@@ -867,6 +876,7 @@ export const OrganizeNotes = forwardRef<{ openOrganize: () => void }, OrganizeNo
         if (shouldEmitOrganizeOnboardingComplete({ streamFinished, aborted: signal.aborted })) {
           emitter.emit('onboarding-step-complete', { step: 'organize-note', filePath: newFilePath })
         }
+        if (streamFinished && !signal.aborted) onOrganized?.(newFilePath, [...recordIdsToUse])
 
         toast({
           description: tMark('toolbar.organizeSuccess', { title: sanitizedTitle }),
@@ -884,6 +894,7 @@ export const OrganizeNotes = forwardRef<{ openOrganize: () => void }, OrganizeNo
         if (shouldEmitOrganizeOnboardingComplete({ streamFinished, aborted: signal.aborted })) {
           emitter.emit('onboarding-step-complete', { step: 'organize-note', filePath })
         }
+        if (streamFinished && !signal.aborted) onOrganized?.(filePath, [...recordIdsToUse])
 
         toast({
           description: tMark('toolbar.organizeSuccess', { title: fileName }),
@@ -960,7 +971,8 @@ export const OrganizeNotes = forwardRef<{ openOrganize: () => void }, OrganizeNo
 
   useEffect(() => {
     if (!open) return
-    setSelectedRecordIds(new Set(marksByRange.map(item => item.id)))
+    const preset = presetRef.current?.recordIds
+    setSelectedRecordIds(new Set(marksByRange.map(item => item.id).filter(id => !preset || preset.includes(id))))
   }, [marksByRange, open])
 
   const handleDialogKeyDown = useCallback((e: ReactKeyboardEvent<HTMLDivElement>) => {
