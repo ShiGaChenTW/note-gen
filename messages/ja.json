@@ -6598,7 +6598,7 @@
       "failed": "保存できませんでした"
     },
     "needs": {
-      "title": "対応が必要（{count}）",
+      "title": "対応が必要",
       "review": "下書き確認",
       "reviewAction": "確認",
       "drafts": "確認待ちの下書き {count} 件",

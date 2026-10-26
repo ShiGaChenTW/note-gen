@@ -6549,7 +6549,7 @@
       "failed": "Speichern fehlgeschlagen"
     },
     "needs": {
-      "title": "Wartet auf dich ({count})",
+      "title": "Wartet auf dich",
       "review": "Entwürfe",
       "reviewAction": "Prüfen",
       "drafts": "{count} Entwürfe zu prüfen",

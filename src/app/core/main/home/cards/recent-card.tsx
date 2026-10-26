@@ -9,6 +9,7 @@ import { splitFrontmatter } from '@/lib/markdown/frontmatter-split'
 import useArticleStore from '@/stores/article'
 import useHomeStore from '@/stores/home'
 import useVaultIndexStore from '@/stores/vault-index'
+import { EmptyState } from '../../page-ui'
 
 function title(path: string) {
   return path.split('/').pop()?.replace(/\.md$/i, '') ?? path
@@ -55,7 +56,7 @@ export function RecentNotes() {
   return (
     <section className="rounded-xl bg-background p-4" aria-labelledby="home-recent">
       <h2 id="home-recent" className="mb-2 text-[15px] font-semibold">{t('title')}</h2>
-      {!first && <p className="text-sm text-muted-foreground">{t('empty')}</p>}
+      {!first && <EmptyState compact icon={FileText} text={t('empty')} />}
       {first && (
         <button type="button" className="mb-2 block w-full rounded-lg bg-muted p-3 text-left hover:bg-accent" onClick={() => open(first.path)}>
           <div className="flex items-center gap-2 text-sm font-medium"><FileText className="size-3.5" aria-hidden />{title(first.path)}</div>

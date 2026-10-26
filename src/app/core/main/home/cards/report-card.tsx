@@ -171,7 +171,7 @@ export function ReportStrip() {
             {t('generate')}
           </Button>
         ) : (
-          <Button size="sm" onClick={() => openDrawer('baseline')}>{t('baseline')}</Button>
+          <Button size="sm" variant="secondary" onClick={() => openDrawer('baseline')}>{t('baseline')}</Button>
         )}
       </div>
     </section>

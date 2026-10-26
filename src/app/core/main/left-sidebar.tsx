@@ -23,7 +23,9 @@ import { resolvePluginViewTitle } from '@/app/core/setting/plugins/plugin-displa
 import useHomeStore from '@/stores/home'
 import useInboxStore from '@/stores/inbox'
 import { openDailyNoteFromSidebar, SidebarCalendar } from './daily/sidebar-calendar'
-import { SIDEBAR_ROW, SIDEBAR_ROW_ACTIVE } from './sidebar-row'
+import { SIDEBAR_ROW, SIDEBAR_ROW_ACTIVE, SIDEBAR_ROW_ACTIVE_SECONDARY } from './sidebar-row'
+import { Count } from './page-ui'
+import { useInboxPendingCount } from '@/lib/inbox/use-inbox-pending'
 
 // Fork（#45）：功能入口的標籤六種語言都用英文。記錄不再放在下半部，改由 Inbox 頁（#46）處理。
 const SIDEBAR_TABS = [
@@ -62,10 +64,12 @@ function writeTopHeight(value: number | null) {
   }
 }
 
-function LauncherButton({ icon: Icon, title, active, badge, badgeLabel, onClick, expanded }: {
+function LauncherButton({ icon: Icon, title, active, secondary, badge, badgeLabel, onClick, expanded }: {
   icon: ComponentType<{ className?: string }>
   title: string
   active?: boolean
+  /** 首頁或 Inbox 頁開著時，下半部的選中改成次要樣式，免得跟目前頁面搶。 */
+  secondary?: boolean
   /** 右側的待處理數；0 或沒給就不顯示。 */
   badge?: number
   badgeLabel?: string
@@ -81,16 +85,12 @@ function LauncherButton({ icon: Icon, title, active, badge, badgeLabel, onClick,
       className={cn(
         "flex h-7 w-full items-center gap-2 px-2 text-left text-sm text-muted-foreground",
         SIDEBAR_ROW,
-        active && SIDEBAR_ROW_ACTIVE,
+        active && (secondary ? SIDEBAR_ROW_ACTIVE_SECONDARY : SIDEBAR_ROW_ACTIVE),
       )}
     >
-      <Icon className={cn("size-4 shrink-0", active && "text-sidebar-primary")} />
+      <Icon className={cn("size-4 shrink-0", active && !secondary && "text-sidebar-primary")} />
       <span className="min-w-0 flex-1 truncate">{title}</span>
-      {badge ? (
-        <span className="shrink-0 rounded-full bg-sidebar-accent px-1.5 text-[11px] leading-4 font-medium tabular-nums text-muted-foreground" aria-label={badgeLabel}>
-          {badge > 99 ? '99+' : badge}
-        </span>
-      ) : null}
+      {badge ? <Count value={badge} label={badgeLabel} className={active && !secondary ? 'bg-sidebar' : 'bg-sidebar-accent'} /> : null}
     </button>
   )
 }
@@ -166,9 +166,7 @@ export function LeftSidebar() {
   const showHome = useHomeStore(state => state.show)
   const inboxVisible = useInboxStore(state => state.visible)
   const showInbox = useInboxStore(state => state.show)
-  const inboxRecords = useInboxStore(state => state.records)
-  const inboxProcessed = useInboxStore(state => state.processed)
-  const inboxCount = inboxRecords.filter(record => !inboxProcessed.has(record.id)).length
+  const inboxCount = useInboxPendingCount()
   const pluginsInitialized = usePluginStore((state) => state.initialized)
   const displaySettings = usePluginStore(state => state.deviceSettings)
   const installed = usePluginStore((state) => state.installed)
@@ -203,7 +201,7 @@ export function LeftSidebar() {
   // 筆記標籤與時間軸不進 SidebarSearch 的範圍（它只認筆記、記錄、畫布）。
   const searchTab = isBuiltInLeftSidebarTab(leftSidebarTab) && leftSidebarTab !== 'noteTags' && leftSidebarTab !== 'timeline' ? leftSidebarTab : 'files'
   const renderTab = (tab: LauncherTab) => (
-    <LauncherButton key={tab.id} icon={tab.icon} title={tab.title} active={tab.id === leftSidebarTab} onClick={() => void setLeftSidebarTab(tab.id)} />
+    <LauncherButton key={tab.id} icon={tab.icon} title={tab.title} active={tab.id === leftSidebarTab} secondary={homeVisible || inboxVisible} onClick={() => void setLeftSidebarTab(tab.id)} />
   )
 
   return (
@@ -223,7 +221,7 @@ export function LeftSidebar() {
           {visiblePluginTabs.map(renderTab)}
           {morePluginTabs.length > 0 && (
             <>
-              <LauncherButton icon={moreOpen ? ChevronDown : ChevronRight} title="More" active={!moreOpen && activeInMore} expanded={moreOpen} onClick={() => setMoreOpen(open => !open)} />
+              <LauncherButton icon={moreOpen ? ChevronDown : ChevronRight} title="More" active={!moreOpen && activeInMore} secondary={homeVisible || inboxVisible} expanded={moreOpen} onClick={() => setMoreOpen(open => !open)} />
               {moreOpen && <div className="flex flex-col gap-px pl-3">{morePluginTabs.map(renderTab)}</div>}
             </>
           )}

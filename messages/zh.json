@@ -163,7 +163,7 @@
     },
     "tasks": {
       "title": "任务",
-      "counts": "待处理 {pending} · 今天完成 {done}",
+      "counts": "未完成 {pending} · 今天完成 {done}",
       "overdue": "逾期 · {count}",
       "day0": "今天 · {count}",
       "day1": "明天 · {count}",
@@ -6689,7 +6689,7 @@
       "failed": "保存失败"
     },
     "needs": {
-      "title": "需要你处理（{count}）",
+      "title": "需要你处理",
       "review": "待审草稿",
       "reviewAction": "审核",
       "drafts": "{count} 项草稿待审",

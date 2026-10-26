@@ -21,10 +21,12 @@ import {
   Target,
   Rows3,
   Zap,
+  ListChecks,
 } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
+import { EmptyState } from '../page-ui'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
   DropdownMenu,
@@ -74,23 +76,22 @@ function useToday(): TodayContextValue {
 }
 
 /** 首頁頂部的日期與摘要。 */
-export function TodayTitle() {
+/** 頁首的標題與副標（日期；問候、現在時間、今天到期與逾期數）。要放在 TodayProvider 裡。 */
+export function useTodayTitle() {
   const t = useTranslations('today')
   const locale = useLocale()
   const { now, groups } = useToday()
-  const dateTitle = new Intl.DateTimeFormat(locale, { month: 'long', day: 'numeric', weekday: 'long' }).format(now)
+  const title = new Intl.DateTimeFormat(locale, { month: 'long', day: 'numeric', weekday: 'long' }).format(now)
   const hour = now.getHours()
   const greeting = hour < 12 ? t('greeting.morning') : hour < 18 ? t('greeting.afternoon') : t('greeting.evening')
   const todayGroup = groups.upcoming[0]
-  return (
-    <div className="min-w-0">
-      <h1 className="text-[22px] font-semibold tracking-tight">{dateTitle}</h1>
-      <p className="text-sm text-muted-foreground">
-        {greeting} · <span className="tabular-nums">{hhmm(now.getTime())}</span>
-        {' · '}{t('summary', { today: todayGroup?.tasks.length ?? 0, overdue: groups.overdue.length })}
-      </p>
-    </div>
+  const subtitle = (
+    <>
+      {greeting} · <span className="tabular-nums">{hhmm(now.getTime())}</span>
+      {' · '}{t('summary', { today: todayGroup?.tasks.length ?? 0, overdue: groups.overdue.length })}
+    </>
   )
+  return { title, subtitle }
 }
 
 /** 本週七天、月曆、開今日筆記與更多動作。 */
@@ -229,9 +230,7 @@ export function TodayTasks() {
       )}
 
       {groups.pendingCount === 0 && groups.doneToday.length === 0 && (
-        <p className="px-2 py-6 text-center text-sm text-muted-foreground">
-          {indexStatus === 'ready' ? t('tasks.empty') : t('tasks.loading')}
-        </p>
+        <EmptyState icon={ListChecks} text={indexStatus === 'ready' ? t('tasks.empty') : t('tasks.loading')} />
       )}
 
       {groups.overdue.length > 0 && (
@@ -435,7 +434,7 @@ function AgendaPanel({ agenda, calendar, now, onDropTask }: {
       )}
 
       {view === 'list' && (agenda.length === 0
-        ? <p className="py-6 text-center text-sm text-muted-foreground">{t('agenda.empty')}</p>
+        ? <EmptyState icon={Clock} text={t('agenda.empty')} />
         : (
           <ol className="relative before:absolute before:top-2 before:bottom-2 before:left-[51px] before:w-px before:bg-border">
             {rows}
@@ -494,9 +493,9 @@ function Tile({ icon, value, label, detail, warn, action }: {
         <p className="text-sm text-muted-foreground">{detail}</p>
       </div>
       {action && (
-        <button type="button" className="ml-auto cursor-pointer whitespace-nowrap text-sm underline underline-offset-4 hover:text-primary" onClick={action.onClick}>
+        <Button size="sm" variant="secondary" className="ml-auto" onClick={action.onClick}>
           {action.label}
-        </button>
+        </Button>
       )}
     </div>
   )
