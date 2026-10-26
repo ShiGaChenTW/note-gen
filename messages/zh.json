@@ -219,7 +219,13 @@
       "legendNote": "有日记",
       "legendTasks": "有任务到期",
       "noMore": "没有更多日记了",
-      "openFailed": "无法打开日记"
+      "openFailed": "无法打开日记",
+      "prevWeek": "上一周",
+      "nextWeek": "下一周",
+      "prevMonth": "上个月",
+      "nextMonth": "下个月",
+      "collapse": "收起月历",
+      "expand": "展开月历"
     },
     "quickAdd": {
       "label": "快速添加任务",

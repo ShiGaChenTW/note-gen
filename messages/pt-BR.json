@@ -219,7 +219,13 @@
       "legendNote": "Tem nota",
       "legendTasks": "Tarefas com prazo",
       "noMore": "Não há mais notas diárias",
-      "openFailed": "Não foi possível abrir a nota diária"
+      "openFailed": "Não foi possível abrir a nota diária",
+      "prevWeek": "Semana anterior",
+      "nextWeek": "Próxima semana",
+      "prevMonth": "Mês anterior",
+      "nextMonth": "Próximo mês",
+      "collapse": "Recolher calendário",
+      "expand": "Expandir calendário"
     },
     "quickAdd": {
       "label": "Adicionar tarefa rápida",

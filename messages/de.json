@@ -219,7 +219,13 @@
       "legendNote": "Notiz vorhanden",
       "legendTasks": "Aufgaben fällig",
       "noMore": "Keine weiteren Tagesnotizen",
-      "openFailed": "Tagesnotiz konnte nicht geöffnet werden"
+      "openFailed": "Tagesnotiz konnte nicht geöffnet werden",
+      "prevWeek": "Vorherige Woche",
+      "nextWeek": "Nächste Woche",
+      "prevMonth": "Vorheriger Monat",
+      "nextMonth": "Nächster Monat",
+      "collapse": "Kalender einklappen",
+      "expand": "Kalender ausklappen"
     },
     "quickAdd": {
       "label": "Aufgabe schnell hinzufügen",
