@@ -3,6 +3,7 @@ import { create } from 'zustand'
 import { Store } from '@tauri-apps/plugin-store'
 import { DAILY_DEFAULTS, isValidDailyPattern } from '@/lib/daily/format'
 import type { WeekdayKey } from '@/lib/daily/template'
+import { DEFAULT_PROMPT_FOLDER } from '@/lib/prompt-library/prompt-note'
 
 export interface DailySettings {
   /** Folder of daily notes, relative to the workspace. */
@@ -10,6 +11,8 @@ export interface DailySettings {
   /** File name pattern, e.g. `YYYYMMDD`. */
   dailyPattern: string
   inboxFolder: string
+  /** Fork（#53）：提示詞庫的資料夾，相對於工作區。 */
+  promptFolder: string
   staleDays: number
   /** Template note path; empty means a blank note. */
   defaultTemplate: string
@@ -22,6 +25,7 @@ export interface DailySettings {
 
 export const DEFAULT_DAILY_SETTINGS: DailySettings = {
   ...DAILY_DEFAULTS,
+  promptFolder: DEFAULT_PROMPT_FOLDER,
   defaultTemplate: '',
   weekdayTemplates: {},
   openOnLaunch: true,
@@ -48,6 +52,7 @@ function pickSettings(state: DailySettings): DailySettings {
     dailyFolder: state.dailyFolder,
     dailyPattern: state.dailyPattern,
     inboxFolder: state.inboxFolder,
+    promptFolder: state.promptFolder,
     staleDays: state.staleDays,
     defaultTemplate: state.defaultTemplate,
     weekdayTemplates: state.weekdayTemplates,

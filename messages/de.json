@@ -1619,6 +1619,10 @@
         "testBody": "Wenn du das siehst, funktionieren Erinnerungen.",
         "denied": "Mitteilungen sind aus. Aktiviere sie für NoteGen unter Systemeinstellungen → Mitteilungen",
         "sent": "Testmitteilung gesendet"
+      },
+      "promptFolder": {
+        "title": "Prompt-Ordner",
+        "desc": "Speicherort der Prompt-Bibliothek; nur Notizen in diesem Ordner mit frontmatter type: prompt zählen als Prompt."
       }
     },
     "record": {
@@ -6840,5 +6844,38 @@
     "processedNote": "Verarbeitet zu:",
     "saved": "In der Inbox gespeichert",
     "view": "Ansehen"
+  },
+  "promptLibrary": {
+    "title": "Prompt-Bibliothek",
+    "newPrompt": "Neuer Prompt",
+    "backToWorkspace": "Zurück zum Arbeitsbereich",
+    "back": "Zurück",
+    "searchPlaceholder": "Prompts durchsuchen…",
+    "allTags": "Alle Tags",
+    "sort": {
+      "recentlyUsed": "Zuletzt verwendet",
+      "mostUsed": "Am häufigsten verwendet",
+      "title": "Titel"
+    },
+    "empty": "Noch keine Prompts",
+    "useCount": "{count}× verwendet",
+    "unlisted": "{count} nicht enthalten",
+    "moveIn": "Einfügen",
+    "moveFailed": "Verschieben fehlgeschlagen",
+    "moved": "In die Prompt-Bibliothek verschoben",
+    "noSelection": "Wähle einen Prompt aus",
+    "untitled": "Unbenannter Prompt",
+    "cancel": "Abbrechen",
+    "create": "Erstellen",
+    "createFailed": "Erstellen fehlgeschlagen",
+    "openNote": "Notiz öffnen",
+    "loading": "Lädt…",
+    "loadFailed": "Laden fehlgeschlagen",
+    "preview": "Vorschau",
+    "missingRequired": "Noch {count} Pflichtvariable(n) offen",
+    "copy": "Kopieren",
+    "copied": "In die Zwischenablage kopiert",
+    "copyFailed": "Kopieren fehlgeschlagen",
+    "selectOption": "Auswählen"
   }
 }

@@ -2,7 +2,7 @@
 
 // Fork (D1): 日記 settings section.
 import { useEffect, useState } from 'react'
-import { BellRing, CalendarDays, CalendarPlus, FolderOpen, Inbox, LayoutTemplate } from 'lucide-react'
+import { BellRing, CalendarDays, CalendarPlus, FolderOpen, Inbox, LayoutTemplate, ScrollText } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 
@@ -28,7 +28,7 @@ import useDailySettingsStore, { type DailySettings } from '@/stores/daily-settin
 // Monday first, like the vault's week view.
 const WEEKDAY_ORDER: WeekdayKey[] = [...WEEKDAY_KEYS.slice(1), WEEKDAY_KEYS[0]]
 
-type TextKey = 'dailyFolder' | 'dailyPattern' | 'inboxFolder' | 'defaultTemplate'
+type TextKey = 'dailyFolder' | 'dailyPattern' | 'inboxFolder' | 'promptFolder' | 'defaultTemplate'
 
 function TextSetting({
   settingKey,
@@ -198,6 +198,7 @@ export default function DailySettingPage() {
           <TextSetting settingKey="dailyFolder" icon={<FolderOpen />} />
           <TextSetting settingKey="dailyPattern" icon={<CalendarDays />} validate={isValidDailyPattern} />
           <TextSetting settingKey="inboxFolder" icon={<Inbox />} />
+          <TextSetting settingKey="promptFolder" icon={<ScrollText />} />
         </ItemGroup>
       </SettingSection>
 

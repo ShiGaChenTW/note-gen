@@ -1,9 +1,10 @@
 'use client'
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { RefreshCw } from 'lucide-react'
+import { ChevronRight, RefreshCw, ScrollText } from 'lucide-react'
 import { motion, useReducedMotion, type Variants } from 'framer-motion'
 import { useTranslations } from 'next-intl'
+import { useRouter } from 'next/navigation'
 import { Store } from '@tauri-apps/plugin-store'
 import { platform } from '@tauri-apps/plugin-os'
 
@@ -77,7 +78,9 @@ export function MobileMePage({
   const tActivity = useTranslations('activity')
   const tMe = useTranslations('mobile.me')
   const tSync = useTranslations('settings.sync')
+  const tPromptLibrary = useTranslations('promptLibrary')
   const reduceMotion = useReducedMotion()
+  const router = useRouter()
 
   const [activityData, setActivityData] = useState<ActivityCalendarData | null>(
     () => mobileActivityCache
@@ -548,6 +551,21 @@ export function MobileMePage({
             <p className="mt-2 text-2xl font-semibold">{currentStreak}</p>
             <p className="mt-1 text-xs text-muted-foreground">{tMe('stats.streakHint')}</p>
           </div>
+        </motion.section>
+
+        <motion.section variants={embeddedItemVariants} className="px-1">
+          <button
+            type="button"
+            className="mobile-dock-surface flex w-full items-center gap-3 rounded-[1.35rem] p-4 text-left active:opacity-80"
+            onClick={() => {
+              onNavigate?.()
+              router.push('/mobile/prompts')
+            }}
+          >
+            <ScrollText className="size-5 text-muted-foreground" aria-hidden />
+            <span className="min-w-0 flex-1 text-sm font-semibold">{tPromptLibrary('title')}</span>
+            <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
+          </button>
         </motion.section>
 
         <motion.section variants={embeddedItemVariants} className="flex flex-col gap-3 px-1">
