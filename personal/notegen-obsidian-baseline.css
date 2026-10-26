@@ -10,14 +10,19 @@
    ============================================================ */
 
 /* ---------- 0–1. 色票與字型：已內建為預設視覺（src/app/fork-theme.css、src/lib/font-settings.ts）----------
-   這裡只留下面各節自用的變數。要調色請改設定裡的自訂主題，或改 fork-theme.css。 */
-:root.dark, .dark {
-  --ob-shell: #161616;                 /* 卡片之外的底色（v6.4 對齊 Obsidian：#161616 底 / #202020 卡） */
-  --ob-faint: #6e6e6e;
+   這裡只留下面各節自用的變數。要調色請改設定裡的自訂主題，或改 fork-theme.css。
+   :root 是淺色主題的值，:root.dark 覆蓋成深色；只寫在 .dark 的話，淺色主題的外框會吃到深色的 fallback。 */
+:root {
+  --ob-shell: #e8e8e8;                 /* 淺色：卡片之外的底色，比白色卡片深一階 */
+  --ob-faint: #8c8c8c;
   --ob-toggle-on: 132 38% 50%;         /* #4fb062 */
   --ng-titlebar-h: 44px;               /* 原 36px */
   --ng-statusbar-h: 30px;              /* 原 24px */
   --ob-card-gap: 14px;                 /* v6.4 Obsidian 的卡片間距約 14–16px，分界靠留白 */
+}
+:root.dark, .dark {
+  --ob-shell: #161616;                 /* 卡片之外的底色（v6.4 對齊 Obsidian：#161616 底 / #202020 卡） */
+  --ob-faint: #6e6e6e;
 }
 
 /* ---------- 2. 標題列（title-bar.tsx: h-[36px] fixed；layout.tsx: main.mt-9 h-[calc(100vh-36px)]） ---------- */
@@ -173,7 +178,7 @@ main .group.rounded-xl.border.bg-background {
 .ProseMirror .tableWrapper { border-radius: 8px; overflow: hidden; margin: 1em 0; }
 .ProseMirror table { border-collapse: collapse; width: 100%; font-size: .9375em; background: hsl(var(--card)); }
 .ProseMirror th, .ProseMirror td { border: none; border-bottom: 1px solid hsl(var(--border)); padding: 8px 12px; }
-.ProseMirror th { font-weight: 600; color: hsl(var(--third-foreground)); background: #2e2e2e; }
+.ProseMirror th { font-weight: 600; color: hsl(var(--third-foreground)); background: hsl(var(--accent)); }
 .ProseMirror tr:last-child td { border-bottom: none; }
 .ProseMirror hr { border: none; border-top: 1px solid hsl(var(--input)); margin: 2em 0; }
 .ProseMirror img { border-radius: 8px; max-width: 100%; }
