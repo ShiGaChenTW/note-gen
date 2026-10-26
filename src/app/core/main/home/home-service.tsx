@@ -1,9 +1,11 @@
 'use client'
 
-// Fork（#31）：載入首頁設定、註冊 ⌘⇧H、從左側欄開檔時收起首頁，並掛上首頁。由 fork-services.tsx 掛一次。
+// Fork（#31）：載入首頁設定、註冊 ⌘⇧H、從左側欄開檔時收起首頁，並掛上首頁與 Inbox 頁（#46）。由 fork-services.tsx 掛一次。
 import { useEffect } from 'react'
 import useArticleStore from '@/stores/article'
 import useHomeStore from '@/stores/home'
+import useInboxStore from '@/stores/inbox'
+import { InboxScreen } from '../inbox/inbox-screen'
 import { HOME_CARDS } from './home-cards'
 import { HomeScreen } from './home-screen'
 import { ActivityTracker } from './cards/footprint-card'
@@ -34,16 +36,25 @@ export function HomeService() {
   }, [])
 
   useEffect(() => {
-    // 編輯器的浮動選單（選取文字、表格）掛在 body 上、層級比首頁高；首頁打開時讓編輯器失焦，選單就會收起。
-    return useHomeStore.subscribe((state, prev) => {
-      if (!state.visible || prev.visible) return
+    // 編輯器的浮動選單（選取文字、表格）掛在 body 上、層級比首頁高；首頁或 Inbox 頁打開時讓編輯器失焦，選單就會收起。
+    function blurEditor() {
       const active = document.activeElement
       if (active instanceof HTMLElement && active.closest('.ProseMirror')) active.blur()
+    }
+    const unsubscribeHome = useHomeStore.subscribe((state, prev) => {
+      if (state.visible && !prev.visible) blurEditor()
     })
+    const unsubscribeInbox = useInboxStore.subscribe((state, prev) => {
+      if (state.visible && !prev.visible) blurEditor()
+    })
+    return () => {
+      unsubscribeHome()
+      unsubscribeInbox()
+    }
   }, [])
 
   useEffect(() => {
-    // 在左側欄（檔案樹、搜尋、記錄、日曆⋯⋯）打開東西時收起首頁。只認使用者剛碰過左側欄後的切換，
+    // 在左側欄（檔案樹、搜尋、日曆⋯⋯）打開東西時收起首頁與 Inbox 頁。只認使用者剛碰過左側欄後的切換，
     // 啟動時還原分頁、自動打開今日日記不算，否則首頁一開就被收掉。
     let touchedAt = 0
     function onTouch(event: Event) {
@@ -54,6 +65,7 @@ export function HomeService() {
       if (state.activeFilePath === prev.activeFilePath && state.activeTabId === prev.activeTabId) return
       if (Date.now() - touchedAt > LEFT_SIDEBAR_OPEN_WINDOW_MS) return
       if (useHomeStore.getState().visible) useHomeStore.getState().hide()
+      if (useInboxStore.getState().visible) useInboxStore.getState().hide()
     })
     return () => {
       for (const type of TOUCH_EVENTS) document.removeEventListener(type, onTouch, true)
@@ -67,6 +79,7 @@ export function HomeService() {
       <ReportService />
       <ReportDrawer />
       <HomeScreen />
+      <InboxScreen />
     </>
   )
 }

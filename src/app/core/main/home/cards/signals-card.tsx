@@ -1,6 +1,7 @@
 'use client'
 
 // Fork（#32）：「可以交給 Agent」。規則在 src/lib/home/signals.ts；設定顯示在「編輯首頁」。
+import useInboxStore, { selectUnprocessedRecords } from '@/stores/inbox'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Input } from '@/components/ui/input'
@@ -33,12 +34,18 @@ export function useSignalNeeds(): NeedItem[] {
   const revision = useVaultIndexStore(state => state.revision)
   const status = useVaultIndexStore(state => state.status)
   const { dailyFolder, dailyPattern, inboxFolder } = useDailySettingsStore()
+  const records = useInboxStore(state => state.records)
+  const processed = useInboxStore(state => state.processed)
 
   const signals = useMemo(() => {
     if (status !== 'ready') return []
     const prefix = `${inboxFolder.replace(/^\/+|\/+$/g, '')}/`
     const week = isoWeekKey(now)
-    const inbox = [...notes.values()].filter(note => note.path.startsWith(prefix)).map(note => ({ path: note.path, mtime: note.mtime }))
+    // Fork（#46）：Inbox 積壓連還沒整理的記錄一起算
+    const inbox = [
+      ...[...notes.values()].filter(note => note.path.startsWith(prefix)).map(note => ({ path: note.path, mtime: note.mtime })),
+      ...selectUnprocessedRecords({ records, processed }).map(record => ({ path: `record:${record.id}`, mtime: record.createdAt })),
+    ]
     return evaluateSignals({
       now,
       overdueDues: groupTasks(selectAllTasks({ notes, revision }), now).overdue.map(task => task.due),
@@ -49,7 +56,7 @@ export function useSignalNeeds(): NeedItem[] {
       // 知識報告的週報（報告/2026-W44 知識報告.md）不是複盤
       weeklyReviewDone: [...notes.keys()].some(path => path.includes(week) && !path.startsWith(`${REPORT_FOLDER}/`)),
     }, rules)
-  }, [now, rules, notes, revision, status, dailyFolder, dailyPattern, inboxFolder])
+  }, [now, rules, notes, revision, status, dailyFolder, dailyPattern, inboxFolder, records, processed])
 
   return signals.map(signal => {
     const text = t(`signals.${signal.id}.text`, signal.values)

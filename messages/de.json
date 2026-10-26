@@ -6810,5 +6810,35 @@
       "later": "Später",
       "start": "Starten"
     }
+  },
+  "inbox": {
+    "records": "Einträge",
+    "folderNotes": "Ordner {folder}",
+    "showProcessed": "Verarbeitete anzeigen",
+    "trash": "Papierkorb",
+    "backToInbox": "Zurück zur Inbox",
+    "backToWorkspace": "Zurück zum Arbeitsbereich",
+    "selectAll": "Alle auswählen",
+    "selected": "{count} ausgewählt",
+    "organize": "Zu Notiz ordnen",
+    "convert": "In Notiz umwandeln",
+    "addTag": "Tag hinzufügen",
+    "delete": "Löschen",
+    "restore": "Wiederherstellen",
+    "markUnprocessed": "Als unverarbeitet markieren",
+    "empty": "Nichts mehr zu verarbeiten",
+    "trashEmpty": "Papierkorb ist leer",
+    "folderEmpty": "Der Ordner ist leer",
+    "open": "Öffnen",
+    "moveTo": "Verschieben nach…",
+    "root": "Stammordner",
+    "moved": "Nach {folder} verschoben",
+    "moveFailed": "Verschieben fehlgeschlagen",
+    "converted": "In {count} Notizen umgewandelt",
+    "failed": "Etwas ist schiefgelaufen",
+    "noSelection": "Wähle einen Eintrag aus",
+    "processedNote": "Verarbeitet zu:",
+    "saved": "In der Inbox gespeichert",
+    "view": "Ansehen"
   }
 }

@@ -77,6 +77,21 @@ function ResizableWrapper() {
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(!leftSidebarVisible)
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(!rightSidebarVisible)
   const [leftPanelWidth, setLeftPanelWidth] = useState(0)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [leftSidebarRight, setLeftSidebarRight] = useState(0)
+
+  // Fork #46：首頁與 Inbox 頁的左緣對齊左側欄實際的右緣（面板寬度不含外框與分隔條，直接量元素）
+  useEffect(() => {
+    const container = containerRef.current
+    const sidebar = container?.querySelector<HTMLElement>('[data-left-sidebar]')
+    if (!container || !sidebar) return
+    const measure = () => setLeftSidebarRight(Math.max(0, Math.ceil(sidebar.getBoundingClientRect().right - container.getBoundingClientRect().left)))
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(sidebar)
+    observer.observe(container)
+    return () => observer.disconnect()
+  }, [leftPanelWidth, leftSidebarVisible])
 
   useEffect(() => {
     void restoreEditorWindows()
@@ -295,9 +310,10 @@ function ResizableWrapper() {
 
   return (
     <div
+      ref={containerRef}
       className="relative flex h-full min-h-0 flex-col"
-      // Fork #31: relative 讓首頁蓋住編輯器與右側欄；--home-left 讓它避開左側欄（含 1px 分隔條）
-      style={{ '--home-left': leftSidebarVisible && !leftPanelCollapsed ? `${leftPanelWidth + 1}px` : '0px' } as CSSProperties}
+      // Fork #31: relative 讓首頁蓋住編輯器與右側欄；--home-left 讓它避開左側欄
+      style={{ '--home-left': leftSidebarVisible && !leftPanelCollapsed ? `${leftSidebarRight + 1}px` : '0px' } as CSSProperties}
     >
       <ResizablePanelGroup
         orientation="horizontal"

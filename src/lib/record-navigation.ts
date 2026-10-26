@@ -1,5 +1,4 @@
 import { isMobileDevice } from './check'
-import { useSidebarStore } from '@/stores/sidebar'
 
 type RecordRouter = {
   push: (path: string) => void
@@ -7,7 +6,7 @@ type RecordRouter = {
 
 /**
  * 记录完成后的导航处理
- * 桌面端：切换到记录 tab
+ * 桌面端（Fork #46）：不切換畫面；記錄留在 Inbox，由呼叫端的提示提供「查看」
  * 移动端：跳转到记录页面
  */
 export function handleRecordComplete(router?: RecordRouter) {
@@ -21,11 +20,6 @@ export function handleRecordComplete(router?: RecordRouter) {
       window.location.href = '/mobile/record'
     }
   } else {
-    // 桌面端：切换到记录 tab
-    const { leftSidebarVisible, setLeftSidebarTab, toggleLeftSidebar } = useSidebarStore.getState()
-    if (!leftSidebarVisible) {
-      void toggleLeftSidebar()
-    }
-    void setLeftSidebarTab('notes')
+    // 記錄不再放在左側欄，桌面端不切換任何畫面
   }
 }

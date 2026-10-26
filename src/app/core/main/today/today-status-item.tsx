@@ -1,6 +1,7 @@
 'use client'
 
 // Fork (D2): status bar entry "需處理 N" that opens the Today tab.
+import useInboxStore, { selectStaleRecords } from '@/stores/inbox'
 import { useEffect, useMemo, useState } from 'react'
 import { AlertTriangle, CalendarCheck } from 'lucide-react'
 import { useTranslations } from 'next-intl'
@@ -16,6 +17,8 @@ export function TodayStatusItem() {
   const status = useVaultIndexStore(state => state.status)
   const inboxFolder = useDailySettingsStore(state => state.inboxFolder)
   const staleDays = useDailySettingsStore(state => state.staleDays)
+  const records = useInboxStore(state => state.records)
+  const processed = useInboxStore(state => state.processed)
   const initSettings = useDailySettingsStore(state => state.initSettings)
   useEffect(() => { void initSettings() }, [initSettings])
 
@@ -29,9 +32,10 @@ export function TodayStatusItem() {
   const count = useMemo(() => {
     const now = new Date()
     const groups = groupTasks(selectAllTasks({ notes, revision }), now)
-    return needAttentionCount(groups, staleInboxNotes(notes.values(), inboxFolder, staleDays, now).length)
+    const staleRecords = selectStaleRecords({ records, processed }, staleDays, now).length
+    return needAttentionCount(groups, staleInboxNotes(notes.values(), inboxFolder, staleDays, now).length + staleRecords)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [notes, revision, inboxFolder, staleDays, day])
+  }, [notes, revision, inboxFolder, staleDays, day, records, processed])
 
   const label = status === 'ready' && count > 0 ? t('status.need', { count }) : t('status.open')
   return (

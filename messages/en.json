@@ -6950,5 +6950,35 @@
       "later": "Later",
       "start": "Start"
     }
+  },
+  "inbox": {
+    "records": "Records",
+    "folderNotes": "{folder} folder",
+    "showProcessed": "Show processed",
+    "trash": "Trash",
+    "backToInbox": "Back to Inbox",
+    "backToWorkspace": "Back to workspace",
+    "selectAll": "Select all",
+    "selected": "{count} selected",
+    "organize": "Organize into note",
+    "convert": "Convert to note",
+    "addTag": "Add tag",
+    "delete": "Delete",
+    "restore": "Restore",
+    "markUnprocessed": "Mark as unprocessed",
+    "empty": "Nothing left to process",
+    "trashEmpty": "Trash is empty",
+    "folderEmpty": "The folder is empty",
+    "open": "Open",
+    "moveTo": "Move to…",
+    "root": "Vault root",
+    "moved": "Moved to {folder}",
+    "moveFailed": "Move failed",
+    "converted": "Converted into {count} notes",
+    "failed": "Something went wrong",
+    "noSelection": "Pick a record to see it here",
+    "processedNote": "Processed into:",
+    "saved": "Saved to Inbox",
+    "view": "View"
   }
 }

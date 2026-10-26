@@ -1,5 +1,6 @@
 'use client'
 
+import useInboxStore from '@/stores/inbox'
 import { PluginEmbeddedViews } from '@/components/plugins/plugin-embedded-views'
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
@@ -1832,7 +1833,8 @@ export function EditorLayout() {
       return
     }
     if (step === 'organize-note') {
-      await setLeftSidebarTab('notes')
+      // Fork（#46）：記錄改在 Inbox 頁整理
+      useInboxStore.getState().show()
       return
     }
     const candidate = findRecentOnboardingFile({

@@ -78,6 +78,18 @@ async function loadDatabase(): Promise<Database> {
     create trigger if not exists record_tags_delete after delete on marks
     begin delete from record_tag_metadata where markId = OLD.id; end
   `)
+  // Fork（#46）：記錄的「已整理」狀態，只存在本機、不進同步。
+  await nextDatabase.execute(`
+    create table if not exists record_processed (
+      markId integer primary key,
+      processedAt integer not null,
+      notePath text default null
+    )
+  `)
+  await nextDatabase.execute(`
+    create trigger if not exists record_processed_delete after delete on marks
+    begin delete from record_processed where markId = OLD.id; end
+  `)
   for (const operation of ['insert', 'update'] as const) {
     await nextDatabase.execute(`
       create trigger if not exists record_tags_${operation} after ${operation} on record_tag_metadata

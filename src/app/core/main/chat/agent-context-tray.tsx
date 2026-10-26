@@ -1,5 +1,6 @@
 "use client"
 
+import { openRecordInInbox } from '@/lib/inbox/actions'
 import * as React from "react"
 import { useLocale, useTranslations } from "next-intl"
 import { usePathname, useRouter } from "next/navigation"
@@ -85,7 +86,7 @@ export function AgentContextTray({
       if (detail.locator.tagId) {
         await useTagStore.getState().setCurrentTagId(detail.locator.tagId)
       }
-      await useSidebarStore.getState().setLeftSidebarTab('notes')
+      if (!pathname.startsWith('/mobile')) await openRecordInInbox(detail.locator.markId)
       await useMarkStore.getState().fetchMarks()
       useMarkStore.getState().setPendingScrollMarkId(detail.locator.markId)
       useMarkStore.getState().setHighlightedMarkId(detail.locator.markId)
