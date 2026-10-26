@@ -27,6 +27,9 @@ const DEFAULT_GITIGNORE: &str = "\
 !.gitignore
 ";
 
+// 未指定路徑時（自動快照）只 stage 文字筆記；沿用既有 repo 時它的 .gitignore 可能沒排除附件（ADR 0003）。
+const TRACKED_PATHSPECS: [&str; 4] = ["*.md", "*.canvas", "*.base", ".gitignore"];
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum VersionKind {
@@ -194,10 +197,10 @@ fn commit_internal(
         }
         _ => {
             index
-                .add_all(["*"], IndexAddOption::DEFAULT, None)
+                .add_all(TRACKED_PATHSPECS.iter(), IndexAddOption::DEFAULT, None)
                 .map_err(|error| format!("Failed to stage changes: {error}"))?;
             index
-                .update_all(["*"], None)
+                .update_all(TRACKED_PATHSPECS.iter(), None)
                 .map_err(|error| format!("Failed to stage removals: {error}"))?;
         }
     }
@@ -590,6 +593,35 @@ mod tests {
         let tree = head_commit.tree().unwrap();
         assert!(tree.get_path(Path::new("日記/2026-10-26.md")).is_ok());
         assert!(tree.get_path(Path::new("日記/assets/photo.png")).is_err());
+    }
+
+    #[test]
+    fn auto_snapshot_in_reused_repo_only_stages_text_notes() {
+        let workspace = TempWorkspace::new();
+        Repository::init(&workspace.path).unwrap();
+        fs::write(workspace.path.join(".gitignore"), "custom-rule\n").unwrap();
+        git_version_enable(workspace.root()).unwrap();
+        fs::create_dir_all(workspace.path.join("assets")).unwrap();
+        fs::write(workspace.path.join("assets/note.md"), "# hi\n").unwrap();
+        fs::write(workspace.path.join("assets/photo.png"), [0u8, 1, 2]).unwrap();
+
+        let commit = git_version_commit(
+            workspace.root(),
+            "snapshot".to_string(),
+            VersionKind::AutoSnapshot,
+            None,
+        )
+        .unwrap()
+        .expect("note changed");
+
+        let repo = open_repo(&workspace.path).unwrap();
+        let tree = repo
+            .find_commit(Oid::from_str(&commit.id).unwrap())
+            .unwrap()
+            .tree()
+            .unwrap();
+        assert!(tree.get_path(Path::new("assets/note.md")).is_ok());
+        assert!(tree.get_path(Path::new("assets/photo.png")).is_err());
     }
 
     #[test]
