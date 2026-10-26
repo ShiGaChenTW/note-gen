@@ -9,6 +9,7 @@ import {
   FileText,
   FolderOpen,
   ImageIcon,
+  Lightbulb,
   Link,
   type LucideIcon,
   LoaderCircle,
@@ -127,6 +128,10 @@ const MARK_DETAIL_TYPE_VISUALS: Record<Mark["type"], { icon: LucideIcon; classNa
   todo: {
     icon: CheckSquare,
     className: "text-slate-500/20 dark:text-slate-300/18",
+  },
+  'prompt-draft': {
+    icon: Lightbulb,
+    className: "text-violet-500/20 dark:text-violet-300/18",
   },
 }
 
@@ -982,6 +987,18 @@ function MarkDetailBody({ mark, isActive }: { mark: Mark; isActive: boolean }) {
           </a>
         </SectionBlock>
       ) : null}
+      {mark.type === 'prompt-draft' && mark.url ? (
+        <SectionBlock title={t('record.mark.promptDraft.source')}>
+          <a
+            href={mark.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block max-w-full break-all text-primary underline-offset-4 hover:underline"
+          >
+            {mark.url}
+          </a>
+        </SectionBlock>
+      ) : null}
       <SectionBlock className="px-0 py-0" contentClassName="overflow-visible">
         <div
           id="record-detail-content"
@@ -1011,7 +1028,10 @@ function MarkDetailBody({ mark, isActive }: { mark: Mark; isActive: boolean }) {
 }
 
 function MarkDetailView({ mark, onClose, isActive }: { mark: Mark; onClose: () => void; isActive: boolean }) {
-  const pluginRecordTarget = useMemo(() => ({ kind: 'record' as const, id: mark.id, recordType: mark.type }), [mark.id, mark.type])
+  // @notegen/plugin-api 的 recordType 是外部合約，還不認得 prompt-draft；這種記錄不給 target。
+  const pluginRecordTarget = useMemo(() => (
+    mark.type === 'prompt-draft' ? undefined : { kind: 'record' as const, id: mark.id, recordType: mark.type }
+  ), [mark.id, mark.type])
   return (
     <PhotoPreviewProvider>
       <div className="flex h-full w-full min-w-0 max-w-full flex-col overflow-hidden bg-background">

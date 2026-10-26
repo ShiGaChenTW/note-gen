@@ -9,6 +9,7 @@ import { ControlFile } from "./control-file"
 import { ControlLink } from "./control-link"
 import { ControlRecording } from "./control-recording"
 import { ControlTodo } from "./control-todo"
+import { ControlPromptDraft } from "./control-prompt-draft"
 import useMarkStore from "@/stores/mark"
 import useSettingStore from "@/stores/setting"
 import {
@@ -171,6 +172,8 @@ function SortableToolbarItem({ id }: SortableToolbarItemProps) {
         return <ControlFile />
       case 'todo':
         return <ControlTodo />
+      case 'prompt-draft':
+        return <ControlPromptDraft />
       default:
         return null
     }

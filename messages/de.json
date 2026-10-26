@@ -1707,6 +1707,9 @@
           },
           "todo": {
             "desc": "To-Do-Elemente erstellen"
+          },
+          "promptDraft": {
+            "desc": "Prompt-Rohtext erfassen"
           }
         }
       }
@@ -3927,7 +3930,8 @@
         "upload": "Eintrag hochladen",
         "download": "Eintrag herunterladen",
         "uploadTo": "Synchronisiere von lokal nach {provider}",
-        "downloadFrom": "Synchronisiere von {provider} nach lokal"
+        "downloadFrom": "Synchronisiere von {provider} nach lokal",
+        "prompt-draft": "Prompt-Entwurf"
       },
       "uploadSuccess": "Eintrag erfolgreich hochgeladen",
       "downloadSuccess": "Eintrag erfolgreich heruntergeladen",
@@ -4218,7 +4222,8 @@
           "list": "Listenansicht",
           "compact": "Kompakte Ansicht",
           "cards": "Kartenansicht"
-        }
+        },
+        "promptDraft": "Prompt-Entwurf aufnehmen"
       },
       "list": {
         "title": "Einträge",
@@ -4247,6 +4252,14 @@
         "cancel": "Abbrechen",
         "removeThinking": "Denkprozess entfernen",
         "stop": "Stopp"
+      },
+      "promptDraft": {
+        "title": "Prompt-Entwurf aufnehmen",
+        "description": "Füge den Originaltext des Prompts ein (Quelle optional). Du kannst ihn später im Inbox-Bereich zu einem Prompt verarbeiten.",
+        "contentPlaceholder": "Prompt-Text einfügen …",
+        "source": "Quell-URL",
+        "sourcePlaceholder": "https://… (optional)",
+        "save": "Speichern"
       }
     },
     "chat": {
@@ -6881,7 +6894,38 @@
     "noSelection": "Wähle einen Eintrag aus",
     "processedNote": "Verarbeitet zu:",
     "saved": "In der Inbox gespeichert",
-    "view": "Ansehen"
+    "view": "Ansehen",
+    "organizeIntoPrompt": "Zu Prompt organisieren",
+    "organizePrompt": {
+      "title": "Zu einem Prompt organisieren",
+      "description": "Die KI schlägt Titel, Zweck, Szenarien, Tags, Variablen und Quelle vor. Prüfe oder bearbeite jedes Feld, bevor es als Prompt-Notiz gespeichert wird.",
+      "generating": "Vorschlag wird erstellt …",
+      "proposalFailedTitle": "Vorschlag konnte nicht erstellt werden",
+      "proposalFailed": "Beim Anfordern eines Vorschlags von der KI ist ein Fehler aufgetreten. Bitte versuche es erneut.",
+      "aiNotConfigured": "Es ist noch kein primäres Modell konfiguriert. Richte die KI zuerst in den Einstellungen ein.",
+      "retry": "Erneut versuchen",
+      "fieldTitle": "Titel",
+      "fieldSummary": "Zweck in einem Satz",
+      "fieldScenarios": "Szenarien (eines pro Zeile)",
+      "fieldScenariosPlaceholder": "z. B. Wochenbericht erstellen, Lesenotizen zusammenfassen",
+      "fieldTags": "Tags (kommagetrennt)",
+      "fieldTagsPlaceholder": "z. B. Schreiben, Zusammenfassung",
+      "fieldSource": "Quelle",
+      "fieldVariables": "Variablen",
+      "variableDescriptionPlaceholder": "Was diese Variable bedeutet und was eingetragen werden soll",
+      "fieldUnification": "Variablen vereinheitlichen",
+      "unificationHelp": "Markierte Schreibweisen werden zu '{{...}}' vereinheitlicht. Alles Unmarkierte bleibt unverändert.",
+      "unificationCount": "{count} Vorkommen",
+      "fieldImprovements": "Verbesserungsvorschläge (nur zur Orientierung, werden nicht angewendet)",
+      "improvementsHelp": "Diese Vorschläge werden nicht automatisch in die Notiz übernommen – bearbeite den Text selbst, wenn du sie anwenden möchtest.",
+      "fieldPreview": "Vorschau des Textes (unverändert, außer den markierten Variablenersetzungen)",
+      "fieldCommitSummary": "Zusammenfassung der Prompt-Version",
+      "commitSummaryHelp": "Die Versionskontrolle ist aktiviert – beim Bestätigen wird eine Prompt-Version aufgezeichnet. Du kannst diese Zusammenfassung bearbeiten.",
+      "cancel": "Abbrechen",
+      "confirm": "Bestätigen und als Prompt speichern",
+      "saved": "Als Prompt gespeichert: {title}",
+      "saveFailed": "Prompt konnte nicht gespeichert werden"
+    }
   },
   "promptLibrary": {
     "title": "Prompt-Bibliothek",

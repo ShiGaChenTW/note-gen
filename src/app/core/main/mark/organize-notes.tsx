@@ -291,6 +291,7 @@ export const OrganizeNotes = forwardRef<{ openOrganize: (options?: OpenOrganizeO
       file: 0,
       recording: 0,
       todo: 0,
+      'prompt-draft': 0,
     })
   }, [marksByRange])
 
@@ -610,6 +611,7 @@ export const OrganizeNotes = forwardRef<{ openOrganize: (options?: OpenOrganizeO
         fileMarks: marksByRange.filter(item => item.type === 'file'),
         recordingMarks: marksByRange.filter(item => item.type === 'recording'),
         todoMarks: marksByRange.filter(item => item.type === 'todo'),
+        promptDraftMarks: marksByRange.filter(item => item.type === 'prompt-draft'),
       }
 
       // Process image marks
@@ -651,6 +653,8 @@ export const OrganizeNotes = forwardRef<{ openOrganize: (options?: OpenOrganizeO
         ${categorizedMarks.recordingMarks.map((item, index) => `Recording record ${index + 1}: ${item.content}. Created at ${dayjs(item.createdAt).format('YYYY-MM-DD HH:mm:ss')}`).join(';\n\n')}.
         Here are todo records:
         ${categorizedMarks.todoMarks.map((item, index) => `Todo record ${index + 1}: ${item.content || item.desc}. Created at ${dayjs(item.createdAt).format('YYYY-MM-DD HH:mm:ss')}`).join(';\n\n')}.
+        Here are prompt draft records (raw prompt text pasted by the user):
+        ${categorizedMarks.promptDraftMarks.map((item, index) => `Prompt draft record ${index + 1}: ${item.content}${item.url ? ` (source: ${item.url})` : ''}. Created at ${dayjs(item.createdAt).format('YYYY-MM-DD HH:mm:ss')}`).join(';\n\n')}.
         Here are image record descriptions:
         ${processedImageMarks.map(item => `
           Description: ${item.content},

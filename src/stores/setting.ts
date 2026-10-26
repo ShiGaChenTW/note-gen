@@ -1842,6 +1842,7 @@ const useSettingStore = create<SettingState>((set, get) => ({
     { id: 'link', enabled: true, order: 4 },
     { id: 'file', enabled: true, order: 5 },
     { id: 'todo', enabled: true, order: 6 },
+    { id: 'prompt-draft', enabled: true, order: 7 },
   ],
   setRecordToolbarConfig: async (config: RecordToolbarItem[]) => {
     set({ recordToolbarConfig: config })

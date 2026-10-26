@@ -1277,6 +1277,9 @@
           },
           "todo": {
             "desc": "创建待办事项"
+          },
+          "promptDraft": {
+            "desc": "プロンプトの原文を記録"
           }
         }
       }
@@ -4060,7 +4063,8 @@
         "download": "ダウンロード",
         "uploadTo": "ローカルから {provider} へ同期",
         "downloadFrom": "{provider} からローカルへ同期",
-        "recording": "录音"
+        "recording": "录音",
+        "prompt-draft": "プロンプト素材"
       },
       "uploadSuccess": "記録アップロード成功",
       "downloadSuccess": "記録ダウンロード成功",
@@ -4333,7 +4337,8 @@
         "link": "リンク記録",
         "file": "ファイルアップロード",
         "todo": "Todo記録",
-        "closeTrash": "ゴミ箱を閉じる"
+        "closeTrash": "ゴミ箱を閉じる",
+        "promptDraft": "プロンプト素材を記録"
       },
       "list": {
         "title": "記録",
@@ -4349,6 +4354,14 @@
         "cancel": "取消",
         "removeThinking": "移除思考过程",
         "stop": "停止"
+      },
+      "promptDraft": {
+        "title": "プロンプト素材を記録",
+        "description": "プロンプトの原文を貼り付けます（出典URLは任意）。後で Inbox から整理してプロンプトにできます。",
+        "contentPlaceholder": "プロンプトの原文を貼り付け…",
+        "source": "出典URL",
+        "sourcePlaceholder": "https://…（省略可）",
+        "save": "記録"
       }
     },
     "chat": {
@@ -6930,7 +6943,38 @@
     "noSelection": "記録を選ぶとここに表示されます",
     "processedNote": "整理済み：",
     "saved": "Inbox に保存しました",
-    "view": "表示"
+    "view": "表示",
+    "organizeIntoPrompt": "プロンプトに整理",
+    "organizePrompt": {
+      "title": "プロンプトに整理",
+      "description": "AI がタイトル・用途・適用場面・タグ・変数・出典を提案します。各項目を確認または編集してからプロンプトノートとして保存されます。",
+      "generating": "AI が提案を作成しています…",
+      "proposalFailedTitle": "提案の作成に失敗しました",
+      "proposalFailed": "AI への提案依頼でエラーが発生しました。もう一度お試しください。",
+      "aiNotConfigured": "メインモデルが設定されていません。先に設定で AI を設定してください。",
+      "retry": "再試行",
+      "fieldTitle": "タイトル",
+      "fieldSummary": "一言での用途",
+      "fieldScenarios": "適用場面（1行に1つ）",
+      "fieldScenariosPlaceholder": "例：週報の作成、読書ノートの整理",
+      "fieldTags": "タグ（カンマ区切り）",
+      "fieldTagsPlaceholder": "例：ライティング, 要約",
+      "fieldSource": "出典",
+      "fieldVariables": "変数",
+      "variableDescriptionPlaceholder": "この変数が何を表すか、何を入力するか",
+      "fieldUnification": "変数の統一",
+      "unificationHelp": "チェックした表記は '{{...}}' に統一されます。チェックしていない原文はそのまま変更されません。",
+      "unificationCount": "{count} 件",
+      "fieldImprovements": "改善提案（参考のみ、ノートには反映されません）",
+      "improvementsHelp": "これらの提案はノートに自動で反映されません。採用したい場合は本文を自分で編集してください。",
+      "fieldPreview": "本文プレビュー（チェックした変数の置き換え以外は原文のまま）",
+      "fieldCommitSummary": "プロンプトバージョンの概要",
+      "commitSummaryHelp": "バージョン管理が有効なため、確認するとプロンプトバージョンが記録されます。概要は編集できます。",
+      "cancel": "キャンセル",
+      "confirm": "確認してプロンプトとして保存",
+      "saved": "プロンプトとして保存しました：{title}",
+      "saveFailed": "プロンプトの保存に失敗しました"
+    }
   },
   "promptLibrary": {
     "title": "プロンプトライブラリ",

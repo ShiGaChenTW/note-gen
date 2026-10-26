@@ -1707,6 +1707,9 @@
           },
           "todo": {
             "desc": "Create todo items"
+          },
+          "promptDraft": {
+            "desc": "Record raw prompt text"
           }
         }
       }
@@ -4066,7 +4069,8 @@
         "upload": "Upload Record",
         "download": "Download Record",
         "uploadTo": "Sync from local to {provider}",
-        "downloadFrom": "Sync from {provider} to local"
+        "downloadFrom": "Sync from {provider} to local",
+        "prompt-draft": "Prompt Draft"
       },
       "uploadSuccess": "Record upload success",
       "downloadSuccess": "Record download success",
@@ -4357,7 +4361,8 @@
           "list": "List view",
           "compact": "Compact view",
           "cards": "Card view"
-        }
+        },
+        "promptDraft": "Record Prompt Draft"
       },
       "list": {
         "title": "Records",
@@ -4386,6 +4391,14 @@
         "cancel": "Cancel",
         "removeThinking": "Remove thinking process",
         "stop": "Stop"
+      },
+      "promptDraft": {
+        "title": "Record Prompt Draft",
+        "description": "Paste the raw prompt text, with an optional source URL. You can organize it into a prompt later from Inbox.",
+        "contentPlaceholder": "Paste the prompt text…",
+        "source": "Source URL",
+        "sourcePlaceholder": "https://… (optional)",
+        "save": "Save"
       }
     },
     "chat": {
@@ -7021,7 +7034,38 @@
     "noSelection": "Pick a record to see it here",
     "processedNote": "Processed into:",
     "saved": "Saved to Inbox",
-    "view": "View"
+    "view": "View",
+    "organizeIntoPrompt": "Organize into prompt",
+    "organizePrompt": {
+      "title": "Organize into a prompt",
+      "description": "AI proposes a title, purpose, scenarios, tags, variables and source. Review or edit each field before it's saved as a prompt note.",
+      "generating": "Generating a proposal…",
+      "proposalFailedTitle": "Couldn't generate a proposal",
+      "proposalFailed": "Something went wrong while asking AI for a proposal. Please try again.",
+      "aiNotConfigured": "No primary model is configured yet. Please set up AI in Settings first.",
+      "retry": "Retry",
+      "fieldTitle": "Title",
+      "fieldSummary": "One-line purpose",
+      "fieldScenarios": "Scenarios (one per line)",
+      "fieldScenariosPlaceholder": "e.g. drafting a weekly report, summarizing reading notes",
+      "fieldTags": "Tags (comma-separated)",
+      "fieldTagsPlaceholder": "e.g. writing, summary",
+      "fieldSource": "Source",
+      "fieldVariables": "Variables",
+      "variableDescriptionPlaceholder": "What this variable represents and what to fill in",
+      "fieldUnification": "Variable unification",
+      "unificationHelp": "Checked spellings are unified into '{{...}}'. Anything left unchecked stays exactly as written.",
+      "unificationCount": "{count} occurrence(s)",
+      "fieldImprovements": "Improvement suggestions (reference only, not applied)",
+      "improvementsHelp": "These suggestions are not written into the note automatically — edit the body yourself if you want to apply them.",
+      "fieldPreview": "Body preview (unchanged except for the checked variable replacements)",
+      "fieldCommitSummary": "Prompt version summary",
+      "commitSummaryHelp": "Version control is enabled — confirming will record a prompt version. You can edit this summary.",
+      "cancel": "Cancel",
+      "confirm": "Confirm and save as prompt",
+      "saved": "Saved as prompt: {title}",
+      "saveFailed": "Failed to save the prompt"
+    }
   },
   "promptLibrary": {
     "title": "Prompt Library",

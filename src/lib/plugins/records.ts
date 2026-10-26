@@ -25,11 +25,12 @@ async function snapshot(mark: Mark, preview = false): Promise<PluginRecord> {
   ])))
   const data = mark.type === 'todo' ? todo(mark) : undefined
   // Binary attachments and their app-private paths are not exposed by the record API.
-  const content = data ? (typeof data.title === 'string' ? data.title : '') : ['text', 'link', 'scan', 'recording'].includes(mark.type) ? mark.content ?? '' : ''
+  const content = data ? (typeof data.title === 'string' ? data.title : '') : ['text', 'link', 'scan', 'recording', 'prompt-draft'].includes(mark.type) ? mark.content ?? '' : ''
   const description = data && typeof data.description === 'string' ? data.description : mark.desc ?? ''
   if (!preview && new TextEncoder().encode(content + description).length > 128 * 1024) throw new PluginError('QuotaExceeded', 'Record text exceeds the read limit')
+  // @notegen/plugin-api 的 PluginRecord type 還不認得 prompt-draft，對外當成純文字曝光。
   return {
-    id: mark.id, tagId: mark.tagId, type: mark.type, createdAt: mark.createdAt,
+    id: mark.id, tagId: mark.tagId, type: mark.type === 'prompt-draft' ? 'text' : mark.type, createdAt: mark.createdAt,
     content: preview ? content.slice(0, 1000) : content,
     description: preview ? description.slice(0, 500) : description,
     revision: [...new Uint8Array(hash)].map(byte => byte.toString(16).padStart(2, '0')).join(''),
