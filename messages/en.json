@@ -4563,7 +4563,8 @@
         },
         "promptSelect": {
           "tooltip": "Select prompt",
-          "placeholder": "Search prompts"
+          "placeholder": "Search prompts",
+          "conversationPromptApplied": "This conversation's system prompt was set from a prompt"
         },
         "newChat": "New Chat",
         "temporaryChat": "Temporary Chat",
@@ -4888,11 +4889,19 @@
             "untitledRecord": "Untitled record",
             "recordFallback": "Record content",
             "canvasSummary": "{nodes} nodes, {edges} edges"
+          },
+          "prompts": {
+            "title": "Prompt Library"
           }
         },
         "clearChat": "Clear chat",
         "clearContext": {
           "tooltip": "Clear context"
+        },
+        "modelSuggestion": {
+          "apply": "Apply to this message",
+          "applied": "Applied — resets for the next message",
+          "unavailable": "No matching model setting found"
         }
       },
       "header": {
@@ -7032,6 +7041,10 @@
     "copy": "Copy",
     "copied": "Copied to clipboard",
     "copyFailed": "Copy failed",
-    "selectOption": "Pick one"
+    "selectOption": "Pick one",
+    "insertDialog": {
+      "insert": "Insert into input",
+      "startNewConversation": "Start a new conversation with this prompt"
+    }
   }
 }

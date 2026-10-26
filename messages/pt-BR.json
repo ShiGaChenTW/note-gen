@@ -4508,7 +4508,8 @@
         },
         "promptSelect": {
           "tooltip": "Selecionar prompt",
-          "placeholder": "Pesquisar prompts"
+          "placeholder": "Pesquisar prompts",
+          "conversationPromptApplied": "O prompt do sistema desta conversa foi definido a partir de um prompt"
         },
         "clearChat": "Limpar Chat",
         "clearContext": {
@@ -4779,11 +4780,19 @@
             "untitledRecord": "Registro sem título",
             "recordFallback": "Conteúdo do registro",
             "canvasSummary": "{nodes} nós, {edges} conexões"
+          },
+          "prompts": {
+            "title": "Biblioteca de prompts"
           }
         },
         "stopped": "A conversa foi encerrada",
         "newChat": "Novo Chat",
-        "temporaryChat": "Chat temporário"
+        "temporaryChat": "Chat temporário",
+        "modelSuggestion": {
+          "apply": "Aplicar a esta mensagem",
+          "applied": "Aplicado — será redefinido na próxima mensagem",
+          "unavailable": "Nenhuma configuração de modelo correspondente encontrada"
+        }
       },
       "header": {
         "configApiKey": "Configurar CHAVE DE API",
@@ -6908,6 +6917,10 @@
     "copy": "Copiar",
     "copied": "Copiado para a área de transferência",
     "copyFailed": "Falha ao copiar",
-    "selectOption": "Escolha uma opção"
+    "selectOption": "Escolha uma opção",
+    "insertDialog": {
+      "insert": "Inserir no campo de entrada",
+      "startNewConversation": "Iniciar nova conversa com este prompt"
+    }
   }
 }
