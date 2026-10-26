@@ -48,6 +48,25 @@ export function useActiveDailyDate(): Date | null {
   )
 }
 
+/** 月曆上「有日記」「有任務到期」兩種小點的 modifiers；彈出月曆與左側欄月曆共用。 */
+export function useDailyDayModifiers() {
+  const { withNote, withOpenTasks } = useDailyDates()
+  return useMemo(() => ({
+    modifiers: {
+      hasNote: (date: Date) => withNote.has(toDateKey(date)),
+      openTasks: (date: Date) => withOpenTasks.has(toDateKey(date)),
+    },
+    modifiersClassNames: {
+      hasNote: `relative ${DOT} after:bg-muted-foreground/70`,
+      openTasks: `relative ${DOT} after:bg-primary`,
+    },
+  }), [withNote, withOpenTasks])
+}
+
+export function dayPickerLocale(locale: string) {
+  return DAY_PICKER_LOCALES[locale as keyof typeof DAY_PICKER_LOCALES] ?? enUS
+}
+
 export function openDailyNoteWithFeedback(date: Date, errorMessage: string) {
   void openDailyNote(date).catch(error => {
     console.error('[daily] open failed:', error)
@@ -62,7 +81,7 @@ export function DailyCalendarPopover({ selected, children, align = 'end' }: {
 }) {
   const t = useTranslations('today.calendarNav')
   const locale = useLocale()
-  const { withNote, withOpenTasks } = useDailyDates()
+  const { modifiers, modifiersClassNames } = useDailyDayModifiers()
   const [open, setOpen] = useState(false)
   const [month, setMonth] = useState<Date>(() => selected ?? new Date())
 
@@ -72,7 +91,7 @@ export function DailyCalendarPopover({ selected, children, align = 'end' }: {
       <PopoverContent align={align} className="w-auto p-0">
         <Calendar
           mode="single"
-          locale={DAY_PICKER_LOCALES[locale as keyof typeof DAY_PICKER_LOCALES] ?? enUS}
+          locale={dayPickerLocale(locale)}
           weekStartsOn={1}
           month={month}
           onMonthChange={setMonth}
@@ -82,14 +101,8 @@ export function DailyCalendarPopover({ selected, children, align = 'end' }: {
             setOpen(false)
             openDailyNoteWithFeedback(date, t('openFailed'))
           }}
-          modifiers={{
-            hasNote: date => withNote.has(toDateKey(date)),
-            openTasks: date => withOpenTasks.has(toDateKey(date)),
-          }}
-          modifiersClassNames={{
-            hasNote: `relative ${DOT} after:bg-muted-foreground/70`,
-            openTasks: `relative ${DOT} after:bg-primary`,
-          }}
+          modifiers={modifiers}
+          modifiersClassNames={modifiersClassNames}
         />
         <div className="flex items-center gap-3 border-t px-3 py-2 text-xs text-muted-foreground">
           <span className="flex items-center gap-1"><span className="size-1.5 rounded-full bg-muted-foreground/70" />{t('legendNote')}</span>

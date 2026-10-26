@@ -219,7 +219,13 @@
       "legendNote": "Has note",
       "legendTasks": "Tasks due",
       "noMore": "No more daily notes",
-      "openFailed": "Couldn't open the daily note"
+      "openFailed": "Couldn't open the daily note",
+      "prevWeek": "Previous week",
+      "nextWeek": "Next week",
+      "prevMonth": "Previous month",
+      "nextMonth": "Next month",
+      "collapse": "Collapse calendar",
+      "expand": "Expand calendar"
     },
     "quickAdd": {
       "label": "Quick add task",

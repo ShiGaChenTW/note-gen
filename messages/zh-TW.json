@@ -219,7 +219,13 @@
       "legendNote": "有日記",
       "legendTasks": "有任務到期",
       "noMore": "沒有更多日記了",
-      "openFailed": "無法開啟日記"
+      "openFailed": "無法開啟日記",
+      "prevWeek": "上一週",
+      "nextWeek": "下一週",
+      "prevMonth": "上個月",
+      "nextMonth": "下個月",
+      "collapse": "收起月曆",
+      "expand": "展開月曆"
     },
     "quickAdd": {
       "label": "快速新增任務",

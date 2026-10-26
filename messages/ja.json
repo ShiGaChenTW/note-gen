@@ -219,7 +219,13 @@
       "legendNote": "ノートあり",
       "legendTasks": "期限のタスクあり",
       "noMore": "これ以上デイリーノートはありません",
-      "openFailed": "デイリーノートを開けませんでした"
+      "openFailed": "デイリーノートを開けませんでした",
+      "prevWeek": "前の週",
+      "nextWeek": "次の週",
+      "prevMonth": "前の月",
+      "nextMonth": "次の月",
+      "collapse": "カレンダーを折りたたむ",
+      "expand": "カレンダーを展開"
     },
     "quickAdd": {
       "label": "タスクをすばやく追加",
