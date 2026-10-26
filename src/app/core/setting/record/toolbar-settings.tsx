@@ -11,6 +11,7 @@ import {
   Link2,
   FileText,
   CheckSquare,
+  Lightbulb,
   GripVertical
 } from 'lucide-react'
 import useSettingStore, { RecordToolbarItem } from '@/stores/setting'
@@ -76,6 +77,11 @@ const TOOL_CONFIGS = {
     icon: <CheckSquare />,
     titleKey: 'record.mark.toolbar.todo',
     descKey: 'settings.record.toolbar.recordToolbar.todo.desc',
+  },
+  'prompt-draft': {
+    icon: <Lightbulb />,
+    titleKey: 'record.mark.toolbar.promptDraft',
+    descKey: 'settings.record.toolbar.recordToolbar.promptDraft.desc',
   },
 }
 

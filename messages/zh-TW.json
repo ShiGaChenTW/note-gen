@@ -1277,6 +1277,9 @@
           },
           "todo": {
             "desc": "创建待办事项"
+          },
+          "promptDraft": {
+            "desc": "記錄一段 Prompt 原文"
           }
         }
       }
@@ -4060,7 +4063,8 @@
         "download": "下載記錄",
         "uploadTo": "從本地同步到 {provider}",
         "downloadFrom": "從 {provider} 同步到本地",
-        "recording": "录音"
+        "recording": "录音",
+        "prompt-draft": "Prompt 素材"
       },
       "note": {
         "organizeAs": "整理為",
@@ -4338,7 +4342,8 @@
         "link": "記錄連結",
         "file": "上傳文件",
         "todo": "待辦記錄",
-        "closeTrash": "關閉回收站"
+        "closeTrash": "關閉回收站",
+        "promptDraft": "記錄 Prompt 素材"
       },
       "list": {
         "title": "記錄",
@@ -4349,6 +4354,14 @@
       "imageGallery": {
         "expand": "展开",
         "collapse": "收起"
+      },
+      "promptDraft": {
+        "title": "記錄 Prompt 素材",
+        "description": "貼上提示詞原文，可選填來源網址；之後可以在 Inbox 整理成提示詞。",
+        "contentPlaceholder": "貼上提示詞原文…",
+        "source": "來源網址",
+        "sourcePlaceholder": "https://…（可留空）",
+        "save": "記錄"
       }
     },
     "chat": {
@@ -6898,7 +6911,38 @@
     "noSelection": "點一筆記錄看內容",
     "processedNote": "已整理，整理成：",
     "saved": "已存進 Inbox",
-    "view": "查看"
+    "view": "查看",
+    "organizeIntoPrompt": "整理成提示詞",
+    "organizePrompt": {
+      "title": "整理成提示詞",
+      "description": "AI 會提議標題、用途、適用情境、標籤、變數與來源；逐欄確認或修改後才會存成提示詞筆記。",
+      "generating": "AI 正在產生提議…",
+      "proposalFailedTitle": "產生提議失敗",
+      "proposalFailed": "AI 產生提議時發生錯誤，請重試。",
+      "aiNotConfigured": "尚未設定主要模型，請先到設定完成 AI 設定。",
+      "retry": "重試",
+      "fieldTitle": "標題",
+      "fieldSummary": "一句話用途",
+      "fieldScenarios": "適用情境（每行一項）",
+      "fieldScenariosPlaceholder": "例如：準備週報、整理讀書筆記",
+      "fieldTags": "標籤（逗號分隔）",
+      "fieldTagsPlaceholder": "例如：寫作, 摘要",
+      "fieldSource": "來源",
+      "fieldVariables": "變數",
+      "variableDescriptionPlaceholder": "這個變數代表什麼、要填什麼內容",
+      "fieldUnification": "變數統一",
+      "unificationHelp": "勾選的寫法會統一成 '{{...}}'；沒勾選的原文完全不變。",
+      "unificationCount": "共 {count} 處",
+      "fieldImprovements": "改進建議（僅供參考，不會套用到筆記）",
+      "improvementsHelp": "這些建議不會自動寫進筆記，想採用要自己編輯內文。",
+      "fieldPreview": "本文預覽（原文除勾選的變數替換外完全不變）",
+      "fieldCommitSummary": "提示詞版本摘要",
+      "commitSummaryHelp": "版本管理已啟用，確認後會留一筆提示詞版本；摘要可以修改。",
+      "cancel": "取消",
+      "confirm": "確認並存成提示詞",
+      "saved": "已存成提示詞：{title}",
+      "saveFailed": "存成提示詞失敗"
+    }
   },
   "promptLibrary": {
     "title": "提示詞庫",

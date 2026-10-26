@@ -140,7 +140,7 @@ export interface CanvasNodeData extends Record<string, unknown> {
   drawingTool?: 'pen' | 'highlighter'
   filePath?: string
   recordId?: number
-  recordType?: 'scan' | 'text' | 'image' | 'link' | 'file' | 'recording' | 'todo'
+  recordType?: 'scan' | 'text' | 'image' | 'link' | 'file' | 'recording' | 'todo' | 'prompt-draft'
   imagePath?: string
   url?: string
   checked?: boolean

@@ -12,7 +12,7 @@ import {
 } from './remote-library'
 
 type RecordAssetMark = {
-  type: 'scan' | 'text' | 'image' | 'link' | 'file' | 'recording' | 'todo'
+  type: 'scan' | 'text' | 'image' | 'link' | 'file' | 'recording' | 'todo' | 'prompt-draft'
   url: string
   content?: string
 }

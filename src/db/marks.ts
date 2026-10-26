@@ -21,7 +21,7 @@ export interface Mark {
   /** The primary tag remains tagId for compatibility with chats and save targets. */
   tagIds?: number[]
   tagUpdatedAt?: number
-  type: 'scan' | 'text' | 'image' | 'link' | 'file' | 'recording' | 'todo'
+  type: 'scan' | 'text' | 'image' | 'link' | 'file' | 'recording' | 'todo' | 'prompt-draft'
   content?: string
   desc?: string
   url: string

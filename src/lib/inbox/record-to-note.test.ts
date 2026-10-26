@@ -19,4 +19,14 @@ describe('recordNoteContent', () => {
   it('does not repeat an image description that equals its OCR text', () => {
     expect(recordNoteContent({ type: 'scan', content: 'OCR', desc: 'OCR', url: 'image/a.png' })).toBe('OCR\n')
   })
+
+  it('keeps a prompt draft record as-is, appending its source URL when present (#55)', () => {
+    expect(recordNoteContent({ type: 'prompt-draft', content: '寫一篇關於 {{topic}} 的文章', desc: '', url: 'https://example.com' }))
+      .toBe('寫一篇關於 {{topic}} 的文章\n\nhttps://example.com\n')
+  })
+
+  it('keeps a prompt draft record without a source URL unchanged', () => {
+    expect(recordNoteContent({ type: 'prompt-draft', content: '寫一篇關於 {{topic}} 的文章', desc: '', url: '' }))
+      .toBe('寫一篇關於 {{topic}} 的文章\n')
+  })
 })
