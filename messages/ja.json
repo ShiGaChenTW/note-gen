@@ -1189,6 +1189,10 @@
         "testBody": "この通知が見えていれば、リマインダーは正常に動作しています。",
         "denied": "通知が許可されていません。システム設定 → 通知 で NoteGen を許可してください",
         "sent": "テスト通知を送信しました"
+      },
+      "promptFolder": {
+        "title": "プロンプトフォルダ",
+        "desc": "プロンプトライブラリの場所。このフォルダ内で frontmatter に type: prompt があるノートだけがプロンプトとして扱われます。"
       }
     },
     "record": {
@@ -3142,6 +3146,22 @@
         "title": "アセット",
         "desc": "アセットディレクトリ名を設定します。エディタでローカル画像を挿入すると、このディレクトリ名（assets や images など）が使われます。",
         "select": "アセットディレクトリ名を設定してください。例: assets"
+      },
+      "versionControl": {
+        "title": "バージョン管理",
+        "desc": "ワークスペース全体にローカルの git 履歴を作成し、オフラインでも変更を振り返れるようにします。追跡するのは .md、.canvas、.base のテキストファイルのみで、添付ファイルは履歴に含まれません。",
+        "enable": "バージョン管理を有効にする",
+        "statusRepo": "ローカル git 履歴が稼働中です",
+        "statusNotRepo": "まだローカル git 履歴がありません",
+        "confirmTitle": "バージョン管理を有効にしますか？",
+        "confirmDescNew": "ワークスペースのルートに .git と既定の .gitignore を作成します。追跡するのは .md、.canvas、.base のみで、どこにもアップロードされません。",
+        "confirmDescExisting": "このワークスペースには既に .git があります（例: 他のツールで作成）。有効にするとそのまま引き継いで使用し、再作成したり既存の設定を変更したりしません。",
+        "toastEnabled": "バージョン管理を有効にしました",
+        "toastEnabledDesc": "このワークスペースにローカル git 履歴を作成しました",
+        "toastReused": "ワークスペースの既存のローカル git 履歴を引き継ぎました",
+        "toastError": "バージョン管理の切り替えに失敗しました",
+        "autoSnapshotLabel": "自動スナップショット",
+        "autoSnapshotDesc": "一定時間操作がない場合やアプリを終了する際に、追跡中の変更をまとめて自動で記録します。オフにすると自動記録されなくなります。"
       }
     },
     "shortcuts": {
@@ -6901,5 +6921,38 @@
   "leftSidebar": {
     "resize": "上下の領域の高さを調整",
     "resizeHint": "ドラッグまたは上下キーで調整、Enter かダブルクリックで既定に戻す"
+  },
+  "promptLibrary": {
+    "title": "プロンプトライブラリ",
+    "newPrompt": "新規プロンプト",
+    "backToWorkspace": "ワークスペースに戻る",
+    "back": "戻る",
+    "searchPlaceholder": "プロンプトを検索…",
+    "allTags": "すべてのタグ",
+    "sort": {
+      "recentlyUsed": "最近使用",
+      "mostUsed": "よく使う",
+      "title": "タイトル"
+    },
+    "empty": "まだプロンプトがありません",
+    "useCount": "{count} 回使用",
+    "unlisted": "{count} 件未登録",
+    "moveIn": "取り込む",
+    "moveFailed": "移動に失敗しました",
+    "moved": "プロンプトライブラリに移動しました",
+    "noSelection": "プロンプトを選ぶとここに表示されます",
+    "untitled": "名称未設定のプロンプト",
+    "cancel": "キャンセル",
+    "create": "作成",
+    "createFailed": "作成に失敗しました",
+    "openNote": "ノートを開く",
+    "loading": "読み込み中…",
+    "loadFailed": "読み込みに失敗しました",
+    "preview": "プレビュー",
+    "missingRequired": "必須の変数が {count} 件残っています",
+    "copy": "コピー",
+    "copied": "クリップボードにコピーしました",
+    "copyFailed": "コピーに失敗しました",
+    "selectOption": "選択してください"
   }
 }

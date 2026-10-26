@@ -5,7 +5,7 @@ import { isPluginDisplayVisible } from '@/lib/plugins/display-preferences'
 import { usePluginLocalization } from '@/lib/plugins/localization'
 import { useEffect, useRef, useState, type ComponentType, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react'
 import { Tabs, TabsContent } from "@/components/ui/tabs"
-import { CalendarCheck, ChevronDown, ChevronRight, Files, Hash, History, Inbox, LayoutDashboard, Palette } from "lucide-react"
+import { CalendarCheck, ChevronDown, ChevronRight, Files, Hash, History, Inbox, LayoutDashboard, Palette, ScrollText } from "lucide-react"
 import { FileSidebar } from "./file"
 import { FileActions } from "./file/file-actions"
 import { useLocale, useTranslations } from "next-intl"
@@ -22,6 +22,7 @@ import { usePluginStore } from '@/stores/plugins'
 import { resolvePluginViewTitle } from '@/app/core/setting/plugins/plugin-display'
 import useHomeStore from '@/stores/home'
 import useInboxStore from '@/stores/inbox'
+import usePromptLibraryStore from '@/stores/prompt-library'
 import { openDailyNoteFromSidebar, SidebarCalendar } from './daily/sidebar-calendar'
 import { SIDEBAR_ROW, SIDEBAR_ROW_ACTIVE, SIDEBAR_ROW_ACTIVE_SECONDARY } from './sidebar-row'
 import { Count } from './page-ui'
@@ -167,6 +168,9 @@ export function LeftSidebar() {
   const inboxVisible = useInboxStore(state => state.visible)
   const showInbox = useInboxStore(state => state.show)
   const inboxCount = useInboxPendingCount()
+  const promptLibraryVisible = usePromptLibraryStore(state => state.visible)
+  const showPromptLibrary = usePromptLibraryStore(state => state.show)
+  const pageVisible = homeVisible || inboxVisible || promptLibraryVisible
   const pluginsInitialized = usePluginStore((state) => state.initialized)
   const displaySettings = usePluginStore(state => state.deviceSettings)
   const installed = usePluginStore((state) => state.installed)
@@ -201,7 +205,7 @@ export function LeftSidebar() {
   // 筆記標籤與時間軸不進 SidebarSearch 的範圍（它只認筆記、記錄、畫布）。
   const searchTab = isBuiltInLeftSidebarTab(leftSidebarTab) && leftSidebarTab !== 'noteTags' && leftSidebarTab !== 'timeline' ? leftSidebarTab : 'files'
   const renderTab = (tab: LauncherTab) => (
-    <LauncherButton key={tab.id} icon={tab.icon} title={tab.title} active={tab.id === leftSidebarTab} secondary={homeVisible || inboxVisible} onClick={() => void setLeftSidebarTab(tab.id)} />
+    <LauncherButton key={tab.id} icon={tab.icon} title={tab.title} active={tab.id === leftSidebarTab} secondary={pageVisible} onClick={() => void setLeftSidebarTab(tab.id)} />
   )
 
   return (
@@ -216,12 +220,13 @@ export function LeftSidebar() {
           <LauncherButton icon={LayoutDashboard} title="Overview" active={homeVisible} onClick={showHome} />
           <LauncherButton icon={CalendarCheck} title="Today" onClick={() => openDailyNoteFromSidebar(new Date(), t('today.calendarNav.openFailed'))} />
           <LauncherButton icon={Inbox} title="Inbox" active={inboxVisible} badge={inboxCount} badgeLabel={t('inbox.pending', { count: inboxCount })} onClick={() => showInbox()} />
+          <LauncherButton icon={ScrollText} title="Prompts" active={promptLibraryVisible} onClick={() => showPromptLibrary()} />
           <div className="mx-2 my-1.5 border-t border-sidebar-border" role="separator" />
           {SIDEBAR_TABS.map(renderTab)}
           {visiblePluginTabs.map(renderTab)}
           {morePluginTabs.length > 0 && (
             <>
-              <LauncherButton icon={moreOpen ? ChevronDown : ChevronRight} title="More" active={!moreOpen && activeInMore} secondary={homeVisible || inboxVisible} expanded={moreOpen} onClick={() => setMoreOpen(open => !open)} />
+              <LauncherButton icon={moreOpen ? ChevronDown : ChevronRight} title="More" active={!moreOpen && activeInMore} secondary={pageVisible} expanded={moreOpen} onClick={() => setMoreOpen(open => !open)} />
               {moreOpen && <div className="flex flex-col gap-px pl-3">{morePluginTabs.map(renderTab)}</div>}
             </>
           )}

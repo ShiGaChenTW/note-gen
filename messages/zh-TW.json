@@ -1189,6 +1189,10 @@
         "testBody": "看到這則通知，就代表提醒可以正常運作。",
         "denied": "沒有通知權限，請到「系統設定 → 通知」開啟 NoteGen",
         "sent": "已傳送測試通知"
+      },
+      "promptFolder": {
+        "title": "提示詞資料夾",
+        "desc": "提示詞庫的位置；資料夾內且 frontmatter 標 type: prompt 才算提示詞。"
       }
     },
     "record": {
@@ -3142,6 +3146,22 @@
         "title": "寫作資源路徑",
         "desc": "設置寫作資源目錄名稱。編輯器本地插入圖片時會使用該目錄名，例如 assets 或 images。",
         "select": "請設置資源目錄名稱，例如：assets"
+      },
+      "versionControl": {
+        "title": "版本管理",
+        "desc": "為整個工作區建立本機 git 版本記錄，離線也能回顧每次變更；只追蹤 .md、.canvas、.base 文字檔，附件不會進入版本記錄。",
+        "enable": "啟用版本管理",
+        "statusRepo": "本機 git 記錄運作中",
+        "statusNotRepo": "尚未建立本機 git 記錄",
+        "confirmTitle": "啟用版本管理？",
+        "confirmDescNew": "會在工作區根目錄建立 .git 與預設 .gitignore，只追蹤 .md、.canvas、.base，不會上傳到任何地方。",
+        "confirmDescExisting": "偵測到工作區已經有 .git（例如由其他工具建立），啟用後會沿用現有的本機 git 記錄，不會重新建立、也不會更改它既有的設定。",
+        "toastEnabled": "版本管理已啟用",
+        "toastEnabledDesc": "已在工作區建立本機 git 記錄",
+        "toastReused": "已沿用工作區現有的本機 git 記錄",
+        "toastError": "切換版本管理失敗",
+        "autoSnapshotLabel": "自動快照",
+        "autoSnapshotDesc": "閒置一段時間或關閉 App 時，自動為所有已追蹤的變更留下一筆版本；關閉後不再自動建立。"
       }
     },
     "shortcuts": {
@@ -6891,5 +6911,38 @@
   "leftSidebar": {
     "resize": "調整上下區塊高度",
     "resizeHint": "拖拉或用上下鍵調整高度，Enter 或雙擊恢復預設"
+  },
+  "promptLibrary": {
+    "title": "提示詞庫",
+    "newPrompt": "新增提示詞",
+    "backToWorkspace": "回到工作區",
+    "back": "返回",
+    "searchPlaceholder": "搜尋提示詞…",
+    "allTags": "所有標籤",
+    "sort": {
+      "recentlyUsed": "最近使用",
+      "mostUsed": "最常使用",
+      "title": "標題"
+    },
+    "empty": "還沒有提示詞",
+    "useCount": "用過 {count} 次",
+    "unlisted": "{count} 篇未納入",
+    "moveIn": "移入庫",
+    "moveFailed": "移動失敗",
+    "moved": "已移入提示詞庫",
+    "noSelection": "點一則提示詞看內容",
+    "untitled": "未命名提示詞",
+    "cancel": "取消",
+    "create": "建立",
+    "createFailed": "建立失敗",
+    "openNote": "開啟筆記",
+    "loading": "載入中…",
+    "loadFailed": "讀取失敗",
+    "preview": "預覽",
+    "missingRequired": "還有 {count} 個必填變數",
+    "copy": "複製",
+    "copied": "已複製到剪貼簿",
+    "copyFailed": "複製失敗",
+    "selectOption": "選一個"
   }
 }

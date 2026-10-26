@@ -1189,6 +1189,10 @@
         "testBody": "Se você está vendo isto, os lembretes estão funcionando.",
         "denied": "As notificações estão desativadas. Ative-as para o NoteGen em Ajustes do Sistema → Notificações",
         "sent": "Notificação de teste enviada"
+      },
+      "promptFolder": {
+        "title": "Pasta de prompts",
+        "desc": "Onde a biblioteca de prompts fica; uma nota só conta como prompt dentro desta pasta com frontmatter type: prompt."
       }
     },
     "record": {
@@ -3167,6 +3171,22 @@
         "title": "Caminho dos Recursos",
         "desc": "Defina o nome do diretório de recursos. A inserção local de imagens no editor usará esse nome de diretório, como `assets` ou `images`.",
         "select": "Defina o nome do diretório de recursos, por exemplo: assets"
+      },
+      "versionControl": {
+        "title": "Controle de versão",
+        "desc": "Cria um histórico local do git para todo o espaço de trabalho, permitindo revisar cada alteração mesmo offline; apenas arquivos de texto .md, .canvas e .base são rastreados — anexos nunca entram no histórico.",
+        "enable": "Ativar controle de versão",
+        "statusRepo": "O histórico local do git está ativo",
+        "statusNotRepo": "Ainda não há histórico local do git",
+        "confirmTitle": "Ativar controle de versão?",
+        "confirmDescNew": "Isso cria .git e um .gitignore padrão na raiz do espaço de trabalho, rastreando apenas .md, .canvas e .base. Nada é enviado para lugar nenhum.",
+        "confirmDescExisting": "Este espaço de trabalho já tem um .git (por exemplo, criado por outra ferramenta). Ao ativar, ele será reutilizado como está — o NoteGen não vai recriá-lo nem alterar suas configurações existentes.",
+        "toastEnabled": "Controle de versão ativado",
+        "toastEnabledDesc": "Um histórico local do git foi criado para este espaço de trabalho",
+        "toastReused": "Histórico local do git existente do espaço de trabalho foi reutilizado",
+        "toastError": "Falha ao alternar o controle de versão",
+        "autoSnapshotLabel": "Snapshot automático",
+        "autoSnapshotDesc": "Depois de um período de inatividade ou ao fechar o app, salva automaticamente uma versão de todas as alterações rastreadas. Desative para parar os snapshots automáticos."
       }
     },
     "shortcuts": {
@@ -6868,5 +6888,38 @@
   "leftSidebar": {
     "resize": "Redimensionar seções da barra lateral",
     "resizeHint": "Arraste ou use as setas para ajustar; Enter ou clique duplo para redefinir"
+  },
+  "promptLibrary": {
+    "title": "Biblioteca de Prompts",
+    "newPrompt": "Novo prompt",
+    "backToWorkspace": "Voltar ao espaço de trabalho",
+    "back": "Voltar",
+    "searchPlaceholder": "Buscar prompts…",
+    "allTags": "Todas as tags",
+    "sort": {
+      "recentlyUsed": "Usados recentemente",
+      "mostUsed": "Mais usados",
+      "title": "Título"
+    },
+    "empty": "Ainda não há prompts",
+    "useCount": "Usado {count} vezes",
+    "unlisted": "{count} não incluído(s)",
+    "moveIn": "Mover para a biblioteca",
+    "moveFailed": "Falha ao mover",
+    "moved": "Movido para a biblioteca de prompts",
+    "noSelection": "Escolha um prompt para vê-lo aqui",
+    "untitled": "Prompt sem título",
+    "cancel": "Cancelar",
+    "create": "Criar",
+    "createFailed": "Falha ao criar",
+    "openNote": "Abrir nota",
+    "loading": "Carregando…",
+    "loadFailed": "Falha ao carregar",
+    "preview": "Pré-visualização",
+    "missingRequired": "Faltam {count} variável(is) obrigatória(s)",
+    "copy": "Copiar",
+    "copied": "Copiado para a área de transferência",
+    "copyFailed": "Falha ao copiar",
+    "selectOption": "Escolha uma opção"
   }
 }
