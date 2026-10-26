@@ -48,6 +48,7 @@ describe('git-versions/commands', () => {
       summary: '自動快照',
       kind: 'auto-snapshot',
       paths: null,
+      allowEmpty: false,
     })
   })
 
@@ -59,8 +60,21 @@ describe('git-versions/commands', () => {
       summary: '第一版',
       kind: 'prompt-version',
       paths: ['Prompts/a.md'],
+      allowEmpty: false,
     })
     expect(result).toBeNull()
+  })
+
+  it('commitGitVersion forwards allowEmpty for confirming an unchanged prompt version', async () => {
+    invokeMock.mockResolvedValue({ id: 'def', kind: 'prompt-version' })
+    await commitGitVersion('/vault', '確認為新版本', 'prompt-version', ['Prompts/a.md'], true)
+    expect(invokeMock).toHaveBeenCalledWith('git_version_commit', {
+      workspaceRoot: '/vault',
+      summary: '確認為新版本',
+      kind: 'prompt-version',
+      paths: ['Prompts/a.md'],
+      allowEmpty: true,
+    })
   })
 
   it('listGitVersionLog defaults path/limit to null when omitted', async () => {

@@ -6355,6 +6355,19 @@
         "placeholder": "Digite a instrução de IA",
         "submit": "Executar"
       }
+    },
+    "promptVersion": {
+      "banner": "Alterações não confirmadas",
+      "confirmButton": "Confirmar como nova versão",
+      "dialogTitle": "Confirmar como nova versão",
+      "dialogDesc": "A IA resumiu o que mudou e por quê — você pode editar antes de confirmar. Isso só faz commit desta nota como uma versão de prompt.",
+      "summaryLabel": "Nota da versão",
+      "summaryPlaceholder": "O que mudou e por quê…",
+      "generating": "Resumindo com IA…",
+      "cancel": "Cancelar",
+      "confirm": "Confirmar",
+      "committed": "Nova versão do prompt criada",
+      "commitFailed": "Falha ao criar a versão"
     }
   },
   "quickRecord": {

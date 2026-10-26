@@ -175,6 +175,7 @@ fn commit_internal(
     summary: &str,
     kind: VersionKind,
     paths: Option<&[String]>,
+    allow_empty: bool,
 ) -> Result<Option<GitVersionCommitInfo>, String> {
     let repo = open_repo(root)?;
     let mut index = repo
@@ -220,7 +221,9 @@ fn commit_internal(
         Some(parent) => parent.tree_id() == tree_id,
         None => tree.is_empty(),
     };
-    if unchanged {
+    // 自動快照可能已經把這次修改收進 HEAD；「確認為新版本」仍要留下一筆標記用的
+    // prompt-version commit，即使樹內容和上一筆相同（#56）。
+    if unchanged && !allow_empty {
         return Ok(None);
     }
 
@@ -244,6 +247,14 @@ fn commit_touches_path(repo: &Repository, commit: &git2::Commit, path: &str) -> 
     let tree = commit
         .tree()
         .map_err(|error| format!("Failed to read commit tree: {error}"))?;
+
+    // 提示詞版本一定是針對這個 path 明確確認的（#56 的 allow_empty 可能讓樹內容和上一筆
+    // 完全相同），不能只靠 diff 判斷有沒有「touch」，否則這種標記用的 commit 會從歷史裡消失。
+    let (_, kind) = split_trailer(commit.message().unwrap_or_default());
+    if kind == Some(VersionKind::PromptVersion) {
+        return Ok(tree.get_path(Path::new(path)).is_ok());
+    }
+
     let parent_tree = commit
         .parents()
         .next()
@@ -350,9 +361,10 @@ pub fn git_version_commit(
     summary: String,
     kind: VersionKind,
     paths: Option<Vec<String>>,
+    allow_empty: bool,
 ) -> Result<Option<GitVersionCommitInfo>, String> {
     let root = canonical_workspace_root(&workspace_root)?;
-    commit_internal(&root, &summary, kind, paths.as_deref())
+    commit_internal(&root, &summary, kind, paths.as_deref(), allow_empty)
 }
 
 #[tauri::command]
@@ -467,7 +479,7 @@ pub fn flush_pending_snapshot_on_exit(app: &AppHandle) {
     } else {
         &context.snapshot_summary
     };
-    if let Err(error) = commit_internal(&root, summary, VersionKind::AutoSnapshot, None) {
+    if let Err(error) = commit_internal(&root, summary, VersionKind::AutoSnapshot, None, false) {
         eprintln!("[git-versions] exit snapshot failed: {error}");
     }
 }
@@ -554,6 +566,7 @@ mod tests {
             "第一篇筆記".to_string(),
             VersionKind::AutoSnapshot,
             None,
+            false,
         )
         .unwrap()
         .expect("expected a commit because note.md changed");
@@ -584,6 +597,7 @@ mod tests {
             "日記".to_string(),
             VersionKind::AutoSnapshot,
             None,
+            false,
         )
         .unwrap()
         .expect("nested note changed");
@@ -610,6 +624,7 @@ mod tests {
             "snapshot".to_string(),
             VersionKind::AutoSnapshot,
             None,
+            false,
         )
         .unwrap()
         .expect("note changed");
@@ -634,6 +649,7 @@ mod tests {
             "first".to_string(),
             VersionKind::AutoSnapshot,
             None,
+            false,
         )
         .unwrap();
 
@@ -642,6 +658,7 @@ mod tests {
             "second".to_string(),
             VersionKind::AutoSnapshot,
             None,
+            false,
         )
         .unwrap();
         assert!(second.is_none());
@@ -659,6 +676,7 @@ mod tests {
             "只存 a".to_string(),
             VersionKind::PromptVersion,
             Some(vec!["a.md".to_string()]),
+            false,
         )
         .unwrap()
         .expect("a.md changed");
@@ -671,17 +689,79 @@ mod tests {
     }
 
     #[test]
+    fn commit_without_allow_empty_is_still_a_noop_when_nothing_changed_for_that_path() {
+        // 自動快照已經把這篇筆記的修改收進 HEAD 之後，「確認為新版本」沒傳 allow_empty
+        // 就應該照舊是 no-op：不留下重複的 commit（#56）。
+        let workspace = TempWorkspace::new();
+        git_version_enable(workspace.root()).unwrap();
+        fs::write(workspace.path.join("a.md"), "a\n").unwrap();
+        git_version_commit(
+            workspace.root(),
+            "自動快照".to_string(),
+            VersionKind::AutoSnapshot,
+            None,
+            false,
+        )
+        .unwrap()
+        .expect("a.md changed");
+
+        let noop = git_version_commit(
+            workspace.root(),
+            "確認為新版本".to_string(),
+            VersionKind::PromptVersion,
+            Some(vec!["a.md".to_string()]),
+            false,
+        )
+        .unwrap();
+        assert!(noop.is_none());
+    }
+
+    #[test]
+    fn commit_with_allow_empty_still_commits_when_auto_snapshot_already_caught_up() {
+        // 同一種情境：有 allow_empty 時要留下一筆新的 prompt-version commit 當確認標記，
+        // 即使樹內容和上一筆（自動快照）相同（#56）。
+        let workspace = TempWorkspace::new();
+        git_version_enable(workspace.root()).unwrap();
+        fs::write(workspace.path.join("a.md"), "a\n").unwrap();
+        let first = git_version_commit(
+            workspace.root(),
+            "自動快照".to_string(),
+            VersionKind::AutoSnapshot,
+            None,
+            false,
+        )
+        .unwrap()
+        .expect("a.md changed");
+
+        let confirmed = git_version_commit(
+            workspace.root(),
+            "確認為新版本".to_string(),
+            VersionKind::PromptVersion,
+            Some(vec!["a.md".to_string()]),
+            true,
+        )
+        .unwrap()
+        .expect("allow_empty should still create a commit");
+        assert_ne!(confirmed.id, first.id);
+        assert_eq!(confirmed.kind, VersionKind::PromptVersion);
+
+        let log = git_version_log(workspace.root(), Some("a.md".to_string()), None).unwrap();
+        assert_eq!(log[0].summary, "確認為新版本");
+        assert_eq!(log[0].kind, Some(VersionKind::PromptVersion));
+    }
+
+    #[test]
     fn log_filters_commits_by_path() {
         let workspace = TempWorkspace::new();
         git_version_enable(workspace.root()).unwrap();
         fs::write(workspace.path.join("a.md"), "a\n").unwrap();
-        git_version_commit(workspace.root(), "a1".to_string(), VersionKind::AutoSnapshot, None)
+        git_version_commit(workspace.root(), "a1".to_string(), VersionKind::AutoSnapshot, None, false)
             .unwrap();
         fs::write(workspace.path.join("b.md"), "b\n").unwrap();
-        git_version_commit(workspace.root(), "b1".to_string(), VersionKind::AutoSnapshot, None)
+        git_version_commit(workspace.root(), "b1".to_string(), VersionKind::AutoSnapshot, None, false)
             .unwrap();
         fs::write(workspace.path.join("a.md"), "a2\n").unwrap();
-        git_version_commit(workspace.root(), "a2".to_string(), VersionKind::AutoSnapshot, None)
+        git_version_commit(workspace.root(), "a2".to_string(), VersionKind::AutoSnapshot, None, false)
             .unwrap();
 
         let log = git_version_log(workspace.root(), Some("a.md".to_string()), None).unwrap();
@@ -694,11 +774,11 @@ mod tests {
         let workspace = TempWorkspace::new();
         git_version_enable(workspace.root()).unwrap();
         fs::write(workspace.path.join("note.md"), "v1\n").unwrap();
-        let first = git_version_commit(workspace.root(), "v1".to_string(), VersionKind::AutoSnapshot, None)
+        let first = git_version_commit(workspace.root(), "v1".to_string(), VersionKind::AutoSnapshot, None, false)
             .unwrap()
             .unwrap();
         fs::write(workspace.path.join("note.md"), "v2\n").unwrap();
-        let second = git_version_commit(workspace.root(), "v2".to_string(), VersionKind::AutoSnapshot, None)
+        let second = git_version_commit(workspace.root(), "v2".to_string(), VersionKind::AutoSnapshot, None, false)
             .unwrap()
             .unwrap();
 
@@ -720,7 +800,7 @@ mod tests {
         let workspace = TempWorkspace::new();
         git_version_enable(workspace.root()).unwrap();
         fs::write(workspace.path.join("note.md"), "v1\n").unwrap();
-        let commit = git_version_commit(workspace.root(), "v1".to_string(), VersionKind::AutoSnapshot, None)
+        let commit = git_version_commit(workspace.root(), "v1".to_string(), VersionKind::AutoSnapshot, None, false)
             .unwrap()
             .unwrap();
 

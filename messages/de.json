@@ -6342,6 +6342,19 @@
         "placeholder": "KI-Anweisung eingeben",
         "submit": "Ausführen"
       }
+    },
+    "promptVersion": {
+      "banner": "Nicht bestätigte Änderungen",
+      "confirmButton": "Als neue Version bestätigen",
+      "dialogTitle": "Als neue Version bestätigen",
+      "dialogDesc": "Die KI fasst zusammen, was sich geändert hat und warum — du kannst es vor dem Bestätigen anpassen. Dabei wird nur diese Notiz als Prompt-Version committet.",
+      "summaryLabel": "Versionshinweis",
+      "summaryPlaceholder": "Was hat sich geändert und warum…",
+      "generating": "KI fasst zusammen…",
+      "cancel": "Abbrechen",
+      "confirm": "Bestätigen",
+      "committed": "Neue Prompt-Version erstellt",
+      "commitFailed": "Version konnte nicht erstellt werden"
     }
   },
   "editorWindow": {
