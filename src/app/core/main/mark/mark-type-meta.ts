@@ -4,6 +4,7 @@ import {
   CheckSquare,
   FileText,
   ImageIcon,
+  Lightbulb,
   Link,
   Mic,
   ScanText,
@@ -11,7 +12,7 @@ import {
   type LucideIcon,
 } from "lucide-react"
 
-export const MARK_TYPE_OPTIONS: Mark["type"][] = ['text', 'recording', 'scan', 'image', 'link', 'file', 'todo']
+export const MARK_TYPE_OPTIONS: Mark["type"][] = ['text', 'recording', 'scan', 'image', 'link', 'file', 'todo', 'prompt-draft']
 
 type MarkTypeTone = {
   list: string
@@ -63,6 +64,12 @@ const MARK_TYPE_TONES: Record<Mark["type"], MarkTypeTone> = {
     chipInactive: "border-slate-200/80 bg-slate-50/70 text-slate-700 hover:bg-slate-100 dark:border-slate-400/35 dark:bg-slate-400/12 dark:text-slate-100/90 dark:hover:bg-slate-400/20",
     icon: "text-slate-500 dark:text-slate-300",
   },
+  'prompt-draft': {
+    list: "border-violet-300/80 bg-violet-100 text-violet-900",
+    chipActive: "border-violet-300 bg-violet-50 text-violet-900 hover:bg-violet-100 dark:border-violet-500/60 dark:bg-violet-500/18 dark:text-violet-200 dark:hover:bg-violet-500/24",
+    chipInactive: "border-violet-200/70 bg-violet-50/40 text-violet-800/80 hover:bg-violet-50 dark:border-violet-500/35 dark:bg-violet-500/10 dark:text-violet-200/90 dark:hover:bg-violet-500/18",
+    icon: "text-violet-600 dark:text-violet-300",
+  },
 }
 
 export const MARK_TYPE_ICONS: Record<Mark["type"], LucideIcon> = {
@@ -73,6 +80,7 @@ export const MARK_TYPE_ICONS: Record<Mark["type"], LucideIcon> = {
   link: Link,
   file: FileText,
   todo: CheckSquare,
+  'prompt-draft': Lightbulb,
 }
 
 export function getMarkTypeChipClasses(type: Mark["type"], active: boolean) {

@@ -810,7 +810,7 @@ export class AgentRuntime {
     const allTools = input.transformTools ? input.transformTools(baseTools) : baseTools // Fork #30
     const toolMap = new Map(allTools.map((tool) => [tool.name, tool]))
     let tools = selectToolsForContext(context, allTools, input.permissionMode)
-    const customSystemPrompt = await getSystemPromptContent()
+    const customSystemPrompt = input.systemPromptOverride?.trim() || await getSystemPromptContent()
     let memoryContext = input.useMemories === false
       ? {
           memories: [],

@@ -38,7 +38,7 @@ async function invalidateConversationCompactions(conversationIds: Iterable<numbe
 }
 
 export type Role = 'system' | 'user'
-export type ChatType = 'chat' | 'note' | 'clipboard' | 'clear' | 'condensed' | 'model_change'
+export type ChatType = 'chat' | 'note' | 'clipboard' | 'clear' | 'condensed' | 'model_change' | 'conversation_prompt'
 
 export interface Chat {
   id: number

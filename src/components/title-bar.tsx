@@ -22,6 +22,7 @@ import { ControlImage } from '@/app/core/main/mark/control-image'
 import { ControlLink } from '@/app/core/main/mark/control-link'
 import { ControlFile } from '@/app/core/main/mark/control-file'
 import { ControlTodo } from '@/app/core/main/mark/control-todo'
+import { ControlPromptDraft } from '@/app/core/main/mark/control-prompt-draft'
 import {
   DndContext,
   closestCenter,
@@ -242,6 +243,8 @@ export function TitleBar() {
                             return <ControlFile />
                           case 'todo':
                             return <ControlTodo />
+                          case 'prompt-draft':
+                            return <ControlPromptDraft />
                           default:
                             return null
                         }

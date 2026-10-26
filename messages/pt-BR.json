@@ -1277,6 +1277,9 @@
           },
           "todo": {
             "desc": "创建待办事项"
+          },
+          "promptDraft": {
+            "desc": "Registrar o texto bruto do prompt"
           }
         }
       }
@@ -4054,7 +4057,8 @@
         "upload": "Upload de Registro",
         "download": "Download de Registro",
         "uploadTo": "Sincronizar do local para {provider}",
-        "downloadFrom": "Sincronizar de {provider} para local"
+        "downloadFrom": "Sincronizar de {provider} para local",
+        "prompt-draft": "Rascunho de prompt"
       },
       "uploadSuccess": "Upload de registro bem-sucedido",
       "downloadSuccess": "Download de registro bem-sucedido",
@@ -4322,7 +4326,8 @@
         "link": "Gravar Link",
         "file": "Carregar Arquivo",
         "todo": "Registro Todo",
-        "closeTrash": "Fechar lixeira"
+        "closeTrash": "Fechar lixeira",
+        "promptDraft": "Gravar rascunho de prompt"
       },
       "list": {
         "title": "Registros",
@@ -4342,6 +4347,14 @@
       "imageGallery": {
         "expand": "Expandir",
         "collapse": "Recolher"
+      },
+      "promptDraft": {
+        "title": "Gravar rascunho de prompt",
+        "description": "Cole o texto original do prompt; a URL de origem é opcional. Você pode organizá-lo como um prompt mais tarde na Inbox.",
+        "contentPlaceholder": "Cole o texto do prompt…",
+        "source": "URL de origem",
+        "sourcePlaceholder": "https://… (opcional)",
+        "save": "Salvar"
       }
     },
     "chat": {
@@ -4508,7 +4521,8 @@
         },
         "promptSelect": {
           "tooltip": "Selecionar prompt",
-          "placeholder": "Pesquisar prompts"
+          "placeholder": "Pesquisar prompts",
+          "conversationPromptApplied": "O prompt do sistema desta conversa foi definido a partir de um prompt"
         },
         "clearChat": "Limpar Chat",
         "clearContext": {
@@ -4779,11 +4793,19 @@
             "untitledRecord": "Registro sem título",
             "recordFallback": "Conteúdo do registro",
             "canvasSummary": "{nodes} nós, {edges} conexões"
+          },
+          "prompts": {
+            "title": "Biblioteca de prompts"
           }
         },
         "stopped": "A conversa foi encerrada",
         "newChat": "Novo Chat",
-        "temporaryChat": "Chat temporário"
+        "temporaryChat": "Chat temporário",
+        "modelSuggestion": {
+          "apply": "Aplicar a esta mensagem",
+          "applied": "Aplicado — será redefinido na próxima mensagem",
+          "unavailable": "Nenhuma configuração de modelo correspondente encontrada"
+        }
       },
       "header": {
         "configApiKey": "Configurar CHAVE DE API",
@@ -6355,6 +6377,19 @@
         "placeholder": "Digite a instrução de IA",
         "submit": "Executar"
       }
+    },
+    "promptVersion": {
+      "banner": "Alterações não confirmadas",
+      "confirmButton": "Confirmar como nova versão",
+      "dialogTitle": "Confirmar como nova versão",
+      "dialogDesc": "A IA resumiu o que mudou e por quê — você pode editar antes de confirmar. Isso só faz commit desta nota como uma versão de prompt.",
+      "summaryLabel": "Nota da versão",
+      "summaryPlaceholder": "O que mudou e por quê…",
+      "generating": "Resumindo com IA…",
+      "cancel": "Cancelar",
+      "confirm": "Confirmar",
+      "committed": "Nova versão do prompt criada",
+      "commitFailed": "Falha ao criar a versão"
     }
   },
   "quickRecord": {
@@ -6875,7 +6910,38 @@
     "noSelection": "Escolha um registro para vê-lo aqui",
     "processedNote": "Processado em:",
     "saved": "Salvo na Inbox",
-    "view": "Ver"
+    "view": "Ver",
+    "organizeIntoPrompt": "Organizar como prompt",
+    "organizePrompt": {
+      "title": "Organizar como um prompt",
+      "description": "A IA propõe título, finalidade, cenários, tags, variáveis e fonte. Revise ou edite cada campo antes de salvar como uma nota de prompt.",
+      "generating": "Gerando uma proposta…",
+      "proposalFailedTitle": "Não foi possível gerar uma proposta",
+      "proposalFailed": "Ocorreu um erro ao pedir uma proposta à IA. Tente novamente.",
+      "aiNotConfigured": "Nenhum modelo principal foi configurado ainda. Configure a IA nas Configurações primeiro.",
+      "retry": "Tentar novamente",
+      "fieldTitle": "Título",
+      "fieldSummary": "Finalidade em uma linha",
+      "fieldScenarios": "Cenários (um por linha)",
+      "fieldScenariosPlaceholder": "ex.: preparar um relatório semanal, resumir notas de leitura",
+      "fieldTags": "Tags (separadas por vírgula)",
+      "fieldTagsPlaceholder": "ex.: escrita, resumo",
+      "fieldSource": "Fonte",
+      "fieldVariables": "Variáveis",
+      "variableDescriptionPlaceholder": "O que esta variável representa e o que preencher",
+      "fieldUnification": "Unificação de variáveis",
+      "unificationHelp": "As grafias marcadas são unificadas em '{{...}}'. O que não for marcado permanece exatamente como escrito.",
+      "unificationCount": "{count} ocorrência(s)",
+      "fieldImprovements": "Sugestões de melhoria (apenas referência, não aplicadas)",
+      "improvementsHelp": "Essas sugestões não são escritas automaticamente na nota — edite o corpo você mesmo se quiser aplicá-las.",
+      "fieldPreview": "Pré-visualização do corpo (inalterado, exceto pelas substituições de variáveis marcadas)",
+      "fieldCommitSummary": "Resumo da versão do prompt",
+      "commitSummaryHelp": "O controle de versão está ativado — confirmar registrará uma versão do prompt. Você pode editar este resumo.",
+      "cancel": "Cancelar",
+      "confirm": "Confirmar e salvar como prompt",
+      "saved": "Salvo como prompt: {title}",
+      "saveFailed": "Falha ao salvar o prompt"
+    }
   },
   "promptLibrary": {
     "title": "Biblioteca de Prompts",
@@ -6908,7 +6974,11 @@
     "copy": "Copiar",
     "copied": "Copiado para a área de transferência",
     "copyFailed": "Falha ao copiar",
-    "selectOption": "Escolha uma opção"
+    "selectOption": "Escolha uma opção",
+    "insertDialog": {
+      "insert": "Inserir no campo de entrada",
+      "startNewConversation": "Iniciar nova conversa com este prompt"
+    }
   },
   "versionHistory": {
     "footerButton": "Histórico",

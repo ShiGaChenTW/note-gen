@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { toast } from 'sonner'
-import { ArchiveRestore, CheckCheck, FilePlus2, FolderInput, PanelsTopLeft, Sparkles, Tag, Trash2, Undo2 } from 'lucide-react'
+import { ArchiveRestore, CheckCheck, FilePlus2, FolderInput, Lightbulb, PanelsTopLeft, Sparkles, Tag, Trash2, Undo2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -28,6 +28,7 @@ import { MarkDetailPanel } from '../mark/mark-detail-panel'
 import { getMarkListItemContent } from '../mark/mark-list-item-content'
 import { MARK_TYPE_ICONS, getMarkTypeIconClasses } from '../mark/mark-type-meta'
 import { OrganizeNotes, type OpenOrganizeOptions } from '../mark/organize-notes'
+import { OrganizePromptDialog } from '../mark/organize-prompt-dialog'
 
 /** 記錄有變動（新增、編輯、刪除）時重新載入 Inbox。 */
 function useInboxSync() {
@@ -122,6 +123,7 @@ export function InboxScreen() {
   const revision = useVaultIndexStore(state => state.revision)
   const locale = useLocale()
   const organizeRef = useRef<{ openOrganize: (options?: OpenOrganizeOptions) => void }>(null)
+  const organizePromptRef = useRef<{ openOrganizePrompt: (record: Mark, options?: { onOrganized?: (notePath: string, recordId: number) => void }) => void }>(null)
   const [selected, setSelected] = useState<Set<number>>(new Set())
   const [busy, setBusy] = useState(false)
   useInboxSync()
@@ -193,6 +195,17 @@ export function InboxScreen() {
     })
   }
 
+  const organizeIntoPrompt = () => {
+    const [promptDraft] = selectedRecords
+    if (!promptDraft) return
+    organizePromptRef.current?.openOrganizePrompt(promptDraft, {
+      onOrganized: (notePath, recordId) => {
+        void setRecordsProcessed([recordId], notePath)
+        setSelected(new Set())
+      },
+    })
+  }
+
   async function openNote(path: string) {
     hide()
     await useArticleStore.getState().setActiveFilePath(path)
@@ -250,6 +263,11 @@ export function InboxScreen() {
                   <Button variant="ghost" size="sm" className="h-7 gap-1 px-2" disabled={busy || selected.size === 0} onClick={organize} title={t('organize')}>
                     <Sparkles className="size-3.5" aria-hidden />{t('organize')}
                   </Button>
+                  {selectedRecords.length === 1 && selectedRecords[0].type === 'prompt-draft' && (
+                    <Button variant="ghost" size="sm" className="h-7 gap-1 px-2" disabled={busy} onClick={organizeIntoPrompt} title={t('organizeIntoPrompt')}>
+                      <Lightbulb className="size-3.5" aria-hidden />{t('organizeIntoPrompt')}
+                    </Button>
+                  )}
                   <Button variant="ghost" size="sm" className="h-7 gap-1 px-2" disabled={busy || selected.size === 0} title={t('convert')}
                     onClick={() => void run(async () => {
                       const paths = await convertRecordsToNotes(selectedRecords, inboxFolder)
@@ -364,6 +382,7 @@ export function InboxScreen() {
         </div>
       </div>
       <OrganizeNotes ref={organizeRef} />
+      <OrganizePromptDialog ref={organizePromptRef} />
     </div>
   )
 }

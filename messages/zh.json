@@ -1707,6 +1707,9 @@
           },
           "todo": {
             "desc": "创建待办事项"
+          },
+          "promptDraft": {
+            "desc": "记录一段 Prompt 原文"
           }
         }
       }
@@ -4065,7 +4068,8 @@
         "upload": "上传记录",
         "download": "下载记录",
         "uploadTo": "从本地同步到 {provider}",
-        "downloadFrom": "从 {provider} 同步到本地"
+        "downloadFrom": "从 {provider} 同步到本地",
+        "prompt-draft": "Prompt 素材"
       },
       "note": {
         "organizeAs": "整理为",
@@ -4366,7 +4370,8 @@
         "image": "上传图片",
         "link": "记录链接",
         "file": "上传文件",
-        "todo": "待办记录"
+        "todo": "待办记录",
+        "promptDraft": "记录 Prompt 素材"
       },
       "list": {
         "title": "记录",
@@ -4386,6 +4391,14 @@
           "last7Days": "最近7天",
           "last30Days": "最近30天"
         }
+      },
+      "promptDraft": {
+        "title": "记录 Prompt 素材",
+        "description": "粘贴提示词原文，可选填来源网址；之后可以在 Inbox 整理成提示词。",
+        "contentPlaceholder": "粘贴提示词原文…",
+        "source": "来源网址",
+        "sourcePlaceholder": "https://…（可留空）",
+        "save": "记录"
       }
     },
     "chat": {
@@ -4479,7 +4492,8 @@
         },
         "promptSelect": {
           "tooltip": "选择 Prompt",
-          "placeholder": "搜索 Prompt"
+          "placeholder": "搜索 Prompt",
+          "conversationPromptApplied": "此对话的系统提示词已由一则提示词设定"
         },
         "newChat": "开始新对话",
         "temporaryChat": "临时会话",
@@ -4801,11 +4815,19 @@
             "untitledRecord": "未命名记录",
             "recordFallback": "记录内容",
             "canvasSummary": "{nodes} 个节点，{edges} 条连线"
+          },
+          "prompts": {
+            "title": "提示词库"
           }
         },
         "clearChat": "清空对话",
         "clearContext": {
           "tooltip": "清除上下文"
+        },
+        "modelSuggestion": {
+          "apply": "应用到这条消息",
+          "applied": "已应用，下一条消息会恢复",
+          "unavailable": "找不到对应的模型设置"
         }
       },
       "header": {
@@ -6482,6 +6504,19 @@
         "placeholder": "输入 AI 指令",
         "submit": "执行"
       }
+    },
+    "promptVersion": {
+      "banner": "有未确认的修改",
+      "confirmButton": "确认为新版本",
+      "dialogTitle": "确认为新版本",
+      "dialogDesc": "AI 摘要了这次改了什么、为什么，你可以先改再确认；只会替这篇笔记建立一笔提示词版本。",
+      "summaryLabel": "版本说明",
+      "summaryPlaceholder": "改了什么、为什么…",
+      "generating": "AI 摘要中…",
+      "cancel": "取消",
+      "confirm": "确认",
+      "committed": "已建立新的提示词版本",
+      "commitFailed": "建立版本失败"
     }
   },
   "editorWindow": {
@@ -6999,7 +7034,38 @@
     "noSelection": "点一条记录查看内容",
     "processedNote": "已整理，整理成：",
     "saved": "已存进 Inbox",
-    "view": "查看"
+    "view": "查看",
+    "organizeIntoPrompt": "整理成提示词",
+    "organizePrompt": {
+      "title": "整理成提示词",
+      "description": "AI 会提议标题、用途、适用情境、标签、变数与来源；逐栏确认或修改后才会存成提示词笔记。",
+      "generating": "AI 正在产生提议…",
+      "proposalFailedTitle": "产生提议失败",
+      "proposalFailed": "AI 产生提议时发生错误，请重试。",
+      "aiNotConfigured": "尚未设置主要模型，请先到设置完成 AI 设置。",
+      "retry": "重试",
+      "fieldTitle": "标题",
+      "fieldSummary": "一句话用途",
+      "fieldScenarios": "适用情境（每行一项）",
+      "fieldScenariosPlaceholder": "例如：准备周报、整理读书笔记",
+      "fieldTags": "标签（逗号分隔）",
+      "fieldTagsPlaceholder": "例如：写作, 摘要",
+      "fieldSource": "来源",
+      "fieldVariables": "变数",
+      "variableDescriptionPlaceholder": "这个变数代表什么、要填什么内容",
+      "fieldUnification": "变数统一",
+      "unificationHelp": "勾选的写法会统一成 '{{...}}'；没勾选的原文完全不变。",
+      "unificationCount": "共 {count} 处",
+      "fieldImprovements": "改进建议（仅供参考，不会套用到笔记）",
+      "improvementsHelp": "这些建议不会自动写进笔记，想采用要自己编辑内文。",
+      "fieldPreview": "本文预览（原文除勾选的变数替换外完全不变）",
+      "fieldCommitSummary": "提示词版本摘要",
+      "commitSummaryHelp": "版本管理已启用，确认后会留一笔提示词版本；摘要可以修改。",
+      "cancel": "取消",
+      "confirm": "确认并存成提示词",
+      "saved": "已存成提示词：{title}",
+      "saveFailed": "存成提示词失败"
+    }
   },
   "promptLibrary": {
     "title": "提示词库",
@@ -7032,7 +7098,11 @@
     "copy": "复制",
     "copied": "已复制到剪贴板",
     "copyFailed": "复制失败",
-    "selectOption": "选一个"
+    "selectOption": "选一个",
+    "insertDialog": {
+      "insert": "插入输入框",
+      "startNewConversation": "用这个提示词开新对话"
+    }
   },
   "versionHistory": {
     "footerButton": "版本历史",

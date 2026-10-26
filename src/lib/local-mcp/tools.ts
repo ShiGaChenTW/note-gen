@@ -447,7 +447,7 @@ export async function executeLocalMcpTool(toolName: string, rawArguments: unknow
       case 'record_create': {
         const tagId = requiredInteger(input, 'tagId')
         const type = optionalString(input, 'type') || 'text'
-        const allowedTypes: Mark['type'][] = ['scan', 'text', 'image', 'link', 'file', 'recording', 'todo']
+        const allowedTypes: Mark['type'][] = ['scan', 'text', 'image', 'link', 'file', 'recording', 'todo', 'prompt-draft']
         if (!allowedTypes.includes(type as Mark['type'])) throw new Error('参数 type 不是支持的记录类型')
         const result = await insertMark({
           tagId,

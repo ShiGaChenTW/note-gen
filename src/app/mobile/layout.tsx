@@ -86,6 +86,10 @@ const ControlTodo = dynamic(
   () => import('@/app/core/main/mark/control-todo').then(module => module.ControlTodo),
   { ssr: false },
 )
+const ControlPromptDraft = dynamic(
+  () => import('@/app/core/main/mark/control-prompt-draft').then(module => module.ControlPromptDraft),
+  { ssr: false },
+)
 
 export default function RootLayout({
   children,
@@ -308,6 +312,7 @@ export default function RootLayout({
               <ControlLink />
               <ControlFile />
               <ControlTodo />
+              <ControlPromptDraft />
             </div>
           </TooltipProvider>
           <SyncConfirmDialog />

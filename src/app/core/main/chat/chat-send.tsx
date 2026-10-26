@@ -25,6 +25,7 @@ import { retainCompletedAgentTraceEvents } from '@/lib/agent/trace-retention'
 import { getAISettingsByModelId } from '@/lib/ai/utils'
 import { applyChatReasoningOverride } from '@/lib/ai/chat-reasoning'
 import type { AiConfig } from '@/app/core/setting/config'
+import type { ResolvedPromptModelSuggestion } from '@/lib/prompt-library/chat-model-suggestion'
 import {
   buildChatImageContext,
   buildHistoricalImageContext,
@@ -98,6 +99,7 @@ interface ChatSendProps {
   fileAttachments?: RuntimeChatAttachment[];
   quoteData?: AgentQuoteData | null;
   canvasSelectionContext?: CanvasSelectionContext | null;
+  modelSuggestionOverride?: ResolvedPromptModelSuggestion | null;
   selectedSkillIds?: string[];
   mentionedFiles?: MarkdownFile[];
   mentionedRecords?: AgentQuoteData[];
@@ -122,6 +124,7 @@ export const ChatSend = forwardRef<ChatSendHandle, ChatSendProps>(({
   fileAttachments = [],
   quoteData = null,
   canvasSelectionContext = null,
+  modelSuggestionOverride = null,
   selectedSkillIds = [],
   mentionedFiles = [],
   mentionedRecords = [],
@@ -159,6 +162,7 @@ export const ChatSend = forwardRef<ChatSendHandle, ChatSendProps>(({
 
   const createRequestSnapshot = (overrideText?: string): AgentRequestSnapshot => ({
     reasoningOverride: useChatStore.getState().reasoningOverride,
+    modelOverride: modelSuggestionOverride,
     inputValue: overrideText ?? inputValue,
     requestText: (overrideText ?? inputValue).trim() || t('record.chat.input.addAttachment.attachmentOnlyPrompt'),
     linkedResource,
@@ -521,6 +525,7 @@ export const ChatSend = forwardRef<ChatSendHandle, ChatSendProps>(({
       modelName: modelSnapshot.name,
       aiConfig: modelSnapshot.config,
       conversationId: placeholderMessage.conversationId,
+      systemPromptOverride: useChatStore.getState().chats.find(chat => chat.type === 'conversation_prompt')?.content || undefined,
       workspaceId: useSettingStore.getState().workspacePath.trim().replace(/\\/g, '/').replace(/\/+$/, '') || 'default',
       useMemories: !useChatStore.getState().isTemporaryConversation,
       activeFilePath: activeArticle.activeFilePath,
@@ -1148,10 +1153,13 @@ ${hasValidRange ? `**仅在用户明确要求修改/改写/补充/插入时才�
 
   agentSession.configure({
     execute: async (request) => {
-      const modelId = useSettingStore.getState().primaryModel
-      const aiConfig = applyChatReasoningOverride(
+      const modelId = request.modelOverride?.modelId ?? useSettingStore.getState().primaryModel
+      const baseAiConfig = applyChatReasoningOverride(
         await getAISettingsByModelId(modelId), modelId, request.reasoningOverride ?? null,
       )
+      const aiConfig = baseAiConfig && request.modelOverride?.temperature !== undefined
+        ? { ...baseAiConfig, temperature: request.modelOverride.temperature }
+        : baseAiConfig
       const modelSnapshot = {
         id: modelId,
         name: aiConfig?.model || modelId,
