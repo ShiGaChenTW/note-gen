@@ -35,19 +35,23 @@ export async function getGitVersionStatus(workspaceRoot: string): Promise<GitVer
 /**
  * 以 `message` 建立一筆 commit，`kind` 決定 trailer 區分成提示詞版本或自動快照。
  * 不傳 `paths` 代表「所有已追蹤的變更」（自動快照用）；傳 `paths` 只會 stage 那些相對路徑（提示詞版本用）。
- * 沒有任何變更時回傳 null，不會產生空 commit。
+ * 沒有任何變更時回傳 null，不會產生空 commit——除非傳 `allowEmpty: true`：
+ * 自動快照可能已經把這次修改收進 HEAD，這時「確認為新版本」(#56) 仍要留下一筆標記用的
+ * prompt-version commit，即使樹內容和上一筆相同。
  */
 export async function commitGitVersion(
   workspaceRoot: string,
   summary: string,
   kind: GitVersionKind,
   paths?: string[],
+  allowEmpty = false,
 ): Promise<GitVersionCommitInfo | null> {
   return await invoke<GitVersionCommitInfo | null>('git_version_commit', {
     workspaceRoot,
     summary,
     kind,
     paths: paths ?? null,
+    allowEmpty,
   })
 }
 

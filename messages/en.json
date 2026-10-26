@@ -6491,6 +6491,19 @@
         "placeholder": "Enter AI instruction",
         "submit": "Run"
       }
+    },
+    "promptVersion": {
+      "banner": "Unconfirmed changes",
+      "confirmButton": "Confirm as new version",
+      "dialogTitle": "Confirm as new version",
+      "dialogDesc": "AI summarized what changed and why — edit it if you like. This only commits this note as a prompt version.",
+      "summaryLabel": "Version note",
+      "summaryPlaceholder": "What changed, and why…",
+      "generating": "Summarizing with AI…",
+      "cancel": "Cancel",
+      "confirm": "Confirm",
+      "committed": "Created a new prompt version",
+      "commitFailed": "Failed to create the version"
     }
   },
   "editorWindow": {

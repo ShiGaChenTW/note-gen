@@ -6491,6 +6491,19 @@
         "placeholder": "输入 AI 指令",
         "submit": "执行"
       }
+    },
+    "promptVersion": {
+      "banner": "有未确认的修改",
+      "confirmButton": "确认为新版本",
+      "dialogTitle": "确认为新版本",
+      "dialogDesc": "AI 摘要了这次改了什么、为什么，你可以先改再确认；只会替这篇笔记建立一笔提示词版本。",
+      "summaryLabel": "版本说明",
+      "summaryPlaceholder": "改了什么、为什么…",
+      "generating": "AI 摘要中…",
+      "cancel": "取消",
+      "confirm": "确认",
+      "committed": "已建立新的提示词版本",
+      "commitFailed": "建立版本失败"
     }
   },
   "editorWindow": {

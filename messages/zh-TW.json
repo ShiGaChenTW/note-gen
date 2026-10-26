@@ -6390,6 +6390,19 @@
         "placeholder": "輸入 AI 指令",
         "submit": "執行"
       }
+    },
+    "promptVersion": {
+      "banner": "有未確認的修改",
+      "confirmButton": "確認為新版本",
+      "dialogTitle": "確認為新版本",
+      "dialogDesc": "AI 摘要了這次改了什麼、為什麼，你可以先改再確認；只會替這篇筆記建立一筆提示詞版本。",
+      "summaryLabel": "版本說明",
+      "summaryPlaceholder": "改了什麼、為什麼…",
+      "generating": "AI 摘要中…",
+      "cancel": "取消",
+      "confirm": "確認",
+      "committed": "已建立新的提示詞版本",
+      "commitFailed": "建立版本失敗"
     }
   },
   "editorWindow": {

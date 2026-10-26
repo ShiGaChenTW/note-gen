@@ -6400,6 +6400,19 @@
         "placeholder": "AI 指示を入力",
         "submit": "実行"
       }
+    },
+    "promptVersion": {
+      "banner": "未確認の変更があります",
+      "confirmButton": "新しいバージョンとして確定",
+      "dialogTitle": "新しいバージョンとして確定",
+      "dialogDesc": "AI が今回の変更内容と理由を要約しました。確定前に編集できます。このノートのみプロンプトバージョンとして記録されます。",
+      "summaryLabel": "バージョンの説明",
+      "summaryPlaceholder": "何を、なぜ変更したか…",
+      "generating": "AI が要約中…",
+      "cancel": "キャンセル",
+      "confirm": "確定",
+      "committed": "新しいプロンプトバージョンを作成しました",
+      "commitFailed": "バージョンの作成に失敗しました"
     }
   },
   "editorWindow": {
