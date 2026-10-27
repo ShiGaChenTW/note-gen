@@ -36,6 +36,7 @@ npx pnpm@9 install --frozen-lockfile
 | 日期 | 上游 | 結果 |
 |---|---|---|
 | 2026-10-25 | `upstream/dev` `ab0f5bf9`（39 個 commit，v0.38.3）→ PR #25 | 10 個衝突已解（見修改清單）。**`section-document*`／`sectioned-markdown-editor.tsx` 被上游移除**（#1299 改用 markdown-lexer worker），fork 曾在 `section-document.ts` 為大文件保留 frontmatter（F1），隨之消失。**上游的背景 tokenize 在 fork 自動停用**：`parsePreparedMarkdown` 要求編輯器的 tokenizer 名單與上游固定清單完全相同，fork 加了 frontmatter／wikilink 等自訂 tokenizer，會退回編輯器解析，所以 `trySetMarkdownContent` 的退回路徑必須先 `encodeFrontmatterForEditor`；代價是拿不到上游的大文件效能優化。同步後 `dev` 領先 `upstream-dev` 105、落後 0 |
+| 2026-10-27 | `upstream/dev` `750cd738`（21 個 commit，v0.39.0） | 12 個衝突已解：6 個 `messages/*.json` 用 JSON 三方合併（無同 key 衝突，兩邊都沒遺失）；`pnpm-lock.yaml` 取上游版再用 pnpm 10 補算（fork 只多 `vitest`／`jsdom`）；`tauri.conf.json` 保留 fork 的 `productName`／`identifier`、版本採 0.39.0；`remote-mutation-recovery.ts` 採上游（上游已自己加上 `NoInfer<T>`，上次 PR #25 的型別修補不再需要）。**上游新增「左側欄大綱」頁籤**（`outline`，設定 `outlinePlacement === 'sidebar'` 才出現）：`left-sidebar.tsx` 以 fork 的啟動器版面為底接入，標籤用英文 `Outline`（#45 慣例），`SidebarSearch` 與右上角動作列都排除 `outline`；`BUILT_IN_LEFT_SIDEBAR_TABS` 兩邊的頁籤都留。**上游把 `Highlight` 換成 `ColorHighlight`＋`TextColor`**（彩色字體），tokenizer 固定名單同步改變，`MARKDOWN_LEXER_VERSION` 升 2；fork 的自訂 tokenizer 仍使背景 tokenize 停用，退回路徑（`encodeFrontmatterForEditor`）完好。上游這版把 React 升到 19.2.3、zod 升到 4 |
 
 下次同步前先看：上游若新增 markdown tokenizer 或改動 `schema-markdown.ts`／`markdown-tokenizers.ts`，要確認 fork 的自訂 tokenizer（`notegen_frontmatter`、wikilink、表格原文、Bases）仍走得通。
 

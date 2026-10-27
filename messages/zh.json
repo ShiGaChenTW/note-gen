@@ -910,6 +910,35 @@
     },
     "skills": {
       "title": "技能",
+      "tabs": {
+        "global": "全局",
+        "workspace": "本地",
+        "discover": "发现"
+      },
+      "recommended": {
+        "title": "NoteGen 精选",
+        "description": "发现适合笔记与写作的技能，选择后即可安装。",
+        "empty": "暂无推荐技能",
+        "loadError": "推荐技能加载失败",
+        "refresh": "刷新推荐",
+        "install": "安装",
+        "installed": "已安装",
+        "installTitle": "安装 {name}",
+        "installDescription": "选择安装位置。全局技能可供所有工作区使用。",
+        "scope": "安装位置",
+        "source": "查看来源",
+        "author": "作者：{author}",
+        "inspecting": "正在获取技能信息…",
+        "installing": "正在安装…",
+        "installSuccess": "已安装 {name}",
+        "installError": "安装技能失败",
+        "previewError": "无法获取技能信息",
+        "skillMismatch": "下载的技能与推荐条目不一致，请刷新推荐后重试。",
+        "files": "包含 {count} 个文件",
+        "scripts": "包含脚本，运行时可能需要本机环境。",
+        "warningsTitle": "安装提示",
+        "refreshSkillsError": "技能已安装，但列表刷新失败，请重新打开设置。"
+      },
       "desc": "技能是可重用的 AI 能力包，让 AI 助手能够根据任务自动应用特定的行为模式。",
       "enable": "启用技能功能",
       "enableDesc": "启用后，AI 可以使用已配置的技能",
@@ -969,7 +998,19 @@
       "pythonRuntime": "Python 运行环境",
       "isolatedRuntime": "隔离环境",
       "systemRuntime": "系统环境",
-      "runtimeUnavailable": "不可用"
+      "runtimeUnavailable": "不可用",
+      "environment": {
+        "title": "运行环境",
+        "description": "查看此 Skill 使用的运行时和文档工具。",
+        "available": "可用",
+        "missing": "未安装",
+        "systemToolsHelp": "Word 转换与版式预览需要 LibreOffice、Poppler 等本机工具；扫描件 OCR 还需要 Tesseract。安装后刷新状态。",
+        "dependencyHelp": "以下按钮会从 PyPI 或 npm 下载所列依赖，安装到此 Skill 的独立环境。其他依赖可在任务中按需安装。",
+        "installPython": "安装 Python 依赖",
+        "installNode": "安装 Node.js 依赖",
+        "installed": "依赖安装完成",
+        "desktopOnly": "本机脚本和文档运行环境目前用于桌面端。移动端可安装并使用纯指令技能。"
+      }
     },
     "plugins": {
       "ui": {
@@ -1479,6 +1520,12 @@
           "pie": "pie title 资源分配\n    \"CPU\" : 45\n    \"内存\" : 30\n    \"存储\" : 25",
           "journey": "journey\n    title 我的日常工作\n    section 上午\n    通勤 : 7:00, 5\n    工作 : 9:00, 8"
         }
+      },
+      "outlinePlacement": "大纲显示区域",
+      "outlinePlacementDesc": "在编辑器内显示大纲，或通过左侧栏的大纲标签页查看当前笔记的标题结构。",
+      "outlinePlacementOptions": {
+        "editor": "编辑器内",
+        "sidebar": "左侧栏"
       }
     },
     "canvas": {
@@ -4520,20 +4567,35 @@
         "addAttachment": {
           "title": "添加",
           "image": {
-            "title": "图片"
+            "title": "图片",
+            "description": "从相册或本地添加图片"
           },
           "file": {
-            "title": "文件"
+            "title": "文件",
+            "description": "添加本地文档与其他文件"
           },
           "folder": {
-            "title": "文件夹"
+            "title": "文件夹",
+            "description": "添加文件夹及其中的文件"
           },
           "entryCount": "{count} 项",
           "remove": "移除 {name}",
           "metadataOnly": "仅元数据",
           "readFailed": "{count} 个附件读取失败",
           "selectFailed": "选择附件失败，请重试",
-          "attachmentOnlyPrompt": "请查看并分析我添加的附件。"
+          "attachmentOnlyPrompt": "请查看并分析我添加的附件。",
+          "groups": {
+            "attachments": "本地附件",
+            "context": "工作区与技能"
+          },
+          "resource": {
+            "title": "引用笔记与记录",
+            "description": "搜索工作区中的笔记、记录和画布"
+          },
+          "skill": {
+            "title": "使用技能",
+            "description": "为这次消息选择一个 Skill"
+          }
         },
         "imageAttachment": {
           "selectSuccess": "已附加 {count} 张图片",
@@ -4584,6 +4646,11 @@
           "thought": "思考",
           "action": "行动",
           "toolCalls": "工具调用",
+          "timeline": {
+            "elapsed": "用时 {duration} 秒",
+            "processing": "已处理 {duration} 秒",
+            "tools": "{count} 次工具调用"
+          },
           "resultSummary": "结果摘要",
           "queryParameters": "查询参数",
           "toolResult": "工具结果",
@@ -4677,9 +4744,31 @@
               "scope": "安装位置",
               "has_scripts": "包含脚本",
               "skipped_symlinks": "跳过的符号链接",
-              "replaceExisting": "替换已有 Skill"
+              "replaceExisting": "替换已有 Skill",
+              "language": "运行语言",
+              "code": "完整代码",
+              "args": "参数",
+              "packages": "依赖包",
+              "timeout": "超时（毫秒）",
+              "script_id": "已登记脚本"
             },
             "tools": {
+              "update_file": {
+                "title": "修改文件",
+                "description": "将把修改保存到目标文件。"
+              },
+              "update_editor_content": {
+                "title": "修改编辑器内容",
+                "description": "将在当前编辑器中应用插入、替换或删除操作。"
+              },
+              "delete_folder": {
+                "title": "删除文件夹",
+                "description": "将删除所选文件夹及其中的内容。"
+              },
+              "install_skill": {
+                "title": "安装 Skill 包",
+                "description": "将把 Skill 包安装到指定位置；替换已有版本时会先备份。"
+              },
               "create_memory": {
                 "title": "记住这条信息？",
                 "description": "确认后，AI 会在之后的对话中使用这条信息。",
@@ -4749,8 +4838,42 @@
                   "executable-scripts": "包含可执行脚本；安装后运行脚本仍会单独请求确认。",
                   "symbolic-links": "包含 {count} 个符号链接；继续安装时会跳过这些链接。"
                 }
+              },
+              "run_skill_code": {
+                "title": "运行 Skill 代码",
+                "description": "将在本机执行下方完整代码和参数，可访问本机文件及程序。本次确认仅适用于当前代码和参数。"
+              },
+              "install_skill_node_dependencies": {
+                "title": "安装 Skill Node.js 依赖",
+                "description": "将从 npm 下载所列依赖并安装到此 Skill 的独立环境，不运行包的安装脚本。"
               }
-            }
+            },
+            "previewBefore": "修改前",
+            "previewAfter": "修改后"
+          },
+          "ui": {
+            "waiting": "等待填写",
+            "expired": "已结束",
+            "displayed": "信息",
+            "submitted": "已提交",
+            "cancelled": "已取消",
+            "submit": "提交并继续",
+            "cancel": "取消",
+            "required": "请填写此项。",
+            "invalid": "请检查此项内容。",
+            "emptyValue": "未填写",
+            "search": "搜索选项",
+            "searchLabel": "搜索{label}",
+            "select": "请选择",
+            "loading": "正在加载选项…",
+            "noOptions": "没有可用选项",
+            "moreOptions": "仅显示前 100 项，可通过搜索缩小范围。",
+            "rootFolder": "根目录",
+            "renderError": "此交互内容暂时无法显示，请通过对话继续。",
+            "loadError": "选项加载失败，请重试。",
+            "retry": "重试",
+            "submitError": "提交失败，请重试。",
+            "expiredDescription": "此交互已结束，请在当前对话中重新发起。"
           }
         },
         "fileLink": {
@@ -4803,7 +4926,11 @@
             "scope": {
               "global": "全局",
               "project": "工作区"
-            }
+            },
+            "unavailable": "暂无可用技能",
+            "emptyDescription": "安装或启用技能后，即可在这里选择使用。",
+            "disabledDescription": "Skills 已关闭，可在技能设置中启用。",
+            "manage": "管理技能"
           },
           "resources": {
             "title": "关联上下文",
@@ -4818,7 +4945,8 @@
           },
           "prompts": {
             "title": "提示词库"
-          }
+          },
+          "allAdded": "已添加所有可用项"
         },
         "clearChat": "清空对话",
         "clearContext": {
@@ -4828,6 +4956,31 @@
           "apply": "应用到这条消息",
           "applied": "已应用，下一条消息会恢复",
           "unavailable": "找不到对应的模型设置"
+        },
+        "toolsMenu": {
+          "groups": {
+            "conversation": "对话设置",
+            "extensions": "扩展工具"
+          },
+          "model": {
+            "title": "模型",
+            "description": "选择回答所用的模型"
+          },
+          "prompt": {
+            "title": "提示词",
+            "description": "设置角色与回答方式"
+          },
+          "reasoning": {
+            "description": "调整当前模型的思考强度"
+          },
+          "mcp": {
+            "title": "MCP 服务",
+            "description": "连接外部服务与工具"
+          },
+          "clipboard": {
+            "title": "剪贴板监听",
+            "description": "自动获取剪贴板中的内容"
+          }
         }
       },
       "header": {
@@ -4978,6 +5131,43 @@
       "mark": {
         "recorded": "已记录",
         "record": "记录"
+      },
+      "response": {
+        "generating": "正在生成组件…",
+        "previewActions": "生成完成后可操作",
+        "openSource": "打开来源",
+        "saveArtifact": "另存文件",
+        "copied": "已复制",
+        "saved": "文件已另存",
+        "unavailable": "内容已不可用，或不属于当前工作区。",
+        "actionFailed": "操作失败",
+        "imageFailed": "图片无法显示。",
+        "mathFailed": "公式无法解析，已显示原始 LaTeX。",
+        "step": {
+          "pending": "待进行",
+          "current": "进行中",
+          "done": "已完成"
+        }
+      },
+      "artifacts": {
+        "open": "打开 {name}",
+        "saveAs": "另存为 {name}",
+        "saved": "文件已另存",
+        "openFailed": "无法打开文件",
+        "saveFailed": "另存文件失败",
+        "actionFailed": "操作失败，请确认文件仍存在后重试。",
+        "desktopOnly": "请在桌面端打开或另存生成的文件。",
+        "partialHint": "这是执行未完成时生成的文件，内容尚未验证。",
+        "errors": {
+          "INVALID_PATH": "文件路径无效。",
+          "NOT_ALLOWED": "此链接不属于当前回复生成的文件。",
+          "WORKSPACE_CHANGED": "工作区已切换，请回到文件所属的工作区后重试。",
+          "MISSING_FILE": "文件已被移动或删除。",
+          "SYMLINK_BLOCKED": "无法访问通过符号链接指向的文件。",
+          "UNSUPPORTED_PLATFORM": "请在桌面端打开或另存生成的文件。",
+          "OPEN_FAILED": "系统未能打开该文件，请确认已安装对应应用。",
+          "SAVE_FAILED": "无法复制到所选位置，请重试。"
+        }
       }
     },
     "tag": {
@@ -6245,6 +6435,7 @@
       "tooDeep": "嵌入太深，不再转入"
     },
     "outline": {
+      "sidebarEmpty": "打开 Markdown 笔记并切换到可视化模式，即可查看大纲。",
       "title": "大纲",
       "open": "打开大纲",
       "close": "关闭大纲",
@@ -6293,6 +6484,17 @@
       "normalQuote": "普通引用"
     },
     "bubbleMenu": {
+      "colors": {
+        "text": "字体颜色",
+        "highlight": "高亮颜色",
+        "clear": "清除颜色",
+        "red": "红色",
+        "orange": "橙色",
+        "yellow": "黄色",
+        "green": "绿色",
+        "blue": "蓝色",
+        "purple": "紫色"
+      },
       "ai": "AI",
       "polish": "润色",
       "concise": "精简",
@@ -7144,5 +7346,8 @@
     "kindPromptVersion": "提示词版本",
     "kindAutoSnapshot": "自动快照",
     "kindUnknown": "其他版本"
+  },
+  "editorImage": {
+    "changedOnDisk": "图片已被同步或其他操作更新。请重新打开图片后再编辑保存。"
   }
 }

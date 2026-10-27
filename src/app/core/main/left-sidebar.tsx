@@ -5,7 +5,7 @@ import { isPluginDisplayVisible } from '@/lib/plugins/display-preferences'
 import { usePluginLocalization } from '@/lib/plugins/localization'
 import { useEffect, useRef, useState, type ComponentType, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react'
 import { Tabs, TabsContent } from "@/components/ui/tabs"
-import { CalendarCheck, ChevronDown, ChevronRight, Files, Hash, History, Inbox, LayoutDashboard, Palette, ScrollText } from "lucide-react"
+import { CalendarCheck, ChevronDown, ChevronRight, Files, Hash, History, Inbox, LayoutDashboard, ListTree, Palette, ScrollText } from "lucide-react"
 import { FileSidebar } from "./file"
 import { FileActions } from "./file/file-actions"
 import { useLocale, useTranslations } from "next-intl"
@@ -27,6 +27,10 @@ import { openDailyNoteFromSidebar, SidebarCalendar } from './daily/sidebar-calen
 import { SIDEBAR_ROW, SIDEBAR_ROW_ACTIVE, SIDEBAR_ROW_ACTIVE_SECONDARY } from './sidebar-row'
 import { Count } from './page-ui'
 import { useInboxPendingCount } from '@/lib/inbox/use-inbox-pending'
+import useSettingStore, { useSettingsHydrationStore } from '@/stores/setting'
+import { useEditorOutlineStore } from '@/stores/editor-outline'
+import { Outline } from './editor/markdown/outline'
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 
 // Fork（#45）：功能入口的標籤六種語言都用英文。記錄不再放在下半部，改由 Inbox 頁（#46）處理。
 const SIDEBAR_TABS = [
@@ -35,6 +39,9 @@ const SIDEBAR_TABS = [
   { id: "canvases", title: "Canvas", icon: Palette },
   { id: "noteTags", title: "Tags", icon: Hash },
 ] as const
+
+/** 上游（v0.39.0）的大綱頁籤：只在設定把大綱放在左側欄時才出現。標籤同樣用英文。 */
+const OUTLINE_TAB: LauncherTab = { id: "outline", title: "Outline", icon: ListTree }
 
 /** 外掛入口超過這個數量時，其餘收進 More。 */
 const VISIBLE_PLUGIN_TABS = 3
@@ -161,6 +168,9 @@ function useTopHeight(containerRef: React.RefObject<HTMLDivElement | null>, topR
 
 export function LeftSidebar() {
   const { leftSidebarTab, setLeftSidebarTab } = useSidebarStore()
+  const outlinePlacement = useSettingStore(state => state.outlinePlacement)
+  const settingsReady = useSettingsHydrationStore(state => state.status === 'ready')
+  const outlineEditor = useEditorOutlineStore(state => state.active)
   const t = useTranslations()
   const locale = useLocale()
   const homeVisible = useHomeStore(state => state.visible)
@@ -184,7 +194,8 @@ export function LeftSidebar() {
       .filter((view) => view.location === 'left-sidebar' && isPluginDisplayVisible(displaySettings, plugin.manifest.id, view.location))
       .map((view) => ({ title: resolvePluginViewTitle(plugin, view, locale, state?.settings), icon: getPluginIcon(view.icon), id: `${plugin.manifest.id}:${view.id}` })) : []
   })
-  const allTabs: LauncherTab[] = [...SIDEBAR_TABS, ...pluginTabs]
+  const builtInTabs: LauncherTab[] = outlinePlacement === 'sidebar' ? [...SIDEBAR_TABS, OUTLINE_TAB] : [...SIDEBAR_TABS]
+  const allTabs: LauncherTab[] = [...builtInTabs, ...pluginTabs]
   const activeTabAvailable = allTabs.some((tab) => tab.id === leftSidebarTab)
   const activeTab = allTabs.find((tab) => tab.id === leftSidebarTab)
   const [moreOpen, setMoreOpen] = useState(false)
@@ -197,13 +208,14 @@ export function LeftSidebar() {
   const split = useTopHeight(containerRef, topRef)
 
   useEffect(() => {
-    if (!pluginsInitialized || activeTabAvailable) return
+    if (!settingsReady || !pluginsInitialized || activeTabAvailable) return
     void setLeftSidebarTab('files')
-  }, [activeTabAvailable, pluginsInitialized, setLeftSidebarTab])
+  }, [activeTabAvailable, pluginsInitialized, setLeftSidebarTab, settingsReady])
 
   const activePluginTab = pluginTabs.find((tab) => tab.id === leftSidebarTab)
-  // 筆記標籤與時間軸不進 SidebarSearch 的範圍（它只認筆記、記錄、畫布）。
-  const searchTab = isBuiltInLeftSidebarTab(leftSidebarTab) && leftSidebarTab !== 'noteTags' && leftSidebarTab !== 'timeline' ? leftSidebarTab : 'files'
+  // 筆記標籤、時間軸與大綱不進 SidebarSearch 的範圍（它只認筆記、記錄、畫布）。
+  const searchTab = isBuiltInLeftSidebarTab(leftSidebarTab) && leftSidebarTab !== 'noteTags' && leftSidebarTab !== 'timeline' && leftSidebarTab !== 'outline' ? leftSidebarTab : 'files'
+  const showOutline = leftSidebarTab === 'outline' && outlinePlacement === 'sidebar'
   const renderTab = (tab: LauncherTab) => (
     <LauncherButton key={tab.id} icon={tab.icon} title={tab.title} active={tab.id === leftSidebarTab} secondary={pageVisible} onClick={() => void setLeftSidebarTab(tab.id)} />
   )
@@ -222,7 +234,7 @@ export function LeftSidebar() {
           <LauncherButton icon={Inbox} title="Inbox" active={inboxVisible} badge={inboxCount} badgeLabel={t('inbox.pending', { count: inboxCount })} onClick={() => showInbox()} />
           <LauncherButton icon={ScrollText} title="Prompts" active={promptLibraryVisible} onClick={() => showPromptLibrary()} />
           <div className="mx-2 my-1.5 border-t border-sidebar-border" role="separator" />
-          {SIDEBAR_TABS.map(renderTab)}
+          {builtInTabs.map(renderTab)}
           {visiblePluginTabs.map(renderTab)}
           {morePluginTabs.length > 0 && (
             <>
@@ -253,7 +265,7 @@ export function LeftSidebar() {
               <PluginViewToolbar viewKey={activePluginTab.id} />
             </div>
           ) : null}
-          <div className={cn("shrink-0", activePluginTab && "hidden")}>
+          <div className={cn("shrink-0", (activePluginTab || showOutline) && "hidden")}>
             <div className={cn(leftSidebarTab !== "files" && "hidden")}><FileActions /></div>
             <div className={cn(leftSidebarTab !== "canvases" && "hidden")}><CanvasActions /></div>
           </div>
@@ -262,7 +274,29 @@ export function LeftSidebar() {
           <div className="min-h-0 flex-1 overflow-y-auto">
             <PluginViewSurface key={activePluginTab.id} viewKey={activePluginTab.id} toolbarInHeader />
           </div>
-        ) : <SidebarSearch activeTab={searchTab}>
+        ) : <>
+        {showOutline ? (
+          <TabsContent value="outline" className="m-0 flex min-h-0 flex-1 flex-col overflow-hidden">
+            {outlineEditor && !outlineEditor.editor.isDestroyed ? (
+              <Outline
+                key={outlineEditor.documentKey}
+                editor={outlineEditor.editor}
+                documentKey={outlineEditor.documentKey}
+                isOpen
+                variant="sidebar"
+              />
+            ) : (
+              <Empty>
+                <EmptyHeader>
+                  <EmptyTitle>{t('navigation.outline')}</EmptyTitle>
+                  <EmptyDescription>{t('editor.outline.sidebarEmpty')}</EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            )}
+          </TabsContent>
+        ) : null}
+        <div className={cn('flex min-h-0 flex-1 flex-col', showOutline && 'hidden')}>
+        <SidebarSearch activeTab={searchTab}>
           <div className="relative min-h-0 flex-1">
             <TabsContent
               forceMount
@@ -293,7 +327,9 @@ export function LeftSidebar() {
               <NoteTagsSidebar />
             </TabsContent>
           </div>
-        </SidebarSearch>}
+        </SidebarSearch>
+        </div>
+        </>}
       </Tabs>
     </div>
   )

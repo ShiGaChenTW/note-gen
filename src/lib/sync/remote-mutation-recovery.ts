@@ -65,7 +65,7 @@ export async function fetchRemoteRead(url: string, options: Omit<RequestInit, 'm
  */
 export async function recoverRemoteMutation<T>({ send, reconcile, beforeWrite, maxAttempts = 3 }: {
   send: () => Promise<T>
-  // 型別只由 send() 決定；reconcile 的 applied.value 必須相容，但不參與推斷（否則 T 會被推成含 undefined）
+  // Infer the result from send; an unchanged observation carries no result value.
   reconcile: () => Promise<RemoteMutationObservation<NoInfer<T>>>
   beforeWrite?: () => Promise<void>
   maxAttempts?: number

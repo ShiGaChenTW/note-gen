@@ -16,7 +16,8 @@ import {
 } from '@/lib/outline-preferences'
 import { Store } from '@tauri-apps/plugin-store'
 import { useShallow } from 'zustand/react/shallow'
-import useSettingStore from '@/stores/setting'
+import useSettingStore, { useSettingsHydrationStore } from '@/stores/setting'
+import { useSidebarStore } from '@/stores/sidebar'
 import {
   editorPathsReferToSameFile,
   getCurrentEditorWorkspaceRoot,
@@ -53,12 +54,15 @@ export function MdEditor({ tabContentsRef, filePath, isActive, disabled = false 
   const {
     enableOutline,
     outlinePosition,
+    outlinePlacement,
     workspacePath,
   } = useSettingStore(useShallow((state) => ({
     enableOutline: state.enableOutline,
     outlinePosition: state.outlinePosition,
+    outlinePlacement: state.outlinePlacement,
     workspacePath: state.workspacePath,
   })))
+  const settingsReady = useSettingsHydrationStore(state => state.status === 'ready')
 
   const t = useTranslations('article.file.sync')
   const tEditor = useTranslations('editor')
@@ -66,8 +70,6 @@ export function MdEditor({ tabContentsRef, filePath, isActive, disabled = false 
   const isCreatingFileRef = useRef(false)
   // Track loaded state per file path - Bug fix: make this cleanup possible
   const loadedPathsRef = useRef<Set<string>>(new Set())
-  // Bug fix: Track which file's content is currently in currentArticle
-  const currentArticlePathRef = useRef<string | null>(null)
   // Bug fix: Track if editor content has been initialized to prevent saving empty content
   const contentInitializedRef = useRef(false)
   // Bug fix: Track expected content to detect if editor is behind
@@ -95,22 +97,6 @@ export function MdEditor({ tabContentsRef, filePath, isActive, disabled = false 
       emitter.off('editor-file-close', handleFileClose as any)
       // Also clean up on component unmount
       loadedPathsRef.current.delete(filePath)
-    }
-  }, [filePath])
-
-  // Bug fix: Listen for article opened events to track which file currentArticle belongs to
-  useEffect(() => {
-    const handleArticleOpened = (event: { path: string; content: string }) => {
-      if (event.path === filePath) {
-        currentArticlePathRef.current = filePath
-      } else {
-        // Bug fix: If a different file was opened, clear the reference
-        currentArticlePathRef.current = null
-      }
-    }
-    emitter.on('article-opened', handleArticleOpened as any)
-    return () => {
-      emitter.off('article-opened', handleArticleOpened as any)
     }
   }, [filePath])
 
@@ -157,7 +143,6 @@ export function MdEditor({ tabContentsRef, filePath, isActive, disabled = false 
         filePath,
         event.workspaceRoot,
       )
-      currentArticlePathRef.current = targetIsActive ? filePath : null
       if (tabContentsRef.current) {
         tabContentsRef.current[filePath] = event.content
       }
@@ -232,7 +217,16 @@ export function MdEditor({ tabContentsRef, filePath, isActive, disabled = false 
     return () => { disposed = true }
   }, [enableOutline, filePath, workspacePath])
 
+  const sidebarOutlineOpen = useSidebarStore(state => state.leftSidebarVisible && state.leftSidebarTab === 'outline')
   const handleToggleOutline = useCallback(() => {
+    if (!settingsReady) return
+
+    if (outlinePlacement === 'sidebar') {
+      const sidebar = useSidebarStore.getState()
+      void sidebar.setLeftSidebarTab(sidebarOutlineOpen ? 'files' : 'outline')
+      if (!sidebar.leftSidebarVisible) void sidebar.toggleLeftSidebar()
+      return
+    }
     setOutlineOpen(current => {
       const next = !current
       void Store.load('store.json').then(async store => {
@@ -241,7 +235,7 @@ export function MdEditor({ tabContentsRef, filePath, isActive, disabled = false 
       })
       return next
     })
-  }, [filePath, workspacePath])
+  }, [filePath, workspacePath, outlinePlacement, settingsReady, sidebarOutlineOpen])
 
   const handleOutlineWidthChange = useCallback((width: number) => {
     setOutlineWidth(normalizeOutlineWidth(width))
@@ -269,8 +263,9 @@ export function MdEditor({ tabContentsRef, filePath, isActive, disabled = false 
       return
     }
 
-    const { activeFilePath: storeActivePath } = useArticleStore.getState()
-    if (storeActivePath === filePath) {
+    // Path and content must come from the same render snapshot. A tab switch
+    // can change the live store before this effect runs.
+    if (activeFilePath === filePath) {
       if (articleLoading) return
       setInitialContent(currentArticle)
       if (tabContentsRef.current) {
@@ -303,17 +298,13 @@ export function MdEditor({ tabContentsRef, filePath, isActive, disabled = false 
     return () => {
       disposed = true
     }
-  }, [articleLoading, currentArticle, filePath, tabContentsRef])
+  }, [activeFilePath, articleLoading, currentArticle, filePath, tabContentsRef])
 
-  // Subscribe to currentArticle changes (for remote file pull results)
-  // Bug fix: Only update if currentArticle belongs to this file
+  // Apply active-document updates only after that document has finished loading.
   useEffect(() => {
-    // Bug fix: Only process if currentArticle belongs to this file
-    // Also check against store's activeFilePath as fallback
-    const { activeFilePath: storeActivePath } = useArticleStore.getState()
-    const isThisFile = currentArticlePathRef.current === filePath || storeActivePath === filePath
+    if (activeFilePath !== filePath || articleLoading) return
 
-    if (currentArticle && currentArticle.length > 0 && currentArticle !== initialContent && isThisFile) {
+    if (currentArticle !== initialContent) {
       // Bug fix: Set expected content BEFORE updating initialContent
       // This ensures handleContentChange knows what to expect
       expectedContentRef.current = currentArticle
@@ -330,14 +321,14 @@ export function MdEditor({ tabContentsRef, filePath, isActive, disabled = false 
       if (justPulledFile) {
         emitter.emit('editor-content-from-remote', { content: currentArticle })
       }
-    } else if (currentArticle === '' && isThisFile && initialContent === '') {
+    } else if (currentArticle === '' && initialContent === '') {
       // Genuinely empty file - hide loading and mark as initialized
       // Bug fix: Set expected content for empty file
       expectedContentRef.current = ''
       // Mark as initialized for empty files so user can start typing
       contentInitializedRef.current = true
     }
-  }, [currentArticle, filePath, tabContentsRef, initialContent, justPulledFile])
+  }, [activeFilePath, articleLoading, currentArticle, filePath, tabContentsRef, initialContent, justPulledFile])
 
   // Handle content changes for this editor's document. Split groups may edit a
   // document before the global active-file transition has finished, so always
@@ -476,7 +467,7 @@ export function MdEditor({ tabContentsRef, filePath, isActive, disabled = false 
     )
   }
 
-  const showOutline = outlineOpen && !isThisEditorPulling && editorReady && editorInstance
+  const showOutline = settingsReady && outlinePlacement === 'editor' && outlineOpen && !isThisEditorPulling && editorReady && editorInstance
   const renderOutline = () => editorInstance ? (
     <Outline
       editor={editorInstance}
@@ -519,7 +510,7 @@ export function MdEditor({ tabContentsRef, filePath, isActive, disabled = false 
         placeholder={tEditor('placeholder')}
         activeFilePath={filePath}
         onEditorReady={handleEditorReady}
-          outlineOpen={outlineOpen}
+        outlineOpen={settingsReady && (outlinePlacement === 'sidebar' ? sidebarOutlineOpen : outlineOpen)}
         outlinePosition={outlinePosition}
         outlineWidth={outlineWidth}
         outlineInLayout

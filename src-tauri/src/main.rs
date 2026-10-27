@@ -42,7 +42,7 @@ mod system_permissions;
 mod tray;
 mod web_clipper;
 mod window;
-#[cfg(all(target_os = "windows", not(debug_assertions)))]
+#[cfg(target_os = "windows")]
 mod windows_installer;
 
 use ai::{
@@ -94,7 +94,8 @@ use remote_skills::{
 };
 use screenshot::cleanup_temp_screenshot_dir;
 use skill_runtime::{
-    cancel_skill_script, inspect_skill_python, install_skill_python_dependencies, run_skill_script,
+    cancel_skill_script, inspect_skill_environment, inspect_skill_python,
+    install_skill_node_dependencies, install_skill_python_dependencies, run_skill_code, run_skill_script,
     SkillProcessManager,
 };
 use skills::{
@@ -120,6 +121,19 @@ fn close_developer_tools(window: tauri::WebviewWindow) {
 #[tauri::command]
 fn is_developer_tools_open(window: tauri::WebviewWindow) -> bool {
     window.is_devtools_open()
+}
+
+#[tauri::command]
+fn get_desktop_update_target(app: tauri::AppHandle) -> Result<Option<String>, String> {
+    #[cfg(target_os = "windows")]
+    {
+        windows_installer::update_target(&app.package_info().version.to_string()).map(Some)
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        let _ = app;
+        Ok(None)
+    }
 }
 
 fn main() {
@@ -170,6 +184,7 @@ fn main() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         // 注册命令处理器
         .invoke_handler(tauri::generate_handler![
+            get_desktop_update_target,
             browser::browser_create,
             browser::browser_set_theme,
             browser::browser_set_bounds,
@@ -267,9 +282,12 @@ fn main() {
             install_remote_skill,
             cancel_remote_skill_download,
             run_skill_script,
+            run_skill_code,
             cancel_skill_script,
             inspect_skill_python,
+            inspect_skill_environment,
             install_skill_python_dependencies,
+            install_skill_node_dependencies,
             start_mcp_stdio_server,
             stop_mcp_server,
             send_mcp_message,

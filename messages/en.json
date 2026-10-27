@@ -910,6 +910,35 @@
     },
     "skills": {
       "title": "Skills",
+      "tabs": {
+        "global": "Global",
+        "workspace": "Local",
+        "discover": "Discover"
+      },
+      "recommended": {
+        "title": "NoteGen picks",
+        "description": "Discover skills for notes and writing, then choose one to install.",
+        "empty": "No recommended skills yet",
+        "loadError": "Failed to load recommended skills",
+        "refresh": "Refresh recommendations",
+        "install": "Install",
+        "installed": "Installed",
+        "installTitle": "Install {name}",
+        "installDescription": "Choose where to install this skill. Global skills are available in all workspaces.",
+        "scope": "Install location",
+        "source": "View source",
+        "author": "By {author}",
+        "inspecting": "Fetching skill information…",
+        "installing": "Installing…",
+        "installSuccess": "Installed {name}",
+        "installError": "Failed to install skill",
+        "previewError": "Unable to fetch skill information",
+        "skillMismatch": "The downloaded skill does not match the recommendation. Refresh recommendations and try again.",
+        "files": "Contains {count} files",
+        "scripts": "Contains scripts that may require a local runtime.",
+        "warningsTitle": "Installation notes",
+        "refreshSkillsError": "The skill was installed, but the list could not be refreshed. Reopen settings."
+      },
       "desc": "Skills are reusable AI capability packages that allow AI assistants to automatically apply specific behavioral patterns based on tasks.",
       "enable": "Enable Skills",
       "enableDesc": "When enabled, AI can use configured Skills",
@@ -969,7 +998,19 @@
       "pythonRuntime": "Python runtime",
       "isolatedRuntime": "isolated",
       "systemRuntime": "system",
-      "runtimeUnavailable": "unavailable"
+      "runtimeUnavailable": "unavailable",
+      "environment": {
+        "title": "Runtime environment",
+        "description": "Inspect the runtimes and document tools used by this Skill.",
+        "available": "Available",
+        "missing": "Not installed",
+        "systemToolsHelp": "Word conversion and layout previews require local tools such as LibreOffice and Poppler. Scanned-document OCR also requires Tesseract. Refresh after installing them.",
+        "dependencyHelp": "These buttons download the listed packages from PyPI or npm into this Skill’s own environment. Other packages can be installed as needed during a task.",
+        "installPython": "Install Python packages",
+        "installNode": "Install Node.js packages",
+        "installed": "Packages installed",
+        "desktopOnly": "Local scripts and document runtimes are currently available on desktop. Instruction-only Skills can be installed and used on mobile."
+      }
     },
     "plugins": {
       "ui": {
@@ -1479,6 +1520,12 @@
           "pie": "pie title Resource Allocation\n    \"CPU\" : 45\n    \"Memory\" : 30\n    \"Storage\" : 25",
           "journey": "journey\n    title My Daily Work\n    section Morning\n    Commute : 7:00, 5\n    Work : 9:00, 8"
         }
+      },
+      "outlinePlacement": "Outline display area",
+      "outlinePlacementDesc": "Show the outline inside the editor or in a left sidebar tab that follows the active note.",
+      "outlinePlacementOptions": {
+        "editor": "Inside editor",
+        "sidebar": "Left sidebar"
       }
     },
     "canvas": {
@@ -4607,20 +4654,35 @@
         "addAttachment": {
           "title": "Add",
           "image": {
-            "title": "Image"
+            "title": "Image",
+            "description": "Add images from your device"
           },
           "file": {
-            "title": "File"
+            "title": "File",
+            "description": "Attach local documents and other files"
           },
           "folder": {
-            "title": "Folder"
+            "title": "Folder",
+            "description": "Attach a folder and its files"
           },
           "entryCount": "{count} items",
           "remove": "Remove {name}",
           "metadataOnly": "metadata only",
           "readFailed": "Failed to read {count} attachments",
           "selectFailed": "Failed to select attachments. Please try again",
-          "attachmentOnlyPrompt": "Please review and analyze the attachments I added."
+          "attachmentOnlyPrompt": "Please review and analyze the attachments I added.",
+          "groups": {
+            "attachments": "Local attachments",
+            "context": "Workspace & skills"
+          },
+          "resource": {
+            "title": "Reference notes & records",
+            "description": "Find notes, records, and canvases in your workspace"
+          },
+          "skill": {
+            "title": "Use a skill",
+            "description": "Choose a Skill for this message"
+          }
         },
         "imageAttachment": {
           "selectSuccess": "{count, plural, one {Attached # image} other {Attached # images}}",
@@ -4671,6 +4733,11 @@
           "thought": "Thought",
           "action": "Action",
           "toolCalls": "Tool Calls",
+          "timeline": {
+            "elapsed": "Took {duration}s",
+            "processing": "Processing for {duration}s",
+            "tools": "{count, plural, one {# tool call} other {# tool calls}}"
+          },
           "resultSummary": "Result summary",
           "queryParameters": "Query parameters",
           "toolResult": "Tool result",
@@ -4764,9 +4831,31 @@
               "scope": "Install location",
               "has_scripts": "Contains scripts",
               "skipped_symlinks": "Skipped symbolic links",
-              "replaceExisting": "Replace existing Skill"
+              "replaceExisting": "Replace existing Skill",
+              "language": "Language",
+              "code": "Complete code",
+              "args": "Arguments",
+              "packages": "Packages",
+              "timeout": "Timeout (ms)",
+              "script_id": "Registered script"
             },
             "tools": {
+              "update_file": {
+                "title": "Modify file",
+                "description": "Changes will be saved to the target file."
+              },
+              "update_editor_content": {
+                "title": "Modify editor content",
+                "description": "Insertions, replacements, or deletions will be applied in the current editor."
+              },
+              "delete_folder": {
+                "title": "Delete folder",
+                "description": "The selected folders and their contents will be deleted."
+              },
+              "install_skill": {
+                "title": "Install Skill package",
+                "description": "The Skill package will be installed in the selected location. An existing version will be backed up before replacement."
+              },
               "create_memory": {
                 "title": "Remember this information?",
                 "description": "After confirmation, AI can use this information in future chats.",
@@ -4836,8 +4925,42 @@
                   "executable-scripts": "The Skill contains executable scripts. Running them will still require separate confirmation.",
                   "symbolic-links": "The Skill contains {count} symbolic link(s). They will be skipped if installation continues."
                 }
+              },
+              "run_skill_code": {
+                "title": "Run Skill code",
+                "description": "The complete code and arguments below will run on this computer with access to local files and programs. This approval applies only to this code and these arguments."
+              },
+              "install_skill_node_dependencies": {
+                "title": "Install Skill Node.js packages",
+                "description": "Download the listed npm packages into this Skill’s own environment without running package installation scripts."
               }
-            }
+            },
+            "previewBefore": "Before changes",
+            "previewAfter": "After changes"
+          },
+          "ui": {
+            "waiting": "Waiting for input",
+            "expired": "Ended",
+            "displayed": "Information",
+            "submitted": "Submitted",
+            "cancelled": "Cancelled",
+            "submit": "Submit and continue",
+            "cancel": "Cancel",
+            "required": "Complete this field.",
+            "invalid": "Check this field.",
+            "emptyValue": "Not provided",
+            "search": "Search options",
+            "searchLabel": "Search {label}",
+            "select": "Select an option",
+            "loading": "Loading options…",
+            "noOptions": "No options available",
+            "moreOptions": "Showing the first 100 options. Search to narrow the results.",
+            "rootFolder": "Root folder",
+            "renderError": "This interactive content could not be displayed. Continue in the chat.",
+            "loadError": "Could not load options. Try again.",
+            "retry": "Retry",
+            "submitError": "Could not submit. Try again.",
+            "expiredDescription": "This interaction has ended. Start a new one in the current chat."
           }
         },
         "fileLink": {
@@ -4890,7 +5013,11 @@
             "scope": {
               "global": "Global",
               "project": "Workspace"
-            }
+            },
+            "unavailable": "No skills available",
+            "emptyDescription": "Install or enable skills to choose them here.",
+            "disabledDescription": "Skills are turned off. Enable them in skill settings.",
+            "manage": "Manage skills"
           },
           "resources": {
             "title": "Link context",
@@ -4905,7 +5032,8 @@
           },
           "prompts": {
             "title": "Prompt Library"
-          }
+          },
+          "allAdded": "All available items have been added"
         },
         "clearChat": "Clear chat",
         "clearContext": {
@@ -4915,6 +5043,31 @@
           "apply": "Apply to this message",
           "applied": "Applied — resets for the next message",
           "unavailable": "No matching model setting found"
+        },
+        "toolsMenu": {
+          "groups": {
+            "conversation": "Conversation settings",
+            "extensions": "Extensions"
+          },
+          "model": {
+            "title": "Model",
+            "description": "Choose the model for responses"
+          },
+          "prompt": {
+            "title": "Prompt",
+            "description": "Set the role and response style"
+          },
+          "reasoning": {
+            "description": "Adjust how much the model reasons"
+          },
+          "mcp": {
+            "title": "MCP servers",
+            "description": "Connect external services and tools"
+          },
+          "clipboard": {
+            "title": "Clipboard monitoring",
+            "description": "Automatically read clipboard content"
+          }
         }
       },
       "header": {
@@ -4978,6 +5131,43 @@
         "cancel": "Cancel",
         "delete": "Delete",
         "deleteConfirm": "Are you sure to delete this message?"
+      },
+      "response": {
+        "generating": "Generating components…",
+        "previewActions": "Available when generation finishes",
+        "openSource": "Open source",
+        "saveArtifact": "Save file as",
+        "copied": "Copied",
+        "saved": "File saved",
+        "unavailable": "The content is unavailable or belongs to another workspace.",
+        "actionFailed": "Action failed",
+        "imageFailed": "The image could not be displayed.",
+        "mathFailed": "The formula could not be parsed. Showing the original LaTeX.",
+        "step": {
+          "pending": "Pending",
+          "current": "In progress",
+          "done": "Done"
+        }
+      },
+      "artifacts": {
+        "open": "Open {name}",
+        "saveAs": "Save {name} as...",
+        "saved": "File saved",
+        "openFailed": "Unable to open file",
+        "saveFailed": "Unable to save file",
+        "actionFailed": "The operation failed. Check that the file still exists and try again.",
+        "desktopOnly": "Open or save generated files in the desktop app.",
+        "partialHint": "This file was created during an incomplete execution. Its contents have not been verified.",
+        "errors": {
+          "INVALID_PATH": "The file path is invalid.",
+          "NOT_ALLOWED": "This link is not a file generated in this reply.",
+          "WORKSPACE_CHANGED": "The workspace has changed. Return to the file's workspace and try again.",
+          "MISSING_FILE": "The file has been moved or deleted.",
+          "SYMLINK_BLOCKED": "Files reached through symbolic links cannot be accessed.",
+          "UNSUPPORTED_PLATFORM": "Open or save generated files in the desktop app.",
+          "OPEN_FAILED": "The system could not open this file. Check that a compatible app is installed.",
+          "SAVE_FAILED": "Unable to copy the file to the selected location. Please try again."
+        }
       }
     },
     "tag": {
@@ -6245,6 +6435,7 @@
       "tooDeep": "Embed too deep, not expanded"
     },
     "outline": {
+      "sidebarEmpty": "Open a Markdown note in visual mode to view its outline.",
       "title": "Outline",
       "open": "Open Outline",
       "close": "Close Outline",
@@ -6293,6 +6484,17 @@
       "normalQuote": "Regular quote"
     },
     "bubbleMenu": {
+      "colors": {
+        "text": "Text color",
+        "highlight": "Highlight color",
+        "clear": "Clear color",
+        "red": "Red",
+        "orange": "Orange",
+        "yellow": "Yellow",
+        "green": "Green",
+        "blue": "Blue",
+        "purple": "Purple"
+      },
       "ai": "AI",
       "polish": "Polish",
       "concise": "Concise",
@@ -7144,5 +7346,8 @@
     "kindPromptVersion": "Prompt version",
     "kindAutoSnapshot": "Auto snapshot",
     "kindUnknown": "Other version"
+  },
+  "editorImage": {
+    "changedOnDisk": "The image was updated by sync or another operation. Reopen it before editing and saving again."
   }
 }
