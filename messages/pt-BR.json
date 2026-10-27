@@ -1049,6 +1049,12 @@
           "pie": "pie title Alocação de Recursos\n    \"CPU\" : 45\n    \"Memória\" : 30\n    \"Armazenamento\" : 25",
           "journey": "journey\n    title Meu Trabalho Diário\n    section Manhã\n    Deslocamento : 7:00, 5\n    Trabalho : 9:00, 8"
         }
+      },
+      "outlinePlacement": "Área de exibição da estrutura",
+      "outlinePlacementDesc": "Exiba a estrutura no editor ou em uma aba da barra lateral esquerda que acompanha a nota ativa.",
+      "outlinePlacementOptions": {
+        "editor": "No editor",
+        "sidebar": "Barra lateral esquerda"
       }
     },
     "canvas": {
@@ -3447,6 +3453,35 @@
     },
     "skills": {
       "title": "Skills",
+      "tabs": {
+        "global": "Global",
+        "workspace": "Local",
+        "discover": "Descobrir"
+      },
+      "recommended": {
+        "title": "Seleção do NoteGen",
+        "description": "Descubra skills para notas e escrita e escolha uma para instalar.",
+        "empty": "Nenhuma skill recomendada ainda",
+        "loadError": "Não foi possível carregar as skills recomendadas",
+        "refresh": "Atualizar recomendações",
+        "install": "Instalar",
+        "installed": "Instalada",
+        "installTitle": "Instalar {name}",
+        "installDescription": "Escolha onde instalar. Skills globais ficam disponíveis em todos os espaços de trabalho.",
+        "scope": "Local de instalação",
+        "source": "Ver fonte",
+        "author": "Por {author}",
+        "inspecting": "Buscando informações da skill…",
+        "installing": "Instalando…",
+        "installSuccess": "{name} instalada",
+        "installError": "Não foi possível instalar a skill",
+        "previewError": "Não foi possível obter informações da skill",
+        "skillMismatch": "A skill baixada não corresponde à recomendação. Atualize as recomendações e tente novamente.",
+        "files": "Contém {count} arquivos",
+        "scripts": "Contém scripts que podem exigir um ambiente de execução local.",
+        "warningsTitle": "Notas de instalação",
+        "refreshSkillsError": "A skill foi instalada, mas não foi possível atualizar a lista. Abra as configurações novamente."
+      },
       "desc": "Skills são pacotes reutilizáveis de capacidades de IA, permitindo que o assistente aplique automaticamente comportamentos específicos conforme a tarefa.",
       "enable": "Ativar Skills",
       "enableDesc": "Quando ativado, a IA pode usar as Skills configuradas.",
@@ -3502,7 +3537,19 @@
       "content": "Conteúdo das instruções",
       "deleteSkillTitle": "Excluir Skill",
       "deleteSkillDesc": "Tem certeza de que deseja excluir esta Skill? Esta ação não pode ser desfeita.",
-      "skillDeleted": "Skill excluída com sucesso"
+      "skillDeleted": "Skill excluída com sucesso",
+      "environment": {
+        "title": "Ambiente de execução",
+        "description": "Verifique os runtimes e as ferramentas de documentos deste Skill.",
+        "available": "Disponível",
+        "missing": "Não instalado",
+        "systemToolsHelp": "A conversão de Word e a prévia de layout exigem ferramentas locais como LibreOffice e Poppler. O OCR de documentos digitalizados também exige Tesseract. Atualize após a instalação.",
+        "dependencyHelp": "Estes botões baixam os pacotes listados do PyPI ou npm para o ambiente próprio deste Skill. Outros pacotes podem ser instalados conforme necessário durante uma tarefa.",
+        "installPython": "Instalar pacotes Python",
+        "installNode": "Instalar pacotes Node.js",
+        "installed": "Pacotes instalados",
+        "desktopOnly": "Scripts locais e runtimes de documentos estão disponíveis no desktop. Skills compostos apenas por instruções podem ser instalados e usados no celular."
+      }
     },
     "plugins": {
       "ui": {
@@ -4554,20 +4601,35 @@
         "addAttachment": {
           "title": "Adicionar",
           "image": {
-            "title": "Imagem"
+            "title": "Imagem",
+            "description": "Adicionar imagens do dispositivo"
           },
           "file": {
-            "title": "Arquivo"
+            "title": "Arquivo",
+            "description": "Anexar documentos locais e outros arquivos"
           },
           "folder": {
-            "title": "Pasta"
+            "title": "Pasta",
+            "description": "Anexar uma pasta e seus arquivos"
           },
           "entryCount": "{count} itens",
           "remove": "Remover {name}",
           "metadataOnly": "somente metadados",
           "readFailed": "Falha ao ler {count} anexos",
           "selectFailed": "Falha ao selecionar anexos. Tente novamente",
-          "attachmentOnlyPrompt": "Revise e analise os anexos que adicionei."
+          "attachmentOnlyPrompt": "Revise e analise os anexos que adicionei.",
+          "groups": {
+            "attachments": "Anexos locais",
+            "context": "Espaço de trabalho e Skills"
+          },
+          "resource": {
+            "title": "Referenciar notas e registros",
+            "description": "Buscar notas, registros e telas no espaço de trabalho"
+          },
+          "skill": {
+            "title": "Usar Skill",
+            "description": "Escolher uma Skill para esta mensagem"
+          }
         },
         "imageAttachment": {
           "selectSuccess": "{count, plural, one {# imagem anexada} other {# imagens anexadas}}",
@@ -4607,6 +4669,11 @@
           "acting": "Agindo",
           "observation": "Observação",
           "toolCalls": "Chamadas de Ferramenta",
+          "timeline": {
+            "elapsed": "Duração: {duration}s",
+            "processing": "Processando há {duration}s",
+            "tools": "{count, plural, one {# chamada de ferramenta} other {# chamadas de ferramenta}}"
+          },
           "resultSummary": "Resumo do resultado",
           "queryParameters": "Parâmetros da consulta",
           "toolResult": "Resultado da ferramenta",
@@ -4690,9 +4757,31 @@
               "scope": "Local de instalação",
               "has_scripts": "Contém scripts",
               "skipped_symlinks": "Links simbólicos ignorados",
-              "replaceExisting": "Substituir Skill existente"
+              "replaceExisting": "Substituir Skill existente",
+              "language": "Linguagem",
+              "code": "Código completo",
+              "args": "Argumentos",
+              "packages": "Pacotes",
+              "timeout": "Tempo limite (ms)",
+              "script_id": "Script registrado"
             },
             "tools": {
+              "update_file": {
+                "title": "Modificar arquivo",
+                "description": "As alterações serão salvas no arquivo de destino."
+              },
+              "update_editor_content": {
+                "title": "Modificar conteúdo do editor",
+                "description": "Inserções, substituições ou exclusões serão aplicadas no editor atual."
+              },
+              "delete_folder": {
+                "title": "Excluir pasta",
+                "description": "As pastas selecionadas e seu conteúdo serão excluídos."
+              },
+              "install_skill": {
+                "title": "Instalar pacote do Skill",
+                "description": "O pacote do Skill será instalado no local selecionado. Uma versão existente será copiada para backup antes da substituição."
+              },
               "create_memory": {
                 "title": "Lembrar desta informação?",
                 "description": "Após a confirmação, a IA poderá usar esta informação em conversas futuras.",
@@ -4718,8 +4807,42 @@
                   "executable-scripts": "O Skill contém scripts executáveis. A execução ainda exigirá confirmação separada.",
                   "symbolic-links": "O Skill contém {count} link(s) simbólico(s). Eles serão ignorados se a instalação continuar."
                 }
+              },
+              "run_skill_code": {
+                "title": "Executar código do Skill",
+                "description": "O código completo e os argumentos abaixo serão executados neste computador, com acesso a arquivos e programas locais. Esta aprovação vale apenas para este código e estes argumentos."
+              },
+              "install_skill_node_dependencies": {
+                "title": "Instalar pacotes Node.js do Skill",
+                "description": "Baixar os pacotes npm listados para o ambiente próprio deste Skill, sem executar scripts de instalação dos pacotes."
               }
-            }
+            },
+            "previewBefore": "Antes das alterações",
+            "previewAfter": "Depois das alterações"
+          },
+          "ui": {
+            "waiting": "Aguardando preenchimento",
+            "expired": "Encerrado",
+            "displayed": "Informação",
+            "submitted": "Enviado",
+            "cancelled": "Cancelado",
+            "submit": "Enviar e continuar",
+            "cancel": "Cancelar",
+            "required": "Preencha este campo.",
+            "invalid": "Verifique este campo.",
+            "emptyValue": "Não informado",
+            "search": "Pesquisar opções",
+            "searchLabel": "Pesquisar {label}",
+            "select": "Selecione uma opção",
+            "loading": "Carregando opções…",
+            "noOptions": "Nenhuma opção disponível",
+            "moreOptions": "Exibindo as primeiras 100 opções. Pesquise para refinar os resultados.",
+            "rootFolder": "Pasta raiz",
+            "renderError": "Não foi possível exibir este conteúdo interativo. Continue no chat.",
+            "loadError": "Não foi possível carregar as opções. Tente novamente.",
+            "retry": "Tentar novamente",
+            "submitError": "Não foi possível enviar. Tente novamente.",
+            "expiredDescription": "Esta interação foi encerrada. Inicie uma nova no chat atual."
           }
         },
         "imageSelector": {
@@ -4781,7 +4904,11 @@
             "scope": {
               "global": "Global",
               "project": "Workspace"
-            }
+            },
+            "unavailable": "Nenhuma Skill disponível",
+            "emptyDescription": "Instale ou ative Skills para selecioná-las aqui.",
+            "disabledDescription": "Skills estão desativadas. Ative-as nas configurações de Skills.",
+            "manage": "Gerenciar Skills"
           },
           "resources": {
             "title": "Vincular contexto",
@@ -4796,7 +4923,8 @@
           },
           "prompts": {
             "title": "Biblioteca de prompts"
-          }
+          },
+          "allAdded": "Todos os itens disponíveis já foram adicionados"
         },
         "stopped": "A conversa foi encerrada",
         "newChat": "Novo Chat",
@@ -4805,6 +4933,31 @@
           "apply": "Aplicar a esta mensagem",
           "applied": "Aplicado — será redefinido na próxima mensagem",
           "unavailable": "Nenhuma configuração de modelo correspondente encontrada"
+        },
+        "toolsMenu": {
+          "groups": {
+            "conversation": "Configurações da conversa",
+            "extensions": "Extensões"
+          },
+          "model": {
+            "title": "Modelo",
+            "description": "Escolher o modelo para as respostas"
+          },
+          "prompt": {
+            "title": "Prompt",
+            "description": "Definir o papel e o estilo das respostas"
+          },
+          "reasoning": {
+            "description": "Ajustar o esforço de raciocínio do modelo"
+          },
+          "mcp": {
+            "title": "Servidores MCP",
+            "description": "Conectar serviços e ferramentas externas"
+          },
+          "clipboard": {
+            "title": "Monitorar área de transferência",
+            "description": "Ler o conteúdo da área de transferência automaticamente"
+          }
         }
       },
       "header": {
@@ -4878,6 +5031,43 @@
         "lineSingle": "引用自 {fileName} 第 {line} 行",
         "lineRange": "引用自 {fileName} 第 {startLine}-{endLine} 行",
         "noLine": "引用自 {fileName}"
+      },
+      "response": {
+        "generating": "Gerando componentes…",
+        "previewActions": "Disponível quando a geração terminar",
+        "openSource": "Abrir fonte",
+        "saveArtifact": "Salvar arquivo como",
+        "copied": "Copiado",
+        "saved": "Arquivo salvo",
+        "unavailable": "O conteúdo está indisponível ou pertence a outro espaço de trabalho.",
+        "actionFailed": "Falha na ação",
+        "imageFailed": "Não foi possível exibir a imagem.",
+        "mathFailed": "Não foi possível interpretar a fórmula. Exibindo o LaTeX original.",
+        "step": {
+          "pending": "Pendente",
+          "current": "Em andamento",
+          "done": "Concluído"
+        }
+      },
+      "artifacts": {
+        "open": "Abrir {name}",
+        "saveAs": "Salvar {name} como...",
+        "saved": "Arquivo salvo",
+        "openFailed": "Não foi possível abrir o arquivo",
+        "saveFailed": "Não foi possível salvar o arquivo",
+        "actionFailed": "A operação falhou. Confirme que o arquivo ainda existe e tente novamente.",
+        "desktopOnly": "Abra ou salve os arquivos gerados no aplicativo para desktop.",
+        "partialHint": "Este arquivo foi criado durante uma execução incompleta. Seu conteúdo ainda não foi verificado.",
+        "errors": {
+          "INVALID_PATH": "O caminho do arquivo é inválido.",
+          "NOT_ALLOWED": "Este link não pertence a um arquivo gerado nesta resposta.",
+          "WORKSPACE_CHANGED": "O espaço de trabalho mudou. Retorne ao espaço do arquivo e tente novamente.",
+          "MISSING_FILE": "O arquivo foi movido ou excluído.",
+          "SYMLINK_BLOCKED": "Não é possível acessar arquivos por links simbólicos.",
+          "UNSUPPORTED_PLATFORM": "Abra ou salve os arquivos gerados no aplicativo para desktop.",
+          "OPEN_FAILED": "O sistema não conseguiu abrir o arquivo. Verifique se há um aplicativo compatível instalado.",
+          "SAVE_FAILED": "Não foi possível copiar o arquivo para o local selecionado. Tente novamente."
+        }
       }
     },
     "tag": {
@@ -6133,6 +6323,7 @@
       "tooDeep": "Incorporação profunda demais, não expandida"
     },
     "outline": {
+      "sidebarEmpty": "Abra uma nota Markdown no modo visual para ver sua estrutura.",
       "title": "Sumário",
       "open": "Abrir sumário",
       "close": "Fechar sumário",
@@ -6166,6 +6357,17 @@
       "normalQuote": "Citação comum"
     },
     "bubbleMenu": {
+      "colors": {
+        "text": "Cor do texto",
+        "highlight": "Cor de destaque",
+        "clear": "Remover cor",
+        "red": "Vermelho",
+        "orange": "Laranja",
+        "yellow": "Amarelo",
+        "green": "Verde",
+        "blue": "Azul",
+        "purple": "Roxo"
+      },
       "ai": "IA",
       "polish": "Polir",
       "concise": "Conciso",
@@ -7020,5 +7222,8 @@
     "kindPromptVersion": "Versão de prompt",
     "kindAutoSnapshot": "Snapshot automático",
     "kindUnknown": "Outra versão"
+  },
+  "editorImage": {
+    "changedOnDisk": "A imagem foi atualizada pela sincronização ou por outra operação. Abra-a novamente antes de editar e salvar."
   }
 }

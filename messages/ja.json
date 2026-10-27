@@ -1049,6 +1049,12 @@
           "pie": "pie title リソース割り当て\n    \"CPU\" : 45\n    \"メモリ\" : 30\n    \"ストレージ\" : 25",
           "journey": "journey\n    title 私の日常工作\n    section 午前\n    通勤 : 7:00, 5\n    仕事 : 9:00, 8"
         }
+      },
+      "outlinePlacement": "アウトラインの表示場所",
+      "outlinePlacementDesc": "エディター内、または現在のノートに連動する左サイドバーのタブに表示します。",
+      "outlinePlacementOptions": {
+        "editor": "エディター内",
+        "sidebar": "左サイドバー"
       }
     },
     "canvas": {
@@ -3422,6 +3428,35 @@
     },
     "skills": {
       "title": "スキル",
+      "tabs": {
+        "global": "グローバル",
+        "workspace": "ローカル",
+        "discover": "見つける"
+      },
+      "recommended": {
+        "title": "NoteGen おすすめ",
+        "description": "ノートや執筆に役立つスキルを見つけて、選んでインストールできます。",
+        "empty": "おすすめのスキルはまだありません",
+        "loadError": "おすすめのスキルを読み込めませんでした",
+        "refresh": "おすすめを更新",
+        "install": "インストール",
+        "installed": "インストール済み",
+        "installTitle": "{name} をインストール",
+        "installDescription": "インストール先を選択してください。グローバルスキルはすべてのワークスペースで使用できます。",
+        "scope": "インストール先",
+        "source": "ソースを表示",
+        "author": "作者：{author}",
+        "inspecting": "スキル情報を取得中…",
+        "installing": "インストール中…",
+        "installSuccess": "{name} をインストールしました",
+        "installError": "スキルをインストールできませんでした",
+        "previewError": "スキル情報を取得できません",
+        "skillMismatch": "ダウンロードしたスキルがおすすめの項目と一致しません。おすすめを更新して再試行してください。",
+        "files": "{count} 個のファイルを含みます",
+        "scripts": "スクリプトが含まれており、実行にはローカル環境が必要な場合があります。",
+        "warningsTitle": "インストールに関する注意",
+        "refreshSkillsError": "スキルはインストールされましたが、一覧を更新できませんでした。設定を開き直してください。"
+      },
       "desc": "Skills 是可重用的 AI 能力包，让 AI 助手能够根据任务自动应用特定的行为模式。",
       "enable": "启用 Skills 功能",
       "enableDesc": "启用后，AI 可以使用已配置的 Skills",
@@ -3477,7 +3512,19 @@
       "userInvocableHelp": "用户可以通过 /skill-name 手动触发",
       "deleteSkillTitle": "删除 Skill",
       "deleteSkillDesc": "确定要删除这个 Skill 吗？此操作无法撤销。",
-      "skillDeleted": "Skill 删除成功"
+      "skillDeleted": "Skill 删除成功",
+      "environment": {
+        "title": "実行環境",
+        "description": "この Skill が使用するランタイムと文書ツールを確認します。",
+        "available": "利用可能",
+        "missing": "未インストール",
+        "systemToolsHelp": "Word の変換とレイアウトプレビューには LibreOffice や Poppler などのローカルツールが必要です。スキャン文書の OCR には Tesseract も必要です。インストール後に更新してください。",
+        "dependencyHelp": "以下のボタンは、一覧のパッケージを PyPI または npm からダウンロードし、この Skill 専用の環境にインストールします。ほかのパッケージはタスク中に必要に応じて追加できます。",
+        "installPython": "Python パッケージをインストール",
+        "installNode": "Node.js パッケージをインストール",
+        "installed": "パッケージをインストールしました",
+        "desktopOnly": "ローカルスクリプトと文書の実行環境は現在デスクトップ版で利用できます。モバイル版では指示のみの Skill をインストールして使用できます。"
+      }
     },
     "plugins": {
       "ui": {
@@ -4479,20 +4526,35 @@
         "addAttachment": {
           "title": "追加",
           "image": {
-            "title": "画像"
+            "title": "画像",
+            "description": "端末から画像を追加"
           },
           "file": {
-            "title": "ファイル"
+            "title": "ファイル",
+            "description": "ローカルの文書やファイルを添付"
           },
           "folder": {
-            "title": "フォルダ"
+            "title": "フォルダ",
+            "description": "フォルダーとその中のファイルを添付"
           },
           "entryCount": "{count} 件",
           "remove": "{name} を削除",
           "metadataOnly": "メタデータのみ",
           "readFailed": "{count} 件の添付ファイルを読み取れませんでした",
           "selectFailed": "添付ファイルを選択できませんでした。もう一度お試しください",
-          "attachmentOnlyPrompt": "追加した添付ファイルを確認して分析してください。"
+          "attachmentOnlyPrompt": "追加した添付ファイルを確認して分析してください。",
+          "groups": {
+            "attachments": "ローカル添付",
+            "context": "ワークスペースとスキル"
+          },
+          "resource": {
+            "title": "ノート・記録を参照",
+            "description": "ワークスペースのノート・記録・キャンバスを検索"
+          },
+          "skill": {
+            "title": "スキルを使用",
+            "description": "このメッセージで使う Skill を選択"
+          }
         },
         "imageAttachment": {
           "selectSuccess": "{count} 枚の画像を添付しました",
@@ -4532,6 +4594,11 @@
           "acting": "実行中",
           "observation": "観察結果",
           "toolCalls": "ツール呼び出し",
+          "timeline": {
+            "elapsed": "所要時間 {duration} 秒",
+            "processing": "処理中 {duration} 秒",
+            "tools": "ツール呼び出し {count} 回"
+          },
           "resultSummary": "結果の概要",
           "queryParameters": "検索パラメータ",
           "toolResult": "ツールの結果",
@@ -4615,9 +4682,31 @@
               "scope": "インストール先",
               "has_scripts": "スクリプトを含む",
               "skipped_symlinks": "スキップするシンボリックリンク",
-              "replaceExisting": "既存の Skill を置換"
+              "replaceExisting": "既存の Skill を置換",
+              "language": "言語",
+              "code": "コード全体",
+              "args": "引数",
+              "packages": "パッケージ",
+              "timeout": "タイムアウト（ミリ秒）",
+              "script_id": "登録済みスクリプト"
             },
             "tools": {
+              "update_file": {
+                "title": "ファイルを変更",
+                "description": "変更内容を対象のファイルに保存します。"
+              },
+              "update_editor_content": {
+                "title": "エディターの内容を変更",
+                "description": "現在のエディターで挿入、置換、削除の操作を適用します。"
+              },
+              "delete_folder": {
+                "title": "フォルダーを削除",
+                "description": "選択したフォルダーとその内容を削除します。"
+              },
+              "install_skill": {
+                "title": "Skill パッケージをインストール",
+                "description": "指定した場所に Skill パッケージをインストールします。既存のバージョンを置き換える前にバックアップします。"
+              },
               "create_memory": {
                 "title": "この情報を記憶しますか？",
                 "description": "確認すると、AI が今後の会話でこの情報を使用します。",
@@ -4643,8 +4732,42 @@
                   "executable-scripts": "実行可能なスクリプトが含まれます。実行時には別途確認が必要です。",
                   "symbolic-links": "{count} 個のシンボリックリンクが含まれます。続行するとスキップされます。"
                 }
+              },
+              "run_skill_code": {
+                "title": "Skill コードを実行",
+                "description": "以下のコードと引数をこのコンピューターで実行します。ローカルのファイルやプログラムにアクセスできます。この承認は現在のコードと引数にのみ適用されます。"
+              },
+              "install_skill_node_dependencies": {
+                "title": "Skill の Node.js パッケージをインストール",
+                "description": "一覧の npm パッケージをこの Skill 専用の環境にダウンロードします。パッケージのインストールスクリプトは実行しません。"
               }
-            }
+            },
+            "previewBefore": "変更前",
+            "previewAfter": "変更後"
+          },
+          "ui": {
+            "waiting": "入力待ち",
+            "expired": "終了",
+            "displayed": "情報",
+            "submitted": "送信済み",
+            "cancelled": "キャンセル済み",
+            "submit": "送信して続行",
+            "cancel": "キャンセル",
+            "required": "この項目を入力してください。",
+            "invalid": "この項目を確認してください。",
+            "emptyValue": "未入力",
+            "search": "選択肢を検索",
+            "searchLabel": "{label}を検索",
+            "select": "選択してください",
+            "loading": "選択肢を読み込み中…",
+            "noOptions": "選択肢がありません",
+            "moreOptions": "最初の100件を表示しています。検索で絞り込めます。",
+            "rootFolder": "ルートフォルダー",
+            "renderError": "この操作画面を表示できませんでした。チャットで続けてください。",
+            "loadError": "選択肢を読み込めませんでした。もう一度お試しください。",
+            "retry": "再試行",
+            "submitError": "送信できませんでした。もう一度お試しください。",
+            "expiredDescription": "この操作は終了しました。現在のチャットで新しく開始してください。"
           }
         },
         "imageSelector": {
@@ -4706,7 +4829,11 @@
             "scope": {
               "global": "グローバル",
               "project": "ワークスペース"
-            }
+            },
+            "unavailable": "利用できるスキルがありません",
+            "emptyDescription": "スキルをインストールまたは有効にすると、ここで選択できます。",
+            "disabledDescription": "Skills は無効です。スキル設定で有効にしてください。",
+            "manage": "スキルを管理"
           },
           "resources": {
             "title": "コンテキストをリンク",
@@ -4721,7 +4848,8 @@
           },
           "prompts": {
             "title": "プロンプトライブラリ"
-          }
+          },
+          "allAdded": "すべての項目が追加済みです"
         },
         "stopped": "对话已终止",
         "newChat": "新しいチャット",
@@ -4730,6 +4858,31 @@
           "apply": "このメッセージに適用",
           "applied": "適用中。次のメッセージで元に戻ります",
           "unavailable": "対応するモデル設定が見つかりません"
+        },
+        "toolsMenu": {
+          "groups": {
+            "conversation": "会話設定",
+            "extensions": "拡張ツール"
+          },
+          "model": {
+            "title": "モデル",
+            "description": "回答に使うモデルを選択"
+          },
+          "prompt": {
+            "title": "プロンプト",
+            "description": "役割と回答スタイルを設定"
+          },
+          "reasoning": {
+            "description": "モデルの思考の強さを調整"
+          },
+          "mcp": {
+            "title": "MCP サーバー",
+            "description": "外部サービスやツールに接続"
+          },
+          "clipboard": {
+            "title": "クリップボード監視",
+            "description": "クリップボードの内容を自動取得"
+          }
         }
       },
       "header": {
@@ -4885,6 +5038,43 @@
       "condensed": {
         "message": "過去のメッセージ {count} 件を圧縮しました",
         "summary": "継続用の要約"
+      },
+      "response": {
+        "generating": "コンポーネントを生成中…",
+        "previewActions": "生成が完了すると操作できます",
+        "openSource": "参照元を開く",
+        "saveArtifact": "名前を付けて保存",
+        "copied": "コピーしました",
+        "saved": "ファイルを保存しました",
+        "unavailable": "内容が利用できないか、別のワークスペースに属しています。",
+        "actionFailed": "操作に失敗しました",
+        "imageFailed": "画像を表示できませんでした。",
+        "mathFailed": "数式を解析できませんでした。元の LaTeX を表示しています。",
+        "step": {
+          "pending": "未着手",
+          "current": "進行中",
+          "done": "完了"
+        }
+      },
+      "artifacts": {
+        "open": "{name} を開く",
+        "saveAs": "{name} を名前を付けて保存",
+        "saved": "ファイルを保存しました",
+        "openFailed": "ファイルを開けません",
+        "saveFailed": "ファイルを保存できません",
+        "actionFailed": "操作に失敗しました。ファイルが存在することを確認して再試行してください。",
+        "desktopOnly": "生成ファイルを開く・保存するにはデスクトップ版をご利用ください。",
+        "partialHint": "処理が完了する前に生成されたファイルです。内容は未検証です。",
+        "errors": {
+          "INVALID_PATH": "ファイルパスが無効です。",
+          "NOT_ALLOWED": "このリンクは現在の返信で生成されたファイルではありません。",
+          "WORKSPACE_CHANGED": "ワークスペースが変更されました。ファイルのあるワークスペースで再試行してください。",
+          "MISSING_FILE": "ファイルが移動または削除されています。",
+          "SYMLINK_BLOCKED": "シンボリックリンク経由のファイルにはアクセスできません。",
+          "UNSUPPORTED_PLATFORM": "生成ファイルを開く・保存するにはデスクトップ版をご利用ください。",
+          "OPEN_FAILED": "ファイルを開けません。対応するアプリがインストールされているか確認してください。",
+          "SAVE_FAILED": "選択した場所へコピーできません。再試行してください。"
+        }
       }
     },
     "tag": {
@@ -6154,6 +6344,7 @@
       "tooDeep": "埋め込みが深すぎるため展開しません"
     },
     "outline": {
+      "sidebarEmpty": "Markdown ノートを開き、ビジュアルモードに切り替えるとアウトラインが表示されます。",
       "title": "アウトライン",
       "open": "アウトラインを開く",
       "close": "アウトラインを閉じる",
@@ -6202,6 +6393,17 @@
       "normalQuote": "通常の引用"
     },
     "bubbleMenu": {
+      "colors": {
+        "text": "文字色",
+        "highlight": "ハイライト色",
+        "clear": "色を解除",
+        "red": "赤",
+        "orange": "オレンジ",
+        "yellow": "黄",
+        "green": "緑",
+        "blue": "青",
+        "purple": "紫"
+      },
       "ai": "AI",
       "polish": "添削",
       "concise": "簡潔に",
@@ -7053,5 +7255,8 @@
     "kindPromptVersion": "プロンプトバージョン",
     "kindAutoSnapshot": "自動スナップショット",
     "kindUnknown": "その他のバージョン"
+  },
+  "editorImage": {
+    "changedOnDisk": "同期または別の操作で画像が更新されました。画像を開き直してから編集・保存してください。"
   }
 }

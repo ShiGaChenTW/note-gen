@@ -14,11 +14,15 @@ import './chat.css'
 import { advanceStreamingSmoother } from './streaming-smoother'
 import { cn } from '@/lib/utils'
 import { StreamdownRenderer } from '@/components/markdown/streamdown-renderer'
+import type { AgentArtifactPaths } from '@/lib/agent/artifacts'
 
 type ChatPreviewProps = {
   text: string
   streaming?: boolean
   containerClassName?: string
+  artifacts?: AgentArtifactPaths
+  interactive?: boolean
+  onDisplayComplete?: (text: string) => void
 }
 
 const MIN_RENDER_INTERVAL_MS = 33
@@ -29,7 +33,7 @@ function isMacOS() {
   return /Mac|iPhone|iPad|iPod/.test(navigator.userAgent)
 }
 
-export default function ChatPreview({ text, streaming = false, containerClassName }: ChatPreviewProps) {
+export default function ChatPreview({ text, streaming = false, containerClassName, artifacts, interactive = true, onDisplayComplete }: ChatPreviewProps) {
   const t = useTranslations('record.chat.messageControl')
   const { contentTextScale } = useSettingStore()
   const streamdownTranslations = useMemo(() => ({
@@ -156,6 +160,14 @@ export default function ChatPreview({ text, streaming = false, containerClassNam
     }
   }, [stopAnimation])
 
+  useEffect(() => {
+    // Receiving the last chunk does not mean the smoothing animation has
+    // caught up. Notify the timeline only after the full text is rendered.
+    if (!streaming && displayedText === text) {
+      onDisplayComplete?.(text)
+    }
+  }, [displayedText, text, streaming, onDisplayComplete])
+
   const handleDragStart = (event: DragEvent) => {
     if (!isMacOS()) {
       event.preventDefault()
@@ -203,6 +215,8 @@ export default function ChatPreview({ text, streaming = false, containerClassNam
           markdown={displayedText}
           streaming={streaming || (hasStreamedRef.current && displayedText.length < text.length)}
           translations={streamdownTranslations}
+          artifacts={artifacts}
+          interactive={interactive}
         />
       </div>
     </div>

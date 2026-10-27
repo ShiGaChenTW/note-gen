@@ -23,6 +23,7 @@ import type { ConversationSyncTombstone } from '@/db/conversation-sync-state'
 import { v5 as uuidv5 } from 'uuid'
 import { recordSyncTiming } from './sync-timing'
 import { CONVERSATION_ASSETS_DIRECTORY, resolveConversationAssetPath } from '@/lib/conversation-assets'
+import { sanitizeChatUiBlocksForSync } from '@/lib/chat-ui/serialization'
 
 export const CONVERSATION_SYNC_DIRECTORY = '.data/conversations'
 export const CONVERSATION_SYNC_INDEX_PATH = `${CONVERSATION_SYNC_DIRECTORY}/index.json`
@@ -55,6 +56,7 @@ export interface ConversationSyncMessage {
   ragSources?: string
   ragSourceDetails?: string
   agentHistory?: string
+  uiBlocks?: string
   thinking?: string
   quoteData?: string
   condensedContent?: string
@@ -212,6 +214,9 @@ async function createRawConversationRemoteStorage(store: Store): Promise<Convers
           repo,
           path,
           sha: getRemoteSha(existing),
+          // Keep the checked SHA; an unguarded upload refreshes it and can
+          // overwrite a concurrent update made after the content comparison.
+          guarded: expectedContent !== undefined,
           message: `Sync conversation ${path.split('/').pop() || 'data'}`,
         }))
       },
@@ -518,6 +523,7 @@ function normalizeSyncMessage(value: unknown): ConversationSyncMessage | null {
     ragSources: optionalString(value.ragSources),
     ragSourceDetails: sanitizeRagSourceDetails(optionalString(value.ragSourceDetails)),
     agentHistory: optionalString(value.agentHistory),
+    uiBlocks: sanitizeChatUiBlocksForSync(optionalString(value.uiBlocks)),
     thinking: optionalString(value.thinking),
     quoteData: optionalString(value.quoteData),
     condensedContent: optionalString(value.condensedContent),
@@ -626,6 +632,7 @@ function chatToSyncMessage(chat: Chat): ConversationSyncMessage | null {
     ragSources: chat.ragSources,
     ragSourceDetails: sanitizeRagSourceDetails(chat.ragSourceDetails),
     agentHistory: chat.agentHistory,
+    uiBlocks: sanitizeChatUiBlocksForSync(chat.uiBlocks),
     thinking: chat.thinking,
     quoteData: chat.quoteData,
     condensedContent: chat.condensedContent,
@@ -964,7 +971,13 @@ function mergeMessages(
       || message.syncUpdatedAt > existing.syncUpdatedAt
       || (message.syncUpdatedAt === existing.syncUpdatedAt
         && stableSerialize(message) > stableSerialize(existing))) {
-      merged.set(message.syncId, message)
+      merged.set(message.syncId, {
+        ...message,
+        uiBlocks: message.uiBlocks ?? existing?.uiBlocks,
+      })
+    } else if (existing.uiBlocks === undefined && message.uiBlocks !== undefined) {
+      // Older clients omit UI blocks even when updating the rest of a message.
+      merged.set(message.syncId, { ...existing, uiBlocks: message.uiBlocks })
     }
   }
   return Array.from(merged.values()).sort((left, right) => (
@@ -1120,10 +1133,10 @@ async function persistMergedConversationItems(
              syncId, syncUpdatedAt, tagId, conversationId, content, role, type,
              image, images, imageAnalyses, attachments, inserted, createdAt,
              ragSources, ragSourceDetails, agentHistory, thinking, quoteData,
-             condensedContent, condensedAt
+             condensedContent, condensedAt, uiBlocks
            ) values (
              $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-             $11, $12, $13, $14, $15, $16, $17, $18, $19, $20
+             $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21
            )
            on conflict(syncId) do update set
              syncUpdatedAt = excluded.syncUpdatedAt,
@@ -1143,6 +1156,7 @@ async function persistMergedConversationItems(
              agentHistory = excluded.agentHistory,
              thinking = excluded.thinking,
              quoteData = excluded.quoteData,
+             uiBlocks = coalesce(excluded.uiBlocks, chats.uiBlocks),
              condensedContent = excluded.condensedContent,
              condensedAt = excluded.condensedAt`,
           [
@@ -1166,6 +1180,7 @@ async function persistMergedConversationItems(
             message.quoteData,
             message.condensedContent,
             message.condensedAt,
+            message.uiBlocks ?? null,
           ]
       )
     }
@@ -1476,34 +1491,35 @@ export async function uploadConversations() {
   for (const item of activeItems) {
     const itemStartedAt = Date.now()
     const remoteEntry = remoteEntries.get(item.syncId)
-    let expectedRemoteItemContent: string | null = null
-    let parsedRemoteItem: ConversationSyncItem | null = null
+    // A previous attempt may have published the item but not its index entry.
+    // Inspect the actual file even without an index entry, and use that exact
+    // snapshot both for merging and for the conditional write below.
+    const remoteItemPath = remoteEntry?.path ?? getConversationItemPath(item.syncId)
+    const expectedRemoteItemContent = await storage.read(remoteItemPath)
+    if (remoteEntry && expectedRemoteItemContent === null) return false
+    const parsedRemoteItem = expectedRemoteItemContent !== null
+      ? parseConversationSyncItem(expectedRemoteItemContent)
+      : null
+    if (expectedRemoteItemContent !== null
+      && (!parsedRemoteItem || parsedRemoteItem.syncId !== item.syncId)) return false
+    const remoteMatchesLocal = parsedRemoteItem !== null
+      && stableSerialize(parsedRemoteItem) === stableSerialize(item)
     if (remoteEntry?.syncUpdatedAt === item.syncUpdatedAt
-      && versions[item.syncId] === item.syncUpdatedAt) {
-      expectedRemoteItemContent = await storage.read(remoteEntry.path)
-      if (!expectedRemoteItemContent) return false
-      parsedRemoteItem = parseConversationSyncItem(expectedRemoteItemContent)
-      if (!parsedRemoteItem || parsedRemoteItem.syncId !== item.syncId) return false
-      if (stableSerialize(parsedRemoteItem) === stableSerialize(item)) {
-        publishedItems.push(item)
-        recordSyncTiming('conversationItemUpload', itemStartedAt, {
-          messages: item.messages.length,
-          mode: 'unchanged',
-        })
-        continue
-      }
+      && versions[item.syncId] === item.syncUpdatedAt
+      && remoteMatchesLocal) {
+      publishedItems.push(item)
+      recordSyncTiming('conversationItemUpload', itemStartedAt, {
+        messages: item.messages.length,
+        mode: 'unchanged',
+      })
+      continue
     }
     let itemToPublish = item
-    if (remoteEntry && expectedRemoteItemContent === null) {
-      expectedRemoteItemContent = await storage.read(remoteEntry.path)
-      if (!expectedRemoteItemContent) return false
-    }
-    if (remoteEntry && (
-      versions[item.syncId] !== remoteEntry.syncUpdatedAt
-      || parsedRemoteItem !== null
+    if (parsedRemoteItem && (
+      versions[item.syncId] !== parsedRemoteItem.syncUpdatedAt
+      || !remoteMatchesLocal
     )) {
-      const remoteItem = parsedRemoteItem || parseConversationSyncItem(expectedRemoteItemContent)
-      if (!remoteItem || remoteItem.syncId !== item.syncId) return false
+      const remoteItem = parsedRemoteItem
       await downloadConversationAssets([remoteItem])
       const mergedTombstones = mergeTombstones(
         tombstones,

@@ -2,6 +2,7 @@ import type OpenAI from 'openai'
 import type { AiConfig } from '@/app/core/setting/config'
 import type { RuntimeChatAttachment } from '@/lib/chat-attachments'
 import type { AgentImageAttachment } from '@/lib/chat-image-context'
+import type { ChatResponsePreview, PendingChatUi, RequestChatUi } from '@/lib/chat-ui/types'
 
 export type JsonPrimitive = string | number | boolean | null
 export type JsonValue = JsonPrimitive | JsonObject | JsonValue[]
@@ -125,8 +126,10 @@ export interface AgentSkillSummary {
 
 export interface AgentToolExecutionContext {
   requestUserQuestion?: (questions: AgentUserQuestion[], signal?: AbortSignal) => Promise<AgentUserAnswer[] | null>
+  requestUserInteraction?: RequestChatUi
   signal?: AbortSignal
   runId: string
+  workspaceIdentity?: string
   context: AgentContextSnapshot
 }
 
@@ -179,6 +182,15 @@ export type AgentRunStatus =
   | 'failed'
 
 export interface AgentTraceEvent {
+  approvalDecision?: AgentApprovalDecision
+  approvalPreview?: {
+    previewParams?: Record<string, unknown>
+    originalContent?: string
+    modifiedContent?: string
+    filePath?: string
+    from?: number
+    to?: number
+  }
   id: string
   runId: string
   type:
@@ -196,6 +208,7 @@ export interface AgentTraceEvent {
   timestamp: number
   duration?: number
   toolName?: string
+  displayTitle?: string
   input?: Record<string, unknown>
   output?: unknown
   message?: string
@@ -274,6 +287,7 @@ export interface AgentUserAnswer {
 
 export interface AgentRuntimeCallbacks {
   requestUserQuestion?: AgentToolExecutionContext['requestUserQuestion']
+  requestUserInteraction?: RequestChatUi
   onStatus?: (status: AgentRunStatus) => void
   onSteeringDelivered?: (payloads: AgentSteeringPayload[]) => void
   onTrace?: (event: AgentTraceEvent) => void
@@ -282,6 +296,7 @@ export interface AgentRuntimeCallbacks {
   onStep?: (step: AgentStep) => void
   onCandidateAnswerRender?: (markdownContent: string) => void
   onCandidateAnswerClear?: () => void
+  onResponsePreview?: (preview: ChatResponsePreview | undefined, runId: string) => void
   onFinalAnswerRender?: (markdownContent: string) => void
   requestConfirmation?: (
     toolName: string,
@@ -338,6 +353,7 @@ export interface ToolResult {
 export interface ToolCall {
   id: string
   toolName: string
+  displayTitle?: string
   params: Record<string, any>
   result?: ToolResult
   status: 'pending' | 'running' | 'success' | 'error'
@@ -345,6 +361,12 @@ export interface ToolCall {
 }
 
 export interface ConfirmationRecord {
+  id?: string
+  runId?: string
+  chatId?: number
+  conversationId?: number
+  traceEventId?: string
+  workspacePath?: string
   toolName: string
   params: Record<string, any>
   status: 'pending' | 'confirmed' | 'cancelled' | 'superseded'
@@ -355,8 +377,15 @@ export interface ConfirmationRecord {
 }
 
 export interface AgentState {
+  responsePreview?: ChatResponsePreview
+  pendingUiInteraction?: PendingChatUi
   pendingQuestion?: {
     id: string
+    chatId?: number
+    runId?: string
+    traceEventId?: string
+    toolCallId?: string
+    workspacePath?: string
     conversationId?: number
     questions: AgentUserQuestion[]
     response?: AgentUserAnswer[] | null
@@ -379,6 +408,12 @@ export interface AgentState {
   maxIterations: number
   currentIteration: number
   pendingConfirmation?: {
+    id?: string
+    runId?: string
+    chatId?: number
+    conversationId?: number
+    traceEventId?: string
+    workspacePath?: string
     toolName: string
     params: Record<string, any>
     previewParams?: Record<string, any>

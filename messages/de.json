@@ -910,6 +910,35 @@
     },
     "skills": {
       "title": "Skills",
+      "tabs": {
+        "global": "Global",
+        "workspace": "Lokal",
+        "discover": "Entdecken"
+      },
+      "recommended": {
+        "title": "NoteGen-Empfehlungen",
+        "description": "Entdecke Skills für Notizen und Texte und wähle einen zur Installation aus.",
+        "empty": "Noch keine empfohlenen Skills",
+        "loadError": "Empfohlene Skills konnten nicht geladen werden",
+        "refresh": "Empfehlungen aktualisieren",
+        "install": "Installieren",
+        "installed": "Installiert",
+        "installTitle": "{name} installieren",
+        "installDescription": "Wähle den Installationsort. Globale Skills sind in allen Arbeitsbereichen verfügbar.",
+        "scope": "Installationsort",
+        "source": "Quelle anzeigen",
+        "author": "Von {author}",
+        "inspecting": "Skill-Informationen werden abgerufen…",
+        "installing": "Wird installiert…",
+        "installSuccess": "{name} wurde installiert",
+        "installError": "Skill konnte nicht installiert werden",
+        "previewError": "Skill-Informationen konnten nicht abgerufen werden",
+        "skillMismatch": "Der heruntergeladene Skill entspricht nicht der Empfehlung. Aktualisiere die Empfehlungen und versuche es erneut.",
+        "files": "Enthält {count} Dateien",
+        "scripts": "Enthält Skripte, die möglicherweise eine lokale Laufzeitumgebung benötigen.",
+        "warningsTitle": "Installationshinweise",
+        "refreshSkillsError": "Der Skill wurde installiert, aber die Liste konnte nicht aktualisiert werden. Öffne die Einstellungen erneut."
+      },
       "desc": "Skills sind wiederverwendbare KI-Fähigkeitspakete, die es KI-Assistenten ermöglichen, bestimmte Verhaltensmuster basierend auf Aufgaben automatisch anzuwenden.",
       "enable": "Skills aktivieren",
       "enableDesc": "Wenn aktiviert, kann die KI konfigurierte Skills verwenden",
@@ -969,7 +998,19 @@
       "pythonRuntime": "Python-Laufzeit",
       "isolatedRuntime": "isoliert",
       "systemRuntime": "system",
-      "runtimeUnavailable": "nicht verfügbar"
+      "runtimeUnavailable": "nicht verfügbar",
+      "environment": {
+        "title": "Laufzeitumgebung",
+        "description": "Laufzeiten und Dokumentwerkzeuge für diesen Skill prüfen.",
+        "available": "Verfügbar",
+        "missing": "Nicht installiert",
+        "systemToolsHelp": "Word-Konvertierung und Layoutvorschau benötigen lokale Werkzeuge wie LibreOffice und Poppler. Für OCR gescannter Dokumente ist auch Tesseract erforderlich. Nach der Installation aktualisieren.",
+        "dependencyHelp": "Diese Schaltflächen laden die aufgeführten Pakete von PyPI oder npm in die eigene Umgebung dieses Skills. Weitere Pakete können während einer Aufgabe installiert werden.",
+        "installPython": "Python-Pakete installieren",
+        "installNode": "Node.js-Pakete installieren",
+        "installed": "Pakete installiert",
+        "desktopOnly": "Lokale Skripte und Dokumentlaufzeiten sind derzeit auf dem Desktop verfügbar. Skills ohne ausführbare Skripte können auch mobil installiert und genutzt werden."
+      }
     },
     "plugins": {
       "ui": {
@@ -1479,6 +1520,12 @@
           "pie": "pie title Resource Allocation\n    \"CPU\" : 45\n    \"Memory\" : 30\n    \"Storage\" : 25",
           "journey": "journey\n    title My Daily Work\n    section Morning\n    Commute : 7:00, 5\n    Work : 9:00, 8"
         }
+      },
+      "outlinePlacement": "Anzeigebereich der Gliederung",
+      "outlinePlacementDesc": "Die Gliederung im Editor oder als Tab in der linken Seitenleiste für die aktive Notiz anzeigen.",
+      "outlinePlacementOptions": {
+        "editor": "Im Editor",
+        "sidebar": "Linke Seitenleiste"
       }
     },
     "canvas": {
@@ -4468,20 +4515,35 @@
         "addAttachment": {
           "title": "Hinzufügen",
           "image": {
-            "title": "Bild"
+            "title": "Bild",
+            "description": "Bilder von deinem Gerät hinzufügen"
           },
           "file": {
-            "title": "Datei"
+            "title": "Datei",
+            "description": "Lokale Dokumente und andere Dateien anhängen"
           },
           "folder": {
-            "title": "Ordner"
+            "title": "Ordner",
+            "description": "Einen Ordner und seine Dateien anhängen"
           },
           "entryCount": "{count} Elemente",
           "remove": "Entferne {name}",
           "metadataOnly": "nur Metadaten",
           "readFailed": "Fehler beim Lesen von {count} Anhängen",
           "selectFailed": "Fehler bei der Auswahl von Anhängen. Bitte versuche es erneut",
-          "attachmentOnlyPrompt": "Bitte überprüfe und analysiere die Anhänge, die ich hinzugefügt habe."
+          "attachmentOnlyPrompt": "Bitte überprüfe und analysiere die Anhänge, die ich hinzugefügt habe.",
+          "groups": {
+            "attachments": "Lokale Anhänge",
+            "context": "Arbeitsbereich & Skills"
+          },
+          "resource": {
+            "title": "Notizen & Aufzeichnungen zitieren",
+            "description": "Notizen, Aufzeichnungen und Canvases suchen"
+          },
+          "skill": {
+            "title": "Skill verwenden",
+            "description": "Einen Skill für diese Nachricht auswählen"
+          }
         },
         "imageAttachment": {
           "selectSuccess": "{count, plural, one {# Bild angehängt} other {# Bilder angehängt}}",
@@ -4532,6 +4594,11 @@
           "thought": "Gedanke",
           "action": "Aktion",
           "toolCalls": "Tool-Aufrufe",
+          "timeline": {
+            "elapsed": "Dauer: {duration} s",
+            "processing": "In Bearbeitung seit {duration} s",
+            "tools": "{count, plural, one {# Werkzeugaufruf} other {# Werkzeugaufrufe}}"
+          },
           "resultSummary": "Ergebniszusammenfassung",
           "queryParameters": "Abfrageparameter",
           "toolResult": "Tool-Ergebnis",
@@ -4625,9 +4692,31 @@
               "scope": "Installationsort",
               "has_scripts": "Enthält Skripte",
               "skipped_symlinks": "Übersprungene symbolische Links",
-              "replaceExisting": "Vorhandenen Skill ersetzen"
+              "replaceExisting": "Vorhandenen Skill ersetzen",
+              "language": "Sprache",
+              "code": "Vollständiger Code",
+              "args": "Argumente",
+              "packages": "Pakete",
+              "timeout": "Zeitlimit (ms)",
+              "script_id": "Registriertes Skript"
             },
             "tools": {
+              "update_file": {
+                "title": "Datei ändern",
+                "description": "Die Änderungen werden in der Zieldatei gespeichert."
+              },
+              "update_editor_content": {
+                "title": "Editorinhalt ändern",
+                "description": "Einfügungen, Ersetzungen oder Löschungen werden im aktuellen Editor angewendet."
+              },
+              "delete_folder": {
+                "title": "Ordner löschen",
+                "description": "Die ausgewählten Ordner und ihre Inhalte werden gelöscht."
+              },
+              "install_skill": {
+                "title": "Skill-Paket installieren",
+                "description": "Das Skill-Paket wird am gewählten Ort installiert. Eine vorhandene Version wird vor dem Ersetzen gesichert."
+              },
               "create_memory": {
                 "title": "Diese Information merken?",
                 "description": "Nach Bestätigung kann KI diese Information in zukünftigen Chats verwenden.",
@@ -4697,8 +4786,42 @@
                   "executable-scripts": "Der Skill enthält ausführbare Skripte. Deren Ausführung erfordert weiterhin eine separate Bestätigung.",
                   "symbolic-links": "Der Skill enthält {count} symbolische Link(s). Diese werden übersprungen, wenn die Installation fortgesetzt wird."
                 }
+              },
+              "run_skill_code": {
+                "title": "Skill-Code ausführen",
+                "description": "Der vollständige Code und die Argumente unten werden auf diesem Computer mit Zugriff auf lokale Dateien und Programme ausgeführt. Diese Freigabe gilt nur für diesen Code und diese Argumente."
+              },
+              "install_skill_node_dependencies": {
+                "title": "Node.js-Pakete für den Skill installieren",
+                "description": "Die aufgeführten npm-Pakete in die eigene Umgebung dieses Skills laden, ohne Installationsskripte der Pakete auszuführen."
               }
-            }
+            },
+            "previewBefore": "Vor der Änderung",
+            "previewAfter": "Nach der Änderung"
+          },
+          "ui": {
+            "waiting": "Eingabe ausstehend",
+            "expired": "Beendet",
+            "displayed": "Information",
+            "submitted": "Gesendet",
+            "cancelled": "Abgebrochen",
+            "submit": "Senden und fortfahren",
+            "cancel": "Abbrechen",
+            "required": "Bitte dieses Feld ausfüllen.",
+            "invalid": "Bitte dieses Feld prüfen.",
+            "emptyValue": "Nicht angegeben",
+            "search": "Optionen durchsuchen",
+            "searchLabel": "{label} durchsuchen",
+            "select": "Option auswählen",
+            "loading": "Optionen werden geladen…",
+            "noOptions": "Keine Optionen verfügbar",
+            "moreOptions": "Die ersten 100 Optionen werden angezeigt. Mit der Suche lässt sich die Auswahl eingrenzen.",
+            "rootFolder": "Stammordner",
+            "renderError": "Dieser interaktive Inhalt konnte nicht angezeigt werden. Bitte im Chat fortfahren.",
+            "loadError": "Optionen konnten nicht geladen werden. Bitte erneut versuchen.",
+            "retry": "Erneut versuchen",
+            "submitError": "Senden fehlgeschlagen. Bitte erneut versuchen.",
+            "expiredDescription": "Diese Interaktion ist beendet. Bitte im aktuellen Chat eine neue starten."
           }
         },
         "fileLink": {
@@ -4751,7 +4874,11 @@
             "scope": {
               "global": "Global",
               "project": "Arbeitsbereich"
-            }
+            },
+            "unavailable": "Keine Skills verfügbar",
+            "emptyDescription": "Installiere oder aktiviere Skills, um sie hier auszuwählen.",
+            "disabledDescription": "Skills sind deaktiviert. Aktiviere sie in den Skill-Einstellungen.",
+            "manage": "Skills verwalten"
           },
           "resources": {
             "title": "Linkkontext",
@@ -4766,7 +4893,8 @@
           },
           "prompts": {
             "title": "Prompt-Bibliothek"
-          }
+          },
+          "allAdded": "Alle verfügbaren Einträge wurden hinzugefügt"
         },
         "clearChat": "Chat leeren",
         "clearContext": {
@@ -4776,6 +4904,31 @@
           "apply": "Auf diese Nachricht anwenden",
           "applied": "Angewendet – wird bei der nächsten Nachricht zurückgesetzt",
           "unavailable": "Keine passende Modelleinstellung gefunden"
+        },
+        "toolsMenu": {
+          "groups": {
+            "conversation": "Gesprächseinstellungen",
+            "extensions": "Erweiterungen"
+          },
+          "model": {
+            "title": "Modell",
+            "description": "Modell für Antworten auswählen"
+          },
+          "prompt": {
+            "title": "Prompt",
+            "description": "Rolle und Antwortstil festlegen"
+          },
+          "reasoning": {
+            "description": "Den Denkaufwand des Modells anpassen"
+          },
+          "mcp": {
+            "title": "MCP-Server",
+            "description": "Externe Dienste und Tools verbinden"
+          },
+          "clipboard": {
+            "title": "Zwischenablage überwachen",
+            "description": "Inhalte der Zwischenablage automatisch lesen"
+          }
         }
       },
       "header": {
@@ -4839,6 +4992,43 @@
         "cancel": "Abbrechen",
         "delete": "Löschen",
         "deleteConfirm": "Bist du sicher, dass du diese Nachricht löschen möchtest?"
+      },
+      "response": {
+        "generating": "Komponenten werden generiert…",
+        "previewActions": "Nach Abschluss der Generierung verfügbar",
+        "openSource": "Quelle öffnen",
+        "saveArtifact": "Datei speichern unter",
+        "copied": "Kopiert",
+        "saved": "Datei gespeichert",
+        "unavailable": "Der Inhalt ist nicht verfügbar oder gehört zu einem anderen Arbeitsbereich.",
+        "actionFailed": "Aktion fehlgeschlagen",
+        "imageFailed": "Das Bild konnte nicht angezeigt werden.",
+        "mathFailed": "Die Formel konnte nicht verarbeitet werden. Der ursprüngliche LaTeX-Code wird angezeigt.",
+        "step": {
+          "pending": "Ausstehend",
+          "current": "In Bearbeitung",
+          "done": "Erledigt"
+        }
+      },
+      "artifacts": {
+        "open": "{name} öffnen",
+        "saveAs": "{name} speichern unter...",
+        "saved": "Datei gespeichert",
+        "openFailed": "Datei kann nicht geöffnet werden",
+        "saveFailed": "Datei kann nicht gespeichert werden",
+        "actionFailed": "Der Vorgang ist fehlgeschlagen. Prüfe, ob die Datei noch vorhanden ist, und versuche es erneut.",
+        "desktopOnly": "Öffne oder speichere erzeugte Dateien in der Desktop-App.",
+        "partialHint": "Diese Datei wurde während einer unvollständigen Ausführung erstellt. Ihr Inhalt wurde nicht geprüft.",
+        "errors": {
+          "INVALID_PATH": "Der Dateipfad ist ungültig.",
+          "NOT_ALLOWED": "Dieser Link gehört nicht zu einer in dieser Antwort erzeugten Datei.",
+          "WORKSPACE_CHANGED": "Der Arbeitsbereich wurde gewechselt. Kehre zum Arbeitsbereich der Datei zurück und versuche es erneut.",
+          "MISSING_FILE": "Die Datei wurde verschoben oder gelöscht.",
+          "SYMLINK_BLOCKED": "Dateien hinter symbolischen Links können nicht geöffnet werden.",
+          "UNSUPPORTED_PLATFORM": "Öffne oder speichere erzeugte Dateien in der Desktop-App.",
+          "OPEN_FAILED": "Das System konnte die Datei nicht öffnen. Prüfe, ob eine passende App installiert ist.",
+          "SAVE_FAILED": "Die Datei konnte nicht an den gewählten Ort kopiert werden. Versuche es erneut."
+        }
       }
     },
     "tag": {
@@ -6105,6 +6295,7 @@
       "tooDeep": "Einbettung zu tief, wird nicht aufgelöst"
     },
     "outline": {
+      "sidebarEmpty": "Öffne eine Markdown-Notiz im visuellen Modus, um ihre Gliederung anzuzeigen.",
       "title": "Gliederung",
       "open": "Gliederung öffnen",
       "close": "Gliederung schließen",
@@ -6153,6 +6344,17 @@
       "normalQuote": "Normales Zitat"
     },
     "bubbleMenu": {
+      "colors": {
+        "text": "Textfarbe",
+        "highlight": "Hervorhebungsfarbe",
+        "clear": "Farbe entfernen",
+        "red": "Rot",
+        "orange": "Orange",
+        "yellow": "Gelb",
+        "green": "Grün",
+        "blue": "Blau",
+        "purple": "Violett"
+      },
       "ai": "KI",
       "polish": "Überarbeiten",
       "concise": "Prägnant",
@@ -7004,5 +7206,8 @@
     "kindPromptVersion": "Prompt-Version",
     "kindAutoSnapshot": "Automatischer Schnappschuss",
     "kindUnknown": "Andere Version"
+  },
+  "editorImage": {
+    "changedOnDisk": "Das Bild wurde durch die Synchronisierung oder einen anderen Vorgang aktualisiert. Öffne es erneut, bevor du es bearbeitest und speicherst."
   }
 }

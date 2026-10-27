@@ -10,7 +10,7 @@ import Link from '@tiptap/extension-link'
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
 import CharacterCount from '@tiptap/extension-character-count'
-import Highlight from '@tiptap/extension-highlight'
+import { ColorHighlight, TextColor, normalizeTextColor } from './color-marks'
 import Underline from '@tiptap/extension-underline'
 import TextAlign from '@tiptap/extension-text-align'
 import Typography from '@tiptap/extension-typography'
@@ -103,6 +103,7 @@ import { BlockRoundtrip, BlockRoundtripDocument } from './block-roundtrip-extens
 import { StableCodeBlockLowlight } from './code-block-extension'
 import { shouldTransformImageSrcToWorkspaceAsset } from './image-src'
 import useSettingStore from '@/stores/setting'
+import { useEditorOutlineStore } from '@/stores/editor-outline'
 import useSyncStore from '@/stores/sync'
 import useChatStore, { type PendingQuote } from '@/stores/chat'
 import { ArrowUp, Eye, Loader2, X } from 'lucide-react'
@@ -2583,6 +2584,7 @@ export function TipTapEditor({
     showEditorUndoRedo,
     showMobileEditorToolbar,
     enableOutline,
+    outlinePlacement,
     primaryBackupMethod,
     workspacePath,
     setEditorViewMode,
@@ -2638,6 +2640,7 @@ export function TipTapEditor({
   }, [])
   const [mobileContext, setMobileContext] = useState<MobileSelectionContext>(null)
   const [mobileSheetMode, setMobileSheetMode] = useState<MobileSheetMode>(null)
+  const mobileColorSelectionRef = useRef<{ from: number; to: number; doc: CoreEditor['state']['doc'] } | null>(null)
   const [mobileOutlineOpen, setMobileOutlineOpen] = useState(isMobile && enableOutline)
   const [showMobileScrollTop, setShowMobileScrollTop] = useState(false)
   const [imageSrcDraft, setImageSrcDraft] = useState('')
@@ -2871,9 +2874,10 @@ export function TipTapEditor({
         shouldHighlight: () => !isSourceViewRef.current,
       }),
       CharacterCount,
-      Highlight.configure({
+      ColorHighlight.configure({
         multicolor: true,
       }),
+      TextColor,
       Underline,
       TextAlign.configure({
         types: ['heading', 'paragraph'],
@@ -4724,6 +4728,10 @@ export function TipTapEditor({
 
     const closeSheet = () => setMobileSheetMode(null)
     const openSheet = (mode: Exclude<MobileSheetMode, null>) => {
+      if (mode === 'format') {
+        const { from, to } = editor.state.selection
+        mobileColorSelectionRef.current = { from, to, doc: editor.state.doc }
+      }
       window.setTimeout(() => {
         setMobileSheetMode(mode)
       }, 0)
@@ -4732,6 +4740,20 @@ export function TipTapEditor({
       command()
       closeSheet()
       updateMobileContext()
+    }
+
+    const colorAction = /^(text-color|highlight-color):(.+)$/.exec(action)
+    if (colorAction) {
+      const mark = colorAction[1] === 'text-color' ? 'textColor' : 'highlight'
+      const color = normalizeTextColor(colorAction[2])
+      if (colorAction[2] !== 'clear' && !color) return
+      const saved = mobileColorSelectionRef.current
+      if (!saved || saved.doc !== editor.state.doc) { closeSheet(); return }
+      runCommand(() => {
+        const chain = editor.chain().focus().setTextSelection({ from: saved.from, to: saved.to })
+        return color ? chain.setMark(mark, { color }).run() : chain.unsetMark(mark).run()
+      })
+      return
     }
 
     switch (action) {
@@ -5886,6 +5908,24 @@ export function TipTapEditor({
     trySetMarkdownContent,
     viewMode,
   ])
+
+  // Only the active desktop Markdown pane supplies the shared sidebar outline.
+  useEffect(() => {
+    if (!editor || editor.isDestroyed || !isActive || isMobile || isSourceView
+      || !onToggleOutline || !activeFilePath || outlinePlacement !== 'sidebar') return
+
+    const unregister = useEditorOutlineStore.getState().register({
+      editor,
+      documentKey: `${workspacePath}:${activeFilePath}`,
+    })
+    editor.on('destroy', unregister)
+    editor.on('unmount', unregister)
+    return () => {
+      editor.off('destroy', unregister)
+      editor.off('unmount', unregister)
+      unregister()
+    }
+  }, [activeFilePath, editor, isActive, isMobile, isSourceView, onToggleOutline, outlinePlacement, workspacePath])
 
   // Listen to editor transactions and notify header/tab bar about undo/redo state
   useEffect(() => {
