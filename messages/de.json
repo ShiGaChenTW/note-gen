@@ -4307,6 +4307,21 @@
         "source": "Quell-URL",
         "sourcePlaceholder": "https://… (optional)",
         "save": "Speichern"
+      },
+      "unified": {
+        "title": "Aufnehmen",
+        "subtitle": "Eingeben, automatisch einsortiert",
+        "placeholder": "Text eingeben, Link einfügen oder Quelle wählen",
+        "detected": "Erkannt als {type}",
+        "manual": "Manuell festgelegt: {type}",
+        "typeLabel": "Aufnahmetyp",
+        "autoDetect": "Automatisch erkennen",
+        "expand": "Vollständige Eingabe",
+        "collapse": "Zurück zur Schnelleingabe",
+        "captureLink": "Abrufen und speichern",
+        "saveAs": "{type} speichern",
+        "selectAudioFile": "Audiodatei wählen",
+        "stopRecording": "Aufnahme beenden"
       }
     },
     "chat": {

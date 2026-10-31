@@ -4409,6 +4409,21 @@
         "source": "來源網址",
         "sourcePlaceholder": "https://…（可留空）",
         "save": "記錄"
+      },
+      "unified": {
+        "title": "記錄",
+        "subtitle": "輸入內容，自動分類",
+        "placeholder": "輸入文字、貼上連結，或選擇資料來源",
+        "detected": "已辨識為{type}",
+        "manual": "手動指定：{type}",
+        "typeLabel": "記錄類型",
+        "autoDetect": "自動判斷",
+        "expand": "完整輸入",
+        "collapse": "收合為快速輸入",
+        "captureLink": "擷取並儲存",
+        "saveAs": "儲存{type}",
+        "selectAudioFile": "選擇音訊檔",
+        "stopRecording": "停止錄音"
       }
     },
     "chat": {

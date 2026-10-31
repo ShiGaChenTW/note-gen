@@ -4446,6 +4446,21 @@
         "source": "Source URL",
         "sourcePlaceholder": "https://… (optional)",
         "save": "Save"
+      },
+      "unified": {
+        "title": "Record",
+        "subtitle": "Type anything, sorted automatically",
+        "placeholder": "Type text, paste a link, or choose a source",
+        "detected": "Detected as {type}",
+        "manual": "Set manually: {type}",
+        "typeLabel": "Record type",
+        "autoDetect": "Auto-detect",
+        "expand": "Full input",
+        "collapse": "Back to quick input",
+        "captureLink": "Capture and save",
+        "saveAs": "Save {type}",
+        "selectAudioFile": "Choose audio file",
+        "stopRecording": "Stop recording"
       }
     },
     "chat": {

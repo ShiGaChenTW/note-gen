@@ -67,6 +67,7 @@ interface Events {
   'toolbar-shortcut-todo': unknown;
   'editor-ai-streaming': { isStreaming: boolean; targetFilePath?: string; terminate?: () => void };
   'toolbar-shortcut-recording': unknown;
+  'toolbar-shortcut-recording-file': unknown;
   'mobile-dock-swipe': 'previous' | 'next';
   'toolbar-shortcut-scan': unknown;
   'desktop-screenshot-trigger': unknown;
@@ -74,6 +75,10 @@ interface Events {
   /** Fork（#46）：快速記錄存好了；Inbox 頁跳出「已存進 Inbox · 查看」。 */
   'inbox-record-saved': unknown;
   'toolbar-shortcut-link': unknown;
+  'unified-record-open': {
+    type?: 'auto' | 'text' | 'recording' | 'scan' | 'image' | 'link' | 'file' | 'todo' | 'prompt-draft'
+    prefillText?: string
+  } | undefined;
   'latest-commit-info': {
     sha: string;
     message: string;
