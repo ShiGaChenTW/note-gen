@@ -49,9 +49,15 @@ export function ControlRecording() {
       }
     }
     
+    const handleSelectAudioFile = () => {
+      void handleFileSelect()
+    }
+
     emitter.on('toolbar-shortcut-recording', handleToggleRecording)
+    emitter.on('toolbar-shortcut-recording-file', handleSelectAudioFile)
     return () => {
       emitter.off('toolbar-shortcut-recording', handleToggleRecording)
+      emitter.off('toolbar-shortcut-recording-file', handleSelectAudioFile)
     }
   })
 

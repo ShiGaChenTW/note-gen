@@ -4402,6 +4402,21 @@
         "source": "URL de origem",
         "sourcePlaceholder": "https://… (opcional)",
         "save": "Salvar"
+      },
+      "unified": {
+        "title": "Registrar",
+        "subtitle": "Digite e classifique automaticamente",
+        "placeholder": "Digite texto, cole um link ou escolha uma origem",
+        "detected": "Detectado como {type}",
+        "manual": "Definido manualmente: {type}",
+        "typeLabel": "Tipo de registro",
+        "autoDetect": "Detectar automaticamente",
+        "expand": "Entrada completa",
+        "collapse": "Voltar à entrada rápida",
+        "captureLink": "Capturar e salvar",
+        "saveAs": "Salvar {type}",
+        "selectAudioFile": "Escolher arquivo de áudio",
+        "stopRecording": "Parar gravação"
       }
     },
     "chat": {

@@ -49,6 +49,8 @@ import { PluginCommandPalette } from "@/components/plugins/plugin-command-palett
 import { PluginHostBridge } from "@/components/plugins/plugin-host-bridge"
 import { PluginDialogHost } from "@/components/plugins/plugin-dialog-host"
 import { DesktopScreenshotBridge } from "@/components/desktop-screenshot-bridge"
+import { DesktopRecordControls } from './main/mark/desktop-record-controls'
+import { UnifiedRecordDialog } from './main/mark/unified-record-dialog'
 
 export default function RootLayout({
   children,
@@ -244,33 +246,34 @@ export default function RootLayout({
           break
         case 'record-audio':
           await navigateToMain()
-          emitter.emit('toolbar-shortcut-recording')
+          emitter.emit('unified-record-open', { type: 'recording' })
           break
         case 'record-screenshot':
         case 'screenshot':
-          emitter.emit('desktop-screenshot-trigger')
+          await navigateToMain()
+          emitter.emit('unified-record-open', { type: 'scan' })
           break
         case 'record-text':
         case 'text':
           await navigateToMain()
-          emitter.emit('toolbar-shortcut-text')
+          emitter.emit('unified-record-open', { type: 'text' })
           break
         case 'record-link':
         case 'link':
           await navigateToMain()
-          emitter.emit('toolbar-shortcut-link')
+          emitter.emit('unified-record-open', { type: 'link' })
           break
         case 'record-image':
           await navigateToMain()
-          emitter.emit('toolbar-shortcut-image')
+          emitter.emit('unified-record-open', { type: 'image' })
           break
         case 'record-file':
           await navigateToMain()
-          emitter.emit('toolbar-shortcut-file')
+          emitter.emit('unified-record-open', { type: 'file' })
           break
         case 'record-todo':
           await navigateToMain()
-          emitter.emit('toolbar-shortcut-todo')
+          emitter.emit('unified-record-open', { type: 'todo' })
           break
         case 'pin-window':
         case 'pin':
@@ -501,6 +504,8 @@ export default function RootLayout({
     >
       <TextSizeProvider>
         <TitleBar />
+        <UnifiedRecordDialog />
+        <DesktopRecordControls />
         <main className="flex flex-1 flex-col overflow-hidden w-full h-[calc(100vh-36px)] mt-9">
           {children}
         </main>

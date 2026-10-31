@@ -4446,6 +4446,21 @@
         "source": "来源网址",
         "sourcePlaceholder": "https://…（可留空）",
         "save": "记录"
+      },
+      "unified": {
+        "title": "记录",
+        "subtitle": "输入内容，自动分类",
+        "placeholder": "输入文字、粘贴链接，或选择数据来源",
+        "detected": "已识别为{type}",
+        "manual": "手动指定：{type}",
+        "typeLabel": "记录类型",
+        "autoDetect": "自动判断",
+        "expand": "完整输入",
+        "collapse": "收起为快速输入",
+        "captureLink": "抓取并保存",
+        "saveAs": "保存{type}",
+        "selectAudioFile": "选择音频文件",
+        "stopRecording": "停止录音"
       }
     },
     "chat": {

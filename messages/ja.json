@@ -4409,6 +4409,21 @@
         "source": "出典URL",
         "sourcePlaceholder": "https://…（省略可）",
         "save": "記録"
+      },
+      "unified": {
+        "title": "記録",
+        "subtitle": "入力すると自動で分類します",
+        "placeholder": "テキストを入力、リンクを貼り付け、またはソースを選択",
+        "detected": "{type}として認識",
+        "manual": "手動指定：{type}",
+        "typeLabel": "記録の種類",
+        "autoDetect": "自動判定",
+        "expand": "詳細入力",
+        "collapse": "クイック入力に戻す",
+        "captureLink": "取得して保存",
+        "saveAs": "{type}を保存",
+        "selectAudioFile": "音声ファイルを選択",
+        "stopRecording": "録音を停止"
       }
     },
     "chat": {

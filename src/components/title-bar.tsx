@@ -13,32 +13,10 @@ import { PinToggle } from './pin-toggle'
 import AppStatus from './app-status'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Button } from '@/components/ui/button'
-import useSettingStore from '@/stores/setting'
 import useUpdateStore from '@/stores/update'
-import { ControlText } from '@/app/core/main/mark/control-text'
-import { ControlRecording } from '@/app/core/main/mark/control-recording'
-import { ControlScan } from '@/app/core/main/mark/control-scan'
-import { ControlImage } from '@/app/core/main/mark/control-image'
-import { ControlLink } from '@/app/core/main/mark/control-link'
-import { ControlFile } from '@/app/core/main/mark/control-file'
-import { ControlTodo } from '@/app/core/main/mark/control-todo'
-import { ControlPromptDraft } from '@/app/core/main/mark/control-prompt-draft'
-import {
-  DndContext,
-  closestCenter,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from '@dnd-kit/core'
-import {
-  arrayMove,
-  SortableContext,
-  horizontalListSortingStrategy,
-} from '@dnd-kit/sortable'
-import { DraggableToolbarItem } from './draggable-toolbar-item'
 import { useToolbarShortcuts } from '@/hooks/use-toolbar-shortcuts'
 import { useSettingsDialogStore } from '@/stores/settings-dialog'
+import { UnifiedRecordButton } from '@/app/core/main/mark/unified-record-dialog'
 
 type Platform = 'macos' | 'windows' | 'linux' | 'unknown'
 
@@ -67,37 +45,9 @@ export function TitleBar() {
     
     return false
   }
-  const { recordToolbarConfig, setRecordToolbarConfig } = useSettingStore()
   const { hasUpdate } = useUpdateStore()
   const t = useTranslations()
-  const { isModifierPressed } = useToolbarShortcuts()
-
-  // 拖拽传感器配置
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        delay: 200,
-        tolerance: 5,
-      },
-    })
-  )
-
-  // 处理拖拽结束
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event
-
-    if (over && active.id !== over.id) {
-      const oldIndex = recordToolbarConfig.findIndex((item) => item.id === active.id)
-      const newIndex = recordToolbarConfig.findIndex((item) => item.id === over.id)
-      
-      const newItems = arrayMove(recordToolbarConfig, oldIndex, newIndex)
-      const updatedItems = newItems.map((item, index) => ({
-        ...item,
-        order: index
-      }))
-      setRecordToolbarConfig(updatedItems)
-    }
-  }
+  useToolbarShortcuts()
 
   useEffect(() => {
     // 检查是否为移动设备
@@ -210,61 +160,8 @@ export function TitleBar() {
         }}
         data-tauri-drag-region
       >
-        {/* 左侧记录工具栏按钮 */}
         <div id="onboarding-target-record-toolbar" className="flex items-center gap-0.5 px-2 shrink-0" data-tauri-drag-region="false">
-          <TooltipProvider>
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
-              <SortableContext
-                items={recordToolbarConfig.filter(item => item.enabled).map(item => item.id)}
-                strategy={horizontalListSortingStrategy}
-              >
-                <div className="flex">
-                  {recordToolbarConfig
-                    .filter(item => item.enabled)
-                    .sort((a, b) => a.order - b.order)
-                    .map((item, index) => {
-                      const renderToolbarItem = () => {
-                        switch (item.id) {
-                          case 'text':
-                            return <ControlText />
-                          case 'recording':
-                            return <ControlRecording />
-                          case 'scan':
-                            return <ControlScan />
-                          case 'image':
-                            return <ControlImage />
-                          case 'link':
-                            return <ControlLink />
-                          case 'file':
-                            return <ControlFile />
-                          case 'todo':
-                            return <ControlTodo />
-                          case 'prompt-draft':
-                            return <ControlPromptDraft />
-                          default:
-                            return null
-                        }
-                      }
-                      
-                      return (
-                        <DraggableToolbarItem
-                          key={item.id}
-                          id={item.id}
-                          shortcutNumber={index + 1}
-                          showShortcut={isModifierPressed && index < 9}
-                        >
-                          {renderToolbarItem()}
-                        </DraggableToolbarItem>
-                      )
-                    })}
-                </div>
-              </SortableContext>
-            </DndContext>
-          </TooltipProvider>
+          <UnifiedRecordButton compact />
         </div>
 
         <PluginTitleBar location="title-bar-left" />
