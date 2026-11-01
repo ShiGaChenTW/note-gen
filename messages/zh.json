@@ -7235,6 +7235,7 @@
     "organize": "整理成笔记",
     "convert": "转成笔记",
     "addTag": "加标签",
+    "noTags": "还没有标签",
     "delete": "删除",
     "restore": "还原",
     "markUnprocessed": "标回未整理",

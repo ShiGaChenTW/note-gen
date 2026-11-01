@@ -2,7 +2,7 @@
 
 // Fork（#32）：最近筆記。最新一篇顯示成大卡片並附摘要，其餘列出；點了打開並回到工作區。
 import { useEffect, useMemo, useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { FileText } from 'lucide-react'
 import { readNote } from '@/lib/daily/note-io'
 import { splitFrontmatter } from '@/lib/markdown/frontmatter-split'
@@ -30,6 +30,7 @@ function excerptOf(content: string) {
 
 export function RecentNotes() {
   const t = useTranslations('home.recent')
+  const locale = useLocale()
   const notes = useVaultIndexStore(state => state.notes)
   const revision = useVaultIndexStore(state => state.revision)
   const hide = useHomeStore(state => state.hide)
@@ -51,7 +52,6 @@ export function RecentNotes() {
     void useArticleStore.getState().setActiveFilePath(path)
     hide()
   }
-  const locale = typeof navigator === 'undefined' ? 'en' : navigator.language
 
   return (
     <section className="rounded-xl bg-background p-4" aria-labelledby="home-recent">
@@ -68,7 +68,7 @@ export function RecentNotes() {
         {recent.slice(1).map(note => (
           <li key={note.path}>
             <button type="button" className="flex w-full items-center gap-2 rounded-md px-1 py-1 text-left text-sm hover:bg-accent" onClick={() => open(note.path)}>
-              <span className="min-w-0 flex-1 truncate">{title(note.path)}</span>
+              <span className="min-w-0 flex-1 truncate" title={title(note.path)}>{title(note.path)}</span>
               <span className="text-xs text-muted-foreground">{relative(note.mtime, locale)}</span>
             </button>
           </li>

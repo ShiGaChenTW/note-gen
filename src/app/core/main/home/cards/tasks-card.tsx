@@ -2,7 +2,7 @@
 
 // Fork（#32）：Agent 任務卡。主欄顯示背景任務四組狀態與最近對話；
 // 「需要你處理」放待審草稿、沒做完的任務，以及最近有新內容卻還沒摘要的對話。
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { useMemo } from 'react'
 import { Bot, MessageSquare } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -22,11 +22,11 @@ import { EmptyState } from '../../page-ui'
 
 const STATUS_TONE: Record<AgentTaskStatus, string> = {
   awaiting_review: 'text-primary',
-  queued: 'text-sky-500',
-  running: 'text-sky-500',
+  queued: 'text-sky-700 dark:text-sky-400',
+  running: 'text-sky-700 dark:text-sky-400',
   interrupted: 'text-destructive',
   failed: 'text-destructive',
-  completed: 'text-emerald-600 dark:text-emerald-400',
+  completed: 'text-emerald-700 dark:text-emerald-400',
   cancelled: 'text-muted-foreground',
 }
 
@@ -84,6 +84,7 @@ function isToday(ms: number | undefined) {
 
 export function TasksSection() {
   const t = useTranslations('home.tasks')
+  const locale = useLocale()
   const tStatus = useTranslations('agentTasks.status')
   const tasks = useAgentTaskStore(state => state.tasks)
   const conversations = useChatStore(state => state.conversations)
@@ -114,8 +115,8 @@ export function TasksSection() {
             {shown.map(task => (
               <li key={task.id} className="flex items-center gap-2 rounded-md px-1 py-1.5 text-sm hover:bg-accent">
                 <span className={cn('w-16 shrink-0 text-xs', STATUS_TONE[task.status])}>{tStatus(task.status)}</span>
-                <button type="button" className="min-w-0 flex-1 truncate text-left" onClick={() => openTasks()}>{task.title}</button>
-                {task.tokens > 0 && <span className="text-xs tabular-nums text-muted-foreground">{task.tokens.toLocaleString()} tokens</span>}
+                <button type="button" className="min-w-0 flex-1 truncate text-left" title={task.title} onClick={() => openTasks()}>{task.title}</button>
+                {task.tokens > 0 && <span className="text-xs tabular-nums text-muted-foreground">{task.tokens.toLocaleString(locale)} tokens</span>}
                 {(task.status === 'running' || task.status === 'queued') && (
                   <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => void agentTaskCenter.cancel(task.id)}>{t('cancel')}</Button>
                 )}
@@ -133,12 +134,12 @@ export function TasksSection() {
               <li key={conversation.id} className="flex items-center gap-1">
                 <button type="button" className="flex min-w-0 flex-1 items-center gap-2 rounded-md px-1 py-1.5 text-left text-sm hover:bg-accent" onClick={() => void openConversation(conversation.id)}>
                   <MessageSquare className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
-                  <span className="min-w-0 flex-1 truncate">{conversation.title}</span>
-                  <span className="text-xs text-muted-foreground">{new Date(conversation.updatedAt).toLocaleDateString()}</span>
+                  <span className="min-w-0 flex-1 truncate" title={conversation.title}>{conversation.title}</span>
+                  <span className="text-xs text-muted-foreground">{new Date(conversation.updatedAt).toLocaleDateString(locale)}</span>
                 </button>
                 {needsSummary(conversation, summarized)
                   ? <Button size="sm" variant="secondary" className="h-6 px-2 text-xs" onClick={() => openConversationSummary(conversation.id)}>{t('summarize')}</Button>
-                  : <span className="px-2 text-xs text-emerald-600 dark:text-emerald-400">{t('summarized')}</span>}
+                  : <span className="px-2 text-xs text-emerald-700 dark:text-emerald-400">{t('summarized')}</span>}
               </li>
             ))}
           </ul>

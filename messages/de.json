@@ -7095,6 +7095,7 @@
     "organize": "Zu Notiz ordnen",
     "convert": "In Notiz umwandeln",
     "addTag": "Tag hinzufügen",
+    "noTags": "Noch keine Tags",
     "delete": "Löschen",
     "restore": "Wiederherstellen",
     "markUnprocessed": "Als unverarbeitet markieren",

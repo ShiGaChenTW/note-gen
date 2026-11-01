@@ -7235,6 +7235,7 @@
     "organize": "Organize into note",
     "convert": "Convert to note",
     "addTag": "Add tag",
+    "noTags": "No tags yet",
     "delete": "Delete",
     "restore": "Restore",
     "markUnprocessed": "Mark as unprocessed",

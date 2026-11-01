@@ -52,7 +52,8 @@ export function CaptureBar() {
       <ChevronRight className="size-4 shrink-0 text-primary" aria-hidden />
       <input
         value={text}
-        disabled={busy}
+        // 用 readOnly 而不是 disabled：disabled 會讓輸入框失焦，存完無法接著打下一筆
+        readOnly={busy}
         onChange={event => setText(event.target.value)}
         onKeyDown={event => {
           if (event.key !== 'Enter' || event.nativeEvent.isComposing) return
