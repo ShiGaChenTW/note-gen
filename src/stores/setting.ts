@@ -925,10 +925,10 @@ const useSettingStore = create<SettingState>((set, get) => ({
       }
     }
 
-    // Migrate previous built-in chat choices to the single Limited entry.
+    // Migrate previous built-in chat choices to the single NoteGen chat entry.
     for (const field of ['primaryModel', 'editorModel', 'placeholderModel', 'imageMethodModel', 'completionModel', 'markDescModel', 'commitModel']) {
       const selected = await store.get<string>(field)
-      if (selected && (selected.startsWith('note-gen-limited') || selected.startsWith('note-gen-free-note-gen-limited') || selected === 'note-gen-vlm' || selected === 'note-gen-free-note-gen-vlm')) {
+      if (selected && (selected.startsWith('note-gen-limited') || selected.startsWith('note-gen-free-note-gen-limited') || selected === 'note-gen-free-chat' || selected === 'note-gen-free-note-gen-free-chat' || selected === 'note-gen-vlm' || selected === 'note-gen-free-note-gen-vlm')) {
         await store.set(field, 'note-gen-chat')
         set({ [field]: 'note-gen-chat' })
       }

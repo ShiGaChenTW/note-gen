@@ -3249,9 +3249,9 @@
         "title": "NoteGen",
         "desc": "NoteGen bietet mit Unterstützung von SiliconFlow und AIHubMix kostenlose KI-Modelldienste, die grundlegende Funktionen ohne Konfiguration ermöglichen.",
         "chatModel": {
-          "name": "Qwen/Qwen3-8B",
+          "name": "NoteGen AI",
           "type": "Chat-Modell",
-          "desc": "Geeignet für tägliche Unterhaltungen und Textgenerierung"
+          "desc": "Sofort nutzbar, keine Einrichtung erforderlich"
         },
         "embeddingModel": {
           "name": "BAAI/bge-m3",

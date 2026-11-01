@@ -2861,9 +2861,9 @@
         "title": "NoteGen",
         "desc": "NoteGen 為用戶提供免費的 AI 模型服務，由矽基流動和 AIHubMix 提供支持，無需配置即可使用基礎功能。",
         "chatModel": {
-          "name": "Qwen/Qwen3-8B",
+          "name": "NoteGen AI",
           "type": "對話模型",
-          "desc": "適用於日常對話、文本生成等場景"
+          "desc": "開箱即用，無需設定"
         },
         "embeddingModel": {
           "name": "BAAI/bge-m3",

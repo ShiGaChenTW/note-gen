@@ -2879,9 +2879,9 @@
         "title": "NoteGen",
         "desc": "O NoteGen oferece serviços gratuitos de modelos de IA com o apoio da SiliconFlow e da AIHubMix, permitindo usar os recursos básicos sem configuração.",
         "chatModel": {
-          "name": "Qwen/Qwen3-8B",
+          "name": "NoteGen AI",
           "type": "Modelo de Chat",
-          "desc": "Adequado para conversas diárias e geração de texto"
+          "desc": "Pronto para usar, sem configuração"
         },
         "embeddingModel": {
           "name": "BAAI/bge-m3",
