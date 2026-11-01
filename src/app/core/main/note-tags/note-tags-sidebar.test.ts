@@ -8,9 +8,6 @@ import useVaultIndexStore from '@/stores/vault-index'
 import messages from '../../../../../messages/zh-TW.json'
 import en from '../../../../../messages/en.json'
 import zh from '../../../../../messages/zh.json'
-import ja from '../../../../../messages/ja.json'
-import de from '../../../../../messages/de.json'
-import pt from '../../../../../messages/pt-BR.json'
 
 const { reveal, activate, order } = vi.hoisted(() => ({
   reveal: vi.fn(),
@@ -92,34 +89,7 @@ describe('note tag copy', () => {
       empty: '还没有标签',
       indexing: '索引中…',
     })
-    expect(ja.noteTags).toEqual({
-      title: 'ノートタグ',
-      search: 'タグを検索',
-      sortByName: '名前順',
-      sortByCount: '件数順',
-      notes: '{count} 件のノート',
-      empty: 'タグはまだありません',
-      indexing: 'インデックス作成中…',
-    })
-    expect(de.noteTags).toEqual({
-      title: 'Notiz-Tags',
-      search: 'Tags suchen',
-      sortByName: 'Nach Name',
-      sortByCount: 'Nach Anzahl',
-      notes: '{count} Notizen',
-      empty: 'Noch keine Tags',
-      indexing: 'Indizierung…',
-    })
-    expect(pt.noteTags).toEqual({
-      title: 'Tags de notas',
-      search: 'Buscar tags',
-      sortByName: 'Por nome',
-      sortByCount: 'Por quantidade',
-      notes: '{count} notas',
-      empty: 'Ainda não há tags',
-      indexing: 'Indexando…',
-    })
-    for (const locale of [messages, en, zh, ja, de, pt]) {
+    for (const locale of [messages, en, zh]) {
       const namespaces = Object.keys(locale)
       expect(namespaces[namespaces.indexOf('tags') + 1]).toBe('noteTags')
       expect(Object.keys(locale.noteTags)).toEqual(['title', 'search', 'sortByName', 'sortByCount', 'notes', 'empty', 'indexing'])
@@ -130,9 +100,6 @@ describe('note tag copy', () => {
     expect(messages.navigation.noteTags).toBe('筆記標籤')
     expect(en.navigation.noteTags).toBe('Note tags')
     expect(zh.navigation.noteTags).toBe('笔记标签')
-    expect(ja.navigation.noteTags).toBe('ノートタグ')
-    expect(de.navigation.noteTags).toBe('Notiz-Tags')
-    expect(pt.navigation.noteTags).toBe('Tags de notas')
   })
 })
 

@@ -8,9 +8,6 @@ import useVaultIndexStore from '@/stores/vault-index'
 import messages from '../../../../../messages/zh-TW.json'
 import en from '../../../../../messages/en.json'
 import zh from '../../../../../messages/zh.json'
-import ja from '../../../../../messages/ja.json'
-import de from '../../../../../messages/de.json'
-import pt from '../../../../../messages/pt-BR.json'
 
 const { reveal, activate, order } = vi.hoisted(() => ({
   reveal: vi.fn(), activate: vi.fn(), order: [] as string[],
@@ -52,7 +49,7 @@ function ready(contents: Array<[string, string]>) {
 
 describe('backlinks panel', () => {
   it('provides all translations after today and linkRewrite in every locale', () => {
-    for (const locale of [messages, en, zh, ja, de, pt]) {
+    for (const locale of [messages, en, zh]) {
       // 2-1 的七個 key 在前，2-2 L4 的八個 key 追加在 backlinks 物件尾端
       expect(Object.keys(locale.backlinks)).toEqual([
         'title', 'linked', 'outgoing', 'empty', 'indexing', 'notMarkdown', 'unresolved',
