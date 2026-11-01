@@ -1,5 +1,5 @@
 import { normalizeSpeechMode } from '@/lib/speech/preferences'
-import { filterSyncData } from '@/config/sync-exclusions'
+import { filterSyncData, type SyncExclusionOptions } from '@/config/sync-exclusions'
 import { DEFAULT_EDITOR_CONTENT_WIDTH, normalizeEditorContentWidth, normalizeEditorLineHeight, normalizeEditorViewMode } from '@/lib/editor-layout-styles'
 import { normalizeOutlinePosition } from '@/lib/outline-preferences'
 import { normalizeRecordSortMode, normalizeRecordViewMode } from '@/lib/record-display-preferences'
@@ -9,10 +9,10 @@ import { isManagedAgentSystemPrompt } from '@/lib/ai/system-prompt'
 
 /** Pure equivalent of persisted preference migrations, before preview or writes.
  * Defaults come from getInitialState(), never from this device's live choices. */
-export function normalizeSettingsSnapshot(value: Record<string, unknown>, defaults: Record<string, unknown>) {
+export function normalizeSettingsSnapshot(value: Record<string, unknown>, defaults: Record<string, unknown>, options: SyncExclusionOptions = { excludeSensitiveConfig: true }) {
   const filtered = (input: Record<string, unknown>) => filterSyncData(Object.fromEntries(
     Object.entries(input).filter(([, item]) => typeof item !== 'function' && item !== undefined)
-  ), { excludeSensitiveConfig: true })
+  ), options)
   const result: Record<string, unknown> = { ...filtered(defaults), ...filtered(value) }
   result.editorContentWidth = normalizeEditorContentWidth(value.editorContentWidth
     ?? (value.centeredContent === true ? 'standard' : DEFAULT_EDITOR_CONTENT_WIDTH))
@@ -40,7 +40,7 @@ export function normalizeSettingsSnapshot(value: Record<string, unknown>, defaul
   }
   for (const key of ['primaryModel', 'editorModel', 'placeholderModel', 'imageMethodModel', 'completionModel', 'markDescModel', 'commitModel']) {
     const value = result[key]
-    if (typeof value === 'string' && (value.startsWith('note-gen-limited') || value.startsWith('note-gen-free-note-gen-limited') || value === 'note-gen-vlm' || value === 'note-gen-free-note-gen-vlm')) result[key] = 'note-gen-chat'
+    if (typeof value === 'string' && (value.startsWith('note-gen-limited') || value.startsWith('note-gen-free-note-gen-limited') || value === 'note-gen-free-chat' || value === 'note-gen-free-note-gen-free-chat' || value === 'note-gen-vlm' || value === 'note-gen-free-note-gen-vlm')) result[key] = 'note-gen-chat'
   }
   // Keep the final snapshot inside the same boundary even when a migration
   // adds fields. Preview, persistence, verification and recovery share it.

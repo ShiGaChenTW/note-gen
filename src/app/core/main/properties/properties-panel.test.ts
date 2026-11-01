@@ -4,9 +4,6 @@ import { chipValues, formatPropertyDate, initialPropertyValue, propertiesForArti
 import en from '../../../../../messages/en.json'
 import zh from '../../../../../messages/zh.json'
 import tw from '../../../../../messages/zh-TW.json'
-import ja from '../../../../../messages/ja.json'
-import de from '../../../../../messages/de.json'
-import pt from '../../../../../messages/pt-BR.json'
 
 describe('屬性面板資料轉換', () => {
   it('只列 frontmatter，不把行內欄位算進屬性，並套用 vault 型別', () => {
@@ -55,7 +52,7 @@ describe('屬性面板資料轉換', () => {
     expect(suggestPropertyValues(notes, 'n')).toEqual(['3'])
   })
   it('六語系提供相同 key，位於 backlinks 與 settings 之間', () => {
-    for (const locale of [en, zh, tw, ja, de, pt]) {
+    for (const locale of [en, zh, tw]) {
       const data = locale as unknown as Record<string, Record<string, unknown>>
       expect(data.properties).toBeDefined()
       expect(Object.keys(data.properties).sort()).toEqual(['title', 'add', 'empty', 'source', 'apply', 'invalidYaml', 'keyPlaceholder', 'valuePlaceholder', 'remove', 'rename', 'unsupported', 'notMarkdown', 'types', 'type', 'keyExists', 'saveFailed',

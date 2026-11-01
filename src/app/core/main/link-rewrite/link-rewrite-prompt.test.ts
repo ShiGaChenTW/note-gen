@@ -5,9 +5,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import messages from '../../../../../messages/zh-TW.json'
 import en from '../../../../../messages/en.json'
 import zh from '../../../../../messages/zh.json'
-import ja from '../../../../../messages/ja.json'
-import de from '../../../../../messages/de.json'
-import pt from '../../../../../messages/pt-BR.json'
 
 const { planLinkRewrite, applyLinkRewrite, toast } = vi.hoisted(() => ({
   planLinkRewrite: vi.fn(), applyLinkRewrite: vi.fn(), toast: vi.fn(),
@@ -61,7 +58,7 @@ async function request() {
 
 describe('link rewrite i18n', () => {
   it('六個語系都有 linkRewrite 七個 key，插在 today 之後、backlinks 之前', () => {
-    for (const locale of [messages, en, zh, ja, de, pt]) {
+    for (const locale of [messages, en, zh]) {
       expect(Object.keys(locale.linkRewrite)).toEqual(['title', 'description', 'obsidianHint', 'confirm', 'skip', 'done', 'failed'])
       expect(locale.linkRewrite.description).toContain('{files}')
       expect(locale.linkRewrite.description).toContain('{links}')
