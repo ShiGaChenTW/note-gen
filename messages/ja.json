@@ -7144,6 +7144,7 @@
     "organize": "ノートに整理",
     "convert": "ノートに変換",
     "addTag": "タグを追加",
+    "noTags": "タグはまだありません",
     "delete": "削除",
     "restore": "復元",
     "markUnprocessed": "未整理に戻す",

@@ -7134,6 +7134,7 @@
     "organize": "整理成筆記",
     "convert": "轉成筆記",
     "addTag": "加標籤",
+    "noTags": "還沒有標籤",
     "delete": "刪除",
     "restore": "還原",
     "markUnprocessed": "標回未整理",

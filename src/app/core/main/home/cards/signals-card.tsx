@@ -71,18 +71,30 @@ export function useSignalNeeds(): NeedItem[] {
   })
 }
 
+/** 離開欄位或按 Enter 才套用：每打一鍵就夾範圍的話，清空重打會被改成最小值。 */
 function NumberField({ value, onChange, min, max, label }: { value: number; onChange: (value: number) => void; min: number; max: number; label: string }) {
+  const [text, setText] = useState(String(value))
+  useEffect(() => { setText(String(value)) }, [value])
+  const commit = () => {
+    const parsed = Number(text)
+    if (text.trim() === '' || !Number.isFinite(parsed)) {
+      setText(String(value))
+      return
+    }
+    const next = Math.min(max, Math.max(min, Math.round(parsed)))
+    setText(String(next))
+    if (next !== value) onChange(next)
+  }
   return (
     <Input
       type="number"
-      value={value}
+      value={text}
       min={min}
       max={max}
       aria-label={label}
-      onChange={event => {
-        const next = Number(event.target.value)
-        if (Number.isFinite(next)) onChange(Math.min(max, Math.max(min, Math.round(next))))
-      }}
+      onChange={event => setText(event.target.value)}
+      onBlur={commit}
+      onKeyDown={event => { if (event.key === 'Enter') commit() }}
       className="h-7 w-16 px-2 text-xs"
     />
   )

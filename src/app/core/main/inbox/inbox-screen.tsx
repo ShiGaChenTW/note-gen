@@ -98,7 +98,7 @@ function RecordRow({ record, selected, focused, processed, locale, onToggle, onF
       <Checkbox checked={selected} onCheckedChange={onToggle} aria-label={text} />
       <button type="button" onClick={onFocus} aria-current={focused ? 'true' : undefined} className={cn('flex min-w-0 flex-1 items-center gap-2 py-2 text-left', ROW_BUTTON)}>
         <Icon className={cn('size-4 shrink-0', getMarkTypeIconClasses(record.type), processed && 'opacity-60')} aria-hidden />
-        <span className={cn('min-w-0 flex-1 truncate', processed && 'text-muted-foreground')}>{text}</span>
+        <span className={cn('min-w-0 flex-1 truncate', processed && 'text-muted-foreground')} title={text}>{text}</span>
         {processed && <CheckCheck className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />}
         <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{formatListTime(record.createdAt, locale)}</span>
       </button>
@@ -217,10 +217,15 @@ export function InboxScreen() {
   async function moveNote(path: string, folder: string) {
     const activeFilePath = useArticleStore.getState().activeFilePath
     if (!await prepareActiveEditorPathMutationDurably(activeFilePath, [path])) return
-    const result = await moveFileManagerEntries([path], folder)
-    await useArticleStore.getState().loadFileTree()
-    if (result.failed.length > 0) toast.error(t('moveFailed'))
-    else toast.success(t('moved', { folder: folder || t('root') }))
+    try {
+      const result = await moveFileManagerEntries([path], folder)
+      await useArticleStore.getState().loadFileTree()
+      if (result.failed.length > 0) toast.error(t('moveFailed'))
+      else toast.success(t('moved', { folder: folder || t('root') }))
+    } catch (error) {
+      console.error('[inbox] move failed:', error)
+      toast.error(t('moveFailed'))
+    }
   }
 
   const focusedProcessed = focusedMarkId !== null && processed.has(focusedMarkId)
@@ -252,6 +257,7 @@ export function InboxScreen() {
               checked={list.length > 0 && selected.size === list.length ? true : selected.size > 0 ? 'indeterminate' : false}
               onCheckedChange={value => setSelected(value === true ? new Set(list.map(record => record.id)) : new Set())}
               aria-label={t('selectAll')}
+              disabled={list.length === 0}
             />
             <span className="ml-1 text-xs text-muted-foreground">{selected.size > 0 ? t('selected', { count: selected.size }) : t('selectAll')}</span>
             <div className="ml-auto flex items-center gap-0.5">
@@ -283,6 +289,7 @@ export function InboxScreen() {
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent align="end" className="max-h-72 w-56 overflow-y-auto p-1">
+                      {tags.length === 0 && <p className="px-2 py-1.5 text-sm text-muted-foreground">{t('noTags')}</p>}
                       {tags.map(tag => (
                         <button key={tag.id} type="button" className="flex w-full cursor-pointer items-center rounded px-2 py-1.5 text-left text-sm outline-none hover:bg-accent focus-visible:bg-accent"
                           onClick={() => void run(() => addTagToRecords(selectedRecords, tag.id))}>
@@ -342,7 +349,7 @@ export function InboxScreen() {
                     <span className="size-4 shrink-0" aria-hidden />
                     <button type="button" className={cn('flex min-w-0 flex-1 items-center gap-2 py-2 text-left', ROW_BUTTON)} onClick={() => void openNote(note.path)} title={t('open')}>
                       <FileText className="size-4 shrink-0 text-muted-foreground" aria-hidden />
-                      <span className="min-w-0 flex-1 truncate">{noteTitle(note.path)}</span>
+                      <span className="min-w-0 flex-1 truncate" title={noteTitle(note.path)}>{noteTitle(note.path)}</span>
                     </button>
                     {note.mtime > 0 && <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{formatListTime(note.mtime, locale)}</span>}
                     <Popover>

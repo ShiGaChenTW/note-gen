@@ -29,10 +29,10 @@ function NeedsFrom({ card, onCount }: { card: HomeCardDef; onCount: (key: string
       {items.map(item => (
         <li key={item.key} className="flex items-center gap-3 py-2.5">
           {/* 分類字只佔自己的寬度，不再固定 w-20 */}
-          <span className={cn('shrink-0 rounded-md bg-muted px-1.5 py-0.5 text-xs', TONE[item.tone])}>{item.label}</span>
+          <span className={cn('shrink-0 rounded-md bg-card px-1.5 py-0.5 text-xs', TONE[item.tone])}>{item.label}</span>
           <div className="min-w-0 flex-1">
-            <div className="truncate text-sm">{item.text}</div>
-            {item.meta && <div className="truncate text-xs text-muted-foreground">{item.meta}</div>}
+            <div className="truncate text-sm" title={item.text}>{item.text}</div>
+            {item.meta && <div className="truncate text-xs text-muted-foreground" title={item.meta}>{item.meta}</div>}
           </div>
           <Button size="sm" variant="secondary" onClick={item.onAction}>{item.action}</Button>
         </li>
@@ -73,10 +73,12 @@ export function HandoffDialog() {
   const handoff = useHomeStore(state => state.handoff)
   const setHandoff = useHomeStore(state => state.setHandoff)
   const [prompt, setPrompt] = useState('')
+  const [starting, setStarting] = useState(false)
   useEffect(() => { if (handoff) setPrompt(handoff.prompt) }, [handoff])
 
   async function start() {
-    if (!handoff || !prompt.trim()) return
+    if (!handoff || !prompt.trim() || starting) return
+    setStarting(true)
     try {
       const task = await agentTaskCenter.enqueue({ prompt: prompt.trim(), title: handoff.title, kind: handoff.kind })
       handoff.onStarted?.(task.id)
@@ -84,6 +86,8 @@ export function HandoffDialog() {
       toast({ title: t('started'), description: task.title })
     } catch (error) {
       toast({ title: t('failed'), description: error instanceof Error ? error.message : String(error), variant: 'destructive' })
+    } finally {
+      setStarting(false)
     }
   }
 
@@ -97,7 +101,7 @@ export function HandoffDialog() {
         <Textarea value={prompt} onChange={event => setPrompt(event.target.value)} rows={5} aria-label={t('prompt')} />
         <DialogFooter>
           <Button variant="ghost" onClick={() => setHandoff(null)}>{t('cancel')}</Button>
-          <Button onClick={() => void start()} disabled={!prompt.trim()}>{t('start')}</Button>
+          <Button onClick={() => void start()} disabled={!prompt.trim() || starting}>{t('start')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

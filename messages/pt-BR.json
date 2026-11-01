@@ -7111,6 +7111,7 @@
     "organize": "Organizar em nota",
     "convert": "Converter em nota",
     "addTag": "Adicionar tag",
+    "noTags": "Nenhuma tag ainda",
     "delete": "Excluir",
     "restore": "Restaurar",
     "markUnprocessed": "Marcar como não processado",
