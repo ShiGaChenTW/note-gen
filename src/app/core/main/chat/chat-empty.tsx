@@ -16,6 +16,7 @@ import emitter from '@/lib/emitter'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import 'dayjs/locale/zh-cn'
+import 'dayjs/locale/zh-tw'
 import 'dayjs/locale/en'
 import 'dayjs/locale/ja'
 import 'dayjs/locale/pt-br'
@@ -30,6 +31,7 @@ dayjs.extend(relativeTime)
 function formatRelativeTime(timestamp: number, locale: string): string {
   let dayjsLocale = 'en'
   if (locale === '简体中文' || locale === 'zh') dayjsLocale = 'zh-cn'
+  else if (locale === '繁體中文' || locale === 'zh-TW') dayjsLocale = 'zh-tw'
   else if (locale === '日本語' || locale === 'ja') dayjsLocale = 'ja'
   else if (locale === 'Português' || locale === 'pt-BR') dayjsLocale = 'pt-br'
   else if (locale === 'Deutsch' || locale === 'de') dayjsLocale = 'de'
@@ -53,9 +55,9 @@ export default function ChatEmpty() {
 
   // 快速 prompt 模板 - 默认模板
   const quickPrompts = useMemo(() => [
-    { id: 1, icon: <FileEdit className="w-4 h-4" />, text: t('quickPrompts.writeNote') || '幫我寫一篇筆記' },
-    { id: 2, icon: <FileText className="w-4 h-4" />, text: t('quickPrompts.summarize') || '幫我摘要這段內容' },
-    { id: 3, icon: <Lightbulb className="w-4 h-4" />, text: t('quickPrompts.brainstorm') || '幫我發想一些點子' },
+    { id: 1, icon: <FileEdit className="w-4 h-4" />, text: t('quickPrompts.writeNote') },
+    { id: 2, icon: <FileText className="w-4 h-4" />, text: t('quickPrompts.summarize') },
+    { id: 3, icon: <Lightbulb className="w-4 h-4" />, text: t('quickPrompts.brainstorm') },
   ], [t])
 
   const handleQuickPrompt = (prompt: string) => {
@@ -157,7 +159,7 @@ export default function ChatEmpty() {
 
         {/* Quick Prompts */}
         <div className="space-y-2">
-          <p className="text-xs text-muted-foreground px-1">{t('quickPrompts.title') || '快速開始'}</p>
+          <p className="text-xs text-muted-foreground px-1">{t('quickPrompts.title')}</p>
           {quickPrompts.map((prompt) => (
             <button
               type="button"

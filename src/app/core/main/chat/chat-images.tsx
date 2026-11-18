@@ -37,7 +37,7 @@ export function ChatImages({ images, analyses = [], onRetry }: ChatImagesProps) 
               >
                 <LocalImage
                   src={imageUrl}
-                  alt={`Image ${index + 1}`}
+                  alt={previewT('numberedImage', { number: index + 1 })}
                   fill
                   className="object-cover"
                   unoptimized
