@@ -4729,7 +4729,97 @@
       }
     },
     "chat": {
-      "condensing": "正在压缩上下文...",
+      "v3": {
+        "tabs": {
+          "chat": "對話",
+          "links": "連結",
+          "properties": "屬性",
+          "graph": "圖譜"
+        },
+        "newChat": "新對話",
+        "temporaryChat": "臨時對話",
+        "summary": "對話摘要",
+        "more": "更多對話操作",
+        "sendToBackground": "改成背景任務",
+        "backgroundRequiresDelegate": "切到「交辦」就能將草稿送到背景執行。",
+        "scrollToEnd": "捲到對話底部",
+        "usagePercent": "{percent}%",
+        "mode": {
+          "label": "對話模式",
+          "shortcut": "按 Tab 切換模式",
+          "ask": "問",
+          "delegate": "交辦",
+          "readOnlyHint": "只回答，不改檔案",
+          "ask-before-edit": "修改前先問我",
+          "auto-edit": "自動修改",
+          "askPlaceholder": "問這篇筆記任何事",
+          "delegatePlaceholder": "交代一件事，例如：把待辦移到最上面"
+        },
+        "empty": {
+          "ask": {
+            "title": "問我任何事",
+            "description": "我會參考你正在看的筆記，只回答、不改檔案。",
+            "prompts": {
+              "first": {
+                "label": "這篇還有什麼沒做完？",
+                "insert": "這篇還有什麼沒做完？"
+              },
+              "second": {
+                "label": "幫我摘要這篇",
+                "insert": "幫我摘要這篇"
+              },
+              "third": {
+                "label": "找相關筆記",
+                "insert": "找出和這篇相關的筆記"
+              }
+            }
+          },
+          "delegate": {
+            "title": "交辦一件事給我",
+            "description": "我會列出步驟，並依照你選擇的權限處理檔案。",
+            "prompts": {
+              "first": {
+                "label": "整理這篇的重點",
+                "insert": "把這篇筆記整理成重點"
+              },
+              "second": {
+                "label": "待辦移到最上面",
+                "insert": "把還沒完成的待辦移到最上面"
+              },
+              "third": {
+                "label": "接著寫下去",
+                "insert": "依照這篇筆記的語氣接著寫"
+              }
+            }
+          },
+          "temporaryHint": "離開後，這段臨時對話會自動清除。"
+        },
+        "task": {
+          "title": "這次任務",
+          "progress": "任務進度",
+          "running": "執行中 {current}/{total}",
+          "waiting": "等你確認",
+          "completed": "完成",
+          "failed": "失敗",
+          "stopped": "已停止",
+          "pending": "尚未開始",
+          "runningStep": "進行中",
+          "showSteps": "看 {count} 個步驟",
+          "hideSteps": "收起步驟",
+          "targets": "{count, number} 項",
+          "tokens": "{count, number} 個權杖"
+        },
+        "review": {
+          "file": "要改 {name}，可以嗎？",
+          "files": "要改 {count} 個檔案，可以嗎？",
+          "apply": "可以，套用",
+          "deny": "不要",
+          "showDiff": "看改動",
+          "hideDiff": "收起改動",
+          "fileList": "看檔案清單"
+        }
+      },
+      "condensing": "正在壓縮上下文…",
       "condensed": {
         "message": "已壓縮 {count} 條歷史訊息",
         "summary": "續接摘要"
@@ -4752,15 +4842,15 @@
         "conversationHistory": "歷史對話",
         "viewMore": "查看更多",
         "messages": "條消息",
-        "searchPlaceholder": "搜索對話...",
-        "noMatchingConversations": "沒有找到匹配的對話",
-        "noConversationHistory": "暫無歷史對話",
+        "searchPlaceholder": "搜尋對話…",
+        "noMatchingConversations": "找不到符合的對話",
+        "noConversationHistory": "目前沒有歷史對話",
         "quickPrompts": {
-          "title": "快速开始",
-          "writeNote": "帮我写一篇笔记",
-          "summarize": "帮我总结这段内容",
-          "brainstorm": "帮我头脑风暴一些想法",
-          "explain": "帮我解释这个概念"
+          "title": "快速開始",
+          "writeNote": "幫我寫一篇筆記",
+          "summarize": "幫我摘要這段內容",
+          "brainstorm": "幫我發想一些點子",
+          "explain": "幫我解釋這個概念"
         }
       },
       "newChat": "使用新標籤開始對話",

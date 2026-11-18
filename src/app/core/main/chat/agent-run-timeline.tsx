@@ -3,6 +3,7 @@
 import * as React from "react"
 import {
   AlertTriangle,
+  Check,
   CheckCircle2,
   ChevronDown,
   ChevronRight,
@@ -23,6 +24,7 @@ import {
   agentStatusText,
   formatAgentDuration,
   formatAgentToolActivity,
+  formatAgentToolDescription,
   formatAgentToolName,
   getAgentToolIcon,
 } from "./agent-display-utils"
@@ -41,6 +43,8 @@ import { AgentApprovalPanel } from "./agent-approval-panel"
 import { AgentChangeList } from "./agent-change-list"
 import { cancelPendingAgentAction, confirmPendingAgentAction } from "./agent-approval-actions"
 import { AgentQuestionPanel, AgentQuestionResult } from "./agent-question-panel"
+import { cn } from '@/lib/utils'
+import { useChatV3 } from './chat-v3'
 import { getAgentArtifactPaths } from "@/lib/agent/artifacts"
 
 interface AgentRunTimelineProps {
@@ -329,7 +333,16 @@ export function AgentRunTimeline({
   ragSourceDetails = [],
   loadedSkills = [],
 }: AgentRunTimelineProps) {
+  const v3 = useChatV3()
   const t = useTranslations('record.chat')
+  const tTask = useTranslations('record.chat.v3.task')
+  const taskTitle = useChatStore(state => {
+    if (!v3 || chat === undefined) return undefined
+    const index = state.chats.findIndex(message => message.id === chat.id)
+    for (let i = index - 1; i >= 0; i--) {
+      if (state.chats[i].role === 'user') return state.chats[i].content?.trim()
+    }
+  })
   const chatLoading = useChatStore(state => state.loading)
   const pendingUiId = useChatStore(state => state.agentState.pendingUiInteraction?.id)
   const pendingApproval = useChatStore(state => state.agentState.pendingConfirmation)
@@ -515,7 +528,7 @@ export function AgentRunTimeline({
     const isModelEvent = event.type === "model_call" || event.type === "model_response"
     const eventLabel = event.editOutcome && event.editOutcome !== "applied" ? t(`input.agent.changes.${event.editOutcome}`)
       : event.editSkipped ? t("input.agent.editorEditSkipped") : hasUi ? eventUi[0].title : event.toolName
-      ? formatAgentToolActivity(event)
+      ? (v3 ? formatAgentToolDescription(event, count => tTask('targets', { count })) : formatAgentToolActivity(event))
       : event.title
     const visibleMessage = !hasUi && !hasHostUi && shouldShowEventMessage(event) ? event.message : undefined
     const modelResponseContent = getModelResponseContent(event)
@@ -531,7 +544,8 @@ export function AgentRunTimeline({
       modelReasoningContent ||
       hasTraceDetails
     )
-    const forceExpanded = waitingForUi || Boolean((activeApproval && !reviewOutsideProcess) || activeQuestion) || (isModelEvent && event.status === "running")
+    const stepWaiting = Boolean(waitingForUi || activeApproval || (activeQuestion && activeQuestion.response === undefined))
+    const forceExpanded = waitingForUi || Boolean((activeApproval && !reviewOutsideProcess && !v3) || (!v3 && activeQuestion)) || (isModelEvent && event.status === "running")
     const expanded = forceExpanded || storedExpanded
     const canToggle = hasDetails && !forceExpanded
     const displayDuration = event.duration ?? (
@@ -551,23 +565,33 @@ export function AgentRunTimeline({
             onClick={() => canToggle && toggleEvent(event.id, expanded)}
             aria-expanded={hasDetails ? expanded : undefined}
           >
-            <MarkerIcon>{eventIcon(event)}</MarkerIcon>
+            <MarkerIcon>{v3 ? (
+              <span className={cn("grid size-3.5 place-items-center rounded-sm border border-faint",
+                event.status === "success" && !stepWaiting && "border-invert bg-invert text-invert-ink")}
+                role="img" aria-label={tTask(stepWaiting ? 'waiting' : event.status === 'success' ? 'completed'
+                  : event.status === 'error' ? 'failed' : event.status === 'pending' ? 'pending' : 'runningStep')}>
+                {stepWaiting ? null : event.status === "success" ? <Check className="size-2.5!" />
+                  : event.status === "error" ? <AlertTriangle className="size-2.5!" />
+                    : event.status === "running" && <Loader2 className="size-2.5! animate-spin" />}
+              </span>
+            ) : eventIcon(event)}</MarkerIcon>
             <MarkerContent className="flex-1">
             <span className="flex min-w-0 items-center gap-2">
-              <span className="agent-tool-title min-w-0 flex-1 truncate" data-running={toolIsRunning} title={eventLabel}>
+              <span className="agent-tool-title min-w-0 flex-1 truncate" data-running={!v3 && toolIsRunning} title={eventLabel}>
                 {eventLabel}
               </span>
               {hasUi && <Badge variant="secondary">{t(`input.agent.ui.${eventUi[0].status === 'pending' ? waitingForUi ? 'waiting' : 'expired' : eventUi[0].status}`)}</Badge>}
-              {isApproval && <Badge variant="secondary">{event.editOutcome ? t(`input.agent.changes.${event.editOutcome}`) : t(approvalStatus)}</Badge>}
-              {isQuestion && <Badge variant="secondary">{t(`input.agent.ui.${activeQuestion ? 'waiting' : hasRecordedQuestionAnswers(event) ? 'submitted' : event.status === 'error' ? 'cancelled' : 'expired'}`)}</Badge>}
+              {v3 && stepWaiting && <span className="shrink-0 font-mono text-[11px] text-faint">{tTask('waiting')}</span>}
+              {isApproval && (!v3 || !stepWaiting) && <Badge variant="secondary">{event.editOutcome ? t(`input.agent.changes.${event.editOutcome}`) : t(approvalStatus)}</Badge>}
+              {isQuestion && (!v3 || !stepWaiting) && <Badge variant="secondary">{t(`input.agent.ui.${activeQuestion ? 'waiting' : hasRecordedQuestionAnswers(event) ? 'submitted' : event.status === 'error' ? 'cancelled' : 'expired'}`)}</Badge>}
               {displayDuration !== undefined && (
-                <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                <span className={cn("shrink-0 text-xs tabular-nums text-muted-foreground", v3 && "font-mono text-[11px] text-faint")}>
                   {formatAgentDuration(displayDuration)}
                 </span>
               )}
               {receivedTokenCount > 0 && (
-                <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
-                  · {receivedTokenCount.toLocaleString()} tokens
+                <span className={cn("shrink-0 text-xs tabular-nums text-muted-foreground", v3 && "font-mono text-[11px] text-faint")}>
+                  · {v3 ? tTask('tokens', { count: receivedTokenCount }) : `${receivedTokenCount.toLocaleString()} tokens`}
                 </span>
               )}
             </span>
@@ -580,7 +604,7 @@ export function AgentRunTimeline({
           </button>
         </Marker>}
 
-        {expanded && isApproval && event.toolName && !reviewOutsideProcess && (
+        {expanded && isApproval && event.toolName && !reviewOutsideProcess && !(v3 && activeApproval) && (
           <div className="mt-2 min-w-0 pb-2">
             <AgentApprovalPanel
               pendingConfirmation={activeApproval ?? { toolName: event.toolName, params: event.input ?? {}, ...event.approvalPreview }}
@@ -594,7 +618,7 @@ export function AgentRunTimeline({
           </div>
         )}
 
-        {expanded && isQuestion && (
+        {expanded && isQuestion && (!v3 || !activeQuestion) && (
           <div className="mt-2 min-w-0 pb-2">
             {activeQuestion
               ? <AgentQuestionPanel chatId={chat?.id} traceEventId={event.id} embedded />
@@ -665,8 +689,8 @@ export function AgentRunTimeline({
       />
 
       {events.length > 0 && (
-        <div role="list" className="flex min-w-0 flex-col gap-2">
-          {segments.map(segment => {
+        <div role="list" className={cn("flex min-w-0 flex-col gap-2", v3 && "gap-0.5")}>
+          {v3 ? visibleEvents.map(renderEvent) : segments.map(segment => {
             if (segment.kind === 'event' || segment.events.length === 1) return renderEvent(segment.events[0])
             const running = isRunning && segment.events.some(event => event.status === 'running' || event.status === 'pending')
             const failed = segment.events.some(event => event.status === 'error' && !event.editOutcome && !event.editSkipped)
@@ -703,7 +727,7 @@ export function AgentRunTimeline({
 
       {chat && unmatchedUi.length > 0 && <ChatUiMessages chat={chat} blocks={unmatchedUi} />}
 
-      {showStatusRow && (
+      {showStatusRow && !v3 && (
         <Marker role="status" className="py-1.5">
           <MarkerIcon>{statusIcon(status, isRunning)}</MarkerIcon>
           <MarkerContent>{agentStatusText[status]}</MarkerContent>
@@ -713,24 +737,48 @@ export function AgentRunTimeline({
     </div>
   )
 
+  const completedSteps = events.filter(event => event.status === 'success' || event.status === 'error').length
+  const waiting = status === 'waiting_approval' || status === 'waiting_answer'
+    || Boolean(liveApproval || (isRunning && chat?.id === activeChatId && pendingQuestion && pendingQuestion.response === undefined))
+  const progress = status === 'completed' ? 100 : events.length === 0 ? 0 : 100 * completedSteps / events.length
+  const taskStatus = waiting ? tTask('waiting')
+    : !isRunning && (status === 'completed' || status === 'failed' || status === 'stopped') ? tTask(status)
+      : tTask('running', { current: completedSteps, total: events.length })
+
   return (
     <div className="flex min-w-0 flex-col gap-2">
-      <Collapsible className="flex min-w-0 flex-col gap-2" open={processOpen} onOpenChange={setProcessOpen}>
-        <CollapsibleTrigger asChild>
+      <Collapsible className={cn("flex min-w-0 flex-col gap-2", v3 && "rounded-[10px] border border-line bg-bg px-2.5 py-2")}
+        open={processOpen} onOpenChange={setProcessOpen}>
+        {v3 && <>
+          <div className="flex min-w-0 items-center justify-between gap-2">
+            <h3 className="truncate text-[12.5px] font-semibold text-ink" title={taskTitle}>{taskTitle || tTask('title')}</h3>
+            <span className="shrink-0 font-mono text-[11px] text-faint" role="status">{taskStatus}</span>
+          </div>
+          <div role="progressbar" aria-label={tTask('progress')} aria-valuenow={Math.round(progress)}
+            className="h-[3px] overflow-hidden rounded-full bg-line-soft">
+            <div className="h-full bg-ink transition-[width] motion-reduce:transition-none" style={{ width: `${progress}%` }} />
+          </div>
+        </>}
+        {v3 ? <CollapsibleTrigger asChild>
+          <button type="button" className="flex w-fit items-center gap-1 rounded text-[11px] text-muted-ink hover:text-ink">
+            {processOpen ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
+            {tTask(processOpen ? 'hideSteps' : 'showSteps', { count: events.length })}
+          </button>
+        </CollapsibleTrigger> : <CollapsibleTrigger asChild>
           <Marker asChild>
             <button type="button" className="group min-h-6 py-0.5 transition-colors hover:text-foreground">
               <MarkerContent className="truncate">{processLabel || agentStatusText[status]}</MarkerContent>
               <MarkerIcon><ChevronRight className="transition-transform group-data-[state=open]:rotate-90" /></MarkerIcon>
             </button>
           </Marker>
-        </CollapsibleTrigger>
-        <Separator />
+        </CollapsibleTrigger>}
+        {!v3 && <Separator />}
         <CollapsibleContent>
           {processContent}
           {hasUnreadableUi && chat && <ChatUiMessages chat={chat} />}
         </CollapsibleContent>
       </Collapsible>
-      {liveApproval && <AgentApprovalPanel
+      {liveApproval && !v3 && <AgentApprovalPanel
         key={liveApproval.id ?? liveApproval.traceEventId ?? liveApproval.toolName}
         pendingConfirmation={liveApproval}
         onConfirm={scope => confirmPendingAgentAction(scope, liveApproval.id)}

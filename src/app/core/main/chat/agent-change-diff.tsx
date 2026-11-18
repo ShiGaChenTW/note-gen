@@ -15,15 +15,16 @@ const CHANGE_PAGE_LINES = 200
 
 type DiffSegment = { from: number; to: number; hidden: boolean }
 
-export function EditorChangeDiff({ before, after, defaultOpen = false, proposed = false, showLineEndings = true }: {
+export function EditorChangeDiff({ before, after, defaultOpen = false, hideTrigger = false, proposed = false, showLineEndings = true }: {
   before: string
   after: string
   defaultOpen?: boolean
+  hideTrigger?: boolean
   proposed?: boolean
   showLineEndings?: boolean
 }) {
   const t = useTranslations("record.chat.input.agent.changes")
-  const [open, setOpen] = React.useState(defaultOpen)
+  const [open, setOpen] = React.useState(defaultOpen || hideTrigger)
   const [wrap, setWrap] = React.useState(true)
   const [revealed, setRevealed] = React.useState<Record<number, number>>({})
   const [shownChanges, setShownChanges] = React.useState<Record<number, number>>({})
@@ -67,8 +68,8 @@ export function EditorChangeDiff({ before, after, defaultOpen = false, proposed 
     setRevealed({})
     setShownChanges({})
     setActiveHunk(0)
-    setOpen(defaultOpen)
-  }, [before, after, defaultOpen])
+    setOpen(defaultOpen || hideTrigger)
+  }, [before, after, defaultOpen, hideTrigger])
 
   const navigateHunk = (index: number) => {
     const hunk = hunks[index]
@@ -107,12 +108,12 @@ export function EditorChangeDiff({ before, after, defaultOpen = false, proposed 
   return (
     <Collapsible open={open} onOpenChange={setOpen} className="min-w-0 rounded-md border">
       <div className="flex flex-wrap items-center gap-1 p-1">
-        <CollapsibleTrigger asChild>
+        {!hideTrigger && <CollapsibleTrigger asChild>
           <Button type="button" variant="ghost" size="sm">
             {open ? <ChevronDown data-icon="inline-start" /> : <ChevronRight data-icon="inline-start" />}
             {t(proposed ? "proposedDiff" : "diff")}
           </Button>
-        </CollapsibleTrigger>
+        </CollapsibleTrigger>}
         {lines && <Badge variant="outline" aria-label={t("addedCount", { count: added })}>+{added}</Badge>}
         {lines && <Badge variant="outline" aria-label={t("removedCount", { count: removed })}>−{removed}</Badge>}
         {hunks.length > 0 && <span className="text-xs text-muted-foreground">{t("hunkCount", { count: hunks.length })}</span>}
@@ -144,7 +145,7 @@ export function EditorChangeDiff({ before, after, defaultOpen = false, proposed 
               })
               if (next >= 0) setActiveHunk(next)
             }}
-            className="max-h-96 overflow-auto overscroll-contain rounded-b-md border-t focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
+            className={cn("max-h-96 overflow-auto overscroll-contain rounded-b-md border-t focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring", hideTrigger && "max-h-36")}>
             <div className="sticky top-0 grid grid-cols-[2.75rem_2.75rem_1fr] border-b bg-muted px-0 py-1 text-center text-xs text-muted-foreground">
               <span>{t("before")}</span><span>{t("after")}</span><span className="text-left">{t("content")}</span>
             </div>

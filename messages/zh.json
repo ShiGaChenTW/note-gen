@@ -4664,6 +4664,96 @@
       }
     },
     "chat": {
+      "v3": {
+        "tabs": {
+          "chat": "对话",
+          "links": "链接",
+          "properties": "属性",
+          "graph": "图谱"
+        },
+        "newChat": "新对话",
+        "temporaryChat": "临时对话",
+        "summary": "对话摘要",
+        "more": "更多对话操作",
+        "sendToBackground": "改为后台任务",
+        "backgroundRequiresDelegate": "切到「交办」即可将草稿发送到后台执行。",
+        "scrollToEnd": "滚动到对话底部",
+        "usagePercent": "{percent}%",
+        "mode": {
+          "label": "对话模式",
+          "shortcut": "按 Tab 切换模式",
+          "ask": "问",
+          "delegate": "交办",
+          "readOnlyHint": "只回答，不修改文件",
+          "ask-before-edit": "修改前先问我",
+          "auto-edit": "自动修改",
+          "askPlaceholder": "问这篇笔记任何事",
+          "delegatePlaceholder": "交代一件事，例如：把待办移到最上面"
+        },
+        "empty": {
+          "ask": {
+            "title": "问我任何事",
+            "description": "我会参考你正在看的笔记，只回答、不修改文件。",
+            "prompts": {
+              "first": {
+                "label": "这篇还有什么没做完？",
+                "insert": "这篇还有什么没做完？"
+              },
+              "second": {
+                "label": "帮我总结这篇",
+                "insert": "帮我总结这篇"
+              },
+              "third": {
+                "label": "找相关笔记",
+                "insert": "找出和这篇相关的笔记"
+              }
+            }
+          },
+          "delegate": {
+            "title": "交办一件事给我",
+            "description": "我会列出步骤，并按照你选择的权限处理文件。",
+            "prompts": {
+              "first": {
+                "label": "整理这篇的重点",
+                "insert": "把这篇笔记整理成重点"
+              },
+              "second": {
+                "label": "待办移到最上面",
+                "insert": "把还没完成的待办移到最上面"
+              },
+              "third": {
+                "label": "接着写下去",
+                "insert": "按这篇笔记的语气接着写"
+              }
+            }
+          },
+          "temporaryHint": "离开后，这段临时对话会自动清除。"
+        },
+        "task": {
+          "title": "本次任务",
+          "progress": "任务进度",
+          "running": "执行中 {current}/{total}",
+          "waiting": "等你确认",
+          "completed": "完成",
+          "failed": "失败",
+          "stopped": "已停止",
+          "pending": "尚未开始",
+          "runningStep": "进行中",
+          "showSteps": "看 {count} 个步骤",
+          "hideSteps": "收起步骤",
+          "targets": "{count, number} 项",
+          "tokens": "{count, number} 个令牌"
+        },
+        "review": {
+          "file": "要修改 {name}，可以吗？",
+          "files": "要修改 {count} 个文件，可以吗？",
+          "apply": "可以，应用",
+          "deny": "不要",
+          "showDiff": "查看改动",
+          "hideDiff": "收起改动",
+          "fileList": "查看文件列表"
+        }
+      },
       "condensing": "正在压缩上下文...",
       "condensed": {
         "message": "已压缩 {count} 条历史消息",

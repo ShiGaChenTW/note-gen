@@ -11,6 +11,7 @@ import {
 import type { ConversationContextUsage } from "@/lib/ai/conversation-context-usage"
 import { agentDebugLog } from "@/lib/agent/debug-log"
 import emitter from "@/lib/emitter"
+import { useChatV3 } from './chat-v3'
 import useChatStore from "@/stores/chat"
 import useSettingStore from "@/stores/setting"
 
@@ -42,6 +43,8 @@ export function ContextUsageIndicator({
   additionalContext,
   imageCount = 0,
 }: ContextUsageIndicatorProps) {
+  const v3 = useChatV3()
+  const tV3 = useTranslations("record.chat.v3")
   const t = useTranslations("record.chat.input.contextUsage")
   const primaryModel = useSettingStore(state => state.primaryModel)
   const aiModelList = useSettingStore(state => state.aiModelList)
@@ -210,7 +213,7 @@ export function ContextUsageIndicator({
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <span className="inline-flex h-8 w-8">
+        <span className={v3 ? "inline-flex" : "inline-flex h-8 w-8"}>
           <Button
             type="button"
             variant="ghost"
@@ -218,12 +221,12 @@ export function ContextUsageIndicator({
             disabled={compactionUnavailable}
             aria-label={label}
             onClick={handleManualCompaction}
-            className="h-8 w-8 p-0 text-muted-foreground"
+            className={v3 ? "h-6 gap-1 px-1 font-mono text-[11px] text-faint hover:bg-hover hover:text-ink" : "h-8 w-8 p-0 text-muted-foreground"}
           >
             <svg
               aria-hidden="true"
               viewBox="0 0 24 24"
-              className={`size-4 -rotate-90 ${
+              className={`${v3 ? "size-3.5" : "size-4"} -rotate-90 ${
                 manualCompacting ? "animate-spin" : ""
               }`}
             >
@@ -249,6 +252,7 @@ export function ContextUsageIndicator({
                 className="transition-[stroke-dashoffset] duration-300"
               />
             </svg>
+            {v3 && tV3('usagePercent', { percent: usage.usedPercent })}
           </Button>
         </span>
       </TooltipTrigger>

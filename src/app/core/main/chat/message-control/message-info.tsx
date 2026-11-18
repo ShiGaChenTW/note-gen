@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Chat } from "@/db/chats"
 import dayjs from "dayjs"
@@ -9,12 +10,13 @@ dayjs.extend(relativeTime)
 interface MessageInfoProps {
   chat: Chat
   format?: 'relative' | 'time'
+  className?: string
 }
 
-export function MessageInfo({ chat, format = 'relative' }: MessageInfoProps) {
+export function MessageInfo({ chat, format = 'relative', className }: MessageInfoProps) {
 
   if (format === 'time') {
-    return <time className="text-xs tabular-nums text-muted-foreground"
+    return <time className={cn("text-xs tabular-nums text-muted-foreground", className)}
       dateTime={dayjs(chat.createdAt).toISOString()} title={dayjs(chat.createdAt).format('YYYY-MM-DD HH:mm:ss')}>
       {dayjs(chat.createdAt).format('HH:mm')}
     </time>

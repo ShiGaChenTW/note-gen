@@ -9,7 +9,13 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { toast } from '@/hooks/use-toast'
 import { agentTaskCenter, useAgentTaskStore } from '@/lib/agent-tasks'
 
-export function BackgroundTaskControls({ text, onSent }: { text: string; onSent: () => void }) {
+export function BackgroundTaskControls({ text, onSent, inMenu = false, readOnly = false }: {
+  text: string
+  onSent: () => void
+  inMenu?: boolean
+  readOnly?: boolean
+}) {
+  const tV3 = useTranslations('record.chat.v3')
   const t = useTranslations('agentTasks')
   const openSheet = useAgentTaskStore(state => state.openSheet)
   const waiting = useAgentTaskStore(state => state.tasks.filter(task => task.kind !== 'organize' && task.status === 'awaiting_review').length)
@@ -26,6 +32,20 @@ export function BackgroundTaskControls({ text, onSent }: { text: string; onSent:
       toast({ title: t('sent.failed'), description: error instanceof Error ? error.message : String(error), variant: 'destructive' })
     }
   }
+
+  if (inMenu) return (
+    <>
+      <Button type="button" variant="ghost" size="sm" className="justify-start"
+        disabled={!prompt || readOnly} onClick={() => void sendToBackground()}>
+        <SendToBack data-icon="inline-start" />{tV3('sendToBackground')}
+      </Button>
+      {readOnly && <p className="px-2 pb-1 text-xs text-muted-ink">{tV3('backgroundRequiresDelegate')}</p>}
+      <Button type="button" variant="ghost" size="sm" className="justify-start" onClick={() => openSheet()}>
+        <ListTodo data-icon="inline-start" />{t('open')}
+        {(waiting > 0 || running > 0) && <span className="ml-auto font-mono">{waiting || running}</span>}
+      </Button>
+    </>
+  )
 
   return (
     <>

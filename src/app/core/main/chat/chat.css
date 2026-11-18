@@ -26,7 +26,7 @@
 
 @media (prefers-reduced-motion: no-preference) {
   @supports ((background-clip: text) or (-webkit-background-clip: text)) {
-    .agent-tool-title[data-running="true"] {
+    :where(:root:not([data-ui="v3"])) .agent-tool-title[data-running="true"] {
       background-image: linear-gradient(
         110deg,
         hsl(var(--muted-foreground)) 40%,

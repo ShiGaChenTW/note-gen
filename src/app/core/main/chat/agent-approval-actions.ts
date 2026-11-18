@@ -6,8 +6,11 @@ import emitter from "@/lib/emitter"
 
 export type AgentApprovalScope = "once" | "conversation"
 
-function getActionableConfirmation(expectedId?: string) {
-  const latestState = useChatStore.getState()
+export function getActionableConfirmation(
+  latestState: ReturnType<typeof useChatStore.getState>,
+  workspacePath: string,
+  expectedId?: string,
+) {
   const pendingConfirmation = latestState.agentState.pendingConfirmation
   if (!pendingConfirmation || !latestState.agentState.isRunning) return
   if (expectedId !== undefined && pendingConfirmation.id !== expectedId) return
@@ -17,12 +20,12 @@ function getActionableConfirmation(expectedId?: string) {
   const owner = latestState.chats.find(chat => chat.id === chatId)
   if (!owner || (owner.conversationId ?? undefined) !== (latestState.currentConversationId ?? undefined)) return
   if (pendingConfirmation.id && pendingConfirmation.conversationId !== (latestState.currentConversationId ?? undefined)) return
-  if (pendingConfirmation.workspacePath !== undefined && pendingConfirmation.workspacePath !== useSettingStore.getState().workspacePath) return
+  if (pendingConfirmation.workspacePath !== undefined && pendingConfirmation.workspacePath !== workspacePath) return
   return { latestState, pendingConfirmation }
 }
 
 export function confirmPendingAgentAction(scope: AgentApprovalScope = "once", expectedId?: string) {
-  const actionable = getActionableConfirmation(expectedId)
+  const actionable = getActionableConfirmation(useChatStore.getState(), useSettingStore.getState().workspacePath, expectedId)
   if (!actionable) return
   const { latestState, pendingConfirmation } = actionable
 
@@ -66,7 +69,7 @@ export function confirmPendingAgentAction(scope: AgentApprovalScope = "once", ex
 }
 
 export function cancelPendingAgentAction(expectedId?: string) {
-  const actionable = getActionableConfirmation(expectedId)
+  const actionable = getActionableConfirmation(useChatStore.getState(), useSettingStore.getState().workspacePath, expectedId)
   if (!actionable) return
   const { latestState, pendingConfirmation } = actionable
 

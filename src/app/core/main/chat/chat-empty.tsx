@@ -21,6 +21,7 @@ import 'dayjs/locale/ja'
 import 'dayjs/locale/pt-br'
 import 'dayjs/locale/de'
 import useSettingStore from '@/stores/setting'
+import { useChatV3 } from './chat-v3'
 
 // 初始化 dayjs 插件
 dayjs.extend(relativeTime)
@@ -36,6 +37,9 @@ function formatRelativeTime(timestamp: number, locale: string): string {
 }
 
 export default function ChatEmpty() {
+  const v3 = useChatV3()
+  const tV3 = useTranslations('record.chat.v3.empty')
+  const readOnly = useSettingStore(state => state.agentPermissionMode === 'read-only')
   const t = useTranslations('record.chat.empty')
   const { language } = useSettingStore()
 
@@ -49,9 +53,9 @@ export default function ChatEmpty() {
 
   // 快速 prompt 模板 - 默认模板
   const quickPrompts = useMemo(() => [
-    { id: 1, icon: <FileEdit className="w-4 h-4" />, text: t('quickPrompts.writeNote') || '帮我写一篇笔记' },
-    { id: 2, icon: <FileText className="w-4 h-4" />, text: t('quickPrompts.summarize') || '帮我总结这段内容' },
-    { id: 3, icon: <Lightbulb className="w-4 h-4" />, text: t('quickPrompts.brainstorm') || '帮我头脑风暴一些想法' },
+    { id: 1, icon: <FileEdit className="w-4 h-4" />, text: t('quickPrompts.writeNote') || '幫我寫一篇筆記' },
+    { id: 2, icon: <FileText className="w-4 h-4" />, text: t('quickPrompts.summarize') || '幫我摘要這段內容' },
+    { id: 3, icon: <Lightbulb className="w-4 h-4" />, text: t('quickPrompts.brainstorm') || '幫我發想一些點子' },
   ], [t])
 
   const handleQuickPrompt = (prompt: string) => {
@@ -73,6 +77,28 @@ export default function ChatEmpty() {
 
   const handleDelete = async (id: number) => {
     await deleteConversation(id)
+  }
+
+  if (v3) {
+    const mode = readOnly ? 'ask' : 'delegate'
+    return (
+      <div className="flex w-full flex-1 flex-col items-center justify-center px-4 py-6 text-center">
+        <span aria-hidden="true" className="mb-3 grid size-9 place-items-center rounded-full bg-invert text-invert-ink">
+          {isTemporaryConversation ? <MessageSquareDashed className="size-4" /> : <MessageCircle className="size-4" />}
+        </span>
+        <h2 className="text-[15px] font-semibold text-ink">{tV3(`${mode}.title`)}</h2>
+        <p className="mt-1 max-w-64 text-xs leading-relaxed text-muted-ink">{tV3(`${mode}.description`)}</p>
+        {isTemporaryConversation && <p className="mt-1 text-xs text-muted-ink">{tV3('temporaryHint')}</p>}
+        <div className="mt-4 flex flex-wrap justify-center gap-1.5">
+          {(['first', 'second', 'third'] as const).map(key => (
+            <button key={key} type="button" onClick={() => handleQuickPrompt(tV3(`${mode}.prompts.${key}.insert`))}
+              className="min-h-7 rounded-full border border-line px-3 text-xs text-ink hover:bg-hover">
+              {tV3(`${mode}.prompts.${key}.label`)}
+            </button>
+          ))}
+        </div>
+      </div>
+    )
   }
 
   if (isTemporaryConversation) {
@@ -131,7 +157,7 @@ export default function ChatEmpty() {
 
         {/* Quick Prompts */}
         <div className="space-y-2">
-          <p className="text-xs text-muted-foreground px-1">{t('quickPrompts.title') || '快速开始'}</p>
+          <p className="text-xs text-muted-foreground px-1">{t('quickPrompts.title') || '快速開始'}</p>
           {quickPrompts.map((prompt) => (
             <button
               type="button"
