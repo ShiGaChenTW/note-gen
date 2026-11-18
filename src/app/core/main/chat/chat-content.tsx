@@ -1,11 +1,12 @@
 import React from 'react'
 import useChatStore from '@/stores/chat'
 import useTagStore from '@/stores/tag'
-import { BotMessageSquare, ChevronDown, Drama, X, Loader2, QuoteIcon } from 'lucide-react'
+import { BotMessageSquare, ChevronDown, Drama, X, Loader2, QuoteIcon, MessageCircle, ArrowDown } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Chat } from '@/db/chats'
 import ChatPreview from './chat-preview'
 import './chat.css'
+import { useChatV3 } from './chat-v3'
 import { NoteOutput } from './message-control/note-output'
 import { MarkText } from './message-control/mark-text'
 import { ChatClipboard } from './chat-clipboard'
@@ -61,6 +62,7 @@ interface DisplayedConversationCompaction {
 }
 
 const ChatContent = React.memo(function ChatContent() {
+  const v3 = useChatV3()
   const { chats, init, agentState, loading, currentConversationId } = useChatStore()
   const { currentTagId } = useTagStore()
   const t = useTranslations()
@@ -183,9 +185,9 @@ const ChatContent = React.memo(function ChatContent() {
   return (
     <MessageScrollerProvider autoScroll defaultScrollPosition="last-anchor" scrollPreviousItemPeek={80} scrollMargin={16}>
       <MessageScroller className="flex-1">
-        <MessageScrollerViewport id="chats-wrapper" className="overflow-x-hidden p-4">
+        <MessageScrollerViewport id="chats-wrapper" className={cn("overflow-x-hidden p-4", v3 && "px-3.5")}>
           <MessageScrollerContent
-            className={cn("items-end gap-3", chats.length === 0 && "h-full",
+            className={cn("items-end gap-3", v3 && "gap-3.5", chats.length === 0 && "h-full",
               chats.length > 0 && !loading && !agentState.isRunning && !compactionRunning && "pb-[clamp(8rem,30dvh,20rem)]")}
             spacerClassName="shrink-0"
           >
@@ -267,7 +269,9 @@ const ChatContent = React.memo(function ChatContent() {
             )}
           </MessageScrollerContent>
         </MessageScrollerViewport>
-        <MessageScrollerButton />
+        <MessageScrollerButton>
+          {v3 ? <><ArrowDown className="size-4" /><span className="sr-only">{t('record.chat.v3.scrollToEnd')}</span></> : undefined}
+        </MessageScrollerButton>
       </MessageScroller>
     </MessageScrollerProvider>
   )
@@ -275,6 +279,7 @@ const ChatContent = React.memo(function ChatContent() {
 ChatContent.displayName = 'ChatContent'
 
 const MessageWrapper = React.memo(function MessageWrapper({ chat, children }: { chat: Chat, children: React.ReactNode }) {
+  const v3 = useChatV3()
   const { deleteChat } = useChatStore()
   const [showActions, setShowActions] = useState(false)
   const isMobile = useIsMobile()
@@ -297,7 +302,8 @@ const MessageWrapper = React.memo(function MessageWrapper({ chat, children }: { 
             if (!isMobile) setShowActions(false)
           }}
         >
-          <div className="min-w-0 max-w-full rounded-2xl bg-foreground px-4 py-3 text-sm leading-6 wrap-break-word text-background"
+          <div className={cn("min-w-0 max-w-full rounded-2xl bg-foreground px-4 py-3 text-sm leading-6 wrap-break-word text-background",
+            v3 && "rounded-[12px_12px_4px_12px] bg-sunken px-3 py-2 text-[13.5px] leading-relaxed text-ink")}
             tabIndex={0}
             onClick={() => {
               if (isMobile) setShowActions(previous => !previous)
@@ -308,7 +314,7 @@ const MessageWrapper = React.memo(function MessageWrapper({ chat, children }: { 
             showActions ? 'opacity-100' : 'pointer-events-none opacity-0',
             !isMobile && 'group-focus-within/user-message:pointer-events-auto group-focus-within/user-message:opacity-100')}
             onClick={event => event.stopPropagation()}>
-            <MessageInfo chat={chat} format="time" />
+            <MessageInfo chat={chat} format="time" className={v3 ? "font-mono text-faint" : undefined} />
             <CopyControl chat={chat} variant="ghost" />
             <TooltipButton icon={<X />} tooltipText={t('delete')} variant="ghost" size="icon-xs" buttonClassName="[&_svg:not([class*='size-'])]:size-3.5" onClick={handleDelete} />
             <PluginChatMessageActions conversationId={chat.conversationId} messageId={chat.id} role={chat.role} messageType={chat.type} />
@@ -320,7 +326,7 @@ const MessageWrapper = React.memo(function MessageWrapper({ chat, children }: { 
 
   // AI 消息：左对齐，无边框，无图标
   return (
-    <div className="group/assistant-message flex w-full min-w-0"
+    <div className={cn("group/assistant-message flex w-full min-w-0", v3 && "gap-2.5")}
       data-actions-visible={isMobile && showActions}
       onClick={event => {
         if (!isMobile || !(event.target instanceof Element)
@@ -328,7 +334,11 @@ const MessageWrapper = React.memo(function MessageWrapper({ chat, children }: { 
           || window.getSelection()?.isCollapsed === false) return
         setShowActions(previous => !previous)
       }}>
-      <div className='text-sm leading-6 flex-1 word-break min-w-0 overflow-hidden [&_[data-slot=card]]:ring-inset'>
+      {v3 && <span aria-hidden="true" className="mt-0.5 grid size-[22px] shrink-0 place-items-center rounded-full bg-invert text-invert-ink">
+        <MessageCircle className="size-3" />
+      </span>}
+      <div className={cn('text-sm leading-6 flex-1 word-break min-w-0 overflow-hidden [&_[data-slot=card]]:ring-inset',
+        v3 && "text-[13.5px] text-note-ink")}>
         {children}
         <PluginChatMessageActions conversationId={chat.conversationId} messageId={chat.id} role={chat.role} messageType={chat.type} />
       </div>

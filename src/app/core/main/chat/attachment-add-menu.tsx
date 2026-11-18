@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { AtSign, File, Folder, Image, Plus, Sparkles } from 'lucide-react'
+import { useChatV3 } from './chat-v3'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Kbd } from '@/components/ui/kbd'
@@ -58,6 +59,7 @@ export function AttachmentAddMenu({
 }: AttachmentAddMenuProps) {
   const [open, setOpen] = useState(false)
   const pendingActionRef = useRef<(() => void) | null>(null)
+  const v3 = useChatV3()
   const t = useTranslations('record.chat.input.addAttachment')
 
   const selectAction = (id: AddAction['id']) => {
@@ -105,7 +107,7 @@ export function AttachmentAddMenu({
       type="button"
       variant="ghost"
       size="icon"
-      className="size-8 text-muted-foreground"
+      className={v3 ? "size-[30px] shrink-0 rounded-full text-muted-ink hover:bg-hover hover:text-ink" : "size-8 text-muted-foreground"}
       disabled={disabled}
       aria-label={t('title')}
       title={t('title')}

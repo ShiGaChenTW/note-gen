@@ -4664,6 +4664,96 @@
       }
     },
     "chat": {
+      "v3": {
+        "tabs": {
+          "chat": "Chat",
+          "links": "Links",
+          "properties": "Properties",
+          "graph": "Graph"
+        },
+        "newChat": "New chat",
+        "temporaryChat": "Temporary chat",
+        "summary": "Conversation summary",
+        "more": "More chat actions",
+        "sendToBackground": "Run in background",
+        "backgroundRequiresDelegate": "Switch to Delegate to run your draft in the background.",
+        "scrollToEnd": "Scroll to end of conversation",
+        "usagePercent": "{percent}%",
+        "mode": {
+          "label": "Chat mode",
+          "shortcut": "Press Tab to switch modes",
+          "ask": "Ask",
+          "delegate": "Delegate",
+          "readOnlyHint": "Answers only, no file edits",
+          "ask-before-edit": "Ask before editing",
+          "auto-edit": "Edit automatically",
+          "askPlaceholder": "Ask anything about this note",
+          "delegatePlaceholder": "Give me a task, such as moving to-dos to the top"
+        },
+        "empty": {
+          "ask": {
+            "title": "Ask me anything",
+            "description": "I’ll answer using the note you’re viewing without changing your files.",
+            "prompts": {
+              "first": {
+                "label": "What’s still open?",
+                "insert": "What’s still open in this note?"
+              },
+              "second": {
+                "label": "Summarize this note",
+                "insert": "Summarize this note"
+              },
+              "third": {
+                "label": "Find related notes",
+                "insert": "Find notes related to this one"
+              }
+            }
+          },
+          "delegate": {
+            "title": "Give me a task",
+            "description": "I’ll show my steps and follow your chosen file permissions.",
+            "prompts": {
+              "first": {
+                "label": "Organize the key points",
+                "insert": "Organize this note around its key points"
+              },
+              "second": {
+                "label": "Move to-dos to the top",
+                "insert": "Move the unfinished to-dos to the top of this note"
+              },
+              "third": {
+                "label": "Keep writing",
+                "insert": "Continue writing in the style of this note"
+              }
+            }
+          },
+          "temporaryHint": "This temporary conversation clears when you leave it."
+        },
+        "task": {
+          "title": "Current task",
+          "progress": "Task progress",
+          "running": "Running {current}/{total}",
+          "waiting": "Waiting for you",
+          "completed": "Complete",
+          "failed": "Failed",
+          "stopped": "Stopped",
+          "pending": "Pending",
+          "runningStep": "In progress",
+          "showSteps": "View {count, plural, one {# step} other {# steps}}",
+          "hideSteps": "Hide steps",
+          "targets": "{count, plural, one {# item} other {# items}}",
+          "tokens": "{count, plural, one {# token} other {# tokens}}"
+        },
+        "review": {
+          "file": "Edit {name}?",
+          "files": "Edit {count} files?",
+          "apply": "Apply changes",
+          "deny": "Decline",
+          "showDiff": "View changes",
+          "hideDiff": "Hide changes",
+          "fileList": "View files"
+        }
+      },
       "condensing": "Condensing context...",
       "condensed": {
         "message": "Condensed {count} historical messages",

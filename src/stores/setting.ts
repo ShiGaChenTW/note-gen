@@ -212,6 +212,7 @@ interface SettingState {
   setSystemPrompt: (systemPrompt: string) => Promise<void>
 
   agentPermissionMode: AgentPermissionMode
+  lastAgentEditPermission: Exclude<AgentPermissionMode, 'read-only'>
   setAgentPermissionMode: (mode: AgentPermissionMode) => Promise<void>
 
   templateList: GenTemplate[]
@@ -1185,11 +1186,18 @@ const useSettingStore = create<SettingState>((set, get) => ({
   },
 
   agentPermissionMode: 'ask',
+  lastAgentEditPermission: 'ask',
   setAgentPermissionMode: async (agentPermissionMode) => {
-    set({ agentPermissionMode })
-    const store = await Store.load('store.json')
-    await store.set('agentPermissionMode', agentPermissionMode)
-    await store.save()
+    const current = get().agentPermissionMode
+    const lastAgentEditPermission = agentPermissionMode !== 'read-only'
+      ? agentPermissionMode
+      : current === 'read-only' ? get().lastAgentEditPermission : current
+    set({ agentPermissionMode, lastAgentEditPermission })
+    const pending = settingPersistQueue.then(() => persistChangedSettings(
+      get(), ['lastAgentEditPermission', 'agentPermissionMode'], []
+    ))
+    settingPersistQueue = pending.catch(() => {})
+    await pending
   },
 
   templateList: [

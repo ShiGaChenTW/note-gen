@@ -23,7 +23,10 @@ export function ChatDock({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const target = host ?? home.current
-    if (dock && target && dock.parentElement !== target) target.appendChild(dock)
+    if (!dock || !target) return
+    dock.classList.toggle('v3:mx-auto', Boolean(host))
+    dock.classList.toggle('v3:max-w-[720px]', Boolean(host))
+    if (dock.parentElement !== target) target.appendChild(dock)
   }, [dock, host])
 
   // Fork（almanac ALMNC-24）：v3 右側欄不再被蓋住，對話搬去對話頁時這裡留一行說明，不是一片空白

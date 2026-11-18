@@ -150,6 +150,7 @@ export const ALWAYS_SYNC_EXCLUDED_FIELDS: string[] = [
   'developerPerformanceInfo',
   // Local execution/collection permissions and installed capabilities.
   'agentPermissionMode',
+  'lastAgentEditPermission',
   'autoReadClipboard',
   'clipboardMonitor',
   'clipboardMonitorEnabled',

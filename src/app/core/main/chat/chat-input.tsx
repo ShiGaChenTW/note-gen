@@ -22,7 +22,8 @@ import { ImageAttachments, ImageAttachment } from "./image-attachments"
 import { ImageIcon, Sparkles } from "lucide-react"
 import { isMobileDevice } from '@/lib/check'
 import type { PendingQuote } from "@/stores/chat"
-import { AgentPermissionModeSelect } from "./agent-permission-mode"
+import { isChatModeShortcut, useChatV3 } from "./chat-v3"
+import { AgentPermissionModeSelect, ChatModeSwitch } from "./agent-permission-mode"
 import { AgentPendingMessageList } from "./agent-pending-message-list"
 import { ContextUsageIndicator } from "./context-usage-indicator"
 import { readFile, readTextFile, writeFile, BaseDirectory, exists, mkdir, stat } from "@tauri-apps/plugin-fs"
@@ -129,7 +130,15 @@ export const ChatInput = React.memo(function ChatInput() {
     requestAnimationFrame(() => textareaRef.current?.focus())
   }), [])
 
-  const { primaryModel } = useSettingStore()
+  const v3 = useChatV3()
+  const { primaryModel, agentPermissionMode, setAgentPermissionMode } = useSettingStore()
+  const readOnly = agentPermissionMode === 'read-only'
+  function changeChatMode(nextReadOnly: boolean) {
+    if (nextReadOnly === readOnly) return
+    const lastMode = useSettingStore.getState().lastAgentEditPermission
+    void setAgentPermissionMode(nextReadOnly ? 'read-only' : lastMode === 'auto-edit' ? 'auto-edit' : 'ask')
+      .catch(error => console.error('Failed to persist chat mode:', error))
+  }
   const {
     loading,
     setLinkedResource: setChatLinkedResource,
@@ -209,7 +218,9 @@ export const ChatInput = React.memo(function ChatInput() {
   const setCanvasSelectionContext = useCanvasStore(state => state.setSelectionContext)
   const [isComposing, setIsComposing] = useState(false)
   const t = useTranslations()
-  const defaultPlaceholder = t('record.chat.input.placeholder.default')
+  const defaultPlaceholder = v3
+    ? t(readOnly ? 'record.chat.v3.mode.askPlaceholder' : 'record.chat.v3.mode.delegatePlaceholder')
+    : t('record.chat.input.placeholder.default')
   const pendingPlaceholder = t('record.chat.input.placeholder.pending')
   const approvalPlaceholder = t('record.chat.input.placeholder.approval')
   const [inputHistory, setInputHistory] = useLocalStorage<string[]>('chat-input-history', [])
@@ -1538,12 +1549,110 @@ ${previewLines.join('\n')}
     }
   }, [activeContextPaths, autoLinkRevision, isMobile, setChatLinkedResource, setLinkedResourcePreview])
 
+  const contextStrip = (
+    <ChatContextStrip
+      linkedResource={linkedResource}
+      activeTabContexts={visibleActiveTabContexts}
+      browserPages={visibleBrowserPages}
+      quoteData={activeQuote}
+      canvasContext={canvasSelectionContext}
+      selectedSkills={selectedSkills}
+      mentionedContexts={visibleMentionedContexts}
+      lockedKeys={lockedKeys}
+      onToggleLock={toggleContextLock}
+      onRemoveLinkedResource={removeLinkedFile}
+      onRemoveActiveTabContext={removeActiveTabContext}
+      onRemoveBrowserPage={removeBrowserPage}
+      onRemoveQuote={removeQuote}
+      onRemoveCanvas={removeCanvasContext}
+      onRemoveSkill={removeSkill}
+      onRemoveMentionedContext={removeMentionedContext}
+    />
+  )
+  const attachments = (
+    <AttachmentAddMenu
+      mobile={isMobile}
+      disabled={!primaryModel}
+      onSelectImages={isMobile ? handleSelectFromGallery : handleSelectLocalImages}
+      onSelectFiles={handleSelectLocalFiles}
+      onSelectFolders={handleSelectLocalFolders}
+      onSelectResources={() => openComposerMenu('resource')}
+      onSelectSkills={() => openComposerMenu('skill')}
+    />
+  )
+  const contextUsage = (
+    <ContextUsageIndicator
+      currentUserInput={text}
+      additionalContext={contextUsageAdditionalContext}
+      imageCount={attachedImages.length}
+    />
+  )
+  const modelSuggestion = promptSuggestion && (
+    <Button
+      type="button"
+      variant={promptSuggestion.armed ? "secondary" : "ghost"}
+      size="xs"
+      disabled={!promptSuggestion.resolved}
+      className="h-5 min-w-0 max-w-36 gap-1 px-1 text-xs font-normal text-muted-foreground"
+      title={promptSuggestion.resolved
+        ? t(promptSuggestion.armed ? 'record.chat.input.modelSuggestion.applied' : 'record.chat.input.modelSuggestion.apply')
+        : t('record.chat.input.modelSuggestion.unavailable')}
+      onClick={() => setPromptSuggestion(current => current && { ...current, armed: !current.armed })}
+    >
+      <Sparkles data-icon="inline-start" />
+      <span className="truncate">
+        {promptSuggestion.resolved
+          ? [promptSuggestion.resolved.modelLabel, promptSuggestion.resolved.temperature]
+              .filter(part => part !== undefined && part !== null)
+              .join(' · ')
+          : promptSuggestion.modelRef}
+      </span>
+    </Button>
+  )
+  const send = (
+    <ChatSend
+      inputValue={text}
+      preparingAttachments={pendingFolderAttachments > 0}
+      onSent={handleSent}
+      linkedResource={linkedResource}
+      attachedImages={attachedImages}
+      fileAttachments={fileAttachments}
+      quoteData={activeQuote}
+      canvasSelectionContext={canvasSelectionContext}
+      selectedSkillIds={selectedSkills.map(skill => skill.id)}
+      modelSuggestionOverride={promptSuggestion?.armed ? promptSuggestion.resolved : null}
+      mentionedFiles={[
+        ...visibleActiveTabContexts,
+        ...visibleMentionedContexts,
+      ].flatMap(context =>
+        context.kind === 'file' ? [context.file] : []
+      )}
+      mentionedRecords={[
+        ...visibleActiveTabContexts,
+        ...visibleMentionedContexts,
+      ].flatMap(context =>
+        context.kind === 'record' ? [context.record] : []
+      )}
+      mentionedCanvases={[
+        ...visibleActiveTabContexts,
+        ...visibleMentionedContexts,
+      ].flatMap(context =>
+        context.kind === 'canvas' ? [context.canvas] : []
+      )}
+      browserTabId={currentBrowserTab?.id ?? null}
+      browserPageContextOverrides={isMobile ? [] : lockedBrowserPages.map(page => page.context)}
+      browserExpectedUrl={currentBrowserTab?.url ?? null}
+      dockStyle={isMobile}
+      roundStyle={v3}
+      ref={chatSendRef}
+    />
+  )
   return (
     <footer
       id="onboarding-target-chat-input"
       className={cn(
         "relative flex w-full flex-col items-center justify-between",
-        isMobile ? "px-2 pb-1 pt-0" : "p-1"
+        v3 ? "shrink-0 px-3 pb-2" : isMobile ? "px-2 pb-1 pt-0" : "p-1"
       )}
     >
       {/* 移动端图片选择 */}
@@ -1560,7 +1669,9 @@ ${previewLines.join('\n')}
       <div
         className={cn(
           "group relative z-10 flex w-full flex-col overflow-hidden border",
-          isMobile
+          v3
+            ? "gap-1 rounded-[18px] border-line bg-bg p-1.5 transition-colors focus-within:border-faint"
+            : isMobile
             ? "mobile-dock-surface gap-1 rounded-[1.35rem] p-1.5 transition-[background-color,border-color,transform] duration-200"
             : "gap-1 rounded-xl bg-background p-1 transition-colors",
           isImageDragOver && (
@@ -1574,7 +1685,7 @@ ${previewLines.join('\n')}
         onDragLeave={handleImageDragLeave}
         onDrop={handleImageDrop}
       >
-        {loading && (
+        {loading && !v3 && (
           <ShineBorder
             borderWidth={1}
             duration={5}
@@ -1601,34 +1712,24 @@ ${previewLines.join('\n')}
         )}
         <PluginEmbeddedViews location="chat-input" compact />
         <AgentPendingMessageList />
-        <ChatContextStrip
-          linkedResource={linkedResource}
-          activeTabContexts={visibleActiveTabContexts}
-          browserPages={visibleBrowserPages}
-          quoteData={activeQuote}
-          canvasContext={canvasSelectionContext}
-          selectedSkills={selectedSkills}
-          mentionedContexts={visibleMentionedContexts}
-          lockedKeys={lockedKeys}
-          onToggleLock={toggleContextLock}
-          onRemoveLinkedResource={removeLinkedFile}
-          onRemoveActiveTabContext={removeActiveTabContext}
-          onRemoveBrowserPage={removeBrowserPage}
-          onRemoveQuote={removeQuote}
-          onRemoveCanvas={removeCanvasContext}
-          onRemoveSkill={removeSkill}
-          onRemoveMentionedContext={removeMentionedContext}
-        />
+        {v3 ? (
+          <div className="flex min-w-0 items-start gap-2">
+            <ChatModeSwitch readOnly={readOnly} disabled={loading} onChange={changeChatMode} />
+            {contextStrip}
+          </div>
+        ) : contextStrip}
         <ImageAttachments images={attachedImages} onRemove={removeImage} />
         <PendingFileAttachments attachments={fileAttachments} onRemove={removeFileAttachment} />
-        <div className="relative w-full flex items-start">
+        <div className={cn("relative w-full flex items-start", v3 && "items-end gap-1")}>
+          {v3 && attachments}
           <Textarea
             ref={textareaRef}
             className={cn(
               "relative flex-1 resize-none overflow-y-auto border-none p-2 shadow-none focus-visible:ring-0",
               isMobile
                 ? "min-h-[40px] max-h-[220px] bg-transparent text-sm placeholder:text-sm"
-                : "min-h-[36px] max-h-[240px] text-xs placeholder:text-sm md:placeholder:text-sm md:text-sm"
+                : "min-h-[36px] max-h-[240px] text-xs placeholder:text-sm md:placeholder:text-sm md:text-sm",
+              v3 && "min-w-0 min-h-[30px] rounded-none bg-transparent px-1 py-1 text-[13px] leading-[22px] text-ink placeholder:text-faint disabled:bg-transparent dark:bg-transparent dark:disabled:bg-transparent"
             )}
             rows={1}
             disabled={!primaryModel}
@@ -1659,6 +1760,12 @@ ${previewLines.join('\n')}
                   e.stopPropagation()
                   return
                 }
+              }
+
+              if (v3 && !loading && isChatModeShortcut(e, Boolean(composerMenu), isComposing)) {
+                e.preventDefault()
+                changeChatMode(!readOnly)
+                return
               }
 
               if (composerMenu && !isComposing) {
@@ -1722,19 +1829,13 @@ ${previewLines.join('\n')}
             }}
             onPaste={handlePaste}
           />
+          {v3 && send}
         </div>
         
-        <div className="flex justify-between items-center w-full">
+
+        {!v3 && <div className="flex justify-between items-center w-full">
           <div className="flex min-w-0 flex-1 items-center gap-1">
-            <AttachmentAddMenu
-              mobile={isMobile}
-              disabled={!primaryModel}
-              onSelectImages={isMobile ? handleSelectFromGallery : handleSelectLocalImages}
-              onSelectFiles={handleSelectLocalFiles}
-              onSelectFolders={handleSelectLocalFolders}
-              onSelectResources={() => openComposerMenu('resource')}
-              onSelectSkills={() => openComposerMenu('skill')}
-            />
+            {attachments}
             {!isMobile ? (
               <ChatToolsPopover />
             ) : (
@@ -1744,74 +1845,22 @@ ${previewLines.join('\n')}
             )}
           </div>
           <div className="flex shrink-0 items-center justify-end gap-2 pr-1">
-            <ContextUsageIndicator
-              currentUserInput={text}
-              additionalContext={contextUsageAdditionalContext}
-              imageCount={attachedImages.length}
-            />
-            {promptSuggestion && (
-              <Button
-                type="button"
-                variant={promptSuggestion.armed ? "secondary" : "ghost"}
-                size="xs"
-                disabled={!promptSuggestion.resolved}
-                className="h-5 min-w-0 max-w-36 gap-1 px-1 text-xs font-normal text-muted-foreground"
-                title={promptSuggestion.resolved
-                  ? t(promptSuggestion.armed ? 'record.chat.input.modelSuggestion.applied' : 'record.chat.input.modelSuggestion.apply')
-                  : t('record.chat.input.modelSuggestion.unavailable')}
-                onClick={() => setPromptSuggestion(current => current && { ...current, armed: !current.armed })}
-              >
-                <Sparkles data-icon="inline-start" />
-                <span className="truncate">
-                  {promptSuggestion.resolved
-                    ? [promptSuggestion.resolved.modelLabel, promptSuggestion.resolved.temperature]
-                        .filter(part => part !== undefined && part !== null)
-                        .join(' · ')
-                    : promptSuggestion.modelRef}
-                </span>
-              </Button>
-            )}
+            {contextUsage}
+            {modelSuggestion}
             <AgentPermissionModeSelect />
             {!isMobile && <BackgroundTaskControls text={text} onSent={() => setText('')} />}
-            <ChatSend
-              inputValue={text}
-              preparingAttachments={pendingFolderAttachments > 0}
-              onSent={handleSent}
-              linkedResource={linkedResource}
-              attachedImages={attachedImages}
-              fileAttachments={fileAttachments}
-              quoteData={activeQuote}
-              canvasSelectionContext={canvasSelectionContext}
-              selectedSkillIds={selectedSkills.map(skill => skill.id)}
-              modelSuggestionOverride={promptSuggestion?.armed ? promptSuggestion.resolved : null}
-              mentionedFiles={[
-                ...visibleActiveTabContexts,
-                ...visibleMentionedContexts,
-              ].flatMap(context =>
-                context.kind === 'file' ? [context.file] : []
-              )}
-              mentionedRecords={[
-                ...visibleActiveTabContexts,
-                ...visibleMentionedContexts,
-              ].flatMap(context =>
-                context.kind === 'record' ? [context.record] : []
-              )}
-              mentionedCanvases={[
-                ...visibleActiveTabContexts,
-                ...visibleMentionedContexts,
-              ].flatMap(context =>
-                context.kind === 'canvas' ? [context.canvas] : []
-              )}
-              browserTabId={currentBrowserTab?.id ?? null}
-              browserPageContextOverrides={isMobile ? [] : lockedBrowserPages.map(page => page.context)}
-              browserExpectedUrl={currentBrowserTab?.url ?? null}
-              dockStyle={isMobile}
-              ref={chatSendRef}
-            />
+            {send}
           </div>
-        </div>
-
+        </div>}
       </div>
+      {v3 && <div className="flex min-h-8 w-full min-w-0 flex-wrap items-center gap-0.5 pt-1 text-[11px] text-faint">
+        {readOnly
+          ? <span className="px-1.5">{t('record.chat.v3.mode.readOnlyHint')}</span>
+          : <AgentPermissionModeSelect compact />}
+        <ChatToolsPopover backgroundActions={<BackgroundTaskControls text={text} onSent={() => setText('')} inMenu readOnly={readOnly} />} />
+        {modelSuggestion}
+        <div className="ml-auto shrink-0">{contextUsage}</div>
+      </div>}
       <ChatComposerMenu
         ref={composerMenuRef}
         mode={composerMenu?.mode ?? null}

@@ -1,5 +1,5 @@
 "use client"
-import { Send, Square } from "lucide-react"
+import { ArrowUp, Send, Square } from "lucide-react"
 import useSettingStore from "@/stores/setting"
 import useChatStore from "@/stores/chat"
 import useTagStore from "@/stores/tag"
@@ -151,6 +151,7 @@ interface ChatSendProps {
   browserPageContextOverrides?: string[];
   browserExpectedUrl?: string | null;
   dockStyle?: boolean;
+  roundStyle?: boolean;
 }
 
 export interface ChatSendHandle {
@@ -176,6 +177,7 @@ export const ChatSend = forwardRef<ChatSendHandle, ChatSendProps>(({
   browserPageContextOverrides = [],
   browserExpectedUrl = null,
   dockStyle = false,
+  roundStyle = false,
 }, ref) => {
   const { primaryModel, agentPermissionMode } = useSettingStore()
   const { currentTagId } = useTagStore()
@@ -1306,9 +1308,9 @@ ${hasValidRange ? `**仅在用户明确要求修改/改写/补充/插入时才�
   return (
     <span className="relative inline-flex">
       <TooltipButton
-        variant={dockStyle ? "ghost" : showStop ? "destructive" : "default"}
-        size={dockStyle ? "icon" : "sm"}
-        icon={showStop ? <Square className="fill-current" /> : <Send />}
+        variant={roundStyle ? "default" : dockStyle ? "ghost" : showStop ? "destructive" : "default"}
+        size={roundStyle || dockStyle ? "icon" : "sm"}
+        icon={showStop ? <Square className="fill-current" /> : roundStyle ? <ArrowUp /> : <Send />}
         disabled={!showStop && (preparingAttachments || !primaryModel || !hasInput)}
         tooltipText={showStop
           ? t('record.chat.input.stop')
@@ -1318,7 +1320,7 @@ ${hasValidRange ? `**仅在用户明确要求修改/改写/补充/插入时才�
               ? t('record.chat.input.agent.deliveryMode.pending.add')
               : t('record.chat.input.send')}
         onClick={showStop ? handleStop : () => void handleSubmit()}
-        buttonClassName={dockStyle ? cn(
+        buttonClassName={roundStyle ? "size-[30px] rounded-full bg-invert text-invert-ink hover:bg-invert/85 [&_svg]:size-3.5" : dockStyle ? cn(
           "size-8 rounded-full border border-border/50 bg-[hsl(var(--component-active-bg))] text-foreground shadow-none hover:bg-[hsl(var(--component-active-bg))] hover:text-foreground",
           showStop && "border-destructive bg-background text-destructive hover:bg-background hover:text-destructive"
         ) : undefined}

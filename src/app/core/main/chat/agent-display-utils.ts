@@ -114,7 +114,7 @@ function getStringInput(input: Record<string, unknown> | undefined, key: string)
   return typeof value === "string" && value.trim() ? value.trim() : undefined
 }
 
-function getToolActivityTarget(event: AgentTraceEvent) {
+function getToolActivityTarget(event: AgentTraceEvent, formatCount?: (count: number) => string) {
   const input = event.input
   const query = getStringInput(input, "query")
   if (query) {
@@ -152,17 +152,21 @@ function getToolActivityTarget(event: AgentTraceEvent) {
   for (const key of ["filePaths", "relativePaths", "folderPaths", "ids"]) {
     const value = input?.[key]
     if (Array.isArray(value) && value.length > 0) {
-      return `${value.length} 项`
+      return formatCount?.(value.length) ?? `${value.length} 项`
     }
   }
 
   return undefined
 }
 
-export function formatAgentToolActivity(event: AgentTraceEvent) {
+export function formatAgentToolDescription(event: AgentTraceEvent, formatCount?: (count: number) => string) {
   const action = event.displayTitle || event.title || (event.toolName ? formatAgentToolName(event.toolName) : "执行操作")
-  const target = event.displayTitle ? undefined : getToolActivityTarget(event)
-  const description = target ? `${action} · ${target}` : action
+  const target = event.displayTitle ? undefined : getToolActivityTarget(event, formatCount)
+  return target ? `${action} · ${target}` : action
+}
+
+export function formatAgentToolActivity(event: AgentTraceEvent) {
+  const description = formatAgentToolDescription(event)
 
   if (event.status === "running") {
     return `正在${description}`

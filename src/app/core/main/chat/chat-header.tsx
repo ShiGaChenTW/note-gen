@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo } from 'react'
-import { MessageSquareDashed, MessageSquarePlus, ChevronDown, Search, Trash2 } from "lucide-react"
+import { MessageSquareDashed, MessageSquarePlus, ChevronDown, Search, Trash2, Ellipsis, NotebookPen } from "lucide-react"
 import { TooltipButton } from "@/components/tooltip-button"
 import { ConversationSummaryButton } from "../conversation-summary/summary-dialog" // Fork #33
 import useChatStore from "@/stores/chat"
@@ -14,7 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import 'dayjs/locale/zh-cn'
@@ -22,7 +22,11 @@ import 'dayjs/locale/en'
 import 'dayjs/locale/ja'
 import 'dayjs/locale/pt-br'
 import 'dayjs/locale/de'
+import 'dayjs/locale/zh-tw'
 import useSettingStore from '@/stores/setting'
+import { useChatV3 } from './chat-v3'
+import { useConversationSummaryStore } from '@/lib/conversation-summary'
+import { cn } from '@/lib/utils'
 
 dayjs.extend(relativeTime)
 
@@ -36,6 +40,10 @@ function formatRelativeTime(timestamp: number, locale: string): string {
 }
 
 export function ChatHeader() {
+  const v3 = useChatV3()
+  const locale = useLocale()
+  const tV3 = useTranslations('record.chat.v3')
+  const openSummary = useConversationSummaryStore(state => state.open)
   const {
     startNewConversation,
     startTemporaryConversation,
@@ -76,13 +84,13 @@ export function ChatHeader() {
   const currentConversation = conversations.find(c => c.id === currentConversationId)
   const dropdownTitle = currentConversation && currentConversation.messageCount > 0
     ? currentConversation.title
-    : tEmpty('conversationHistory')
+    : v3 ? tV3('newChat') : tEmpty('conversationHistory')
 
   return (
-    <header className="h-12 w-full flex items-center justify-between border-b px-4 gap-2">
+    <header className={cn("h-12 w-full flex items-center justify-between border-b px-4 gap-2", v3 && "h-11 shrink-0 border-line-soft px-2 pl-3")}>
       {/* 左侧：历史对话下拉 */}
-      <div className="flex items-center gap-2">
-        {isTemporaryConversation ? (
+      <div className={cn("flex items-center gap-2", v3 && "min-w-0 flex-1")}>
+        {isTemporaryConversation && !v3 ? (
           <div className="flex items-center gap-2 px-2 text-sm font-medium text-muted-foreground">
             <MessageSquareDashed className="size-4" />
             <span>{t('record.chat.input.temporaryChat')}</span>
@@ -92,12 +100,15 @@ export function ChatHeader() {
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="px-2 hover:bg-transparent cursor-pointer justify-start gap-1.5"
+                className={cn("px-2 hover:bg-transparent cursor-pointer justify-start gap-1.5", v3 && "h-8 min-w-0 px-1 text-ink hover:bg-hover")}
+                title={v3 ? tEmpty('conversationHistory') : undefined}
               >
-                <span className="text-sm font-medium truncate max-w-30">{dropdownTitle}</span>
-                <span className="text-xs text-muted-foreground">
-                  ({filteredConversations.length})
+                <span className={cn("text-sm font-medium truncate max-w-30", v3 && "min-w-0 max-w-full text-[13px]")}>
+                  {v3 && isTemporaryConversation ? tV3('temporaryChat') : dropdownTitle}
                 </span>
+                {!v3 && <span className="text-xs text-muted-foreground">
+                  ({filteredConversations.length})
+                </span>}
                 <ChevronDown className="w-4 h-4 text-muted-foreground" />
               </Button>
             </DropdownMenuTrigger>
@@ -112,6 +123,9 @@ export function ChatHeader() {
                     placeholder={tEmpty('searchPlaceholder')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={v3 ? e => {
+                      if (!['Escape', 'Tab', 'ArrowUp', 'ArrowDown'].includes(e.key)) e.stopPropagation()
+                    } : undefined}
                     className="pl-8 h-8 text-sm"
                   />
                 </div>
@@ -127,10 +141,11 @@ export function ChatHeader() {
                     <DropdownMenuItem
                       key={conv.id}
                       className="cursor-pointer group"
+                      onSelect={v3 ? () => { void switchConversation(conv.id) } : undefined}
                     >
                       <div
                         className="flex-1 min-w-0"
-                        onClick={() => switchConversation(conv.id)}
+                        onClick={v3 ? undefined : () => switchConversation(conv.id)}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -139,15 +154,19 @@ export function ChatHeader() {
                             </span>
                           </div>
                           <div className="shrink-0 ml-auto flex items-center gap-2">
-                            <span className="text-xs text-muted-foreground">
-                              {formatRelativeTime(conv.updatedAt, language)}
+                            <span className={cn("text-xs text-muted-foreground", v3 && "font-mono")}>
+                              {v3 && locale === 'zh-TW'
+                                ? dayjs(conv.updatedAt).locale('zh-tw').fromNow()
+                                : formatRelativeTime(conv.updatedAt, v3 ? locale : language)}
                             </span>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation()
+                                if (v3) e.preventDefault()
                                 deleteConversation(conv.id)
                               }}
-                              className="flex items-center justify-center rounded-md text-muted-foreground opacity-0 group-hover:opacity-100 transition-all duration-200 ease-out hover:text-destructive hover:bg-destructive/10 active:scale-95"
+                              className={cn("flex items-center justify-center rounded-md text-muted-foreground opacity-0 group-hover:opacity-100 transition-all duration-200 ease-out hover:text-destructive hover:bg-destructive/10 active:scale-95",
+                                v3 && "size-7 opacity-100 hover:bg-hover hover:text-danger")}
                               title={tEmpty('deleteConversation')}
                             >
                               <Trash2 className="w-3.5 h-3.5 transition-transform duration-150 group-hover/button:scale-110" />
@@ -165,23 +184,43 @@ export function ChatHeader() {
       </div>
 
       {/* 右侧：临时会话与新建对话 */}
-      <div className="flex items-center gap-1">
-        <ConversationSummaryButton conversationId={isTemporaryConversation ? null : currentConversationId} disabled={loading} />
-        <TooltipButton
-          icon={<MessageSquareDashed />}
-          tooltipText={t('record.chat.input.temporaryChat')}
-          side="bottom"
-          onClick={startTemporaryConversation}
-          disabled={loading || isTemporaryConversation}
-          variant={isTemporaryConversation ? 'secondary' : 'ghost'}
-        />
+      <div className={cn("flex items-center gap-1", v3 && "shrink-0")}>
+        {!v3 && <>
+          <ConversationSummaryButton conversationId={isTemporaryConversation ? null : currentConversationId} disabled={loading} />
+          <TooltipButton
+            icon={<MessageSquareDashed />}
+            tooltipText={t('record.chat.input.temporaryChat')}
+            side="bottom"
+            onClick={startTemporaryConversation}
+            disabled={loading || isTemporaryConversation}
+            variant={isTemporaryConversation ? 'secondary' : 'ghost'}
+          />
+        </>}
         <TooltipButton
           icon={<MessageSquarePlus />}
-          tooltipText={t('record.chat.input.newChat')}
+          tooltipText={v3 ? tV3('newChat') : t('record.chat.input.newChat')}
+          buttonClassName={v3 ? 'size-8 text-muted-ink hover:bg-hover hover:text-ink' : undefined}
           side="bottom"
           onClick={() => startNewConversation()}
           disabled={isDisabled}
         />
+        {v3 && <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button type="button" variant="ghost" size="icon" className="size-8 text-muted-ink hover:bg-hover hover:text-ink"
+              aria-label={tV3('more')} title={tV3('more')}>
+              <Ellipsis />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem disabled={loading || isTemporaryConversation} onSelect={() => { void startTemporaryConversation() }}>
+              <MessageSquareDashed />{tV3('temporaryChat')}
+            </DropdownMenuItem>
+            <DropdownMenuItem disabled={loading || isTemporaryConversation || currentConversationId === null}
+              onSelect={() => { if (currentConversationId !== null) openSummary(currentConversationId) }}>
+              <NotebookPen />{tV3('summary')}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>}
       </div>
     </header>
   )

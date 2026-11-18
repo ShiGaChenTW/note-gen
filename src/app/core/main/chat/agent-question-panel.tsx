@@ -8,10 +8,11 @@ import { QuestionUi } from '@/components/chat-ui/question-ui'
 
 type PendingQuestion = NonNullable<AgentState['pendingQuestion']>
 
-export function AgentQuestionPanel({ chatId, traceEventId, embedded = false }: {
+export function AgentQuestionPanel({ chatId, traceEventId, embedded = false, docked = false }: {
   chatId?: number
   traceEventId?: string
   embedded?: boolean
+  docked?: boolean
 }) {
   const pending = useChatStore(state => state.agentState.pendingQuestion)
   const conversationId = useChatStore(state => state.currentConversationId)
@@ -25,10 +26,10 @@ export function AgentQuestionPanel({ chatId, traceEventId, embedded = false }: {
     || (pending.chatId !== undefined && pending.chatId !== activeChatId)
     || (pending.runId !== undefined && pending.runId !== runId)
     || (pending.workspacePath !== undefined && pending.workspacePath !== workspacePath)) return null
-  return <QuestionForm key={pending.id} pending={pending} embedded={embedded} />
+  return <QuestionForm key={pending.id} pending={pending} embedded={embedded} docked={docked} />
 }
 
-function QuestionForm({ pending, embedded }: { pending: PendingQuestion; embedded: boolean }) {
+function QuestionForm({ pending, embedded, docked }: { pending: PendingQuestion; embedded: boolean; docked: boolean }) {
   const [answers, setAnswers] = useState<AgentUserAnswer[]>(() => pending.questions.map(question => ({ question: question.question, selected: [] })))
   const [questionIndex, setQuestionIndex] = useState(0)
   const [submitted, setSubmitted] = useState(false)
@@ -71,7 +72,9 @@ function QuestionForm({ pending, embedded }: { pending: PendingQuestion; embedde
   }
 
   if (!question) return null
-  return <div ref={panel} onKeyDown={event => {
+  return <div ref={panel} className={docked
+    ? "mb-2 rounded-[10px] border border-line bg-bg [&_[data-slot=card]]:gap-2 [&_[data-slot=card]]:rounded-none [&_[data-slot=card]]:bg-transparent [&_[data-slot=card]]:py-2 [&_[data-slot=card]]:ring-0 [&_[data-slot=card-title]]:text-[12.5px] [&_[data-slot=card-content]]:max-h-[25dvh]"
+    : undefined} onKeyDown={event => {
     if (event.key === 'Escape') {
       event.preventDefault()
       event.stopPropagation()
@@ -82,7 +85,7 @@ function QuestionForm({ pending, embedded }: { pending: PendingQuestion; embedde
       advance(answers)
     }
   }}>
-    <QuestionUi id={pending.id} questions={pending.questions} answers={answers} questionIndex={questionIndex} disabled={submitted} embedded={embedded}
+    <QuestionUi id={pending.id} questions={pending.questions} answers={answers} questionIndex={questionIndex} disabled={submitted} embedded={embedded || docked}
       onSelect={select} onAdvance={() => advance(answers)} onCancel={() => respond(null)} />
   </div>
 }

@@ -13,6 +13,7 @@ import type { AgentEditPreview } from "@/lib/agent/types"
 import emitter from "@/lib/emitter"
 import { formatAgentToolName } from "./agent-display-utils"
 import { EditorChangeDiff } from "./agent-change-diff"
+import { buildLineDiff } from "@/lib/agent/text-diff"
 
 export { EditorChangeDiff } from "./agent-change-diff"
 
@@ -36,6 +37,7 @@ interface AgentApprovalPanelProps {
   onCancel?: () => void
   readOnly?: boolean
   embedded?: boolean
+  docked?: boolean
   showProposedDiff?: boolean
   outcome?: "applied" | "not-applied" | "cancelled" | "stale" | "unverified"
 }
@@ -54,16 +56,46 @@ function formatRiskBytes(value: number) {
   return `${Math.ceil(value / (1024 * 1024))} MB`
 }
 
+function getApprovalPaths(approval: PendingAgentConfirmation): string[] {
+  if (approval.filePath) return [approval.filePath]
+  const params = approval.previewParams ?? approval.params
+  const batch = params.filePaths ?? params.files ?? params.filesPreview
+  if (Array.isArray(batch)) {
+    const paths = batch.flatMap((file: unknown) => {
+      if (typeof file === 'string') return file ? [file] : []
+      if (!file || typeof file !== 'object') return []
+      const entry = file as Record<string, unknown>
+      const path = entry.filePath ?? entry.path ?? entry.fileName ?? entry.name
+      return typeof path === 'string' && path ? [path] : []
+    })
+    return [...new Set(paths)]
+  }
+  const path = params.filePath ?? params.sourcePath ?? params.fileName
+  return typeof path === 'string' && path ? [path] : []
+}
+
 export function AgentApprovalPanel({
   pendingConfirmation,
   onConfirm,
   onCancel,
   readOnly = false,
   embedded = false,
+  docked = false,
   showProposedDiff = false,
   outcome,
 }: AgentApprovalPanelProps) {
   const t = useTranslations()
+  const tReview = useTranslations('record.chat.v3.review')
+  const [diffOpen, setDiffOpen] = React.useState(false)
+  const { originalContent, modifiedContent } = pendingConfirmation ?? {}
+  const counts = React.useMemo(() => {
+    if (!docked || originalContent === undefined || modifiedContent === undefined) return null
+    const result = { add: 0, remove: 0 }
+    for (const line of buildLineDiff(originalContent, modifiedContent)) {
+      if (line.type !== 'equal') result[line.type]++
+    }
+    return result
+  }, [docked, originalContent, modifiedContent])
   const [expanded, setExpanded] = React.useState(false)
   const [previewSkipped, setPreviewSkipped] = React.useState(false)
   const [previewStale, setPreviewStale] = React.useState(false)
@@ -81,6 +113,7 @@ export function AgentApprovalPanel({
 
   React.useEffect(() => {
     setExpanded(false)
+    setDiffOpen(false)
   }, [pendingConfirmation?.id, pendingConfirmation?.toolName, pendingConfirmation?.params])
 
   React.useEffect(() => {
@@ -242,6 +275,74 @@ export function AgentApprovalPanel({
     ).join(" · ")
     : pendingConfirmation.filePath || description
   const hasDetails = model.fields.length > 0
+
+  if (docked) {
+    const params = pendingConfirmation.previewParams ?? pendingConfirmation.params
+    const paths = getApprovalPaths(pendingConfirmation)
+    const fileCount = Math.max(paths.length, typeof params.fileCount === 'number' ? params.fileCount : 0)
+    const hasFileTargets = fileCount > 0
+    const filename = paths[0]?.split(/[\\/]/).pop()
+    const heading = fileCount > 1 ? tReview('files', { count: fileCount })
+      : filename ? tReview('file', { name: filename }) : title
+    const canShowDetails = paths.length > 1 || hasDetails
+    const confirmLabel = isRemoteSkillInstall
+      ? t(`record.chat.input.agent.confirmation.tools.install_remote_skill.${riskWarnings.length > 0 ? 'continue' : 'confirm'}`)
+      : hasFileTargets ? tReview('apply') : t("record.chat.input.agent.confirmation.confirm")
+
+    return (
+      <section className="mb-2 min-w-0 rounded-[10px] border border-line bg-bg text-ink">
+        <div className="flex min-w-0 items-start gap-2 px-3 py-2">
+          <ShieldAlert className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
+          <div className="min-w-0 flex-1">
+            <h3 className="break-words text-[12.5px] font-semibold" title={fileCount === 1 ? paths[0] : undefined}>{heading}</h3>
+            {!hasFileTargets && <p className="break-words text-xs text-muted-ink">{summary}</p>}
+            {hasFileTargets && originalContent === undefined && <p className="break-words text-xs text-muted-ink">{title}</p>}
+            {pendingConfirmation.operation === 'delete' && <p className="break-words text-xs text-muted-ink">{title}</p>}
+          </div>
+          {counts && <div className="flex shrink-0 gap-1 font-mono text-[11px]">
+            <span className="text-[var(--success-ink)]" aria-label={t("record.chat.input.agent.changes.addedCount", { count: counts.add })}>+{counts.add}</span>
+            <span className="text-danger" aria-label={t("record.chat.input.agent.changes.removedCount", { count: counts.remove })}>−{counts.remove}</span>
+          </div>}
+        </div>
+        {previewStale && <p role="status" className="px-3 pb-2 text-xs text-danger">{t("record.chat.input.agent.changes.stalePreview")}</p>}
+        {previewSkipped && !previewStale && <p role="status" className="px-3 pb-2 text-xs text-muted-ink">{t("record.chat.input.agent.changes.inlineUnavailable")}</p>}
+        {model.warnings.length > 0 && <div className="px-3 pb-2"><ApprovalUi model={{ ...model, fields: [] }} /></div>}
+        <div className="flex flex-wrap items-center gap-1 px-2.5 pb-2">
+          <Button type="button" size="xs" disabled={!onConfirm || previewStale} onClick={() => onConfirm?.('once')}>
+            {confirmLabel}
+          </Button>
+          <Button type="button" size="xs" variant="ghost" disabled={!onCancel} onClick={onCancel}>
+            {tReview('deny')}
+          </Button>
+          {pendingConfirmation.canApproveForSession && <Button type="button" size="xs" variant="secondary"
+            disabled={!onConfirm || previewStale} onClick={() => onConfirm?.('conversation')}>
+            {t("record.chat.input.agent.confirmation.session")}
+          </Button>}
+          <span className="flex-1" />
+          {canShowDetails && <Button type="button" size="xs" variant="ghost" aria-expanded={expanded}
+            onClick={() => setExpanded(value => !value)}>
+            {fileCount > 1 ? tReview('fileList') : t("record.chat.input.agent.confirmation.parameters")}
+          </Button>}
+          {counts && <Button type="button" size="xs" variant="ghost" aria-expanded={diffOpen}
+            onClick={() => setDiffOpen(value => !value)}>
+            {tReview(diffOpen ? 'hideDiff' : 'showDiff')}
+          </Button>}
+        </div>
+        {diffOpen && originalContent !== undefined && modifiedContent !== undefined && (
+          <div className="px-2.5 pb-2">
+            <EditorChangeDiff before={originalContent} after={modifiedContent} defaultOpen hideTrigger proposed
+              showLineEndings={pendingConfirmation.from === undefined && pendingConfirmation.to === undefined} />
+          </div>
+        )}
+        {expanded && canShowDetails && <div className="min-w-0 space-y-2 px-2.5 pb-2">
+          {paths.length > 1 && <ul className="max-h-28 list-inside list-disc overflow-y-auto break-all font-mono text-xs text-muted-ink">
+            {paths.map(path => <li key={path}>{path}</li>)}
+          </ul>}
+          {hasDetails && <ApprovalUi model={{ ...model, warnings: [] }} />}
+        </div>}
+      </section>
+    )
+  }
 
   return (
     <Collapsible open={expanded} onOpenChange={setExpanded} asChild>

@@ -19,6 +19,7 @@ import {
   Waypoints,
   X,
 } from "lucide-react"
+import { useChatV3 } from "./chat-v3"
 import { useTranslations } from "next-intl"
 
 import { Badge } from "@/components/ui/badge"
@@ -89,11 +90,14 @@ function ContextBadge({
   onToggleLock: (key: string) => void
   onRemove: () => void
 }) {
+  const v3 = useChatV3()
   const t = useTranslations('record.chat.input')
   return (
     <Badge
       variant="secondary"
-      className="group/context h-7 max-w-40 shrink-0 gap-1 rounded-lg pl-2 pr-0.5 font-normal"
+      className={v3
+        ? "group/context h-6 min-w-0 gap-1 rounded-full border-line bg-sunken pl-2 pr-0.5 text-[11px] font-normal text-muted-ink max-w-44 [&_svg]:text-muted-ink"
+        : "group/context h-7 max-w-40 shrink-0 gap-1 rounded-lg pl-2 pr-0.5 font-normal"}
       title={label}
     >
       <span className="relative flex size-4 shrink-0 items-center justify-center self-center">
@@ -116,7 +120,7 @@ function ContextBadge({
         type="button"
         variant="ghost"
         size="icon-xs"
-        className="shrink-0"
+        className={v3 ? "size-5 shrink-0 rounded-full" : "shrink-0"}
         onClick={onRemove}
         aria-label={`${t('removeContext')}：${label}`}
       >
@@ -269,6 +273,7 @@ export function ChatContextStrip({
   lockedKeys,
   onToggleLock,
 }: ChatContextStripProps) {
+  const v3 = useChatV3()
   const locked = new Set(lockedKeys)
   if (
     !linkedResource
@@ -281,7 +286,9 @@ export function ChatContextStrip({
   ) return null
 
   return (
-    <div className="flex w-full max-w-full flex-wrap gap-1 px-1 pt-1">
+    <div className={v3
+      ? "flex min-w-0 flex-1 flex-wrap justify-end gap-1"
+      : "flex w-full max-w-full flex-wrap gap-1 px-1 pt-1"}>
       {linkedResource ? (
         <ContextBadge
           icon={isLinkedFolder(linkedResource) ? <FolderOpen /> : <FileText />}
