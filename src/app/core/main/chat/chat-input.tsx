@@ -1715,6 +1715,8 @@ ${previewLines.join('\n')}
         {v3 ? (
           <div className="flex min-w-0 items-start gap-2">
             <ChatModeSwitch readOnly={readOnly} disabled={loading} onChange={changeChatMode} />
+            {/* Tab 切換問／交辦；跟今天頁的記／問一樣把快捷鍵寫出來 */}
+            {!isMobile && <kbd className="mt-0.5 hidden h-[18px] shrink-0 items-center rounded bg-sunken px-1.5 font-mono text-[10.5px] text-muted-ink sm:inline-flex">Tab</kbd>}
             {contextStrip}
           </div>
         ) : contextStrip}
@@ -1857,7 +1859,7 @@ ${previewLines.join('\n')}
         {readOnly
           ? <span className="px-1.5">{t('record.chat.v3.mode.readOnlyHint')}</span>
           : <AgentPermissionModeSelect compact />}
-        <ChatToolsPopover backgroundActions={<BackgroundTaskControls text={text} onSent={() => setText('')} inMenu readOnly={readOnly} />} />
+        <ChatToolsPopover backgroundActions={isMobile ? undefined : <BackgroundTaskControls text={text} onSent={() => setText('')} inMenu readOnly={readOnly} />} />
         {modelSuggestion}
         <div className="ml-auto shrink-0">{contextUsage}</div>
       </div>}

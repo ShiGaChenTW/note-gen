@@ -545,7 +545,7 @@ export function AgentRunTimeline({
       hasTraceDetails
     )
     const stepWaiting = Boolean(waitingForUi || activeApproval || (activeQuestion && activeQuestion.response === undefined))
-    const forceExpanded = waitingForUi || Boolean((activeApproval && !reviewOutsideProcess) || (!v3 && activeQuestion)) || (isModelEvent && event.status === "running")
+    const forceExpanded = waitingForUi || Boolean((activeApproval && !reviewOutsideProcess && !v3) || (!v3 && activeQuestion)) || (isModelEvent && event.status === "running")
     const expanded = forceExpanded || storedExpanded
     const canToggle = hasDetails && !forceExpanded
     const displayDuration = event.duration ?? (
@@ -604,7 +604,7 @@ export function AgentRunTimeline({
           </button>
         </Marker>}
 
-        {expanded && isApproval && event.toolName && !reviewOutsideProcess && (
+        {expanded && isApproval && event.toolName && !reviewOutsideProcess && !(v3 && activeApproval) && (
           <div className="mt-2 min-w-0 pb-2">
             <AgentApprovalPanel
               pendingConfirmation={activeApproval ?? { toolName: event.toolName, params: event.input ?? {}, ...event.approvalPreview }}

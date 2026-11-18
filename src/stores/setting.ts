@@ -1191,7 +1191,7 @@ const useSettingStore = create<SettingState>((set, get) => ({
     const current = get().agentPermissionMode
     const lastAgentEditPermission = agentPermissionMode !== 'read-only'
       ? agentPermissionMode
-      : current === 'read-only' ? get().lastAgentEditPermission : current
+      : current === 'read-only' ? (get().lastAgentEditPermission === 'auto-edit' ? 'auto-edit' : 'ask') : current
     set({ agentPermissionMode, lastAgentEditPermission })
     const pending = settingPersistQueue.then(() => persistChangedSettings(
       get(), ['lastAgentEditPermission', 'agentPermissionMode'], []
