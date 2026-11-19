@@ -24,18 +24,19 @@ import { useDecideActions } from '../decide/decide-parts'
 import { buildProposalBlocks } from '@/lib/today-v3/layout'
 import { openDailyNote } from '@/lib/daily/open-daily-note'
 import { toDateKey } from '@/lib/daily/format'
+import { useDateFormats } from '@/lib/date-format'
 import { dateFromDayKey } from '@/lib/today-v3/date-strip'
 import { DateStrip } from './date-strip'
 import { useTodayV3Data } from './use-today-v3-data'
 
-function Journal({ layout, now, viewingToday, exists, onOpen }: { layout: TodayV3Layout, now: string, viewingToday: boolean, exists: boolean, onOpen: () => void }) {
+function Journal({ layout, dateLabel, viewingToday, exists, onOpen }: { layout: TodayV3Layout, dateLabel: string, viewingToday: boolean, exists: boolean, onOpen: () => void }) {
   const t = useTranslations('todayV3.journal')
   const [focus, setFocus] = useState(false)
   const { heading, paragraphs } = layout.journal
   return (
     <div className="flex max-w-[600px] flex-col gap-3.5" data-testid="today-v3-journal">
       <div className="flex items-center justify-between">
-        <span className={LABEL}>{t('label')} · <span className="font-mono">{viewingToday ? now : `${layout.heading.month}/${layout.heading.day}`}</span></span>
+        <span className={LABEL}>{t('label')} · <span className="tabular-nums">{dateLabel}</span></span>
         <Button variant="ghost" size="sm" className="rounded-(--r)" aria-pressed={focus} onClick={() => setFocus(value => !value)}>{focus ? t('focusOff') : t('focus')}</Button>
       </div>
       {heading && <h2 className={cn('text-2xl leading-8 font-semibold tracking-tight transition-opacity duration-150', focus && 'opacity-35')}>{heading}</h2>}
@@ -82,13 +83,13 @@ function TodoRow({ item, busy, onToggle }: { item: TodoItem, busy: boolean, onTo
   )
 }
 
-function Todo({ layout, busy, viewingToday, onToggle }: { layout: TodayV3Layout, busy: ReadonlySet<string>, viewingToday: boolean, onToggle: (item: TodoItem) => void }) {
+function Todo({ layout, busy, viewingToday, shortDate, onToggle }: { layout: TodayV3Layout, busy: ReadonlySet<string>, viewingToday: boolean, shortDate: string, onToggle: (item: TodoItem) => void }) {
   const t = useTranslations('todayV3.todo')
   const { items, doneCount, total } = layout.todo
   return (
     <div className="mt-7 max-w-[600px]" data-testid="today-v3-todo">
       <div className={cn(RAIL_HEAD, 'justify-between')}>
-        <span className={LABEL}>{viewingToday ? t('label') : t('labelDay', { month: layout.heading.month, day: layout.heading.day })}</span>
+        <span className={LABEL}>{viewingToday ? t('label') : t('labelDay', { date: shortDate })}</span>
         <span className={cn(LABEL, 'font-mono')}>{doneCount} / {total}</span>
       </div>
       {items.length === 0
@@ -155,6 +156,7 @@ function CaptureRail({ layout }: { layout: TodayV3Layout }) {
 
 export function TodayV3Screen() {
   const t = useTranslations('todayV3')
+  const dates = useDateFormats()
   const hide = useHomeStore(state => state.hide)
   // 選中日：null = 跟著今天（跨午夜也跟）；其餘為 YYYY-MM-DD。資料以選中日為準，記一筆、時段提案、現在線仍以今天為準。
   const [pickedKey, setPickedKey] = useState<string | null>(null)
@@ -162,7 +164,9 @@ export function TodayV3Screen() {
   const { now, day, dayKey, viewingToday, tasks, todayPath, noteKeys, journalExists, layout, calendarAccess } = useTodayV3Data(pickedDay)
   const { busy, toggleTask, openNote } = useTodayActions({ now, tasks })
   const todayKey = toDateKey(now)
-  const { heading, summary } = layout
+  const { summary } = layout
+  const monthDay = dates.monthDay(day)
+  const shortDate = dates.short(day)
   // ALMNC-16：排程員的時段提案畫在時間軸上，收下／不要與等你定共用同一份狀態
   const pendingSlots = usePendingSlots(toDateKey(now))
   const proposals = useMemo(() => buildProposalBlocks(pendingSlots), [pendingSlots])
@@ -182,14 +186,14 @@ export function TodayV3Screen() {
   return (
     <PageSurface label={t('title')} onDismiss={hide}>
       <PageHeader
-        title={viewingToday ? t('title') : t('titleDay', { month: layout.heading.month, day: layout.heading.day })}
-        subtitle={<span className="tabular-nums">{!viewingToday && `${t('viewing')} · `}{t('dateLabel', { month: heading.month, day: heading.day, weekday: t(`weekday.${heading.weekday}`), week: heading.week })}</span>}
+        title={viewingToday ? t('title') : t('titleDay', { date: monthDay })}
+        subtitle={<span className="tabular-nums">{!viewingToday && `${t('viewing')} · `}{t('dateLabel', { date: dates.full(day), week: dates.week(day) })}</span>}
         onBack={hide}
         actions={(
           <p className="max-w-[520px] text-right text-[13px] leading-5 text-muted-ink" data-testid="today-v3-summary">
             {viewingToday
               ? t('summary', { events: summary.events, tasks: summary.openTasks, decisions: summary.decisions })
-              : t('summaryDay', { month: heading.month, day: heading.day, events: summary.events, tasks: summary.openTasks, decisions: summary.decisions })}
+              : t('summaryDay', { date: monthDay, events: summary.events, tasks: summary.openTasks, decisions: summary.decisions })}
           </p>
         )}
       />
@@ -209,8 +213,8 @@ export function TodayV3Screen() {
           />
         </div>
         <div className="min-w-0 overflow-y-auto border-l border-line-soft px-10 pt-8 pb-28" data-testid="today-v3-center">
-          <Journal layout={layout} now={clock} viewingToday={viewingToday} exists={journalExists} onOpen={openJournal} />
-          <Todo layout={layout} busy={busy} viewingToday={viewingToday} onToggle={item => toggleTask(item.task, !item.done)} />
+          <Journal layout={layout} dateLabel={viewingToday ? clock : shortDate} viewingToday={viewingToday} exists={journalExists} onOpen={openJournal} />
+          <Todo layout={layout} busy={busy} shortDate={shortDate} viewingToday={viewingToday} onToggle={item => toggleTask(item.task, !item.done)} />
         </div>
         <div className="flex min-w-0 flex-col gap-6 overflow-y-auto border-l border-line-soft px-6 pt-5 pb-24 @max-[1000px]:hidden" data-testid="today-v3-right">
           <DecideRail layout={layout} />
@@ -218,7 +222,7 @@ export function TodayV3Screen() {
         </div>
       </div>
       </div>
-      <TodayComposer viewingLabel={viewingToday ? null : `${heading.month}/${heading.day}`} />
+      <TodayComposer viewingLabel={viewingToday ? null : shortDate} />
     </PageSurface>
   )
 }

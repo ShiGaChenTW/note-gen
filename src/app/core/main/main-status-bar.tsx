@@ -31,7 +31,7 @@ export function MainStatusBar({ workspaceCovered = false }: { workspaceCovered?:
       <PluginStatusBarCenter workspaceCovered={workspaceCovered} />
       <StatusBarSpacer id="spacer:after-plugins" rank={85} />
       <StatusBarItem id="fork:daily-nav" rank={86}><DailyNavStatusItem /></StatusBarItem>
-      <StatusBarItem id="fork:today" rank={87}><TodayStatusItem /></StatusBarItem>
+      <TodayStatusItem />
       <ChatFooter embedded />
     </footer>
   )

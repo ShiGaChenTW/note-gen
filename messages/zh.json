@@ -8277,26 +8277,19 @@
       "cancelled": "已取消"
     }
   },
+  "dateNavigation": {
+    "weekNumber": "第 {week} 周"
+  },
   "todayV3": {
     "title": "今天",
-    "dateLabel": "{month} 月 {day} 日 {weekday} · W{week}",
-    "weekday": {
-      "0": "星期日",
-      "1": "星期一",
-      "2": "星期二",
-      "3": "星期三",
-      "4": "星期四",
-      "5": "星期五",
-      "6": "星期六"
-    },
+    "dateLabel": "{date} · {week}",
     "summary": "今天 {events} 个行程、{tasks} 件待办、{decisions} 件等你定。",
-    "summaryDay": "{month} 月 {day} 日：{events} 个行程、{tasks} 件待办；等你定 {decisions} 件（不分日期）。",
+    "summaryDay": "{date}：{events} 个行程、{tasks} 件待办；等你定 {decisions} 件（不分日期）。",
     "viewing": "正在看",
     "strip": {
       "label": "日期栏，{range}",
       "previous": "往前一周",
       "next": "往后一周",
-      "dayLabel": "{month} 月 {day} 日 {weekday}",
       "today": "今天",
       "hasNote": "有日记",
       "backToToday": "回到今天"
@@ -8330,7 +8323,7 @@
       "overdue": "逾期 {days} 天",
       "check": "完成“{title}”",
       "uncheck": "取消完成“{title}”",
-      "labelDay": "{month}/{day} 到期",
+      "labelDay": "{date} 到期",
       "emptyDay": "这天没有到期的任务。"
     },
     "decide": {
@@ -8369,10 +8362,10 @@
       "captured": "收进来了，正在拆分成提案",
       "noModel": "还没设置模型，请先到设置里选一个。"
     },
-    "titleDay": "{month} 月 {day} 日"
+    "titleDay": "{date}"
   },
   "week": {
-    "title": "周计划",
+    "title": "计划",
     "previous": "上一周",
     "next": "下一周",
     "current": "本周",
@@ -8434,7 +8427,7 @@
       "timeline": "时间轴",
       "canvases": "画布",
       "noteTags": "标签",
-      "prompts": "提示词库",
+      "prompts": "提示词",
       "outline": "大纲"
     },
     "knowledge": {
