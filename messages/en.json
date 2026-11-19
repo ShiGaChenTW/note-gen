@@ -4682,7 +4682,7 @@
         "usagePercent": "{percent}%",
         "mode": {
           "label": "Chat mode",
-          "shortcut": "Press Tab to switch modes",
+          "shortcut": "Press Tab to switch between Ask and Delegate",
           "ask": "Ask",
           "delegate": "Delegate",
           "readOnlyHint": "Answers only, no file edits",
@@ -8352,6 +8352,7 @@
     },
     "composer": {
       "modeLabel": "Input mode",
+      "tabHint": "Press Tab to switch to Ask",
       "note": "Note",
       "ask": "Ask",
       "notePlaceholder": "Jot something down, or press Tab to switch to Ask",

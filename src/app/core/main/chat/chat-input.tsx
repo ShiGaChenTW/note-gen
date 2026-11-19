@@ -23,6 +23,7 @@ import { ImageIcon, Sparkles } from "lucide-react"
 import { isMobileDevice } from '@/lib/check'
 import type { PendingQuote } from "@/stores/chat"
 import { isChatModeShortcut, useChatV3 } from "./chat-v3"
+import { KbdHint } from '@/components/v3/kbd-hint'
 import { COMPOSER_FIELD, COMPOSER_FRAME } from '@/components/v3/composer-styles'
 import { AgentPermissionModeSelect, ChatModeSwitch } from "./agent-permission-mode"
 import { AgentPendingMessageList } from "./agent-pending-message-list"
@@ -1671,7 +1672,7 @@ ${previewLines.join('\n')}
         className={cn(
           "group relative z-10 flex w-full flex-col overflow-hidden border",
           v3
-            ? cn("gap-1 transition-colors", COMPOSER_FRAME)
+            ? cn("@container gap-1 transition-colors", COMPOSER_FRAME)
             : isMobile
             ? "mobile-dock-surface gap-1 rounded-[1.35rem] p-1.5 transition-[background-color,border-color,transform] duration-200"
             : "gap-1 rounded-xl bg-background p-1 transition-colors",
@@ -1716,8 +1717,7 @@ ${previewLines.join('\n')}
         {v3 ? (
           <div className="flex min-w-0 items-start gap-2">
             <ChatModeSwitch readOnly={readOnly} disabled={loading} onChange={changeChatMode} />
-            {/* Tab 切換問／交辦；跟今天頁的記／問一樣把快捷鍵寫出來 */}
-            {!isMobile && <kbd className="mt-0.5 hidden h-[18px] shrink-0 items-center rounded bg-sunken px-1.5 text-xs text-muted-ink sm:inline-flex">Tab</kbd>}
+            {!isMobile && !loading && <KbdHint className="mt-0.5 ml-1" description={t('record.chat.v3.mode.shortcut')} />}
             {contextStrip}
           </div>
         ) : contextStrip}

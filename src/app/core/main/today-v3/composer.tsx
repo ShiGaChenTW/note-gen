@@ -3,6 +3,7 @@
 // Fork（almanac ALMNC-16.2）：v5 底部「記／問」輸入列。Tab 從記切到問，下一次 Tab 繼續前進。
 //   記 → 走收集拆分（stores/collect → lib/collect/split），提案出現在右欄「等你定」，收進來的東西出現在「今天收進來」
 //   問 → 走隨處對話（打開 AnywhereChatPanel，送出沿用 'quick-prompt-send'，由右側欄的 ChatInput 帶上下文送出）
+import { KbdHint } from '@/components/v3/kbd-hint'
 import { Segmented } from '@/components/v3/segmented'
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
@@ -76,6 +77,7 @@ export function TodayComposer({ viewingLabel = null }: { viewingLabel?: string |
       className={cn(
         'absolute bottom-4 z-10 flex items-center gap-2',
         COMPOSER_FRAME,
+        isV3 && '@container',
         // 隨處對話面板（右下 400px）開著時，輸入列讓到它左邊，免得送出鈕被蓋住
         chatOpen ? 'left-6 w-[min(640px,calc(100%-456px))]' : 'left-1/2 w-[min(640px,calc(100%-48px))] -translate-x-1/2',
       )}
@@ -108,7 +110,10 @@ export function TodayComposer({ viewingLabel = null }: { viewingLabel?: string |
       <span className={cn('shrink-0 rounded-md bg-hover px-[7px] py-px text-xs font-semibold text-muted-ink transition-opacity duration-100', detected ? 'opacity-100' : 'opacity-0')} aria-hidden={!detected}>
         {detected ? t(`detect.${detected}`) : ''}
       </span>
-      {!noteOnly && mode === 'note' && <kbd className="inline-flex shrink-0 rounded-[4px] bg-sunken px-[5px] text-xs leading-[18px] text-muted-ink">Tab</kbd>}
+      {!noteOnly && mode === 'note' && (isV3
+        ? <KbdHint description={t('tabHint')} />
+        : <kbd className="inline-flex shrink-0 rounded-[4px] bg-sunken px-[5px] text-xs leading-[18px] text-muted-ink">Tab</kbd>
+      )}
       <Button type="button" size="sm" className="h-8 rounded-(--r)" onClick={submit} aria-disabled={!value.trim()}>{t(mode === 'note' ? 'submitNote' : 'submitAsk')}</Button>
     </div>
   )
