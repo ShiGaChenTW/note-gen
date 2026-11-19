@@ -86,6 +86,7 @@ export function PageHeader({ title, subtitle, children, tabs, actions, onBack, b
             <h1 className="text-xl leading-7 font-semibold tracking-tight text-ink">{title}</h1>
             {subtitle && <div className="text-[13px] leading-5 text-muted-ink">{subtitle}</div>}
           </div>
+          {children && <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">{children}</div>}
           {actions && <div className="ml-auto flex min-w-0 flex-wrap items-center gap-1">{actions}</div>}
         </div>
         {tabs && <div className="overflow-x-auto p-0.5 -m-0.5">{tabs}</div>}

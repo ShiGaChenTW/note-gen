@@ -1,7 +1,11 @@
 'use client'
 
-import type { KeyboardEvent, ReactNode } from 'react'
+import { useEffect, useRef, type KeyboardEvent, type ReactNode } from 'react'
 import { cn } from '@/lib/utils'
+
+// 頁籤會打開另一個全頁畫面（它有自己的一組頁籤）。用鍵盤啟用時，把焦點交給新畫面的選中頁籤，
+// 鍵盤使用者不用每切一次就重新 Tab 回來。
+let carryTabFocusAt = 0
 
 interface Segment<Value extends string> {
   value: Value
@@ -25,6 +29,13 @@ export function Segmented<Value extends string>({
   const tabs = kind === 'tabs'
   const enabled = disabled ? [] : items.filter(item => !item.disabled)
   const tabStop = enabled.find(item => item.value === value) ?? enabled[0]
+  const root = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!tabs || !carryTabFocusAt || Date.now() - carryTabFocusAt > 1000) return
+    carryTabFocusAt = 0
+    root.current?.querySelector<HTMLButtonElement>('[aria-selected="true"]')?.focus({ preventScroll: true })
+  }, [tabs])
 
   function move(event: KeyboardEvent<HTMLButtonElement>, current: Value) {
     if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || event.nativeEvent.isComposing) return
@@ -51,6 +62,7 @@ export function Segmented<Value extends string>({
 
   return (
     <div
+      ref={root}
       role={tabs ? 'tablist' : 'group'}
       aria-label={label}
       title={title}
@@ -71,7 +83,12 @@ export function Segmented<Value extends string>({
               'inline-flex min-w-0 cursor-pointer items-center justify-center gap-1.5 rounded-[4px] border border-transparent px-2 text-xs leading-none whitespace-nowrap outline-none transition-colors focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50',
               selected ? 'border-line bg-bg font-semibold text-ink' : 'text-muted-ink enabled:hover:text-ink',
             )}
-            onClick={() => { if (!selected) onChange(item.value) }}
+            onClick={event => {
+              if (selected) return
+              // detail === 0：由鍵盤（Enter／空白鍵）觸發的 click
+              if (tabs && event.detail === 0) carryTabFocusAt = Date.now()
+              onChange(item.value)
+            }}
             onKeyDown={event => move(event, item.value)}
           >
             {item.label}

@@ -75,4 +75,24 @@ describe('Segmented', () => {
     const buttons = render('mode', true)
     expect([...buttons].every(button => button.disabled)).toBe(true)
   })
+
+  it('hands focus to the next page tablist when a tab is activated from the keyboard', () => {
+    // 模擬：點頁籤打開另一個畫面，新畫面帶著自己的一組頁籤重新掛載
+    function Page({ page, go }: { page: string, go: (v: string) => void }) {
+      return createElement(Segmented, {
+        key: page, kind: 'tabs', value: page, onChange: go, label: 'Pages',
+        items: [{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }],
+      })
+    }
+    function Fixture() {
+      const [page, go] = useState('a')
+      return createElement(Page, { page, go })
+    }
+    act(() => root.render(createElement(Fixture)))
+    const b = [...host.querySelectorAll('button')].find(button => button.textContent === 'B')!
+    act(() => { b.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 0 })) })
+    const active = document.activeElement as HTMLElement
+    expect(active.textContent).toBe('B')
+    expect(active.getAttribute('aria-selected')).toBe('true')
+  })
 })
