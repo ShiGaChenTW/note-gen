@@ -11,10 +11,13 @@ import { useWeekOverlay } from '@/lib/week/overlay'
 import useCollectStore from '@/stores/collect'
 import useHomeStore from '@/stores/home'
 import useSettingStore from '@/stores/setting'
+import { useSidebarStore } from '@/stores/sidebar'
+import { usePluginUiStore } from '@/lib/plugins/ui-registry'
 import { AnywhereService } from './anywhere/anywhere-service'
 import { LeftSidebar } from './left-sidebar'
 import { PageSurface } from './page-ui'
 import { TodayComposer } from './today-v3/composer'
+import { RightSidebarCollapsedContext } from './right-sidebar-visibility'
 import { CopyButton } from './editor/markdown/footer-bar/copy-button'
 import { ExportButton } from './editor/markdown/footer-bar/export-button'
 import type { Editor } from '@tiptap/react'
@@ -55,6 +58,8 @@ beforeEach(() => {
   })
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
   useUiModeStore.setState({ mode: 'v3' })
+  useSidebarStore.setState({ rightSidebarVisible: false })
+  usePluginUiStore.setState({ activeRightView: null })
   useAnywhereStore.setState({ chatOpen: false, paletteOpen: false })
   useCollectStore.setState({ items: [] })
   useHomeStore.getState().hide()
@@ -203,4 +208,49 @@ it('opens Anywhere chat and sends the question when Enter is pressed in Ask mode
     await act(async () => useSettingStore.setState({ primaryModel: originalModel }))
     emitter.off('quick-prompt-send', onSend)
   }
+})
+
+
+it('returns Ask to Note when right sidebar chat opens and preserves the draft', async () => {
+  await render(React.createElement(TodayComposer))
+  const input = host.querySelector('input')!
+  await act(async () => keyDown(input, 'Tab'))
+  await typeIn(input, '未送出的草稿')
+
+  await act(async () => useSidebarStore.setState({ rightSidebarVisible: true }))
+  expect(host.querySelector('[aria-pressed="true"]')?.textContent).toBe(zhTW.todayV3.composer.note)
+  expect(host.querySelector('[aria-pressed="false"]')).toBeNull()
+  expect(host.querySelector('kbd')).toBeNull()
+  expect(input.placeholder).not.toContain('Tab')
+  expect(input.value).toBe('未送出的草稿')
+  expect(keyDown(input, 'Tab').defaultPrevented).toBe(false)
+
+  await act(async () => useSidebarStore.setState({ rightSidebarVisible: false }))
+  expect(host.querySelector('[aria-pressed="true"]')?.textContent).toBe(zhTW.todayV3.composer.note)
+  expect(host.querySelector('[aria-pressed="false"]')?.textContent).toBe(zhTW.todayV3.composer.ask)
+  expect(host.querySelector('kbd')?.textContent).toBe('Tab')
+})
+
+it('offers Ask when the visible sidebar shows a different tab or in classic', async () => {
+  useSidebarStore.setState({ rightSidebarVisible: true })
+  usePluginUiStore.setState({ activeRightView: '@backlinks' })
+  await render(React.createElement(TodayComposer))
+  expect(host.querySelector('[aria-pressed="false"]')?.textContent).toBe(zhTW.todayV3.composer.ask)
+
+  await act(async () => usePluginUiStore.setState({ activeRightView: null }))
+  expect(host.querySelector('[aria-pressed="false"]')).toBeNull()
+
+  await act(async () => useUiModeStore.setState({ mode: 'classic' }))
+  expect(host.querySelector('[aria-pressed="false"]')?.textContent).toBe(zhTW.todayV3.composer.ask)
+})
+
+
+it('offers Ask after the right sidebar is collapsed by dragging its panel', async () => {
+  useSidebarStore.setState({ rightSidebarVisible: true })
+  const composer = React.createElement(TodayComposer)
+  await render(React.createElement(RightSidebarCollapsedContext.Provider, { value: false }, composer))
+  expect(host.querySelector('[aria-pressed="false"]')).toBeNull()
+
+  await render(React.createElement(RightSidebarCollapsedContext.Provider, { value: true }, composer))
+  expect(host.querySelector('[aria-pressed="false"]')?.textContent).toBe(zhTW.todayV3.composer.ask)
 })

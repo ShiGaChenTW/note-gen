@@ -41,6 +41,7 @@ import {
 } from '@/components/ui/tooltip'
 import { toast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
+import { useUiV3 } from '@/lib/fork-ui'
 import { getDefaultArticleAbsolutePath } from '@/lib/workspace'
 import { useWorkspaceDisplayName } from '@/hooks/use-workspace-display-name'
 import { RepoNames } from '@/lib/sync/github.types'
@@ -51,8 +52,10 @@ import { useSkillsStore } from '@/stores/skills'
 import { SYNC_PLATFORM_INFO } from '@/types/sync'
 
 import { prepareActiveEditorDeactivationDurably } from '@/lib/editor-deactivation'
+import { StatusBarSettingsTooltip } from '../status-bar-settings-tooltip'
 
 export function FileFooter() {
+  const isV3 = useUiV3()
   const settingsStatus = useSettingsHydrationStore(state => state.status)
   const {
     workspacePath,
@@ -233,6 +236,16 @@ export function FileFooter() {
   }
 
   if (settingsStatus === 'error') {
+    if (isV3) {
+      return (
+        <StatusBarSettingsTooltip reason={tOverview('configurationFailed')}>
+          <Button type="button" variant="ghost" size="xs" className="gap-1 px-2 text-xs text-destructive" onClick={openSyncSettings}>
+            <CircleAlert aria-hidden="true" className="size-3" />
+            <span>{tOverview('configurationFailed')}</span>
+          </Button>
+        </StatusBarSettingsTooltip>
+      )
+    }
     return (
       <div role="status" className="flex items-center gap-1 px-2 text-xs text-destructive">
         <CircleAlert aria-hidden="true" className="size-3" />

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { ChatFooter } from './chat/chat-footer'
 import { FileFooter } from './file/file-footer'
@@ -12,7 +12,9 @@ import { DailyNavStatusItem } from './daily/daily-calendar'
 
 const EDITOR_STATUS_SLOT_ID = 'main-editor-status-slot'
 
-export function MainStatusBar() {
+export const WorkspaceCoveredContext = createContext(false)
+
+export function MainStatusBar({ workspaceCovered = false }: { workspaceCovered?: boolean }) {
   const loadOrder = useStatusBarOrder(state => state.load)
   useEffect(() => { void loadOrder() }, [loadOrder])
   return (
@@ -26,7 +28,7 @@ export function MainStatusBar() {
         id={EDITOR_STATUS_SLOT_ID}
         className="contents"
       />
-      <PluginStatusBarCenter />
+      <PluginStatusBarCenter workspaceCovered={workspaceCovered} />
       <StatusBarSpacer id="spacer:after-plugins" rank={85} />
       <StatusBarItem id="fork:daily-nav" rank={86}><DailyNavStatusItem /></StatusBarItem>
       <StatusBarItem id="fork:today" rank={87}><TodayStatusItem /></StatusBarItem>
@@ -44,6 +46,7 @@ export function MainStatusBarPortal({
   inline?: boolean
   children: ReactNode
 }) {
+  const workspaceCovered = useContext(WorkspaceCoveredContext)
   const [target, setTarget] = useState<HTMLElement | null>(null)
 
   useEffect(() => {
@@ -51,6 +54,6 @@ export function MainStatusBarPortal({
   }, [])
 
   if (inline) return children
-  if (!active || !target) return null
+  if (workspaceCovered || !active || !target) return null
   return createPortal(children, target)
 }

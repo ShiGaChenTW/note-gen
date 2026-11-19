@@ -7222,6 +7222,9 @@
     "undo": "撤销",
     "redo": "重做"
   },
+  "statusBar": {
+    "settingsErrorHint": "{reason}。点击前往设置。"
+  },
   "syncOverview": {
     "selfHostedConflict": {
       "initializing": "协作笔记正在初始化，请稍后刷新版本。",
@@ -8352,6 +8355,7 @@
       "note": "记",
       "ask": "问",
       "notePlaceholder": "记一笔，或按 Tab 切到“问”",
+      "noteOnlyPlaceholder": "记一笔",
       "askPlaceholder": "问问题，例如“下午的空档怎么排”",
       "notePlaceholderToday": "记一笔（会记到今天，不是 {date}）",
       "toToday": "记到今天",

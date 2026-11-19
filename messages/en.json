@@ -7222,6 +7222,9 @@
     "undo": "Undo",
     "redo": "Redo"
   },
+  "statusBar": {
+    "settingsErrorHint": "{reason}. Click to open settings."
+  },
   "syncOverview": {
     "selfHostedConflict": {
       "initializing": "The collaborative note is initializing. Refresh the versions shortly.",
@@ -8352,6 +8355,7 @@
       "note": "Note",
       "ask": "Ask",
       "notePlaceholder": "Jot something down, or press Tab to switch to Ask",
+      "noteOnlyPlaceholder": "Jot something down",
       "askPlaceholder": "Ask a question, e.g. \"how should I use this afternoon?\"",
       "notePlaceholderToday": "Capture a note (goes to today, not {date})",
       "toToday": "Goes to today",

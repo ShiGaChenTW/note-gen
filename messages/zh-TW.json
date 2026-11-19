@@ -7287,6 +7287,9 @@
     "undo": "復原",
     "redo": "重做"
   },
+  "statusBar": {
+    "settingsErrorHint": "{reason}。點一下前往設定。"
+  },
   "syncOverview": {
     "selfHostedConflict": {
       "initializing": "協作筆記正在初始化，請稍後重新整理版本。",
@@ -8417,6 +8420,7 @@
       "note": "記",
       "ask": "問",
       "notePlaceholder": "記一筆，或按 Tab 切到「問」",
+      "noteOnlyPlaceholder": "記一筆",
       "askPlaceholder": "問問題，例如「下午的空檔怎麼排」",
       "notePlaceholderToday": "記一筆（會記到今天，不是 {date}）",
       "toToday": "記到今天",

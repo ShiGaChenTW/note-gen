@@ -1,6 +1,8 @@
 import * as React from "react"
-import { useEffect, useState } from "react"
-import useSettingStore from "@/stores/setting"
+import { useMemo } from "react"
+import useSettingStore, { useSettingsHydrationStore } from "@/stores/setting"
+import { useSettingsDialogStore } from "@/stores/settings-dialog"
+import { useUiV3 } from "@/lib/fork-ui"
 import useChatStore from "@/stores/chat"
 import { BotMessageSquare, BotOff } from "lucide-react"
 import {
@@ -28,6 +30,7 @@ import {
   collectGroupedChatModels,
   type GroupedChatModel,
 } from "./model-selection"
+import { StatusBarSettingsTooltip } from "../status-bar-settings-tooltip"
 
 interface ModelSelectProps {
   display?: 'icon' | 'status' | 'panel'
@@ -35,8 +38,10 @@ interface ModelSelectProps {
 }
 
 export function ModelSelect({ display = 'icon', disabled = false }: ModelSelectProps) {
-  const [groupedModels, setGroupedModels] = useState<GroupedChatModel[]>([])
+  const isV3 = useUiV3()
+  const settingsLoading = useSettingsHydrationStore(state => state.status === 'loading')
   const { primaryModel, aiModelList } = useSettingStore()
+  const groupedModels = useMemo(() => collectGroupedChatModels(aiModelList), [aiModelList])
   const { loading, agentState } = useChatStore()
   const [open, setOpen] = React.useState(false)
   const t = useTranslations('record.chat.input.modelSelect')
@@ -71,11 +76,6 @@ export function ModelSelect({ display = 'icon', disabled = false }: ModelSelectP
     setOpen(isOpen)
   }
 
-  // 监听 aiModelList 变化，处理新的模型配置结构
-  useEffect(() => {
-    setGroupedModels(collectGroupedChatModels(aiModelList))
-  }, [aiModelList])
-
   // 按配置分组模型
   const groupedByConfig = groupedModels.reduce((acc, item) => {
     if (!acc[item.configTitle]) {
@@ -97,26 +97,34 @@ export function ModelSelect({ display = 'icon', disabled = false }: ModelSelectP
     ? `${agentState.activeModelName || agentState.activeModelId} → ${selectedDisplayName}`
     : selectedDisplayName
 
+  const opensModelSettings = isV3 && display === 'status' && !settingsLoading && !selectedModel
+  const statusButton = (
+    <Button
+      variant="ghost"
+      size="xs"
+      disabled={disabled}
+      onClick={opensModelSettings ? () => useSettingsDialogStore.getState().openSettings('ai') : undefined}
+      className="h-5 min-w-0 max-w-80 gap-1 px-1 text-xs font-normal text-muted-foreground"
+      aria-label={opensModelSettings ? selectedModelLabel : t('tooltip')}
+      title={opensModelSettings ? undefined : displayedModelLabel}
+    >
+      {selectedModel ? <BotMessageSquare data-icon="inline-start" /> : <BotOff data-icon="inline-start" />}
+      <span className="truncate">
+        {appliesNextTurn && `${agentState.activeModelName || agentState.activeModelId} → `}
+        {selectedDisplayName}
+      </span>
+      {appliesNextTurn && <Badge variant="secondary">{t('nextTurnBadge')}</Badge>}
+    </Button>
+  )
+
+  if (opensModelSettings) {
+    return <StatusBarSettingsTooltip reason={selectedModelLabel}>{statusButton}</StatusBarSettingsTooltip>
+  }
+
   return (
     <Popover open={open} onOpenChange={handleSetOpen}>
       <PopoverTrigger asChild>
-        {display === 'status' ? (
-          <Button
-            variant="ghost"
-            size="xs"
-            disabled={disabled}
-            className="h-5 min-w-0 max-w-80 gap-1 px-1 text-xs font-normal text-muted-foreground"
-            aria-label={t('tooltip')}
-            title={displayedModelLabel}
-          >
-            {selectedModel ? <BotMessageSquare data-icon="inline-start" /> : <BotOff data-icon="inline-start" />}
-            <span className="truncate">
-              {appliesNextTurn && `${agentState.activeModelName || agentState.activeModelId} → `}
-              {selectedDisplayName}
-            </span>
-            {appliesNextTurn && <Badge variant="secondary">{t('nextTurnBadge')}</Badge>}
-          </Button>
-        ) : display === 'panel' ? (
+        {display === 'status' ? statusButton : display === 'panel' ? (
           <ChatToolItem
             icon={selectedModel ? BotMessageSquare : BotOff}
             title={tTools('model.title')}
