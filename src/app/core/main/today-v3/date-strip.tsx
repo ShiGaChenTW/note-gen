@@ -1,7 +1,7 @@
 'use client'
 
 // Fork（almanac ALMNC-23）：今天主畫面上方的日期列。大數字＋星期，一次約兩週，可往前往後翻。
-// v5 視覺（單色）：今天＝粗體＋數字下方短底線；選中日＝反白底（bg-invert，和 v5 的 .thread.on／.ditem.on 同一種選取）；
+// 今天在數字上方加圓點，選中日用淡底及較粗的數字。
 // 有日記＝星期下方一顆小點。鍵盤：左右鍵移動、Enter／空白鍵選取、Home／End 到窗口頭尾，焦點環用 ring-ring。
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
