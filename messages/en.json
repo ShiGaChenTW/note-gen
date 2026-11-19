@@ -8182,7 +8182,7 @@
   },
   "decide": {
     "title": "Decide",
-    "subtitle": "Everything that needs your call, accept or decline one by one",
+    "subtitle": "{count, plural, one {# item} other {# items}} for you to decide on. Accept or dismiss each one.",
     "count": "{count} waiting for you",
     "needsLabel": "Decide",
     "listLabel": "Items waiting for you",
@@ -8283,8 +8283,8 @@
   "todayV3": {
     "title": "Today",
     "dateLabel": "{date} · {week}",
-    "summary": "Today: {events, plural, one {# event} other {# events}}, {tasks, plural, one {# task} other {# tasks}}, {decisions} waiting for you.",
-    "summaryDay": "{date}: {events, plural, one {# event} other {# events}}, {tasks, plural, one {# task} other {# tasks}}; {decisions} waiting for you (all days).",
+    "summaryDue": "{count, plural, one {# item due} other {# items due}}",
+    "summaryOverdue": "{count, plural, one {# item overdue} other {# items overdue}}",
     "viewing": "Viewing",
     "strip": {
       "label": "Date strip, {range}",
@@ -8367,6 +8367,7 @@
   },
   "week": {
     "title": "Plan",
+    "subtitle": "{range} · {week}",
     "previous": "Previous week",
     "next": "Next week",
     "current": "This week",

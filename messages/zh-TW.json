@@ -8247,7 +8247,7 @@
   },
   "decide": {
     "title": "等你定",
-    "subtitle": "需要你拍板的事都在這裡，逐條收下或不要",
+    "subtitle": "{count} 件等你定，逐條收下或不要",
     "count": "{count} 件等你定",
     "needsLabel": "等你定",
     "listLabel": "等你定的項目",
@@ -8348,8 +8348,8 @@
   "todayV3": {
     "title": "今天",
     "dateLabel": "{date} · {week}",
-    "summary": "今天 {events} 個行程、{tasks} 件待辦、{decisions} 件等你定。",
-    "summaryDay": "{date}：{events} 個行程、{tasks} 件待辦；等你定 {decisions} 件（不分日期）。",
+    "summaryDue": "{count} 項到期",
+    "summaryOverdue": "{count} 項逾期",
     "viewing": "正在看",
     "strip": {
       "label": "日期列，{range}",
@@ -8432,6 +8432,7 @@
   },
   "week": {
     "title": "計畫",
+    "subtitle": "{range} · {week}",
     "previous": "上一週",
     "next": "下一週",
     "current": "本週",

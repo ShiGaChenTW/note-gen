@@ -181,7 +181,7 @@ export function PromptLibraryScreen() {
   return (
     <div className="absolute top-0 right-0 bottom-7 left-(--home-left) z-30 flex flex-col bg-card" role="region" aria-label="Prompt Library">
       {v3Mode ? (
-        <PageHeader title={t('title')} onBack={hide} tabs={<KnowledgeTabs active="prompts" />} actions={newPromptButton} />
+        <PageHeader title={t('title')} onBack={hide} tabs={<KnowledgeTabs active="prompts" />} />
       ) : (
         <header className="flex h-14 shrink-0 items-center gap-3 border-b px-5">
           <h1 className="flex items-center gap-2 text-lg font-semibold"><ScrollText className="size-5" aria-hidden />{t('title')}</h1>
@@ -197,6 +197,7 @@ export function PromptLibraryScreen() {
       <div className="flex min-h-0 flex-1">
         <div className="flex w-[380px] min-w-[300px] shrink-0 flex-col border-r">
           <div className="flex flex-col gap-2 border-b p-3">
+            {v3Mode && <div className="flex justify-end">{newPromptButton}</div>}
             <Input
               value={search}
               placeholder={t('searchPlaceholder')}

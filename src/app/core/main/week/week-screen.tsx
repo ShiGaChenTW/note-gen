@@ -57,7 +57,7 @@ function WeekPage() {
     <PageSurface label={t('title')} onDismiss={hide} className="bg-bg text-ink">
       <PageHeader
         title={t('title')}
-        subtitle={<span className="tabular-nums">{range}</span>}
+        subtitle={<span className="tabular-nums">{t('subtitle', { range, week: dates.week(start) })}</span>}
         onBack={hide}
         actions={(
           <>

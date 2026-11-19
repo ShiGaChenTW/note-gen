@@ -165,7 +165,7 @@ export function TodayV3Screen() {
   const { now, day, dayKey, viewingToday, tasks, todayPath, noteKeys, journalExists, layout, calendarAccess } = useTodayV3Data(pickedDay)
   const { busy, toggleTask, openNote } = useTodayActions({ now, tasks })
   const todayKey = toDateKey(now)
-  const { summary } = layout
+  const { due, overdue } = layout.summary
   const monthDay = dates.monthDay(day)
   const shortDate = dates.short(day)
   // ALMNC-16：排程員的時段提案畫在時間軸上，收下／不要與等你定共用同一份狀態
@@ -188,15 +188,17 @@ export function TodayV3Screen() {
     <PageSurface label={t('title')} onDismiss={hide}>
       <PageHeader
         title={viewingToday ? t('title') : t('titleDay', { date: monthDay })}
-        subtitle={<span className="tabular-nums">{!viewingToday && `${t('viewing')} · `}{t('dateLabel', { date: dates.full(day), week: dates.week(day) })}</span>}
+        subtitle={
+          <span className="tabular-nums" data-testid="today-v3-summary">
+            {[
+              !viewingToday && t('viewing'),
+              t('dateLabel', { date: dates.full(day), week: dates.week(day) }),
+              due > 0 && t('summaryDue', { count: due }),
+              overdue > 0 && t('summaryOverdue', { count: overdue }),
+            ].filter(Boolean).join(' · ')}
+          </span>
+        }
         onBack={hide}
-        actions={(
-          <p className="max-w-[520px] text-right text-ui-compact leading-5 text-muted-ink" data-testid="today-v3-summary">
-            {viewingToday
-              ? t('summary', { events: summary.events, tasks: summary.openTasks, decisions: summary.decisions })
-              : t('summaryDay', { date: monthDay, events: summary.events, tasks: summary.openTasks, decisions: summary.decisions })}
-          </p>
-        )}
       />
       <DateStrip todayKey={todayKey} selectedKey={dayKey} noteKeys={noteKeys} onSelect={selectDay} onToday={() => setPickedKey(null)} />
       <div className="@container min-h-0 flex-1">

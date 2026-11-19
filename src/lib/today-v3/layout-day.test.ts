@@ -76,7 +76,7 @@ describe('buildTodayLayout with a selected day', () => {
   it('heading, journal, summary and todo follow the selected day', () => {
     expect(friday.heading).toMatchObject({ month: 11, day: 20, weekday: 5 })
     expect(friday.journal.paragraphs).toEqual(['週五的日記段落。'])
-    expect(friday.summary).toEqual({ events: 2, openTasks: 2, decisions: 0 })
+    expect(friday.summary).toEqual({ due: 2, overdue: 0 })
     expect(friday.timeline.nowMin).toBeNull()
   })
 

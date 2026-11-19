@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import { MessageSquareDashed, MessageSquarePlus, ChevronDown, Search, Trash2, Ellipsis, NotebookPen } from "lucide-react"
 import { TooltipButton } from "@/components/tooltip-button"
 import { ConversationSummaryButton } from "../conversation-summary/summary-dialog" // Fork #33
+import { CreateJobButton } from '../jobs/create-job'
 import useChatStore from "@/stores/chat"
 import useThreadsStore from '@/stores/threads'
 import { Button } from '@/components/ui/button'
@@ -199,6 +200,7 @@ export function ChatHeader() {
             variant={isTemporaryConversation ? 'secondary' : 'ghost'}
           />
         </>}
+        {inThreads && <CreateJobButton />}
         {!inThreads && <TooltipButton
           icon={<MessageSquarePlus />}
           tooltipText={v3 ? tV3('newChat') : t('record.chat.input.newChat')}

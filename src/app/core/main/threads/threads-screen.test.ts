@@ -147,6 +147,7 @@ describe('v3 threads page', () => {
       || button.getAttribute('aria-label') === messages.record.chat.v3.newChat,
     )
     expect(buttons).toHaveLength(1)
+    expect(buttons[0].closest('header')?.querySelector('h1')?.textContent).toBe(messages.threads.title)
     expect(buttons[0].disabled).toBe(false)
     act(() => buttons[0].click())
     expect(startNewConversation).toHaveBeenCalledOnce()

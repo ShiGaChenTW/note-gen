@@ -17,7 +17,6 @@ import useCollectStore from '@/stores/collect'
 import useDecideStore from '@/stores/decide'
 import { OrganizeHistory } from '../organize/organize-history'
 import { JobReviewPreview } from '../jobs/job-result'
-import { Count } from '@/components/v3/count'
 import { EmptyState } from '@/components/v3/empty-state'
 import { PageHeader, PageSurface } from '../page-ui'
 import { DiffBlock, KIND_ICON, destinationText, useDecideActions } from './decide-parts'
@@ -73,9 +72,8 @@ function DecidePage() {
     <PageSurface label={t('title')} onDismiss={hide}>
       <PageHeader
         title={t('title')}
-        subtitle={t('subtitle')}
+        subtitle={<span className="tabular-nums">{t('subtitle', { count: items.length })}</span>}
         onBack={hide}
-        actions={<Count value={items.length} emphasis label={t('count', { count: items.length })} />}
       />
       <OrganizeHistory />
       {items.length === 0 ? (
