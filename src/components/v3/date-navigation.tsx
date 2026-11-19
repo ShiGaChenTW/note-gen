@@ -18,7 +18,7 @@ export function DateNavArrow({ direction, className, ...props }: ComponentProps<
 
 export function DateNavReset({ className, ...props }: ComponentProps<'button'>) {
   return (
-    <button type="button" className={cn(BUTTON, FOCUS, 'bg-hover px-2.5 text-[12.5px] font-medium text-ink enabled:hover:bg-active', className)} {...props} />
+    <button type="button" className={cn(BUTTON, FOCUS, 'bg-hover px-2.5 text-ui-compact font-medium text-ink enabled:hover:bg-active', className)} {...props} />
   )
 }
 

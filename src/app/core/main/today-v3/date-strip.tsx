@@ -7,6 +7,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { DateCell, DateNavArrow, DateNavReset } from '@/components/v3/date-navigation'
 import { toDateKey } from '@/lib/daily/format'
+import { cn } from '@/lib/utils'
 import { useDateFormats } from '@/lib/date-format'
 import {
   addDaysLocal,
@@ -75,6 +76,7 @@ export function DateStrip({ todayKey, selectedKey, noteKeys, onSelect, onToday }
   const page = (direction: -1 | 1) => setStart(current => shiftStripStart(current, direction))
   const range = dates.shortRange(first.date, last.date)
   const todayStart = defaultStripStart(dateFromDayKey(todayKey))
+  const atToday = selectedKey === todayKey && start.getTime() === todayStart.getTime()
   const reset = () => {
     setStart(todayStart)
     setFocusKey(todayKey)
@@ -108,7 +110,13 @@ export function DateStrip({ todayKey, selectedKey, noteKeys, onSelect, onToday }
       </div>
       <DateNavArrow direction="next" aria-label={t('next')} onClick={() => page(1)} />
       <span className="ml-1 w-[100px] shrink-0 text-right text-[11px] whitespace-nowrap text-muted-ink tabular-nums" aria-hidden>{range}</span>
-      <DateNavReset onClick={reset} className="ml-1">{t('backToToday')}</DateNavReset>
+      {/* 已經在看今天、日期列也停在今天這兩週時不需要「回到今天」；保留位置避免版面跳動 */}
+      <DateNavReset
+        onClick={reset}
+        tabIndex={atToday ? -1 : 0}
+        aria-hidden={atToday || undefined}
+        className={cn('ml-1', atToday && 'invisible')}
+      >{t('backToToday')}</DateNavReset>
     </div>
   )
 }
