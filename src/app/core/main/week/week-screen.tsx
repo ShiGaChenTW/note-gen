@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { useLocale, useTranslations } from 'next-intl'
+import { useTranslations } from 'next-intl'
+import { DateNavArrow, DateNavReset } from '@/components/v3/date-navigation'
+import { useDateFormats } from '@/lib/date-format'
 import { Button } from '@/components/ui/button'
 import { dailyNotePath, toDateKey } from '@/lib/daily/format'
 import { refreshJournal } from '@/lib/decide/actions'
@@ -29,7 +30,7 @@ function openDecision(key: string) {
 
 function WeekPage() {
   const t = useTranslations('week')
-  const locale = useLocale()
+  const dates = useDateFormats()
   const [start, setStart] = useState(() => weekStart(new Date()))
   const hide = useWeekOverlay(state => state.hide)
   const calendar = useWeekCalendar(start)
@@ -51,8 +52,7 @@ function WeekPage() {
     pathFor: date => dailyNotePath(date, dailyFolder, dailyPattern),
   }), [start, events, tasks, proposals, dailyFolder, dailyPattern])
 
-  const date = new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric' })
-  const range = date.formatRange(start, localDay(start, 6))
+  const range = dates.range(start, localDay(start, 6))
   return (
     <PageSurface label={t('title')} onDismiss={hide} className="bg-bg text-ink">
       <PageHeader
@@ -61,13 +61,9 @@ function WeekPage() {
         onBack={hide}
         actions={(
           <>
-            <Button type="button" variant="ghost" size="icon" disabled={calendar.requesting} aria-label={t('previous')} onClick={() => setStart(day => localDay(day, -7))}>
-              <ChevronLeft className="size-4" aria-hidden />
-            </Button>
-            <Button type="button" variant="ghost" size="icon" disabled={calendar.requesting} aria-label={t('next')} onClick={() => setStart(day => localDay(day, 7))}>
-              <ChevronRight className="size-4" aria-hidden />
-            </Button>
-            <Button type="button" variant="ghost" size="sm" className="rounded-(--r)" disabled={calendar.requesting} onClick={() => setStart(weekStart(new Date()))}>{t('current')}</Button>
+            <DateNavArrow direction="previous" disabled={calendar.requesting} aria-label={t('previous')} onClick={() => setStart(day => localDay(day, -7))} />
+            <DateNavReset disabled={calendar.requesting} onClick={() => setStart(weekStart(new Date()))}>{t('current')}</DateNavReset>
+            <DateNavArrow direction="next" disabled={calendar.requesting} aria-label={t('next')} onClick={() => setStart(day => localDay(day, 7))} />
           </>
         )}
       />

@@ -11,7 +11,7 @@ export const KNOWLEDGE_PROMPTS_TAB = 'prompts'
 export interface KnowledgeTabItem {
   id: string
   kind: 'builtin' | 'outline' | 'plugin'
-  /** 內建與大綱用固定英文標籤（由畫面端決定）；外掛用外掛自己的標題。 */
+  /** 內建與大綱由畫面端翻譯；外掛用外掛自己的標題。 */
   title?: string
 }
 

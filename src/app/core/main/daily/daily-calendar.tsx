@@ -1,7 +1,7 @@
 'use client'
 
 // Fork (D3): month calendar for jumping between daily notes, plus prev/next navigation.
-import { useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 import { de, enUS, ja, ptBR, zhCN, zhTW } from 'react-day-picker/locale'
@@ -11,11 +11,14 @@ import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { dailyNoteDateKeys } from '@/lib/daily/daily-nav'
+import { useDateFormats } from '@/lib/date-format'
+import { useUiV3 } from '@/lib/fork-ui'
 import { parseDailyNotePath, toDateKey } from '@/lib/daily/format'
 import { openAdjacentDailyNote, openDailyNote } from '@/lib/daily/open-daily-note'
 import useArticleStore from '@/stores/article'
 import useDailySettingsStore from '@/stores/daily-settings'
 import useVaultIndexStore, { selectAllTasks } from '@/stores/vault-index'
+import { openTodayTab } from '../today/today-tab'
 
 const DAY_PICKER_LOCALES = { en: enUS, zh: zhCN, 'zh-TW': zhTW, ja, de, 'pt-BR': ptBR } as const
 
@@ -130,8 +133,37 @@ export function stepDailyNoteWithFeedback(direction: -1 | 1, messages: { none: s
     })
 }
 
-/** 狀態列：開著日記時顯示「‹ 日期 ›」，其他時候只有月曆按鈕。 */
+function TodayDateStatusItem() {
+  const dates = useDateFormats()
+  const t = useTranslations('sidebarV3.nav')
+  const [today, setToday] = useState(() => new Date())
+  useEffect(() => {
+    const update = () => {
+      const now = new Date()
+      setToday(current => toDateKey(now) === toDateKey(current) ? current : now)
+    }
+    const timer = window.setInterval(update, 60_000)
+    window.addEventListener('focus', update)
+    return () => {
+      window.clearInterval(timer)
+      window.removeEventListener('focus', update)
+    }
+  }, [])
+
+  const label = dates.full(today)
+  return (
+    <button type="button" className="flex h-5 cursor-pointer items-center rounded px-1.5 tabular-nums hover:bg-hover" title={t('today')} onClick={openTodayTab}>
+      <time dateTime={toDateKey(today)}>{label}</time>
+    </button>
+  )
+}
+
 export function DailyNavStatusItem() {
+  return useUiV3() ? <TodayDateStatusItem /> : <ClassicDailyNavStatusItem />
+}
+
+/** Classic 狀態列：開著日記時顯示「‹ 日期 ›」，其他時候只有月曆按鈕。 */
+function ClassicDailyNavStatusItem() {
   const t = useTranslations('today.calendarNav')
   const locale = useLocale()
   const activeDate = useActiveDailyDate()

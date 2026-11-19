@@ -8,10 +8,13 @@ import { useTranslations } from 'next-intl'
 import { groupTasks, needAttentionCount, staleInboxNotes } from '@/lib/today/today-model'
 import useDailySettingsStore from '@/stores/daily-settings'
 import useVaultIndexStore, { selectAllTasks } from '@/stores/vault-index'
+import { useUiV3 } from '@/lib/fork-ui'
+import { StatusBarItem } from '../status-bar-order'
 import { openTodayTab } from './today-tab'
 
 export function TodayStatusItem() {
   const t = useTranslations('today')
+  const isV3 = useUiV3()
   const notes = useVaultIndexStore(state => state.notes)
   const revision = useVaultIndexStore(state => state.revision)
   const status = useVaultIndexStore(state => state.status)
@@ -37,19 +40,24 @@ export function TodayStatusItem() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [notes, revision, inboxFolder, staleDays, day, records, processed])
 
-  const label = status === 'ready' && count > 0 ? t('status.need', { count }) : t('status.open')
+  const hasReminder = status === 'ready' && count > 0
+  if (isV3 && !hasReminder) return null
+
+  const label = hasReminder ? t('status.need', { count }) : t('status.open')
   return (
-    <button
-      type="button"
-      onClick={openTodayTab}
-      className={`flex h-5 cursor-pointer items-center gap-1 rounded px-1.5 hover:bg-muted ${count > 0 ? 'text-foreground' : ''}`}
-      aria-label={status === 'ready' ? t('status.aria', { count }) : t('status.open')}
-      title={t('status.open')}
-    >
-      {count > 0 && status === 'ready'
-        ? <AlertTriangle className="size-3 text-ink" aria-hidden />
-        : <CalendarCheck className="size-3" aria-hidden />}
-      <span className="tabular-nums">{label}</span>
-    </button>
+    <StatusBarItem id="fork:today" rank={87}>
+      <button
+        type="button"
+        onClick={openTodayTab}
+        className={`flex h-5 cursor-pointer items-center gap-1 rounded px-1.5 hover:bg-muted ${count > 0 ? 'text-foreground' : ''}`}
+        aria-label={status === 'ready' ? t('status.aria', { count }) : t('status.open')}
+        title={t('status.open')}
+      >
+        {hasReminder
+          ? <AlertTriangle className="size-3 text-ink" aria-hidden />
+          : <CalendarCheck className="size-3" aria-hidden />}
+        <span className="tabular-nums">{label}</span>
+      </button>
+    </StatusBarItem>
   )
 }
