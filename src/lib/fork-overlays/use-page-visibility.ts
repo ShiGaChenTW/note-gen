@@ -1,3 +1,4 @@
+import { useUiV3 } from '@/lib/fork-ui'
 import useCollectStore from '@/stores/collect'
 import useDecideStore from '@/stores/decide'
 import useHomeStore from '@/stores/home'
@@ -17,4 +18,12 @@ export function usePageVisibility() {
   const knowledge = useKnowledgeOverlay(state => state.visible)
   const promptLibrary = usePromptLibraryStore(state => state.visible)
   return { home, decide, collect, inbox, threads, week, knowledge, promptLibrary }
+}
+
+export function useWorkspaceCovered() {
+  const isV3 = useUiV3()
+  const pages = usePageVisibility()
+  const homeLoaded = useHomeStore(state => state.loaded)
+  return isV3 && ((pages.home && homeLoaded) || pages.decide || pages.collect
+    || pages.inbox || pages.threads || pages.week || pages.knowledge || pages.promptLibrary)
 }
