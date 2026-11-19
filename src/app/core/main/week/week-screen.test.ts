@@ -96,7 +96,7 @@ describe('week screen', () => {
     vi.mocked(loadCalendarWeek).mockResolvedValue({ access: 'denied', events: [] })
     try {
       await act(async () => useWeekOverlay.getState().show())
-      expect(host.textContent).toContain('Week plan')
+      expect(host.querySelector('h1')?.textContent).toBe(messages.sidebarV3.nav.plan)
       await act(async () => other.setState({ visible: true }))
       expect(host.textContent).toBe('')
       await act(async () => useWeekOverlay.getState().show())

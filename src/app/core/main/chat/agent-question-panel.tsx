@@ -73,7 +73,7 @@ function QuestionForm({ pending, embedded, docked }: { pending: PendingQuestion;
 
   if (!question) return null
   return <div ref={panel} className={docked
-    ? "mb-2 rounded-[10px] border border-line bg-bg [&_[data-slot=card]]:gap-2 [&_[data-slot=card]]:rounded-none [&_[data-slot=card]]:bg-transparent [&_[data-slot=card]]:py-2 [&_[data-slot=card]]:ring-0 [&_[data-slot=card-title]]:text-[12.5px] [&_[data-slot=card-content]]:max-h-[25dvh]"
+    ? "mb-2 rounded-[10px] border border-line bg-bg [&_[data-slot=card]]:gap-2 [&_[data-slot=card]]:rounded-none [&_[data-slot=card]]:bg-transparent [&_[data-slot=card]]:py-2 [&_[data-slot=card]]:ring-0 [&_[data-slot=card-title]]:text-ui-compact [&_[data-slot=card-content]]:max-h-[25dvh]"
     : undefined} onKeyDown={event => {
     if (event.key === 'Escape') {
       event.preventDefault()

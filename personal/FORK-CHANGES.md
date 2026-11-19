@@ -45,6 +45,7 @@ npx pnpm@9 install --frozen-lockfile
 
 | 日期 | 檔案 | 修改 | 原因 |
 |---|---|---|---|
+| 2026-11-19 | `src/components/v3/`、`fork-{theme,tokens}.css`、`src/lib/utils.ts`、`src/app/core/main/` | ALMNC-32/33 共用小標、計數、空狀態及字級。淡字亮色 `#85857f`、暗色 `#7a7a74`，placeholder 跟隨 `--faint` | v3 的 `--bg`／`--panel` 對比至少 3.5:1，共用頁面保留 classic 分支 |
 | 2026-10-15 | `src-tauri/tauri.conf.json` | `identifier` → `tw.scottchen.NoteGen`、`productName` → `NoteGen (Scott)` | 資料目錄與官方版分開，可並存（D1） |
 | 2026-10-15 | `src-tauri/tauri.conf.json` | `plugins.updater.endpoints` → `[]` | 防止自動更新把 fork 換回官方版（D4）。「關於」頁按檢查更新會顯示錯誤，屬預期 |
 | 2026-10-15 | `personal/` | 新增：個人文件、custom CSS、NoteGen Today 插件 | D6 |
@@ -244,6 +245,8 @@ npx pnpm@9 install --frozen-lockfile
 | 2026-11-19 | `messages/{zh-TW,zh,en}.json`；fork：`src/app/core/main/today-v3/{date-strip,today-v3-screen,timeline,composer,use-today-v3-data}`、`src/lib/today-v3/{date-strip,layout}.ts`（含測試） | almnc23：今天主畫面頂端日期列（約兩週、可翻頁、鍵盤操作），點日期把時間軸／日誌／今天要完成／摘要換成那天；`buildTodayLayout` 把選中日 `day` 與現在 `now` 分開；訊息只加在 `todayV3` 底下 | Scott 2026-11-19 需求；記一筆、時段提案、現在線仍以今天為準；只動 fork 檔與 messages，classic 不受影響 |
 
 | 2026-11-19 | `src/app/core/main/{page,main-status-bar,today-v3/composer,unified-sync-status,file/file-footer,chat/model-select}.tsx`、`src/components/plugins/plugin-status-bar-center.tsx` | v3 右欄對話可見時今天頁只留「記」；全頁覆蓋時隱藏編輯器狀態列項目；同步及模型錯誤可開啟設定 | ALMNC-30 |
+
+| 2026-11-19 | `messages/{zh-TW,zh,en}.json`、`src/app/core/main/main-status-bar.tsx`；fork 日期導覽與知識頁籤 | V3 共用日期格式、月曆與日期列的選中／今天／有內容樣式，以及 28px 導覽。狀態列日期直達今天，計畫頁名與導覽一致，內建知識頁籤取應用程式翻譯。 | ALMNC-34/35 |
 
 ## 刻意不改的東西
 

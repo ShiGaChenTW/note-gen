@@ -1,5 +1,5 @@
 import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { extendTailwindMerge } from "tailwind-merge"
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { appDataDir } from '@tauri-apps/api/path';
 import { getWorkspacePath } from "./workspace";
@@ -9,6 +9,11 @@ const HTTP_URL_RE = /^https?:\/\//i
 let appDataDirPromise: Promise<string> | null = null
 const convertedImageSrcCache = new Map<string, string>()
 const convertedWorkspaceImageSrcCache = new Map<string, string>()
+
+// Match the v3 text size tokens in fork-tokens.css alongside ordinary text colors.
+const twMerge = extendTailwindMerge({
+  extend: { classGroups: { 'font-size': [{ text: ['ui-numeric', 'ui-compact', 'ui-emphasis'] }] } },
+})
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))

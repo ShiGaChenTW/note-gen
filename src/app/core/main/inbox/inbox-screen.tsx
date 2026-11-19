@@ -31,7 +31,10 @@ import { getMarkListItemContent } from '../mark/mark-list-item-content'
 import { MARK_TYPE_ICONS, getMarkTypeIconClasses } from '../mark/mark-type-meta'
 import { OrganizeNotes, type OpenOrganizeOptions } from '../mark/organize-notes'
 import { OrganizePromptDialog } from '../mark/organize-prompt-dialog'
-import { Count, EmptyState, PageHeader, PageSurface } from '../page-ui'
+import { Count } from '@/components/v3/count'
+import { EmptyState } from '@/components/v3/empty-state'
+import { SectionLabel } from '@/components/v3/section-label'
+import { Count as ClassicCount, EmptyState as ClassicEmptyState, PageHeader, PageSurface } from '../page-ui'
 import { CollectTabs } from '../sidebar-v3/section-tabs'
 
 /** 記錄有變動（新增、編輯、刪除）時重新載入 Inbox。 */
@@ -68,14 +71,20 @@ function noteTitle(path: string) {
   return (path.split('/').pop() ?? path).replace(/\.md$/i, '')
 }
 
-function Section({ title, count, children, actions }: { title: string, count: number, children: ReactNode, actions?: ReactNode }) {
+function Section({ title, count, children, isV3 }: { title: string, count: number, children: ReactNode, isV3: boolean }) {
   return (
     <section className="flex flex-col">
-      <div className="sticky top-0 z-10 flex h-9 items-center gap-2 border-b bg-card px-3 text-xs font-medium text-muted-foreground">
-        <span>{title}</span>
-        <Count value={count} />
-        <div className="ml-auto flex items-center gap-1">{actions}</div>
-      </div>
+      {isV3 ? (
+        <SectionLabel as="h2" underline className="sticky top-0 z-10 h-9 bg-bg px-3 py-0" trailing={<Count value={count} />}>
+          {title}
+        </SectionLabel>
+      ) : (
+        <div className="sticky top-0 z-10 flex h-9 items-center gap-2 border-b bg-card px-3 text-xs font-medium text-muted-foreground">
+          <span>{title}</span>
+          <ClassicCount value={count} />
+          <div className="ml-auto flex items-center gap-1" />
+        </div>
+      )}
       {children}
     </section>
   )
@@ -111,6 +120,7 @@ function RecordRow({ record, selected, focused, processed, locale, onToggle, onF
 export function InboxScreen() {
   const t = useTranslations('inbox')
   const isV3 = useUiV3()
+  const InboxEmptyState = isV3 ? EmptyState : ClassicEmptyState
   const visible = useInboxStore(state => state.visible)
   const hide = useInboxStore(state => state.hide)
   const records = useInboxStore(state => state.records)
@@ -331,9 +341,9 @@ export function InboxScreen() {
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto">
-            <Section title={t('records')} count={list.length}>
+            <Section title={t('records')} count={list.length} isV3={isV3}>
               {list.length === 0 ? (
-                <EmptyState icon={trash ? Trash2 : Inbox} text={trash ? t('trashEmpty') : t('empty')} />
+                <InboxEmptyState className="px-3 py-4" icon={trash ? Trash2 : Inbox} text={trash ? t('trashEmpty') : t('empty')} />
               ) : list.map(record => (
                 <RecordRow
                   key={record.id}
@@ -349,9 +359,9 @@ export function InboxScreen() {
             </Section>
 
             {!trash && (
-              <Section title={t('folderNotes', { folder: inboxFolder })} count={folderNotes.length}>
+              <Section title={t('folderNotes', { folder: inboxFolder })} count={folderNotes.length} isV3={isV3}>
                 {folderNotes.length === 0 ? (
-                  <EmptyState icon={FolderInput} text={t('folderEmpty')} />
+                  <InboxEmptyState className="px-3 py-4" icon={FolderInput} text={t('folderEmpty')} />
                 ) : folderNotes.map(note => (
                   <div key={note.path} className={cn('group flex items-center gap-2 border-b px-3 text-sm', ROW)}>
                     {/* 對齊記錄列：勾選框那一欄留空，再放檔案圖示 */}
@@ -403,8 +413,8 @@ export function InboxScreen() {
               </div>
             </div>
           ) : (
-            <div className="grid h-full place-items-center">
-              <EmptyState icon={MousePointerClick} text={t('noSelection')} />
+            <div className={isV3 ? "px-2" : "grid h-full place-items-center"}>
+              <InboxEmptyState className="px-3 py-4" icon={MousePointerClick} text={t('noSelection')} />
             </div>
           )}
         </div>

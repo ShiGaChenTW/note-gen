@@ -8,6 +8,7 @@ import { EditorLayout } from './editor/editor-layout'
 import { PluginRightSidebar } from '@/components/plugins/plugin-right-sidebar'
 import dynamic from 'next/dynamic'
 import { useSidebarStore } from "@/stores/sidebar"
+import useThreadsStore from "@/stores/threads"
 import { useEffect, useState, useRef } from 'react'
 import { Store } from '@tauri-apps/plugin-store'
 import { Layout, PanelImperativeHandle } from 'react-resizable-panels'
@@ -61,7 +62,7 @@ function getDefaultLayout(layoutKey: string) {
 function ResizableWrapper() {
   const { 
     leftSidebarVisible, 
-    centerPanelVisible, 
+    centerPanelVisible: preferredCenterPanelVisible,
     rightSidebarVisible, 
     initSidebarState,
     toggleLeftSidebar,
@@ -73,6 +74,10 @@ function ResizableWrapper() {
   const rightPanelRef = useRef<PanelImperativeHandle>(null)
   
   const isV3 = useUiV3() // Fork（almanac ALMNC-20）：v3 左欄固定 240px
+  const threadsVisible = useThreadsStore(state => state.visible)
+  // The threads overlay needs a center panel to occupy when the right panel collapses.
+  const temporaryCenterPanel = isV3 && threadsVisible && !preferredCenterPanelVisible
+  const centerPanelVisible = preferredCenterPanelVisible || temporaryCenterPanel
   const workspaceCovered = useWorkspaceCovered()
   const MIN_LEFT_SIDEBAR_WIDTH_PX = 240 // Fork：原本 320；almanac v5 規格 240px
   const MIN_RIGHT_SIDEBAR_WIDTH_PX = 280
@@ -221,6 +226,8 @@ function ResizableWrapper() {
   }
   
   const onLayout = (layout: Layout) => {
+    // 對話頁暫時借用中間面板時，版面不是使用者選的，不存；其他時候（含對話頁期間拖曳分隔線）照常存
+    if (temporaryCenterPanel) return
     // 保存当前面板布局
     const storageKey = `react-resizable-panels:main-layout:${layoutKey}`
     const sizes = ['left', 'center', 'right'].map((id) => layout[id] ?? 0)

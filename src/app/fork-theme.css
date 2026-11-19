@@ -189,7 +189,7 @@
   --ink: #191919;
   --note-ink: #191919;
   --muted-ink: #6e6e6a;
-  --faint: #a3a39e;          /* placeholder、裝飾與停用狀態；不可當 focus 色 */
+  --faint: #85857f;          /* placeholder、裝飾與停用狀態；不可當 focus 色 */
   --line: #e3e3e0;
   --line-soft: #ececea;
   --hover: rgba(25, 25, 25, 0.05);
@@ -278,7 +278,7 @@
   --ink: #ebebe8;
   --note-ink: #cbd0d2;
   --muted-ink: #8f8f8a;
-  --faint: #64645f;          /* placeholder、裝飾與停用狀態；不可當 focus 色 */
+  --faint: #7a7a74;          /* placeholder、裝飾與停用狀態；不可當 focus 色 */
   --line: #292927;
   --line-soft: #202020;
   --hover: rgba(235, 235, 232, 0.06);
@@ -355,6 +355,11 @@ code, kbd, pre, samp {
 
 :where([data-ui="v3"]) ::selection {
   background: color-mix(in srgb, var(--ink) 14%, transparent);
+}
+
+:where([data-ui="v3"]) :where(input, textarea)::placeholder {
+  color: var(--faint);
+  opacity: 1;
 }
 
 /* 放進 base layer：Tailwind 的 outline-* 工具類（utilities layer）才能蓋過它 */

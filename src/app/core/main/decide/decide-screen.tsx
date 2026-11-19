@@ -17,7 +17,9 @@ import useCollectStore from '@/stores/collect'
 import useDecideStore from '@/stores/decide'
 import { OrganizeHistory } from '../organize/organize-history'
 import { JobReviewPreview } from '../jobs/job-result'
-import { Count, EmptyState, PageHeader, PageSurface } from '../page-ui'
+import { Count } from '@/components/v3/count'
+import { EmptyState } from '@/components/v3/empty-state'
+import { PageHeader, PageSurface } from '../page-ui'
 import { DiffBlock, KIND_ICON, destinationText, useDecideActions } from './decide-parts'
 
 function itemTitle(item: DecideItem) {
@@ -39,13 +41,13 @@ function Detail({ item }: { item: DecideItem }) {
         <span>{item.source === 'job' ? jobT('card') : t(`source.${item.source}`)}</span>
       </div>
       <h2 className="mt-2 text-xl leading-7 font-semibold tracking-[-0.01em] break-words">{itemTitle(item)}</h2>
-      <p className="mt-1 text-[13.5px] leading-6 text-muted-foreground">
+      <p className="mt-1 text-sm leading-6 text-muted-foreground">
         {[item.when, t('from', { origin: item.origin })].filter(Boolean).join(' · ')}
       </p>
       {item.preview.type === 'job' ? (
         <div className="mt-3"><JobReviewPreview criterion={item.preview.criterion} result={item.preview.result} /></div>
       ) : (
-        <p className="mt-3 text-[13.5px] leading-6 text-muted-foreground">{t('writesTo')}<span className="text-ink">{destinationText(t, item.preview)}</span></p>
+        <p className="mt-3 text-sm leading-6 text-muted-foreground">{t('writesTo')}<span className="text-ink">{destinationText(t, item.preview)}</span></p>
       )}
       {item.organizeMerge && <p className="mt-3 text-sm">{organizeT('mergeEffect', item.organizeMerge)}</p>}
       {diff && <DiffBlock diff={diff} className="mt-3" />}
@@ -73,11 +75,11 @@ function DecidePage() {
         title={t('title')}
         subtitle={t('subtitle')}
         onBack={hide}
-        actions={<Count value={items.length} label={t('count', { count: items.length })} />}
+        actions={<Count value={items.length} emphasis label={t('count', { count: items.length })} />}
       />
       <OrganizeHistory />
       {items.length === 0 ? (
-        <div className="flex flex-1 items-center justify-center"><EmptyState icon={CheckCheck} text={t('empty')} /></div>
+        <EmptyState className="px-5 py-4" icon={CheckCheck} text={t('empty')} />
       ) : (
         <div className="grid min-h-0 flex-1 grid-cols-1 overflow-y-auto lg:grid-cols-[360px_minmax(0,1fr)] lg:overflow-hidden">
           <ul className="min-w-0 border-b border-line-soft p-2 lg:overflow-y-auto lg:border-r lg:border-b-0" aria-label={t('listLabel')}>
@@ -95,7 +97,7 @@ function DecidePage() {
                   >
                     <Icon className="mt-1 size-3.5 shrink-0 text-muted-ink" aria-hidden />
                     <span className="min-w-0 flex-1">
-                      <span className={cn('block truncate text-[13.5px] leading-5', active && 'font-semibold')}>{itemTitle(item)}</span>
+                      <span className={cn('block truncate text-sm leading-5', active && 'font-semibold')}>{itemTitle(item)}</span>
                       <span className="block truncate text-xs leading-5 text-muted-ink">{[item.kind === 'job' ? jobT('result') : t(`kind.${item.kind}`), item.when, t('from', { origin: item.origin })].filter(Boolean).join(' · ')}</span>
                     </span>
                   </button>

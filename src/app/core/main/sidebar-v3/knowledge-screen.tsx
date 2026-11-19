@@ -4,7 +4,7 @@
 // 設定放在左側欄的大綱與外掛左側欄視圖也是這裡的分頁；提示詞庫是它自己的頁（分頁切過去）；筆記檔案樹留在側欄 MyVault。
 import { useTranslations } from 'next-intl'
 import { PluginViewSurface, PluginViewToolbar } from '@/components/plugins/plugin-view-surface'
-import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
+import { EmptyState } from '@/components/v3/empty-state'
 import { useUiV3 } from '@/lib/fork-ui'
 import { resolveKnowledgeTab, useKnowledgeOverlay } from '@/lib/sidebar-v3/knowledge'
 import { useEditorOutlineStore } from '@/stores/editor-outline'
@@ -23,12 +23,7 @@ function OutlineTab() {
     return <Outline key={outlineEditor.documentKey} editor={outlineEditor.editor} documentKey={outlineEditor.documentKey} isOpen variant="sidebar" />
   }
   return (
-    <Empty>
-      <EmptyHeader>
-        <EmptyTitle>{t('navigation.outline')}</EmptyTitle>
-        <EmptyDescription>{t('editor.outline.sidebarEmpty')}</EmptyDescription>
-      </EmptyHeader>
-    </Empty>
+    <EmptyState className="px-4 py-4" text={t('navigation.outline')} description={t('editor.outline.sidebarEmpty')} />
   )
 }
 

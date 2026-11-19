@@ -1304,11 +1304,12 @@ ${hasValidRange ? `**仅在用户明确要求修改/改写/补充/插入时才�
 
   const hasInput = Boolean(inputValue.trim() || attachedImages.length > 0 || fileAttachments.length > 0)
   const showStop = loading && !hasInput
+  const ghostSend = roundStyle && !hasInput && !showStop
 
   return (
     <span className="relative inline-flex">
       <TooltipButton
-        variant={roundStyle ? "default" : dockStyle ? "ghost" : showStop ? "destructive" : "default"}
+        variant={roundStyle ? (ghostSend ? "ghost" : "default") : dockStyle ? "ghost" : showStop ? "destructive" : "default"}
         size={roundStyle || dockStyle ? "icon" : "sm"}
         icon={showStop ? <Square className="fill-current" /> : roundStyle ? <ArrowUp /> : <Send />}
         disabled={!showStop && (preparingAttachments || !primaryModel || !hasInput)}
@@ -1320,7 +1321,12 @@ ${hasValidRange ? `**仅在用户明确要求修改/改写/补充/插入时才�
               ? t('record.chat.input.agent.deliveryMode.pending.add')
               : t('record.chat.input.send')}
         onClick={showStop ? handleStop : () => void handleSubmit()}
-        buttonClassName={roundStyle ? "size-8 rounded-(--r) bg-invert text-invert-ink hover:bg-invert/85 [&_svg]:size-3.5" : dockStyle ? cn(
+        buttonClassName={roundStyle ? cn(
+          "size-8 rounded-(--r) [&_svg]:size-3.5",
+          ghostSend
+            ? "bg-transparent text-muted-ink hover:bg-hover hover:text-muted-ink disabled:pointer-events-auto disabled:opacity-100 dark:hover:bg-hover"
+            : "bg-invert text-invert-ink hover:bg-invert/85"
+        ) : dockStyle ? cn(
           "size-8 rounded-full border border-border/50 bg-[hsl(var(--component-active-bg))] text-foreground shadow-none hover:bg-[hsl(var(--component-active-bg))] hover:text-foreground",
           showStop && "border-destructive bg-background text-destructive hover:bg-background hover:text-destructive"
         ) : undefined}

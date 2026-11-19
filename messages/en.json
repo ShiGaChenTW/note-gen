@@ -4682,7 +4682,7 @@
         "usagePercent": "{percent}%",
         "mode": {
           "label": "Chat mode",
-          "shortcut": "Press Tab to switch modes",
+          "shortcut": "Press Tab to switch between Ask and Delegate",
           "ask": "Ask",
           "delegate": "Delegate",
           "readOnlyHint": "Answers only, no file edits",
@@ -8277,26 +8277,19 @@
       "cancelled": "Cancelled"
     }
   },
+  "dateNavigation": {
+    "weekNumber": "W{week}"
+  },
   "todayV3": {
     "title": "Today",
-    "dateLabel": "{month}/{day} {weekday} · W{week}",
-    "weekday": {
-      "0": "Sun",
-      "1": "Mon",
-      "2": "Tue",
-      "3": "Wed",
-      "4": "Thu",
-      "5": "Fri",
-      "6": "Sat"
-    },
+    "dateLabel": "{date} · {week}",
     "summary": "Today: {events, plural, one {# event} other {# events}}, {tasks, plural, one {# task} other {# tasks}}, {decisions} waiting for you.",
-    "summaryDay": "{month}/{day}: {events, plural, one {# event} other {# events}}, {tasks, plural, one {# task} other {# tasks}}; {decisions} waiting for you (all days).",
+    "summaryDay": "{date}: {events, plural, one {# event} other {# events}}, {tasks, plural, one {# task} other {# tasks}}; {decisions} waiting for you (all days).",
     "viewing": "Viewing",
     "strip": {
       "label": "Date strip, {range}",
       "previous": "Back one week",
       "next": "Forward one week",
-      "dayLabel": "{month}/{day} {weekday}",
       "today": "today",
       "hasNote": "has a daily note",
       "backToToday": "Back to today"
@@ -8330,7 +8323,7 @@
       "overdue": "{days}d overdue",
       "check": "Complete \"{title}\"",
       "uncheck": "Reopen \"{title}\"",
-      "labelDay": "Due {month}/{day}",
+      "labelDay": "Due {date}",
       "emptyDay": "No tasks due this day."
     },
     "decide": {
@@ -8352,6 +8345,7 @@
     },
     "composer": {
       "modeLabel": "Input mode",
+      "tabHint": "Press Tab to switch to Ask",
       "note": "Note",
       "ask": "Ask",
       "notePlaceholder": "Jot something down, or press Tab to switch to Ask",
@@ -8369,10 +8363,10 @@
       "captured": "Collected. Splitting into proposals",
       "noModel": "No model configured yet. Pick one in settings first."
     },
-    "titleDay": "{month}/{day}"
+    "titleDay": "{date}"
   },
   "week": {
-    "title": "Week plan",
+    "title": "Plan",
     "previous": "Previous week",
     "next": "Next week",
     "current": "This week",
@@ -8387,6 +8381,7 @@
     },
     "calendar": "Calendar event",
     "completed": "Completed task",
+    "empty": "This week has no events or tasks.",
     "untitledEvent": "Untitled event",
     "reviewProposal": "Review proposed time slot {description}",
     "slotUnavailable": "This slot is no longer available or the task has changed.",

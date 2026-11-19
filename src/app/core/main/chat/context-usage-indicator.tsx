@@ -221,7 +221,7 @@ export function ContextUsageIndicator({
             disabled={compactionUnavailable}
             aria-label={label}
             onClick={handleManualCompaction}
-            className={v3 ? "h-6 gap-1 rounded-(--r) px-1 font-mono text-[11px] text-muted-ink hover:bg-hover hover:text-ink" : "h-8 w-8 p-0 text-muted-foreground"}
+            className={v3 ? "h-6 gap-1 rounded-(--r) px-1 font-mono text-ui-numeric tabular-nums text-muted-ink hover:bg-hover hover:text-ink" : "h-8 w-8 p-0 text-muted-foreground"}
           >
             <svg
               aria-hidden="true"

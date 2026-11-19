@@ -17,6 +17,8 @@ export interface SidebarState {
   toggleCenterPanel: () => Promise<void>
   showCenterPanel: () => Promise<void>
   rightSidebarVisible: boolean
+  rightSidebarBeforeThreads: boolean | null
+  setThreadsRightSidebarAutoCollapse: (active: boolean) => void
   toggleRightSidebar: () => Promise<void>
   leftSidebarTab: string
   setLeftSidebarTab: (tab: string) => Promise<void>
@@ -172,6 +174,17 @@ export const useSidebarStore = create<SidebarState>((set, get) => ({
     await store.save()
   },
   rightSidebarVisible: initialState.right,
+  rightSidebarBeforeThreads: null,
+  setThreadsRightSidebarAutoCollapse: (active) => {
+    const { rightSidebarVisible, rightSidebarBeforeThreads } = get()
+    if (active) {
+      if (rightSidebarBeforeThreads === null) {
+        set({ rightSidebarVisible: false, rightSidebarBeforeThreads: rightSidebarVisible })
+      }
+    } else if (rightSidebarBeforeThreads !== null) {
+      set({ rightSidebarVisible: rightSidebarBeforeThreads, rightSidebarBeforeThreads: null })
+    }
+  },
   toggleRightSidebar: async () => {
     const { leftSidebarVisible, centerPanelVisible, rightSidebarVisible } = get()
     
@@ -190,7 +203,7 @@ export const useSidebarStore = create<SidebarState>((set, get) => ({
     
     // 如果要打开右侧面板，总是允许
     const newState = !rightSidebarVisible
-    set({ rightSidebarVisible: newState })
+    set({ rightSidebarVisible: newState, rightSidebarBeforeThreads: null })
     localStorage.setItem('rightSidebarVisible', String(newState))
     const store = await Store.load('store.json')
     await store.set('rightSidebarVisible', newState)
@@ -221,7 +234,11 @@ export const useSidebarStore = create<SidebarState>((set, get) => ({
       localStorage.setItem('centerPanelVisible', String(centerState))
     }
     if (rightState !== null && rightState !== undefined) {
-      set({ rightSidebarVisible: rightState })
+      if (get().rightSidebarBeforeThreads !== null) {
+        set({ rightSidebarBeforeThreads: rightState })
+      } else {
+        set({ rightSidebarVisible: rightState })
+      }
       localStorage.setItem('rightSidebarVisible', String(rightState))
     }
     if (storedLeftTab !== null && storedLeftTab !== undefined) {

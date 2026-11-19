@@ -22,7 +22,7 @@ export function DiffBlock({ diff, className }: { diff: DiffPreview, className?: 
   if (diff.context.length + diff.removed.length + diff.added.length === 0) return null
   return (
     <div className={className} data-testid="decide-diff">
-      <pre className="overflow-x-auto rounded-md border border-line-soft bg-bg px-3 py-2 font-mono text-[12.5px] leading-6 whitespace-pre-wrap break-words">
+      <pre className="overflow-x-auto rounded-md border border-line-soft bg-bg px-3 py-2 font-mono text-ui-compact leading-6 whitespace-pre-wrap break-words">
         {diff.context.map((line, i) => <div key={`c${i}`} className="text-muted-ink">{`  ${line}`}</div>)}
         {diff.removed.map((line, i) => <div key={`r${i}`} className="text-muted-ink line-through">{`- ${line}`}</div>)}
         {diff.added.map((line, i) => <div key={`a${i}`}><ins className="rounded-[3px] bg-ink/9 px-0.5 no-underline">{`+ ${line}`}</ins></div>)}

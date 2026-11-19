@@ -20,7 +20,10 @@ import useArticleStore from '@/stores/article'
 import useCollectStore, { type CaptureItem, type CaptureProposal } from '@/stores/collect'
 import useInboxStore, { selectUnprocessedRecords } from '@/stores/inbox'
 import { getMarkListItemContent } from '../mark/mark-list-item-content'
-import { Count, EmptyState, PageHeader, PageSurface } from '../page-ui'
+import { Count } from '@/components/v3/count'
+import { EmptyState } from '@/components/v3/empty-state'
+import { SectionLabel } from '@/components/v3/section-label'
+import { PageHeader, PageSurface } from '../page-ui'
 import { CollectTabs } from '../sidebar-v3/section-tabs'
 
 const KIND_ICON: Record<ProposalKind, typeof FileText> = { note: FileText, task: ListTodo, event: CalendarClock }
@@ -99,7 +102,7 @@ function ProposalCard({ item, proposal }: { item: CaptureItem, proposal: Capture
     return (
       <div className={cn(base, 'border-line-soft bg-hover')} data-status="ok">
         <div className="flex items-center gap-1.5 text-xs text-muted-ink"><Icon className="size-3" aria-hidden />{t(`kind.${proposal.kind}`)}</div>
-        <b className="text-[13px] leading-5 font-medium">{proposal.title}</b>
+        <b className="text-ui-compact leading-5 font-medium">{proposal.title}</b>
         <div className="flex items-center justify-between gap-1 text-xs text-muted-foreground">
           <span className="flex min-w-0 items-center gap-1"><Check className="size-3 shrink-0" aria-hidden /><span className="truncate">{t('status.ok')}</span></span>
           <span className="flex shrink-0 gap-0.5">
@@ -117,7 +120,7 @@ function ProposalCard({ item, proposal }: { item: CaptureItem, proposal: Capture
     return (
       <div className={cn(base, 'border-dashed border-faint opacity-40')} data-status="no">
         <div className="flex items-center gap-1.5 text-xs text-muted-ink"><Icon className="size-3" aria-hidden />{t(`kind.${proposal.kind}`)}</div>
-        <b className="text-[13px] leading-5 font-medium line-through">{proposal.title}</b>
+        <b className="text-ui-compact leading-5 font-medium line-through">{proposal.title}</b>
         <span className="text-xs text-muted-foreground">{t('status.no')}</span>
       </div>
     )
@@ -132,7 +135,7 @@ function ProposalCard({ item, proposal }: { item: CaptureItem, proposal: Capture
           value={proposal.title}
           onChange={event => edit(item.id, proposal.id, { title: event.target.value })}
           aria-label={t('fieldTitle')}
-          className="h-7 w-full rounded border border-line bg-bg px-1.5 text-[13px] outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          className="h-7 w-full rounded border border-line bg-bg px-1.5 text-ui-compact outline-none focus-visible:ring-1 focus-visible:ring-ring"
         />
         {proposal.kind !== 'note' && (
           <div className="flex flex-col gap-1">
@@ -153,7 +156,7 @@ function ProposalCard({ item, proposal }: { item: CaptureItem, proposal: Capture
         <span className="flex items-center gap-1.5"><Icon className="size-3" aria-hidden />{t(`kind.${proposal.kind}`)}</span>
         {when && <span className="tabular-nums">{when}</span>}
       </div>
-      <b className="text-[13px] leading-5 font-medium break-words">{proposal.title}</b>
+      <b className="text-ui-compact leading-5 font-medium break-words">{proposal.title}</b>
       <span className="truncate text-xs text-muted-foreground" title={destination}>{destination}</span>
       <div className="mt-1 flex items-center gap-0.5">
         <Button size="sm" className="h-7 rounded-(--r) px-2.5" onClick={() => void onAccept()} disabled={busy}>{t('accept')}</Button>
@@ -195,10 +198,10 @@ function Entry({ item }: { item: CaptureItem }) {
       </div>
       <div className="min-w-0">
         <div className="flex items-start gap-2">
-          <h3 className="min-w-0 flex-1 text-[15px] leading-[22px] font-semibold tracking-[-0.006em] break-words">{itemTitle(item.input) || t('input.text')}</h3>
+          <h3 className="min-w-0 flex-1 text-ui-emphasis leading-[22px] font-semibold tracking-[-0.006em] break-words">{itemTitle(item.input) || t('input.text')}</h3>
           <button type="button" onClick={() => remove(item.id)} aria-label={t('remove')} title={t('remove')} className="cursor-pointer rounded-(--r) p-1 text-muted-ink outline-none hover:bg-hover hover:text-ink focus-visible:ring-1 focus-visible:ring-ring/65"><X className="size-3.5" aria-hidden /></button>
         </div>
-        {excerpt && excerpt !== itemTitle(item.input) && <p className="mt-0.5 line-clamp-2 whitespace-pre-line text-[13.5px] leading-[1.75] break-words text-muted-foreground">{excerpt}</p>}
+        {excerpt && excerpt !== itemTitle(item.input) && <p className="mt-0.5 line-clamp-2 whitespace-pre-line text-sm leading-[1.75] break-words text-muted-foreground">{excerpt}</p>}
 
         {item.state === 'reading' ? (
           <p className="mt-2.5 flex items-center gap-2 text-sm text-muted-foreground">
@@ -337,9 +340,9 @@ export function CollectScreen() {
                 placeholder={t('placeholder')}
                 aria-label={t('inputLabel')}
                 rows={3}
-                className="block min-h-[76px] w-full resize-none border-0 bg-transparent px-4 pt-3.5 pb-1.5 text-base leading-[26px] outline-none placeholder:text-faint focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring"
+                className="block min-h-[76px] w-full resize-none border-0 bg-transparent px-4 pt-3.5 pb-1.5 text-ui-emphasis leading-[26px] outline-none placeholder:text-faint focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring"
               />
-              <div className={cn('mx-3 mb-3 flex min-h-9 items-center gap-2 rounded-md px-2.5 py-1.5 text-[13px]', detected ? 'bg-hover' : 'border border-dashed border-line text-muted-ink')} aria-live="polite">
+              <div className={cn('mx-3 mb-3 flex min-h-9 items-center gap-2 rounded-md px-2.5 py-1.5 text-ui-compact', detected ? 'bg-hover' : 'border border-dashed border-line text-muted-ink')} aria-live="polite">
                 {detected ? (
                   <><span className="flex items-center gap-1.5 font-medium">{(() => { const D = detected === 'link' ? Link2 : detected === 'task' ? ListTodo : Type; return <D className="size-3.5" aria-hidden /> })()}{t(`detect.${detected}.name`)}</span><span className="text-muted-foreground">{t(`detect.${detected}.hint`)}</span></>
                 ) : t('detect.empty')}
@@ -369,24 +372,22 @@ export function CollectScreen() {
                 onChange={setFilter}
                 items={(['all', 'pending', 'done'] as const).map(value => ({
                   value,
-                  label: <>{t(`filter.${value}`)}<span className="font-mono text-[11px] font-normal">{counts[value]}</span></>,
+                  label: <>{t(`filter.${value}`)}<Count value={counts[value]} emphasis={value === 'pending'} /></>,
                 }))}
               />
             </div>
 
             {shown.length === 0 ? (
-              <EmptyState icon={InboxIcon} text={items.length === 0 ? t('empty') : t('emptyFilter')} />
+              <EmptyState className="py-4" icon={InboxIcon} text={items.length === 0 ? t('empty') : t('emptyFilter')} />
             ) : shown.map(item => <Entry key={item.id} item={item} />)}
           </div>
         </div>
 
         <aside className="min-w-0 border-t border-line-soft px-4 py-5 lg:overflow-y-auto lg:border-t-0 lg:border-l">
-          <div className="flex items-center gap-2 border-b border-line pb-1.5 text-[12.5px] font-semibold">
-            <span>{t('records')}</span><Count value={unprocessed.length} />
-          </div>
+          <SectionLabel as="h2" underline trailing={<Count value={unprocessed.length} />}>{t('records')}</SectionLabel>
           <p className="mt-2 text-xs leading-5 text-muted-ink">{t('recordsHint')}</p>
           {unprocessed.length === 0 ? (
-            <EmptyState icon={InboxIcon} text={t('recordsEmpty')} compact />
+            <EmptyState className="py-3" icon={InboxIcon} text={t('recordsEmpty')} />
           ) : (
             <ul className="mt-1">
               {unprocessed.slice(0, 12).map(record => {
@@ -394,7 +395,7 @@ export function CollectScreen() {
                 const label = title || preview || record.url
                 const inQueue = queued.has(record.id)
                 return (
-                  <li key={record.id} className="flex items-center gap-2 border-b border-line-soft py-2 text-[13px]">
+                  <li key={record.id} className="flex items-center gap-2 border-b border-line-soft py-2 text-ui-compact">
                     <span className="min-w-0 flex-1 truncate" title={label}>{label}</span>
                     <Button
                       size="sm"

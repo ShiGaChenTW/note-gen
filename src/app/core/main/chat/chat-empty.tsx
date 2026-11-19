@@ -88,7 +88,7 @@ export default function ChatEmpty() {
         <span aria-hidden="true" className="mb-3 grid size-9 place-items-center rounded-full bg-invert text-invert-ink">
           {isTemporaryConversation ? <MessageSquareDashed className="size-4" /> : <MessageCircle className="size-4" />}
         </span>
-        <h2 className="text-[15px] font-semibold text-ink">{tV3(`${mode}.title`)}</h2>
+        <h2 className="text-ui-emphasis font-semibold text-ink">{tV3(`${mode}.title`)}</h2>
         <p className="mt-1 max-w-64 text-xs leading-relaxed text-muted-ink">{tV3(`${mode}.description`)}</p>
         {isTemporaryConversation && <p className="mt-1 text-xs text-muted-ink">{tV3('temporaryHint')}</p>}
         <div className="mt-4 flex flex-wrap justify-center gap-1.5">

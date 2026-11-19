@@ -54,6 +54,8 @@ import {
 } from '@/components/ui/drawer'
 import { Input } from '@/components/ui/input'
 import { useTranslations } from 'next-intl'
+import { EmptyState } from '@/components/v3/empty-state'
+import { useUiV3 } from '@/lib/fork-ui'
 import useSettingStore from '@/stores/setting'
 import type { EditorEvents } from '@tiptap/core'
 import { OutlineHeadingIndex, type HeadingItem } from './outline-index'
@@ -375,6 +377,7 @@ function OutlineItems({
   onDragEnd: (event: DragEndEvent) => void
 }) {
   const t = useTranslations('editor')
+  const isV3 = useUiV3()
   const textSize = useSettingStore(state => state.fileManagerTextSize)
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -395,11 +398,14 @@ function OutlineItems({
     })
   }, [])
 
-  return headings.length === 0 ? (
-    <div className="flex min-h-24 items-center justify-center px-4 py-6 text-center text-sm text-muted-foreground">
-      {totalHeadingCount === 0 ? t('outline.empty') : t('outline.noResults')}
-    </div>
-  ) : (
+  if (headings.length === 0) {
+    const text = t(totalHeadingCount === 0 ? 'outline.empty' : 'outline.noResults')
+    return isV3 ? <EmptyState className="px-4 py-4" text={text} /> : (
+      <div className="flex min-h-24 items-center justify-center px-4 py-6 text-center text-sm text-muted-foreground">{text}</div>
+    )
+  }
+
+  return (
     <DndContext sensors={sensors} collisionDetection={collisionDetection} onDragEnd={onDragEnd}>
       <SortableContext
         items={headings.map((heading) => heading.id)}

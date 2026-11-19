@@ -4747,7 +4747,7 @@
         "usagePercent": "{percent}%",
         "mode": {
           "label": "對話模式",
-          "shortcut": "按 Tab 切換模式",
+          "shortcut": "按 Tab 在「問」與「交辦」之間切換",
           "ask": "問",
           "delegate": "交辦",
           "readOnlyHint": "只回答，不改檔案",
@@ -8342,26 +8342,19 @@
       "cancelled": "已取消"
     }
   },
+  "dateNavigation": {
+    "weekNumber": "第 {week} 週"
+  },
   "todayV3": {
     "title": "今天",
-    "dateLabel": "{month} 月 {day} 日 {weekday} · W{week}",
-    "weekday": {
-      "0": "星期日",
-      "1": "星期一",
-      "2": "星期二",
-      "3": "星期三",
-      "4": "星期四",
-      "5": "星期五",
-      "6": "星期六"
-    },
+    "dateLabel": "{date} · {week}",
     "summary": "今天 {events} 個行程、{tasks} 件待辦、{decisions} 件等你定。",
-    "summaryDay": "{month} 月 {day} 日：{events} 個行程、{tasks} 件待辦；等你定 {decisions} 件（不分日期）。",
+    "summaryDay": "{date}：{events} 個行程、{tasks} 件待辦；等你定 {decisions} 件（不分日期）。",
     "viewing": "正在看",
     "strip": {
       "label": "日期列，{range}",
       "previous": "往前一週",
       "next": "往後一週",
-      "dayLabel": "{month} 月 {day} 日 {weekday}",
       "today": "今天",
       "hasNote": "有每日筆記",
       "backToToday": "回到今天"
@@ -8395,7 +8388,7 @@
       "overdue": "逾期 {days} 天",
       "check": "完成「{title}」",
       "uncheck": "取消完成「{title}」",
-      "labelDay": "{month}/{day} 到期",
+      "labelDay": "{date} 到期",
       "emptyDay": "這天沒有到期的任務。"
     },
     "decide": {
@@ -8417,6 +8410,7 @@
     },
     "composer": {
       "modeLabel": "輸入模式",
+      "tabHint": "按 Tab 切換到「問」",
       "note": "記",
       "ask": "問",
       "notePlaceholder": "記一筆，或按 Tab 切到「問」",
@@ -8434,10 +8428,10 @@
       "captured": "收進來了，正在拆分成提案",
       "noModel": "還沒設定模型，請先到設定選一個。"
     },
-    "titleDay": "{month} 月 {day} 日"
+    "titleDay": "{date}"
   },
   "week": {
-    "title": "週計畫",
+    "title": "計畫",
     "previous": "上一週",
     "next": "下一週",
     "current": "本週",
@@ -8452,6 +8446,7 @@
     },
     "calendar": "行事曆事件",
     "completed": "已完成的任務",
+    "empty": "這一週沒有行程或任務。",
     "untitledEvent": "無標題事件",
     "reviewProposal": "查看時段提案 {description}",
     "slotUnavailable": "此時段已無法使用，或原任務已變更。",
@@ -8499,7 +8494,7 @@
       "timeline": "時間軸",
       "canvases": "畫布",
       "noteTags": "標籤",
-      "prompts": "個人提示詞庫",
+      "prompts": "提示詞",
       "outline": "大綱"
     },
     "knowledge": {

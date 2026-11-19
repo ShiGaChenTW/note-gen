@@ -109,7 +109,7 @@ function PanelBody() {
                 send()
               }
             }}
-            className="max-h-32 min-h-8 flex-1 resize-none border-0 bg-transparent p-1 text-[13px] shadow-none placeholder:text-faint focus-visible:ring-1 focus-visible:ring-ring"
+            className="max-h-32 min-h-8 flex-1 resize-none border-0 bg-transparent p-1 text-[13px] v3:text-ui-compact shadow-none placeholder:text-faint focus-visible:ring-1 focus-visible:ring-ring"
           />
           <Button size="icon-sm" aria-label={t('send')} disabled={!canSend} onClick={send}><ArrowUp aria-hidden /></Button>
         </div>
