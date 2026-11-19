@@ -71,7 +71,7 @@
     "close": "關閉貼圖",
     "copied": "已複製圖片",
     "zoomLabel": "縮放 {percent}%",
-    "hint": "拖曳頂部列移動；滾輪縮放；Esc 關閉"
+    "hint": "拖曳頂端列移動；滾輪縮放；Esc 關閉"
   },
   "screenshotEditor": {
     "title": "桌面截圖",
@@ -114,7 +114,7 @@
   },
   "appLock": {
     "title": "啟動密碼鎖",
-    "description": "密碼鎖僅保護應用程式介面，不會加密筆記檔案；請妥善保存密碼。",
+    "description": "密碼鎖僅保護應用程式介面，不會加密筆記檔案；請妥善保管密碼。",
     "unlockDescription": "輸入密碼後開啟 NoteGen。",
     "loading": "正在讀取密碼鎖設定…",
     "password": "密碼",
@@ -152,14 +152,14 @@
   "tray": {
     "quickRecord": "快速記錄",
     "moreRecord": "更多記錄",
-    "open": "打開",
+    "open": "開啟",
     "showMain": "顯示主視窗",
-    "newNote": "新建筆記",
-    "newFolder": "新建資料夾",
-    "settings": "設置",
+    "newNote": "新增筆記",
+    "newFolder": "新增資料夾",
+    "settings": "設定",
     "window": "視窗",
     "pinToggle": "置頂/取消置頂",
-    "hideWindow": "隱藏到托盤",
+    "hideWindow": "隱藏至系統匣",
     "quit": "退出 NoteGen"
   },
   "today": {
@@ -171,7 +171,7 @@
       "evening": "晚安"
     },
     "week": {
-      "label": "本週日記",
+      "label": "本週每日筆記",
       "day": "{date}，{open} 項未完成"
     },
     "openDaily": "開啟 Daily Note",
@@ -210,8 +210,8 @@
       "blocks": "時間軸"
     },
     "calendar": {
-      "prompt": "連接 macOS 行事曆，把今天的會議放進進程",
-      "connect": "連接行事曆",
+      "prompt": "連線 macOS 行事曆，把今天的會議放進進程",
+      "connect": "連線行事曆",
       "denied": "行事曆權限已關閉，可到「系統設定 → 隱私權與安全性 → 行事曆」開啟"
     },
     "tasks": {
@@ -269,7 +269,7 @@
       "prevShortcut": "前一篇日記（⌘⌥[）",
       "nextShortcut": "後一篇日記（⌘⌥]）",
       "today": "今天",
-      "legendNote": "有日記",
+      "legendNote": "有每日筆記",
       "legendTasks": "有任務到期",
       "noMore": "沒有更多日記了",
       "openFailed": "無法開啟日記",
@@ -397,7 +397,7 @@
       "title": "預設模型",
       "followPrimary": {
         "title": "編輯器模型",
-        "desc": "用於續寫、內容生成和自動提交訊息；未選擇時跟隨目前的主要模型",
+        "desc": "用於續寫、內容產生和自動提交訊息；未選擇時跟隨目前的主要模型",
         "value": "跟隨主要模型"
       }
     },
@@ -426,14 +426,14 @@
         "microphone": "麥克風",
         "microphoneDesc": "用於錄音記錄。"
       },
-      "title": "常規設置",
-      "desc": "在這裡，你可以配置應用的基本設置，包括界面主題、語言等選項。",
+      "title": "常規設定",
+      "desc": "設定應用程式的基本選項，包括介面主題和語言。",
       "behavior": {
-        "title": "應用行為",
+        "title": "應用程式行為",
         "desc": "設定 NoteGen 的啟動方式和關閉視窗時的行為",
         "close": {
           "title": "關閉視窗時",
-          "desc": "選擇點擊視窗關閉按鈕後執行的操作",
+          "desc": "選擇點選視窗關閉按鈕後執行的操作",
           "options": {
             "minimize": "最小化到系統匣",
             "quit": "直接退出",
@@ -452,25 +452,25 @@
         },
         "closePrompt": {
           "title": "關閉 NoteGen？",
-          "desc": "你可以將 NoteGen 保留在系統匣，或完全退出應用。",
+          "desc": "你可以將 NoteGen 保留在系統匣，或完全結束應用程式。",
           "cancel": "取消",
           "minimize": "最小化到系統匣",
-          "quit": "退出應用"
+          "quit": "結束應用程式"
         }
       },
       "interface": {
-        "title": "界面設置",
+        "title": "介面設定",
         "appearance": {
           "title": "外觀與語言",
-          "desc": "調整應用主題、顯示語言和全域字體"
+          "desc": "調整應用程式主題、顯示語言和全域字體"
         },
         "reading": {
           "title": "閱讀與縮放",
-          "desc": "分別調整界面、正文和列表的顯示尺寸"
+          "desc": "分別調整介面、正文和清單的顯示尺寸"
         },
         "theme": {
           "title": "主題",
-          "desc": "選擇應用的外觀主題",
+          "desc": "選擇應用程式的外觀主題",
           "options": {
             "light": "亮色",
             "dark": "暗色",
@@ -479,12 +479,12 @@
         },
         "language": {
           "title": "語言",
-          "desc": "選擇應用的顯示語言",
+          "desc": "選擇應用程式的顯示語言",
           "findInPlugins": "在外掛中找到您要的語言"
         },
         "scale": {
-          "title": "界面縮放",
-          "desc": "調整應用界面的整體縮放比例",
+          "title": "介面縮放",
+          "desc": "調整應用程式介面的整體縮放比例",
           "placeholder": "選擇縮放比例"
         },
         "contentTextScale": {
@@ -492,19 +492,19 @@
           "desc": "調整編輯器和對話中 Markdown 內容的文字大小"
         },
         "fileManagerTextSize": {
-          "title": "文件管理器文字大小",
-          "desc": "調整文件管理器中文件和文件夾列表的文字大小"
+          "title": "檔案總管文字大小",
+          "desc": "調整檔案總管中檔案和資料夾清單的文字大小"
         },
         "recordTextSize": {
           "title": "記錄文字大小",
-          "desc": "調整記錄列表中記錄項的文字大小"
+          "desc": "調整記錄清單中記錄項的文字大小"
         },
         "fontFamily": {
-          "title": "應用字體",
+          "title": "應用程式字型",
           "desc": "桌面端可選擇系統字體；移動端使用系統允許的通用字體族",
           "placeholder": "選擇字體",
           "loading": "正在讀取系統字體...",
-          "noSystemFonts": "當前平台不支援讀取完整系統字體",
+          "noSystemFonts": "目前平台不支援讀取完整系統字體",
           "groups": {
             "default": "預設",
             "generic": "通用字體",
@@ -519,73 +519,73 @@
         },
         "customCss": {
           "title": "自訂 CSS",
-          "desc": "自訂整個應用的樣式，包括 Markdown 正文、側邊欄和設定介面",
+          "desc": "自訂整個應用程式的樣式，包括 Markdown 正文、側邊欄和設定介面",
           "button": "編輯 CSS",
           "dialogTitle": "自訂 CSS",
-          "dialogDesc": "CSS 儲存後會作用於目前裝置的整個應用。若樣式影響使用，可在此清空並恢復預設。",
-          "placeholder": "在此輸入自訂 CSS 代碼。",
+          "dialogDesc": "CSS 儲存後會作用於目前裝置的整個應用程式。若樣式影響使用，可在此清空並還原預設。",
+          "placeholder": "在此輸入自訂 CSS 程式碼。",
           "save": "儲存",
           "cancel": "取消",
-          "reset": "清空並恢復預設",
+          "reset": "清空並還原預設",
           "saveError": "自訂 CSS 儲存失敗"
         },
         "customTheme": {
-          "title": "自定义主题颜色",
-          "desc": "自定义应用的主题颜色，包括背景色、前景色、边框色等",
-          "button": "编辑颜色",
-          "dialogTitle": "自定义主题颜色",
-          "dialogDesc": "配置自定义主题颜色。颜色更改会实时保存并生效，同时覆盖亮色和暗色主题。",
+          "title": "自訂主題顏色",
+          "desc": "自訂應用程式的主題顏色，包括背景色、前景色、邊框色等",
+          "button": "編輯顏色",
+          "dialogTitle": "自訂主題顏色",
+          "dialogDesc": "設定自訂主題顏色。變更會立即儲存並套用，同時覆寫淺色與深色主題。",
           "close": "關閉",
           "reset": "重置全部",
           "tabs": {
-            "custom": "自定义",
-            "presets": "预设方案",
-            "importExport": "导入导出"
+            "custom": "自訂",
+            "presets": "預設方案",
+            "importExport": "匯入匯出"
           },
           "export": {
-            "title": "导出配色方案",
-            "button": "生成导出代码",
-            "placeholder": "点击生成按钮将当前配色导出为代码"
+            "title": "匯出配色方案",
+            "button": "產生配色 JSON",
+            "placeholder": "點選按鈕將目前配色匯出成 JSON"
           },
           "import": {
-            "title": "导入配色方案",
-            "button": "导入配色",
-            "placeholder": "粘贴配色方案的 JSON 代码"
+            "title": "匯入配色方案",
+            "button": "匯入配色",
+            "placeholder": "貼上配色方案的 JSON 內容"
           },
           "colors": {
             "background": "背景色",
             "foreground": "前景色",
             "card": "卡片背景色",
             "cardForeground": "卡片前景色",
-            "primary": "主色调",
-            "primaryForeground": "主色调前景色",
-            "secondary": "次要色调",
-            "secondaryForeground": "次要色调前景色",
-            "third": "第三色调",
-            "thirdForeground": "第三色调前景色",
+            "primary": "主色調",
+            "primaryForeground": "主色調前景色",
+            "secondary": "次要色調",
+            "secondaryForeground": "次要色調前景色",
+            "third": "第三色調",
+            "thirdForeground": "第三色調前景色",
             "muted": "柔和色",
             "mutedForeground": "柔和色前景色",
-            "accent": "强调色",
-            "accentForeground": "强调色前景色",
-            "border": "边框色",
-            "shadow": "阴影色"
+            "accent": "強調色",
+            "accentForeground": "強調色前景色",
+            "border": "邊框色",
+            "shadow": "陰影色"
           },
           "presets": {
-            "apply": "应用",
+            "apply": "套用",
             "reset": {
-              "name": "恢复默认"
+              "name": "還原預設"
             },
             "default": {
-              "name": "默认白色"
+              "name": "預設白色"
             },
             "ocean": {
-              "name": "海洋蓝"
+              "name": "海洋藍"
             },
             "forest": {
-              "name": "森林绿"
+              "name": "森林綠"
             },
             "sunset": {
-              "name": "日落红"
+              "name": "日落紅"
             },
             "lavender": {
               "name": "薰衣草紫"
@@ -594,13 +594,13 @@
               "name": "午夜暗"
             },
             "deepSea": {
-              "name": "深海蓝"
+              "name": "深海藍"
             },
             "darkForest": {
-              "name": "暗夜绿"
+              "name": "暗夜綠"
             },
             "darkViolet": {
-              "name": "紫罗兰暗"
+              "name": "深紫羅蘭"
             },
             "coralWarm": {
               "name": "珊瑚暖"
@@ -612,17 +612,17 @@
               "name": "暗夜金"
             },
             "beigeWarm": {
-              "name": "米黄暖"
+              "name": "暖米黃"
             },
             "beigeDark": {
-              "name": "米黄暗"
+              "name": "深米黃"
             }
           }
         },
         "tray": {
           "enabled": {
-            "title": "啟用托盤",
-            "desc": "關閉窗口時選擇最小化到托盤或直接關閉軟件"
+            "title": "啟用系統匣",
+            "desc": "關閉視窗時，可將程式縮到系統匣或直接結束"
           }
         },
         "themePackage": {
@@ -635,28 +635,28 @@
         }
       },
       "tools": {
-        "title": "工具設置",
-        "desc": "配置各种工具栏按钮的显示和排序",
+        "title": "工具設定",
+        "desc": "設定各種工具列按鈕的顯示和排序",
         "chatToolbar": {
-          "title": "對話工具欄",
-          "desc": "自訂對話工具欄按鈕的顯示順序和可見性，打造個性化的對話體驗",
-          "button": "設置",
-          "dialogTitle": "配置對話工具欄",
-          "dialogDesc": "拖動工具調整排序，使用開關控制顯示或隱藏",
+          "title": "對話工具列",
+          "desc": "自訂對話工具列按鈕的顯示順序和顯示狀態，打造個性化的對話體驗",
+          "button": "設定",
+          "dialogTitle": "設定對話工具列",
+          "dialogDesc": "拖曳工具調整排序，使用開關控制顯示或隱藏",
           "groups": {
             "pc": "PC 端",
             "mobile": "移動端",
-            "bottom": "底部工具欄",
-            "topLeft": "頂部工具欄 - 左側",
-            "topRight": "頂部工具欄 - 右側"
+            "bottom": "底端工具列",
+            "topLeft": "頂端工具列 - 左側",
+            "topRight": "頂端工具列 - 右側"
           }
         },
         "recordToolbar": {
-          "title": "记录工具栏",
-          "desc": "自定义记录工具栏按钮的显示顺序和可见性",
-          "button": "設置",
-          "dialogTitle": "配置记录工具栏",
-          "dialogDesc": "拖动工具调整排序，使用开关控制显示或隐藏"
+          "title": "記錄工具列",
+          "desc": "自訂記錄工具列按鈕的顯示順序和顯示狀態",
+          "button": "設定",
+          "dialogTitle": "設定記錄工具列",
+          "dialogDesc": "拖曳工具調整排序，使用開關控制顯示或隱藏"
         }
       }
     },
@@ -733,10 +733,10 @@
       "title": "知識庫",
       "desc": "知識庫透過向量、BM25 和模糊比對進行混合檢索，並可使用重排模型改善結果順序。",
       "modelSectionTitle": "檢索模型",
-      "modelSectionDesc": "嵌入模型用於語意檢索，重排模型為選用；未配置模型時仍可使用本機詞法檢索。",
+      "modelSectionDesc": "嵌入模型用於語意檢索，重排模型為選用；未設定模型時仍可使用本機詞法檢索。",
       "modelAvailable": "可用",
       "modelUnavailable": "不可用",
-      "modelNotConfigured": "未配置",
+      "modelNotConfigured": "未設定",
       "indexStatusTitle": "索引狀態",
       "indexStatusDesc": "查看目前索引規模；模型、分塊或排除路徑變更後需要重新建立。",
       "vectorDocuments": "向量檔案",
@@ -760,7 +760,7 @@
         },
         "record": {
           "title": "記錄",
-          "desc": "索引單條記錄、OCR、錄音轉寫和既有中繼資料。"
+          "desc": "索引單則記錄、OCR、錄音轉寫和既有中繼資料。"
         },
         "canvas": {
           "title": "畫布",
@@ -807,31 +807,31 @@
           "title": "召回優先"
         }
       },
-      "settingsTitle": "參數設置",
-      "settingsDesc": "通過調解參數，可以更加精確的控制知識庫的檢索效果。",
+      "settingsTitle": "參數設定",
+      "settingsDesc": "調整參數可更精確地控制知識庫的檢索效果。",
       "deleteVectorConfirm": "確定清空向量和 BM25 索引嗎？筆記不會被刪除，本機模糊檢索仍然可用。",
       "deleteVectorSuccess": "檢索索引已清空",
       "enable": "啟用知識庫檢索",
       "enableDesc": "啟用後，AI 將在回答問題時檢索你的筆記內容，提供更準確的回答。",
-      "topPDesc": "Top P 參數控制模型生成文本的多樣性，值越小生成的文本越確定，值越大生成的文本越多樣。",
+      "topPDesc": "Top P 參數控制模型產生文字的多樣性，值越小產生的文字越確定，值越大產生的文字越多樣。",
       "chunkSize": "分塊大小",
-      "chunkSizeDesc": "文本分塊的最大字元數，較大的分塊可能包含更多上下文，但會增加向量計算的複雜度。",
+      "chunkSizeDesc": "文字分塊的最大字元數，較大的分塊可能包含更多上下文，但會增加向量計算的複雜度。",
       "chunkOverlap": "重疊大小",
-      "chunkOverlapDesc": "文本分塊間的重疊字元數，較大的重疊可以保持上下文連貫性。",
+      "chunkOverlapDesc": "文字分塊間的重疊字元數，較大的重疊可以保持上下文連貫性。",
       "resultCount": "檢索數量",
       "resultCountDesc": "最終提供給 AI 的相關上下文片段數量，數量越多資訊更豐富，但也可能引入雜訊。",
       "similarityThreshold": "相似度閾值",
       "similarityThresholdDesc": "只過濾向量檢索中相似度過低的片段，不影響 BM25 和模糊檢索。值越高要求越嚴格。",
       "rerankThreshold": "重排相關性閾值",
       "rerankThresholdDesc": "重排模型啟用時過濾低相關結果，減少為了湊數而加入的雜訊。",
-      "rerankThresholdDisabledDesc": "未配置可用的重排模型；目前使用本機融合評分排序，此閾值不生效。",
+      "rerankThresholdDisabledDesc": "未設定可用的重排模型；目前使用本機融合評分排序，此閾值不生效。",
       "excludedPaths": "排除路徑",
-      "excludedPathsDesc": "每行填寫一個相對於知識庫根目錄的資料夾或路徑前綴；儲存後需要重新建立索引。",
+      "excludedPathsDesc": "每行填寫一個相對於知識庫根目錄的資料夾或路徑前置字串；儲存後需要重新建立索引。",
       "excludedPathsPlaceholder": "例如：封存\n敏感資訊",
       "excludedPathsInvalid": "請使用相對於知識庫根目錄的安全路徑，不支援絕對路徑或 ..。",
       "excludedPathsSaved": "已儲存",
       "excludedPathsUnsaved": "有未儲存的修改",
-      "restoreDefaultExclusions": "恢復預設排除項",
+      "restoreDefaultExclusions": "還原預設排除項",
       "saveExcludedPaths": "儲存",
       "advancedSettingsTitle": "進階設定",
       "advancedSettingsDesc": "調整分塊與過濾閾值；分塊設定變更後需要重新建立索引。",
@@ -863,45 +863,45 @@
     },
     "mcp": {
       "title": "MCP",
-      "desc": "透過 Model Context Protocol 連接外部工具，或讓本機 AI 存取 NoteGen。",
+      "desc": "透過 Model Context Protocol 連線外部工具，或讓本機 AI 存取 NoteGen。",
       "externalTab": "外部 MCP 服務",
       "accessTab": "存取 NoteGen",
-      "enableTitle": "启用 MCP 功能",
-      "enableDesc": "启用后，AI 可以调用配置的 MCP 服务器提供的工具。",
-      "servers": "伺服器列表",
-      "serversDesc": "管理 MCP 伺服器配置，每個伺服器可以提供不同的工具和資源。",
-      "addServer": "添加伺服器",
-      "addFirstServer": "添加第一個伺服器",
+      "enableTitle": "啟用 MCP 功能",
+      "enableDesc": "啟用後，AI 可以呼叫設定的 MCP 伺服器提供的工具。",
+      "servers": "伺服器清單",
+      "serversDesc": "管理 MCP 伺服器設定，每個伺服器可以提供不同的工具和資源。",
+      "addServer": "新增伺服器",
+      "addFirstServer": "新增第一個伺服器",
       "editServer": "編輯伺服器",
       "serverName": "伺服器名稱",
-      "serverNamePlaceholder": "例如：文件系統伺服器",
+      "serverNamePlaceholder": "例如：檔案系統伺服器",
       "serverEnabled": "啟用伺服器",
       "trustToolAnnotations": "信任工具權限聲明",
       "trustToolAnnotationsDesc": "僅對可信伺服器啟用；允許依唯讀聲明減少確認，破壞性操作仍會確認。",
-      "serverEnabledDesc": "啟用後，此伺服器將自動連接並提供工具。",
+      "serverEnabledDesc": "啟用後，此伺服器將自動連線並提供工具。",
       "serverType": "伺服器類型",
-      "stdio": "本地命令",
+      "stdio": "本機命令",
       "http": "HTTP 服務",
       "command": "命令",
       "args": "參數",
       "argsDesc": "命令行參數，用空格分隔",
       "env": "環境變數",
-      "envDesc": "JSON 格式的環境變數配置",
+      "envDesc": "JSON 格式的環境變數設定",
       "url": "服務地址",
       "headers": "請求頭",
       "headersDesc": "JSON 格式的 HTTP 請求頭",
-      "testConnection": "測試連接",
+      "testConnection": "測試連線",
       "test": "測試",
-      "testSuccess": "連接測試成功",
-      "testFailed": "連接測試失敗",
-      "connected": "已連接",
+      "testSuccess": "連線測試成功",
+      "testFailed": "連線測試失敗",
+      "connected": "已連線",
       "connecting": "連線中",
-      "disconnected": "未連接",
+      "disconnected": "未連線",
       "error": "錯誤",
       "tools": "工具",
       "noServers": "未啟用 MCP 服務功能",
-      "noServersFound": "未找到匹配的伺服器",
-      "serverAdded": "伺服器添加成功",
+      "noServersFound": "找不到匹配的伺服器",
+      "serverAdded": "伺服器新增成功",
       "serverUpdated": "伺服器更新成功",
       "serverDeleted": "伺服器刪除成功",
       "deleteServerTitle": "刪除伺服器",
@@ -910,35 +910,35 @@
       "commandRequired": "請輸入命令",
       "urlRequired": "請輸入服務地址",
       "toolBrowser": "工具瀏覽器",
-      "searchTools": "搜索工具...",
-      "noToolsFound": "未找到工具",
+      "searchTools": "搜尋工具...",
+      "noToolsFound": "找不到工具",
       "parameters": "參數",
-      "testAll": "測試所有連接",
-      "testAllCompleted": "所有連接測試完成",
-      "testAllFailed": "連接測試失敗",
-      "save": "保存",
+      "testAll": "測試所有連線",
+      "testAllCompleted": "所有連線測試完成",
+      "testAllFailed": "連線測試失敗",
+      "save": "儲存",
       "cancel": "取消",
       "delete": "刪除",
-      "importJson": "導入 JSON",
-      "jsonImportTitle": "從 JSON 導入伺服器配置",
-      "jsonImportDesc": "粘貼 MCP 伺服器的 mcpServers 配置格式",
-      "jsonInput": "JSON 配置",
-      "jsonInputHelp": "支持 mcpServers 格式，會自動使用伺服器名稱作為 key",
-      "jsonRequired": "請輸入 JSON 配置",
-      "jsonEmpty": "JSON 配置不能為空",
+      "importJson": "匯入 JSON",
+      "jsonImportTitle": "從 JSON 匯入伺服器設定",
+      "jsonImportDesc": "貼上 MCP 伺服器的 mcpServers 設定格式",
+      "jsonInput": "JSON 設定",
+      "jsonInputHelp": "支援 mcpServers 格式，會自動使用伺服器名稱作為 key",
+      "jsonRequired": "請輸入 JSON 設定",
+      "jsonEmpty": "JSON 設定不能為空",
       "jsonInvalidJson": "JSON 格式錯誤",
-      "jsonInvalidFormat": "配置格式無效，必須包含 name 和 type 字段",
+      "jsonInvalidFormat": "設定格式無效，必須包含 name 和 type 欄位",
       "jsonInvalidType": "伺服器類型必須是 stdio 或 http",
       "jsonMissingCommand": "stdio 類型伺服器必須指定 command",
       "jsonMissingUrl": "http 類型伺服器必須指定 url",
-      "jsonImportSuccess": "成功導入 {count} 個伺服器",
+      "jsonImportSuccess": "成功匯入 {count} 個伺服器",
       "jsonImportSkipped": "跳過 {count} 個已存在的伺服器",
-      "jsonImportNoServers": "沒有導入任何伺服器",
-      "import": "導入",
-      "mobileHttpOnlyTitle": "本地命令 MCP 僅限桌面端",
-      "mobileHttpOnlyDesc": "本地命令型 MCP 伺服器僅支援桌面端，行動端目前只支援 HTTP MCP。",
+      "jsonImportNoServers": "沒有匯入任何伺服器",
+      "import": "匯入",
+      "mobileHttpOnlyTitle": "本機命令 MCP 僅限桌面端",
+      "mobileHttpOnlyDesc": "本機命令型 MCP 伺服器僅支援桌面端，行動端目前只支援 HTTP MCP。",
       "runtimeEnvironment": "執行環境",
-      "runtimeEnvironmentDesc": "在測試 MCP 伺服器前，先檢查所需的本地執行環境是否可用。",
+      "runtimeEnvironmentDesc": "在測試 MCP 伺服器前，先檢查所需的本機執行環境是否可用。",
       "checkEnvironment": "檢查環境",
       "recheckEnvironment": "重新檢查環境",
       "runtimeCheckFailed": "環境檢查失敗",
@@ -960,7 +960,7 @@
       "runtimeInstallCompleted": "安裝完成",
       "runtimeInstallCancelled": "已取消",
       "runtimeInstallFailedState": "安裝失敗",
-      "runtimeInstallLogs": "安裝日誌",
+      "runtimeInstallLogs": "安裝記錄",
       "runtimeInstallWaitingLogs": "等待安裝輸出...",
       "runtimeInstallClose": "關閉",
       "runtimeInstallCancel": "終止安裝",
@@ -980,7 +980,7 @@
       "recommended": {
         "title": "NoteGen 精選",
         "description": "探索適合筆記與寫作的技能，選擇後即可安裝。",
-        "empty": "暫無推薦技能",
+        "empty": "目前沒有推薦技能",
         "loadError": "推薦技能載入失敗",
         "refresh": "重新整理推薦",
         "install": "安裝",
@@ -1002,68 +1002,68 @@
         "refreshSkillsError": "技能已安裝，但清單重新整理失敗，請重新開啟設定。"
       },
       "desc": "技能是可重用的 AI 能力包，讓 AI 助手能夠根據任務自動套用特定行為模式。",
-      "enable": "启用 Skills 功能",
-      "enableDesc": "启用后，AI 可以使用已配置的 Skills",
-      "autoMatch": "自动匹配 Skills",
-      "autoMatchDesc": "根据用户输入自动选择合适的 Skills",
+      "enable": "啟用 Skills 功能",
+      "enableDesc": "啟用後，AI 可以使用已設定的 Skills",
+      "autoMatch": "自動比對 Skills",
+      "autoMatchDesc": "根據使用者輸入自動選擇合適的 Skills",
       "project": "工作區技能",
       "global": "全域技能",
       "globalPath": "全域技能儲存位置",
-      "openInFileManager": "在文件管理器中打开",
-      "createSkill": "创建 Skill",
-      "deleteSkill": "删除 Skill",
-      "exportSkill": "导出 Skill",
-      "importSkill": "导入 Skill",
+      "openInFileManager": "在檔案總管中開啟",
+      "createSkill": "建立 Skill",
+      "deleteSkill": "刪除 Skill",
+      "exportSkill": "匯出 Skill",
+      "importSkill": "匯入 Skill",
       "installSkill": "安裝技能",
       "installFromFolder": "從資料夾安裝",
       "installFromZip": "從 ZIP 安裝",
       "openSkillsFolder": "開啟目錄",
       "selectSkillFolder": "選擇包含 SKILL.md 的 Skill 資料夾",
-      "selectSkillZip": "选择 Skill zip 文件",
+      "selectSkillZip": "選擇 Skill zip 檔案",
       "openDirectoryError": "開啟 Skills 目錄失敗",
-      "importSuccess": "导入成功",
-      "importError": "导入失败",
-      "imported": "已导入",
+      "importSuccess": "匯入成功",
+      "importError": "匯入失敗",
+      "imported": "已匯入",
       "importedSkill": "已安裝 {name}",
-      "importing": "导入中...",
-      "skillName": "Skill 名称",
+      "importing": "匯入中...",
+      "skillName": "Skill 名稱",
       "skillDescription": "描述",
       "skillVersion": "版本",
       "skillAuthor": "作者",
-      "allowedTools": "允许使用的工具",
-      "userInvocable": "在斜杠菜单显示",
-      "importHelp": "支持导入 zip 格式的 Skill，zip 文件需包含 SKILL.md 文件。",
+      "allowedTools": "允許使用的工具",
+      "userInvocable": "在斜槓選單顯示",
+      "importHelp": "支援匯入 zip 格式的 Skill，zip 檔案需包含 SKILL.md 檔案。",
       "workspaceInstallHelp": "安裝到目前工作區的 skills 目錄，僅供目前工作區使用。",
       "globalInstallHelp": "安裝到 NoteGen 的全域 Skills 目錄，可供所有工作區使用。",
-      "metadata": "元数据",
-      "content": "指令内容",
-      "noSkills": "还没有 Skills",
-      "noSkillsDesc": "创建或导入 Skills 以开始使用",
-      "noSkillsGlobal": "还没有全局 Skills",
-      "noSkillsGlobalDesc": "创建或导入 Skills 以在所有项目中使用",
-      "emptyWorkspace": "工作区中没有 Skills",
-      "emptyWorkspaceDesc": "在 skills 文件夹中创建 SKILL.md 文件来添加 Skill",
-      "basicSettings": "基础设置",
+      "metadata": "元資料",
+      "content": "指令內容",
+      "noSkills": "還沒有 Skills",
+      "noSkillsDesc": "建立或匯入 Skills 以開始使用",
+      "noSkillsGlobal": "還沒有全域 Skills",
+      "noSkillsGlobalDesc": "建立或匯入 Skills 以在所有專案中使用",
+      "emptyWorkspace": "工作區中沒有 Skills",
+      "emptyWorkspaceDesc": "在 skills 資料夾中建立 SKILL.md 檔案來新增 Skill",
+      "basicSettings": "基礎設定",
       "installedGlobalSkills": "已安裝的全域技能",
-      "nameRequired": "请输入 Skill 名称",
-      "descriptionRequired": "请输入描述",
+      "nameRequired": "請輸入 Skill 名稱",
+      "descriptionRequired": "請輸入描述",
       "namePlaceholder": "note-organizer",
       "versionPlaceholder": "1.0.0",
-      "descriptionPlaceholder": "自动整理和优化笔记结构...",
+      "descriptionPlaceholder": "自動整理和優化筆記結構...",
       "authorPlaceholder": "Your Name",
-      "descriptionHelp": "用于 AI 匹配，描述此 Skill 的功能和适用场景",
-      "allowedToolsHelp": "这些工具使用时不需要用户确认",
-      "userInvocableHelp": "用户可以通过 /skill-name 手动触发",
-      "deleteSkillTitle": "删除 Skill",
-      "deleteSkillDesc": "确定要删除这个 Skill 吗？此操作无法撤销。",
-      "skillDeleted": "Skill 删除成功",
+      "descriptionHelp": "用於 AI 比對，描述此 Skill 的功能和適用情境",
+      "allowedToolsHelp": "這些工具使用時不需要使用者確認",
+      "userInvocableHelp": "使用者可以透過 /skill-name 手動觸發",
+      "deleteSkillTitle": "刪除 Skill",
+      "deleteSkillDesc": "確定要刪除這個 Skill 嗎？此操作無法撤銷。",
+      "skillDeleted": "Skill 刪除成功",
       "pythonRuntime": "Python 執行環境",
       "isolatedRuntime": "隔離環境",
       "systemRuntime": "系統環境",
       "runtimeUnavailable": "無法使用",
       "environment": {
         "title": "執行環境",
-        "description": "查看此 Skill 使用的執行階段與文件工具。",
+        "description": "查看此 Skill 使用的執行階段與檔案工具。",
         "available": "可用",
         "missing": "未安裝",
         "systemToolsHelp": "Word 轉換與版面預覽需要 LibreOffice、Poppler 等本機工具；掃描檔 OCR 還需要 Tesseract。安裝後請重新整理狀態。",
@@ -1071,7 +1071,7 @@
         "installPython": "安裝 Python 相依套件",
         "installNode": "安裝 Node.js 相依套件",
         "installed": "相依套件安裝完成",
-        "desktopOnly": "本機指令碼與文件執行環境目前用於桌面版。行動版可安裝並使用純指令技能。"
+        "desktopOnly": "本機指令碼與檔案執行環境目前用於桌面版。行動版可安裝並使用純指令技能。"
       }
     },
     "plugins": {
@@ -1080,10 +1080,10 @@
         "confirmPrompt": "確認",
         "cancelPrompt": "取消",
         "searchChoices": "搜尋選項",
-        "loadingView": "正在載入外掛視圖…",
-        "viewFailed": "無法開啟外掛視圖",
+        "loadingView": "正在載入外掛檢視…",
+        "viewFailed": "無法開啟外掛檢視",
         "retry": "重試",
-        "empty": "暫無內容",
+        "empty": "目前沒有內容",
         "chat": "AI 對話",
         "editor": "編輯器",
         "closeView": "關閉 {name}",
@@ -1122,7 +1122,7 @@
         "import": "匯入",
         "importing": "匯入中...",
         "reload": "重新載入",
-        "clearLogs": "清除日誌",
+        "clearLogs": "清除記錄",
         "details": "詳細資料",
         "enabling": "啟用中...",
         "clearFailure": "清除故障狀態",
@@ -1171,9 +1171,9 @@
         "installFailed": "外掛程式安裝失敗",
         "installAria": "安裝 {name}",
         "reviewInstallTitle": "安裝前檢查 {name}",
-        "reviewInstallDesc": "請核對發佈者、原始碼、授權條款、相容性、安裝包摘要與申請的權限。",
-        "publisher": "發佈者",
-        "publisherKey": "發佈者金鑰 ID",
+        "reviewInstallDesc": "請核對發布者、原始碼、授權條款、相容性、安裝包摘要與申請的權限。",
+        "publisher": "發布者",
+        "publisherKey": "發布者金鑰 ID",
         "license": "授權條款",
         "packageDigest": "安裝包 SHA-256",
         "sourceCode": "查看原始碼",
@@ -1185,7 +1185,7 @@
         "sortLabel": "外掛排序",
         "clearFilters": "清除篩選",
         "downloadsCount": "{count} 次下載",
-        "downloadsUnknown": "暫無統計",
+        "downloadsUnknown": "目前沒有統計",
         "downloadsDescription": "累計各版本透過 CDN 成功下載外掛套件的請求數。包含重複下載，不含 GitHub 備援下載，不代表使用者數或安裝量。",
         "statisticsLoading": "正在載入下載統計…",
         "statisticsUnavailable": "下載統計暫時無法使用",
@@ -1257,7 +1257,7 @@
         "relativePathOnly": "請使用不含 .. 的工作區相對路徑。",
         "relativePathHelp": "路徑相對於目前工作區，不接受絕對路徑。",
         "byteUsage": "{used} / {max} 位元組",
-        "byteLimitExceeded": "目前內容占用 {used} 位元組，超過 {max} 位元組上限。",
+        "byteLimitExceeded": "目前內容佔用 {used} 位元組，超過 {max} 位元組上限。",
         "scopes": {
           "device": "目前裝置",
           "workspace": "目前工作區"
@@ -1405,7 +1405,7 @@
         "autoReload": "自動重新載入",
         "autoReloadHelp": "在外掛專案中執行 notegen-plugin dev。已啟用的開發外掛會自動載入成功建置的產物，權限變更仍須審核。",
         "disabledTitle": "開發者模式未開啟",
-        "disabledDesc": "請先在「一般設定 → 進階」中開啟開發者模式，才能載入本機外掛程式碼或查看執行日誌。",
+        "disabledDesc": "請先在「一般設定 → 進階」中開啟開發者模式，才能載入本機外掛程式碼或查看執行記錄。",
         "importTitle": "載入本機外掛套件",
         "importDesc": "匯入已解包的開發目錄。本機程式碼未經外掛市集驗證。",
         "pathLabel": "外掛套件絕對路徑",
@@ -1419,8 +1419,8 @@
         "pathUnavailable": "來源路徑不可用",
         "noDevelopmentPlugins": "尚未載入開發外掛程式",
         "noDevelopmentPluginsDesc": "在上方輸入解包後的外掛目錄，開始本機開發。",
-        "logsTitle": "外掛執行日誌",
-        "logsDesc": "日誌僅保留在記憶體中，可在此手動清除；重新啟動 NoteGen 也會清除日誌。",
+        "logsTitle": "外掛執行記錄",
+        "logsDesc": "日誌僅保留在記憶體中，可在此手動清除；重新啟動 NoteGen 也會清除記錄。",
         "logFilterLabel": "依外掛程式篩選日誌",
         "allLogs": "所有外掛程式",
         "logLevels": {
@@ -1428,7 +1428,7 @@
           "warning": "警告",
           "error": "錯誤"
         },
-        "noLogs": "目前沒有外掛日誌",
+        "noLogs": "目前沒有外掛記錄",
         "noLogsDesc": "執行時警告與錯誤會顯示在這裡。"
       },
       "display": {
@@ -1449,18 +1449,18 @@
           "editor/selection-panel": "選取範圍面板",
           "editor-inline": "編輯器游標旁",
           "mobile/writing/overflow": "行動版更多選單",
-          "title-bar-left": "頂部左側",
-          "title-bar-center": "頂部中間",
-          "title-bar-right": "頂部右側",
+          "title-bar-left": "頂端左側",
+          "title-bar-center": "頂端中間",
+          "title-bar-right": "頂端右側",
           "new-tab": "空白頁面板",
-          "document-top": "文件頂部",
-          "document-bottom": "文件底部",
+          "document-top": "檔案頂端",
+          "document-bottom": "檔案底端",
           "file-panel": "檔案欄面板",
           "file-selection-panel": "已選檔案面板",
           "editor-toolbar": "編輯器工具列元件",
           "chat-input": "聊天輸入區",
           "chat-message-actions": "聊天訊息操作",
-          "record-list": "記錄列表面板",
+          "record-list": "記錄清單面板",
           "record-detail": "記錄詳情",
           "status-bar-panel": "狀態列面板",
           "status-bar": "狀態列"
@@ -1468,8 +1468,8 @@
       }
     },
     "editor": {
-      "title": "編輯器設置",
-      "desc": "在這裡，你可以對編輯器進行自定義配置，打造更適合你的寫作方式。",
+      "title": "編輯器設定",
+      "desc": "自訂編輯器設定，打造適合你的寫作介面。",
       "layout": {
         "title": "寫作版面",
         "desc": "調整桌面編輯器的內容寬度和閱讀密度",
@@ -1507,7 +1507,7 @@
       },
       "mode": {
         "title": "預設編輯模式",
-        "desc": "設定編輯器預設使用的編輯方式，也可在編輯器底部隨時切換",
+        "desc": "設定編輯器預設使用的編輯方式，也可在編輯器底端隨時切換",
         "options": {
           "visual": "所見即所得",
           "source": "Markdown 原始碼"
@@ -1526,8 +1526,8 @@
       },
       "frontmatter": {
         "title": "屬性範本",
-        "desc": "在筆記頂部一鍵建立 Frontmatter 時使用的範本",
-        "help": "沒有屬性的筆記，可在編輯器頂部一鍵套用預設範本。範本只寫 YAML 內文，不含 ---。",
+        "desc": "在筆記頂端一鍵建立 Frontmatter 時使用的範本",
+        "help": "沒有屬性的筆記，可在編輯器頂端一鍵套用預設範本。範本只寫 YAML 內文，不含 ---。",
         "vars": {
           "title": "筆記檔名",
           "date": "今天（YYYY-MM-DD）",
@@ -1552,13 +1552,13 @@
         "desc": "長行超過編輯器寬度時自動換到下一行"
       },
       "mobileToolbar": {
-        "title": "底部格式工具列",
-        "desc": "在行動編輯器底部顯示格式和插入工具"
+        "title": "底端格式工具列",
+        "desc": "在行動編輯器底端顯示格式和插入工具"
       },
       "outlineEnable": "預設啟用大綱",
-      "outlineEnableDesc": "啟用後，編輯器將默認顯示大綱。",
+      "outlineEnableDesc": "啟用後，編輯器將預設顯示大綱。",
       "outlinePosition": "大綱位置",
-      "outlinePositionDesc": "設置大綱位置。",
+      "outlinePositionDesc": "設定大綱位置。",
       "outlinePositionOptions": {
         "left": "左側",
         "right": "右側"
@@ -1573,19 +1573,19 @@
         }
       },
       "commit": {
-        "title": "自動生成 Commit",
+        "title": "自動產生 Commit",
         "model": {
           "title": "提交模型",
-          "desc": "用於自動生成 Git 提交信息，基於文件內容變化智能生成描述性提交信息"
+          "desc": "用於自動產生 Git 提交訊息，基於檔案內容變化智慧產生描述性提交訊息"
         }
       },
       "mermaid": {
         "title": "圖表",
-        "rendering": "渲染中...",
-        "renderError": "渲染錯誤",
-        "clickToEdit": "點擊編輯源碼",
-        "clickToAdd": "點擊添加圖表",
-        "placeholder": "輸入 Mermaid 圖表代碼...",
+        "rendering": "算繪中...",
+        "renderError": "算繪錯誤",
+        "clickToEdit": "點選編輯源碼",
+        "clickToAdd": "點選新增圖表",
+        "placeholder": "輸入 Mermaid 圖表程式碼...",
         "preview": "預覽",
         "done": "完成",
         "diagramTypes": {
@@ -1604,7 +1604,7 @@
           "classDiagram": "classDiagram\n    Animal <|-- Duck\n    Animal <|-- Fish\n    Animal : +int age\n    Animal : +String gender",
           "stateDiagram": "stateDiagram-v2\n    [*] --> Active\n    Active --> [*]",
           "er": "erDiagram\n    CUSTOMER ||--o{ ORDER : places\n    CUSTOMER ||--o{ DELIVERY-ADDRESS : uses",
-          "gantt": "gantt\n    title 項目計劃\n    dateFormat YYYY-MM-DD\n    section 第一階段\n    任務1 :a1, 2024-01-01, 30d\n    section 第二階段\n    任務2 :after a1, 20d",
+          "gantt": "gantt\n    title 專案計畫\n    dateFormat YYYY-MM-DD\n    section 第一階段\n    任務1 :a1, 2024-01-01, 30d\n    section 第二階段\n    任務2 :after a1, 20d",
           "pie": "pie title 資源分配\n    \"CPU\" : 45\n    \"記憶體\" : 30\n    \"儲存\" : 25",
           "journey": "journey\n    title 我的日常工作\n    section 上午\n    通勤 : 7:00, 5\n    工作 : 9:00, 8"
         }
@@ -1680,7 +1680,7 @@
           "desc": "選擇畫布管理器的顯示方式。",
           "options": {
             "grid": "網格",
-            "list": "列表"
+            "list": "清單"
           }
         },
         "sort": {
@@ -1695,27 +1695,27 @@
       }
     },
     "daily": {
-      "title": "日記",
-      "desc": "設定每日筆記的位置、檔名格式與模板。NoteGen 會用與 Obsidian 相同的檔案，不會另外保存資料。",
+      "title": "每日筆記",
+      "desc": "設定每日筆記的位置、檔名格式與範本。NoteGen 會用與 Obsidian 相同的檔案，不會另外儲存資料。",
       "sections": {
         "today": "今日筆記",
         "location": "位置與檔名",
-        "templates": "模板",
+        "templates": "範本",
         "reminders": "提醒"
       },
       "open": {
         "button": "開啟今日筆記",
         "preview": "今天的筆記：{path}",
-        "created": "已依模板建立今日筆記",
+        "created": "已依範本建立今日筆記",
         "opened": "已開啟今日筆記",
         "error": "無法開啟今日筆記"
       },
       "openOnLaunch": {
         "title": "啟動時開啟今日筆記",
-        "desc": "每次啟動 App 時打開今天的筆記；還不存在就依模板建立。"
+        "desc": "每次啟動 App 時開啟今天的筆記；還不存在就依範本建立。"
       },
       "dailyFolder": {
-        "title": "日記資料夾",
+        "title": "每日筆記資料夾",
         "desc": "相對於工作區的路徑，例如 20 Journal/21 Daily。"
       },
       "dailyPattern": {
@@ -1725,17 +1725,17 @@
       },
       "inboxFolder": {
         "title": "Inbox 資料夾",
-        "desc": "收件匣的位置，今日頁會提醒積壓的筆記。"
+        "desc": "設定 Inbox 資料夾的位置。「今天」頁會提醒尚未整理的筆記。"
       },
-      "templatesDesc": "模板支援 '{{date}}'、'{{date:FORMAT}}'、'{{time}}'、'{{weekday}}'、'{{title}}'、'{{random:筆記路徑}}'。",
+      "templatesDesc": "範本支援 '{{date}}'、'{{date:FORMAT}}'、'{{time}}'、'{{weekday}}'、'{{title}}'、'{{random:筆記路徑}}'。",
       "defaultTemplate": {
-        "title": "預設模板",
-        "desc": "模板筆記的路徑，可省略 .md。留空就建立空白筆記。"
+        "title": "預設範本",
+        "desc": "範本筆記的路徑，可省略 .md。留空就建立空白筆記。"
       },
       "weekdayTemplates": {
-        "title": "星期專屬模板",
-        "desc": "有設定的那天優先使用，否則用預設模板。",
-        "placeholder": "留空使用預設模板"
+        "title": "星期專屬範本",
+        "desc": "有設定的那天優先使用，否則用預設範本。",
+        "placeholder": "留空使用預設範本"
       },
       "weekdays": {
         "monday": "星期一",
@@ -1748,7 +1748,7 @@
       },
       "reminders": {
         "title": "任務時間到時通知",
-        "desc": "有 ⏰ 時間的任務到點時發 macOS 通知；App 關著時錯過的，下次打開會補發（最多回補 24 小時）。",
+        "desc": "有 ⏰ 時間的任務到點時發 macOS 通知；App 關著時錯過的，下次開啟會補發（最多回補 24 小時）。",
         "test": "傳送測試通知",
         "testTitle": "NoteGen 提醒測試",
         "testBody": "看到這則通知，就代表提醒可以正常運作。",
@@ -1757,34 +1757,34 @@
       },
       "promptFolder": {
         "title": "提示詞資料夾",
-        "desc": "提示詞庫的位置；資料夾內且 frontmatter 標 type: prompt 才算提示詞。"
+        "desc": "個人提示詞庫的位置；資料夾內且 frontmatter 標 type: prompt 才算提示詞。"
       }
     },
     "record": {
-      "title": "記錄設置",
-      "desc": "在這裡，你可以配置記錄相關的設置，包括記錄描述和工具欄配置。",
+      "title": "記錄設定",
+      "desc": "調整記錄描述、工具列等記錄設定。",
       "model": {
-        "title": "模型設置",
+        "title": "模型設定",
         "markDesc": {
           "title": "記錄描述",
-          "desc": "用於處理 OCR 識別後的記錄，生成記錄描述"
+          "desc": "用於處理 OCR 辨識後的記錄，產生記錄描述"
         }
       },
       "display": {
         "title": "瀏覽方式",
-        "desc": "設定記錄列表的預設檢視與排序方式",
+        "desc": "設定記錄清單的預設檢視與排序方式",
         "view": {
           "title": "預設檢視",
-          "desc": "選擇記錄列表的預設顯示密度",
+          "desc": "選擇記錄清單的預設顯示密度",
           "options": {
-            "list": "列表",
+            "list": "清單",
             "compact": "精簡",
             "cards": "卡片"
           }
         },
         "sort": {
           "title": "預設排序",
-          "desc": "選擇記錄在列表中的預設排列順序",
+          "desc": "選擇記錄在清單中的預設排列順序",
           "options": {
             "newest": "最新優先",
             "oldest": "最早優先",
@@ -1817,47 +1817,47 @@
         }
       },
       "toolbar": {
-        "title": "工具欄設置",
+        "title": "工具列設定",
         "recordToolbar": {
-          "title": "記錄工具欄",
-          "desc": "自定義記錄工具欄按鈕的顯示順序和可見性",
-          "button": "設置",
+          "title": "記錄工具列",
+          "desc": "自訂記錄工具列按鈕的顯示順序和顯示狀態",
+          "button": "設定",
           "text": {
-            "desc": "记录文本内容"
+            "desc": "記錄文字內容"
           },
           "recording": {
-            "desc": "录音记录功能"
+            "desc": "錄音記錄功能"
           },
           "scan": {
-            "desc": "扫描识别图片中的文字"
+            "desc": "掃描辨識圖片中的文字"
           },
           "image": {
-            "desc": "上传图片到笔记"
+            "desc": "上傳圖片到筆記"
           },
           "link": {
-            "desc": "记录网页链接"
+            "desc": "記錄網頁鏈接"
           },
           "file": {
-            "desc": "上传文件到笔记"
+            "desc": "上傳檔案到筆記"
           },
           "todo": {
-            "desc": "创建待办事项"
+            "desc": "建立待辦事項"
           },
           "promptDraft": {
-            "desc": "記錄一段 Prompt 原文"
+            "desc": "記錄一段提示詞原文"
           }
         }
       }
     },
     "uploadStore": {
-      "uploadConfirm": "上傳配置請確保同步倉庫為私有，否則數據將會洩露！",
-      "downloadConfirm": "下載配置將會覆蓋本地配置，並且重啟生效！",
+      "uploadConfirm": "上傳設定請確保同步版本庫為私有，否則資料將會洩露！",
+      "downloadConfirm": "下載設定將會覆蓋本機設定，並且重新啟動生效！",
       "uploadSuccess": "上傳成功",
       "uploadFailed": "上傳設定失敗",
       "downloadSuccess": "下載成功",
       "downloadFailed": "下載設定失敗",
-      "upload": "上傳配置",
-      "download": "下載配置"
+      "upload": "上傳設定",
+      "download": "下載設定"
     },
     "prompt": {
       "title": "提示詞",
@@ -1865,13 +1865,13 @@
       "desc": "在這裡，你可以新增和管理提示詞，幫助 AI 更好地理解你的需求。",
       "addPrompt": "新增提示詞",
       "promptLibrary": "提示詞資源庫",
-      "selectPrompt": "選擇 Prompt",
-      "configPrompt": "配置 Prompt",
-      "noContent": "暫無內容",
-      "addPromptDesc": "請輸入 Prompt 名稱和內容，幫助AI更好地理解你的需求。",
-      "promptTitlePlaceholder": "請輸入 Prompt 名稱",
-      "promptContentPlaceholder": "請輸入 Prompt 內容",
-      "promptContent": "Prompt 內容",
+      "selectPrompt": "選擇 對話角色",
+      "configPrompt": "設定 對話角色",
+      "noContent": "目前沒有內容",
+      "addPromptDesc": "請輸入 對話角色 名稱和內容，幫助AI更好地理解你的需求。",
+      "promptTitlePlaceholder": "請輸入 對話角色 名稱",
+      "promptContentPlaceholder": "請輸入 對話角色 內容",
+      "promptContent": "對話角色 內容",
       "optimizePrompt": "最佳化提示詞",
       "optimizing": "最佳化中...",
       "optimizeSuccess": "提示詞最佳化成功",
@@ -1901,16 +1901,16 @@
       },
       "form": {
         "title": "新增記憶",
-        "categoryDescription": "记忆分为两种类型：",
-        "preferenceDescription": "偏好：语言、格式、风格等设置，每次对话都会自动加载",
-        "memoryDescription": "记忆：事实、经验、专长等信息，根据对话内容智能匹配",
+        "categoryDescription": "記憶分為兩種類型：",
+        "preferenceDescription": "偏好：語言、格式、風格等設定，每次對話都會自動載入",
+        "memoryDescription": "記憶：事實、經驗、專長等資訊，根據對話內容智慧比對",
         "contentLabel": "記憶內容",
         "contentPlaceholder": "例如：我喜歡用中文回答、我是React專家...",
         "categoryLabel": "類型",
         "preferenceLabel": "偏好",
-        "memoryLabel": "记忆",
+        "memoryLabel": "記憶",
         "preferenceDesc": "偏好（語言、格式、風格等）",
-        "memoryDesc": "事实、经验、专长等",
+        "memoryDesc": "事實、經驗、專長等",
         "save": "儲存記憶",
         "saving": "儲存中...",
         "description": "儲存可在未來對話中使用的穩定使用者資訊。",
@@ -1922,18 +1922,18 @@
       },
       "listTitle": "我的記憶",
       "addMemory": "新增記憶",
-      "empty": "暫無記憶，新增第一條記憶吧！",
+      "empty": "目前沒有記憶，新增第一則記憶吧！",
       "emptyHint": "你可以手動新增記憶，也可以說「請記住……」「以後都……」「預設……」讓 AI 立即記住。",
       "noMatches": "找不到符合條件的記憶",
       "noMatchesHint": "請嘗試更換關鍵詞或清除篩選條件。",
       "preference": "偏好",
-      "memory": "记忆",
+      "memory": "記憶",
       "replaced": "已替換",
       "accessCount": "存取 {count} 次",
       "tabs": {
         "all": "全部",
         "preference": "偏好",
-        "memory": "记忆",
+        "memory": "記憶",
         "policy": {
           "generate": "自動記住聊天中的重要資訊",
           "generateDescription": "AI 會自動記住重要資訊。你也可以說「請記住……」或「以後都……」。"
@@ -1982,12 +1982,12 @@
           "failed": "索引失敗"
         },
         "deleteConfirm": {
-          "title": "永久刪除這條記憶？",
+          "title": "永久刪除這則記憶？",
           "description": "永久刪除後無法復原。",
           "cancel": "取消"
         },
-        "autoCreated": "背景產生了 {count} 條記憶",
-        "pendingConfirmation": "這條記憶需要確認",
+        "autoCreated": "背景產生了 {count} 則記憶",
+        "pendingConfirmation": "這則記憶需要確認",
         "approvedAll": "已確認全部候選",
         "savedPendingIndex": "記憶已儲存並等待索引",
         "savedPendingReview": "記憶已進入待確認佇列",
@@ -2005,13 +2005,13 @@
       "updated": "記憶已更新",
       "deleted": "記憶已刪除",
       "cleared": "所有記憶已清空",
-      "found": "找到 {count} 條記憶",
+      "found": "找到 {count} 則記憶",
       "error": "錯誤",
       "errorEmpty": "請輸入記憶內容",
       "errorSave": "儲存失敗",
       "errorDelete": "刪除失敗",
-      "errorList": "取得記憶列表失敗",
-      "errorEmbedding": "無法生成向量嵌入，請檢查嵌入模型設定",
+      "errorList": "取得記憶清單失敗",
+      "errorEmbedding": "無法產生向量嵌入，請檢查嵌入模型設定",
       "errorClear": "清空失敗",
       "policy": {
         "generate": "自動記住對話中的重要資訊",
@@ -2080,41 +2080,41 @@
       "editDescription": "修改內容、類型、適用範圍和套用方式。"
     },
     "defaultModel": {
-      "title": "默認模型",
-      "desc": "在這裡，你可以針對不同的場景使用不同的模型，提高效率降低成本。",
+      "title": "預設模型",
+      "desc": "在這裡，你可以針對不同的情境使用不同的模型，提高效率降低成本。",
       "tooltip": "使用主要模型",
       "noModel": "跟隨主要模型",
       "modelUnavailable": "已選模型不可用",
-      "placeholder": "請選擇或搜索模型",
+      "placeholder": "請選擇或搜尋模型",
       "mainModel": "主要模型",
       "options": {
         "primaryModel": {
           "title": "主要模型",
-          "desc": "用於對話、編輯器 AI 和自動生成文字等通用場景。"
+          "desc": "用於對話、編輯器 AI 和自動產生文字等通用情境。"
         },
         "markDesc": {
           "title": "記錄描述",
-          "desc": "用於處理 OCR 識別後的紀錄，生成記錄描述。"
+          "desc": "用於處理 OCR 辨識後的記錄，產生記錄描述。"
         },
         "placeholder": {
           "title": "AI 建議",
-          "desc": "AI 建議提示作用於記錄頁面 AI 對話 placeholder 內容生成。"
+          "desc": "AI 建議提示作用於記錄頁面 AI 對話 placeholder 內容產生。"
         },
         "completion": {
           "title": "快速補全",
-          "desc": "用於 Markdown 編輯器的 AI 內聯補全，類似 GitHub Copilot，快速生成續寫內容。"
+          "desc": "用於 Markdown 編輯器的 AI 內聯補全，類似 GitHub Copilot，快速產生續寫內容。"
         },
         "commit": {
-          "title": "自動生成 commit 資訊",
-          "desc": "用於自動生成 Git 提交資訊，基於文件內容變化智能生成描述性提交資訊。"
+          "title": "自動產生 commit 資訊",
+          "desc": "用於自動產生 Git 提交訊息，基於檔案內容變化智慧產生描述性提交訊息。"
         },
         "embedding": {
           "title": "嵌入模型",
-          "desc": "用於處理文本嵌入和向量化的場景。"
+          "desc": "用於處理文字嵌入和向量化的情境。"
         },
         "reranking": {
           "title": "重排模型",
-          "desc": "用於搜索結果的重新排序和最佳化。"
+          "desc": "用於搜尋結果的重新排序和最佳化。"
         },
         "condense": {
           "title": "壓縮模型",
@@ -2123,51 +2123,51 @@
       }
     },
     "audio": {
-      "title": "语音设置",
-      "desc": "在这里，你可以配置语音相关设置，包括文本转语音（朗读）和语音转文本（录音识别）功能。",
+      "title": "語音設定",
+      "desc": "設定文字轉語音（朗讀）與語音轉文字（錄音辨識）。",
       "mode": {
-        "title": "運行方式",
+        "title": "執行方式",
         "auto": "自動（推薦）",
-        "local": "僅本地",
+        "local": "僅本機",
         "model": "僅模型"
       },
       "tts": {
-        "title": "文本转语音（TTS）",
-        "desc": "配置朗读功能，为聊天内容提供语音播放。",
+        "title": "文字轉語音（TTS）",
+        "desc": "設定朗讀功能，為聊天內容提供語音播放。",
         "modeDesc": "預設優先使用瀏覽器與系統語音，需要更佳效果時再使用模型。",
         "model": {
-          "title": "朗读模型",
-          "desc": "可選。配置後可在自動模式下增強體驗，或在僅模型模式下使用。"
+          "title": "朗讀模型",
+          "desc": "可選。設定後可在自動模式下增強體驗，或在僅模型模式下使用。"
         },
         "speed": {
-          "title": "语速",
-          "desc": "调整语音播放的速度，范围从0.5倍到2倍速度，默认为1倍正常速度。"
+          "title": "語速",
+          "desc": "調整語音播放的速度，範圍從0.5倍到2倍速度，預設為1倍正常速度。"
         }
       },
       "stt": {
-        "title": "语音转文本（STT）",
-        "desc": "配置录音识别功能，将语音转换为文字记录。",
-        "modeDesc": "預設優先使用瀏覽器原生識別，不支援時再回退到模型識別。",
+        "title": "語音轉文字（STT）",
+        "desc": "設定錄音辨識功能，將語音轉換為文字記錄。",
+        "modeDesc": "優先使用瀏覽器內建辨識，瀏覽器不支援時改用模型辨識。",
         "model": {
-          "title": "识别模型",
-          "desc": "可選。配置後可在自動模式下回退使用，或在僅模型模式下強制使用。"
+          "title": "辨識模型",
+          "desc": "此設定為選用。自動模式會在需要時使用此模型，僅模型模式則一律使用此模型。"
         }
       }
     },
     "readAloud": {
       "title": "朗讀",
-      "desc": "配置文字朗讀方式，預設優先使用系統語音，模型作為增強能力。",
+      "desc": "設定文字朗讀方式，預設優先使用系統語音，模型作為增強能力。",
       "options": {
         "mode": {
-          "title": "運行方式",
+          "title": "執行方式",
           "desc": "自動模式會優先使用系統語音，不可用時再嘗試模型。",
           "auto": "自動（推薦）",
-          "local": "僅本地",
+          "local": "僅本機",
           "model": "僅模型"
         },
         "audioModel": {
           "title": "朗讀模型",
-          "desc": "可選。配置後可在自動模式下增強體驗，或在僅模型模式下使用。"
+          "desc": "可選。設定後可在自動模式下增強體驗，或在僅模型模式下使用。"
         },
         "speed": {
           "title": "語速",
@@ -2191,14 +2191,14 @@
       "updateAvailable": "更新至最新版本",
       "updateIgnored": "已忽略此版本",
       "updateDownloading": "更新中 {downloaded} / {contentLength}",
-      "updateInstalled": "重啟應用",
-      "noUpdate": "當前已是最新版本",
+      "updateInstalled": "重新啟動應用程式",
+      "noUpdate": "目前已是最新版本",
       "lastCheckedAt": "上次檢查：{time}",
       "lastCheckedNever": "尚未檢查更新",
       "releasePublishedAt": "發布於 {date}",
       "releaseHistoryTitle": "更新記錄",
       "releaseHistoryDesc": "從 v{currentVersion} 到 v{latestVersion}，共 {count} 個版本。",
-      "releaseHistoryEmpty": "未找到從目前版本到最新版本之間的更新記錄。",
+      "releaseHistoryEmpty": "找不到從目前版本到最新版本之間的更新記錄。",
       "releasePrerelease": "預發布",
       "releaseNoNotes": "此版本未提供更新說明。",
       "retryReleaseNotes": "重新載入",
@@ -2220,8 +2220,8 @@
       "close": "關閉",
       "sections": {
         "appInfo": {
-          "title": "應用資訊",
-          "desc": "查看目前版本、更新狀態和應用簡介。"
+          "title": "應用程式資訊",
+          "desc": "查看目前版本、更新狀態和應用程式簡介。"
         },
         "updates": {
           "title": "版本更新",
@@ -2232,7 +2232,7 @@
           "desc": "如果 NoteGen 對你有幫助，可以透過捐贈支持專案持續維護。"
         },
         "docs": {
-          "title": "文件與配置",
+          "title": "文件與設定",
           "desc": "從官網和文件了解同步、備份與資料儲存。"
         },
         "community": {
@@ -2243,13 +2243,13 @@
       "items": {
         "home": {
           "title": "官網",
-          "buttonName": "打開",
-          "desc": "訪問官網了解產品。"
+          "buttonName": "開啟",
+          "desc": "瀏覽官網了解產品。"
         },
         "guide": {
-          "title": "同步配置指南",
-          "buttonName": "打開",
-          "desc": "配置 Git、S3 和 WebDAV 同步。"
+          "title": "同步設定指南",
+          "buttonName": "開啟",
+          "desc": "設定 Git、S3 和 WebDAV 同步。"
         },
         "donate": {
           "title": "支持 NoteGen",
@@ -2267,7 +2267,7 @@
           "desc": "查看原始碼與貢獻。"
         },
         "releases": {
-          "title": "更新日誌",
+          "title": "更新記錄",
           "buttonName": "查看",
           "desc": "查看版本更新。"
         },
@@ -2284,8 +2284,8 @@
       }
     },
     "sync": {
-      "title": "同步配置",
-      "desc": "在這裡，你可以配置同步倉庫，它可以幫助你同步記錄、markdown 文件、系統配置等資訊。",
+      "title": "同步設定",
+      "desc": "設定同步版本庫，用來同步記錄、Markdown 檔案與系統設定。",
       "selectPlatform": "選擇同步平台",
       "platformSettings": "同步方式",
       "currentPlatform": "使用中",
@@ -2323,15 +2323,15 @@
       "engineSwitchReviewDescription": "將暫停目前的同步執行環境並切換方案。本機還有 {changes} 項變更、{commands} 條待傳送命令；目前遠端 {currentRemote} 個物件，目標遠端 {nextRemote} 個物件。兩側遠端資料都不會自動刪除。確認差異後繼續。",
       "local": {
         "title": "本機儲存",
-        "description": "筆記、記錄和設定僅儲存在目前裝置，不連接遠端同步服務。既有遠端設定會保留，可隨時切回。"
+        "description": "筆記、記錄和設定僅儲存在目前裝置，不連線遠端同步服務。既有遠端設定會保留，可隨時切回。"
       },
       "selfHosted": {
-        "title": "自託管",
-        "experimentalWarningTitle": "自託管同步仍處於實驗階段",
+        "title": "自行架設",
+        "experimentalWarningTitle": "自行架設同步仍處於實驗階段",
         "experimentalWarningDescription": "此功能可能存在未知缺陷，目前無法保證同步過程及遠端儲存中的資料安全。",
         "experimentalBackupTitle": "使用前請先備份",
-        "experimentalBackupDescription": "啟用前請完整備份現有工作區，並在使用期間定期保留可復原的副本。請勿將自託管同步作為重要資料的唯一備份。",
-        "experimentalAcknowledge": "我已瞭解風險並繼續",
+        "experimentalBackupDescription": "啟用前請完整備份現有工作區，並在使用期間定期保留可復原的副本。請勿將自行架設同步作為重要資料的唯一備份。",
+        "experimentalAcknowledge": "我已了解風險並繼續",
         "deploymentGuide": "查看伺服器部署指南",
         "transferTarget": "選擇自己的可寫工作區",
         "transferToLibrary": "轉存到工作區",
@@ -2339,14 +2339,14 @@
         "transferredToLibrary": "已轉存到 {name}",
         "libraryUnbound": "工作區已解除本機關聯",
         "unbind": "解除本機關聯",
-        "instanceChangeTitle": "連接重設後的伺服器？",
+        "instanceChangeTitle": "連線重設後的伺服器？",
         "instanceChangeDescription": "伺服器 {server} 的實例身分已變更。確認是你重設或替換伺服器後，可繼續重新登入。登入成功後會停用舊同步綁定並清除舊憑證與同步金鑰，本機筆記保留；開始同步前仍需核對資料差異。",
-        "instanceChangeConfirm": "確認並重新連接",
+        "instanceChangeConfirm": "確認並重新連線",
         "instanceChangeCancel": "取消",
         "connectedToast": "授權成功，確認資料後開始同步",
         "connectionFailed": "連線失敗",
-        "disconnectedToast": "已中斷自託管同步",
-        "connectionTitle": "連線自託管服務",
+        "disconnectedToast": "已中斷自行架設同步",
+        "connectionTitle": "連線自行架設服務",
         "connectionDescription": "連線由你部署及管理的同步服務，在多台裝置間同步工作區與個人資料，並使用即時協作。",
         "serverUrl": "伺服器位址",
         "httpsNoDowngrade": "HTTPS 連線失敗時不會自動降級至 HTTP。",
@@ -2365,7 +2365,7 @@
         "disconnectDescription": "登入憑證與工作區金鑰會從安全儲存中清除；已下載的本機資料仍會保留。",
         "disconnect": "中斷連線",
         "personalDataTitle": "個人資料",
-        "personalDataDescription": "依領域控制個人空間的同步內容。路徑、祕密、快取、索引與硬體設定只保存在本機。",
+        "personalDataDescription": "依領域控制個人空間的同步內容。路徑、祕密、快取、索引與硬體設定只儲存在本機。",
         "domains": {
           "tags": {
             "title": "標籤",
@@ -2377,7 +2377,7 @@
           },
           "conversations": {
             "title": "會話",
-            "description": "同步會話標題、順序與狀態。"
+            "description": "同步對話標題、順序與狀態。"
           },
           "messages": {
             "title": "訊息",
@@ -2494,64 +2494,64 @@
       },
       "connectionTab": "連線設定",
       "syncOptionsTab": "同步選項",
-      "settings": "同步設置",
-      "platformDesc": "配置 Token 和倉庫資訊以啟用同步功能",
-      "moreSettings": "更多設置",
+      "settings": "同步設定",
+      "platformDesc": "設定 Token 和版本庫資訊以啟用同步功能",
+      "moreSettings": "更多設定",
       "noteSettings": "筆記設定",
       "noteSettingsDesc": "控制筆記檔案的自動上傳與拉取。",
-      "recordConfigSettings": "應用資料同步",
-      "recordConfigSettingsDesc": "記錄、對話和設定儲存在預設同步倉庫中，分別偵測變更並自動合併。",
-      "repoStatus": "倉庫狀態",
-      "syncRepo": "同步倉庫",
-      "syncRepoDesc": "同步寫作中的 markdown 文件。",
-      "imageRepo": "圖床倉庫",
-      "imageRepoDesc": "同步你的圖片到圖床倉庫。",
+      "recordConfigSettings": "應用程式資料同步",
+      "recordConfigSettingsDesc": "記錄、對話和設定儲存在預設同步版本庫中，分別偵測變更並自動合併。",
+      "repoStatus": "版本庫狀態",
+      "syncRepo": "同步版本庫",
+      "syncRepoDesc": "同步寫作中的 Markdown 檔案。",
+      "imageRepo": "圖床版本庫",
+      "imageRepoDesc": "同步你的圖片到圖床版本庫。",
       "status": {
-        "connected": "已連接",
-        "configured": "已配置",
-        "disconnected": "未連接",
+        "connected": "已連線",
+        "configured": "已設定",
+        "disconnected": "未連線",
         "failed": "連線失敗",
-        "unconfigured": "未配置"
+        "unconfigured": "未設定"
       },
-      "uploadRecords": "上載記錄和配置",
-      "downloadConfig": "下載記錄和配置",
-      "cloudSync": "記錄與配置同步",
-      "localBackupAll": "本地備份（全部）",
+      "uploadRecords": "上傳記錄和設定",
+      "downloadConfig": "下載記錄和設定",
+      "cloudSync": "記錄與設定同步",
+      "localBackupAll": "本機備份（全部）",
       "private": "私有",
       "public": "公開",
-      "createdAt": "創建於 {time}",
+      "createdAt": "建立於 {time}",
       "updatedAt": "最後更新於 {time}",
-      "newToken": "創建 access token",
+      "newToken": "建立 access token",
       "tokenPermissionGuide": "查看權限說明",
       "toggleTokenVisibility": "顯示或隱藏 Access Token",
-      "newTokenDesc": "建議使用 Fine-grained token。現有倉庫需要 Contents 讀寫權限；由 NoteGen 建立倉庫還需要 Administration 讀寫權限。",
-      "giteeTokenDesc": "Gitee 私人令牌用於同步數據，需要有倉庫的讀寫權限，配置後將自動創建文件倉庫（私有）和圖床倉庫。",
+      "newTokenDesc": "建議使用 Fine-grained token。現有版本庫需要 Contents 讀寫權限；由 NoteGen 建立版本庫還需要 Administration 讀寫權限。",
+      "giteeTokenDesc": "Gitee 個人存取權杖用於同步資料，需要有版本庫的讀寫權限，設定後將自動建立檔案版本庫（私有）和圖床版本庫。",
       "imageRepoSetting": "開啟圖床",
-      "imageRepoSettingDesc": "你已經配置了圖床倉庫，開啟此項將使用圖床倉庫，否則將使用本地儲存。",
+      "imageRepoSettingDesc": "你已經設定了圖床版本庫，開啟此項將使用圖床版本庫，否則將使用本機儲存。",
       "jsdelivrSetting": "jsDelivr",
       "jsdelivrSettingDesc": "使用 jsdelivr 加速圖片訪問。",
       "autoSyncDesc": "筆記編輯停止後，按所選延遲自動同步到目前同步平台",
       "giteeAutoSyncDesc": "啟用後，編輯器會在輸入停止 10 秒後自動同步到 Gitee",
-      "customSyncRepo": "自訂同步倉庫名",
-      "customSyncRepoDesc": "每個工作區獨立儲存，預設工作區使用預設倉庫名",
-      "workspaceRepoMapping": "工作區與同步倉庫",
-      "workspaceRepoMappingDesc": "預設工作區倉庫同步筆記檔案及記錄、標籤、畫布和設定；其他工作區倉庫僅同步對應工作區的檔案",
+      "customSyncRepo": "自訂同步版本庫名稱",
+      "customSyncRepoDesc": "每個工作區獨立儲存，預設工作區使用預設版本庫名稱",
+      "workspaceRepoMapping": "工作區與同步版本庫",
+      "workspaceRepoMappingDesc": "預設工作區版本庫同步筆記檔案及記錄、標籤、畫布和設定；其他工作區版本庫僅同步對應工作區的檔案",
       "workspaceConnection": {
         "workspaceLabel": "本機工作區",
-        "repositoryLabel": "同步倉庫",
+        "repositoryLabel": "同步版本庫",
         "current": "目前",
         "connected": "已綁定",
         "notChecked": "尚未檢查",
-        "unbound": "未綁定倉庫",
-        "unboundTitle": "這個工作區尚未關聯倉庫",
-        "unboundDescription": "未綁定倉庫，筆記檔案僅儲存在本機。",
-        "unboundInactiveDescription": "尚未為此平台綁定倉庫。",
-        "boundDescription": "已關聯倉庫：{repo}",
+        "unbound": "未綁定版本庫",
+        "unboundTitle": "這個工作區尚未關聯版本庫",
+        "unboundDescription": "未綁定版本庫，筆記檔案僅儲存在本機。",
+        "unboundInactiveDescription": "尚未為此平台綁定版本庫。",
+        "boundDescription": "已關聯版本庫：{repo}",
         "pending": "待確認",
         "checking": "正在驗證",
         "saving": "正在綁定",
         "unlinking": "正在解除綁定",
-        "notFound": "倉庫無法使用",
+        "notFound": "版本庫無法使用",
         "failed": "綁定失敗",
         "apply": "驗證並關聯",
         "unlink": "解除關聯",
@@ -2564,109 +2564,109 @@
         "setupDescription": "請先完成同步平台的連線設定，才能同步此工作區。",
         "targetLabel": "同步目標",
         "defaultScope": "預設工作區也會同步筆記、記錄、標籤、畫布和設定。",
-        "filesScope": "此倉庫僅用於同步對應工作區的筆記檔案。",
-        "blurHint": "輸入倉庫名稱，離開輸入框後檢查並確認綁定。",
-        "bindConfirmTitle": "綁定現有倉庫",
-        "bindConfirmDescription": "要將工作區「{workspace}」綁定到倉庫「{repo}」嗎？確認後將使用此倉庫同步筆記檔案。",
-        "createConfirmTitle": "建立並綁定倉庫",
-        "createConfirmDescription": "找不到倉庫「{repo}」，也可能是沒有存取權限。是否嘗試建立同名的私有倉庫，並綁定到工作區「{workspace}」？",
+        "filesScope": "此版本庫僅用於同步對應工作區的筆記檔案。",
+        "blurHint": "輸入版本庫名稱，離開輸入框後檢查並確認綁定。",
+        "bindConfirmTitle": "綁定現有版本庫",
+        "bindConfirmDescription": "要將工作區「{workspace}」綁定到版本庫「{repo}」嗎？確認後將使用此版本庫同步筆記檔案。",
+        "createConfirmTitle": "建立並綁定版本庫",
+        "createConfirmDescription": "找不到版本庫「{repo}」，也可能是沒有存取權限。是否嘗試建立同名的私有版本庫，並綁定到工作區「{workspace}」？",
         "bindConfirmAction": "確認綁定",
         "createConfirmAction": "建立並綁定",
-        "refresh": "重新檢測",
-        "refreshHint": "點擊以重新檢測倉庫",
-        "platformRefreshHint": "點擊以重新檢測連線"
+        "refresh": "重新偵測",
+        "refreshHint": "點選以重新偵測版本庫",
+        "platformRefreshHint": "點選以重新偵測連線"
       },
       "currentWorkspaceGroup": "目前工作區",
       "otherWorkspacesGroup": "其他工作區",
-      "repositoryForWorkspace": "{workspace} 的同步倉庫",
+      "repositoryForWorkspace": "{workspace} 的同步版本庫",
       "openWorkspace": "在檔案管理器中開啟 {workspace}",
-      "repositoryNamePlaceholder": "請輸入倉庫名稱",
-      "selectRepository": "選擇倉庫",
-      "searchRepositories": "搜尋或輸入倉庫名稱...",
-      "loadingRepositories": "正在取得倉庫列表...",
-      "repositoryListError": "取得倉庫列表失敗，可重試或手動輸入名稱",
-      "noRepositories": "找不到倉庫",
+      "repositoryNamePlaceholder": "請輸入版本庫名稱",
+      "selectRepository": "選擇版本庫",
+      "searchRepositories": "搜尋或輸入版本庫名稱...",
+      "loadingRepositories": "正在取得版本庫清單...",
+      "repositoryListError": "取得版本庫清單失敗，可重試或手動輸入名稱",
+      "noRepositories": "找不到版本庫",
       "customRepository": "自訂名稱",
       "useRepositoryName": "使用「{repo}」",
-      "repositoryList": "你的倉庫",
-      "refreshRepositories": "重新整理倉庫列表",
-      "repositoryRequired": "請先設定目前工作區的同步倉庫名稱",
+      "repositoryList": "你的版本庫",
+      "refreshRepositories": "重新整理版本庫清單",
+      "repositoryRequired": "請先設定目前工作區的同步版本庫名稱",
       "tokenSaveFailed": "儲存存取權杖失敗",
       "repositoryCheck": {
-        "success": "倉庫可用",
-        "not-found": "倉庫不存在或無權存取",
+        "success": "版本庫可用",
+        "not-found": "版本庫不存在或無權存取",
         "missing-token": "請先在上方設定存取權杖",
-        "error": "檢測失敗，請檢查網路或設定",
-        "create-error": "建立倉庫失敗，請檢查名稱、權限或網路"
+        "error": "偵測失敗，請檢查網路或設定",
+        "create-error": "建立版本庫失敗，請檢查名稱、權限或網路"
       },
-      "customImageRepo": "自訂圖床倉庫名",
-      "customImageRepoDesc": "留空則使用默認倉庫名",
+      "customImageRepo": "自訂圖床版本庫名稱",
+      "customImageRepoDesc": "留空則使用預設版本庫名稱",
       "backupMethod": "同步方式",
       "backupMethodDesc": "設為目前同步方式後，NoteGen 資料同步將使用此平台；備份與還原仍是獨立功能。",
       "createRepo": "建立",
-      "creating": "創建中",
-      "checkRepo": "檢查倉庫",
+      "creating": "建立中",
+      "checkRepo": "檢查版本庫",
       "checking": "檢查中",
       "enterToken": "請輸入 Access Token",
-      "enterTokenHint": "請先輸入 Access Token 以檢查倉庫狀態",
-      "defaultRepoName": "默認: {name}",
+      "enterTokenHint": "請先輸入 Access Token 以檢查版本庫狀態",
+      "defaultRepoName": "預設：{name}",
       "gitlabInstanceType": "GitLab 實例類型",
-      "gitlabInstanceTypeDesc": "選擇要連接的 GitLab 實例類型",
+      "gitlabInstanceTypeDesc": "選擇要連線的 GitLab 實例類型",
       "gitlabInstanceTypePlaceholder": "選擇 GitLab 實例類型",
       "gitlabInstanceTypeOptions": {
         "selfHosted": "自建實例",
-        "selfHostedDesc": "輸入您的自建 GitLab 伺服器地址（如：https://gitlab.example.com）"
+        "selfHostedDesc": "輸入您的自建 GitLab 伺服器位址（如：https://gitlab.example.com）"
       },
-      "gitlabAccessTokenDesc": "在 {instanceDisplayName} 創建個人訪問令牌，需要 api 權限",
-      "giteaInstanceType": "Gitea 实例类型",
-      "giteaInstanceTypeDesc": "选择要连接的 Gitea 实例类型",
-      "giteaInstanceTypePlaceholder": "选择 Gitea 实例类型",
+      "gitlabAccessTokenDesc": "在 {instanceDisplayName} 建立個人存取權杖，需要 api 權限",
+      "giteaInstanceType": "Gitea 實例類型",
+      "giteaInstanceTypeDesc": "選擇要連線的 Gitea 實例類型",
+      "giteaInstanceTypePlaceholder": "選擇 Gitea 實例類型",
       "giteaInstanceTypeOptions": {
-        "selfHosted": "自建实例",
-        "selfHostedDesc": "输入您的自建 Gitea 服务器地址（如：https://gitea.example.com）"
+        "selfHosted": "自行架設",
+        "selfHostedDesc": "輸入自行架設的 Gitea 伺服器位址（例如：https://gitea.example.com）"
       },
-      "giteaAccessTokenDesc": "在 {instanceDisplayName} 创建个人访问令牌，需要完整的 repository 权限",
+      "giteaAccessTokenDesc": "在 {instanceDisplayName} 建立個人存取權杖，需要完整的 repository 權限",
       "s3": {
         "title": "S3 同步",
-        "description": "使用 S3 兼容存储同步你的笔记",
-        "status": "连接状态",
-        "connected": "已连接",
-        "connecting": "连接中",
-        "disconnected": "未连接",
+        "description": "使用 S3 相容儲存同步你的筆記",
+        "status": "連線狀態",
+        "connected": "已連線",
+        "connecting": "連線中",
+        "disconnected": "未連線",
         "accessKeyId": "Access Key ID",
-        "accessKeyIdPlaceholder": "请输入 Access Key ID",
+        "accessKeyIdPlaceholder": "請輸入 Access Key ID",
         "secretAccessKey": "Secret Access Key",
-        "secretAccessKeyPlaceholder": "请输入 Secret Access Key",
-        "region": "区域",
-        "bucket": "存储桶",
-        "bucketPlaceholder": "请输入存储桶名称",
-        "endpoint": "端点",
-        "pathPrefix": "路径前缀",
-        "pathPrefixPlaceholder": "请输入路径前缀",
-        "pathPrefixDesc": "用于区分不同用户的文件，类似仓库名",
-        "customDomain": "自定义域名",
-        "testConnection": "测试连接",
-        "testing": "测试中"
+        "secretAccessKeyPlaceholder": "請輸入 Secret Access Key",
+        "region": "區域",
+        "bucket": "儲存貯體",
+        "bucketPlaceholder": "請輸入儲存貯體名稱",
+        "endpoint": "端點",
+        "pathPrefix": "路徑前置字串",
+        "pathPrefixPlaceholder": "請輸入路徑前置字串",
+        "pathPrefixDesc": "用於區分不同使用者的檔案，類似版本庫名稱。",
+        "customDomain": "自訂網域",
+        "testConnection": "測試連線",
+        "testing": "測試中"
       },
       "webdav": {
         "title": "WebDAV 同步",
-        "description": "使用 WebDAV 协议同步你的笔记",
-        "status": "连接状态",
-        "connected": "已连接",
-        "connecting": "连接中",
-        "disconnected": "未连接",
-        "url": "服务器地址",
-        "urlPlaceholder": "请输入 WebDAV 服务器地址",
-        "urlDesc": "支持群晖、QNAP、Nextcloud 等 WebDAV 服务",
-        "username": "用户名",
-        "usernamePlaceholder": "请输入用户名",
-        "password": "密码",
-        "passwordPlaceholder": "请输入密码",
-        "pathPrefix": "路径前缀",
-        "pathPrefixPlaceholder": "请输入路径前缀",
-        "pathPrefixDesc": "用于区分不同用户的文件",
-        "testConnection": "测试连接",
-        "testing": "测试中"
+        "description": "使用 WebDAV 協議同步你的筆記",
+        "status": "連線狀態",
+        "connected": "已連線",
+        "connecting": "連線中",
+        "disconnected": "未連線",
+        "url": "伺服器位址",
+        "urlPlaceholder": "請輸入 WebDAV 伺服器位址",
+        "urlDesc": "支援 Synology、QNAP、Nextcloud 等 WebDAV 服務。",
+        "username": "使用者名稱",
+        "usernamePlaceholder": "請輸入使用者名稱",
+        "password": "密碼",
+        "passwordPlaceholder": "請輸入密碼",
+        "pathPrefix": "路徑前置字串",
+        "pathPrefixPlaceholder": "請輸入路徑前置字串",
+        "pathPrefixDesc": "用於區分不同使用者的檔案",
+        "testConnection": "測試連線",
+        "testing": "測試中"
       },
       "cloudFolder": {
         "title": "雲端硬碟同步",
@@ -2707,22 +2707,22 @@
         "folder": "同步位置",
         "folderValue": "OneDrive / Apps / NoteGen",
         "folderDescription": "NoteGen 僅在自己的應用程式資料夾中儲存和同步資料。",
-        "notConnected": "尚未連接 OneDrive",
-        "connected": "已連接",
-        "disconnected": "未連接",
-        "connect": "連接 OneDrive",
-        "connecting": "正在連接",
+        "notConnected": "尚未連線 OneDrive",
+        "connected": "已連線",
+        "disconnected": "未連線",
+        "connect": "連線 OneDrive",
+        "connecting": "正在連線",
         "loadingTitle": "正在載入 OneDrive",
         "loadingDescription": "正在檢查帳號與同步資料夾，請稍候。",
-        "disconnect": "中斷連接",
-        "connectFailed": "無法連接 OneDrive",
+        "disconnect": "中斷連線",
+        "connectFailed": "無法連線 OneDrive",
         "disconnectFailed": "無法中斷 OneDrive",
         "signInTitle": "完成 Microsoft 登入",
-        "signInDescription": "請在開啟的頁面輸入代碼 {code}，完成後返回 NoteGen。",
-        "signInDescriptionCopied": "代碼 {code} 已複製，請在開啟的頁面貼上，完成後返回 NoteGen。",
+        "signInDescription": "請在開啟的頁面輸入驗證碼 {code}，完成後返回 NoteGen。",
+        "signInDescriptionCopied": "驗證碼 {code} 已複製，請在開啟的頁面貼上，完成後返回 NoteGen。",
         "openSignIn": "開啟登入頁面",
         "workspace": "本機鏡像工作區",
-        "workspaceDescription": "OneDrive 使用獨立的本機工作區保存離線副本，並與雲端雙向同步。",
+        "workspaceDescription": "OneDrive 使用獨立的本機工作區儲存離線副本，並與雲端雙向同步。",
         "workspaceNotReady": "尚未建立 OneDrive 工作區",
         "workspaceSetupTitle": "需要啟用 OneDrive 工作區",
         "workspaceSetupDescription": "將建立獨立的本機鏡像工作區。若雲端已有筆記則下載；若雲端為空則複製目前工作區並上傳。原工作區會保留。",
@@ -2736,25 +2736,25 @@
         "workspaceReadyDescription": "已下載 {downloaded} 個檔案，上傳 {uploaded} 個檔案。",
         "workspaceTransferFailed": "有 {count} 個檔案同步失敗，請重試。",
         "workspaceSetupFailed": "無法建立或切換 OneDrive 工作區",
-        "statusDisconnectedTitle": "尚未連接 OneDrive",
-        "statusDisconnectedDescription": "點擊連接後，NoteGen 會引導你完成 Microsoft 登入。",
-        "statusRequestingCodeTitle": "正在取得登入代碼",
-        "statusRequestingCodeDescription": "正在向 Microsoft 請求一次性登入代碼。",
-        "statusCodeCopiedTitle": "登入代碼已複製",
-        "statusCodeReadyTitle": "登入代碼已產生",
-        "statusCodeCopiedDescription": "代碼 {code} 已複製，{seconds} 秒後將開啟瀏覽器。",
-        "statusCodeReadyDescription": "代碼 {code} 已產生，{seconds} 秒後將開啟瀏覽器。請在登入頁面輸入該代碼。",
+        "statusDisconnectedTitle": "尚未連線 OneDrive",
+        "statusDisconnectedDescription": "點選連線後，NoteGen 會引導你完成 Microsoft 登入。",
+        "statusRequestingCodeTitle": "正在取得登入驗證碼",
+        "statusRequestingCodeDescription": "正在向 Microsoft 請求一次性登入驗證碼。",
+        "statusCodeCopiedTitle": "登入驗證碼已複製",
+        "statusCodeReadyTitle": "登入驗證碼已產生",
+        "statusCodeCopiedDescription": "驗證碼 {code} 已複製，{seconds} 秒後將開啟瀏覽器。",
+        "statusCodeReadyDescription": "驗證碼 {code} 已產生，{seconds} 秒後將開啟瀏覽器。請在登入頁面輸入該驗證碼。",
         "statusOpeningBrowserTitle": "正在開啟瀏覽器",
         "statusOpeningBrowserDescription": "即將前往 Microsoft 登入頁面。",
         "statusWaitingAuthorizationTitle": "等待 Microsoft 授權",
         "statusWaitingAuthorizationDescription": "請在瀏覽器完成登入，然後返回 NoteGen。",
-        "statusConnectingTitle": "正在連接 OneDrive",
-        "statusConnectingDescription": "已返回 NoteGen，正在等待 Microsoft 確認並建立連接。",
+        "statusConnectingTitle": "正在連線 OneDrive",
+        "statusConnectingDescription": "已返回 NoteGen，正在等待 Microsoft 確認並建立連線。",
         "statusPreparingWorkspaceTitle": "正在準備 OneDrive 工作區",
-        "statusPreparingWorkspaceDescription": "帳號已連接，正在建立、切換並同步本機鏡像工作區。",
+        "statusPreparingWorkspaceDescription": "帳號已連線，正在建立、切換並同步本機鏡像工作區。",
         "statusPreparingRemoteWorkspaceDescription": "正在建立新的本機鏡像工作區，並下載 OneDrive 中已有的內容。",
         "statusCopyingCurrentWorkspaceDescription": "正在將目前工作區複製到新的本機鏡像，並上傳到 OneDrive。",
-        "statusConnectedTitle": "OneDrive 已連接",
+        "statusConnectedTitle": "OneDrive 已連線",
         "statusConnectedDescription": "帳號和本機鏡像工作區均已就緒，可以開始同步。",
         "statusDisconnectingTitle": "正在中斷 OneDrive",
         "statusDisconnectingDescription": "正在安全移除本機儲存的 Microsoft 登入憑證。",
@@ -2783,8 +2783,8 @@
         "accessFailedDescription": "請選擇可讀寫的 iCloud 資料夾後重試。"
       },
       "autoSync": "自動同步筆記",
-      "autoDataSync": "自動同步記錄和配置",
-      "autoDataSyncDesc": "記錄、標籤、畫布和配置變更後，自動上傳到預設工作區的同步倉庫，不會跟隨目前工作區切換",
+      "autoDataSync": "自動同步記錄和設定",
+      "autoDataSyncDesc": "記錄、標籤、畫布和設定變更後，自動上傳到預設工作區的同步版本庫，不會跟隨目前工作區切換",
       "autoRecordSync": "自動同步記錄",
       "autoRecordSyncDesc": "獨立同步記錄、標籤、畫布及相關資源，不受設定同步開關影響。",
       "autoSettingsSync": "自動同步設定",
@@ -2792,13 +2792,13 @@
       "autoConversationSync": "自動同步對話",
       "autoConversationSyncDesc": "獨立同步對話記錄、壓縮摘要和聊天圖片，不受記錄與設定同步影響。",
       "autoDataSyncStatusOff": "自動同步已關閉",
-      "autoDataSyncStatusWaitingProvider": "等待配置同步平台",
+      "autoDataSyncStatusWaitingProvider": "等待設定同步平台",
       "autoDataSyncStatusQueued": "已加入同步佇列",
       "autoDataSyncStatusSyncing": "正在自動同步",
       "autoDataSyncStatusFailed": "同步失敗",
       "autoDataSyncStatusConflict": "同步衝突",
       "autoDataSyncStatusIdle": "已同步",
-      "autoDataSyncStatusTitle": "記錄和配置同步",
+      "autoDataSyncStatusTitle": "記錄和設定同步",
       "autoDataSyncStatusProvider": "同步平台",
       "autoDataSyncStatusPending": "待同步",
       "autoDataSyncStatusLastSuccess": "上次成功",
@@ -2807,28 +2807,28 @@
       "autoDataSyncOpenSettings": "開啟設定",
       "autoDataSyncNever": "從未",
       "autoDataSyncConflictTitle": "處理同步衝突",
-      "autoDataSyncConflictDesc": "遠端內容已被其他設備更新，同時本機還有未上傳修改。請選擇保留哪一側的資料。",
+      "autoDataSyncConflictDesc": "遠端內容已被其他裝置更新，同時本機還有未上傳修改。請選擇保留哪一側的資料。",
       "autoDataSyncConflictMerge": "合併兩邊內容",
-      "autoDataSyncConflictMergeDesc": "合併會保留本機和遠端新增的記錄，同一條記錄按較新的時間保留；設定會按目前隱私規則合併。",
-      "autoDataSyncConflictMergeRecordsDesc": "合併會保留本機和遠端新增的記錄，同一條記錄按較新的時間保留。",
+      "autoDataSyncConflictMergeDesc": "合併會保留本機和遠端新增的記錄，同一則記錄按較新的時間保留；設定會按目前隱私規則合併。",
+      "autoDataSyncConflictMergeRecordsDesc": "合併會保留本機和遠端新增的記錄，同一則記錄按較新的時間保留。",
       "autoDataSyncConflictMergeSettingsDesc": "合併會套用遠端可同步設定，並保留僅存於本機的隱私設定。",
       "autoDataSyncConflictPullRemote": "拉取遠端覆蓋本機",
       "autoDataSyncConflictUploadLocal": "上傳本機覆蓋遠端",
       "autoDataSyncConflictLater": "稍後處理",
-      "autoDataSyncConflictPullConfirm": "拉取遠端會覆蓋本機未上傳的記錄和配置，確定繼續嗎？",
-      "autoDataSyncConflictUploadConfirm": "上傳本機會覆蓋遠端最新記錄和配置，其他設備的修改可能丟失。確定繼續嗎？",
+      "autoDataSyncConflictPullConfirm": "拉取遠端會覆蓋本機未上傳的記錄和設定，確定繼續嗎？",
+      "autoDataSyncConflictUploadConfirm": "上傳本機會覆蓋遠端最新記錄和設定，其他裝置的修改可能丟失。確定繼續嗎？",
       "autoDataSyncConflictResolved": "同步衝突已處理",
       "autoDataSyncConflictResolveFailed": "同步衝突處理失敗",
       "autoDataSyncInitialSuccess": "自動同步初始化完成",
       "autoDataSyncInitialFailed": "自動同步初始化失敗",
       "autoDataSyncInitialTitle": "選擇首次自動同步方向",
-      "autoDataSyncInitialDesc": "切換設備或首次啟用時，先選擇上傳本機資料，或拉取遠端最新記錄和配置，避免覆蓋錯誤內容。",
+      "autoDataSyncInitialDesc": "切換裝置或首次啟用時，先選擇上傳本機資料，或拉取遠端最新記錄和設定，避免覆蓋錯誤內容。",
       "autoDataSyncInitialUploadLocal": "上傳本機資料",
       "autoDataSyncInitialPullRemote": "拉取遠端最新",
       "autoDataSyncInitialLater": "稍後處理",
-      "autoDataSyncPrivacyTitle": "不同步敏感配置",
-      "autoDataSyncPrivacyDesc": "開啟後，Access Token、密碼、密鑰、同步平台選擇、圖床配置、MCP 配置、工作區路徑等設備或隱私相關配置會被排除。",
-      "autoDataSyncPrivacyDisableConfirm": "關閉後，Access Token、密碼、密鑰等敏感或設備相關配置可能會上傳到遠端同步平台，並同步到其他設備。確定關閉嗎？",
+      "autoDataSyncPrivacyTitle": "不同步敏感設定",
+      "autoDataSyncPrivacyDesc": "開啟後，Access Token、密碼、金鑰、同步平台選擇、圖床設定、MCP 設定、工作區路徑等裝置或隱私相關設定會被排除。",
+      "autoDataSyncPrivacyDisableConfirm": "關閉後，Access Token、密碼、金鑰等敏感或裝置相關設定可能會上傳到遠端同步平台，並同步到其他裝置。確定關閉嗎？",
       "autoSyncOptions": {
         "placeholder": "選擇自動同步時間",
         "disabled": "關閉",
@@ -2844,22 +2844,22 @@
       "autoPullOnOpen": "開啟或切換檔案時自動拉取",
       "autoPullOnOpenDesc": "開啟檔案時檢查遠端版本，遠端較新則自動拉取；關閉後僅提示可用更新",
       "exclusions": {
-        "title": "同步排除配置",
-        "desc": "以下配置項不會在設備間同步，因為它們是設備特定的",
+        "title": "同步排除設定",
+        "desc": "以下設定項目不會在裝置間同步，因為它們是裝置特定的",
         "workspacePath": "工作區路徑",
         "workspaceHistory": "工作區歷史路徑",
         "assetsPath": "資源路徑",
-        "uiScale": "界面縮放",
+        "uiScale": "介面縮放",
         "contentTextScale": "正文文字縮放",
         "customCss": "自訂 CSS",
-        "reason": "這些配置在不同設備上可能不同，不進行同步可以避免路徑錯誤等問題"
+        "reason": "這些設定在不同裝置上可能不同，不進行同步可以避免路徑錯誤等問題"
       },
       "settingsSync": {
-        "uploadSuccess": "配置上傳成功",
-        "uploadFailed": "配置上傳失敗",
-        "downloadSuccess": "配置下載成功",
-        "downloadFailed": "配置下載失敗",
-        "autoSync": "上傳/下載時會自動同步配置（排除工作區路徑等設備特定配置）"
+        "uploadSuccess": "設定上傳成功",
+        "uploadFailed": "設定上傳失敗",
+        "downloadSuccess": "設定下載成功",
+        "downloadFailed": "設定下載失敗",
+        "autoSync": "上傳/下載時會自動同步設定（排除工作區路徑等裝置特定設定）"
       },
       "switchPlan": {
         "incrementalReads": "已重用 {cached} 個檔案 · 本次下載 {downloaded} 個檔案",
@@ -2876,7 +2876,7 @@
           "choose": "處理差異",
           "backup": "備份",
           "sync": "同步",
-          "verify": "核驗"
+          "verify": "驗證"
         },
         "stepSkipped": "遠端為空，自動略過選擇",
         "waitingChoice": "等待確認",
@@ -2894,35 +2894,35 @@
         "automaticSetup": "首次使用，自動初始化",
         "operationDetails": "目標與備份詳情",
         "continue": "下一步：核對影響",
-        "completed": "切换完成",
-        "failed": "切换未完成",
-        "choose": "选择数据处理方式",
-        "confirm": "核对执行影响并确认",
-        "target": "目标：{platform} · 工作区：{workspace}",
-        "defaultWorkspace": "默认工作区",
-        "firstUse": "已确认目标远端为空。正在自动初始化并上传本地内容，无需选择合并或覆盖方向。",
-        "automatic": "扫描、比对、备份、执行和核验会自动推进；需要选择或确认时才暂停。",
+        "completed": "切換完成",
+        "failed": "切換未完成",
+        "choose": "選擇資料處理方式",
+        "confirm": "核對影響並確認",
+        "target": "目標：{platform} · 工作區：{workspace}",
+        "defaultWorkspace": "預設工作區",
+        "firstUse": "已確認目標遠端為空。正在自動初始化並上傳本機內容，無需選擇合併或覆蓋方向。",
+        "automatic": "掃描、比對、備份、執行和驗證會自動推進；需要選擇或確認時才暫停。",
         "counts": "{current} / {total}",
-        "comparison": "本地与目标远端的内容对比",
-        "comparisonHint": "按稳定标识和内容比较，不只比较数量。仅处理勾选模块；原平台数据不作修改。",
-        "module": "模块",
-        "localSide": "本地",
-        "differences": "差异分布",
-        "distribution": "{same} 一致 · {localOnly} 仅本地 · {remoteOnly} 仅远端 · {conflicts} 冲突",
+        "comparison": "本機與目標遠端的內容對比",
+        "comparisonHint": "依穩定識別碼與內容比對，並非只比較數量。系統只處理你勾選的同步類別，原平台資料會保留。",
+        "module": "同步類別",
+        "localSide": "本機",
+        "differences": "差異分布",
+        "distribution": "{same} 一致 · {localOnly} 僅本機 · {remoteOnly} 僅遠端 · {conflicts} 衝突",
         "linkedModules": "關聯模組會連動選取；未選模組將暫停自動同步。",
         "nativeEngine": "先選擇本次切換的資料處理方式，再核對差異並確認。合併沿用物件同步協定；保留本機或使用遠端會按所選方向取代參與同步的資料。",
         "nativeMode": "雙向同步，保留雙方獨有內容",
         "nativeDescriptions": {
-          "merge": "雙向同步雙方獨有內容，同名筆記嘗試合併；同一物件與刪除紀錄按同步版本處理。",
+          "merge": "雙向同步雙方獨有內容，同名筆記嘗試合併；同一物件與刪除記錄按同步版本處理。",
           "local": "以本機參與同步的資料為準，取代遠端相同項目並刪除遠端獨有內容；保留本機內容。",
           "remote": "以遠端參與同步的資料為準，取代本機相同項目並將本機獨有內容移出作用中的同步範圍；保留遠端內容。"
         },
-        "chosen": "处理方式：{strategy}。范围：{modules}。",
-        "impact": "新增 {added} 项，替换 {replaced} 项，移出活动同步范围 {removed} 项。",
-        "viewDifference": "查看两侧内容差异",
-        "useLocalVersion": "使用本地版本",
-        "useRemoteVersion": "使用远端版本",
-        "keepBoth": "保留双方副本",
+        "chosen": "處理方式：{strategy}。範圍：{modules}。",
+        "impact": "新增 {added} 項、取代 {replaced} 項、移出目前同步範圍 {removed} 項。",
+        "viewDifference": "查看兩側內容差異",
+        "useLocalVersion": "使用本機版本",
+        "useRemoteVersion": "使用遠端版本",
+        "keepBoth": "保留雙方副本",
         "unresolved": "尚有 {count} 項衝突",
         "nativeReviewAction": "核對資料差異",
         "nativeReviewRequired": "連線已儲存，同步尚未開始。請核對資料差異並確認；取消或離開頁面後仍會保持暫停。",
@@ -2937,14 +2937,14 @@
         "nativeBackupHint": "確認後先儲存並驗證本機檔案和個人資料，再核對差異。失敗時可在此復原到本機儲存。",
         "nativeBackupTitle": "已儲存切換前的本機快照",
         "nativeBackupLocation": "應用程式資料目錄：{path}。包含原始檔案、個人資料和同步對應；復原前會另存目前狀態。",
-        "nativeConnectionRequired": "請先連接自託管伺服器，再重新掃描差異。",
-        "nativeInstanceChanged": "伺服器實例身分已變更，請確認是否已重設或替換後重新連接。",
-        "nativeLibraryRequired": "無法確定目標工作區，請先在自託管設定確認工作區綁定，再重新掃描。",
+        "nativeConnectionRequired": "請先連線自行架設伺服器，再重新掃描差異。",
+        "nativeInstanceChanged": "伺服器實例身分已變更，請確認是否已重設或替換後重新連線。",
+        "nativeLibraryRequired": "無法確定目標工作區，請先在自行架設設定確認工作區綁定，再重新掃描。",
         "nativeContinueWithoutSettings": "保留本機設定，繼續檢查",
         "nativeSkipSettingsHint": "可先暫停此連線的設定同步，保留兩端原設定，繼續檢查與遷移筆記等資料。不會刪除或重設伺服器設定，也不會復原無法解密的歷史設定。",
         "nativeSettingsPaused": "設定同步已暫停：本次不上傳本機設定，也不套用遠端設定，兩端原設定均保留。其他資料依現有同步設定處理。",
-        "nativeSnapshotCapacity": "伺服器的暫時快照已達上限。請更新伺服器與用戶端以支援自動釋放，並等待舊快照閒置 30 分鐘後重試；這不代表筆記或附件儲存空間已滿。",
-        "nativeDecryptionFailed": "目標伺服器的既有資料無法以目前金鑰解密，差異預覽已停止，本機資料尚未同步。請確認伺服器與帳號是否正確；同步日誌已記錄失敗的工作區、物件及金鑰版本。",
+        "nativeSnapshotCapacity": "伺服器的暫時快照已達上限。請更新伺服器與使用者端以支援自動釋放，並等待舊快照閒置 30 分鐘後重試；這不代表筆記或附件儲存空間已滿。",
+        "nativeDecryptionFailed": "無法使用目前金鑰解密目標伺服器上的既有資料。差異預覽已停止，本機資料尚未同步。請確認伺服器與帳號是否正確。失敗的工作區、物件與金鑰版本已寫入同步記錄。",
         "nativeKeyRequired": "目標工作區缺少解密金鑰，無法預覽。請先解鎖工作區，再重新掃描。",
         "nativeContentRequired": "伺服器包含目前版本無法可靠預覽的內容，已停止切換。請確認雙方版本與資料格式是否相容。",
         "nativeDuplicateIdentity": "發現重複的檔案路徑或同步識別碼，請先處理重複項目。",
@@ -2966,13 +2966,13 @@
           "deleted": "遠端已刪除"
         },
         "nativeSummary": "本機：{changes} 項變更 · {commands} 條待處理命令\n遠端物件：目前 {currentRemote} · 目標 {nextRemote}",
-        "backupHint": "执行前保存本地快照及目标远端内容的可恢复备份；备份或核对失败会停止。备份存放在本机应用数据目录，路径将在下面显示。",
+        "backupHint": "執行前會儲存本機快照，並備份目標遠端內容。備份或核對失敗時會停止。備份存放在本機應用程式資料夾，路徑會顯示在下方。",
         "acknowledge": "我已了解資料變化，確認繼續",
         "confirmationRequired": "確認後才能開始",
         "confirmationReady": "已確認，可以開始切換",
-        "acknowledgeHint": "勾選上方確認項目後，點擊「確認並切換」開始執行。",
-        "whyConfirm": "为什么需要再次确认？",
-        "confirmationReason": "切换平台会改变数据来源。保留本地会替换目标远端内容，使用远端会替换本地内容；单侧独有内容会移出活动同步范围。再次确认是为了避免误选覆盖方向；数据已变化时会重新扫描并要求重新选择。",
+        "acknowledgeHint": "勾選上方確認項目後，點選「確認並切換」開始執行。",
+        "whyConfirm": "為什麼需要再次確認？",
+        "confirmationReason": "切換平台會改變資料來源。保留本機會替換目標遠端內容，使用遠端會替換本機內容；單側獨有內容會移出活動同步範圍。再次確認是為了避免誤選覆蓋方向；資料已變化時會重新掃描並要求重新選擇。",
         "stale": "本機、遠端或同步設定的一致性檢查未通過，原預覽已失效。請重新掃描，核對最新差異後再執行。",
         "staleDetails": {
           "stage": "失敗階段：{path}",
@@ -2996,7 +2996,7 @@
             "validate": "重新檢查預覽",
             "backup": "備份",
             "apply": "同步寫入",
-            "verify": "結果核驗",
+            "verify": "結果驗證",
             "restore": "還原備份"
           },
           "checks": {
@@ -3013,20 +3013,20 @@
         },
         "unindexedItemConflict": "遠端索引或舊版資料與未被索引引用的同名檔案內容不同：{path}。為避免覆寫另一份內容，已在寫入前停止。請先在遠端核對並整理這兩個版本，再重新掃描。",
         "partialFailure": "部分變更可能已完成，自動同步已暫停。備份已保留。",
-        "backupLocation": "可恢复备份（应用数据目录）：{path}",
+        "backupLocation": "可還原備份（應用程式資料夾）：{path}",
         "completedHint": "已完成同步與驗證，主要平台已更新。",
         "confirmExecute": "確認並切換",
-        "back": "返回调整",
-        "rescanRetry": "重新扫描并重试",
-        "keepOpen": "正在自动处理，可查看实时进度。",
+        "back": "返回調整",
+        "rescanRetry": "重新掃描並重試",
+        "keepOpen": "正在自動處理，可查看即時進度。",
         "phases": {
           "list": "正在掃描遠端目錄…",
           "validate": "正在複查兩側變更…",
-          "scan": "正在读取清单和内容…",
-          "compare": "正在比对模块内容…",
-          "backup": "正在保存可恢复备份…",
-          "apply": "正在处理数据…",
-          "verify": "正在核验结果…",
+          "scan": "正在讀取清單和內容…",
+          "compare": "正在比對各類同步內容…",
+          "backup": "正在儲存可恢復備份…",
+          "apply": "正在處理資料…",
+          "verify": "正在驗證結果…",
           "start": "正在啟動目標平台同步…"
         },
         "startupTasks": {
@@ -3044,44 +3044,44 @@
           "save": "正在儲存同步設定…"
         },
         "modules": {
-          "notes": "Markdown 笔记",
-          "assets": "笔记附件",
-          "records": "记录",
-          "tags": "标签",
-          "canvases": "画布",
-          "conversations": "对话",
-          "settings": "可同步设置",
-          "memories": "记忆与策略",
-          "dataAssets": "记录与对话附件"
+          "notes": "Markdown 筆記",
+          "assets": "筆記附件",
+          "records": "記錄",
+          "tags": "標籤",
+          "canvases": "畫布",
+          "conversations": "對話",
+          "settings": "可同步設定",
+          "memories": "記憶與策略",
+          "dataAssets": "記錄與對話附件"
         },
         "strategyRequired": "請先選擇一種處理方式再繼續。合併、使用本機或使用遠端會造成不同的資料變更。",
         "strategies": {
-          "merge": "合并",
-          "local": "保留本地",
-          "remote": "使用远端"
+          "merge": "合併",
+          "local": "保留本機",
+          "remote": "使用遠端"
         },
         "descriptions": {
           "merge": "合併兩側內容，衝突項目手動選擇。",
           "local": "以本機為準，取代遠端內容。",
           "remote": "以遠端為準，取代本機內容。"
         },
-        "interrupted": "上一次切换未完成，自动同步已暂停。请重新扫描两侧内容后继续。",
-        "editorBusy": "编辑器仍在写入或处理内容。请等待保存完成后重试。",
-        "chatBusy": "对话仍在生成回复，请等待完成后再切换平台。",
-        "missingReference": "所选记录缺少对应的标签或关联内容。请返回调整范围或重新扫描，不会继续写入数据。",
-        "noModules": "当前未启用可处理的同步模块，将直接启用平台并保持现有内容不变。",
-        "remoteFileCount": "远端扫描到 {count} 个文件（包含应用数据文件）；下表按内容项和模块统计，包含删除标记。",
-        "messages": "{count} 条消息",
+        "interrupted": "上一次切換未完成，自動同步已暫停。請重新掃描兩側內容後繼續。",
+        "editorBusy": "編輯器仍在寫入或處理內容。請等待儲存完成後重試。",
+        "chatBusy": "對話仍在產生回覆，請等候完成後再切換平台。",
+        "missingReference": "所選記錄缺少對應的標籤或關聯內容。請返回調整範圍或重新掃描，不會繼續寫入資料。",
+        "noModules": "目前未啟用可處理的同步類別，將直接啟用平台並保持現有內容不變。",
+        "remoteFileCount": "遠端掃描到 {count} 個檔案（含應用程式資料檔）。下表按項目與同步類別統計，包含刪除標記。",
+        "messages": "{count} 則訊息",
         "emptyLegacyFiles": "空白檔案：{paths}。請選擇合併或保留本機以重建。",
         "unavailableRemoteData": "遠端快照為空，無法使用遠端覆寫本機。",
-        "unreadableSnapshot": "不可用（空文件）",
-        "cannotCompare": "远端没有可读取的快照，无法比较内容。",
-        "invalidJsonFile": "遠端資料「{path}」不是完整有效的 JSON，已停止本次同步。請檢查檔案是否損壞或被截斷，修復後點擊重試；不會將損壞內容當作空資料覆蓋本機。",
-        "selfHostedInvalidResponse": "自託管介面回應為空或格式異常（{path}）。請確認伺服器正常執行、位址指向 API 服務後重試。",
-        "selfHostedAuthenticationRequired": "自託管登入已失效（{path}），請在自託管設定中重新授權後重試。",
-        "selfHostedSecureStorageUnavailable": "系統憑證儲存空間存取失敗，自動同步已暫停。請點擊「重試」重新授權。",
-        "emptyJsonFile": "遠端資料「{path}」傳回空內容，已停止本次同步。請檢查檔案內容或網路回應後點擊重試。",
-        "invalidSchemaFile": "遠端資料「{path}」的結構不符合要求，已停止本次同步。請修復檔案後點擊重試，本機資料不會因此被清空。",
+        "unreadableSnapshot": "不可用（空檔案）",
+        "cannotCompare": "遠端沒有可讀取的快照，無法比較內容。",
+        "invalidJsonFile": "遠端資料「{path}」不是完整有效的 JSON，已停止本次同步。請檢查檔案是否損壞或被截斷，修復後點選重試；不會將損壞內容當作空資料覆蓋本機。",
+        "selfHostedInvalidResponse": "自行架設介面回應為空或格式異常（{path}）。請確認伺服器正常執行、位址指向 API 服務後重試。",
+        "selfHostedAuthenticationRequired": "自行架設登入已失效（{path}），請在自行架設設定中重新授權後重試。",
+        "selfHostedSecureStorageUnavailable": "系統憑證儲存空間存取失敗，自動同步已暫停。請點選「重試」重新授權。",
+        "emptyJsonFile": "遠端資料「{path}」傳回空內容，已停止本次同步。請檢查檔案內容或網路回應後點選重試。",
+        "invalidSchemaFile": "遠端資料「{path}」的結構不符合要求，已停止本次同步。請修復檔案後點選重試，本機資料不會因此被清空。",
         "conditionalUnsupported": "目前平台或檔案版本不支援可靠的條件寫入，已停止操作。可選擇「使用遠端」僅讀取資料，或改用支援版本條件的平台。",
         "emptyUploadUnsupported": "偵測到舊版的空檔案同步攔截（{path}）。請重新載入應用程式後，重新掃描並重試，讓空檔案透過 Git 上傳並保留零位元組內容。",
         "giteeConnectionFailed": "連線至 Gitee 失敗（{path}）。請檢查網路及應用程式代理設定，再重新掃描並重試。",
@@ -3091,9 +3091,9 @@
         "recoveryChanged": "失敗後本機內容又有變更，已停止還原，以免覆蓋新編輯。備份仍保留，請先儲存新內容再手動處理。",
         "restoreLocal": "還原本次操作前的本機資料",
         "restoreLocalHint": "僅還原本機；遠端保持不變，還原後使用本機儲存。",
-        "restoreLocalAcknowledge": "我已了解還原範圍，以及遠端資料不會回復",
+        "restoreLocalAcknowledge": "我已了解還原範圍，以及遠端資料不會還原",
         "recoveryCompleted": "本機資料已還原",
-        "recoveryCompletedHint": "已還原本次操作前的本機內容，並切換至本機儲存。備份和操作日誌仍保留，可重新選擇同步平台。",
+        "recoveryCompletedHint": "已還原本次操作前的本機內容，並切換至本機儲存。備份和操作記錄仍保留，可重新選擇同步平台。",
         "cancelInspection": "取消檢查",
         "cancelling": "正在等待目前任務結束…",
         "phaseElapsed": "本階段已用時 {seconds} 秒",
@@ -3177,89 +3177,89 @@
     },
     "imageHosting": {
       "title": "圖片儲存",
-      "desc": "選擇將圖片儲存在本機工作區，或上傳到已配置的圖床服務。",
+      "desc": "選擇將圖片儲存在本機工作區，或上傳到已設定的圖床服務。",
       "platformSettings": "圖片儲存方式",
       "localProviderTitle": "本機儲存",
       "localProviderDesc": "將圖片儲存在工作區內，適合離線使用及隨筆記一起遷移。",
       "useLocalStorage": "使用本機儲存",
       "localLocationTitle": "跟隨筆記儲存",
-      "localLocationDesc": "圖片儲存在 Markdown 文件所在目錄的資源資料夾。",
+      "localLocationDesc": "圖片儲存在 Markdown 檔案所在目錄的資源資料夾。",
       "relativePathTitle": "相對路徑引用",
       "relativePathDesc": "Markdown 使用相對路徑引用圖片，移動整個工作區時圖片可隨筆記一起遷移。",
       "currentPlatform": "使用中",
       "setCurrentPlatform": "使用此服務",
       "status": {
-        "connected": "已連接",
+        "connected": "已連線",
         "configured": "已設定",
-        "checking": "檢測中",
-        "disconnected": "未連接"
+        "checking": "偵測中",
+        "disconnected": "未連線"
       },
       "common": {
-        "status": "連接狀態",
-        "testConnection": "測試連接"
+        "status": "連線狀態",
+        "testConnection": "測試連線"
       },
       "type": "選擇平台",
       "typeDesc": "選擇圖床服務提供商",
-      "customRepoName": "自訂倉庫名",
-      "customRepoNameDesc": "留空則使用默認倉庫名",
-      "isPrimaryBackup": "當前 {type} 為主要圖床",
+      "customRepoName": "自訂版本庫名稱",
+      "customRepoNameDesc": "留空則使用預設版本庫名稱",
+      "isPrimaryBackup": "目前 {type} 為主要圖床",
       "setPrimaryBackup": "設為主要圖床",
       "smms": {
         "title": "S.EE 圖床",
         "description": "使用 S.EE 上傳和管理圖片",
-        "status": "連接狀態",
-        "connected": "已連接",
-        "connecting": "檢測中",
-        "disconnected": "未連接",
+        "status": "連線狀態",
+        "connected": "已連線",
+        "connecting": "偵測中",
+        "disconnected": "未連線",
         "token": {
-          "desc": "請創建並輸入 S.EE Token。",
-          "createToken": "打開 S.EE 開發者頁面",
-          "helper": "請輸入 S.EE API Token，現有配置可繼續沿用。",
+          "desc": "請建立並輸入 S.EE Token。",
+          "createToken": "開啟 S.EE 開發者頁面",
+          "helper": "請輸入 S.EE API Token，現有設定可繼續沿用。",
           "placeholder": "輸入 S.EE API Token"
         },
         "disk": "磁碟使用情況",
-        "error": "獲取失敗，請檢查網路或 Token 是否正確。"
+        "error": "取得失敗，請檢查網路或 Token 是否正確。"
       },
       "picgo": {
         "title": "PicGo 圖床",
         "description": "使用本機 PicGo 客戶端上傳圖片",
-        "status": "連接狀態",
-        "connected": "已連接",
-        "connecting": "檢測中",
-        "disconnected": "未連接",
-        "desc": "PicGo 伺服器地址",
-        "ok": "檢測到服務正在運行，請確保 PicGo 圖床已配置。",
-        "error": "服務未運行，請確保 PicGo（需要 v2.2.0+） 應用正在運行，否則無法上傳圖片。"
+        "status": "連線狀態",
+        "connected": "已連線",
+        "connecting": "偵測中",
+        "disconnected": "未連線",
+        "desc": "PicGo 伺服器位址",
+        "ok": "偵測到服務正在執行，請確保 PicGo 圖床已設定。",
+        "error": "服務未執行，請確保 PicGo（需要 v2.2.0+） 應用程式正在執行，否則無法上傳圖片。"
       },
       "github": {
         "title": "GitHub 圖床",
-        "description": "使用 GitHub 倉庫作為圖片儲存服務",
-        "repoStatus": "倉庫狀態",
-        "repoExists": "倉庫已存在",
-        "repoNotExists": "倉庫不存在",
-        "checking": "檢測中",
-        "creating": "創建中",
-        "manualCreateTitle": "需要手動創建圖床倉庫",
-        "manualCreateDesc": "請按以下步驟創建圖床倉庫：",
+        "description": "使用 GitHub 版本庫作為圖片儲存服務",
+        "repoStatus": "版本庫狀態",
+        "repoExists": "版本庫已存在",
+        "repoNotExists": "版本庫不存在",
+        "checking": "偵測中",
+        "creating": "建立中",
+        "manualCreateTitle": "需要手動建立圖床版本庫",
+        "manualCreateDesc": "請按以下步驟建立圖床版本庫：",
         "createSteps": {
           "step1": "訪問 GitHub 並登入您的帳戶",
-          "step2": "點擊右上角的 \"+\" 按鈕，選擇 \"New repository\"",
-          "step3": "倉庫名稱設置為：",
-          "step4": "可以選擇設置為私有倉庫（推薦）",
-          "step5": "點擊 \"Create repository\" 完成創建",
-          "step6": "創建完成後，點擊下方的\"重新檢測\"按鈕"
+          "step2": "點選右上角的 \"+\" 按鈕，選擇 \"New repository\"",
+          "step3": "版本庫名稱設定為：",
+          "step4": "可以選擇設定為私有版本庫（推薦）",
+          "step5": "點選 \"Create repository\" 完成建立",
+          "step6": "建立完成後，點選下方的\"重新偵測\"按鈕"
         },
-        "createNewRepo": "創建新倉庫",
-        "recheckRepo": "重新檢測",
-        "recheckingRepo": "檢測中..."
+        "createNewRepo": "建立新版本庫",
+        "recheckRepo": "重新偵測",
+        "recheckingRepo": "偵測中..."
       },
       "s3": {
         "title": "對象儲存",
-        "description": "連接 Amazon S3、Cloudflare R2、阿里雲 OSS、騰訊雲 COS、Backblaze B2、MinIO 或其他相容服務",
-        "status": "連接狀態",
-        "connected": "已連接",
+        "description": "連線 Amazon S3、Cloudflare R2、阿里雲 OSS、騰訊雲 COS、Backblaze B2、MinIO 或其他相容服務",
+        "status": "連線狀態",
+        "connected": "已連線",
         "connecting": "連線中",
-        "disconnected": "未連接",
+        "disconnected": "未連線",
         "accessKeyId": "Access Key ID",
         "accessKeyIdPlaceholder": "輸入 Access Key ID",
         "secretAccessKey": "Secret Access Key",
@@ -3268,7 +3268,7 @@
         "region": "區域",
         "accountId": "帳戶 ID",
         "accountIdPlaceholder": "輸入 Cloudflare 帳戶 ID",
-        "accountIdDesc": "可在 Cloudflare 控制台的 R2 概覽頁面找到。",
+        "accountIdDesc": "可在 Cloudflare 主控台的 R2 概覽頁面找到。",
         "bucket": "儲存桶",
         "bucketPlaceholder": "輸入儲存桶名稱",
         "provider": "服務商",
@@ -3288,8 +3288,8 @@
           "aliyun-oss": "使用阿里雲 OSS 的 S3 相容介面，依所選區域產生端點。",
           "tencent-cos": "使用騰訊雲 COS 的 S3 相容介面，憑證對應 SecretId 和 SecretKey。",
           "backblaze-b2": "使用 Backblaze B2 S3 相容 API，區域應與儲存桶所在區域一致。",
-          "minio": "連接自架 MinIO，需要填寫完整服務端點。",
-          "custom": "連接其他 S3 相容服務，可自行設定端點和尋址方式。"
+          "minio": "連線自架 MinIO，需要填寫完整服務端點。",
+          "custom": "連線其他 S3 相容服務，可自行設定端點和尋址方式。"
         },
         "advancedSettings": "進階設定",
         "endpoint": "自訂端點",
@@ -3310,31 +3310,31 @@
           "path": "路徑模式",
           "virtual": "虛擬主機模式"
         },
-        "customDomain": "自訂域名",
-        "customDomainDesc": "可選，用於訪問圖片的自訂域名",
-        "pathPrefix": "路徑前綴",
-        "pathPrefixDesc": "可選，圖片儲存的路徑前綴",
-        "save": "保存配置",
-        "test": "測試連接",
+        "customDomain": "自訂網域",
+        "customDomainDesc": "可選，用於訪問圖片的自訂網域",
+        "pathPrefix": "路徑前置字串",
+        "pathPrefixDesc": "可選，圖片儲存的路徑前置字串",
+        "save": "儲存設定",
+        "test": "測試連線",
         "setAsPrimary": "設為主要圖床",
-        "error": "配置錯誤",
+        "error": "設定錯誤",
         "requiredFields": "請填寫必填欄位：Access Key ID、Secret Access Key、區域和儲存桶",
-        "saveSuccess": "配置保存成功",
-        "saveSuccessDesc": "S3 配置已保存",
-        "saveError": "配置保存失敗",
-        "testSuccess": "連接測試成功",
-        "testSuccessDesc": "S3 連接正常，可以上傳圖片",
-        "testFailed": "連接測試失敗",
-        "testFailedDesc": "請檢查配置資訊和網路連接",
-        "testFirstDesc": "請先測試連接成功後再設為主要圖床",
-        "setPrimarySuccess": "設置成功",
+        "saveSuccess": "設定儲存成功",
+        "saveSuccessDesc": "S3 設定已儲存",
+        "saveError": "設定儲存失敗",
+        "testSuccess": "連線測試成功",
+        "testSuccessDesc": "S3 連線正常，可以上傳圖片",
+        "testFailed": "連線測試失敗",
+        "testFailedDesc": "請檢查設定資訊和網路連線",
+        "testFirstDesc": "請先測試連線成功後再設為主要圖床",
+        "setPrimarySuccess": "設定成功",
         "setPrimarySuccessDesc": "對象儲存已設為主要圖床"
       },
       "lsky": {
         "title": "Lsky Pro",
-        "description": "連接自架的蘭空圖床服務",
+        "description": "連線自架的蘭空圖床服務",
         "apiUrl": "API 地址",
-        "apiUrlDesc": "填寫包含版本號的 API 根地址，例如 https://example.com/api/v1。",
+        "apiUrlDesc": "填寫包含版本號的 API 根位址，例如 https://example.com/api/v1。",
         "token": "API Token",
         "tokenPlaceholder": "輸入 Bearer Token",
         "strategyId": "儲存策略 ID",
@@ -3349,13 +3349,13 @@
         "password": "密碼",
         "publicUrl": "公開存取地址",
         "publicUrlDesc": "Markdown 使用此地址載入圖片，必須可被閱讀筆記的裝置直接存取。",
-        "pathPrefix": "路徑前綴"
+        "pathPrefix": "路徑前置字串"
       },
       "customHttp": {
         "title": "自訂 HTTP",
-        "description": "連接提供 POST 或 PUT 上傳介面的任意服務",
+        "description": "連線提供 POST 或 PUT 上傳介面的任意服務",
         "url": "上傳地址",
-        "urlDesc": "地址可使用 '{filename}' 和 '{originalName}' 佔位符。",
+        "urlDesc": "地址可使用 '{filename}' 和 '{originalName}' 預留位置。",
         "method": "請求方法",
         "fileField": "檔案欄位名",
         "headers": "請求標頭",
@@ -3377,7 +3377,7 @@
         "title": "ImageKit",
         "description": "使用 ImageKit 上傳、最佳化並透過 CDN 分發圖片",
         "privateKey": "Private Key",
-        "privateKeyDesc": "密鑰僅儲存在本機設定中，用於 ImageKit 服務端上傳介面。",
+        "privateKeyDesc": "金鑰僅儲存在本機設定中，用於 ImageKit 服務端上傳介面。",
         "folder": "資源資料夾"
       },
       "qiniu": {
@@ -3387,7 +3387,7 @@
         "publicUrl": "公開存取網域",
         "uploadUrl": "上傳區域地址",
         "uploadUrlDesc": "預設使用華東上傳地址，其他區域請填寫七牛雲提供的上傳網域。",
-        "pathPrefix": "路徑前綴"
+        "pathPrefix": "路徑前置字串"
       },
       "upyun": {
         "title": "又拍雲 USS",
@@ -3396,7 +3396,7 @@
         "operator": "操作員",
         "password": "操作員密碼",
         "publicUrl": "公開存取網域",
-        "pathPrefix": "路徑前綴"
+        "pathPrefix": "路徑前置字串"
       }
     },
     "backup": {
@@ -3461,52 +3461,52 @@
     },
     "backupSync": {
       "title": "備用方案",
-      "desc": "在這裡，你可以使用其他方案來備份你的數據，你可以定期進行備份，以確保數據的安全。",
+      "desc": "在這裡，你可以使用其他方案來備份你的資料，你可以定期進行備份，以確保資料的安全。",
       "localBackup": {
-        "tabTitle": "本地備份",
+        "tabTitle": "本機備份",
         "export": {
           "title": "匯出備份",
-          "desc": "將應用數據打包為 .zip 文件，保存到指定位置。",
+          "desc": "將應用程式資料打包為 .zip 檔案，儲存到指定位置。",
           "button": "選擇位置並匯出",
           "simpleButton": "匯出",
           "exporting": "匯出中..."
         },
         "import": {
           "title": "匯入備份",
-          "desc": "從 .zip 文件恢復應用數據，將覆蓋當前所有數據。",
-          "button": "選擇文件並匯入",
+          "desc": "從 .zip 檔案恢復應用程式資料，將覆蓋目前所有資料。",
+          "button": "選擇檔案並匯入",
           "importing": "匯入中...",
-          "warning": "匯入操作將覆蓋所有當前數據，請確保已備份重要內容！"
+          "warning": "匯入操作將覆蓋所有目前資料，請確保已備份重要內容！"
         },
         "exportDialog": {
-          "title": "選擇備份文件保存位置"
+          "title": "選擇備份檔案儲存位置"
         },
         "importDialog": {
-          "title": "選擇要匯入的備份文件"
+          "title": "選擇要匯入的備份檔案"
         },
         "exportSuccess": "備份匯出成功！",
         "exportError": "備份匯出失敗",
-        "importSuccess": "備份匯入成功！應用將重啟以應用更改。",
+        "importSuccess": "備份匯入成功！應用程式將重新啟動以套用變更。",
         "importError": "備份匯入失敗",
-        "restartConfirm": "匯入完成！是否立即重啟應用以應用更改？"
+        "restartConfirm": "匯入完成！要立即重新啟動應用程式以套用變更嗎？"
       }
     },
     "template": {
-      "title": "整理模板",
-      "desc": "在這裡，你可以創建和管理自訂整理模板，幫助 AI 按照你的需求整理記錄內容。",
-      "customTemplate": "自訂模板",
-      "addTemplate": "新增模板",
-      "emptyTitle": "還沒有整理模板",
-      "emptyDesc": "建立模板後，可以讓 AI 按照固定結構整理記錄。",
-      "deleteConfirm": "確認刪除模板嗎?",
+      "title": "整理範本",
+      "desc": "在這裡，你可以建立和管理自訂整理範本，幫助 AI 按照你的需求整理記錄內容。",
+      "customTemplate": "自訂範本",
+      "addTemplate": "新增範本",
+      "emptyTitle": "還沒有整理範本",
+      "emptyDesc": "建立範本後，可以讓 AI 按照固定結構整理記錄。",
+      "deleteConfirm": "確認刪除範本嗎?",
       "status": "狀態",
       "name": "名稱",
       "content": "內容",
       "scope": "範圍",
       "selectScope": "選擇範圍",
-      "addTemplateDesc": "請輸入自訂模板名稱和內容，幫助 AI 更好地理解你的需求。",
-      "editTemplate": "編輯自訂模板",
-      "noContent": "暫無內容",
+      "addTemplateDesc": "請輸入自訂範本名稱和內容，幫助 AI 更好地理解你的需求。",
+      "editTemplate": "編輯自訂範本",
+      "noContent": "目前沒有內容",
       "range": {
         "all": "全部",
         "today": "今天",
@@ -3520,14 +3520,14 @@
       "title": "快捷鍵",
       "screenshot": "截圖記錄",
       "link": "連結記錄",
-      "textRecord": "文本記錄",
-      "windowPin": "窗口置頂"
+      "textRecord": "文字記錄",
+      "windowPin": "視窗保持在最上層"
     },
     "theme": {
       "title": "外觀",
-      "appTheme": "應用配色",
+      "appTheme": "應用程式配色",
       "previewTheme": "預覽內容主題",
-      "codeTheme": "代碼塊高亮主題",
+      "codeTheme": "程式碼區塊醒目提示主題",
       "selectTheme": "選擇主題"
     },
     "dev": {
@@ -3536,21 +3536,21 @@
       "developerTitle": "開發者",
       "developerDesc": "開放實驗性功能、開發者工具和本機診斷能力。",
       "developerModeTitle": "開發者模式",
-      "developerModeDesc": "開啟後顯示自託管同步和開發者診斷。此設定僅在目前裝置生效。",
+      "developerModeDesc": "開啟後顯示自行架設同步和開發者診斷。此設定僅在目前裝置生效。",
       "developerToolsTitle": "開發者工具",
       "developerToolsDesc": "可透過此按鈕、F12、Cmd/Ctrl+Shift+I 或右鍵檢查元素開啟。",
       "openDeveloperTools": "開啟開發者工具",
       "openDeveloperToolsFailed": "無法開啟開發者工具",
       "performanceInfoTitle": "編輯器效能資訊",
-      "performanceInfoDesc": "在編輯器中顯示文件大小、工作模式和渲染耗時。",
+      "performanceInfoDesc": "在編輯器中顯示檔案大小、工作模式和算繪耗時。",
       "diagnostics": {
-        "title": "診斷與主控台日誌",
-        "description": "已收集 {count} 筆脫敏執行日誌，可預覽後複製或匯出。",
+        "title": "診斷與主控台記錄",
+        "description": "已收集 {count} 筆去識別化執行記錄，可預覽後複製或匯出。",
         "preview": "產生預覽",
-        "previewTitle": "脫敏診斷預覽",
-        "reviewWarning": "自動脫敏無法涵蓋所有業務文字，複製或提交前請人工複核。診斷不會主動讀取筆記正文。",
-        "clear": "清除日誌",
-        "cleared": "日誌已清除",
+        "previewTitle": "去識別化診斷預覽",
+        "reviewWarning": "自動去識別化無法涵蓋所有業務文字，複製或提交前請人工複核。診斷不會主動讀取筆記正文。",
+        "clear": "清除記錄",
+        "cleared": "記錄已清除",
         "copy": "複製",
         "copied": "已複製",
         "copyFailed": "複製診斷失敗",
@@ -3559,34 +3559,34 @@
         "exportFailed": "匯出診斷失敗",
         "failed": "產生診斷失敗"
       },
-      "clearData": "清理數據",
+      "clearData": "清理資料",
       "clearDataConfirm": "這會永久刪除系統設定、資料庫和全部記錄，且無法復原。確定繼續嗎？",
-      "proxy": "代理，用於解決網路問題，配置後建議重啟應用。",
+      "proxy": "代理，用於解決網路問題，設定後建議重新啟動應用程式。",
       "proxyPlaceholder": "請輸入代理地址",
       "proxyTitle": "網路代理",
       "systemProxyTitle": "使用系統代理",
       "systemProxyDesc": "開啟後使用系統代理；關閉後還原手動代理。模型個別設定的代理優先。",
       "proxySaveFailed": "代理設定儲存失敗，請重試。",
       "proxyLoadFailed": "代理設定載入失敗，請重新開啟設定。",
-      "clearDataTitle": "清理數據",
-      "clearDataDesc": "清理數據資訊，包括系統配置資訊、資料庫（包含記錄）。",
-      "clearFileTitle": "清理文件",
-      "clearFileDesc": "清理文件，包括圖片、文章。",
+      "clearDataTitle": "清理資料",
+      "clearDataDesc": "清理資料資訊，包括系統設定資訊、資料庫（包含記錄）。",
+      "clearFileTitle": "清理檔案",
+      "clearFileDesc": "清理檔案，包括圖片、文章。",
       "dangerZoneTitle": "危險操作",
       "dangerZoneDesc": "以下操作會永久刪除本機內容，執行前請確認已完成備份。",
       "clearFilesConfirm": "這會永久刪除本機圖片、文章和暫存檔案，且無法復原。確定繼續嗎？",
       "filesCleared": "檔案已清理",
-      "dataClearedRestartTitle": "需要重新啟動應用",
-      "dataClearedRestartDesc": "資料已清理，應用即將關閉。請重新啟動應用。",
+      "dataClearedRestartTitle": "需要重新啟動應用程式",
+      "dataClearedRestartDesc": "資料已清理，應用程式即將關閉。請重新啟動應用程式。",
       "cancelButton": "取消",
       "confirmClearButton": "確認清理",
       "clearButton": "清理",
       "configFileTitle": "設定檔管理",
-      "configFileDesc": "設定檔匯入與匯出，匯入設定檔將覆蓋當前配置，並且重啟後生效。",
+      "configFileDesc": "設定檔匯入與匯出，匯入設定檔將覆蓋目前設定，並且重新啟動後生效。",
       "importConfigTitle": "匯入設定檔",
       "importConfigInvalid": "設定檔必須是有效的 JSON 物件。",
       "exportConfigTitle": "匯出設定檔",
-      "importConfigSuccessMobile": "配置下載成功，請手動重啟應用",
+      "importConfigSuccessMobile": "設定下載成功，請手動重新啟動應用程式",
       "exportConfigSuccess": "匯出成功",
       "importButton": "匯入",
       "exportButton": "匯出"
@@ -3626,8 +3626,8 @@
       "actionFailed": "連線操作失敗"
     },
     "chat": {
-      "title": "對話設置",
-      "desc": "在這裡，你可以配置對話相關的設置，包括摘要生成等功能。",
+      "title": "對話設定",
+      "desc": "調整對話設定，包括產生摘要等功能。",
       "primaryModel": {
         "title": "主要模型",
         "model": {
@@ -3636,11 +3636,11 @@
         }
       },
       "toolbar": {
-        "title": "工具欄設置",
+        "title": "工具列設定",
         "chatToolbar": {
-          "title": "對話工具欄",
-          "desc": "自定義對話工具欄按鈕的顯示順序和可見性",
-          "button": "設置",
+          "title": "對話工具列",
+          "desc": "自訂對話工具列按鈕的顯示順序和顯示狀態",
+          "button": "設定",
           "modelSelect": {
             "desc": "切換用於對話的 AI 模型"
           },
@@ -3648,17 +3648,17 @@
             "desc": "選擇對話使用的預設提示詞"
           },
           "chatLanguage": {
-            "desc": "設置對話的語言"
+            "desc": "設定對話的語言"
           },
           "chatLink": {
             "title": "關聯標籤",
-            "desc": "關聯當前標籤的筆記內容到對話上下文"
+            "desc": "關聯目前標籤的筆記內容到對話上下文"
           },
           "fileLink": {
-            "desc": "關聯文件或文件夾到對話上下文"
+            "desc": "關聯檔案或資料夾到對話上下文"
           },
           "mcpButton": {
-            "desc": "選擇並連接 MCP 伺服器以使用外部工具"
+            "desc": "選擇並連線 MCP 伺服器以使用外部工具"
           },
           "ragSwitch": {
             "title": "知識庫檢索",
@@ -3686,15 +3686,15 @@
         },
         "model": {
           "title": "壓縮模型",
-          "desc": "用於生成會話壓縮摘要；未指定時使用主模型",
+          "desc": "用於產生會話壓縮摘要；未指定時使用主模型",
           "placeholder": "使用主模型"
         }
       },
       "conversationTitle": {
-        "title": "会话标题",
+        "title": "對話標題",
         "model": {
-          "title": "标题生成模型",
-          "desc": "选择用于生成会话标题的 AI 模型"
+          "title": "標題產生模型",
+          "desc": "選擇用於產生對話標題的 AI 模型"
         }
       }
     },
@@ -3703,12 +3703,12 @@
       "menuTitle": "模型服務",
       "desc": "集中管理 AI 模型平台、連線憑證和不同能力的模型，可用於對話、整理、知識庫和語音等功能。",
       "providersTitle": "模型平台",
-      "providersDesc": "先選擇平台，再分別配置連線資訊和該平台提供的模型。",
+      "providersDesc": "先選擇平台，再分別設定連線資訊和該平台提供的模型。",
       "providerListTitle": "模型平台",
       "addedPlatforms": "已新增",
-      "providerCount": "共 {count} 個配置",
+      "providerCount": "共 {count} 個設定",
       "searchProviders": "搜尋供應商或位址",
-      "endpointMissing": "尚未配置服務位址",
+      "endpointMissing": "尚未設定服務位址",
       "noProviderResults": "沒有符合的供應商",
       "noProvidersTitle": "還沒有模型平台",
       "noProvidersDesc": "可以從平台範本開始，也可以新增自訂 AI 服務。",
@@ -3718,7 +3718,7 @@
       "templateProvider": "平台範本",
       "customProvider": "自訂平台",
       "connectionTab": "連線設定",
-      "modelsTab": "模型列表",
+      "modelsTab": "模型清單",
       "connectionTitle": "連線設定",
       "connectionDesc": "管理服務位址、API Key、網路代理和自訂請求標頭。修改會自動儲存。",
       "loadingProviderTemplate": "正在讀取供應商範本資訊",
@@ -3731,20 +3731,20 @@
       "noModelsTitle": "尚未加入模型",
       "noModelsDesc": "加入平台提供的模型，並選擇對話、嵌入、重排或語音等能力類型。",
       "selectProviderTitle": "選擇一個模型平台",
-      "selectProviderDesc": "從列表中選擇要管理的模型平台。",
+      "selectProviderDesc": "從清單中選擇要管理的模型平台。",
       "searchModels": "搜尋或輸入模型名稱",
       "noModelResults": "沒有找到模型",
       "modelNamePlaceholder": "輸入模型名稱",
-      "refreshModelList": "重新取得模型列表",
-      "loadingModels": "正在取得模型列表…",
+      "refreshModelList": "重新取得模型清單",
+      "loadingModels": "正在取得模型清單…",
       "searchProviderTemplates": "搜尋平台範本",
       "loadingProviderTemplates": "正在取得平台範本…",
       "providerTemplates": "平台範本",
       "noProviderTemplateResults": "沒有符合的範本",
-      "noProviderTemplateResultsDesc": "可以清除搜尋後選擇自訂配置。",
+      "noProviderTemplateResultsDesc": "可以清除搜尋後選擇自訂設定。",
       "modelTitle": "自訂名稱",
-      "modelConfigTitle": "模型配置",
-      "modelConfigDesc": "每一個配置對應一個 AI 模型，你可以通過模板或自訂創建新的配置。",
+      "modelConfigTitle": "模型設定",
+      "modelConfigDesc": "每一個設定對應一個 AI 模型，你可以透過範本或自訂建立新的設定。",
       "providerInfo": "平台資訊",
       "providerInfoDesc": "此平台透過範本新增，名稱和地址已預設，無需修改。",
       "create": "新增自訂平台",
@@ -3753,7 +3753,7 @@
         "title": "自訂平台",
         "descWithoutModels": "新增自訂模型平台來使用更多模型服務。"
       },
-      "config": "配置單",
+      "config": "設定",
       "custom": "自訂平台",
       "addCustomModel": "自訂",
       "deleteCustomModel": "刪除平台",
@@ -3761,10 +3761,10 @@
       "copyConfig": "複製平台",
       "builtin": "內建",
       "modelSupport": "支援通用的 AI 對話介面",
-      "apiKeyUrl": "創建 API Key",
+      "apiKeyUrl": "建立 API Key",
       "modelType": {
         "title": "模型類型",
-        "desc": "根據 AI 模型能力選擇模型類型，用以調用不同的介面。",
+        "desc": "根據 AI 模型能力選擇模型類型，用以呼叫不同的介面。",
         "chat": "對話",
         "image": "生圖",
         "video": "影片",
@@ -3775,17 +3775,17 @@
       },
       "modelList": {
         "error": {
-          "title": "獲取模型列表失敗",
+          "title": "取得模型清單失敗",
           "description": "請檢查 API Key 或網路是否正確"
         }
       },
       "selectModel": "請選擇模型",
       "modelProviderDesc": "請填寫 AI 服務商提供的介面資訊。",
       "modelTitleDesc": "自訂名稱，用於標識 AI 模型，請勿重複。",
-      "modelBaseUrlDesc": "配置到服務商要求的版本路徑即可，例如：https://api.example.com/v1。",
-      "modelDesc": "部分模型支持獲取模型列表，如果不支持請手動配置。",
+      "modelBaseUrlDesc": "設定到服務商要求的版本路徑即可，例如：https://api.example.com/v1。",
+      "modelDesc": "部分模型支援取得模型清單，如果不支援請手動設定。",
       "temperatureDesc": "使用什麼採樣溫度，介於 0 和 2 之間。較高的值（如 0.8）將使輸出更加隨機，而較低的值（如 0.2）將使輸出更加集中和確定。 我們通常建議改變這個或top_p但不是兩者。",
-      "topPDesc": "一種替代溫度採樣的方法，稱為核採樣，其中模型考慮具有 top_p 機率質量的標記的結果。所以 0.1 意味著只考慮構成前 10% 機率質量的標記。 我們通常建議改變這個或temperature但不是兩者。",
+      "topPDesc": "核心取樣會依機率由高到低選取詞元，直到累計機率達到 top_p。例如設為 0.1 時，只從累計機率前 10% 的詞元中取樣。建議只調整 top_p 或 temperature 其中一項。",
       "proxyModeTitle": "網路代理",
       "proxyModeDesc": "為目前的模型平台選擇代理方式。繼承模式會使用進階設定中的全域代理。",
       "proxyModeInherit": "繼承全域代理",
@@ -3794,25 +3794,25 @@
       "proxyURLPlaceholder": "例如：http://127.0.0.1:7890 或 socks5h://127.0.0.1:1080",
       "proxyURLInvalid": "請輸入有效的 HTTP、HTTPS、SOCKS5 或 SOCKS5H 代理位址。",
       "customHeaders": "自訂請求頭",
-      "customHeadersDesc": "添加自訂 HTTP 請求頭，支持多個鍵值對配置。",
+      "customHeadersDesc": "新增自訂 HTTP 請求頭，支援多個鍵值對設定。",
       "headerKey": "鍵",
       "headerValue": "值",
-      "addHeader": "添加 Header",
-      "connectionSuccess": "AI 連接測試通過",
-      "connectionFailed": "連接失敗",
+      "addHeader": "新增 Header",
+      "connectionSuccess": "AI 連線測試通過",
+      "connectionFailed": "連線失敗",
       "voice": "語音類型",
       "voiceDesc": "指定音訊模型使用的語音類型，如 'alloy'、'echo'、'fable' 等。",
       "voicePlaceholder": "請輸入語音類型，如：alloy",
-      "enableStream": "流式響應",
-      "enableStreamDesc": "啟用流式響應可以即時顯示生成內容，但某些模型可能不支持此功能。",
-      "maxTokens": "最大輸出 Token",
-      "maxTokensDesc": "限制單次生成的最大 Token 數；留空時使用模型或平台的預設限制。",
+      "enableStream": "串流回應",
+      "enableStreamDesc": "啟用串流回應可以即時顯示產生內容，但某些模型可能不支援此功能。",
+      "maxTokens": "最大輸出 詞元",
+      "maxTokensDesc": "限制單次產生的最大 詞元 數；留空時使用模型或平台的預設限制。",
       "maxTokensPlaceholder": "由模型決定",
       "contextWindow": "上下文視窗",
-      "contextWindowDesc": "模型可接受的輸入與輸出 Token 總量；留空時自動推測，並在上下文溢位後學習。",
+      "contextWindowDesc": "模型可接受的輸入與輸出 詞元 總量；留空時自動推測，並在上下文溢位後學習。",
       "contextWindowPlaceholder": "自動偵測（預設 16K）",
-      "tokenLimitParam": "Token 限制參數",
-      "tokenLimitParamDesc": "預設使用 max_completion_tokens；舊版相容接口可切換為 max_tokens。",
+      "tokenLimitParam": "詞元 限制參數",
+      "tokenLimitParamDesc": "預設使用 max_completion_tokens；舊版相容介面可切換為 max_tokens。",
       "reasoningEffort": {
         "title": "推理等級",
         "default": "預設",
@@ -3826,15 +3826,15 @@
       },
       "advancedParameters": "進階參數",
       "selectConfig": "請選擇模型平台",
-      "models": "模型列表",
-      "modelsDesc": "在這裡管理當前平台下的所有模型，每個模型可以有不同的類型和參數。",
-      "addModel": "添加模型",
+      "models": "模型清單",
+      "modelsDesc": "在這裡管理目前平台下的所有模型，每個模型可以有不同的類型和參數。",
+      "addModel": "新增模型",
       "newModel": "新模型",
-      "checkConnection": "檢測連接",
+      "checkConnection": "偵測連線",
       "model": "模型",
       "defaultModels": {
         "title": "NoteGen",
-        "desc": "NoteGen 為用戶提供免費的 AI 模型服務，由矽基流動和 AIHubMix 提供支持，無需配置即可使用基礎功能。",
+        "desc": "NoteGen 為使用者提供免費的 AI 模型服務，由矽基流動和 AIHubMix 提供支援，無需設定即可使用基礎功能。",
         "chatModel": {
           "name": "NoteGen AI",
           "type": "對話模型",
@@ -3843,32 +3843,32 @@
         "embeddingModel": {
           "name": "BAAI/bge-m3",
           "type": "嵌入模型",
-          "desc": "用於文本向量化、語義搜索等功能"
+          "desc": "用於文字向量化、語意搜尋等功能"
         },
         "visionModel": {
           "name": "OpenGVLab/InternVL2-8B",
           "type": "視覺模型",
-          "desc": "支持圖像理解、視覺問答等功能"
+          "desc": "支援影像理解、視覺問答等功能"
         },
         "completionModel": {
           "name": "快速補全",
           "type": "補全模型",
-          "desc": "用於 Markdown 編輯器的 AI 內聯補全，類似 GitHub Copilot，快速生成續寫內容"
+          "desc": "用於 Markdown 編輯器的 AI 內聯補全，類似 GitHub Copilot，快速產生續寫內容"
         },
         "poweredBy": "由 SiliconFlow 提供技術支援"
       }
     },
     "imageMethod": {
-      "title": "圖像識別",
-      "desc": "預設使用系統 OCR 識別圖片；設定 VLM 後會優先使用 VLM，失敗時自動回退 OCR。",
+      "title": "影像辨識",
+      "desc": "預設使用系統 OCR 辨識圖片；設定 VLM 後會優先使用 VLM，失敗時自動改用 OCR。",
       "enable": {
-        "title": "啟用圖像識別",
-        "desc": "開啟後，在截圖記錄和插圖記錄時會自動進行圖片識別。關閉後將跳過圖片識別步驟。"
+        "title": "啟用影像辨識",
+        "desc": "開啟後，在截圖記錄和插圖記錄時會自動進行圖片辨識。關閉後將跳過圖片辨識步驟。"
       },
       "ocr": {
         "title": "系統 OCR",
         "desc": "預設使用目前系統提供的 OCR 能力。",
-        "noProviders": "目前平台暫無內建 OCR 引擎",
+        "noProviders": "目前平台目前沒有內建 OCR 引擎",
         "unknownVersion": "未知版本",
         "ready": "可用",
         "unavailable": "不可用",
@@ -3876,23 +3876,23 @@
       },
       "vlm": {
         "title": "VLM 增強（可選）",
-        "desc": "選擇視覺語言模型後，圖片會先走 VLM 識別；如果模型不可用、識別失敗或未返回內容，仍會自動回退系統 OCR。",
+        "desc": "選擇視覺語言模型後，圖片會先走 VLM 辨識；如果模型不可用、辨識失敗或未傳回內容，仍會自動改用系統 OCR。",
         "noModel": "預設不使用模型",
         "clearModel": "清除 VLM 模型"
       }
     },
     "file": {
-      "title": "文件管理",
-      "desc": "在這裡，你可以管理工作區設置和其他文件相關選項。",
+      "title": "檔案管理",
+      "desc": "在這裡，你可以管理工作區設定和其他檔案相關選項。",
       "workspace": {
-        "title": "工作區設置",
-        "desc": "設置應用程式的工作區目錄，文件將保存在該目錄中。",
+        "title": "工作區設定",
+        "desc": "設定應用程式的工作區目錄，檔案將儲存在該目錄中。",
         "current": "工作區路徑",
-        "defaultPath": "默認工作區",
+        "defaultPath": "預設工作區",
         "default": "預設工作區",
-        "custom": "當前使用自訂工作區路徑。",
+        "custom": "目前使用自訂工作區路徑。",
         "select": "選擇工作區目錄",
-        "reset": "重設為默認路徑",
+        "reset": "重設為預設路徑",
         "history": "歷史路徑",
         "removeHistory": "移除歷史記錄",
         "switchFailed": "切換工作區失敗，已恢復原工作區",
@@ -3902,27 +3902,27 @@
         "clearHistory": "清空歷史記錄",
         "actions": "操作",
         "list": "工作區",
-        "searchPlaceholder": "搜索工作區路徑...",
-        "noResults": "未找到結果"
+        "searchPlaceholder": "搜尋工作區路徑...",
+        "noResults": "找不到結果"
       },
       "info": {
         "title": "工作區說明",
-        "desc": "更改工作區後需要重啟應用程式才能完全生效。新工作區中的文件將在重啟後顯示。"
+        "desc": "更改工作區後需要重新啟動應用程式才能完全生效。新工作區中的檔案將在重新啟動後顯示。"
       },
       "toast": {
         "updated": "工作區已更新",
-        "updatedDesc": "工作區已設置為: {path}",
+        "updatedDesc": "工作區已設定為: {path}",
         "reset": "工作區已重設",
-        "resetDesc": "已恢復使用默認工作區",
+        "resetDesc": "已恢復使用預設工作區",
         "error": "選擇工作區失敗",
         "errorDesc": "無法選擇工作區目錄，請重試",
         "resetError": "重設工作區失敗",
-        "resetErrorDesc": "無法重設為默認工作區，請重試"
+        "resetErrorDesc": "無法重設為預設工作區，請重試"
       },
       "assets": {
         "title": "寫作資源路徑",
-        "desc": "設置寫作資源目錄名稱。編輯器本地插入圖片時會使用該目錄名，例如 assets 或 images。",
-        "select": "請設置資源目錄名稱，例如：assets"
+        "desc": "設定寫作資源目錄名稱。編輯器本機插入圖片時會使用該目錄名，例如 assets 或 images。",
+        "select": "請設定資源目錄名稱，例如：assets"
       },
       "versionControl": {
         "title": "版本管理",
@@ -3943,10 +3943,10 @@
     },
     "shortcuts": {
       "title": "快捷鍵",
-      "desc": "在這裡，你可以配置快捷鍵，幫助你更高效地使用 NoteGen。",
+      "desc": "在這裡，你可以設定快捷鍵，幫助你更有效率地使用 NoteGen。",
       "resetDefaults": "重設",
       "clear": "清空",
-      "noShortcut": "未設置",
+      "noShortcut": "未設定",
       "recording": "按下新的快捷鍵",
       "registrationFailed": "無法註冊此快捷鍵，可能已被系統或其他應用程式佔用，請嘗試其他組合。",
       "saveFailed": "快捷鍵儲存失敗，請重試。",
@@ -4007,27 +4007,27 @@
           },
           "openSearch": {
             "title": "查找 / 替換",
-            "desc": "打開編輯器內搜尋面板。"
+            "desc": "開啟編輯器內搜尋面板。"
           },
           "openSlashCommand": {
             "title": "Slash 選單",
-            "desc": "在游標處打開編輯器命令選單。"
+            "desc": "在游標處開啟編輯器命令選單。"
           },
           "collapseAllHeadings": {
             "title": "摺疊全部標題",
-            "desc": "在完整文件的視覺編輯模式下摺疊所有標題內容。"
+            "desc": "在完整檔案的視覺編輯模式下摺疊所有標題內容。"
           },
           "expandAllHeadings": {
             "title": "展開全部標題",
-            "desc": "在完整文件的視覺編輯模式下展開所有標題內容。"
+            "desc": "在完整檔案的視覺編輯模式下展開所有標題內容。"
           },
           "toggleOutline": {
             "title": "大綱",
-            "desc": "顯示或隱藏目前文件大綱。"
+            "desc": "顯示或隱藏目前檔案大綱。"
           },
           "toggleBold": {
             "title": "粗體",
-            "desc": "切換選中文本或後續輸入的粗體樣式。"
+            "desc": "切換選中文字或後續輸入的粗體樣式。"
           },
           "toggleItalic": {
             "title": "斜體",
@@ -4046,28 +4046,28 @@
             "desc": "切換行內程式碼樣式。"
           },
           "toggleHighlight": {
-            "title": "高亮",
-            "desc": "切換高亮樣式。"
+            "title": "醒目提示",
+            "desc": "切換醒目提示樣式。"
           },
           "openLinkInput": {
             "title": "連結",
-            "desc": "打開連結輸入框。"
+            "desc": "開啟連結輸入框。"
           },
           "toggleBlockquote": {
             "title": "引用區塊",
             "desc": "切換引用區塊。"
           },
           "toggleBulletList": {
-            "title": "無序列表",
-            "desc": "切換無序列表。"
+            "title": "無序清單",
+            "desc": "切換無序清單。"
           },
           "toggleOrderedList": {
-            "title": "有序列表",
-            "desc": "切換有序列表。"
+            "title": "有序清單",
+            "desc": "切換有序清單。"
           },
           "toggleTaskList": {
-            "title": "任務列表",
-            "desc": "切換任務列表。"
+            "title": "任務清單",
+            "desc": "切換任務清單。"
           },
           "toggleCodeBlock": {
             "title": "程式碼區塊",
@@ -4079,7 +4079,7 @@
           },
           "openAiMenu": {
             "title": "AI 動作選單",
-            "desc": "打開選中文本的 AI 操作選單。"
+            "desc": "開啟選中文字的 AI 操作選單。"
           },
           "aiContinue": {
             "title": "AI 續寫",
@@ -4087,35 +4087,35 @@
           },
           "aiPolish": {
             "title": "AI 潤色",
-            "desc": "潤色選中文本。"
+            "desc": "潤色選中文字。"
           },
           "aiConcise": {
             "title": "AI 精簡",
-            "desc": "精簡選中文本。"
+            "desc": "精簡選中文字。"
           },
           "aiExpand": {
             "title": "AI 擴寫",
-            "desc": "擴寫選中文本。"
+            "desc": "擴寫選中文字。"
           },
           "aiTranslate": {
             "title": "AI 翻譯",
-            "desc": "打開選中文本的翻譯選單。"
+            "desc": "開啟選中文字的翻譯選單。"
           },
           "acceptAiSuggestion": {
             "title": "接受 AI 建議",
-            "desc": "AI 建議浮層打開時接受目前結果。"
+            "desc": "AI 建議浮層開啟時接受目前結果。"
           },
           "rejectAiSuggestion": {
             "title": "拒絕 AI 建議",
-            "desc": "AI 建議浮層打開時還原原文。"
+            "desc": "AI 建議浮層開啟時還原原文。"
           },
           "abortAiGeneration": {
-            "title": "終止 AI 生成",
-            "desc": "終止目前 AI 生成任務。"
+            "title": "終止 AI 產生",
+            "desc": "終止目前 AI 產生任務。"
           },
           "insertTable": {
             "title": "插入表格",
-            "desc": "插入預設三列表格。"
+            "desc": "插入預設三清單格。"
           },
           "addColumnBefore": {
             "title": "左側插入列",
@@ -4147,15 +4147,15 @@
           },
           "alignLeft": {
             "title": "左對齊",
-            "desc": "設定文本或表格儲存格左對齊。"
+            "desc": "設定文字或表格儲存格左對齊。"
           },
           "alignCenter": {
             "title": "置中對齊",
-            "desc": "設定文本或表格儲存格置中對齊。"
+            "desc": "設定文字或表格儲存格置中對齊。"
           },
           "alignRight": {
             "title": "右對齊",
-            "desc": "設定文本或表格儲存格右對齊。"
+            "desc": "設定文字或表格儲存格右對齊。"
           },
           "insertImage": {
             "title": "插入圖片",
@@ -4163,11 +4163,11 @@
           },
           "insertInlineMath": {
             "title": "插入行內公式",
-            "desc": "打開行內 LaTeX 公式輸入框。"
+            "desc": "開啟行內 LaTeX 公式輸入框。"
           },
           "insertBlockMath": {
             "title": "插入區塊公式",
-            "desc": "打開區塊 LaTeX 公式輸入框。"
+            "desc": "開啟區塊 LaTeX 公式輸入框。"
           },
           "insertMermaid": {
             "title": "插入 Mermaid 圖",
@@ -4181,15 +4181,15 @@
       },
       "shortcuts": {
         "openWindow": {
-          "title": "打開/隱藏窗口",
-          "desc": "打開/隱藏程序主窗口。"
+          "title": "開啟或隱藏視窗",
+          "desc": "開啟/隱藏應用程式主視窗。"
         },
         "screenshotRecord": {
           "title": "截圖記錄",
           "desc": "使用全域快捷鍵在目前桌面框選、標註、複製、儲存或貼圖。"
         },
         "quickRecordText": {
-          "title": "快速記錄文本",
+          "title": "快速記錄文字",
           "desc": "直接開啟可調整大小的獨立文字記錄視窗，不喚起主視窗。"
         }
       }
@@ -4257,22 +4257,23 @@
     "trash": {
       "title": "清空回收站",
       "confirm": "確定清空回收站嗎？",
-      "records": "共 {count} 條紀錄可還原",
-      "syncWarning": "此操作會同步到其他設備。",
+      "records": "共 {count} 則記錄可還原",
+      "syncWarning": "此操作會同步到其他裝置。",
       "empty": "清空",
       "restoreAll": "全部還原",
       "close": "關閉回收站"
     },
     "queue": {
-      "ocr": "OCR 識別",
-      "ai": "AI 內容識別",
+      "ocr": "OCR 辨識",
+      "ai": "AI 內容辨識",
       "upload": "上傳至圖床",
       "jsdelivr": "通知 jsdelivr 快取",
-      "save": "保存",
+      "save": "儲存",
       "recording": "記錄中...",
       "recorded": "已記錄",
       "record": "記錄",
-      "detected": "檢測到"
+      "detected": "偵測到",
+      "countdown": "{seconds} 秒"
     },
     "capture": {
       "desktopScreenshotPermissionDenied": "請在 macOS 系統設定 → 隱私權與安全性 → 螢幕與系統音訊錄製（部分版本為螢幕錄製）中允許 NoteGen，再重新開啟應用程式。",
@@ -4281,62 +4282,62 @@
       "desktopScreenshotSaveRetry": "截圖仍保留在本機，按下重試可繼續儲存。",
       "desktopScreenshotSavedTitle": "截圖已儲存",
       "desktopScreenshotSavedBody": "已儲存到 NoteGen，可稍後在記錄中查看。",
-      "saveTarget": "保存到",
+      "saveTarget": "儲存到",
       "saveTargetPlaceholder": "選擇標籤",
-      "saved": "記錄已保存",
-      "savedWithType": "{type} 已保存，可繼續處理或整理",
+      "saved": "記錄已儲存",
+      "savedWithType": "{type} 已儲存，可繼續處理或整理",
       "viewRecord": "查看",
-      "processingInBackground": "背景處理中，完成後會自動出現在記錄列表。",
+      "processingInBackground": "背景處理中，完成後會自動出現在記錄清單。",
       "elapsedSeconds": "{seconds}s",
-      "importAudio": "導入音訊",
+      "importAudio": "匯入音訊",
       "smartClipboard": "剪貼板",
       "clipboardEmpty": "剪貼板為空",
       "clipboardEmptyDescription": "複製一段文字或連結後再試。",
       "linkFetchFailed": "網頁內容抓取失敗",
-      "fileUnsupportedSaved": "文件已保存",
+      "fileUnsupportedSaved": "檔案已儲存",
       "fileUnsupportedDescription": "暫不支援提取該類型的文字，已作為附件記錄。",
-      "reparseFile": "重新解析文件",
-      "reparsingFile": "正在重新解析文件",
-      "fileReparseSuccess": "文件內容已重新解析",
+      "reparseFile": "重新解析檔案",
+      "reparsingFile": "正在重新解析檔案",
+      "fileReparseSuccess": "檔案內容已重新解析",
       "documentParseError": {
         "scannedPdf": "此 PDF 不包含可提取的文字，請先進行 OCR，或將頁面作為圖片記錄。",
-        "encrypted": "文件已加密或受密碼保護，無法提取內容。",
-        "malformed": "文件結構損壞或缺少必要內容，無法提取文字。",
-        "resourceLimit": "文件內容過於複雜，已超過安全解析限制。",
-        "fileTooLarge": "文件超過 100 MB，已保存記錄但未提取內容。",
-        "readFailed": "無法讀取文件，已保存原文件路徑。",
-        "parseFailed": "文件解析失敗，已保存原文件路徑。"
+        "encrypted": "檔案已加密或受密碼保護，無法提取內容。",
+        "malformed": "檔案結構損壞或缺少必要內容，無法提取文字。",
+        "resourceLimit": "檔案內容過於複雜，已超過安全解析限制。",
+        "fileTooLarge": "檔案超過 100 MB，已儲存記錄但未提取內容。",
+        "readFailed": "無法讀取檔案，已儲存原檔案路徑。",
+        "parseFailed": "檔案解析失敗，已儲存原檔案路徑。"
       },
-      "imageUploadFallback": "圖片已保存到本地",
-      "imageUploadFallbackDescription": "圖床上傳失敗，已繼續使用本地圖片。",
+      "imageUploadFallback": "圖片已儲存到本機",
+      "imageUploadFallbackDescription": "圖床上傳失敗，已繼續使用本機圖片。",
       "screenshotRecordTitle": "截圖記錄",
       "screenshotCapturing": "正在取得可截圖的視窗...",
       "screenshotCaptureFailed": "無法取得螢幕截圖",
       "screenshotPermissionHint": "請檢查系統螢幕錄製權限後重試。",
-      "screenshotEmpty": "未找到可截圖的視窗",
+      "screenshotEmpty": "找不到可截圖的視窗",
       "screenshotSourceCount": "可用視窗 {count} 個",
-      "screenshotNoSource": "暫無可用視窗",
+      "screenshotNoSource": "目前沒有可用視窗",
       "screenshotRefresh": "重新截圖",
       "retry": "重試",
-      "screenshotSave": "保存截圖",
-      "screenshotSaveAndRecognize": "保存並識別",
-      "screenshotSaveOnly": "僅保存截圖",
-      "screenshotSaveFailed": "截圖記錄保存失敗",
-      "screenshotRecognitionPending": "截圖已保存，正在進行圖片識別...",
-      "screenshotRecognitionComplete": "圖片識別完成",
-      "screenshotRecognitionFailed": "圖片識別失敗",
+      "screenshotSave": "儲存截圖",
+      "screenshotSaveAndRecognize": "儲存並辨識",
+      "screenshotSaveOnly": "僅儲存截圖",
+      "screenshotSaveFailed": "截圖記錄儲存失敗",
+      "screenshotRecognitionPending": "截圖已儲存，正在進行圖片辨識...",
+      "screenshotRecognitionComplete": "圖片辨識完成",
+      "screenshotRecognitionFailed": "圖片辨識失敗",
       "screenshotRecognitionAuto": "自動",
-      "screenshotRecognitionOff": "未識別",
-      "screenshotRecognitionMethod": "識別方式",
-      "screenshotNoText": "這張截圖未識別到文字",
-      "screenshotSavedOnly": "已保存圖片，未進行識別",
-      "screenshotRecognizing": "識別中...",
-      "screenshotRecognizeAgain": "重新識別",
+      "screenshotRecognitionOff": "未辨識",
+      "screenshotRecognitionMethod": "辨識方式",
+      "screenshotNoText": "這張截圖未辨識到文字",
+      "screenshotSavedOnly": "已儲存圖片，未進行辨識",
+      "screenshotRecognizing": "辨識中...",
+      "screenshotRecognizeAgain": "重新辨識",
       "screenshotAiDescription": "AI 描述",
       "screenshotOcrContent": "OCR 內容",
       "screenshotCopyImageLink": "複製圖片連結",
       "screenshotShowInFolder": "在資料夾中顯示",
-      "screenshotKeyboardHint": "Enter 保存，Esc 取消，方向鍵切換來源。",
+      "screenshotKeyboardHint": "Enter 儲存，Esc 取消，方向鍵切換來源。",
       "screenshotModeWindow": "視窗",
       "screenshotModeRegion": "區域",
       "screenshotModeDisplay": "螢幕"
@@ -4345,7 +4346,7 @@
       "checking_remote": "正在檢查遠端更新",
       "queued": "已加入同步佇列",
       "uploading": "正在上傳同步內容",
-      "uploadingRecords": "正在上傳紀錄",
+      "uploadingRecords": "正在上傳記錄",
       "uploadingSettings": "正在上傳設定",
       "downloading": "正在拉取遠端內容",
       "failed": "同步失敗",
@@ -4357,13 +4358,13 @@
       "settings": "設定"
     },
     "mark": {
-      "empty": "暫無記錄",
+      "empty": "目前沒有記錄",
       "loading": "載入中...",
       "detail": {
         "notFound": "記錄不存在或已被刪除",
         "moreActions": "更多操作",
         "tag": "所屬標籤",
-        "discardTitle": "放棄未保存的修改？",
+        "discardTitle": "放棄未儲存的修改？",
         "discardDescription": "返回後，本次修改將不會保留。",
         "discard": "放棄修改"
       },
@@ -4371,22 +4372,22 @@
         "scan": "截圖",
         "image": "插圖",
         "screenshot": "截圖",
-        "text": "文本",
-        "recording": "录音",
-        "file": "文件",
+        "text": "文字",
+        "recording": "錄音",
+        "file": "檔案",
         "link": "連結",
         "todo": "待辦",
         "pdf": "PDF",
         "upload": "上傳記錄",
         "download": "下載記錄",
-        "uploadTo": "從本地同步到 {provider}",
-        "downloadFrom": "從 {provider} 同步到本地",
+        "uploadTo": "從本機同步到 {provider}",
+        "downloadFrom": "從 {provider} 同步到本機",
         "prompt-draft": "Prompt 素材"
       },
       "note": {
         "organizeAs": "整理為",
-        "template": "模板",
-        "setting": "設置",
+        "template": "範本",
+        "setting": "設定",
         "confirm": "確認",
         "cancel": "取消",
         "removeThinking": "移除思考過程",
@@ -4396,50 +4397,50 @@
       "downloadSuccess": "記錄下載成功",
       "desc": "描述",
       "content": "內容",
-      "createdAt": "創建於",
+      "createdAt": "建立於",
       "progress": {
         "cacheImage": "快取圖片",
-        "vlm": "VLM 識別",
-        "ocr": "OCR 識別",
-        "description": "生成描述",
-        "aiAnalysis": "AI 內容識別",
+        "vlm": "VLM 辨識",
+        "ocr": "OCR 辨識",
+        "description": "產生描述",
+        "aiAnalysis": "AI 內容辨識",
         "uploadImage": "上傳至圖床",
         "jsdelivrCache": "通知 jsdelivr 快取",
-        "cacheFile": "快取文件",
+        "cacheFile": "快取檔案",
         "cacheScreenshot": "快取截圖",
-        "textAnalysis": "文本分析",
-        "save": "保存",
-        "saveImage": "保存圖片"
+        "textAnalysis": "文字分析",
+        "save": "儲存",
+        "saveImage": "儲存圖片"
       },
       "imageGallery": {
-        "expand": "展开",
+        "expand": "展開",
         "collapse": "收起"
       },
       "text": {
-        "title": "記錄文本",
-        "description": "記錄一段文本，筆記整理時將插入到合適的位置。",
+        "title": "記錄文字",
+        "description": "記錄一段文字，筆記整理時將插入到合適的位置。",
         "characterCount": "{count} 字元",
         "save": "記錄",
-        "autoReadClipboard": "自動讀取剪貼簿文本"
+        "autoReadClipboard": "自動讀取剪貼簿文字"
       },
       "link": {
         "title": "連結記錄",
-        "description": "輸入網頁連結，系統將自動爬取頁面內容並保存",
-        "save": "保存",
+        "description": "輸入網頁連結，系統將自動爬取頁面內容並儲存",
+        "save": "儲存",
         "autoReadClipboard": "自動讀取剪貼簿連結",
         "searchExcerpt": "以下內容來自網路搜尋摘要，並非完整網頁正文：",
-        "savedPartialTitle": "連結已保存，正文擷取不完整",
+        "savedPartialTitle": "連結已儲存，正文擷取不完整",
         "savedFromSearch": "原網頁無法完整讀取，已使用網路搜尋補充標題和摘要。",
         "captureStatus": {
           "partial": "僅擷取到部分網頁正文，可以稍後重新擷取。",
-          "metadata-only": "僅保存了網頁標題或描述，沒有擷取到正文。",
+          "metadata-only": "僅儲存了網頁標題或描述，沒有擷取到正文。",
           "blocked": "網頁要求登入或驗證，已保留連結。",
           "failed": "網頁請求失敗，已保留連結。"
         }
       },
       "todo": {
         "title": "待辦記錄",
-        "description": "創建待辦事項，管理你的任務",
+        "description": "建立待辦事項，管理你的任務",
         "titlePlaceholder": "輸入待辦標題...",
         "descriptionPlaceholder": "輸入詳細描述（可選）",
         "priority": "優先級",
@@ -4450,40 +4451,40 @@
         "dateRangePlaceholder": "選擇日期範圍",
         "dueDate": "截止日期",
         "dueDatePlaceholder": "選擇日期",
-        "save": "創建待辦",
-        "saveEdit": "保存",
+        "save": "建立待辦",
+        "saveEdit": "儲存",
         "edit": "編輯待辦",
-        "editDescription": "修改待辦事項的詳細信息",
+        "editDescription": "修改待辦事項的詳細資訊",
         "cancel": "取消",
         "selectTag": "選擇標籤",
         "completed": "已完成",
         "uncompleted": "未完成"
       },
       "clipboard": {
-        "detectedImage": "檢測到剪貼簿圖片",
-        "detectedText": "檢測到剪貼簿文本"
+        "detectedImage": "偵測到剪貼簿圖片",
+        "detectedText": "偵測到剪貼簿文字"
       },
       "tag": {
-        "searchPlaceholder": "創建或查詢標籤...",
+        "searchPlaceholder": "建立或查詢標籤...",
         "noResults": "未查詢到相關標籤",
-        "quickAdd": "快速創建",
+        "quickAdd": "快速建立",
         "pinned": "置頂",
         "others": "其他",
         "rename": "重命名",
         "delete": "刪除",
         "pin": "置頂",
         "unpin": "取消置頂",
-        "newTag": "新建標籤",
+        "newTag": "新增標籤",
         "newTagPlaceholder": "輸入標籤名稱...",
         "newChildTag": "新增子標籤",
         "newChildTagPlaceholder": "在 {name} 下建立子標籤",
-        "add": "添加"
+        "add": "新增"
       },
       "mark": {
-        "empty": "還沒有紀錄",
-        "emptyHint": "建立一條新的紀錄，\n或用文字、圖片和錄音捕捉靈感。",
+        "empty": "還沒有記錄",
+        "emptyHint": "建立一則新記錄，\n或用文字、圖片和錄音捕捉靈感。",
         "type": {
-          "text": "文本"
+          "text": "文字"
         },
         "chat": {
           "modeSelect": {
@@ -4511,25 +4512,25 @@
           },
           "placeholder": {
             "default": "你可以提問或將記錄整理為文章...",
-            "noApiKey": "未配置 API Key，無法使用 AI 對話功能...",
+            "noApiKey": "未設定 API Key，無法使用 AI 對話功能...",
             "on": "AI建議開啟",
             "off": "AI建議關閉"
           },
           "header": {
-            "configApiKey": "配置 API KEY",
+            "configApiKey": "設定 API KEY",
             "clearChat": "清空對話",
-            "configPrompt": "配置 Prompt",
-            "selectPrompt": "選擇 Prompt"
+            "configPrompt": "設定 對話角色",
+            "selectPrompt": "選擇 對話角色"
           },
           "clipboard": {
             "image": {
-              "detected": "檢測到剪貼簿存在圖片：",
+              "detected": "偵測到剪貼簿存在圖片：",
               "recording": "正在記錄",
               "recorded": "已記錄",
               "record": "記錄"
             },
             "text": {
-              "detected": "檢測到剪貼簿存在文本：",
+              "detected": "偵測到剪貼簿存在文字：",
               "recorded": "已記錄",
               "record": "記錄"
             }
@@ -4553,24 +4554,24 @@
           "empty": {
             "title": "開始與 AI 對話",
             "subtitle": "使用 Chat 或 Agent 模式與 AI 互動",
-            "currentModel": "當前模型",
-            "currentPrompt": "當前 Prompt",
-            "noModel": "未設置模型",
-            "noPrompt": "未設置 Prompt",
-            "modeHint": "點擊輸入框左側的",
+            "currentModel": "目前模型",
+            "currentPrompt": "目前 對話角色",
+            "noModel": "未設定模型",
+            "noPrompt": "未設定 對話角色",
+            "modeHint": "點選輸入框左側的",
             "modeHintSuffix": "按鈕可切換對話模式"
           },
           "content": {
-            "organize": "將你的紀錄整理為文章："
+            "organize": "將你的記錄整理為文章："
           },
           "note": {
             "writing": "寫作",
             "convert": "轉化文章",
-            "description": "當前的筆記是由 AI 生成且無法編輯，將當前筆記轉化為文章（生成本地文件），可在寫作頁面中進行二次創作。",
-            "filename": "檔案名",
-            "selectFolder": "選擇文件夾",
+            "description": "目前的筆記是由 AI 產生且無法編輯，將目前筆記轉化為文章（產生本機檔案），可在寫作頁面中進行二次創作。",
+            "filename": "檔名",
+            "selectFolder": "選擇資料夾",
             "rootDirectory": "根目錄",
-            "deleteTag": "刪除當前標籤、記錄和筆記（回收站可恢復）",
+            "deleteTag": "刪除目前標籤、記錄和筆記（回收站可恢復）",
             "warning": "轉換後將跳轉到寫作頁面。",
             "convert_button": "轉化"
           },
@@ -4581,19 +4582,19 @@
           "send": "發送"
         },
         "text": {
-          "title": "記錄文本",
-          "description": "記錄一段文本，筆記整理時將插入到合適的位置。",
+          "title": "記錄文字",
+          "description": "記錄一段文字，筆記整理時將插入到合適的位置。",
           "characterCount": "{count} 字元",
           "save": "記錄"
         },
         "clipboard": {
-          "detectedImage": "檢測到剪貼簿圖片",
-          "detectedText": "檢測到剪貼簿文本"
+          "detectedImage": "偵測到剪貼簿圖片",
+          "detectedText": "偵測到剪貼簿文字"
         },
         "tag": {
-          "searchPlaceholder": "創建或查詢標籤...",
+          "searchPlaceholder": "建立或查詢標籤...",
           "noResults": "未查詢到相關標籤",
-          "quickAdd": "快速創建",
+          "quickAdd": "快速建立",
           "pinned": "置頂",
           "others": "其他",
           "rename": "重命名",
@@ -4603,15 +4604,15 @@
         },
         "progress": {
           "cacheImage": "快取圖片",
-          "ocr": "OCR 識別",
-          "aiAnalysis": "AI 內容識別",
+          "ocr": "OCR 辨識",
+          "aiAnalysis": "AI 內容辨識",
           "uploadImage": "上傳至圖床",
           "jsdelivrCache": "通知 jsdelivr 快取",
-          "cacheFile": "快取文件",
+          "cacheFile": "快取檔案",
           "cacheScreenshot": "快取截圖",
-          "textAnalysis": "文本分析",
-          "save": "保存",
-          "saveImage": "保存圖片"
+          "textAnalysis": "文字分析",
+          "save": "儲存",
+          "saveImage": "儲存圖片"
         }
       },
       "toolbar": {
@@ -4622,7 +4623,7 @@
           "oldest": "最早優先",
           "type": "按類型"
         },
-        "search": "搜索",
+        "search": "搜尋",
         "filter": {
           "title": "篩選",
           "description": "依內容、時間和類型即時篩選記錄。",
@@ -4647,7 +4648,7 @@
         "organizeNotes": "整理筆記",
         "organizeSuccess": "筆記整理成功：{title}",
         "organizeError": "整理筆記失敗",
-        "currentTag": "當前標籤",
+        "currentTag": "目前標籤",
         "allTags": "全部標籤",
         "restore": "還原",
         "delete": "刪除",
@@ -4655,10 +4656,10 @@
         "moveTag": "轉移標籤",
         "convertTo": "轉換為{type}",
         "copyLink": "複製連結",
-        "copied": "已複製到剪切板！",
-        "regenerateDesc": "重新生成描述",
+        "copied": "已複製到剪貼簿！",
+        "regenerateDesc": "重新產生描述",
         "viewFolder": "查看目錄",
-        "viewFile": "查看原文件",
+        "viewFile": "查看原檔案",
         "deleteForever": "徹底刪除",
         "multiSelect": "多選",
         "multiSelectMode": "多選模式",
@@ -4666,22 +4667,22 @@
         "selectAll": "全選",
         "deselectAll": "取消全選",
         "selectedCount": "已選擇 {count} 項",
-        "visibleCount": "共 {count} 條記錄",
-        "moveSelectedTags": "轉移選中的 {count} 項",
-        "deleteSelected": "刪除選中的 {count} 項",
-        "deleteSelectedForever": "徹底刪除選中的 {count} 項",
+        "visibleCount": "共 {count} 則記錄",
+        "moveSelectedTags": "轉移選取的 {count} 項",
+        "deleteSelected": "刪除選取的 {count} 項",
+        "deleteSelectedForever": "徹底刪除選取的 {count} 項",
         "view": {
-          "title": "視圖",
-          "list": "列表視圖",
-          "compact": "緊湊視圖",
-          "cards": "卡片視圖"
+          "title": "檢視",
+          "list": "清單檢視",
+          "compact": "緊湊檢視",
+          "cards": "卡片檢視"
         },
-        "text": "記錄文本",
+        "text": "記錄文字",
         "recording": "錄音記錄",
         "scan": "掃描圖片",
         "image": "上傳圖片",
         "link": "記錄連結",
-        "file": "上傳文件",
+        "file": "上傳檔案",
         "todo": "待辦記錄",
         "promptDraft": "記錄 Prompt 素材"
       },
@@ -4742,7 +4743,7 @@
         "more": "更多對話操作",
         "sendToBackground": "改成背景任務",
         "backgroundRequiresDelegate": "切到「交辦」就能將草稿送到背景執行。",
-        "scrollToEnd": "捲到對話底部",
+        "scrollToEnd": "捲到對話底端",
         "usagePercent": "{percent}%",
         "mode": {
           "label": "對話模式",
@@ -4807,7 +4808,7 @@
           "showSteps": "看 {count} 個步驟",
           "hideSteps": "收起步驟",
           "targets": "{count, number} 項",
-          "tokens": "{count, number} 個權杖"
+          "tokens": "{count, number} 個詞元"
         },
         "review": {
           "file": "要改 {name}，可以嗎？",
@@ -4821,27 +4822,28 @@
       },
       "condensing": "正在壓縮上下文…",
       "condensed": {
-        "message": "已壓縮 {count} 條歷史訊息",
-        "summary": "續接摘要"
+        "message": "已壓縮 {count} 則歷史訊息",
+        "summary": "續接摘要",
+        "tokenReduction": "{before} → {after} 個詞元"
       },
       "empty": {
         "title": "開始與 AI 對話",
         "subtitle": "使用 Chat 或 Agent 模式與 AI 互動",
         "temporary": {
-          "title": "臨時會話",
+          "title": "暫時對話",
           "description": "離開後，本次對話內容將自動清除"
         },
-        "currentModel": "當前模型",
-        "currentPrompt": "當前 Prompt",
+        "currentModel": "目前模型",
+        "currentPrompt": "目前 對話角色",
         "currentMode": "對話模式",
-        "noModel": "未設置模型",
-        "noPrompt": "未設置 Prompt",
-        "configureModel": "配置模型",
+        "noModel": "未設定模型",
+        "noPrompt": "未設定 對話角色",
+        "configureModel": "設定模型",
         "recentConversations": "最近對話",
         "deleteConversation": "刪除對話",
         "conversationHistory": "歷史對話",
         "viewMore": "查看更多",
-        "messages": "條消息",
+        "messages": "則訊息",
         "searchPlaceholder": "搜尋對話…",
         "noMatchingConversations": "找不到符合的對話",
         "noConversationHistory": "目前沒有歷史對話",
@@ -4854,11 +4856,11 @@
         }
       },
       "newChat": "使用新標籤開始對話",
-      "removeChat": "刪除當前標籤對話",
-      "confirmNew": "創建新標籤",
-      "confirmNewDescription": "請確認要創建一個新的標籤開始對話嗎？",
+      "removeChat": "刪除目前標籤對話",
+      "confirmNew": "建立新標籤",
+      "confirmNewDescription": "請確認要建立一個新的標籤開始對話嗎？",
       "confirmRemove": "刪除標籤",
-      "confirmRemoveDescription": "請注意，刪除此標籤會連帶刪除內部的紀錄，請再次確認。",
+      "confirmRemoveDescription": "請注意，刪除此標籤會連帶刪除內部的記錄，請再次確認。",
       "input": {
         "organize": "整理",
         "chat": "聊天",
@@ -4869,16 +4871,26 @@
           "default": "你可以提問或將記錄整理為文章...",
           "pending": "輸入訊息，傳送後可在待處理清單中調整...",
           "approval": "輸入修改要求以取代目前待確認操作...",
-          "noApiKey": "未配置 API Key，無法使用 AI 對話功能...",
+          "noApiKey": "未設定 API Key，無法使用 AI 對話功能...",
           "on": "AI 建議 (開啟)",
           "off": "AI 建議 (關閉)",
-          "noPrimaryModel": "未配置主模型，無法使用 AI 對話功能..."
+          "noPrimaryModel": "未設定主模型，無法使用 AI 對話功能..."
         },
         "translate": {
           "tooltip": "翻譯",
           "translating": "翻譯中...",
           "showOriginal": "顯示原文",
-          "alreadyTranslated": "已翻譯為"
+          "alreadyTranslated": "已翻譯為",
+          "languages": {
+            "en": "英語",
+            "zh": "中文",
+            "ja": "日語",
+            "ko": "韓語",
+            "fr": "法語",
+            "de": "德語",
+            "es": "西班牙語",
+            "ru": "俄語"
+          }
         },
         "clipboardMonitor": {
           "enable": "剪貼簿監聽(開啟)",
@@ -4887,19 +4899,19 @@
         "send": "發送",
         "steer": "追加引導",
         "stop": "停止",
-        "stopped": "对话已终止",
+        "stopped": "對話已終止",
         "terminate": "終止",
         "tagLink": {
           "on": "已關聯標籤",
           "off": "未關聯標籤"
         },
         "mcp": {
-          "tooltip": "MCP 服务器"
+          "tooltip": "MCP 伺服器"
         },
         "modelSelect": {
           "tooltip": "選擇 AI 模型",
-          "placeholder": "搜索 AI 模型",
-          "noModel": "未找到模型",
+          "placeholder": "搜尋 AI 模型",
+          "noModel": "找不到模型",
           "nextTurn": "已切換到 {model}，下輪生效",
           "nextTurnBadge": "下輪生效",
           "changeWarning": "切換模型可能影響對話連貫性；目前任務仍使用原模型。",
@@ -4908,15 +4920,15 @@
           "changed": "模型已從 {from} 切換為 {to}"
         },
         "promptSelect": {
-          "tooltip": "選擇 Prompt",
-          "placeholder": "搜索 Prompt",
+          "tooltip": "選擇對話角色",
+          "placeholder": "搜尋對話角色",
           "conversationPromptApplied": "此對話的系統提示詞已由一則提示詞設定"
         },
         "newChat": "開始新對話",
-        "temporaryChat": "臨時會話",
+        "temporaryChat": "暫時對話",
         "chatLanguage": {
           "tooltip": "選擇對話語言",
-          "placeholder": "搜索語言"
+          "placeholder": "搜尋語言"
         },
         "rag": {
           "notSupported": "向量模型不可用",
@@ -4942,7 +4954,7 @@
           },
           "file": {
             "title": "檔案",
-            "description": "加入本機文件與其他檔案"
+            "description": "加入本機檔案"
           },
           "folder": {
             "title": "資料夾",
@@ -4981,23 +4993,25 @@
           "selectFailed": "選擇圖片失敗，請重試",
           "dropHint": "放開以附加圖片",
           "analysis": {
-            "pending": "等待識別",
+            "pending": "等待辨識",
             "normalizing": "正在處理圖片",
-            "recognizing": "正在識別",
+            "recognizing": "正在辨識",
             "vlm": "視覺模型",
             "ocr": "OCR",
-            "ocrFallback": "OCR 回退",
+            "ocrFallback": "改用 OCR",
             "hybrid": "視覺模型 + OCR",
-            "failed": "識別失敗",
-            "cancelled": "識別已停止",
-            "retry": "重新識別"
-          }
+            "failed": "辨識失敗",
+            "cancelled": "辨識已停止",
+            "retry": "重新辨識"
+          },
+          "attachedImage": "附件圖片",
+          "removeImage": "移除附件圖片"
         },
         "imageSelector": {
           "title": "選擇圖片",
-          "local": "本地文件",
+          "local": "本機檔案",
           "records": "從記錄中選擇",
-          "selectFiles": "選擇本地圖片",
+          "selectFiles": "選擇本機圖片",
           "noRecords": "沒有可用的圖片記錄",
           "cancel": "取消",
           "confirm": "確認"
@@ -5005,7 +5019,7 @@
         "contextUsage": {
           "label": "上下文使用率：{percent}%",
           "usageDetail": "預估上下文使用率：{percent}%",
-          "tokenDetail": "{usedTokens} / {contextWindow} Token"
+          "tokenDetail": "{usedTokens} / {contextWindow} 詞元"
         },
         "agent": {
           "running": "Agent 運行中",
@@ -5302,11 +5316,11 @@
           }
         },
         "fileLink": {
-          "tooltip": "關聯文件",
-          "selectFile": "選擇文件",
-          "linkedFile": "關聯文件",
-          "searchPlaceholder": "搜尋文件...",
-          "noFiles": "未找到文件",
+          "tooltip": "關聯檔案",
+          "selectFile": "選擇檔案",
+          "linkedFile": "關聯檔案",
+          "searchPlaceholder": "搜尋檔案...",
+          "noFiles": "找不到檔案",
           "loading": "載入中..."
         },
         "composerMenu": {
@@ -5352,7 +5366,7 @@
               "global": "全域",
               "project": "工作區"
             },
-            "unavailable": "暫無可用技能",
+            "unavailable": "目前沒有可用技能",
             "emptyDescription": "安裝或啟用技能後，即可在這裡選擇使用。",
             "disabledDescription": "Skills 已關閉，可在技能設定中啟用。",
             "manage": "管理技能"
@@ -5360,7 +5374,7 @@
           "resources": {
             "title": "關聯上下文",
             "placeholder": "搜尋檔案、資料夾、記錄或畫布...",
-            "files": "文件",
+            "files": "檔案",
             "folders": "資料夾",
             "records": "記錄",
             "canvases": "畫布",
@@ -5369,13 +5383,14 @@
             "canvasSummary": "{nodes} 個節點，{edges} 條連線"
           },
           "prompts": {
-            "title": "提示詞庫"
+            "title": "個人提示詞庫"
           },
           "allAdded": "已新增所有可用項目"
         },
         "clearChat": "清空對話",
         "clearContext": {
-          "tooltip": "清除上下文"
+          "tooltip": "清除上下文",
+          "cleared": "已清除上下文，後續對話只會使用這則訊息之後的內容。"
         },
         "modelSuggestion": {
           "apply": "套用到這一則訊息",
@@ -5392,15 +5407,15 @@
             "description": "選擇回答所用的模型"
           },
           "prompt": {
-            "title": "提示詞",
-            "description": "設定角色與回答方式"
+            "title": "對話角色",
+            "description": "選擇 AI 在這次對話中扮演的角色"
           },
           "reasoning": {
             "description": "調整目前模型的思考強度"
           },
           "mcp": {
             "title": "MCP 服務",
-            "description": "連接外部服務與工具"
+            "description": "連線外部服務與工具"
           },
           "clipboard": {
             "title": "剪貼簿監聽",
@@ -5409,21 +5424,21 @@
         }
       },
       "header": {
-        "configApiKey": "配置 API KEY",
+        "configApiKey": "設定 API KEY",
         "clearChat": "清空聊天",
-        "configPrompt": "配置 Prompt",
-        "selectPrompt": "選擇 Prompt",
+        "configPrompt": "設定 對話角色",
+        "selectPrompt": "選擇 對話角色",
         "noModel": "未選擇 AI 模型"
       },
       "clipboard": {
         "image": {
-          "detected": "檢測到剪貼簿存在圖片：",
+          "detected": "偵測到剪貼簿存在圖片：",
           "recording": "正在記錄",
           "recorded": "已記錄",
           "record": "記錄"
         },
         "text": {
-          "detected": "檢測到剪貼簿存在文本：",
+          "detected": "偵測到剪貼簿存在文字：",
           "recorded": "已記錄",
           "record": "記錄"
         }
@@ -5441,13 +5456,13 @@
       "ragSources": {
         "label": "參考了 {sources}",
         "articleCount": "{count} 篇文章",
-        "recordCount": "{count} 條記錄",
+        "recordCount": "{count} 則記錄",
         "canvasCount": "{count} 個畫布",
         "sourceCount": "{count} 個來源",
-        "openArticle": "打開文章",
-        "openRecord": "打開記錄",
-        "openCanvas": "打開畫布",
-        "openSource": "打開來源",
+        "openArticle": "開啟文章",
+        "openRecord": "開啟記錄",
+        "openCanvas": "開啟畫布",
+        "openSource": "開啟來源",
         "typeArticle": "文章",
         "typeRecord": "記錄",
         "typeCanvas": "畫布",
@@ -5461,17 +5476,18 @@
         "close": "關閉",
         "copy": "複製",
         "copied": "已複製！",
-        "image": "圖片預覽"
+        "image": "圖片預覽",
+        "numberedImage": "圖片 {number}"
       },
       "control": {
         "edit": "編輯",
-        "save": "保存",
+        "save": "儲存",
         "cancel": "取消",
         "delete": "刪除",
-        "deleteConfirm": "確定要刪除這條消息嗎？"
+        "deleteConfirm": "確定要刪除這則訊息嗎？"
       },
       "content": {
-        "organize": "將你的紀錄整理為文章："
+        "organize": "將你的記錄整理為文章："
       },
       "quote": {
         "lineSingle": "引用自 {fileName} 第 {line} 行",
@@ -5482,45 +5498,45 @@
         "organize": "整理",
         "writing": "寫作",
         "convert": "轉化文章",
-        "description": "當前的筆記是由 AI 生成且無法編輯，將當前筆記轉化為文章（生成本地文件），可在寫作頁面中進行二次創作。",
-        "filename": "檔案名",
-        "selectFolder": "選擇文件夾",
+        "description": "目前的筆記是由 AI 產生且無法編輯，將目前筆記轉化為文章（產生本機檔案），可在寫作頁面中進行二次創作。",
+        "filename": "檔名",
+        "selectFolder": "選擇資料夾",
         "rootDirectory": "根目錄",
-        "deleteTag": "刪除當前標籤、記錄和筆記（回收站可恢復）",
+        "deleteTag": "刪除目前標籤、記錄和筆記（回收站可恢復）",
         "warning": "轉換後將跳轉到寫作頁面。",
         "convert_button": "轉化",
         "organizeAs": "將記錄整理成...",
-        "templateContent": "模板內容",
+        "templateContent": "範本內容",
         "recordRange": "記錄選擇範圍",
         "filterThinkingContent": "移除記錄中的思考",
         "startOrganize": "開始整理",
-        "manageTemplate": "管理模板",
+        "manageTemplate": "管理範本",
         "quickOrganize": "快速整理",
-        "quickOrganizeHelp": "使用目前模板和預設設定，略過記錄選擇與生成設定，直接開始整理。",
-        "templateManager": "模板管理",
+        "quickOrganizeHelp": "使用目前範本和預設設定，略過記錄選擇與產生設定，直接開始整理。",
+        "templateManager": "範本管理",
         "moreTemplates": "更多",
-        "searchTemplates": "搜尋模板",
+        "searchTemplates": "搜尋範本",
         "showMore": "展開",
         "showLess": "收起",
-        "recordCount": "{count} 條記錄",
+        "recordCount": "{count} 則記錄",
         "recordPreview": "記錄預覽",
         "previewEmpty": "目前範圍內沒有可預覽的記錄",
         "previewMore": "查看最近 {count} 條",
-        "selectTemplate": "選擇模板",
-        "noTemplate": "不使用模板",
-        "stepTemplate": "整理模板",
+        "selectTemplate": "選擇範本",
+        "noTemplate": "不使用範本",
+        "stepTemplate": "整理範本",
         "templateStepDescription": "決定 AI 如何組織記錄、採用什麼結構，以及使用哪個時間範圍的內容。",
         "stepRecords": "選擇記錄",
         "recordsStepDescription": "篩選本次要使用的記錄，可按標籤切換範圍並取消不需要的內容。",
-        "stepSettings": "生成設定",
+        "stepSettings": "產生設定",
         "settingsStepDescription": "設定輸出標題、儲存位置、素材取捨和本次整理的補充要求。",
         "nextStep": "下一步",
         "previousStep": "上一步",
-        "generationSettings": "生成設定",
-        "generationSettingsHelp": "確認輸出語言、標題、儲存位置與生成內容範圍。",
+        "generationSettings": "產生設定",
+        "generationSettingsHelp": "確認輸出語言、標題、儲存位置與產生內容範圍。",
         "outputLanguage": "輸出語言",
-        "outputLanguageAuto": "跟隨應用語言",
-        "outputLanguageZh": "简体中文",
+        "outputLanguageAuto": "使用應用程式語言",
+        "outputLanguageZh": "簡體中文",
         "outputLanguageZhTW": "繁體中文",
         "outputLanguageEn": "English",
         "outputLanguageJa": "日本語",
@@ -5530,11 +5546,11 @@
         "outputLanguageCustomPlaceholder": "例如：使用法語；或使用自然口語的中文",
         "outputLanguageHelp": "可選擇常用語言，也可以選擇自訂後手動填寫輸出語言要求。",
         "articleTitle": "文章標題",
-        "articleTitlePlaceholder": "留空則由 AI 自動生成標題",
+        "articleTitlePlaceholder": "留空則由 AI 自動產生標題",
         "saveFolder": "儲存位置",
         "saveFolderRoot": "根目錄",
         "currentSaveFolder": "目前儲存位置",
-        "noFolderAvailable": "暫無資料夾",
+        "noFolderAvailable": "目前沒有資料夾",
         "includeImages": "包含圖片",
         "includeReferences": "保留引用連結",
         "additionalRequirement": "補充要求",
@@ -5542,13 +5558,13 @@
         "selectedRecordCount": "已選 {selected}/{total} 條",
         "selectAllRecords": "全選",
         "clearRecordSelection": "清空",
-        "useRecord": "使用這條記錄",
+        "useRecord": "使用這則記錄",
         "recordSelectionHelp": "取消勾選不希望 AI 使用的記錄，圖片和錄音可直接預覽。",
-        "noRecordsSelected": "請至少選擇一條記錄",
-        "noRecords": "暫無可整理的記錄",
+        "noRecordsSelected": "請至少選擇一則記錄",
+        "noRecords": "目前沒有可整理的記錄",
         "noRecordsInRange": "目前範圍內沒有記錄",
-        "noTemplateAvailable": "暫無可用模板",
-        "copyTemplate": "複製模板",
+        "noTemplateAvailable": "目前沒有可用範本",
+        "copyTemplate": "複製範本",
         "copySuffix": "副本",
         "cancel": "取消",
         "stop": "停止"
@@ -5596,7 +5612,7 @@
       }
     },
     "tag": {
-      "add": "添加標籤",
+      "add": "新增標籤",
       "edit": "編輯標籤",
       "delete": "刪除標籤",
       "deleteConfirm": "確定要刪除這個標籤嗎？",
@@ -5605,15 +5621,15 @@
   },
   "search": {
     "placeholder": "搜尋筆記、記錄和畫布...",
-    "results": "{count} 個搜索結果",
+    "results": "{count} 個搜尋結果",
     "exactMatches": "精確結果",
     "relatedContent": "相關內容",
     "searchingRelated": "正在尋找語意相關內容…",
     "indexingProgress": "建庫 {ready}/{total}",
-    "noResults": "暫無搜索結果",
-    "tryDifferentKeywords": "嘗試使用不同的關鍵字搜索",
-    "clear": "清除搜索",
-    "openFailed": "無法開啟搜索結果",
+    "noResults": "目前沒有搜尋結果",
+    "tryDifferentKeywords": "嘗試使用不同的關鍵字搜尋",
+    "clear": "清除搜尋",
+    "openFailed": "無法開啟搜尋結果",
     "item": {
       "record": "記錄",
       "article": "檔案",
@@ -5623,11 +5639,11 @@
     }
   },
   "image": {
-    "root": "圖床倉庫",
+    "root": "圖床版本庫",
     "noData": {
       "title": "同步功能未開啟",
-      "desc": "請先跳轉至系統設置頁面，配置 Github 同步。",
-      "goToSettings": "前往設置",
+      "desc": "請先跳轉至系統設定頁面，設定 GitHub 同步。",
+      "goToSettings": "前往設定",
       "howToUse": "如何使用同步功能？"
     }
   },
@@ -5657,7 +5673,7 @@
       "sync": {
         "upload": "上傳",
         "pending": "等待上傳",
-        "clickToUpload": "等待上傳，點擊立即上傳",
+        "clickToUpload": "等待上傳，點選立即上傳",
         "uploading": "正在上傳",
         "synced": "已上傳",
         "failed": "上傳失敗",
@@ -5671,7 +5687,7 @@
       "blank": "空白畫布",
       "flowchart": "流程圖",
       "mindmap": "心智圖",
-      "timeline": "時間線",
+      "timeline": "時間軸",
       "quadrant": "四象限",
       "kanban": "看板",
       "swot": "SWOT 分析"
@@ -5781,8 +5797,8 @@
       "decision": "判斷條件",
       "terminator": "開始 / 結束",
       "inputOutput": "輸入 / 輸出",
-      "document": "文件",
-      "multiDocument": "多文件",
+      "document": "檔案",
+      "multiDocument": "多檔案",
       "database": "資料庫",
       "predefinedProcess": "子流程",
       "manualInput": "手動輸入",
@@ -5825,7 +5841,7 @@
       "update": "重新產生",
       "nodeLoading": "正在產生圖表…",
       "nodeErrorTitle": "圖表產生失敗",
-      "nodeErrorHint": "雙擊節點修改資料並重試。",
+      "nodeErrorHint": "按兩下節點修改資料並重試。",
       "types": {
         "auto": "自動識別",
         "area": "面積圖",
@@ -5848,7 +5864,7 @@
       "recommendations": {
         "time-series": "偵測到時間序列，推薦折線圖",
         "continuous": "偵測到連續累計資料，推薦面積圖",
-        "proportion": "偵測到占比資料，推薦圓餅圖",
+        "proportion": "偵測到佔比資料，推薦圓餅圖",
         "progress": "偵測到進度資料，推薦徑向圖",
         "multidimensional": "偵測到多維比較，推薦雷達圖",
         "categorical": "偵測到分類資料，推薦長條圖",
@@ -5888,8 +5904,8 @@
         "CHART_AI_ADDED_VALUE": "AI 傳回了輸入中不存在的數值，已阻止產生。",
         "CHART_AI_SERIES_MISMATCH": "AI 傳回的資料系列長度不一致。",
         "CHART_AI_INVALID_JSON": "AI 沒有傳回有效的圖表資料。",
-        "CHART_AI_NOT_CONFIGURED": "請先在設定中配置編輯器或主要 AI 模型。",
-        "CHART_GENERATION_INTERRUPTED": "上次產生程序已中斷。",
+        "CHART_AI_NOT_CONFIGURED": "請先在設定中設定編輯器或主要 AI 模型。",
+        "CHART_GENERATION_INTERRUPTED": "上次產生作業已中斷。",
         "CHART_UNKNOWN_ERROR": "圖表產生失敗，請檢查資料後重試。"
       }
     },
@@ -5958,7 +5974,7 @@
     },
     "noteNode": {
       "title": "新增筆記引用",
-      "description": "從檔案管理器選擇一篇筆記，雙擊節點可以開啟原始檔案。",
+      "description": "從檔案管理器選擇一篇筆記，按兩下節點可以開啟原始檔案。",
       "search": "搜尋筆記...",
       "empty": "找不到筆記",
       "group": "工作區筆記",
@@ -6032,19 +6048,19 @@
       "me": "我的",
       "canvas": "畫布"
     },
-    "search": "搜索",
-    "githubImageHosting": "Github 圖床",
-    "login": "登錄",
+    "search": "搜尋",
+    "githubImageHosting": "GitHub 圖床",
+    "login": "登入",
     "loading": "載入中",
     "view": "查看",
     "logout": "登出",
-    "setting": "設置",
+    "setting": "設定",
     "files": "筆記",
     "outline": "大綱",
     "showLeftSidebar": "顯示左側邊欄",
     "hideLeftSidebar": "隱藏左側邊欄",
-    "showCenterPanel": "显示编辑器",
-    "hideCenterPanel": "隐藏编辑器",
+    "showCenterPanel": "顯示編輯器",
+    "hideCenterPanel": "隱藏編輯器",
     "showRightSidebar": "顯示右側邊欄",
     "hideRightSidebar": "隱藏右側邊欄",
     "searchPlaceholder": "搜尋筆記、記錄或畫布...",
@@ -6059,7 +6075,7 @@
       "today": "今天"
     },
     "loading": "正在載入活躍度資料...",
-    "empty": "暫無活躍度資料",
+    "empty": "目前沒有活躍度資料",
     "refresh": "重新整理",
     "summary": {
       "totalCount": "總活躍次數",
@@ -6091,7 +6107,7 @@
   "marks": {
     "types": {
       "screenshot": "截圖",
-      "text": "文本",
+      "text": "文字",
       "image": "插圖"
     }
   },
@@ -6108,15 +6124,15 @@
     "indexing": "索引中…"
   },
   "sync": {
-    "status": "同步倉庫狀態",
-    "imageRepo": "圖床倉庫",
-    "articleRepo": "文章倉庫"
+    "status": "同步版本庫狀態",
+    "imageRepo": "圖床版本庫",
+    "articleRepo": "文章版本庫"
   },
   "ai": {
     "thinking": "思考",
     "error": {
       "title": "AI 錯誤",
-      "noAddress": "請先設置 AI 地址"
+      "noAddress": "請先設定 AI 地址"
     }
   },
   "article": {
@@ -6125,13 +6141,13 @@
       "syncComplete": "同步完成"
     },
     "syncConfirm": {
-      "title": "檢測到遠端檔案更新",
+      "title": "偵測到遠端檔案更新",
       "description": "檔案 {fileName} 有遠端更新",
-      "commitInfo": "最新提交資訊",
+      "commitInfo": "最新提交訊息",
       "commitMessage": "提交訊息",
       "author": "作者",
       "changes": "變更",
-      "confirmMessage": "確認要拉取遠端版本並覆蓋本地檔案嗎？此操作無法撤銷。",
+      "confirmMessage": "確認要拉取遠端版本並覆蓋本機檔案嗎？此操作無法撤銷。",
       "cancel": "取消",
       "confirmPull": "確認拉取"
     },
@@ -6151,22 +6167,22 @@
           "activityDetail": "當天明細"
         }
       },
-      "tip": "💡 提示：你也可以從左側文件管理器中選擇文件",
+      "tip": "💡 提示：你也可以從左側檔案總管中選擇檔案",
       "actions": {
         "newNote": {
-          "title": "創建筆記",
-          "desc": "新建一篇 Markdown 筆記"
+          "title": "建立筆記",
+          "desc": "新增一篇 Markdown 筆記"
         },
         "newRecord": {
-          "title": "創建記錄",
-          "desc": "打開文本記錄功能"
+          "title": "建立記錄",
+          "desc": "開啟文字記錄功能"
         },
         "globalSearch": {
-          "title": "全局搜索",
+          "title": "全域搜尋",
           "desc": "快速查找你的筆記內容"
         },
         "openWorkspace": {
-          "title": "打開工作區",
+          "title": "開啟工作區",
           "desc": "選擇或切換工作區目錄"
         }
       },
@@ -6198,7 +6214,7 @@
         },
         "steps": {
           "createRecord": {
-            "title": "建立第一條記錄",
+            "title": "建立第一則記錄",
             "desc": "先記錄一段示例內容，熟悉記錄入口。"
           },
           "organizeNote": {
@@ -6212,7 +6228,7 @@
         },
         "completedStates": {
           "create-record": {
-            "title": "你已經建立了第一條記錄",
+            "title": "你已經建立了第一則記錄",
             "desc": "現在你已經知道如何快速記錄內容了。"
           },
           "organize-note": {
@@ -6227,11 +6243,11 @@
         "spotlight": {
           "create-record": {
             "title": "這裡可以快速記錄內容",
-            "desc": "點擊這個文字記錄入口，系統會自動帶入一段示例內容，你也可以自己修改。"
+            "desc": "點選這個文字記錄入口，系統會自動帶入一段示例內容，你也可以自己修改。"
           },
           "organize-note": {
             "title": "這裡可以整理記錄",
-            "desc": "點擊這個按鈕，把剛才的記錄整理成一篇正式筆記。"
+            "desc": "點選這個按鈕，把剛才的記錄整理成一篇正式筆記。"
           },
           "ai-polish": {
             "title": "這裡可以用 Agent 處理剛生成的筆記",
@@ -6241,15 +6257,15 @@
       }
     },
     "unsupportedFile": {
-      "title": "無法預覽此文件",
-      "fileName": "文件名",
-      "filePath": "文件路徑",
-      "fileSize": "文件大小",
+      "title": "無法預覽此檔案",
+      "fileName": "檔名",
+      "filePath": "檔案路徑",
+      "fileSize": "檔案大小",
       "modifiedTime": "修改時間",
-      "createdTime": "創建時間",
+      "createdTime": "建立時間",
       "pathCopied": "路徑已複製",
-      "openExternal": "用外部程序打開",
-      "openDirectory": "打開文件目錄"
+      "openExternal": "用外部程式開啟",
+      "openDirectory": "開啟檔案目錄"
     },
     "file": {
       "empty": {
@@ -6265,53 +6281,53 @@
         "clear": "清除搜尋",
         "resultCount": "{count} 項",
         "searchingLocal": "正在搜尋本機檔案…",
-        "localNotFoundSearchingRemote": "本機未找到，正在搜尋遠端檔案…",
+        "localNotFoundSearchingRemote": "本機找不到，正在搜尋遠端檔案…",
         "localFoundSearchingRemote": "已找到 {count} 個本機結果，正在搜尋遠端檔案…",
         "emptyTitle": "沒有符合的檔案",
         "emptyDescription": "請嘗試其他關鍵字。",
-        "localNotFoundRemoteUnavailable": "本機未找到符合的檔案，遠端同步尚未設定。",
+        "localNotFoundRemoteUnavailable": "本機找不到符合的檔案，遠端同步尚未設定。",
         "remoteError": "遠端搜尋失敗",
         "retry": "重試",
-        "folderProgress": "文件夾 {loaded}/{total}"
+        "folderProgress": "資料夾 {loaded}/{total}"
       },
       "toolbar": {
-        "accessRepo": "訪問倉庫",
+        "accessRepo": "訪問版本庫",
         "loadingSync": "正在載入同步資訊",
-        "configSync": "配置同步",
+        "configSync": "設定同步",
         "newArticle": "新增筆記",
-        "newFolder": "新建文件夾",
-        "refresh": "刷新",
-        "toggleFolders": "文件夾展開摺疊",
+        "newFolder": "新增資料夾",
+        "refresh": "重新整理",
+        "toggleFolders": "資料夾展開摺疊",
         "expandAll": "全部展開",
         "collapseAll": "全部摺疊",
         "expandFolderTree": "展開",
         "collapseFolderTree": "摺疊",
         "sortByName": "按名稱排序",
-        "sortByCreated": "按創建時間排序",
+        "sortByCreated": "按建立時間排序",
         "sortByModified": "按修改時間排序",
         "sortAsc": "升序排列",
         "sortDesc": "降序排列",
         "sort": "排序",
-        "processingVectors": "正在處理向量數據",
-        "calculateVectors": "知識庫計算（全量）",
+        "processingVectors": "正在處理向量資料",
+        "calculateVectors": "知識庫計算（全部）",
         "importMarkdown": "匯入筆記",
         "convertDocuments": "匯入為 Markdown",
         "convertDialogTitle": "匯入為 Markdown",
-        "convertDialogDescription": "選擇一個或多個文件，在目前工作區產生同名 Markdown 文件，來源文件不會被修改。",
-        "convertTypeColumn": "文件類型",
+        "convertDialogDescription": "選擇一個或多個檔案，在目前工作區產生同名 Markdown 檔案，來源檔案不會被修改。",
+        "convertTypeColumn": "檔案類型",
         "convertExtensions": "副檔名",
-        "convertOtherDocuments": "其他文件",
-        "convertChooseDocuments": "選擇文件",
+        "convertOtherDocuments": "其他檔案",
+        "convertChooseDocuments": "選擇檔案",
         "convertCancel": "取消",
-        "convertFileType": "可轉換文件",
+        "convertFileType": "可轉換檔案",
         "convertSuccess": "匯入完成",
-        "convertSuccessDesc": "已產生 {count} 個 Markdown 文件",
+        "convertSuccessDesc": "已產生 {count} 個 Markdown 檔案",
         "convertPartialDesc": "成功 {success} 個，失敗 {failed} 個",
         "convertError": "匯入失敗",
         "importNotion": "匯入 Notion（.zip）",
         "importing": "正在匯入...",
         "importSuccess": "匯入成功",
-        "importSuccessDesc": "成功匯入 {count} 個文件",
+        "importSuccessDesc": "成功匯入 {count} 個檔案",
         "importError": "匯入失敗"
       },
       "cloudLibrary": {
@@ -6339,11 +6355,11 @@
         "recalculate": "全部重新計算",
         "uploadKnowledgeBase": "上傳知識庫",
         "downloadKnowledgeBase": "下載知識庫",
-        "uploadPrivacyWarning": "知識庫包含筆記分塊正文和向量，將上傳到目前同步倉庫。是否繼續？",
+        "uploadPrivacyWarning": "知識庫包含筆記分塊正文和向量，將上傳到目前同步版本庫。是否繼續？",
         "downloadOverwriteWarning": "下載會取代本機現有知識庫，但不會修改 Markdown 檔案。是否繼續？",
         "uploadComplete": "知識庫上傳完成",
         "downloadComplete": "知識庫下載完成",
-        "knowledgeResult": "{documents} 個文件，{vectors} 個向量分塊",
+        "knowledgeResult": "{documents} 個檔案，{vectors} 個向量分塊",
         "missingSources": "知識庫已匯入，但有 {count} 個來源檔案尚未拉取",
         "operationFailed": "操作失敗",
         "operations": {
@@ -6381,19 +6397,19 @@
       },
       "context": {
         "viewDirectory": "查看目錄",
-        "cut": "剪切",
+        "cut": "剪下",
         "copy": "複製",
         "paste": "黏貼",
         "rename": "重命名",
-        "deleteSyncFile": "刪除同步文件",
-        "deleteLocalFile": "刪除本地文件",
-        "deleteLocalFolder": "刪除本機文件夾",
-        "deleteRemoteFolder": "刪除遠程文件夾",
+        "deleteSyncFile": "刪除同步檔案",
+        "deleteLocalFile": "刪除本機檔案",
+        "deleteLocalFolder": "刪除本機資料夾",
+        "deleteRemoteFolder": "刪除遠端資料夾",
         "delete": "刪除",
-        "confirmDelete": "確定要刪除文件夾 \"{name}\" 嗎？此操作將刪除文件夾及其所有內容。",
-        "confirmDeleteRemoteFolder": "確定要刪除遠程文件夾「{name}」及其所有遠程內容嗎？本機內容會保留。",
+        "confirmDelete": "確定要刪除資料夾 \"{name}\" 嗎？此操作將刪除資料夾及其所有內容。",
+        "confirmDeleteRemoteFolder": "確定要刪除遠端資料夾「{name}」及其所有遠端內容嗎？本機內容會保留。",
         "deleteSuccess": "刪除成功",
-        "deleteRemoteSuccess": "遠程文件夾已刪除",
+        "deleteRemoteSuccess": "遠端資料夾已刪除",
         "deleteSelected": "刪除 {count} 項",
         "confirmDeleteEntries": "確定要刪除選取的 {count} 項及資料夾內的所有內容嗎？本機內容將移到系統垃圾桶。",
         "confirmDeleteEntriesPermanently": "確定要刪除選取的 {count} 項及資料夾內的所有內容嗎？此操作無法復原。",
@@ -6407,11 +6423,11 @@
         "deleteEntriesQueued": "已刪除 {count} 項，遠端刪除已加入同步佇列",
         "deleteEntriesCloudFolder": "已刪除 {count} 項，變更將由系統雲端同步服務同步",
         "deleteEntriesBusy": "檔案正在處理，請稍後重試",
-        "deleteSelectedLocal": "刪除本地 {count} 項",
-        "deleteSelectedRemote": "刪除遠程 {count} 項",
-        "confirmDeleteSelectedRemote": "確定要刪除遠程的 {count} 項嗎？本地內容會保留。",
-        "deleteSelectedRemoteSuccess": "已刪除遠程 {count} 項",
-        "deleteSelectedRemoteResult": "遠程刪除完成：成功 {deleted} 項，失敗 {failed} 項",
+        "deleteSelectedLocal": "刪除本機 {count} 項",
+        "deleteSelectedRemote": "刪除遠端 {count} 項",
+        "confirmDeleteSelectedRemote": "確定要刪除遠端的 {count} 項嗎？本機內容會保留。",
+        "deleteSelectedRemoteSuccess": "已刪除遠端 {count} 項",
+        "deleteSelectedRemoteResult": "遠端刪除完成：成功 {deleted} 項，失敗 {failed} 項",
         "movedToTrash": "已將 {count} 項移到系統垃圾桶",
         "deleteFailed": "刪除失敗",
         "moveFailed": "移動失敗",
@@ -6421,35 +6437,35 @@
           "conflict": "目標位置已有同名項目，未移動任何內容",
           "invalid-target": "不能移動到自身或子目錄",
           "move-failed": "移動失敗，已回復先前操作",
-          "rollback-failed": "移動失敗，且部分項目無法自動回復"
+          "rollback-failed": "移動失敗，且部分項目無法自動復原"
         },
         "invalidMoveTarget": "不能移動到自身或子目錄",
         "dropTarget": "移動 {count} 項到 {name}",
-        "newFile": "新建文件",
-        "newFolder": "新建文件夾",
+        "newFile": "新增檔案",
+        "newFolder": "新增資料夾",
         "duplicate": "建立副本",
-        "uploadFile": "上傳文件",
-        "uploadFileProgress": "正在上傳文件...",
-        "uploadFileSuccess": "文件上傳成功",
-        "uploadFileError": "文件上傳失敗",
-        "uploadFolder": "上傳文件夾",
-        "uploadFolderProgress": "正在上傳文件夾...",
-        "uploadFolderSuccess": "文件夾上傳完成",
+        "uploadFile": "上傳檔案",
+        "uploadFileProgress": "正在上傳檔案...",
+        "uploadFileSuccess": "檔案上傳成功",
+        "uploadFileError": "檔案上傳失敗",
+        "uploadFolder": "上傳資料夾",
+        "uploadFolderProgress": "正在上傳資料夾...",
+        "uploadFolderSuccess": "資料夾上傳完成",
         "uploadFolderResult": "上傳 {uploaded} 個，失敗 {failed} 個",
-        "uploadFolderError": "文件夾上傳失敗",
+        "uploadFolderError": "資料夾上傳失敗",
         "configureSync": "前往同步設定",
-        "syncRepoRequired": "請先設定目前工作區的同步倉庫名稱",
+        "syncRepoRequired": "請先設定目前工作區的同步版本庫名稱",
         "syncNotConfigured": "同步尚未設定",
-        "syncReauthenticationRequired": "自託管登入已失效，請前往同步設定重新授權",
+        "syncReauthenticationRequired": "自行架設登入已失效，請前往同步設定重新授權",
         "syncConfigured": "{platform} 同步已設定",
         "syncAvailable": "{platform} 同步可用",
         "syncChecking": "正在檢查 {platform} 同步",
         "syncUnavailable": "{platform} 同步不可用",
-        "syncFolder": "下載文件夾",
-        "syncFolderDesc": "下載目前遠端文件夾下的全部文件",
-        "syncFolderSuccess": "文件夾下載完成",
-        "syncFolderError": "文件夾下載失敗",
-        "syncFolderProgress": "正在下載文件夾...",
+        "syncFolder": "下載資料夾",
+        "syncFolderDesc": "下載目前遠端資料夾下的全部檔案",
+        "syncFolderSuccess": "資料夾下載完成",
+        "syncFolderError": "資料夾下載失敗",
+        "syncFolderProgress": "正在下載資料夾...",
         "deleteSyncFileSuccess": "刪除成功",
         "deleteSyncFileError": "刪除失敗",
         "knowledgeBase": "知識庫",
@@ -6464,19 +6480,19 @@
         "vectorCalcFailed": "向量計算失敗",
         "vectorDeleted": "向量已刪除",
         "vectorDeleteFailed": "刪除向量失敗",
-        "batchCalcSuccess": "成功計算 {count} 個文件的向量",
+        "batchCalcSuccess": "成功計算 {count} 個檔案的向量",
         "batchCalcPartial": "計算完成：成功 {success} 個，失敗 {failed} 個",
         "batchCalcFailed": "批量計算向量失敗",
-        "batchDeleteSuccess": "成功刪除 {count} 個文件的向量",
+        "batchDeleteSuccess": "成功刪除 {count} 個檔案的向量",
         "batchDeletePartial": "刪除完成：成功 {success} 個，失敗 {failed} 個",
         "batchDeleteFailed": "批量刪除向量失敗",
-        "noMarkdownFiles": "文件夾中沒有 Markdown 文件",
+        "noMarkdownFiles": "資料夾中沒有 Markdown 檔案",
         "includedInKB": "已包含在知識庫中",
         "excludedFromKB": "已從知識庫中排除",
         "autoCalcEnabled": "已啟用自動向量計算",
         "autoCalcDisabled": "已禁用自動向量計算",
-        "settingFailed": "設置失敗",
-        "confirmDeleteVectors": "確定要刪除 {count} 個文件的向量嗎？"
+        "settingFailed": "設定失敗",
+        "confirmDeleteVectors": "確定要刪除 {count} 個檔案的向量嗎？"
       },
       "folderView": {
         "vectorDbNotEnabled": "向量資料庫未啟用",
@@ -6515,7 +6531,7 @@
         "indexPartial": "有 {count} 個檔案未能建立索引，請稍後再試。",
         "loadingFolder": "正在讀取資料夾狀態…",
         "skills": "Skills",
-        "skillNotFound": "Skill 未找到",
+        "skillNotFound": "Skill 找不到",
         "skillNotFoundDesc": "無法找到 ID 為 {id} 的 Skill",
         "loadingSkills": "載入 Skills...",
         "loadingSkill": "載入 Skill...",
@@ -6533,43 +6549,43 @@
       },
       "clipboard": {
         "copied": "已複製到剪貼簿",
-        "cut": "已剪切到剪貼簿",
+        "cut": "已剪下到剪貼簿",
         "pasted": "已黏貼成功",
         "pasteFailed": "黏貼操作失敗",
         "empty": "剪貼簿為空",
-        "confirmOverwrite": "文件已存在，是否覆蓋？",
-        "notSupported": "不支持此操作"
+        "confirmOverwrite": "檔案已存在，是否覆蓋？",
+        "notSupported": "不支援此操作"
       },
       "mobile": {
         "cancel": "取消",
-        "create": "創建",
-        "save": "保存",
+        "create": "建立",
+        "save": "儲存",
         "emptyDir": "該目錄為空",
         "root": "根目錄",
         "editor": "編輯器",
-        "backToFiles": "返回文件管理",
-        "openFiles": "打開文件",
-        "remote": "遠端文件",
-        "remoteFileNotPulled": "僅雲端 · 點擊後拉取",
+        "backToFiles": "返回檔案管理",
+        "openFiles": "開啟檔案",
+        "remote": "遠端檔案",
+        "remoteFileNotPulled": "僅雲端 · 點選後拉取",
         "remoteFolderOnly": "僅雲端目錄",
-        "file": "文件",
-        "folder": "文件夾",
-        "folderChildren": "{files} 個文件 · {folders} 個文件夾",
+        "file": "檔案",
+        "folder": "資料夾",
+        "folderChildren": "{files} 個檔案 · {folders} 個資料夾",
         "filePlaceholder": "示例.md",
-        "folderPlaceholder": "示例文件夾",
+        "folderPlaceholder": "示例資料夾",
         "dragToParent": "拖到這裡移動到上一級",
         "dragReleaseToMove": "鬆手移動到此處",
-        "moveInvalidTarget": "不能移動到該文件夾",
+        "moveInvalidTarget": "不能移動到該資料夾",
         "moveFailed": "移動失敗",
         "refreshFailed": "重新整理檔案清單失敗，請檢查網路和同步設定後重試。"
       },
-      "deleteConfirm": "確認刪除此文件嗎？"
+      "deleteConfirm": "確認刪除此檔案嗎？"
     },
     "editor": {
       "copySuccess": "複製成功",
       "copySuccessDescription": "已複製到剪貼簿",
       "search": {
-        "placeholder": "在文件中尋找",
+        "placeholder": "在檔案中尋找",
         "replacePlaceholder": "取代為",
         "caseSensitive": "區分大小寫",
         "replace": "取代",
@@ -6589,25 +6605,25 @@
       },
       "upload": {
         "error": "上傳失敗",
-        "needToken": "上傳圖片需配置 accessToken",
+        "needToken": "上傳圖片需設定 accessToken",
         "uploading": "正在上傳圖片"
       },
       "saveDialog": {
-        "title": "保存文件",
-        "emptyContent": "内容为空",
-        "emptyContentDesc": "请先输入内容后再保存",
-        "success": "保存成功",
-        "successDesc": "文件已保存",
-        "error": "保存失败",
-        "errorDesc": "文件保存失败，请重试"
+        "title": "儲存檔案",
+        "emptyContent": "內容為空",
+        "emptyContentDesc": "請先輸入內容後再儲存",
+        "success": "儲存成功",
+        "successDesc": "檔案已儲存",
+        "error": "儲存失敗",
+        "errorDesc": "檔案儲存失敗，請重試"
       },
       "toolbar": {
         "mark": {
           "title": "使用記錄",
           "tooltip": "使用記錄",
           "description": "消耗記錄轉化為內容插入到文章。",
-          "noRecords": "暫無記錄",
-          "ocrNoContent": "OCR 未識別到任何內容"
+          "noRecords": "目前沒有記錄",
+          "ocrNoContent": "OCR 未辨識到任何內容"
         },
         "question": {
           "tooltip": "問答",
@@ -6635,16 +6651,16 @@
         },
         "translation": {
           "tooltip": "翻譯",
-          "description": "將選中的文本進行翻譯",
+          "description": "將選取的文字進行翻譯",
           "selectContent": "請先選擇一段內容",
           "promptTemplate": "將這段文字：\n{content}\n翻譯為{language}語言，直接返回翻譯後的結果。",
           "fail": "翻譯失敗",
-          "failNoSelection": "請先選擇要翻譯的文本",
+          "failNoSelection": "請先選擇要翻譯的文字",
           "translating": "翻譯中",
           "translatingTo": "正在翻譯為 {language}...",
           "success": "翻譯完成",
           "successTo": "已翻譯為 {language}",
-          "customLanguage": "自定義語言...",
+          "customLanguage": "自訂語言...",
           "customLanguagePlaceholder": "輸入目標語言，如：英語、日語等",
           "customLanguageEmpty": "請輸入目標語言",
           "customLanguageExample": "例如：英語、日語、法語等"
@@ -6657,7 +6673,7 @@
         "pull": "拉取",
         "checking": "檢查更新中...",
         "noUpdate": "無遠端更新",
-        "clickToPull": "點擊拉取遠端更新",
+        "clickToPull": "點選拉取遠端更新",
         "pullSuccess": "拉取成功",
         "pullFailed": "拉取失敗",
         "ignored": "已忽略",
@@ -6668,7 +6684,7 @@
         "pushed": "已推送",
         "syncing": "推送中",
         "syncFailed": "推送失敗",
-        "checkNetworkOrToken": "請檢查網路連接或令牌是否正確",
+        "checkNetworkOrToken": "請檢查網路連線或權杖是否正確",
         "quickSync": "快速同步"
       },
       "history": {
@@ -6676,7 +6692,7 @@
         "historyRecords": "歷史記錄",
         "noHistory": "無歷史記錄",
         "loading": "載入中",
-        "recordsCount": "條紀錄",
+        "recordsCount": "則記錄",
         "filterQuickSync": "過濾快速同步",
         "committedAt": "提交於",
         "pull": "拉取",
@@ -6685,9 +6701,9 @@
       "vectorCalc": {
         "tooltip": {
           "default": "向量索引狀態",
-          "none": "點擊開始向量計算",
+          "none": "點選開始向量計算",
           "indexed": "已索引",
-          "pending": "待更新，點擊立即計算",
+          "pending": "待更新，點選立即計算",
           "calculating": "計算中..."
         },
         "status": {
@@ -6702,23 +6718,23 @@
         "deviceName": "同步平台",
         "deviceSubtitle": "同步你的記錄與設定",
         "syncPlatform": "同步平台",
-        "gitSubtitle": "已連接 {provider}，可同步你的記錄與設定",
+        "gitSubtitle": "已連線 {provider}，可同步你的記錄與設定",
         "storageSubtitle": "目前透過 {provider} 同步你的記錄與設定",
-        "unconfiguredSubtitle": "尚未設定同步，目前資料僅保存在本地",
+        "unconfiguredSubtitle": "尚未設定同步，目前資料僅儲存在本機",
         "streak": "已連續活躍 {count} 天"
       },
       "activity": {
-        "tip": "點擊熱力圖中的日期，查看當天的活動時間軸。",
+        "tip": "點選熱力圖中的日期，查看當天的活動時間軸。",
         "range": "最近 {count} 週",
         "rangePlaceholder": "最近 16 週",
         "drawerEmpty": "選擇一個日期查看當天的活動詳情。",
-        "drawerSummary": "當天共 {total} 條活動，含 {record} 條記錄、{writing} 條寫作、{chat} 條對話、{canvas} 條繪圖。"
+        "drawerSummary": "當天共 {total} 條活動，含 {record} 則記錄、{writing} 條寫作、{chat} 條對話、{canvas} 條繪圖。"
       },
       "sync": {
         "title": "同步",
         "configured": "已連線",
         "unconfigured": "未設定",
-        "localOnly": "僅本地"
+        "localOnly": "僅本機"
       },
       "stats": {
         "weekly": "本週活躍",
@@ -6746,8 +6762,8 @@
         },
         "tools": {
           "title": "工具",
-          "newChat": "开始新对话",
-          "start": "开始",
+          "newChat": "開始新對話",
+          "start": "開始",
           "clear": "清除",
           "clearChat": "清空對話",
           "clearContext": "清除上下文"
@@ -6764,54 +6780,54 @@
   },
   "mcp": {
     "selectServers": "MCP 伺服器",
-    "searchServers": "搜索伺服器...",
+    "searchServers": "搜尋伺服器...",
     "noServers": "未啟用 MCP 服務功能",
-    "noServersFound": "未找到匹配的伺服器",
-    "addServer": "添加伺服器...",
-    "goToSettings": "前往設置",
+    "noServersFound": "找不到匹配的伺服器",
+    "addServer": "新增伺服器...",
+    "goToSettings": "前往設定",
     "close": "關閉",
     "navigate": "選擇",
     "confirm": "確認",
     "tools": "個工具",
     "connecting": "連線中",
-    "disconnected": "未連接"
+    "disconnected": "未連線"
   },
   "recording": {
-    "title": "录音识别",
-    "description": "点击麦克风按钮开始录音，系统将自动识别并转换为文字记录",
-    "recording": "录音中",
-    "paused": "已暂停",
-    "ready": "准备就绪",
-    "processing": "识别中...",
+    "title": "錄音辨識",
+    "description": "點選麥克風按鈕開始錄音，系統將自動辨識並轉換為文字記錄",
+    "recording": "錄音中",
+    "paused": "已暫停",
+    "ready": "準備就緒",
+    "processing": "辨識中...",
     "cancel": "取消",
-    "error": "错误",
+    "error": "錯誤",
     "success": "成功",
-    "noModelConfigured": "未配置语音识别模型，请先在设置中配置",
-    "speechUnavailable": "當前識別方式不可用，請檢查本地語音支援或模型配置",
-    "fallbackToModel": "本地語音識別不可用，已自動切換為模型識別",
-    "startError": "无法启动录音",
-    "noAudioData": "未录制到音频数据",
-    "transcriptionSuccess": "语音识别完成",
-    "transcriptionEmpty": "识别结果为空",
-    "transcriptionError": "语音识别失败",
-    "configureModel": "配置模型",
-    "retryTranscription": "重新識別",
-    "retrying": "重新識別中...",
-    "retrySuccess": "重新識別完成",
-    "retryError": "重新識別失敗",
-    "noContentDetected": "未识别到内容",
-    "pendingTranscription": "原音訊已保存，待重新識別",
-    "pendingModelConfiguration": "原音訊已保存，配置語音識別後可轉寫",
-    "doubleClickToSelectFile": "双击选择音频文件",
+    "noModelConfigured": "未設定語音辨識模型，請先在設定中設定",
+    "speechUnavailable": "目前辨識方式不可用，請檢查本機語音支援或模型設定",
+    "fallbackToModel": "本機語音辨識不可用，已自動切換為模型辨識",
+    "startError": "無法啟動錄音",
+    "noAudioData": "未錄製到音訊資料",
+    "transcriptionSuccess": "語音辨識完成",
+    "transcriptionEmpty": "辨識結果為空",
+    "transcriptionError": "語音辨識失敗",
+    "configureModel": "設定模型",
+    "retryTranscription": "重新辨識",
+    "retrying": "重新辨識中...",
+    "retrySuccess": "重新辨識完成",
+    "retryError": "重新辨識失敗",
+    "noContentDetected": "未辨識到內容",
+    "pendingTranscription": "原音訊已儲存，待重新辨識",
+    "pendingModelConfiguration": "原音訊已儲存，設定語音辨識後可轉寫",
+    "doubleClickToSelectFile": "按兩下選擇音訊檔案",
     "mode": {
-      "builtin": "浏览器识别",
-      "builtinDesc": "免费，实时识别",
-      "model": "大模型识别",
-      "modelDesc": "需配置STT模型，更准确"
+      "builtin": "瀏覽器辨識",
+      "builtinDesc": "免費，即時辨識",
+      "model": "大模型辨識",
+      "modelDesc": "需設定STT模型，更準確"
     }
   },
   "quickRecord": {
-    "description": "點擊選擇記錄工具，快速創建記錄"
+    "description": "點選選擇記錄工具，快速建立記錄"
   },
   "editor": {
     "statusBar": {
@@ -6869,12 +6885,12 @@
       "disable": "取消唯讀"
     },
     "developerPerformance": {
-      "documentSize": "文件大小",
-      "mode": "文件模式",
+      "documentSize": "檔案大小",
+      "mode": "檔案模式",
       "view": "編輯檢視",
-      "renderTime": "渲染耗時",
-      "largeDocument": "長文件",
-      "standardDocument": "一般文件"
+      "renderTime": "算繪耗時",
+      "largeDocument": "長檔案",
+      "standardDocument": "一般檔案"
     },
     "placeholder": "輸入 / 叫出選單，或直接開始寫作...",
     "markdownParseFallback": {
@@ -6883,8 +6899,8 @@
       "retry": "重試視覺化模式"
     },
     "largeMarkdownMode": {
-      "title": "超大型文件已啟用輕量模式",
-      "description": "正文由視口化原始碼編輯器顯示，暫不解析完整視覺化文件，以縮短首次顯示與可編輯時間。",
+      "title": "超大型檔案已啟用輕量模式",
+      "description": "正文由只算繪可見區域的原始碼編輯器顯示，暫不解析完整視覺化檔案，以縮短首次顯示與可編輯時間。",
       "openVisual": "進入視覺化編輯",
       "preparing": "正在準備視覺化編輯…"
     },
@@ -6915,14 +6931,14 @@
     "outline": {
       "sidebarEmpty": "開啟 Markdown 筆記並切換至視覺化模式，即可查看大綱。",
       "title": "大綱",
-      "open": "打開大綱",
+      "open": "開啟大綱",
       "close": "關閉大綱",
-      "empty": "暫無標題",
+      "empty": "目前沒有標題",
       "noResults": "沒有匹配的標題",
       "searchPlaceholder": "搜尋標題",
       "clearSearch": "清空搜尋",
       "expandHeading": "展開 {title}",
-      "collapseHeading": "折疊 {title}",
+      "collapseHeading": "收合 {title}",
       "untitledHeading": "未命名 H{level}",
       "resizeHandle": "拖曳調整大綱寬度",
       "editHeading": "編輯標題 {title}",
@@ -6930,7 +6946,7 @@
     },
     "translation": {
       "fail": "翻譯失敗",
-      "failNoSelection": "請先選擇要翻譯的文本",
+      "failNoSelection": "請先選擇要翻譯的文字",
       "translating": "翻譯中...",
       "translatingTo": "正在翻譯為 {language}...",
       "success": "翻譯完成",
@@ -6946,7 +6962,7 @@
     "blockHandle": {
       "controls": "區塊操作",
       "addBelow": "在下方新增一行",
-      "dragOrOpen": "拖動區塊，或點擊開啟操作選單",
+      "dragOrOpen": "拖曳區塊，或點選開啟操作選單",
       "copyContent": "複製內容",
       "copyMarkdown": "複製 Markdown",
       "duplicate": "建立副本",
@@ -6980,14 +6996,14 @@
       "generateCanvas": "從選區產生畫布",
       "canvasFlowchart": "產生流程圖",
       "canvasMindmap": "產生心智圖",
-      "canvasTimeline": "產生時間線",
+      "canvasTimeline": "產生時間軸",
       "canvasTasks": "提取任務關係",
       "canvasSource": "以下是 Markdown 選區原文：",
       "canvasPromptSuffix": "請先讀取目前空白畫布，再使用畫布工具產生內容；先顯示操作預覽，等待確認後套用。",
       "canvasPrompts": {
         "flowchart": "把選取文字整理成清晰的流程圖。",
         "mindmap": "把選取文字整理成層級清晰的心智圖。",
-        "timeline": "識別時間、階段和里程碑，產生時間線畫布。",
+        "timeline": "辨識時間、階段和里程碑，產生時間軸畫布。",
         "tasks": "提取任務、依賴關係和先後順序，產生任務關係圖。"
       },
       "translate": "翻譯",
@@ -6997,7 +7013,7 @@
       "linkText": "顯示文字",
       "linkTextPlaceholder": "輸入連結文字",
       "linkUrl": "連結地址",
-      "openLink": "打開連結",
+      "openLink": "開啟連結",
       "removeLink": "移除連結",
       "saveLink": "儲存",
       "linkPlaceholder": "輸入連結地址",
@@ -7007,13 +7023,13 @@
       "italic": "斜體",
       "strike": "刪除線",
       "underline": "底線",
-      "inlineCode": "行內代碼",
-      "highlight": "高亮",
+      "inlineCode": "行內程式碼",
+      "highlight": "醒目提示",
       "blockquote": "引用",
-      "bulletList": "無序列表",
-      "orderedList": "有序列表",
-      "taskList": "任務列表",
-      "codeBlock": "代碼塊",
+      "bulletList": "無序清單",
+      "orderedList": "有序清單",
+      "taskList": "任務清單",
+      "codeBlock": "程式碼區塊",
       "languages": {
         "English": "英語",
         "Japanese": "日語",
@@ -7025,13 +7041,13 @@
         "Russian": "俄語",
         "Arabic": "阿拉伯語"
       },
-      "customLanguagePlaceholder": "自定義語言..."
+      "customLanguagePlaceholder": "自訂語言..."
     },
     "aiSuggestion": {
       "accept": "接受",
       "reject": "拒絕",
       "undo": "撤銷",
-      "generating": "生成中...",
+      "generating": "產生中...",
       "abort": "終止"
     },
     "canvasDrop": {
@@ -7045,7 +7061,7 @@
       "insert": "插入圖片",
       "uploading": "上傳中...",
       "uploadSuccess": "圖片已上傳到圖床",
-      "saveSuccess": "圖片已保存到本地",
+      "saveSuccess": "圖片已儲存到本機",
       "uploadFailed": "插入圖片失敗",
       "sizeSmall": "小 (25%)",
       "sizeMedium": "中 (50%)",
@@ -7055,13 +7071,13 @@
       "alt": "替代文字",
       "deleteShort": "刪除",
       "settings": "圖片設定",
-      "editAlt": "編輯替代文本",
+      "editAlt": "編輯替代文字",
       "editSrc": "編輯地址",
       "editSize": "設定尺寸",
       "resetSize": "重置尺寸",
       "widthPlaceholder": "寬",
       "heightPlaceholder": "高",
-      "altPlaceholder": "輸入替代文本...",
+      "altPlaceholder": "輸入替代文字...",
       "srcPlaceholder": "輸入圖片地址...",
       "delete": "刪除圖片",
       "reset": "重置",
@@ -7071,11 +7087,11 @@
     },
     "mermaid": {
       "title": "圖表",
-      "rendering": "渲染中...",
-      "renderError": "渲染錯誤",
-      "clickToEdit": "點擊編輯源碼",
-      "clickToAdd": "點擊添加圖表",
-      "placeholder": "輸入 Mermaid 圖表代碼...",
+      "rendering": "算繪中...",
+      "renderError": "算繪錯誤",
+      "clickToEdit": "點選編輯源碼",
+      "clickToAdd": "點選新增圖表",
+      "placeholder": "輸入 Mermaid 圖表程式碼...",
       "preview": "預覽",
       "done": "完成",
       "diagramTypes": {
@@ -7094,7 +7110,7 @@
         "classDiagram": "classDiagram\n    Animal <|-- Duck\n    Animal <|-- Fish\n    Animal : +int age\n    Animal : +String gender",
         "stateDiagram": "stateDiagram-v2\n    [*] --> Active\n    Active --> [*]",
         "er": "erDiagram\n    CUSTOMER ||--o{ ORDER : places\n    CUSTOMER ||--o{ DELIVERY-ADDRESS : uses",
-        "gantt": "gantt\n    title 項目計劃\n    dateFormat YYYY-MM-DD\n    section 第一階段\n    任務1 :a1, 2024-01-01, 30d\n    section 第二階段\n    任務2 :after a1, 20d",
+        "gantt": "gantt\n    title 專案計畫\n    dateFormat YYYY-MM-DD\n    section 第一階段\n    任務1 :a1, 2024-01-01, 30d\n    section 第二階段\n    任務2 :after a1, 20d",
         "pie": "pie title 資源分配\n    \"CPU\" : 45\n    \"記憶體\" : 30\n    \"儲存\" : 25",
         "journey": "journey\n    title 我的日常工作\n    section 上午\n    通勤 : 7:00, 5\n    工作 : 9:00, 8"
       }
@@ -7103,7 +7119,7 @@
       "groups": {
         "ai": "AI",
         "heading": "標題",
-        "list": "列表",
+        "list": "清單",
         "block": "區塊",
         "align": "對齊",
         "embed": "嵌入",
@@ -7113,8 +7129,8 @@
       "items": {
         "continue": "續寫",
         "continueDesc": "AI 續寫內容",
-        "generateSection": "生成章節",
-        "generateSectionDesc": "根據目前筆記生成一個新章節",
+        "generateSection": "產生章節",
+        "generateSectionDesc": "根據目前筆記產生一個新章節",
         "summarize": "總結",
         "summarizeDesc": "總結目前筆記內容",
         "customInstruction": "自訂指令",
@@ -7131,16 +7147,16 @@
         "heading5Desc": "五級標題",
         "heading6": "六級標題",
         "heading6Desc": "六級標題",
-        "bulletList": "無序列表",
-        "bulletListDesc": "建立簡單的項目列表",
-        "orderedList": "有序列表",
-        "orderedListDesc": "建立帶編號的列表",
-        "taskList": "任務列表",
-        "taskListDesc": "建立帶核取方塊的任務列表",
+        "bulletList": "無序清單",
+        "bulletListDesc": "建立簡單的項目清單",
+        "orderedList": "有序清單",
+        "orderedListDesc": "建立帶編號的清單",
+        "taskList": "任務清單",
+        "taskListDesc": "建立帶核取方塊的任務清單",
         "image": "圖片",
-        "imageDesc": "插入本地圖片或圖床圖片",
+        "imageDesc": "插入本機圖片或圖床圖片",
         "file": "檔案",
-        "fileDesc": "選擇本地檔案並插入連結",
+        "fileDesc": "選擇本機檔案並插入連結",
         "table": "表格",
         "tableDesc": "插入表格",
         "blockquote": "引用",
@@ -7255,21 +7271,24 @@
     "browserViewAll": "查看全部",
     "browserLoadMore": "載入更多",
     "browserBookmarks": "收藏",
-    "browserHistory": "歷史紀錄",
+    "browserHistory": "歷史記錄",
     "browserNoBookmarks": "尚無收藏網頁",
-    "browserNoHistory": "尚無瀏覽紀錄",
+    "browserNoHistory": "尚無瀏覽記錄",
     "browserAddBookmark": "收藏目前網頁",
     "browserRemoveBookmark": "取消收藏",
-    "browserSaveRecord": "儲存為連結紀錄",
-    "browserRemoveHistory": "刪除這筆紀錄",
-    "browserClearHistory": "清空歷史紀錄",
+    "browserSaveRecord": "儲存為連結記錄",
+    "browserRemoveHistory": "刪除這筆記錄",
+    "browserClearHistory": "清空歷史記錄",
     "browserBackToPage": "返回網頁",
     "browserBackToStart": "返回新分頁",
     "browserLibraryLoading": "正在讀取瀏覽器資料…",
     "emptyGroup": "將分頁拖曳到此處，或從檔案清單開啟筆記",
-    "loadingLayout": "正在還原編輯器版面配置…",
+    "loadingLayout": "正在還原編輯器版面設定…",
     "undo": "復原",
     "redo": "重做"
+  },
+  "statusBar": {
+    "settingsErrorHint": "{reason}。點一下前往設定。"
   },
   "syncOverview": {
     "selfHostedConflict": {
@@ -7310,27 +7329,27 @@
     "continueSetup": "繼續設定",
     "historyVersions": "歷史版本",
     "document": {
-      "title": "目前文件",
+      "title": "目前檔案",
       "autoEnabled": "自動同步已開啟",
       "autoDisabled": "自動同步已關閉",
-      "sync": "同步目前文件",
+      "sync": "同步目前檔案",
       "upload": "上傳目前內容",
       "download": "取得遠端版本",
       "more": "更多操作",
       "update": "發現遠端更新",
       "conflict": "有同步衝突",
       "resolve": "處理衝突",
-      "failed": "文件同步失敗",
-      "ready": "文件同步已就緒"
+      "failed": "檔案同步失敗",
+      "ready": "檔案同步已就緒"
     },
-    "reorderItem": "拖動調整 {name} 的位置",
+    "reorderItem": "拖曳調整 {name} 的位置",
     "markdown": "Markdown 檔案",
     "records": "記錄",
     "settings": "設定",
     "conversations": "對話",
     "notConfigured": "尚未設定同步",
     "configurationFailed": "同步設定讀取失敗",
-    "missingRepository": "尚未關聯倉庫",
+    "missingRepository": "尚未關聯版本庫",
     "unavailable": "同步服務無法使用",
     "checking": "正在檢查同步連線",
     "ready": "同步已就緒",
@@ -7340,12 +7359,12 @@
     "typeSeparator": "、",
     "failed": "同步失敗",
     "synced": "已同步",
-    "idle": "暫無狀態",
-    "noActivity": "暫無最近同步記錄",
+    "idle": "目前沒有狀態",
+    "noActivity": "目前沒有最近同步記錄",
     "disabled": "未啟用",
     "selfHostedConnection": "自動同步筆記與個人資料；有工作時會顯示目前處理步驟。",
     "retry": "重試",
-    "retryHint": "點擊重試同步",
+    "retryHint": "點選重試同步",
     "fileFailed": "檔案同步失敗：{path}",
     "failedCount": "同步失敗（{count} 項）",
     "selfHostedStatus": {
@@ -7451,7 +7470,7 @@
   },
   "home": {
     "title": "首頁",
-    "open": "打開首頁",
+    "open": "開啟首頁",
     "backToWorkspace": "回到工作區",
     "edit": "編輯首頁",
     "editDescription": "開關卡片、拖曳或用箭頭調整順序。設定只存在這台電腦，不進 vault。",
@@ -7668,19 +7687,19 @@
       "empty": "還沒有知識報告",
       "open": "完整報告",
       "generate": "立即產生",
-      "generating": "產生中 · {tokens} tokens",
+      "generating": "產生中 · {tokens} 詞元",
       "baseline": "建立基準"
     },
     "needs": {
       "report": "知識報告",
-      "confirm": "{period} 報告估算 {tokens} tokens，超過上限 {limit}",
+      "confirm": "{period} 報告估算 {tokens} 詞元，超過上限 {limit}",
       "confirmAction": "確認產生",
       "suggestion": "優化建議",
       "handoff": "交給 Agent"
     },
     "toast": {
       "started": "已在背景產生知識報告",
-      "estimate": "估算約 {tokens} tokens",
+      "estimate": "估算約 {tokens} 詞元",
       "busy": "已經有一份報告正在產生",
       "needsConfirm": "估算超過上限，請在「需要你處理」確認",
       "failed": "無法產生知識報告"
@@ -7693,7 +7712,7 @@
         "monthly": "每月",
         "off": "不自動產生"
       },
-      "tokenLimit": "每期 token 上限",
+      "tokenLimit": "每期詞元上限",
       "model": "報告使用的模型",
       "defaultModel": "沿用預設模型",
       "remind": "未處理的優化建議列進「需要你處理」",
@@ -7710,7 +7729,7 @@
       "emptyTitle": "知識報告",
       "description": "各主題的掌握度、評語與優化建議",
       "empty": "還沒有知識報告，先在首頁按「建立基準」。",
-      "meta": "{path} · 產出 {generated} · 約 {tokens} tokens · 報告不會修改其他筆記",
+      "meta": "{path} · 產出 {generated} · 約 {tokens} 詞元 · 報告不會修改其他筆記",
       "openNote": "開啟筆記",
       "topics": "各主題掌握度",
       "score": "{score} 分 · {notes} 篇",
@@ -7719,11 +7738,11 @@
       "suggestions": "優化建議",
       "noSuggestions": "這一期沒有優化建議",
       "handoff": "交給 Agent",
-      "dismiss": "略過這條建議",
+      "dismiss": "略過這項建議",
       "handed": "已交給 Agent",
       "done": "已處理",
       "baselineTitle": "建立基準",
-      "baselineDescription": "整理主題清單、確認後估算 token，再開始第一期報告"
+      "baselineDescription": "整理主題清單、確認後估算 詞元，再開始第一期報告"
     },
     "baseline": {
       "loading": "正在整理標籤與 MOC…",
@@ -7736,7 +7755,7 @@
       "proposeFailed": "AI 提議失敗",
       "save": "儲存主題清單（{count} 個）",
       "saveFailed": "無法儲存主題清單",
-      "estimate": "第一期報告估算約 {tokens} tokens（上限 {limit}）。",
+      "estimate": "第一期報告估算約 {tokens} 詞元（上限 {limit}）。",
       "overLimit": "超過上限；按「開始」仍會產生。",
       "later": "稍後再說",
       "start": "開始"
@@ -7761,7 +7780,7 @@
     "empty": "沒有待整理的記錄",
     "trashEmpty": "垃圾桶是空的",
     "folderEmpty": "資料夾是空的",
-    "open": "打開",
+    "open": "開啟",
     "moveTo": "移到…",
     "root": "根目錄",
     "moved": "已移到 {folder}",
@@ -7814,10 +7833,10 @@
   },
   "leftSidebar": {
     "resize": "調整上下區塊高度",
-    "resizeHint": "拖拉或用上下鍵調整高度，Enter 或雙擊恢復預設"
+    "resizeHint": "拖拉或用上下鍵調整高度，Enter 或按兩下還原預設"
   },
   "promptLibrary": {
-    "title": "提示詞庫",
+    "title": "個人提示詞庫",
     "newPrompt": "新增提示詞",
     "backToWorkspace": "回到工作區",
     "back": "返回",
@@ -7833,7 +7852,7 @@
     "unlisted": "{count} 篇未納入",
     "moveIn": "移入庫",
     "moveFailed": "移動失敗",
-    "moved": "已移入提示詞庫",
+    "moved": "已移入個人提示詞庫",
     "noSelection": "點一則提示詞看內容",
     "untitled": "未命名提示詞",
     "cancel": "取消",
@@ -7856,10 +7875,10 @@
   "versionHistory": {
     "footerButton": "版本歷史",
     "title": "版本歷史",
-    "description": "{fileName} 的本機版本紀錄",
+    "description": "{fileName} 的本機版本記錄",
     "showAutoSnapshots": "顯示自動快照",
     "loading": "載入中…",
-    "empty": "還沒有版本紀錄",
+    "empty": "還沒有版本記錄",
     "notEnabledTitle": "尚未啟用版本管理",
     "notEnabledDesc": "到設定啟用本機 git 版本管理後，才能查看並回復這篇筆記的歷史版本。",
     "goToSettings": "前往設定",
@@ -7871,13 +7890,13 @@
     "versionUnavailable": "這個版本沒有這篇筆記的內容",
     "restore": "回復",
     "restoring": "回復中…",
-    "restoreConfirmTitle": "回復到這個版本？",
-    "restoreConfirmDesc": "會把目前內容換成「{label}」，並留下一筆新的版本紀錄；舊版本仍會保留。",
+    "restoreConfirmTitle": "還原為這個版本？",
+    "restoreConfirmDesc": "會把目前內容換成「{label}」，並留下一筆新的版本記錄；舊版本仍會保留。",
     "restoreSuccess": "已回復",
-    "restoreSuccessDesc": "已回復到「{label}」，並新增一筆版本紀錄",
-    "restoreNoChange": "內容和目前一樣，沒有新增版本紀錄",
+    "restoreSuccessDesc": "已還原為「{label}」，並新增一筆版本記錄",
+    "restoreNoChange": "內容和目前一樣，沒有新增版本記錄",
     "restoreFailed": "回復失敗",
-    "loadFailed": "讀取版本紀錄失敗",
+    "loadFailed": "讀取版本記錄失敗",
     "kindPromptVersion": "提示詞版本",
     "kindAutoSnapshot": "自動快照",
     "kindUnknown": "其他版本"
@@ -8031,7 +8050,7 @@
       },
       "task": {
         "name": "待辦",
-        "hint": "→ 加到今日日誌，有時間就排成時段"
+        "hint": "→ 加到今日的每日筆記，有時間就排成時段"
       },
       "text": {
         "name": "文字",
@@ -8067,7 +8086,7 @@
     },
     "to": {
       "inbox": "筆記 → 收件資料夾",
-      "today": "今日日誌"
+      "today": "今日的每日筆記"
     },
     "reading": "辨識中",
     "source": {
@@ -8086,10 +8105,10 @@
       "ok": "已收下",
       "no": "已丟掉"
     },
-    "open": "打開",
+    "open": "開啟",
     "undo": "復原",
     "accepted": "已收下：{title}",
-    "acceptedMany": "已收下 {count} 條提案",
+    "acceptedMany": "已收下 {count} 項提案",
     "undoFailed": "檔案已被修改，無法復原",
     "failed": "操作失敗，請重試",
     "fileTooLarge": "{name} 超過 8 MB，沒有收進來",
@@ -8253,8 +8272,8 @@
     "writesTo": "收下後寫入：",
     "dest": {
       "note": "收件資料夾的新筆記",
-      "journal": "今日日誌的「{section}」",
-      "journalNew": "今日日誌的「{section}」（今天的日誌還沒建立，收下時依模板建立）"
+      "journal": "今天那篇每日筆記的「{section}」",
+      "journalNew": "每日筆記的「{section}」（今天的每日筆記還沒建立，收下時會依範本建立）"
     },
     "diff": {
       "hidden": "還有 {count} 行沒列出"
@@ -8344,7 +8363,7 @@
       "next": "往後一週",
       "dayLabel": "{month} 月 {day} 日 {weekday}",
       "today": "今天",
-      "hasNote": "有日記",
+      "hasNote": "有每日筆記",
       "backToToday": "回到今天"
     },
     "timeline": {
@@ -8353,7 +8372,7 @@
       "now": "現在",
       "readOnly": "行事曆事件（唯讀）",
       "task": "任務",
-      "anchor": "日誌時段",
+      "anchor": "每日筆記時段",
       "empty": "今天沒有排進時間軸的事。",
       "noAccess": "行事曆還沒開放存取，行程不會出現在這裡。",
       "proposal": "提案 · 排程員",
@@ -8361,14 +8380,14 @@
       "reject": "不要"
     },
     "journal": {
-      "label": "日誌",
+      "label": "每日筆記",
       "focus": "專注模式",
       "focusOff": "結束專注",
-      "empty": "今天的日誌還沒有段落。",
-      "open": "開啟日誌",
-      "emptyDay": "這天的日誌還沒有段落。",
-      "missingDay": "這天還沒有日記。",
-      "create": "建立日記"
+      "empty": "今天的每日筆記還沒有段落。",
+      "open": "開啟每日筆記",
+      "emptyDay": "這天的每日筆記還沒有段落。",
+      "missingDay": "這天還沒有每日筆記。",
+      "create": "建立每日筆記"
     },
     "todo": {
       "label": "今天要完成",
@@ -8401,6 +8420,7 @@
       "note": "記",
       "ask": "問",
       "notePlaceholder": "記一筆，或按 Tab 切到「問」",
+      "noteOnlyPlaceholder": "記一筆",
       "askPlaceholder": "問問題，例如「下午的空檔怎麼排」",
       "notePlaceholderToday": "記一筆（會記到今天，不是 {date}）",
       "toToday": "記到今天",
@@ -8437,7 +8457,16 @@
     "slotUnavailable": "此時段已無法使用，或原任務已變更。",
     "tasksUnavailable": "目前無法讀取任務索引。",
     "loadingTasks": "正在讀取任務…",
-    "calendarLabel": "月曆"
+    "calendarLabel": "月曆",
+    "weekday": {
+      "0": "週日",
+      "1": "週一",
+      "2": "週二",
+      "3": "週三",
+      "4": "週四",
+      "5": "週五",
+      "6": "週六"
+    }
   },
   "sidebarV3": {
     "navLabel": "主要導覽",
@@ -8457,7 +8486,7 @@
       "add": "新增代理人",
       "addFirst": "新增第一位代理人"
     },
-    "vault": "MyVault",
+    "vault": "我的筆記",
     "rules": {
       "label": "規則",
       "text": "代理人只能提案；寫入一律經過等你定。"
@@ -8465,11 +8494,17 @@
     "tabs": {
       "collectGroup": "收集頁面",
       "collect": "收集",
-      "knowledgeGroup": "知識頁面"
+      "knowledgeGroup": "知識頁面",
+      "inbox": "Inbox",
+      "timeline": "時間軸",
+      "canvases": "畫布",
+      "noteTags": "標籤",
+      "prompts": "個人提示詞庫",
+      "outline": "大綱"
     },
     "knowledge": {
       "title": "知識",
-      "subtitle": "時間線、畫布與標籤；筆記檔案樹在左側 MyVault"
+      "subtitle": "時間軸、畫布與標籤，筆記檔案樹在左側的「我的筆記」"
     }
   },
   "organize": {
@@ -8478,13 +8513,13 @@
     "merge": "將 {detail} 合併至 {path}",
     "tag": "為 {path} 補上標籤 #{detail}",
     "link": "從 {path} 連到 {detail}",
-    "mergeEffect": "保留 {keeper}，移除 {removed}。可從整理紀錄還原原始筆記。",
-    "history": "整理紀錄",
+    "mergeEffect": "保留 {keeper}，移除 {removed}。可從整理記錄還原原始筆記。",
+    "history": "整理記錄",
     "undo": "復原",
     "recover": "還原原始筆記",
     "undone": "已復原整理變更。",
     "undoFailed": "無法還原原始筆記。請確認是否有後續編輯或同名檔案。",
-    "conflict": "筆記已變更或無法存取。若有未完成的變更，可查看整理紀錄。",
+    "conflict": "筆記已變更或無法存取。若有未完成的變更，可查看整理記錄。",
     "settingsError": "無法儲存自動整理設定。",
     "saveSnapshot": "另存整理前內容",
     "snapshotSaved": "已另存 {count} 個檔案（檔名加上「整理前」）",

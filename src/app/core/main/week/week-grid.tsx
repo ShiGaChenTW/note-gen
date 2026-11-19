@@ -2,6 +2,7 @@
 
 import { Check, Lock } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
+import { SUPPORTED_LOCALES } from '@/i18n/config'
 import { cn } from '@/lib/utils'
 import { packWeekEntries, weekTime, type WeekPlanDay } from '@/lib/week/model'
 
@@ -12,9 +13,11 @@ export function WeekGrid({ days, today, openDecision }: {
   today: string
   openDecision: (key: string) => void
 }) {
-  const locale = useLocale()
   const t = useTranslations('week')
-  const weekday = new Intl.DateTimeFormat(locale, { weekday: 'short' })
+  const locale = useLocale()
+  const pluginWeekday = SUPPORTED_LOCALES.some(builtIn => builtIn === locale)
+    ? null
+    : new Intl.DateTimeFormat(locale, { weekday: 'short' })
   const gridStart = Math.min(6, ...days.map(day => Math.floor((day.timed[0]?.start ?? 360) / 60)))
   const hours = Array.from({ length: 24 - gridStart }, (_, index) => gridStart + index)
   const hasUntimed = days.some(day => day.untimed.length > 0)
@@ -27,7 +30,7 @@ export function WeekGrid({ days, today, openDecision }: {
           'sticky top-0 z-10 flex items-center justify-center gap-2 border-b border-l border-line bg-bg py-2.5 text-sm text-muted-ink',
           day.key === today && 'bg-panel font-semibold text-ink',
         )}>
-          <span>{weekday.format(day.date)}</span>
+          <span>{pluginWeekday?.format(day.date) ?? t(`weekday.${day.date.getDay()}`)}</span>
           <time dateTime={day.key} className="font-mono">{day.date.getDate()}</time>
         </div>
       ))}

@@ -72,7 +72,7 @@ function SortableItem({ item, index }: { item: Item; index: number }) {
   )
 }
 
-export function PluginStatusBarCenter() {
+export function PluginStatusBarCenter({ workspaceCovered = false }: { workspaceCovered?: boolean }) {
   const installed = usePluginStore(state => state.installed)
   const workspaceStates = usePluginStore(state => state.workspaceStates)
   const workspaceId = usePluginStore(state => state.currentWorkspaceId)
@@ -83,6 +83,7 @@ export function PluginStatusBarCenter() {
     if (!workspaceId) return []
     const contributions = installed.flatMap<StatusItem>(plugin => {
       const pluginId = plugin.manifest.id
+      if (workspaceCovered && pluginId === 'top.notegen.editor-statistics') return []
       if (!isPluginEnabledInWorkspace(plugin, workspaceStates[workspaceId]?.[pluginId])
         || !isPluginDisplayVisible(displaySettings, pluginId, 'status-bar')) return []
       return (plugin.manifest.contributes.statusBar ?? []).flatMap(contribution => {
@@ -97,7 +98,7 @@ export function PluginStatusBarCenter() {
       || left.key.localeCompare(right.key)
     ))
     return [...contributions, ...views.map(view => ({ kind: 'view' as const, key: `view:${view.key}`, view }))]
-  }, [displaySettings, installed, statusBar, views, workspaceId, workspaceStates])
+  }, [displaySettings, installed, statusBar, views, workspaceCovered, workspaceId, workspaceStates])
 
   if (!items.length) return null
   return (

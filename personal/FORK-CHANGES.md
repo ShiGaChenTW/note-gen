@@ -243,6 +243,8 @@ npx pnpm@9 install --frozen-lockfile
 | 2026-11-19 | `src/app/core/main/page-ui.tsx`、`prompt-library/prompt-library-screen.tsx`、`home/home-service.tsx`；fork：`src/lib/fork-overlays/exclusive.ts`、`src/app/fork-theme.css` | almanac ALMNC-22：新介面不顯示「回到工作區」；⌘⇧H 有全頁畫面時全部關掉、沒有時開今天主畫面；點檔案樹裡已開著的那篇也回到編輯器；開檔關閉清單補上等你定；檔案樹目前開著的那篇用 v5 選中底 | v5 原型沒有這顆按鈕，側欄 B 的檔案樹即入口 |
 | 2026-11-19 | `messages/{zh-TW,zh,en}.json`；fork：`src/app/core/main/today-v3/{date-strip,today-v3-screen,timeline,composer,use-today-v3-data}`、`src/lib/today-v3/{date-strip,layout}.ts`（含測試） | almnc23：今天主畫面頂端日期列（約兩週、可翻頁、鍵盤操作），點日期把時間軸／日誌／今天要完成／摘要換成那天；`buildTodayLayout` 把選中日 `day` 與現在 `now` 分開；訊息只加在 `todayV3` 底下 | Scott 2026-11-19 需求；記一筆、時段提案、現在線仍以今天為準；只動 fork 檔與 messages，classic 不受影響 |
 
+| 2026-11-19 | `src/app/core/main/{page,main-status-bar,today-v3/composer,unified-sync-status,file/file-footer,chat/model-select}.tsx`、`src/components/plugins/plugin-status-bar-center.tsx` | v3 右欄對話可見時今天頁只留「記」；全頁覆蓋時隱藏編輯器狀態列項目；同步及模型錯誤可開啟設定 | ALMNC-30 |
+
 ## 刻意不改的東西
 
 - `.github/workflows/*`：`release.yml`、`publish-config.yml` 只能手動觸發，`plugin-contract.yml` 只在 PR 跑檢查，不會自動發佈。保留原檔，減少合併衝突。

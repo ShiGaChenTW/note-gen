@@ -276,7 +276,7 @@ export function CollectScreen() {
         void submit({
           kind: isImage ? 'image' : 'file',
           text: files.length === 1 ? trimmed : '',
-          name: file.name || (isImage ? 'image.png' : 'file'),
+          name: file.name || (isImage ? 'image.png' : t('input.file')),
           imageDataUrl: isImage ? await readAsDataUrl(file) : undefined,
         })
       } catch (error) {

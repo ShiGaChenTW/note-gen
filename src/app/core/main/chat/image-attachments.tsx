@@ -1,4 +1,5 @@
 "use client"
+import { useTranslations } from 'next-intl'
 import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { PhotoPreviewProvider } from "@/components/photo-preview-provider"
@@ -17,6 +18,7 @@ interface ImageAttachmentsProps {
 }
 
 export function ImageAttachments({ images, onRemove }: ImageAttachmentsProps) {
+  const t = useTranslations('record.chat.input.imageAttachment')
   if (images.length === 0) return null
 
   return (
@@ -30,12 +32,13 @@ export function ImageAttachments({ images, onRemove }: ImageAttachmentsProps) {
           >
             <LocalImage
               src={image.url}
-              alt={image.name || 'Attached image'}
+              alt={image.name || t('attachedImage')}
               fill
               className="object-cover"
               unoptimized
             />
             <Button
+              aria-label={t('removeImage')}
               variant="destructive"
               size="icon"
               className="absolute right-0 top-0 size-6 opacity-100 transition-opacity md:size-4 md:opacity-0 md:group-hover:opacity-100"

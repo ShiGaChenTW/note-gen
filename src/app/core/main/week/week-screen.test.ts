@@ -13,6 +13,8 @@ import { indexNote } from '@/lib/vault-index/index-note'
 import useDailySettingsStore from '@/stores/daily-settings'
 import useVaultIndexStore from '@/stores/vault-index'
 import messages from '../../../../../messages/en.json'
+import zh from '../../../../../messages/zh.json'
+import zhTW from '../../../../../messages/zh-TW.json'
 import { WeekScreen } from './week-screen'
 
 vi.mock('@/lib/week/calendar', () => ({ loadCalendarWeek: vi.fn(), requestCalendarWeekAccess: vi.fn() }))
@@ -74,6 +76,17 @@ describe('week screen', () => {
     expect(loadCalendarWeek).toHaveBeenLastCalledWith(at(23, 0))
     expect(host.textContent).not.toContain('Product review')
     expect(host.textContent).not.toContain('Draft budget')
+  })
+
+  it.each([
+    ['zh-TW', zhTW, ['週一', '週二', '週三', '週四', '週五', '週六', '週日']],
+    ['zh', zh, ['周一', '周二', '周三', '周四', '周五', '周六', '周日']],
+  ] as const)('renders the seven weekday headings in %s', async (locale, localizedMessages, weekdays) => {
+    vi.mocked(loadCalendarWeek).mockResolvedValue({ access: 'denied', events: [] })
+    const intl = { locale, messages: localizedMessages, timeZone: 'Asia/Taipei', children: React.createElement(WeekScreen) }
+    await act(async () => root.render(React.createElement(NextIntlClientProvider, intl)))
+    await act(async () => useWeekOverlay.getState().show())
+    expect(Array.from(host.querySelectorAll('time'), time => time.previousElementSibling?.textContent)).toEqual(weekdays)
   })
 
   it('closes when another overlay opens or the mode switches to classic', async () => {

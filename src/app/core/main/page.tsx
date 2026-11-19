@@ -2,8 +2,7 @@
 
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 import { useUiV3 } from "@/lib/fork-ui"
-import { usePageVisibility } from "@/lib/fork-overlays/use-page-visibility"
-import useHomeStore from "@/stores/home"
+import { useWorkspaceCovered } from "@/lib/fork-overlays/use-page-visibility"
 import { LeftSidebar } from "./left-sidebar"
 import { EditorLayout } from './editor/editor-layout'
 import { PluginRightSidebar } from '@/components/plugins/plugin-right-sidebar'
@@ -13,7 +12,8 @@ import { useEffect, useState, useRef } from 'react'
 import { Store } from '@tauri-apps/plugin-store'
 import { Layout, PanelImperativeHandle } from 'react-resizable-panels'
 import { restoreEditorWindows } from '@/lib/editor-windows'
-import { MainStatusBar } from './main-status-bar'
+import { MainStatusBar, WorkspaceCoveredContext } from './main-status-bar'
+import { RightSidebarCollapsedContext } from './right-sidebar-visibility'
 import { ForkServices } from './fork-services'
 import { measurePageBox, pageBoxStyle, type PageBox } from './page-box'
 
@@ -73,10 +73,7 @@ function ResizableWrapper() {
   const rightPanelRef = useRef<PanelImperativeHandle>(null)
   
   const isV3 = useUiV3() // Fork（almanac ALMNC-20）：v3 左欄固定 240px
-  const pages = usePageVisibility()
-  const homeLoaded = useHomeStore(state => state.loaded)
-  const workspaceCovered = isV3 && ((pages.home && homeLoaded) || pages.decide || pages.collect
-    || pages.threads || pages.week || pages.knowledge)
+  const workspaceCovered = useWorkspaceCovered()
   const MIN_LEFT_SIDEBAR_WIDTH_PX = 240 // Fork：原本 320；almanac v5 規格 240px
   const MIN_RIGHT_SIDEBAR_WIDTH_PX = 280
   const MIN_EDITOR_WIDTH_PX = 400
@@ -283,7 +280,9 @@ function ResizableWrapper() {
         collapsible={true}
         collapsedSize="0%"
       >
-        <EditorLayout />
+        <WorkspaceCoveredContext.Provider value={workspaceCovered}>
+          <EditorLayout />
+        </WorkspaceCoveredContext.Provider>
       </ResizablePanel>
     )
 
@@ -338,8 +337,10 @@ function ResizableWrapper() {
       >
         {renderLayout()}
       </ResizablePanelGroup>
-      <MainStatusBar />
-      <ForkServices />
+      <MainStatusBar workspaceCovered={workspaceCovered} />
+      <RightSidebarCollapsedContext.Provider value={rightPanelCollapsed}>
+        <ForkServices />
+      </RightSidebarCollapsedContext.Provider>
     </div>
   )
 }

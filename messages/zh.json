@@ -4207,7 +4207,8 @@
       "recording": "记录中...",
       "recorded": "已记录",
       "record": "记录",
-      "detected": "检测到"
+      "detected": "检测到",
+      "countdown": "{seconds} 秒"
     },
     "capture": {
       "desktopScreenshotPermissionDenied": "请在 macOS 系统设置 → 隐私与安全性 → 屏幕与系统音频录制（部分版本为屏幕录制）中允许 NoteGen，然后重新打开应用。",
@@ -4757,7 +4758,8 @@
       "condensing": "正在压缩上下文...",
       "condensed": {
         "message": "已压缩 {count} 条历史消息",
-        "summary": "续接摘要"
+        "summary": "续接摘要",
+        "tokenReduction": "{before} → {after} 个词元"
       },
       "empty": {
         "title": "开始与 AI 对话",
@@ -4813,7 +4815,17 @@
           "tooltip": "翻译",
           "translating": "翻译中...",
           "showOriginal": "显示原文",
-          "alreadyTranslated": "已翻译为"
+          "alreadyTranslated": "已翻译为",
+          "languages": {
+            "en": "英语",
+            "zh": "中文",
+            "ja": "日语",
+            "ko": "韩语",
+            "fr": "法语",
+            "de": "德语",
+            "es": "西班牙语",
+            "ru": "俄语"
+          }
         },
         "clipboardMonitor": {
           "enable": "剪贴板监听(开启)",
@@ -4843,8 +4855,8 @@
           "changed": "模型已从 {from} 切换为 {to}"
         },
         "promptSelect": {
-          "tooltip": "选择 Prompt",
-          "placeholder": "搜索 Prompt",
+          "tooltip": "选择对话角色",
+          "placeholder": "搜索对话角色",
           "conversationPromptApplied": "此对话的系统提示词已由一则提示词设定"
         },
         "newChat": "开始新对话",
@@ -4926,7 +4938,9 @@
             "failed": "识别失败",
             "cancelled": "识别已停止",
             "retry": "重新识别"
-          }
+          },
+          "attachedImage": "附加图片",
+          "removeImage": "移除附加图片"
         },
         "imageSelector": {
           "title": "选择图片",
@@ -5310,7 +5324,8 @@
         },
         "clearChat": "清空对话",
         "clearContext": {
-          "tooltip": "清除上下文"
+          "tooltip": "清除上下文",
+          "cleared": "上下文已清除，之后的对话将只携带此消息之后的内容。"
         },
         "modelSuggestion": {
           "apply": "应用到这条消息",
@@ -5327,8 +5342,8 @@
             "description": "选择回答所用的模型"
           },
           "prompt": {
-            "title": "提示词",
-            "description": "设置角色与回答方式"
+            "title": "对话角色",
+            "description": "选择 AI 在这次对话中扮演的角色"
           },
           "reasoning": {
             "description": "调整当前模型的思考强度"
@@ -5396,7 +5411,8 @@
         "close": "关闭",
         "copy": "复制",
         "copied": "已复制！",
-        "image": "图片预览"
+        "image": "图片预览",
+        "numberedImage": "图片 {number}"
       },
       "control": {
         "edit": "编辑",
@@ -7206,6 +7222,9 @@
     "undo": "撤销",
     "redo": "重做"
   },
+  "statusBar": {
+    "settingsErrorHint": "{reason}。点击前往设置。"
+  },
   "syncOverview": {
     "selfHostedConflict": {
       "initializing": "协作笔记正在初始化，请稍后刷新版本。",
@@ -8336,6 +8355,7 @@
       "note": "记",
       "ask": "问",
       "notePlaceholder": "记一笔，或按 Tab 切到“问”",
+      "noteOnlyPlaceholder": "记一笔",
       "askPlaceholder": "问问题，例如“下午的空档怎么排”",
       "notePlaceholderToday": "记一笔（会记到今天，不是 {date}）",
       "toToday": "记到今天",
@@ -8372,7 +8392,16 @@
     "slotUnavailable": "此时段已无法使用，或原任务已变更。",
     "tasksUnavailable": "目前无法读取任务索引。",
     "loadingTasks": "正在读取任务…",
-    "calendarLabel": "月历"
+    "calendarLabel": "月历",
+    "weekday": {
+      "0": "周日",
+      "1": "周一",
+      "2": "周二",
+      "3": "周三",
+      "4": "周四",
+      "5": "周五",
+      "6": "周六"
+    }
   },
   "sidebarV3": {
     "navLabel": "主导航",
@@ -8392,7 +8421,7 @@
       "add": "新增代理人",
       "addFirst": "新增第一位代理人"
     },
-    "vault": "MyVault",
+    "vault": "我的笔记",
     "rules": {
       "label": "规则",
       "text": "代理人只能提案；写入一律经过等你定。"
@@ -8400,11 +8429,17 @@
     "tabs": {
       "collectGroup": "收集页面",
       "collect": "收集",
-      "knowledgeGroup": "知识页面"
+      "knowledgeGroup": "知识页面",
+      "inbox": "Inbox",
+      "timeline": "时间轴",
+      "canvases": "画布",
+      "noteTags": "标签",
+      "prompts": "提示词库",
+      "outline": "大纲"
     },
     "knowledge": {
       "title": "知识",
-      "subtitle": "时间线、画布与标签；笔记文件树在左侧 MyVault"
+      "subtitle": "时间轴、画布与标签，笔记文件树在左侧的「我的笔记」"
     }
   },
   "organize": {

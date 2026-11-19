@@ -6,11 +6,11 @@ import { Segmented } from '@/components/v3/segmented'
 import { useTranslations } from 'next-intl'
 import { useUiV3 } from '@/lib/fork-ui'
 import { useInboxPendingCount } from '@/lib/inbox/use-inbox-pending'
-import { useKnowledgeOverlay } from '@/lib/sidebar-v3/knowledge'
+import { KNOWLEDGE_OUTLINE_TAB, useKnowledgeOverlay } from '@/lib/sidebar-v3/knowledge'
 import useCollectStore from '@/stores/collect'
 import useInboxStore from '@/stores/inbox'
 import usePromptLibraryStore from '@/stores/prompt-library'
-import type { CollectTab } from '@/lib/sidebar-v3/nav'
+import { KNOWLEDGE_TABS, type CollectTab } from '@/lib/sidebar-v3/nav'
 import { useKnowledgeTabs } from './use-knowledge-tabs'
 
 interface TabItem<K extends string> {
@@ -47,15 +47,15 @@ export function CollectTabs({ active }: { active: CollectTab }) {
       active={active}
       items={[
         { key: 'collect', label: t('collect'), onSelect: () => useCollectStore.getState().show() },
-        { key: 'inbox', label: 'Inbox', badge: inboxCount, onSelect: () => useInboxStore.getState().show() },
+        { key: 'inbox', label: t('inbox'), badge: inboxCount, onSelect: () => useInboxStore.getState().show() },
       ]}
     />
   )
 }
 
-const BUILT_IN_LABELS: Record<string, string> = { timeline: 'Timeline', canvases: 'Canvas', noteTags: 'Tags', prompts: 'Prompts', outline: 'Outline' }
+const BUILT_IN_TABS = new Set<string>([...KNOWLEDGE_TABS, KNOWLEDGE_OUTLINE_TAB])
 
-/** 知識頁頁首：時間線｜畫布｜標籤｜提示詞，加上大綱與外掛視圖。提示詞庫是自己的頁，切過去仍留在同一組分頁。 */
+/** 知識頁頁首：時間軸｜畫布｜標籤｜提示詞，加上大綱與外掛視圖。提示詞庫是自己的頁，切過去仍留在同一組分頁。 */
 export function KnowledgeTabs({ active }: { active: string }) {
   const t = useTranslations('sidebarV3.tabs')
   const isV3 = useUiV3()
@@ -68,7 +68,7 @@ export function KnowledgeTabs({ active }: { active: string }) {
       active={active}
       items={tabs.map(tab => ({
         key: tab.id,
-        label: tab.title ?? BUILT_IN_LABELS[tab.id] ?? tab.id,
+        label: tab.title ?? (BUILT_IN_TABS.has(tab.id) ? t(tab.id) : tab.id),
         onSelect: tab.id === 'prompts' ? () => usePromptLibraryStore.getState().show() : () => show(tab.id),
       }))}
     />

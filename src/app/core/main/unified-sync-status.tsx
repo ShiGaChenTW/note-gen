@@ -23,6 +23,7 @@ import { getSyncPushQueue } from '@/lib/sync/sync-push-queue'
 import emitter from '@/lib/emitter'
 import { formatSyncDataError } from '@/lib/sync/remote-file'
 import { cn } from '@/lib/utils'
+import { useUiV3 } from '@/lib/fork-ui'
 import {
   getAutoDataSyncState,
   retryAutoDataSync,
@@ -37,6 +38,7 @@ import { usePlatformSwitchStore, retryPlatformSwitch, restorePlatformSwitchRecov
 import { useSettingsDialogStore } from '@/stores/settings-dialog'
 import { SYNC_PLATFORM_INFO } from '@/types/sync'
 import { DocumentSyncPanel } from './document-sync-panel'
+import { StatusBarSettingsTooltip } from './status-bar-settings-tooltip'
 import { useSelfHostedNoteConflicts } from '@/hooks/use-self-hosted-note-conflicts'
 import { useSelfHostedSyncStatus } from '@/hooks/use-self-hosted-sync-status'
 import { useSelfHostedConflictStore } from '@/stores/self-hosted-conflicts'
@@ -66,6 +68,7 @@ function formatSyncTime(timestamp: number, locale: string) {
 
 export function UnifiedSyncStatus({ mobile = false, onNavigate }: { mobile?: boolean; onNavigate?: () => void } = {}) {
   const router = useRouter()
+  const isV3 = useUiV3()
   const settingsStatus = useSettingsHydrationStore(state => state.status)
   const settingsReady = settingsStatus === 'ready'
   const t = useTranslations('syncOverview')
@@ -474,21 +477,34 @@ export function UnifiedSyncStatus({ mobile = false, onNavigate }: { mobile?: boo
     }
   }
 
+  const opensErrorSettings = isV3 && !mobile && statusTone === 'error'
+  const statusButton = (
+    <Button
+      type="button"
+      variant="ghost"
+      size={mobile ? 'sm' : 'xs'}
+      className={cn(mobile && 'h-auto min-h-9 min-w-0 max-w-full whitespace-normal text-left [overflow-wrap:anywhere]')}
+      aria-label={`${t('title')}: ${currentStatus}`}
+      onClick={opensErrorSettings ? openSyncSettings : undefined}
+    >
+      <span aria-hidden="true" className={cn('size-2 rounded-full', appearance.light)} />
+      <span>{currentStatus}</span>
+      {!opensErrorSettings && <ChevronUp data-icon="inline-end" aria-hidden="true" />}
+    </Button>
+  )
+
   return (
     <Popover open={open} onOpenChange={next => { setOpen(next); if (next) selfHostedStatus.refresh() }}>
-      <PopoverTrigger asChild>
-        <Button
-          type="button"
-          variant="ghost"
-          size={mobile ? 'sm' : 'xs'}
-          className={cn(mobile && 'h-auto min-h-9 min-w-0 max-w-full whitespace-normal text-left [overflow-wrap:anywhere]')}
-          aria-label={`${t('title')}: ${currentStatus}`}
-        >
-          <span aria-hidden="true" className={cn('size-2 rounded-full', appearance.light)} />
-          <span>{currentStatus}</span>
-          <ChevronUp data-icon="inline-end" aria-hidden="true" />
-        </Button>
-      </PopoverTrigger>
+      {opensErrorSettings ? (
+        <>
+          <StatusBarSettingsTooltip reason={currentStatus}>{statusButton}</StatusBarSettingsTooltip>
+          <PopoverTrigger asChild>
+            <Button type="button" variant="ghost" size="icon-xs" aria-label={t('selfHostedStatus.viewStatus')}>
+              <ChevronUp aria-hidden="true" />
+            </Button>
+          </PopoverTrigger>
+        </>
+      ) : <PopoverTrigger asChild>{statusButton}</PopoverTrigger>}
       <PopoverContent
         side={mobile ? 'bottom' : 'top'}
         align="start"
