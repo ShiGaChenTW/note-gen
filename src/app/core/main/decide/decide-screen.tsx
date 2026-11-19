@@ -33,7 +33,7 @@ function Detail({ item }: { item: DecideItem }) {
   const Icon = KIND_ICON[item.kind]
   const { diff } = item.preview
   return (
-    <article className="max-w-[640px]" data-testid="decide-detail">
+    <article className="max-w-ui-reading" data-testid="decide-detail">
       <div className="flex items-center gap-2 text-xs text-muted-ink">
         <span className="flex items-center gap-1.5"><Icon className="size-3" aria-hidden />{item.kind === 'job' ? jobT('result') : t(`kind.${item.kind}`)}</span>
         <span className="rounded border border-dashed border-faint px-1.5 py-px">{t('proposalTag')}</span>

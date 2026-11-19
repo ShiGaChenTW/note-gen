@@ -43,7 +43,7 @@ function KnowledgePage() {
       />
       {/* data-left-sidebar：在這裡開筆記時沿用「從左側欄開檔就收起覆蓋層」的規則 */}
       <div className="min-h-0 flex-1 overflow-hidden" data-left-sidebar>
-        <div className="mx-auto flex h-full max-w-[760px] flex-col border-x border-line-soft">
+        <div className="mx-auto flex h-full max-w-ui-reading flex-col border-x border-line-soft">
           {tab === 'timeline' && <TimelineSidebar />}
           {tab === 'canvases' && (
             <>

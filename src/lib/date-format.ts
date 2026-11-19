@@ -2,6 +2,24 @@ import { useMemo } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { isoWeek } from '@/lib/today-v3/layout'
 
+function formatDateRange(start: Date, end: Date) {
+  const startYear = start.getFullYear()
+  const endYear = end.getFullYear()
+  const startMonth = start.getMonth() + 1
+  const endMonth = end.getMonth() + 1
+  const startDay = start.getDate()
+  const endDay = end.getDate()
+  const padded = (value: number) => String(value).padStart(2, '0')
+
+  if (startYear !== endYear) {
+    return `${startYear}/${padded(startMonth)}/${padded(startDay)} – ${endYear}/${padded(endMonth)}/${padded(endDay)}`
+  }
+  if (startMonth !== endMonth) {
+    return `${startMonth}/${startDay} – ${padded(endMonth)}/${padded(endDay)}`
+  }
+  return `${startMonth}/${startDay}–${endDay}`
+}
+
 /** Format local calendar dates with the active app locale. */
 export function createDateFormats(locale: string, formatWeekNumber: (week: number) => string) {
   const monthDay = new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric' })
@@ -19,8 +37,7 @@ export function createDateFormats(locale: string, formatWeekNumber: (week: numbe
     weekday: weekday.format,
     dayNumber: (date: Date) => dayNumber.format(date.getDate()),
     short: short.format,
-    range: (start: Date, end: Date) => monthDay.formatRange(start, end),
-    shortRange: (start: Date, end: Date) => `${short.format(start)} – ${short.format(end)}`,
+    range: formatDateRange,
     week: (date: Date) => formatWeekNumber(isoWeek(date)),
   }
 }

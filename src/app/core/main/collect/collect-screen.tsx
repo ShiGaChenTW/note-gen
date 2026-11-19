@@ -319,7 +319,7 @@ export function CollectScreen() {
       <PageHeader title={t('title')} subtitle={t('subtitle')} onBack={hide} tabs={<CollectTabs active="collect" />} />
       <div className="grid min-h-0 flex-1 grid-cols-1 overflow-y-auto lg:grid-cols-[minmax(0,1fr)_300px] lg:overflow-hidden">
         <div className="min-w-0 px-6 py-5 lg:overflow-y-auto">
-          <div className="mx-auto max-w-[760px]">
+          <div className="mx-auto max-w-ui-reading">
             <div
               onDragOver={event => { event.preventDefault(); setDragging(true) }}
               onDragLeave={() => setDragging(false)}

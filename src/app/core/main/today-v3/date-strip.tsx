@@ -74,7 +74,7 @@ export function DateStrip({ todayKey, selectedKey, noteKeys, onSelect, onToday }
   }
 
   const page = (direction: -1 | 1) => setStart(current => shiftStripStart(current, direction))
-  const range = dates.shortRange(first.date, last.date)
+  const range = dates.range(first.date, last.date)
   const todayStart = defaultStripStart(dateFromDayKey(todayKey))
   const atToday = selectedKey === todayKey && start.getTime() === todayStart.getTime()
   const reset = () => {

@@ -11,6 +11,7 @@
   --text-ui-numeric: 11px;
   --text-ui-compact: 13px;
   --text-ui-emphasis: 15px;
+  --container-ui-reading: 720px;
 }
 
 @theme inline {

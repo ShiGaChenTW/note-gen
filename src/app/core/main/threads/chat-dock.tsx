@@ -25,7 +25,7 @@ export function ChatDock({ children }: { children: ReactNode }) {
     const target = host ?? home.current
     if (!dock || !target) return
     dock.classList.toggle('v3:mx-auto', Boolean(host))
-    dock.classList.toggle('v3:max-w-[720px]', Boolean(host))
+    dock.classList.toggle('v3:max-w-ui-reading', Boolean(host))
     if (dock.parentElement !== target) target.appendChild(dock)
   }, [dock, host])
 
