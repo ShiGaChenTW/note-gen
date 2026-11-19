@@ -33,6 +33,7 @@ dayjs.extend(relativeTime)
 function formatRelativeTime(timestamp: number, locale: string): string {
   let dayjsLocale = 'en'
   if (locale === '简体中文' || locale === 'zh') dayjsLocale = 'zh-cn'
+  else if (locale === '繁體中文' || locale === 'zh-TW') dayjsLocale = 'zh-tw'
   else if (locale === '日本語' || locale === 'ja') dayjsLocale = 'ja'
   else if (locale === 'Português' || locale === 'pt-BR') dayjsLocale = 'pt-br'
   else if (locale === 'Deutsch' || locale === 'de') dayjsLocale = 'de'

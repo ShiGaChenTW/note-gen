@@ -4207,7 +4207,8 @@
       "recording": "Recording...",
       "recorded": "Recorded",
       "record": "Record",
-      "detected": "Detected"
+      "detected": "Detected",
+      "countdown": "{seconds}s"
     },
     "capture": {
       "desktopScreenshotPermissionDenied": "Allow NoteGen in macOS System Settings → Privacy & Security → Screen & System Audio Recording (Screen Recording on some versions), then reopen the app.",
@@ -4757,7 +4758,8 @@
       "condensing": "Condensing context...",
       "condensed": {
         "message": "Condensed {count} historical messages",
-        "summary": "Continuation summary"
+        "summary": "Continuation summary",
+        "tokenReduction": "{before} → {after} tokens"
       },
       "empty": {
         "title": "Start chatting with AI",
@@ -4900,7 +4902,17 @@
           "tooltip": "Translate",
           "translating": "Translating...",
           "showOriginal": "Show Original",
-          "alreadyTranslated": "Translated to"
+          "alreadyTranslated": "Translated to",
+          "languages": {
+            "en": "English",
+            "zh": "中文",
+            "ja": "日本語",
+            "ko": "한국어",
+            "fr": "Français",
+            "de": "Deutsch",
+            "es": "Español",
+            "ru": "Русский"
+          }
         },
         "clipboardMonitor": {
           "enable": "Clipboard monitoring (on)",
@@ -5013,7 +5025,9 @@
             "failed": "Recognition failed",
             "cancelled": "Recognition stopped",
             "retry": "Retry recognition"
-          }
+          },
+          "attachedImage": "Attached image",
+          "removeImage": "Remove attached image"
         },
         "imageSelector": {
           "title": "Select Images",
@@ -5397,7 +5411,8 @@
         },
         "clearChat": "Clear chat",
         "clearContext": {
-          "tooltip": "Clear context"
+          "tooltip": "Clear context",
+          "cleared": "Context cleared. Future replies will only use messages after this point."
         },
         "modelSuggestion": {
           "apply": "Apply to this message",
@@ -5483,7 +5498,8 @@
         "close": "Close",
         "copy": "Copy",
         "copied": "Copied!",
-        "image": "Image preview"
+        "image": "Image preview",
+        "numberedImage": "Image {number}"
       },
       "control": {
         "edit": "Edit",
@@ -8372,7 +8388,16 @@
     "slotUnavailable": "This slot is no longer available or the task has changed.",
     "tasksUnavailable": "The task index is unavailable.",
     "loadingTasks": "Loading tasks…",
-    "calendarLabel": "Calendar"
+    "calendarLabel": "Calendar",
+    "weekday": {
+      "0": "Sun",
+      "1": "Mon",
+      "2": "Tue",
+      "3": "Wed",
+      "4": "Thu",
+      "5": "Fri",
+      "6": "Sat"
+    }
   },
   "sidebarV3": {
     "navLabel": "Main navigation",
@@ -8400,7 +8425,13 @@
     "tabs": {
       "collectGroup": "Collect pages",
       "collect": "Collect",
-      "knowledgeGroup": "Knowledge pages"
+      "knowledgeGroup": "Knowledge pages",
+      "inbox": "Inbox",
+      "timeline": "Timeline",
+      "canvases": "Canvas",
+      "noteTags": "Tags",
+      "prompts": "Prompts",
+      "outline": "Outline"
     },
     "knowledge": {
       "title": "Knowledge",
