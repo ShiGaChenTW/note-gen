@@ -17,18 +17,17 @@ export function TranslateControl({ chat, onTranslatedContent }: TranslateControl
   const [isTranslating, setIsTranslating] = useState(false)
   const [selectedLanguage, setSelectedLanguage] = useState<string>('')
   
-  // 可翻译的语言列表
   const languageOptions = [
-    "English",
-    "中文",
-    "日本語",
-    "한국어",
-    "Français",
-    "Deutsch",
-    "Español",
-    "Русский",
-  ]
-  
+    { id: 'en', target: 'English' },
+    { id: 'zh', target: '中文' },
+    { id: 'ja', target: '日本語' },
+    { id: 'ko', target: '한국어' },
+    { id: 'fr', target: 'Français' },
+    { id: 'de', target: 'Deutsch' },
+    { id: 'es', target: 'Español' },
+    { id: 'ru', target: 'Русский' },
+  ] as const
+
   // 处理翻译
   async function handleTranslate(language: string) {
     if (!chat.content || isTranslating) return
@@ -66,9 +65,9 @@ export function TranslateControl({ chat, onTranslatedContent }: TranslateControl
         onSelect: resetTranslation,
       }]
     : languageOptions.map(language => ({
-        key: language,
-        label: language,
-        onSelect: () => handleTranslate(language),
+        key: language.id,
+        label: translateT(`languages.${language.id}`),
+        onSelect: () => handleTranslate(language.target),
       }))
 
   return (

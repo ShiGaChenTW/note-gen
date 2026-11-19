@@ -205,7 +205,7 @@ const ChatContent = React.memo(function ChatContent() {
                     <div className="flex w-full flex-col gap-2 py-1 text-xs text-muted-foreground">
                       <div
                         className="flex w-full items-center gap-3"
-                        title={`${activeCompaction.sourceTokenCount} → ${activeCompaction.summaryTokenCount} tokens`}
+                        title={t('record.chat.condensed.tokenReduction', { before: activeCompaction.sourceTokenCount, after: activeCompaction.summaryTokenCount })}
                       >
                         <Separator className="flex-1" />
                         <button
