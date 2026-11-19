@@ -8048,7 +8048,7 @@
     "failed": "操作失败，请重试",
     "fileTooLarge": "{name} 超过 8 MB，没有收进来",
     "remove": "移除这条收集",
-    "empty": "还没有收集。丢一段文字、链接或图片进来试试。",
+    "empty": "还没有收进内容。试试粘贴一段文字、链接或图片。",
     "emptyFilter": "这个状态下没有收集。",
     "records": "Inbox 的记录",
     "recordsHint": "Inbox 里还没整理的记录，可以拆成提案。",
@@ -8069,7 +8069,7 @@
       "recent": "最近"
     },
     "ungrouped": "未分组",
-    "empty": "还没有对话。在右侧或随处对话问一题，就会出现在这里。",
+    "empty": "还没有对话。在右侧问一个问题，对话就会出现在这里。",
     "noMatch": "找不到符合的对话",
     "newThread": "新对话",
     "untitled": "未命名对话",
@@ -8182,7 +8182,7 @@
   },
   "decide": {
     "title": "等你定",
-    "subtitle": "需要你拍板的事都在这里，逐条收下或不要",
+    "subtitle": "{count} 件等你定，逐条接受或拒绝",
     "count": "{count} 件等你定",
     "needsLabel": "等你定",
     "listLabel": "等你定的项目",
@@ -8283,8 +8283,8 @@
   "todayV3": {
     "title": "今天",
     "dateLabel": "{date} · {week}",
-    "summary": "今天 {events} 个行程、{tasks} 件待办、{decisions} 件等你定。",
-    "summaryDay": "{date}：{events} 个行程、{tasks} 件待办；等你定 {decisions} 件（不分日期）。",
+    "summaryDue": "{count} 项到期",
+    "summaryOverdue": "{count} 项逾期",
     "viewing": "正在看",
     "strip": {
       "label": "日期栏，{range}",
@@ -8295,13 +8295,13 @@
       "backToToday": "回到今天"
     },
     "timeline": {
-      "label": "时间",
+      "label": "日程",
       "allDay": "全天",
       "now": "现在",
       "readOnly": "日历事件（只读）",
       "task": "任务",
       "anchor": "日志时段",
-      "empty": "今天没有排进时间轴的事。",
+      "empty": "这天还没有安排日程。",
       "noAccess": "日历还没开放访问，行程不会出现在这里。",
       "proposal": "提案 · 排程员",
       "accept": "收下",
@@ -8328,7 +8328,7 @@
     },
     "decide": {
       "label": "等你定",
-      "empty": "都定完了。",
+      "empty": "都处理完了。",
       "all": "全部"
     },
     "captures": {
@@ -8367,6 +8367,7 @@
   },
   "week": {
     "title": "计划",
+    "subtitle": "{range} · {week}",
     "previous": "上一周",
     "next": "下一周",
     "current": "本周",
@@ -8426,7 +8427,7 @@
       "collect": "收集",
       "knowledgeGroup": "知识页面",
       "inbox": "Inbox",
-      "timeline": "时间轴",
+      "timeline": "笔记时间轴",
       "canvases": "画布",
       "noteTags": "标签",
       "prompts": "提示词",

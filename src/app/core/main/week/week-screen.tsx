@@ -57,7 +57,7 @@ function WeekPage() {
     <PageSurface label={t('title')} onDismiss={hide} className="bg-bg text-ink">
       <PageHeader
         title={t('title')}
-        subtitle={<span className="tabular-nums">{range}</span>}
+        subtitle={<span className="tabular-nums">{t('subtitle', { range, week: dates.week(start) })}</span>}
         onBack={hide}
         actions={(
           <>
@@ -68,7 +68,7 @@ function WeekPage() {
         )}
       />
       {(access !== 'granted' || indexStatus !== 'ready') && (
-        <div className="flex shrink-0 flex-wrap items-center gap-x-3 border-b border-line px-5 py-2 text-xs text-muted-ink" role="status">
+        <div className="flex shrink-0 flex-wrap items-center gap-x-3 border-b border-line px-5 py-2 text-ui-compact text-muted-ink" role="status">
           {access !== 'granted' && <span>{t(`access.${access}`)}</span>}
           {access === 'notDetermined' && <Button type="button" size="sm" className="rounded-(--r)" disabled={calendar.requesting} onClick={calendar.request}>{t('grantAccess')}</Button>}
           {indexStatus !== 'ready' && <span>{t(indexStatus === 'error' ? 'tasksUnavailable' : 'loadingTasks')}</span>}

@@ -151,7 +151,7 @@ export function AnywhereCommandPalette() {
                   <CommandItem key={item.id} value={item.id} onSelect={() => void run(item)}>
                     <Icon aria-hidden className="text-muted-ink" />
                     <span className="min-w-0 truncate">{item.title}</span>
-                    {item.subtitle ? <span className="min-w-0 truncate text-xs text-faint v3:text-muted-ink">{item.subtitle}</span> : null}
+                    {item.subtitle ? <span className="min-w-0 truncate text-xs v3:text-ui-compact text-faint v3:text-muted-ink">{item.subtitle}</span> : null}
                     {shortcut ? <CommandShortcut><ShortcutKbd shortcut={shortcut} /></CommandShortcut> : null}
                   </CommandItem>
                 )

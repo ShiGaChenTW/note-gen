@@ -31,7 +31,7 @@ function Entry({ entry, startHour, onOpenTask }: { entry: TimelineEntry, startHo
   const calendar = entry.kind === 'calendar'
   const clickable = entry.kind === 'task' && entry.task
   const className = cn(
-    'absolute overflow-hidden rounded-md px-2 py-[5px] text-left text-xs leading-4 transition-colors duration-100',
+    'absolute overflow-hidden rounded-md px-2 py-px text-left text-ui-compact leading-4 transition-colors duration-100',
     calendar ? 'bg-sunken' : 'border border-line bg-hover hover:bg-active',
     clickable && 'cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring',
   )
@@ -58,7 +58,7 @@ function ProposalBlock({ proposal, startHour, busy, onAccept, onReject }: {
   const height = Math.max(((proposal.endMin - proposal.startMin) / 60) * HOUR_PX - 3, 66)
   return (
     <div
-      className="absolute z-[1] flex flex-col overflow-hidden rounded-md border border-dashed border-line bg-bg px-2 py-[5px] text-xs leading-4"
+      className="absolute z-[1] flex flex-col overflow-hidden rounded-md border border-dashed border-line bg-bg px-2 py-[5px] text-ui-compact leading-4"
       style={{ top, height, left: GUTTER_PX, right: 0 }}
       data-kind="proposal"
       data-testid="today-v3-proposal"
@@ -87,13 +87,14 @@ export function Timeline({ view, dayKey, onOpenTask, noAccess, proposals = [], b
   const t = useTranslations('todayV3.timeline')
   const hours = Array.from({ length: view.endHour - view.startHour + 1 }, (_, i) => view.startHour + i)
   const height = (view.endHour - view.startHour) * HOUR_PX
+  const hasEntries = view.allDay.length > 0 || view.entries.length > 0 || proposals.length > 0
   const nowRef = useRef<HTMLDivElement>(null)
 
   const rootRef = useRef<HTMLDivElement>(null)
 
   // 進來時、換日時：今天把現在線捲到可視範圍中段，別天捲回頂端
   useEffect(() => {
-    if (nowRef.current) nowRef.current.scrollIntoView({ block: 'center' })
+    if (hasEntries && nowRef.current) nowRef.current.scrollIntoView({ block: 'center' })
     else rootRef.current?.scrollIntoView({ block: 'start' })
     // 只在第一次顯示與換日時捲動（現在線每分鐘移動不重捲）
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -105,11 +106,11 @@ export function Timeline({ view, dayKey, onOpenTask, noAccess, proposals = [], b
       {view.allDay.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1">
           {view.allDay.map(title => (
-            <span key={title} className="rounded-md bg-sunken px-2 py-0.5 text-xs text-muted-ink"><span className="mr-1 text-muted-ink">{t('allDay')}</span>{title}</span>
+            <span key={title} className="rounded-md bg-sunken px-2 py-0.5 text-ui-compact text-muted-ink"><span className="mr-1 text-muted-ink">{t('allDay')}</span>{title}</span>
           ))}
         </div>
       )}
-      {noAccess && <EmptyState className="mt-2" text={t('noAccess')} />}
+      {(noAccess || !hasEntries) && <EmptyState className="mt-2" text={t(noAccess ? 'noAccess' : 'empty')} />}
       <div className="relative mt-3" style={{ height }} data-testid="today-v3-timeline">
         {hours.map(hour => (
           <div key={hour} className="absolute right-0 left-0 h-0 border-t border-line-soft" style={{ top: (hour - view.startHour) * HOUR_PX }}>

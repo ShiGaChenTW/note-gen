@@ -4,6 +4,8 @@ import { useState, useMemo } from 'react'
 import { MessageSquareDashed, MessageSquarePlus, ChevronDown, Search, Trash2, Ellipsis, NotebookPen } from "lucide-react"
 import { TooltipButton } from "@/components/tooltip-button"
 import { ConversationSummaryButton } from "../conversation-summary/summary-dialog" // Fork #33
+import { CreateJobButton } from '../jobs/create-job'
+import { EmptyState } from '@/components/v3/empty-state'
 import useChatStore from "@/stores/chat"
 import useThreadsStore from '@/stores/threads'
 import { Button } from '@/components/ui/button'
@@ -134,11 +136,13 @@ export function ChatHeader() {
                 </div>
               </div>
               <DropdownMenuSeparator />
-              {filteredConversations.length === 0 ? (
+              {filteredConversations.length === 0 ? (v3 ? (
+                <EmptyState className="px-4 py-3" text={searchQuery ? tEmpty('noMatchingConversations') : tEmpty('noConversationHistory')} />
+              ) : (
                 <div className="px-4 py-8 text-center text-sm text-muted-foreground">
                   {searchQuery ? tEmpty('noMatchingConversations') : tEmpty('noConversationHistory')}
                 </div>
-              ) : (
+              )) : (
                 <div className="max-h-75 overflow-y-auto">
                   {filteredConversations.map(conv => (
                     <DropdownMenuItem
@@ -199,6 +203,7 @@ export function ChatHeader() {
             variant={isTemporaryConversation ? 'secondary' : 'ghost'}
           />
         </>}
+        {inThreads && <CreateJobButton />}
         {!inThreads && <TooltipButton
           icon={<MessageSquarePlus />}
           tooltipText={v3 ? tV3('newChat') : t('record.chat.input.newChat')}

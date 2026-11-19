@@ -31,9 +31,9 @@ export const ChatToolItem = React.forwardRef<HTMLButtonElement, ChatToolItemProp
       <Icon data-icon="inline-start" />
       <span className="flex min-w-0 flex-1 flex-col gap-0.5 text-left">
         <span className="truncate">{title}</span>
-        <span className="truncate text-xs font-normal text-muted-foreground" title={description}>{description}</span>
+        <span className="truncate text-xs v3:text-ui-compact font-normal text-muted-foreground" title={description}>{description}</span>
       </span>
-      {value && <span className="min-w-0 max-w-24 shrink truncate text-xs font-normal text-muted-foreground">{value}</span>}
+      {value && <span className="min-w-0 max-w-24 shrink truncate text-xs v3:text-ui-compact font-normal text-muted-foreground">{value}</span>}
       <ChevronRight data-icon="inline-end" />
     </Button>
   )

@@ -22,7 +22,7 @@ function ProposalCard({ view, onAction }: { view: ProposalCardView, onAction: (a
       className={cn('rounded-md border bg-bg p-3 text-sm', view.tone === 'pending' ? 'border-dashed border-line' : 'border-line-soft')}
     >
       <div className="flex items-center gap-2">
-        <span className="rounded-sm bg-hover px-1.5 py-0.5 text-xs text-muted-ink">{t('proposal')}</span>
+        <span className="rounded-sm bg-hover px-1.5 py-0.5 text-ui-compact text-muted-ink">{t('proposal')}</span>
         <Icon aria-hidden className="size-3.5 shrink-0 text-muted-ink" />
         <span className={cn('min-w-0 flex-1 truncate font-medium text-ink', view.tone === 'muted' && 'text-muted-ink line-through')}>{view.title}</span>
         {view.when && <span className="shrink-0 text-xs text-muted-ink tabular-nums">{view.when}</span>}
@@ -32,11 +32,11 @@ function ProposalCard({ view, onAction }: { view: ProposalCardView, onAction: (a
         {view.actions.includes('accept') && <Button size="sm" onClick={() => onAction('accept')}>{t('accept')}</Button>}
         {view.actions.includes('reject') && <Button size="sm" variant="outline" onClick={() => onAction('reject')}>{t('reject')}</Button>}
         {view.actions.length === 0 && (
-          <span className="flex items-center gap-1 text-xs text-muted-ink">
+          <span className="flex items-center gap-1 text-ui-compact text-muted-ink">
             {view.tone === 'done' && <Check aria-hidden className="size-3.5" />}{t(view.statusKey)}
           </span>
         )}
-        {view.actions.length > 0 && <span className="ml-auto text-xs text-muted-ink">{t('alsoInInbox')}</span>}
+        {view.actions.length > 0 && <span className="ml-auto text-ui-compact text-muted-ink">{t('alsoInInbox')}</span>}
       </div>
     </div>
   )
@@ -48,8 +48,8 @@ function KickoffCard({ view, onAction }: { view: KickoffCardView, onAction: (act
     <div data-slot="thread-card" data-card="kickoff-result" className="rounded-md border border-line bg-bg p-3 text-sm">
       <div className="flex items-center gap-2">
         <ListTodo aria-hidden className="size-3.5 shrink-0 text-muted-ink" />
-        <span className="text-xs text-muted-ink">{t('kickoff')}</span>
-        <span className="ml-auto text-xs text-muted-ink">{t(view.stateKey)} · {view.done}/{view.total}</span>
+        <span className="text-ui-compact text-muted-ink">{t('kickoff')}</span>
+        <span className="ml-auto text-ui-compact text-muted-ink">{t(view.stateKey)} · <span className="text-xs tabular-nums">{view.done}/{view.total}</span></span>
       </div>
       <p className="mt-1 font-medium text-ink">{view.title}</p>
       <div className="mt-2 flex gap-[3px]" aria-hidden>
@@ -67,7 +67,7 @@ function KickoffCard({ view, onAction }: { view: KickoffCardView, onAction: (act
             </span>
             {task.owner && <span className="shrink-0 text-xs text-muted-ink">{task.owner}</span>}
             {view.showTaskStatus && (
-              <span className="flex shrink-0 items-center gap-1 text-xs text-muted-ink">
+              <span className="flex shrink-0 items-center gap-1 text-ui-compact text-muted-ink">
                 {task.status === 'run' ? <LoaderCircle aria-hidden className="size-3 motion-safe:animate-spin" /> : task.status === 'done' ? <Check aria-hidden className="size-3" /> : null}
                 {t(`task.${task.status}`)}
               </span>
@@ -93,7 +93,7 @@ function KickoffCard({ view, onAction }: { view: KickoffCardView, onAction: (act
           {view.actions.includes('start') && <Button size="sm" onClick={() => onAction('start')}>{t('start')}</Button>}
           {view.actions.includes('hold') && <Button size="sm" variant="outline" onClick={() => onAction('hold')}>{t('hold')}</Button>}
           {view.actions.includes('reopen') && <Button size="sm" variant="outline" onClick={() => onAction('reopen')}>{t('reopen')}</Button>}
-          {view.actions.includes('start') && <span className="ml-auto text-xs text-muted-ink">{t('maxParallel')}</span>}
+          {view.actions.includes('start') && <span className="ml-auto text-ui-compact text-muted-ink">{t('maxParallel')}</span>}
         </div>
       )}
     </div>

@@ -22,7 +22,6 @@ import useInboxStore from '@/stores/inbox'
 import usePromptLibraryStore from '@/stores/prompt-library'
 import useThreadsStore from '@/stores/threads'
 import { useSidebarStore } from '@/stores/sidebar'
-import { CreateJobButton } from '../jobs/create-job'
 import { Count } from '@/components/v3/count'
 import { EmptyState } from '@/components/v3/empty-state'
 import { SectionLabel } from '@/components/v3/section-label'
@@ -63,8 +62,8 @@ function ThreadRow({ thread, project, projects, current, now, onOpen, onMove }: 
           <span className="truncate">{thread.title || t('untitled')}</span>
         </span>
         <span className="text-xs text-muted-ink tabular-nums">{relativeTime(thread.updatedAt, now, t)}</span>
-        <span className="col-span-2 truncate text-xs text-muted-ink">
-          {project ? `${project} · ` : ''}{t('messageCount', { count: thread.messageCount })}
+        <span className="col-span-2 truncate text-ui-compact text-muted-ink">
+          {project ? `${project} · ` : ''}<span className="text-xs tabular-nums">{t('messageCount', { count: thread.messageCount })}</span>
         </span>
       </button>
       <DropdownMenu>
@@ -80,7 +79,7 @@ function ThreadRow({ thread, project, projects, current, now, onOpen, onMove }: 
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-52">
-          <DropdownMenuLabel className="text-xs text-muted-ink">{t('moveToProject')}</DropdownMenuLabel>
+          <DropdownMenuLabel className="text-ui-compact text-muted-ink">{t('moveToProject')}</DropdownMenuLabel>
           {projects.map(name => (
             <DropdownMenuItem key={name} onSelect={() => onMove(name)}>
               <Hash aria-hidden />
@@ -269,12 +268,9 @@ export function ThreadsScreen() {
         subtitle={t('subtitle')}
         onBack={hide}
         actions={(
-          <>
-            <CreateJobButton />
-            <Button size="sm" className="gap-2 rounded-(--r) bg-invert text-invert-ink hover:bg-invert/85" disabled={loading} onClick={() => void startNewConversation()}>
-              <MessageSquarePlus aria-hidden className="size-4" />{t('newThread')}
-            </Button>
-          </>
+          <Button size="sm" className="gap-2 rounded-(--r) bg-invert text-invert-ink hover:bg-invert/85" disabled={loading} onClick={() => void startNewConversation()}>
+            <MessageSquarePlus aria-hidden className="size-4" />{t('newThread')}
+          </Button>
         )}
       />
       <div className="flex min-h-0 flex-1">
@@ -285,7 +281,7 @@ export function ThreadsScreen() {
               value={mode}
               onChange={setMode}
               items={modes.map(value => ({ value, label: t(`mode.${value}`) }))}
-              className="w-full [&>button]:flex-1"
+              className="w-full [&>button]:flex-1 [&>button]:text-ui-compact"
             />
           </div>
           <ThreadList />

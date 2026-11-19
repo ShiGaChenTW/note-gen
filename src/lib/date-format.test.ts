@@ -21,6 +21,16 @@ it.each([
   expect(formats.week(new Date(2027, 0, 1))).toBe(t('weekNumber', { week: 53 }))
 })
 
+it.each([
+  [new Date(2026, 10, 16), new Date(2026, 10, 22), '11/16–22'],
+  [new Date(2026, 10, 30), new Date(2026, 11, 6), '11/30 – 12/06'],
+  [new Date(2026, 11, 28), new Date(2027, 0, 3), '2026/12/28 – 2027/01/03'],
+] as const)('formats the local date range from %s to %s as %s', (start, end, expected) => {
+  for (const locale of ['zh-TW', 'zh', 'en']) {
+    expect(createDateFormats(locale, String).range(start, end)).toBe(expected)
+  }
+})
+
 it.each([en, zh, zhTW])('matches the six v3 page titles to their navigation labels', messages => {
   const { today, decide, collect, threads, knowledge, plan } = messages.sidebarV3.nav
   expect([

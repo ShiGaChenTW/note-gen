@@ -36,13 +36,13 @@ export function DateCell({ day, weekday, today, selected, hasContent, className,
       className={cn(
         'flex cursor-pointer flex-col items-center justify-center rounded-(--r) tabular-nums transition-colors duration-100',
         FOCUS,
-        selected ? 'bg-invert text-invert-ink' : 'text-muted-ink hover:bg-hover',
+        selected ? 'bg-active text-ink' : 'text-muted-ink hover:bg-hover',
         className,
       )}
       {...props}
     >
-      <span data-date-number className={cn(today ? 'font-bold' : 'font-medium', today && !selected && 'text-ink')}>{day}</span>
-      <span aria-hidden data-date-today className={cn('h-0.5 w-3 shrink-0 rounded-full', today && 'bg-current')} />
+      <span aria-hidden data-date-today className={cn('mb-0.5 size-1 shrink-0 rounded-full', today && 'bg-current text-ink')} />
+      <span data-date-number className={cn(selected ? 'font-semibold' : 'font-medium', today && 'text-ink')}>{day}</span>
       {weekday && <span className="mt-0.5 text-xs leading-4">{weekday}</span>}
       <span aria-hidden data-date-content className={cn('mt-0.5 size-[3px] shrink-0 rounded-full', hasContent && 'bg-current')} />
     </button>

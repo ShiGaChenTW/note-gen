@@ -69,7 +69,7 @@ function V3MonthDayButton({ day, modifiers, children, className, ...props }: Day
       today={modifiers.today}
       selected={modifiers.selected}
       hasContent={modifiers.hasNote || modifiers.openTasks}
-      className={cn('h-7 w-full text-xs leading-none', modifiers.outside && !modifiers.selected && !modifiers.today && 'text-faint', className)}
+      className={cn('h-7 w-full text-ui-compact leading-none', modifiers.outside && !modifiers.selected && !modifiers.today && 'text-faint', className)}
     />
   )
 }
@@ -153,7 +153,7 @@ export function SidebarCalendar() {
                 aria-label={dates.full(day)}
                 aria-pressed={key === activeKey}
                 onClick={() => open(day)}
-                className="h-10 text-xs leading-none"
+                className="h-10 text-ui-compact leading-none"
               />
             )
             return (

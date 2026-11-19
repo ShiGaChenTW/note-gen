@@ -29,14 +29,14 @@ export function CondensedIndicator({ chat }: CondensedIndicatorProps) {
           type="button"
           variant="ghost"
           size="sm"
-          className="gap-1 px-2 text-xs font-normal text-muted-foreground hover:text-foreground"
+          className="gap-1 px-2 text-xs v3:text-ui-compact font-normal text-muted-foreground hover:text-foreground"
         >
           <FileText className="size-4" />
           <span>{t('summary')}</span>
         </Button>
       </ResponsivePopoverTrigger>
       <ResponsivePopoverContent side="top" className="max-w-xs">
-        <p className="px-4 pb-4 text-xs whitespace-pre-wrap">{chat.condensedContent}</p>
+        <p className="px-4 pb-4 text-xs v3:text-ui-compact whitespace-pre-wrap">{chat.condensedContent}</p>
       </ResponsivePopoverContent>
     </ResponsivePopover>
   )

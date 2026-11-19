@@ -164,7 +164,7 @@ describe('buildTodayLayout', () => {
       captures: [],
     })
     expect(layout.heading).toEqual({ month: 11, day: 18, weekday: 3, week: 47 })
-    expect(layout.summary).toEqual({ events: 3, openTasks: 2, decisions: 2 })
+    expect(layout.summary).toEqual({ due: 1, overdue: 1 })
     expect(layout.journal.paragraphs).toEqual(['一段日誌'])
   })
 })

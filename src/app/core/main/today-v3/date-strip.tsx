@@ -1,7 +1,7 @@
 'use client'
 
 // Fork（almanac ALMNC-23）：今天主畫面上方的日期列。大數字＋星期，一次約兩週，可往前往後翻。
-// v5 視覺（單色）：今天＝粗體＋數字下方短底線；選中日＝反白底（bg-invert，和 v5 的 .thread.on／.ditem.on 同一種選取）；
+// 今天在數字上方加圓點，選中日用淡底及較粗的數字。
 // 有日記＝星期下方一顆小點。鍵盤：左右鍵移動、Enter／空白鍵選取、Home／End 到窗口頭尾，焦點環用 ring-ring。
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
@@ -74,7 +74,7 @@ export function DateStrip({ todayKey, selectedKey, noteKeys, onSelect, onToday }
   }
 
   const page = (direction: -1 | 1) => setStart(current => shiftStripStart(current, direction))
-  const range = dates.shortRange(first.date, last.date)
+  const range = dates.range(first.date, last.date)
   const todayStart = defaultStripStart(dateFromDayKey(todayKey))
   const atToday = selectedKey === todayKey && start.getTime() === todayStart.getTime()
   const reset = () => {
@@ -109,7 +109,7 @@ export function DateStrip({ todayKey, selectedKey, noteKeys, onSelect, onToday }
         ))}
       </div>
       <DateNavArrow direction="next" aria-label={t('next')} onClick={() => page(1)} />
-      <span className="ml-1 w-[100px] shrink-0 text-right text-[11px] whitespace-nowrap text-muted-ink tabular-nums" aria-hidden>{range}</span>
+      <span className="ml-1 min-w-[100px] shrink-0 text-right text-ui-compact whitespace-nowrap text-muted-ink tabular-nums" aria-hidden>{range}</span>
       {/* 已經在看今天、日期列也停在今天這兩週時不需要「回到今天」；保留位置避免版面跳動 */}
       <DateNavReset
         onClick={reset}

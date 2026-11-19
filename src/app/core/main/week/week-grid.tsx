@@ -36,7 +36,7 @@ export function WeekGrid({ days, today, openDecision }: {
         {days.map(day => (
           <ul key={day.key} aria-label={day.key} className="space-y-1 border-b border-l border-line px-1 py-1.5">
             {day.untimed.map(entry => (
-              <li key={entry.key} className="flex items-center gap-1 rounded bg-panel px-1.5 py-1 text-xs break-words">
+              <li key={entry.key} className="flex items-center gap-1 rounded bg-panel px-1.5 py-1 text-ui-compact break-words">
                 {entry.kind === 'calendar' && <Lock className="size-3 shrink-0 text-muted-ink" aria-label={t('calendar')} />}
                 {entry.done && <Check className="size-3 shrink-0 text-brand" aria-label={t('completed')} />}
                 <span className={cn('min-w-0', entry.done && 'text-brand line-through')}>{entry.title || t('untitledEvent')}</span>
@@ -45,7 +45,7 @@ export function WeekGrid({ days, today, openDecision }: {
           </ul>
         ))}
       </>}
-      <div aria-hidden className="font-mono text-[11px] text-muted-ink">
+      <div aria-hidden className="font-mono text-ui-numeric text-muted-ink">
         {hours.map(hour => <div key={hour} className="pt-0.5 pr-2 text-right" style={{ height: HOUR_HEIGHT }}>{weekTime(hour * 60)}</div>)}
       </div>
       {days.map(day => (
@@ -54,7 +54,7 @@ export function WeekGrid({ days, today, openDecision }: {
           {packWeekEntries(day.timed).map(entry => {
             const description = `${weekTime(entry.start)}–${weekTime(entry.end)} · ${entry.title || t('untitledEvent')}`
             const className = cn(
-              'absolute overflow-hidden rounded border px-1 text-left text-xs leading-3',
+              'absolute overflow-hidden rounded border px-1 text-left text-ui-compact leading-[14px]',
               entry.kind === 'calendar' ? 'border-line bg-sunken' : 'border-line bg-bg',
               entry.kind === 'proposal' && 'cursor-pointer border-dashed border-faint hover:bg-hover focus-visible:ring-1 focus-visible:ring-ring',
             )
@@ -65,7 +65,7 @@ export function WeekGrid({ days, today, openDecision }: {
               width: `calc(${100 / entry.lanes}% - 4px)`,
             }
             const content = <>
-              <span className="flex items-center gap-0.5 font-mono text-[11px] text-muted-ink">
+              <span className="flex items-center gap-0.5 font-mono text-ui-numeric leading-3 text-muted-ink">
                 {entry.kind === 'calendar' && <Lock className="size-2.5 shrink-0" aria-label={t('calendar')} />}
                 {entry.done && <Check className="size-2.5 shrink-0 text-brand" aria-label={t('completed')} />}
                 {weekTime(entry.start)}

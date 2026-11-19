@@ -8048,7 +8048,7 @@
     "failed": "Something went wrong, please try again",
     "fileTooLarge": "{name} is over 8 MB and was not collected",
     "remove": "Remove this capture",
-    "empty": "Nothing collected yet. Drop in some text, a link or an image.",
+    "empty": "Nothing collected yet. Try pasting some text, a link, or an image.",
     "emptyFilter": "Nothing in this state.",
     "records": "Inbox records",
     "recordsHint": "Unprocessed records in the Inbox can be split into proposals.",
@@ -8069,7 +8069,7 @@
       "recent": "Recent"
     },
     "ungrouped": "Ungrouped",
-    "empty": "No conversations yet. Ask something in the side chat or Anywhere chat and it shows up here.",
+    "empty": "No conversations yet. Ask a question on the right and it will appear here.",
     "noMatch": "No matching threads",
     "newThread": "New thread",
     "untitled": "Untitled thread",
@@ -8182,7 +8182,7 @@
   },
   "decide": {
     "title": "Decide",
-    "subtitle": "Everything that needs your call, accept or decline one by one",
+    "subtitle": "{count, plural, one {# item} other {# items}} for you to decide on. Accept or dismiss each one.",
     "count": "{count} waiting for you",
     "needsLabel": "Decide",
     "listLabel": "Items waiting for you",
@@ -8283,8 +8283,8 @@
   "todayV3": {
     "title": "Today",
     "dateLabel": "{date} · {week}",
-    "summary": "Today: {events, plural, one {# event} other {# events}}, {tasks, plural, one {# task} other {# tasks}}, {decisions} waiting for you.",
-    "summaryDay": "{date}: {events, plural, one {# event} other {# events}}, {tasks, plural, one {# task} other {# tasks}}; {decisions} waiting for you (all days).",
+    "summaryDue": "{count, plural, one {# item due} other {# items due}}",
+    "summaryOverdue": "{count, plural, one {# item overdue} other {# items overdue}}",
     "viewing": "Viewing",
     "strip": {
       "label": "Date strip, {range}",
@@ -8295,13 +8295,13 @@
       "backToToday": "Back to today"
     },
     "timeline": {
-      "label": "Time",
+      "label": "Schedule",
       "allDay": "All day",
       "now": "Now",
       "readOnly": "Calendar event (read-only)",
       "task": "Task",
       "anchor": "Journal slot",
-      "empty": "Nothing scheduled on the timeline today.",
+      "empty": "Nothing scheduled for this day.",
       "noAccess": "Calendar access is off, so events will not show here.",
       "proposal": "Proposal · Scheduler",
       "accept": "Accept",
@@ -8328,7 +8328,7 @@
     },
     "decide": {
       "label": "Waiting for you",
-      "empty": "All decided.",
+      "empty": "All items have been handled.",
       "all": "All"
     },
     "captures": {
@@ -8367,6 +8367,7 @@
   },
   "week": {
     "title": "Plan",
+    "subtitle": "{range} · {week}",
     "previous": "Previous week",
     "next": "Next week",
     "current": "This week",
@@ -8426,7 +8427,7 @@
       "collect": "Collect",
       "knowledgeGroup": "Knowledge pages",
       "inbox": "Inbox",
-      "timeline": "Timeline",
+      "timeline": "Notes timeline",
       "canvases": "Canvas",
       "noteTags": "Tags",
       "prompts": "Prompts",

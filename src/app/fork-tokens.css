@@ -5,12 +5,13 @@
 @custom-variant v3 (&:where([data-ui="v3"], [data-ui="v3"] *));
 
 
-/* V3 字級：11px 等寬數字／時間，12px 小標，13px 緊湊內文，14px 內文，
+/* V3 字級：11px 等寬數字／時間，12px 輔助數字與快捷鍵，13px 緊湊內文，14px 內文，
    15px 強調內文，20px 頁首，24px 大標。共用畫面使用 v3: 覆寫。 */
 @theme {
   --text-ui-numeric: 11px;
   --text-ui-compact: 13px;
   --text-ui-emphasis: 15px;
+  --container-ui-reading: 720px;
 }
 
 @theme inline {

@@ -190,7 +190,7 @@ export function PromptLibraryInsertDialog({ path, onOpenChange, onInsert, onStar
               )}
 
               <div className="flex flex-col gap-1.5">
-                <span className="text-xs font-medium text-muted-foreground">{t('preview')}</span>
+                <span className="text-xs v3:text-ui-compact font-medium text-muted-foreground">{t('preview')}</span>
                 <pre className="max-h-[40vh] overflow-auto whitespace-pre-wrap rounded-md border bg-muted/40 p-3 text-sm">{previewText}</pre>
               </div>
             </div>
@@ -199,7 +199,7 @@ export function PromptLibraryInsertDialog({ path, onOpenChange, onInsert, onStar
 
         <DialogFooter className="flex-wrap gap-2 sm:justify-between">
           {missingRequired.length > 0 && (
-            <span className="text-xs text-muted-foreground">{t('missingRequired', { count: missingRequired.length })}</span>
+            <span className="text-xs v3:text-ui-compact text-muted-foreground">{t('missingRequired', { count: missingRequired.length })}</span>
           )}
           <div className="ml-auto flex gap-2">
             <Button variant="outline" disabled={!canUse} onClick={() => void handleStartNewConversation()}>
@@ -224,8 +224,8 @@ function VariableField({ field, value, onChange }: {
   const label = field.required ? `${field.name} *` : field.name
   return (
     <label className="flex flex-col gap-1">
-      <span className="text-xs font-medium text-muted-foreground">{label}</span>
-      {field.description && <span className="text-xs text-muted-foreground/80">{field.description}</span>}
+      <span className="text-xs v3:text-ui-compact font-medium text-muted-foreground">{label}</span>
+      {field.description && <span className="text-xs v3:text-ui-compact text-muted-foreground/80">{field.description}</span>}
       {field.options.length > 0 ? (
         <Select value={value} onValueChange={onChange}>
           <SelectTrigger className="w-full"><SelectValue placeholder={t('selectOption')} /></SelectTrigger>

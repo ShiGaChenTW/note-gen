@@ -17,7 +17,6 @@ import useCollectStore from '@/stores/collect'
 import useDecideStore from '@/stores/decide'
 import { OrganizeHistory } from '../organize/organize-history'
 import { JobReviewPreview } from '../jobs/job-result'
-import { Count } from '@/components/v3/count'
 import { EmptyState } from '@/components/v3/empty-state'
 import { PageHeader, PageSurface } from '../page-ui'
 import { DiffBlock, KIND_ICON, destinationText, useDecideActions } from './decide-parts'
@@ -34,11 +33,13 @@ function Detail({ item }: { item: DecideItem }) {
   const Icon = KIND_ICON[item.kind]
   const { diff } = item.preview
   return (
-    <article className="max-w-[640px]" data-testid="decide-detail">
-      <div className="flex items-center gap-2 text-xs text-muted-ink">
+    <article className="max-w-ui-reading" data-testid="decide-detail">
+      <div className="flex items-center gap-2 text-ui-compact text-muted-ink">
         <span className="flex items-center gap-1.5"><Icon className="size-3" aria-hidden />{item.kind === 'job' ? jobT('result') : t(`kind.${item.kind}`)}</span>
         <span className="rounded border border-dashed border-faint px-1.5 py-px">{t('proposalTag')}</span>
-        <span>{item.source === 'job' ? jobT('card') : t(`source.${item.source}`)}</span>
+        <span className={item.source === 'draft' ? 'text-xs' : undefined}>
+          {item.source === 'job' ? jobT('card') : t(`source.${item.source}`)}
+        </span>
       </div>
       <h2 className="mt-2 text-xl leading-7 font-semibold tracking-[-0.01em] break-words">{itemTitle(item)}</h2>
       <p className="mt-1 text-sm leading-6 text-muted-foreground">
@@ -73,9 +74,8 @@ function DecidePage() {
     <PageSurface label={t('title')} onDismiss={hide}>
       <PageHeader
         title={t('title')}
-        subtitle={t('subtitle')}
+        subtitle={<span className="tabular-nums">{t('subtitle', { count: items.length })}</span>}
         onBack={hide}
-        actions={<Count value={items.length} emphasis label={t('count', { count: items.length })} />}
       />
       <OrganizeHistory />
       {items.length === 0 ? (
@@ -98,7 +98,7 @@ function DecidePage() {
                     <Icon className="mt-1 size-3.5 shrink-0 text-muted-ink" aria-hidden />
                     <span className="min-w-0 flex-1">
                       <span className={cn('block truncate text-sm leading-5', active && 'font-semibold')}>{itemTitle(item)}</span>
-                      <span className="block truncate text-xs leading-5 text-muted-ink">{[item.kind === 'job' ? jobT('result') : t(`kind.${item.kind}`), item.when, t('from', { origin: item.origin })].filter(Boolean).join(' · ')}</span>
+                      <span className="block truncate text-ui-compact leading-5 text-muted-ink">{[item.kind === 'job' ? jobT('result') : t(`kind.${item.kind}`), item.when, t('from', { origin: item.origin })].filter(Boolean).join(' · ')}</span>
                     </span>
                   </button>
                 </li>

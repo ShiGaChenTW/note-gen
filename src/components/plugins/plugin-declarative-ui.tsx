@@ -1,5 +1,7 @@
 'use client'
 
+import { EmptyState } from '@/components/v3/empty-state'
+import { useUiV3 } from '@/lib/fork-ui'
 import type { PluginUiDocument, PluginUiBlock } from '@notegen/plugin-api'
 import { PluginExtendedUi } from './plugin-extended-ui'
 import { PluginAction } from './plugin-action'
@@ -48,7 +50,8 @@ function TreeItems({ items, parentId, depth = 0 }: { items: Extract<PluginUiBloc
 export function PluginDeclarativeUi({ document, scope, nested = false, compact = false }: { document?: PluginUiDocument; scope: string; nested?: boolean; compact?: boolean }) {
   const settingsLayout = usePluginSettingsLayout()
   const t = useTranslations('settings.plugins.ui')
-  if (!document || document.blocks.length === 0) return <Empty><EmptyHeader><EmptyDescription>{t('empty')}</EmptyDescription></EmptyHeader></Empty>
+  const isV3 = useUiV3()
+  if (!document || document.blocks.length === 0) return isV3 ? <EmptyState className="p-3" text={t('empty')} /> : <Empty><EmptyHeader><EmptyDescription>{t('empty')}</EmptyDescription></EmptyHeader></Empty>
   const embeddedOnly = document.blocks.length === 1 && document.blocks[0].type === 'embedded-view'
   return <div className={cn('flex min-w-0 flex-col gap-4 break-words', embeddedOnly ? 'h-full min-h-0 w-full gap-0' : settingsLayout ? nested ? 'contents' : 'p-0 gap-5' : compact ? 'h-8 flex-row items-center gap-1 whitespace-nowrap [&>*]:shrink-0' : nested ? 'contents' : document.blocks.length === 1 && (document.blocks[0].type === 'navigation-list' || document.blocks[0].type === 'item-list') ? 'p-1' : 'p-3')}>{document.blocks.map((block, index) => {
     if (block.type === 'embedded-view') return <PluginSandboxedView key={`embedded-view:${block.id}`} scope={scope} resourceId={block.id} />

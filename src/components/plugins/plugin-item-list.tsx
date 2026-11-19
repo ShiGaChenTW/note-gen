@@ -1,5 +1,7 @@
 'use client'
 
+import { EmptyState } from '@/components/v3/empty-state'
+import { useUiV3 } from '@/lib/fork-ui'
 import { useTranslations } from 'next-intl'
 import { useRef, useState, type ReactNode } from 'react'
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core'
@@ -73,10 +75,10 @@ function ItemRow({ item, block, pending, spacious, run }: {
           <div className="flex min-w-0 items-center gap-2">
             <button type="button" disabled={pending || item.disabled || !block.openCommand} onClick={() => block.openCommand && void run(block.openCommand, argument)} title={item.label}
               className="flex h-6 min-w-0 flex-1 items-center rounded-sm text-left text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"><span className="truncate">{item.label}</span></button>
-            <Button type="button" variant={inlineAction.variant ?? 'secondary'} size="xs" disabled={pending || item.disabled || inlineAction.disabled} className={cn('shrink-0', (inlineAction.variant ?? 'secondary') === 'secondary' && 'hover:bg-secondary')} onMouseDown={event => event.preventDefault()} onClick={() => select(inlineAction)}>{inlineAction.icon ? <PluginIcon name={inlineAction.icon} data-icon="inline-start" /> : null}{inlineAction.label}</Button>
+            <Button type="button" variant={inlineAction.variant ?? 'secondary'} size="xs" disabled={pending || item.disabled || inlineAction.disabled} className={cn('shrink-0 v3:text-ui-compact', (inlineAction.variant ?? 'secondary') === 'secondary' && 'hover:bg-secondary')} onMouseDown={event => event.preventDefault()} onClick={() => select(inlineAction)}>{inlineAction.icon ? <PluginIcon name={inlineAction.icon} data-icon="inline-start" /> : null}{inlineAction.label}</Button>
           </div>
           {item.description ? <button type="button" disabled={pending || item.disabled || !block.openCommand} onClick={() => block.openCommand && void run(block.openCommand, argument)} title={item.description}
-            className="w-full rounded-sm text-left text-xs leading-5 text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"><span className={cn('block overflow-hidden whitespace-pre-wrap break-words', descriptionClamp, block.descriptionLines === 3 ? 'max-h-[3.75rem]' : block.descriptionLines === 2 ? 'max-h-[2.5rem]' : block.descriptionLines === 1 ? 'max-h-[1.25rem]' : '')}><HighlightedDescription text={item.description} highlight={item.descriptionHighlight} /></span></button> : null}
+            className="w-full rounded-sm text-left text-xs v3:text-ui-compact leading-5 text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"><span className={cn('block overflow-hidden whitespace-pre-wrap break-words', descriptionClamp, block.descriptionLines === 3 ? 'max-h-[3.75rem]' : block.descriptionLines === 2 ? 'max-h-[2.5rem]' : block.descriptionLines === 1 ? 'max-h-[1.25rem]' : '')}><HighlightedDescription text={item.description} highlight={item.descriptionHighlight} /></span></button> : null}
         </div> : <div ref={dragFileRow ? setActivatorNodeRef : undefined}
           {...(dragFileRow ? attributes : { tabIndex: 0 })} {...(dragFileRow ? listeners : {})}
           aria-label={dragFileRow ? `${block.reorderLabel}: ${item.label}` : undefined}
@@ -92,8 +94,8 @@ function ItemRow({ item, block, pending, spacious, run }: {
             {item.icon ? <PluginIcon name={item.icon} className={cn('size-4 shrink-0 text-muted-foreground', spacious && 'mt-0.5')} /> : null}
             <span className={cn('min-w-0 flex-1', (spacious || block.compact) && 'flex flex-col gap-0.5')}>
               <span className={cn('block truncate', (spacious || block.compact) && 'font-medium leading-5', spacious && block.actions?.length && 'pr-7')}>{item.label}</span>
-              {item.description ? <span className={cn('block whitespace-pre-wrap break-words text-xs leading-5 text-muted-foreground', descriptionClamp)} title={item.description}><HighlightedDescription text={item.description} highlight={item.descriptionHighlight} /></span> : null}
-              {item.metadata ? <span className="block truncate text-[11px] leading-4 text-muted-foreground" title={item.metadata}>{item.metadata}</span> : null}
+              {item.description ? <span className={cn('block whitespace-pre-wrap break-words text-xs v3:text-ui-compact leading-5 text-muted-foreground', descriptionClamp)} title={item.description}><HighlightedDescription text={item.description} highlight={item.descriptionHighlight} /></span> : null}
+              {item.metadata ? <span className="block truncate text-[11px] v3:text-ui-compact leading-4 text-muted-foreground" title={item.metadata}>{item.metadata}</span> : null}
             </span>
           </button>
           {block.actions?.length && (!dragFileRow || spacious) ? <span className={cn('shrink-0', spacious && 'absolute right-2 top-2')} onPointerDown={event => event.stopPropagation()} onKeyDown={event => event.stopPropagation()}>
@@ -114,6 +116,7 @@ function ItemRow({ item, block, pending, spacious, run }: {
 }
 
 export function PluginItemList({ block, scope }: { block: PluginItemListBlock; scope: string }) {
+  const isV3 = useUiV3()
   const settingsLayout = usePluginSettingsLayout()
   const List = settingsLayout ? ItemGroup : 'ul'
   // Sortable note lists keep consistent spacing even when a note has no preview.
@@ -148,6 +151,10 @@ export function PluginItemList({ block, scope }: { block: PluginItemListBlock; s
           {block.items.map(item => <ItemRow key={item.id} item={item} block={block} pending={pending} spacious={spacious} run={run} />)}
         </List>
       </SortableContext>
-    </DndContext> : <p className="px-3 py-8 text-center text-sm text-muted-foreground">{block.emptyText}</p>}
+    </DndContext> : isV3 ? (
+      <EmptyState className="px-3 py-4" text={block.emptyText} />
+    ) : (
+      <p className="px-3 py-8 text-center text-sm text-muted-foreground">{block.emptyText}</p>
+    )}
   </section>
 }

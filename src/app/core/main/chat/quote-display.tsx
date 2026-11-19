@@ -46,17 +46,17 @@ export function QuoteDisplay({ quoteData, onRemove }: QuoteDisplayProps) {
     <div className="flex items-start gap-2 p-2 mb-2 border rounded-lg bg-muted/50">
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-xs font-medium text-muted-foreground">
+          <span className="text-xs v3:text-ui-compact font-medium text-muted-foreground">
             {getDisplayText()}
           </span>
         </div>
-        <div className={`text-xs text-muted-foreground break-words whitespace-pre-wrap ${expanded ? '' : 'line-clamp-4'}`}>
+        <div className={`text-xs v3:text-ui-compact text-muted-foreground break-words whitespace-pre-wrap ${expanded ? '' : 'line-clamp-4'}`}>
           {previewContent}
         </div>
         {canExpand && (
           <button
             type="button"
-            className="mt-1 text-[11px] v3:text-xs text-ink"
+            className="mt-1 text-[11px] v3:text-ui-compact text-ink"
             onClick={() => setExpanded((value) => !value)}
           >
             {expanded ? tControl('showLess') : tControl('showMore')}

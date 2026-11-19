@@ -7,6 +7,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslations } from 'next-intl'
+import { EmptyState } from '@/components/v3/empty-state'
 import useThreadsStore from '@/stores/threads'
 
 export function ChatDock({ children }: { children: ReactNode }) {
@@ -25,7 +26,7 @@ export function ChatDock({ children }: { children: ReactNode }) {
     const target = host ?? home.current
     if (!dock || !target) return
     dock.classList.toggle('v3:mx-auto', Boolean(host))
-    dock.classList.toggle('v3:max-w-[720px]', Boolean(host))
+    dock.classList.toggle('v3:max-w-ui-reading', Boolean(host))
     if (dock.parentElement !== target) target.appendChild(dock)
   }, [dock, host])
 
@@ -33,7 +34,7 @@ export function ChatDock({ children }: { children: ReactNode }) {
   const t = useTranslations('threads')
   return (
     <div ref={home} className="h-full min-h-0">
-      {host && <p className="px-4 py-6 text-center text-xs text-muted-ink">{t('chatMovedHint')}</p>}
+      {host && <EmptyState className="px-4 py-4" text={t('chatMovedHint')} />}
       {dock ? createPortal(children, dock) : null}
     </div>
   )

@@ -79,7 +79,7 @@ function Section({ title, count, children, isV3 }: { title: string, count: numbe
           {title}
         </SectionLabel>
       ) : (
-        <div className="sticky top-0 z-10 flex h-9 items-center gap-2 border-b bg-card px-3 text-xs font-medium text-muted-foreground">
+        <div className="sticky top-0 z-10 flex h-9 items-center gap-2 border-b bg-card px-3 text-xs v3:text-ui-compact font-medium text-muted-foreground">
           <span>{title}</span>
           <ClassicCount value={count} />
           <div className="ml-auto flex items-center gap-1" />
@@ -278,7 +278,7 @@ export function InboxScreen() {
               aria-label={t('selectAll')}
               disabled={list.length === 0}
             />
-            <span className="ml-1 text-xs text-muted-foreground">{selected.size > 0 ? t('selected', { count: selected.size }) : t('selectAll')}</span>
+            <span className={cn('ml-1 text-xs text-muted-foreground', selected.size > 0 ? 'v3:tabular-nums' : 'v3:text-ui-compact')}>{selected.size > 0 ? t('selected', { count: selected.size }) : t('selectAll')}</span>
             <div className="ml-auto flex items-center gap-0.5">
               {trash ? (
                 <Button variant="ghost" size="sm" className="h-7 gap-1 px-2" disabled={busy || selected.size === 0} onClick={() => void run(() => restoreRecords([...selected]))}>
@@ -397,7 +397,7 @@ export function InboxScreen() {
           {focusedMarkId !== null ? (
             <div className="absolute inset-0 flex flex-col">
               {focusedProcessed && (
-                <div className="flex items-center gap-2 border-b px-4 py-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2 border-b px-4 py-2 text-xs v3:text-ui-compact text-muted-foreground">
                   <CheckCheck className="size-3.5" aria-hidden />
                   {t('processedNote')}
                   {/* 筆記之後被搬走或刪掉就不給連結 */}

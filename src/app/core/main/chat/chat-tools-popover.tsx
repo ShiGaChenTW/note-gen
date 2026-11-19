@@ -34,7 +34,7 @@ export function ChatToolsPopover({ backgroundActions }: { backgroundActions?: Re
   const model = v3 ? collectGroupedChatModels(aiModelList).find(item => item.model.id === primaryModel) : undefined
   const name = model ? noteGenModelDisplayName(model.model.model, model.configKey === 'note-gen-free') : nameT('noModel')
   const heading = cn("px-2 py-1.5 text-xs font-medium text-muted-foreground",
-    v3 && "text-xs font-semibold tracking-[.08em] text-muted-ink")
+    v3 && "text-ui-compact font-semibold tracking-[.08em] text-muted-ink")
   const t = useTranslations()
   const tTools = useTranslations('record.chat.input.toolsMenu')
   const selectedServerCount = useMcpStore((state) => state.selectedServerIds.length)
@@ -46,7 +46,7 @@ export function ChatToolsPopover({ backgroundActions }: { backgroundActions?: Re
           type="button"
           variant="ghost"
           size={v3 ? 'sm' : 'icon'}
-          className={v3 ? "h-6 min-w-0 max-w-44 gap-1 px-1.5 rounded-(--r) text-xs text-muted-ink hover:bg-hover hover:text-ink" : "size-8 text-muted-foreground"}
+          className={v3 ? "h-6 min-w-0 max-w-44 gap-1 px-1.5 rounded-(--r) text-ui-compact text-muted-ink hover:bg-hover hover:text-ink" : "size-8 text-muted-foreground"}
           aria-label={t('mobile.chat.drawer.tools.title')}
           title={v3 ? name : t('mobile.chat.drawer.tools.title')}
         >

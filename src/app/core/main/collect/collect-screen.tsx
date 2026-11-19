@@ -101,9 +101,9 @@ function ProposalCard({ item, proposal }: { item: CaptureItem, proposal: Capture
   if (proposal.status === 'ok') {
     return (
       <div className={cn(base, 'border-line-soft bg-hover')} data-status="ok">
-        <div className="flex items-center gap-1.5 text-xs text-muted-ink"><Icon className="size-3" aria-hidden />{t(`kind.${proposal.kind}`)}</div>
+        <div className="flex items-center gap-1.5 text-ui-compact text-muted-ink"><Icon className="size-3" aria-hidden />{t(`kind.${proposal.kind}`)}</div>
         <b className="text-ui-compact leading-5 font-medium">{proposal.title}</b>
-        <div className="flex items-center justify-between gap-1 text-xs text-muted-foreground">
+        <div className="flex items-center justify-between gap-1 text-ui-compact text-muted-foreground">
           <span className="flex min-w-0 items-center gap-1"><Check className="size-3 shrink-0" aria-hidden /><span className="truncate">{t('status.ok')}</span></span>
           <span className="flex shrink-0 gap-0.5">
             <button type="button" onClick={() => void openTarget()} className="cursor-pointer rounded-(--r) px-1.5 py-0.5 text-brand outline-none hover:bg-hover focus-visible:ring-1 focus-visible:ring-ring/65">{t('open')}</button>
@@ -119,9 +119,9 @@ function ProposalCard({ item, proposal }: { item: CaptureItem, proposal: Capture
   if (proposal.status === 'no') {
     return (
       <div className={cn(base, 'border-dashed border-faint opacity-40')} data-status="no">
-        <div className="flex items-center gap-1.5 text-xs text-muted-ink"><Icon className="size-3" aria-hidden />{t(`kind.${proposal.kind}`)}</div>
+        <div className="flex items-center gap-1.5 text-ui-compact text-muted-ink"><Icon className="size-3" aria-hidden />{t(`kind.${proposal.kind}`)}</div>
         <b className="text-ui-compact leading-5 font-medium line-through">{proposal.title}</b>
-        <span className="text-xs text-muted-foreground">{t('status.no')}</span>
+        <span className="text-ui-compact text-muted-foreground">{t('status.no')}</span>
       </div>
     )
   }
@@ -129,7 +129,7 @@ function ProposalCard({ item, proposal }: { item: CaptureItem, proposal: Capture
   if (editing) {
     return (
       <div className={cn(base, 'border-dashed border-faint')} data-status="editing">
-        <div className="flex items-center gap-1.5 text-xs text-muted-ink"><Icon className="size-3" aria-hidden />{t(`kind.${proposal.kind}`)}</div>
+        <div className="flex items-center gap-1.5 text-ui-compact text-muted-ink"><Icon className="size-3" aria-hidden />{t(`kind.${proposal.kind}`)}</div>
         <input
           autoFocus
           value={proposal.title}
@@ -139,9 +139,9 @@ function ProposalCard({ item, proposal }: { item: CaptureItem, proposal: Capture
         />
         {proposal.kind !== 'note' && (
           <div className="flex flex-col gap-1">
-            <input type="date" value={proposal.due} onChange={event => edit(item.id, proposal.id, { due: event.target.value })} aria-label={t('fieldDate')} className="h-7 w-full rounded border border-line bg-bg px-1 text-xs outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+            <input type="date" value={proposal.due} onChange={event => edit(item.id, proposal.id, { due: event.target.value })} aria-label={t('fieldDate')} className="h-7 w-full rounded border border-line bg-bg px-1 text-ui-compact outline-none focus-visible:ring-1 focus-visible:ring-ring" />
             {proposal.kind === 'event' && (
-              <input type="time" value={proposal.time} onChange={event => edit(item.id, proposal.id, { time: event.target.value })} aria-label={t('fieldTime')} className="h-7 w-full rounded border border-line bg-bg px-1 text-xs outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+              <input type="time" value={proposal.time} onChange={event => edit(item.id, proposal.id, { time: event.target.value })} aria-label={t('fieldTime')} className="h-7 w-full rounded border border-line bg-bg px-1 text-ui-compact outline-none focus-visible:ring-1 focus-visible:ring-ring" />
             )}
           </div>
         )}
@@ -152,12 +152,12 @@ function ProposalCard({ item, proposal }: { item: CaptureItem, proposal: Capture
 
   return (
     <div className={cn(base, 'border-dashed border-faint')} data-status="wait">
-      <div className="flex items-center justify-between text-xs text-muted-ink">
+      <div className="flex items-center justify-between text-ui-compact text-muted-ink">
         <span className="flex items-center gap-1.5"><Icon className="size-3" aria-hidden />{t(`kind.${proposal.kind}`)}</span>
         {when && <span className="tabular-nums">{when}</span>}
       </div>
       <b className="text-ui-compact leading-5 font-medium break-words">{proposal.title}</b>
-      <span className="truncate text-xs text-muted-foreground" title={destination}>{destination}</span>
+      <span className="truncate text-ui-compact text-muted-foreground" title={destination}>{destination}</span>
       <div className="mt-1 flex items-center gap-0.5">
         <Button size="sm" className="h-7 rounded-(--r) px-2.5" onClick={() => void onAccept()} disabled={busy}>{t('accept')}</Button>
         <Button size="sm" variant="ghost" className="h-7 gap-1 rounded-(--r) px-2 text-muted-foreground" onClick={() => setEditing(true)}><Pencil className="size-3" aria-hidden />{t('edit')}</Button>
@@ -192,8 +192,8 @@ function Entry({ item }: { item: CaptureItem }) {
 
   return (
     <article className="grid grid-cols-[72px_minmax(0,1fr)] gap-4 border-b border-line-soft py-4" data-testid="collect-entry">
-      <div className="flex flex-col gap-1.5 pt-0.5 text-xs text-muted-ink">
-        <span className="font-mono">{clock(item.createdAt)}</span>
+      <div className="flex flex-col gap-1.5 pt-0.5 text-ui-compact text-muted-ink">
+        <span className="font-mono text-xs tabular-nums">{clock(item.createdAt)}</span>
         <span className="flex items-center gap-1"><Icon className="size-3.5" aria-hidden />{t(`input.${item.input.kind}`)}</span>
       </div>
       <div className="min-w-0">
@@ -212,9 +212,9 @@ function Entry({ item }: { item: CaptureItem }) {
             <div className="mt-2.5 flex flex-wrap gap-2">
               {item.proposals.map(proposal => <ProposalCard key={proposal.id} item={item} proposal={proposal} />)}
             </div>
-            <div className="mt-2 flex items-center gap-3 text-xs text-muted-ink">
+            <div className="mt-2 flex items-center gap-3 text-ui-compact text-muted-ink">
               <span>{item.source === 'ai' ? t('source.ai') : t('source.rules')}</span>
-              {pending > 1 && <Button size="sm" variant="ghost" className="ml-auto h-6 rounded-(--r) px-2 text-xs" onClick={() => void acceptAll()}>{t('acceptAll')}</Button>}
+              {pending > 1 && <Button size="sm" variant="ghost" className="ml-auto h-6 rounded-(--r) px-2 text-ui-compact" onClick={() => void acceptAll()}>{t('acceptAll')}</Button>}
             </div>
           </>
         )}
@@ -319,7 +319,7 @@ export function CollectScreen() {
       <PageHeader title={t('title')} subtitle={t('subtitle')} onBack={hide} tabs={<CollectTabs active="collect" />} />
       <div className="grid min-h-0 flex-1 grid-cols-1 overflow-y-auto lg:grid-cols-[minmax(0,1fr)_300px] lg:overflow-hidden">
         <div className="min-w-0 px-6 py-5 lg:overflow-y-auto">
-          <div className="mx-auto max-w-[760px]">
+          <div className="mx-auto max-w-ui-reading">
             <div
               onDragOver={event => { event.preventDefault(); setDragging(true) }}
               onDragLeave={() => setDragging(false)}
@@ -357,9 +357,9 @@ export function CollectScreen() {
             </div>
 
             <div className="mt-2.5 flex flex-wrap items-center gap-1.5" aria-label={t('try')}>
-              <span className="text-xs text-muted-ink">{t('try')}</span>
+              <span className="text-ui-compact text-muted-ink">{t('try')}</span>
               {samples.map(sample => (
-                <button key={sample.key} type="button" onClick={() => { setText(sample.value); areaRef.current?.focus() }} className="flex h-6 cursor-pointer items-center gap-1.5 rounded-(--r) border border-line-soft px-2 text-xs text-muted-foreground outline-none transition-colors duration-100 hover:bg-hover hover:text-ink focus-visible:ring-1 focus-visible:ring-ring/65">
+                <button key={sample.key} type="button" onClick={() => { setText(sample.value); areaRef.current?.focus() }} className="flex h-6 cursor-pointer items-center gap-1.5 rounded-(--r) border border-line-soft px-2 text-ui-compact text-muted-foreground outline-none transition-colors duration-100 hover:bg-hover hover:text-ink focus-visible:ring-1 focus-visible:ring-ring/65">
                   <sample.icon className="size-3" aria-hidden />{t(`sample.${sample.key}`)}
                 </button>
               ))}
@@ -368,6 +368,7 @@ export function CollectScreen() {
             <div className="mt-6 border-b border-line pb-2">
               <Segmented
                 label={t('filter.label')}
+                className="[&>button]:text-ui-compact"
                 value={filter}
                 onChange={setFilter}
                 items={(['all', 'pending', 'done'] as const).map(value => ({
@@ -385,7 +386,7 @@ export function CollectScreen() {
 
         <aside className="min-w-0 border-t border-line-soft px-4 py-5 lg:overflow-y-auto lg:border-t-0 lg:border-l">
           <SectionLabel as="h2" underline trailing={<Count value={unprocessed.length} />}>{t('records')}</SectionLabel>
-          <p className="mt-2 text-xs leading-5 text-muted-ink">{t('recordsHint')}</p>
+          <p className="mt-2 text-ui-compact leading-5 text-muted-ink">{t('recordsHint')}</p>
           {unprocessed.length === 0 ? (
             <EmptyState className="py-3" icon={InboxIcon} text={t('recordsEmpty')} />
           ) : (
@@ -400,7 +401,7 @@ export function CollectScreen() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-6 shrink-0 px-2 text-xs"
+                      className="h-6 shrink-0 px-2 text-ui-compact"
                       disabled={inQueue}
                       onClick={() => void submit({
                         kind: record.type === 'link' ? 'link' : record.type === 'image' || record.type === 'scan' ? 'image' : record.type === 'file' || record.type === 'recording' ? 'file' : 'text',
@@ -415,7 +416,7 @@ export function CollectScreen() {
               })}
             </ul>
           )}
-          <p className="mt-4 text-xs leading-5 text-muted-ink">{t('writeHint')}</p>
+          <p className="mt-4 text-ui-compact leading-5 text-muted-ink">{t('writeHint')}</p>
         </aside>
       </div>
     </PageSurface>

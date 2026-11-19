@@ -49,7 +49,7 @@ const OPEN: Record<NavKey, () => void> = {
 }
 
 const ROW = 'flex h-7 w-full items-center gap-2 px-2 text-left text-[13px] text-muted-ink'
-const VAULT_LABEL = 'flex h-6 w-full items-center gap-1.5 px-2 text-muted-ink'
+const VAULT_LABEL = 'flex h-6 w-full items-center gap-1.5 px-2 text-ui-compact text-muted-ink'
 const LABEL = 'flex h-6 w-full items-center gap-1.5 px-2 text-[11px] font-semibold tracking-[0.08em] text-faint'
 
 function useAgentRows(): AgentRow[] {
@@ -186,7 +186,7 @@ export function SidebarV3() {
     <div className="flex h-full w-full flex-col gap-3 border-r border-line-soft bg-panel px-2 py-3" data-left-sidebar data-sidebar-v3>
       <div className="flex shrink-0 items-baseline gap-2 px-2 py-1">
         <b className="text-sm font-[620] tracking-[-0.01em]">NoteGen</b>
-        <span className="text-xs text-faint" aria-hidden>v3</span>
+        <span className="text-ui-compact text-faint" aria-hidden>v3</span>
       </div>
       <button
         type="button"

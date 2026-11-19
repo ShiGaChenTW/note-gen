@@ -128,7 +128,7 @@ export function PromptDetailPanel({ path, onOpenNote }: { path: string, onOpenNo
     <div className="absolute inset-0 flex flex-col">
       <div className="flex h-11 shrink-0 items-center gap-2 border-b px-4">
         <h2 className="min-w-0 flex-1 truncate text-sm font-semibold">{promptTitle({ path, frontmatter: parsed.frontmatter })}</h2>
-        <Button variant="ghost" size="sm" className="h-7 gap-1.5 px-2 text-xs" onClick={onOpenNote}>
+        <Button variant="ghost" size="sm" className="h-7 gap-1.5 px-2 text-xs v3:text-ui-compact" onClick={onOpenNote}>
           <FileText className="size-3.5" aria-hidden />{t('openNote')}
         </Button>
       </div>
@@ -148,14 +148,14 @@ export function PromptDetailPanel({ path, onOpenNote }: { path: string, onOpenNo
         )}
 
         <div className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium text-muted-foreground">{t('preview')}</span>
+          <span className="text-xs v3:text-ui-compact font-medium text-muted-foreground">{t('preview')}</span>
           <pre className="max-h-[50vh] overflow-auto whitespace-pre-wrap rounded-md border bg-muted/40 p-3 text-sm">{previewText}</pre>
         </div>
       </div>
 
       <div className="flex h-14 shrink-0 items-center gap-2 border-t px-4">
         {missingRequired.length > 0 && (
-          <span className="text-xs text-muted-foreground">{t('missingRequired', { count: missingRequired.length })}</span>
+          <span className="text-xs v3:text-ui-compact text-muted-foreground">{t('missingRequired', { count: missingRequired.length })}</span>
         )}
         <Button className="ml-auto gap-2" disabled={missingRequired.length > 0} onClick={() => void handleCopy()}>
           {copied ? <Check className="size-4" aria-hidden /> : <Copy className="size-4" aria-hidden />}
@@ -175,8 +175,8 @@ function VariableField({ field, value, onChange }: {
   const label = field.required ? `${field.name} *` : field.name
   return (
     <label className="flex flex-col gap-1">
-      <span className="text-xs font-medium text-muted-foreground">{label}</span>
-      {field.description && <span className="text-xs text-muted-foreground/80">{field.description}</span>}
+      <span className="text-xs v3:text-ui-compact font-medium text-muted-foreground">{label}</span>
+      {field.description && <span className="text-xs v3:text-ui-compact text-muted-foreground/80">{field.description}</span>}
       {field.options.length > 0 ? (
         <Select value={value} onValueChange={onChange}>
           <SelectTrigger className="w-full"><SelectValue placeholder={t('selectOption')} /></SelectTrigger>

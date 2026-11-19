@@ -322,8 +322,7 @@ export function buildCaptureRail(items: readonly CaptureLike[], now: Date, limit
 
 export interface TodayV3Layout {
   heading: DateHeading
-  /** 頂部摘要的三個數字（本地事實）。 */
-  summary: { events: number, openTasks: number, decisions: number }
+  summary: { due: number, overdue: number }
   timeline: TimelineView
   journal: JournalView
   todo: TodoView
@@ -349,14 +348,14 @@ export function buildTodayLayout(input: TodayV3Input): TodayV3Layout {
   const { now } = input
   const day = input.day ?? now
   const todo = buildTodo(input.tasks, now, day)
-  const decide = buildDecideRail(input.decisions)
+  const overdue = todo.items.filter(item => item.due.kind === 'overdue').length
   return {
     heading: dateHeading(day),
-    summary: { events: input.events.length, openTasks: todo.openCount, decisions: decide.count },
+    summary: { due: todo.openCount - overdue, overdue },
     timeline: buildTimeline({ now, day, dailyNote: input.dailyNote, tasks: input.tasks, events: input.events }),
     journal: buildJournalView(input.journalContent, input.dailyNote),
     todo,
-    decide,
+    decide: buildDecideRail(input.decisions),
     captures: buildCaptureRail(input.captures, now),
   }
 }

@@ -43,9 +43,9 @@ export function ReasoningSelect() {
           <Brain aria-hidden="true" className="size-4 shrink-0" />
           <div className="flex min-w-0 flex-1 flex-col gap-0.5">
             <FieldLabel id={`${id}-label`}>{t('title')}</FieldLabel>
-            <FieldDescription id={`${id}-description`} className="truncate text-xs">{tTools('reasoning.description')}</FieldDescription>
+            <FieldDescription id={`${id}-description`} className="truncate text-xs v3:text-ui-compact">{tTools('reasoning.description')}</FieldDescription>
           </div>
-          <output className="shrink-0 text-xs text-muted-foreground" aria-live="polite">
+          <output className="shrink-0 text-xs v3:text-ui-compact text-muted-foreground" aria-live="polite">
             {options[selectedIndex].label}
           </output>
         </div>

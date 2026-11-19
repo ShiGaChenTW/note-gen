@@ -115,7 +115,7 @@ export function TimelineSidebar() {
               {heading(day.day)}
             </SectionLabel>
           ) : (
-            <h3 className="sticky top-0 z-10 flex items-center gap-2 bg-sidebar px-2 pt-3 pb-1 text-xs font-medium text-muted-foreground">
+            <h3 className="sticky top-0 z-10 flex items-center gap-2 bg-sidebar px-2 pt-3 pb-1 text-xs v3:text-ui-compact font-medium text-muted-foreground">
               <span className="shrink-0">{heading(day.day)}</span>
               <ClassicCount value={day.items.length} className="bg-sidebar-accent" />
             </h3>
@@ -134,7 +134,7 @@ export function TimelineSidebar() {
         </div>
       ))}
       {hasMore && (
-        <button type="button" className={cn('mt-2 flex h-8 w-full items-center justify-center text-xs text-muted-foreground', SIDEBAR_ROW)} onClick={() => setWindows(count => count + 1)}>
+        <button type="button" className={cn('mt-2 flex h-8 w-full items-center justify-center text-xs v3:text-ui-compact text-muted-foreground', SIDEBAR_ROW)} onClick={() => setWindows(count => count + 1)}>
           {t('loadMore')}
         </button>
       )}

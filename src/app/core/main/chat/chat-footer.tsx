@@ -8,7 +8,7 @@ import { StatusBarItem } from '../status-bar-order'
 export function ChatFooter({ embedded = false }: { embedded?: boolean }) {
   return (
     <div className={cn(
-      'flex h-6 min-w-0 items-center gap-2 overflow-hidden bg-background text-xs text-muted-foreground',
+      'flex h-6 min-w-0 items-center gap-2 overflow-hidden bg-background text-xs v3:text-ui-compact text-muted-foreground',
       embedded ? 'contents' : 'w-full justify-between border-t border-border px-1',
     )}>
       {embedded ? <>

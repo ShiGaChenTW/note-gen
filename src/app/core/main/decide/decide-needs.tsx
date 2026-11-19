@@ -26,10 +26,10 @@ export function DecideNeeds() {
         const Icon = KIND_ICON[item.kind]
         return (
           <li key={item.key} className="flex items-center gap-3 py-2.5" data-testid="decide-need">
-            <span className="flex shrink-0 items-center gap-1 rounded-md bg-card px-1.5 py-0.5 text-xs text-ink"><Icon className="size-3" aria-hidden />{t('needsLabel')}</span>
+            <span className="flex shrink-0 items-center gap-1 rounded-md bg-card px-1.5 py-0.5 text-xs v3:text-ui-compact text-ink"><Icon className="size-3" aria-hidden />{t('needsLabel')}</span>
             <div className="min-w-0 flex-1">
               <div className="truncate text-sm" title={item.title}>{item.source === 'draft' ? item.summary || item.title : item.title}</div>
-              <div className="truncate text-xs text-muted-foreground">{[item.kind === 'job' ? jobT('result') : t(`kind.${item.kind}`), item.when, t('from', { origin: item.origin })].filter(Boolean).join(' · ')}</div>
+              <div className="truncate text-xs v3:text-ui-compact text-muted-foreground">{[item.kind === 'job' ? jobT('result') : t(`kind.${item.kind}`), item.when, t('from', { origin: item.origin })].filter(Boolean).join(' · ')}</div>
             </div>
             {item.source === 'job' ? (
               <Button size="sm" className="rounded-(--r)" onClick={() => {

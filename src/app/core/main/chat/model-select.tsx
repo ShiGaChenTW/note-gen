@@ -104,7 +104,7 @@ export function ModelSelect({ display = 'icon', disabled = false }: ModelSelectP
       size="xs"
       disabled={disabled}
       onClick={opensModelSettings ? () => useSettingsDialogStore.getState().openSettings('ai') : undefined}
-      className="h-5 min-w-0 max-w-80 gap-1 px-1 text-xs font-normal text-muted-foreground"
+      className="h-5 min-w-0 max-w-80 gap-1 px-1 text-xs v3:text-ui-compact font-normal text-muted-foreground"
       aria-label={opensModelSettings ? selectedModelLabel : t('tooltip')}
       title={opensModelSettings ? undefined : displayedModelLabel}
     >

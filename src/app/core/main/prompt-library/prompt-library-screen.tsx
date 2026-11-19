@@ -181,7 +181,7 @@ export function PromptLibraryScreen() {
   return (
     <div className="absolute top-0 right-0 bottom-7 left-(--home-left) z-30 flex flex-col bg-card" role="region" aria-label="Prompt Library">
       {v3Mode ? (
-        <PageHeader title={t('title')} onBack={hide} tabs={<KnowledgeTabs active="prompts" />} actions={newPromptButton} />
+        <PageHeader title={t('title')} onBack={hide} tabs={<KnowledgeTabs active="prompts" />} />
       ) : (
         <header className="flex h-14 shrink-0 items-center gap-3 border-b px-5">
           <h1 className="flex items-center gap-2 text-lg font-semibold"><ScrollText className="size-5" aria-hidden />{t('title')}</h1>
@@ -197,6 +197,7 @@ export function PromptLibraryScreen() {
       <div className="flex min-h-0 flex-1">
         <div className="flex w-[380px] min-w-[300px] shrink-0 flex-col border-r">
           <div className="flex flex-col gap-2 border-b p-3">
+            {v3Mode && <div className="flex justify-end">{newPromptButton}</div>}
             <Input
               value={search}
               placeholder={t('searchPlaceholder')}
@@ -245,7 +246,7 @@ export function PromptLibraryScreen() {
                   )}
                 >
                   <span className="truncate text-sm font-medium">{promptTitle(note)}</span>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-2 text-xs v3:text-ui-compact text-muted-foreground">
                     {note.tags.slice(0, 3).map(tag => (
                       <span key={tag} className="rounded bg-muted px-1.5 py-0.5">{tag}</span>
                     ))}
@@ -263,7 +264,7 @@ export function PromptLibraryScreen() {
           {unlistedNotes.length > 0 && (
             <Popover>
               <PopoverTrigger asChild>
-                <button type="button" className="flex h-9 shrink-0 items-center gap-2 border-t px-3 text-xs text-muted-foreground hover:bg-muted/60">
+                <button type="button" className="flex h-9 shrink-0 items-center gap-2 border-t px-3 text-xs v3:text-ui-compact text-muted-foreground hover:bg-muted/60">
                   <FolderInput className="size-3.5" aria-hidden />
                   {t('unlisted', { count: unlistedNotes.length })}
                 </button>
@@ -272,7 +273,7 @@ export function PromptLibraryScreen() {
                 {unlistedNotes.map(note => (
                   <div key={note.path} className="flex items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-muted">
                     <span className="min-w-0 flex-1 truncate">{promptTitle(note)}</span>
-                    <Button variant="ghost" size="sm" className="h-6 shrink-0 gap-1 px-1.5 text-xs" onClick={() => void moveIntoLibrary(note.path)}>
+                    <Button variant="ghost" size="sm" className="h-6 shrink-0 gap-1 px-1.5 text-xs v3:text-ui-compact" onClick={() => void moveIntoLibrary(note.path)}>
                       <FolderInput className="size-3" aria-hidden />{t('moveIn')}
                     </Button>
                   </div>
