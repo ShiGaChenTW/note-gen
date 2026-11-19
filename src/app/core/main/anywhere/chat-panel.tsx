@@ -87,8 +87,8 @@ function PanelBody() {
     >
       <div className="flex h-10 shrink-0 items-center gap-2 border-b border-line-soft px-3">
         <MessageCircleQuestion aria-hidden className="size-4 shrink-0 text-muted-ink" />
-        <span className="min-w-0 flex-1 truncate text-xs text-muted-ink" title={contextLabel}>{contextLabel}</span>
-        <Button variant="ghost" size="sm" className="h-7 text-xs text-muted-ink" onClick={moveToThreads}>
+        <span className="min-w-0 flex-1 truncate text-ui-compact text-muted-ink" title={contextLabel}>{contextLabel}</span>
+        <Button variant="ghost" size="sm" className="h-7 text-ui-compact text-muted-ink" onClick={moveToThreads}>
           <MessagesSquare aria-hidden data-icon="inline-start" />{threadsT('moveFromAnywhere')}
         </Button>
         <Button variant="ghost" size="icon-sm" aria-label={t('close')} onClick={close}><X aria-hidden /></Button>

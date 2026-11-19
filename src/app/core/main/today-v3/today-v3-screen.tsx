@@ -80,7 +80,7 @@ function TodoRow({ item, busy, onToggle }: { item: TodoItem, busy: boolean, onTo
           {item.done && <Check className="size-2.5" strokeWidth={3} aria-hidden />}
         </span>
         <span className={cn('min-w-0 flex-1 truncate text-sm', item.done && 'text-muted-ink line-through')}>{item.title}</span>
-        <span className={cn('shrink-0 text-right text-muted-ink tabular-nums', item.due.kind === 'time' ? 'font-mono text-ui-numeric' : 'text-xs', item.hot && !item.done && 'font-semibold text-ink')}>{dueText}</span>
+        <span className={cn('shrink-0 text-right text-muted-ink tabular-nums', item.due.kind === 'time' ? 'font-mono text-ui-numeric' : 'text-ui-compact', item.hot && !item.done && 'font-semibold text-ink')}>{dueText}</span>
       </button>
     </li>
   )
@@ -120,7 +120,7 @@ function DecideRail({ layout }: { layout: TodayV3Layout }) {
           className="-mx-1.5 block w-[calc(100%+12px)] cursor-pointer rounded-md px-1.5 py-2 text-left transition-colors duration-100 outline-none hover:bg-hover focus-visible:ring-1 focus-visible:ring-ring/65"
         >
           <div className="text-ui-compact leading-5 font-medium">{item.title}</div>
-          <div className="text-xs text-muted-ink">{[item.origin, item.kind === 'job' ? jobT('result') : decideT(`kind.${item.kind}`)].filter(Boolean).join(' · ')}</div>
+          <div className="text-ui-compact text-muted-ink">{[item.origin, item.kind === 'job' ? jobT('result') : decideT(`kind.${item.kind}`)].filter(Boolean).join(' · ')}</div>
         </button>
       ))}
       {count > items.length && (

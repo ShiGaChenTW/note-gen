@@ -95,7 +95,7 @@ export function AttachmentAddMenu({
         <Icon data-icon="inline-start" />
         <span className="flex min-w-0 flex-1 flex-col gap-0.5 text-left">
           <span className="truncate">{t(`${action.id}.title`)}</span>
-          <span className="truncate text-xs font-normal text-muted-foreground">{t(`${action.id}.description`)}</span>
+          <span className="truncate text-xs v3:text-ui-compact font-normal text-muted-foreground">{t(`${action.id}.description`)}</span>
         </span>
         {'shortcut' in action && <Kbd>{action.shortcut}</Kbd>}
       </>
@@ -128,7 +128,7 @@ export function AttachmentAddMenu({
             {ACTION_GROUPS.map((group, index) => (
               <div key={group.id} role="group" aria-label={t(`groups.${group.id}`)}>
                 {index > 0 && <Separator className="my-2" />}
-                <p className="px-3 py-2 text-xs font-medium text-muted-foreground">{t(`groups.${group.id}`)}</p>
+                <p className="px-3 py-2 text-xs v3:text-ui-compact font-medium text-muted-foreground">{t(`groups.${group.id}`)}</p>
                 {group.actions.map(action => (
                   <Button key={action.id} type="button" variant="ghost" className="h-auto min-h-14 w-full justify-start gap-3 px-3 py-2.5" onClick={() => selectAction(action.id)}>
                     {renderAction(action)}
@@ -149,7 +149,7 @@ export function AttachmentAddMenu({
         {ACTION_GROUPS.map((group, index) => (
           <DropdownMenuGroup key={group.id}>
             {index > 0 && <DropdownMenuSeparator className="my-1.5" />}
-            <DropdownMenuLabel className="px-2 py-1.5 text-xs text-muted-foreground">{t(`groups.${group.id}`)}</DropdownMenuLabel>
+            <DropdownMenuLabel className="px-2 py-1.5 text-xs v3:text-ui-compact text-muted-foreground">{t(`groups.${group.id}`)}</DropdownMenuLabel>
             {group.actions.map(action => (
               <DropdownMenuItem key={action.id} className="gap-3 px-2 py-2.5" onSelect={() => selectAction(action.id)}>
                 {renderAction(action)}

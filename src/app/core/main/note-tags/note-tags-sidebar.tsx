@@ -174,7 +174,7 @@ export default function NoteTagsSidebar() {
                 size="xs"
                 variant="ghost"
                 aria-pressed={sortBy === 'name'}
-                className={cn(sortBy === 'name' && 'bg-active text-ink font-medium hover:bg-active')}
+                className={cn('v3:text-ui-compact', sortBy === 'name' && 'bg-active text-ink font-medium hover:bg-active')}
                 onClick={() => setSortBy('name')}
               >
                 {t('sortByName')}
@@ -184,7 +184,7 @@ export default function NoteTagsSidebar() {
                 size="xs"
                 variant="ghost"
                 aria-pressed={sortBy === 'count'}
-                className={cn(sortBy === 'count' && 'bg-active text-ink font-medium hover:bg-active')}
+                className={cn('v3:text-ui-compact', sortBy === 'count' && 'bg-active text-ink font-medium hover:bg-active')}
                 onClick={() => setSortBy('count')}
               >
                 {t('sortByCount')}
@@ -219,7 +219,7 @@ export default function NoteTagsSidebar() {
                           className="w-full cursor-pointer rounded p-2 text-left [overflow-wrap:anywhere] hover:bg-muted focus-visible:ring-2 focus-visible:ring-ink"
                         >
                           <span className="font-medium">{noteKeyOf(path)}</span>
-                          {folder && <span className="mt-0.5 block text-xs text-muted-foreground">{folder}</span>}
+                          {folder && <span className="mt-0.5 block text-xs v3:text-ui-compact text-muted-foreground">{folder}</span>}
                         </button>
                       </li>
                     )

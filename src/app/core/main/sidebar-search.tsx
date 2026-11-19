@@ -152,16 +152,16 @@ function SearchResultItem({
           {recordType ? (
             <Badge
               variant="outline"
-              className={cn(getMarkTypeListBadgeClasses(recordType), 'h-4 px-1.5 text-[10px] v3:text-xs')}
+              className={cn(getMarkTypeListBadgeClasses(recordType), 'h-4 px-1.5 text-[10px] v3:text-ui-compact')}
             >
               {recordTypeT(recordType)}
             </Badge>
           ) : null}
-          <div className="min-w-0 truncate text-xs font-medium">
+          <div className="min-w-0 truncate text-xs v3:text-ui-compact font-medium">
             <HighlightedText text={result.title} query={query} />
           </div>
         </div>
-        <div className="mt-0.5 truncate text-[11px] v3:text-xs text-muted-foreground">
+        <div className="mt-0.5 truncate text-[11px] v3:text-ui-compact text-muted-foreground">
           <HighlightedText text={result.highlightText} query={query} />
         </div>
       </div>
@@ -184,9 +184,9 @@ function SearchResultGroup({
 
   return (
     <div className="px-1 pb-1">
-      <div className="flex items-center justify-between rounded-md bg-muted/45 px-2 py-1.5 text-xs font-medium text-muted-foreground">
+      <div className="flex items-center justify-between rounded-md bg-muted/45 px-2 py-1.5 text-xs v3:text-ui-compact font-medium text-muted-foreground">
         <span>{label}</span>
-        <span className="tabular-nums">{results.length}</span>
+        <span className="tabular-nums v3:text-ui-numeric">{results.length}</span>
       </div>
       <CommandGroup className="p-1">
         {results.map(result => (
@@ -665,7 +665,7 @@ export function SidebarSearch({ activeTab, children }: { activeTab: SidebarTab; 
             ) : null}
 
             {hasExactResults ? (
-              <div className="px-3 pb-1 pt-1 text-xs font-medium text-foreground">
+              <div className="px-3 pb-1 pt-1 text-xs v3:text-ui-compact font-medium text-foreground">
                 {t('search.exactMatches')}
               </div>
             ) : null}
@@ -681,7 +681,7 @@ export function SidebarSearch({ activeTab, children }: { activeTab: SidebarTab; 
             ))}
 
             {hasRelatedResults || relatedLoading ? (
-              <div className="px-3 pb-1 pt-3 text-xs font-medium text-foreground">
+              <div className="px-3 pb-1 pt-3 text-xs v3:text-ui-compact font-medium text-foreground">
                 {t('search.relatedContent')}
               </div>
             ) : null}
@@ -697,7 +697,7 @@ export function SidebarSearch({ activeTab, children }: { activeTab: SidebarTab; 
             ))}
 
             {relatedLoading ? (
-              <div className="flex items-center justify-center gap-2 px-3 py-4 text-xs text-muted-foreground">
+              <div className="flex items-center justify-center gap-2 px-3 py-4 text-xs v3:text-ui-compact text-muted-foreground">
                 <Spinner />
                 {t('search.searchingRelated')}
               </div>

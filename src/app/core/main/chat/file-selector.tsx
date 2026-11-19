@@ -135,7 +135,7 @@ export function FileSelector({ onFileSelect, onClose, isOpen }: FileSelectorProp
                   <FileText className="size-4 text-muted-foreground flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <div className="font-medium truncate">{file.name}</div>
-                    <div className="text-xs text-muted-foreground truncate">
+                    <div className="text-xs v3:text-ui-compact text-muted-foreground truncate">
                       {file.relativePath}
                     </div>
                   </div>

@@ -1595,7 +1595,7 @@ ${previewLines.join('\n')}
       variant={promptSuggestion.armed ? "secondary" : "ghost"}
       size="xs"
       disabled={!promptSuggestion.resolved}
-      className="h-5 min-w-0 max-w-36 gap-1 px-1 text-xs font-normal text-muted-foreground"
+      className="h-5 min-w-0 max-w-36 gap-1 px-1 text-xs v3:text-ui-compact font-normal text-muted-foreground"
       title={promptSuggestion.resolved
         ? t(promptSuggestion.armed ? 'record.chat.input.modelSuggestion.applied' : 'record.chat.input.modelSuggestion.apply')
         : t('record.chat.input.modelSuggestion.unavailable')}
@@ -1858,7 +1858,7 @@ ${previewLines.join('\n')}
       </div>
       {v3 && <div className="flex min-h-8 w-full min-w-0 flex-wrap items-center gap-0.5 pt-1 text-xs text-muted-ink">
         {readOnly
-          ? <span className="px-1.5">{t('record.chat.v3.mode.readOnlyHint')}</span>
+          ? <span className="px-1.5 text-ui-compact">{t('record.chat.v3.mode.readOnlyHint')}</span>
           : <AgentPermissionModeSelect compact />}
         <ChatToolsPopover backgroundActions={isMobile ? undefined : <BackgroundTaskControls text={text} onSent={() => setText('')} inMenu readOnly={readOnly} />} />
         {modelSuggestion}

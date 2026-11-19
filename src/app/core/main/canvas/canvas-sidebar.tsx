@@ -495,7 +495,7 @@ export function CanvasSidebar() {
             role="status"
             className="border-y border-border bg-muted/35 px-3 py-2 text-foreground"
           >
-            <div className="flex min-w-0 items-center gap-2 text-xs">
+            <div className="flex min-w-0 items-center gap-2 text-xs v3:text-ui-compact">
               <DownloadCloud className="size-4 shrink-0" />
               <span className="min-w-0 flex-1 truncate font-medium">
                 {t('manager.sync.downloadingAll')}
@@ -570,7 +570,7 @@ export function CanvasSidebar() {
           >
             {processingCanvas?.id === project.id && (
               <div className={cn(
-                'absolute z-30 flex flex-col items-center justify-center gap-1 bg-background/80 px-2 py-1 text-center text-xs font-medium leading-tight backdrop-blur-sm',
+                'absolute z-30 flex flex-col items-center justify-center gap-1 bg-background/80 px-2 py-1 text-center text-xs v3:text-ui-compact font-medium leading-tight backdrop-blur-sm',
                 viewMode === 'grid' ? 'inset-x-0 top-0 aspect-[4/3]' : 'inset-0'
               )}>
                 <Loader2 className="size-4 shrink-0 animate-spin text-ink" />
@@ -612,7 +612,7 @@ export function CanvasSidebar() {
               >
                 <CanvasThumbnail project={project} compact={viewMode === 'list'} />
                 <span className={cn(
-                  'block min-w-0 flex-1 truncate text-xs font-medium',
+                  'block min-w-0 flex-1 truncate text-xs v3:text-ui-compact font-medium',
                   viewMode === 'grid' ? 'px-2 py-2' : syncConfigured ? 'pr-7' : 'pr-2'
                 )}>{project.title}</span>
               </button>

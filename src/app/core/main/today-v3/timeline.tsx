@@ -31,7 +31,7 @@ function Entry({ entry, startHour, onOpenTask }: { entry: TimelineEntry, startHo
   const calendar = entry.kind === 'calendar'
   const clickable = entry.kind === 'task' && entry.task
   const className = cn(
-    'absolute overflow-hidden rounded-md px-2 py-[5px] text-left text-xs leading-4 transition-colors duration-100',
+    'absolute overflow-hidden rounded-md px-2 py-px text-left text-ui-compact leading-4 transition-colors duration-100',
     calendar ? 'bg-sunken' : 'border border-line bg-hover hover:bg-active',
     clickable && 'cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring',
   )
@@ -58,7 +58,7 @@ function ProposalBlock({ proposal, startHour, busy, onAccept, onReject }: {
   const height = Math.max(((proposal.endMin - proposal.startMin) / 60) * HOUR_PX - 3, 66)
   return (
     <div
-      className="absolute z-[1] flex flex-col overflow-hidden rounded-md border border-dashed border-line bg-bg px-2 py-[5px] text-xs leading-4"
+      className="absolute z-[1] flex flex-col overflow-hidden rounded-md border border-dashed border-line bg-bg px-2 py-[5px] text-ui-compact leading-4"
       style={{ top, height, left: GUTTER_PX, right: 0 }}
       data-kind="proposal"
       data-testid="today-v3-proposal"
@@ -106,7 +106,7 @@ export function Timeline({ view, dayKey, onOpenTask, noAccess, proposals = [], b
       {view.allDay.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1">
           {view.allDay.map(title => (
-            <span key={title} className="rounded-md bg-sunken px-2 py-0.5 text-xs text-muted-ink"><span className="mr-1 text-muted-ink">{t('allDay')}</span>{title}</span>
+            <span key={title} className="rounded-md bg-sunken px-2 py-0.5 text-ui-compact text-muted-ink"><span className="mr-1 text-muted-ink">{t('allDay')}</span>{title}</span>
           ))}
         </div>
       )}

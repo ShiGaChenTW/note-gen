@@ -109,7 +109,7 @@ export function DateStrip({ todayKey, selectedKey, noteKeys, onSelect, onToday }
         ))}
       </div>
       <DateNavArrow direction="next" aria-label={t('next')} onClick={() => page(1)} />
-      <span className="ml-1 w-[100px] shrink-0 text-right text-[11px] whitespace-nowrap text-muted-ink tabular-nums" aria-hidden>{range}</span>
+      <span className="ml-1 min-w-[100px] shrink-0 text-right text-ui-compact whitespace-nowrap text-muted-ink tabular-nums" aria-hidden>{range}</span>
       {/* 已經在看今天、日期列也停在今天這兩週時不需要「回到今天」；保留位置避免版面跳動 */}
       <DateNavReset
         onClick={reset}

@@ -364,7 +364,7 @@ export const ChatComposerMenu = forwardRef<
       aria-label={mode === "resource" ? t("resources.title") : mode === "skill" ? t("skills.title") : t("commands.title")}
     >
       {loading && filteredItems.length === 0 ? (
-        <div role="status" className="flex items-center justify-center gap-2 px-2 py-6 text-xs text-muted-foreground">
+        <div role="status" className="flex items-center justify-center gap-2 px-2 py-6 text-xs v3:text-ui-compact text-muted-foreground">
           <Spinner className="size-4" />
           {t("loading")}
         </div>
@@ -400,7 +400,7 @@ export const ChatComposerMenu = forwardRef<
         <div className="flex flex-col gap-0.5">
           {groups.map(group => (
             <div key={group} className="flex flex-col">
-              <div className="px-2 py-1 text-[11px] v3:text-xs font-medium text-muted-foreground">
+              <div className="px-2 py-1 text-[11px] v3:text-ui-compact font-medium text-muted-foreground">
                 {group}
               </div>
               {filteredItems.map((item, index) => {
@@ -430,17 +430,17 @@ export const ChatComposerMenu = forwardRef<
                       className={item.iconClassName}
                     />
                     <span className="flex min-w-0 flex-1 flex-col items-start gap-0.5 text-left">
-                      <span className="w-full truncate text-xs font-medium">
+                      <span className="w-full truncate text-xs v3:text-ui-compact font-medium">
                         {item.label}
                       </span>
                       {item.description ? (
-                        <span className="line-clamp-2 w-full whitespace-normal text-xs font-normal text-muted-foreground">
+                        <span className="line-clamp-2 w-full whitespace-normal text-xs v3:text-ui-compact font-normal text-muted-foreground">
                           {item.description}
                         </span>
                       ) : null}
                     </span>
                     {item.meta ? (
-                      <span className="ml-auto shrink-0 text-[11px] v3:text-xs font-normal text-muted-foreground">
+                      <span className="ml-auto shrink-0 text-[11px] v3:text-ui-compact font-normal text-muted-foreground">
                         {item.meta}
                       </span>
                     ) : null}

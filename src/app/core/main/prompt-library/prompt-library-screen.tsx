@@ -246,7 +246,7 @@ export function PromptLibraryScreen() {
                   )}
                 >
                   <span className="truncate text-sm font-medium">{promptTitle(note)}</span>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-2 text-xs v3:text-ui-compact text-muted-foreground">
                     {note.tags.slice(0, 3).map(tag => (
                       <span key={tag} className="rounded bg-muted px-1.5 py-0.5">{tag}</span>
                     ))}
@@ -264,7 +264,7 @@ export function PromptLibraryScreen() {
           {unlistedNotes.length > 0 && (
             <Popover>
               <PopoverTrigger asChild>
-                <button type="button" className="flex h-9 shrink-0 items-center gap-2 border-t px-3 text-xs text-muted-foreground hover:bg-muted/60">
+                <button type="button" className="flex h-9 shrink-0 items-center gap-2 border-t px-3 text-xs v3:text-ui-compact text-muted-foreground hover:bg-muted/60">
                   <FolderInput className="size-3.5" aria-hidden />
                   {t('unlisted', { count: unlistedNotes.length })}
                 </button>
@@ -273,7 +273,7 @@ export function PromptLibraryScreen() {
                 {unlistedNotes.map(note => (
                   <div key={note.path} className="flex items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-muted">
                     <span className="min-w-0 flex-1 truncate">{promptTitle(note)}</span>
-                    <Button variant="ghost" size="sm" className="h-6 shrink-0 gap-1 px-1.5 text-xs" onClick={() => void moveIntoLibrary(note.path)}>
+                    <Button variant="ghost" size="sm" className="h-6 shrink-0 gap-1 px-1.5 text-xs v3:text-ui-compact" onClick={() => void moveIntoLibrary(note.path)}>
                       <FolderInput className="size-3" aria-hidden />{t('moveIn')}
                     </Button>
                   </div>

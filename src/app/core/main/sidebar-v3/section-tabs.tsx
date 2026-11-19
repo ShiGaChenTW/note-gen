@@ -25,6 +25,7 @@ function Tabs<K extends string>({ label, items, active }: { label: string, items
   return (
     <Segmented
       kind="tabs"
+      className="[&>button]:text-ui-compact"
       label={label}
       value={active}
       onChange={key => items.find(item => item.key === key)?.onSelect()}

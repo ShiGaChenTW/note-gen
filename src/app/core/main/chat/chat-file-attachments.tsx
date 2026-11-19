@@ -27,7 +27,7 @@ export function PendingFileAttachments({ attachments, onRemove }: PendingAttachm
       {attachments.map((attachment) => {
         const Icon = attachment.kind === 'folder' ? FolderOpen : FileIcon
         return (
-          <div key={attachment.id} className="flex max-w-56 items-center gap-1.5 rounded-lg border bg-muted/50 py-1 pl-2 pr-1 text-xs">
+          <div key={attachment.id} className="flex max-w-56 items-center gap-1.5 rounded-lg border bg-muted/50 py-1 pl-2 pr-1 text-xs v3:text-ui-compact">
             <Icon className="size-3.5 shrink-0 text-muted-foreground" />
             <span className="truncate font-medium">{attachment.name}</span>
             <span className="shrink-0 text-muted-foreground">

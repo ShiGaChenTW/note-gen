@@ -40,7 +40,7 @@ export function PromptSelect({ display = 'icon', disabled = false }: PromptSelec
             variant="ghost"
             size="xs"
             disabled={disabled}
-            className="h-5 min-w-0 max-w-36 gap-1 px-1 text-xs font-normal text-muted-foreground"
+            className="h-5 min-w-0 max-w-36 gap-1 px-1 text-xs v3:text-ui-compact font-normal text-muted-foreground"
             aria-label={t('tooltip')}
           >
             <Drama data-icon="inline-start" />

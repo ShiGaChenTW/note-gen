@@ -202,7 +202,7 @@ const ChatContent = React.memo(function ChatContent() {
                 </MessageScrollerItem>
                 {activeCompaction?.coveredThroughChatId === chat.id && (
                   <MessageScrollerItem className="w-full">
-                    <div className="flex w-full flex-col gap-2 py-1 text-xs text-muted-foreground">
+                    <div className="flex w-full flex-col gap-2 py-1 text-xs v3:text-ui-compact text-muted-foreground">
                       <div
                         className="flex w-full items-center gap-3"
                         title={t('record.chat.condensed.tokenReduction', { before: activeCompaction.sourceTokenCount, after: activeCompaction.summaryTokenCount })}
@@ -227,7 +227,7 @@ const ChatContent = React.memo(function ChatContent() {
                         <Separator className="flex-1" />
                       </div>
                       {expandedCompactionRevision === activeCompaction.revision && (
-                        <div className="mx-auto w-full max-w-2xl rounded-lg border bg-muted/30 p-3 text-xs leading-relaxed text-foreground whitespace-pre-wrap">
+                        <div className="mx-auto w-full max-w-2xl rounded-lg border bg-muted/30 p-3 text-xs v3:text-ui-compact leading-relaxed text-foreground whitespace-pre-wrap">
                           <div className="mb-2 font-medium">{t('record.chat.condensed.summary')}</div>
                           {activeCompaction.summary}
                         </div>
@@ -246,7 +246,7 @@ const ChatContent = React.memo(function ChatContent() {
 
             {compactionRunning && (
               <MessageScrollerItem className="w-full">
-                <div className="flex w-full items-center gap-3 py-1 text-xs text-muted-foreground">
+                <div className="flex w-full items-center gap-3 py-1 text-xs v3:text-ui-compact text-muted-foreground">
                   <Separator className="flex-1" />
                   <span className="flex items-center gap-2">
                     <Loader2 className="size-3.5 animate-spin" />
@@ -678,7 +678,7 @@ const Message = React.memo(function Message({ chat }: { chat: Chat }) {
             <ChatAttachmentSummary attachments={attachments} />
             {/* 显示用户消息中的引用 */}
             {quoteData && (
-              <div className="flex flex-col gap-1 text-[11px] v3:text-xs">
+              <div className="flex flex-col gap-1 text-[11px] v3:text-ui-compact">
                 <div className="flex items-center gap-1">
                   <QuoteIcon className="size-3 opacity-75" />
                   <span className="opacity-75">

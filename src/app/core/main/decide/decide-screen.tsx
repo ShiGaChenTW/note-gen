@@ -34,10 +34,12 @@ function Detail({ item }: { item: DecideItem }) {
   const { diff } = item.preview
   return (
     <article className="max-w-ui-reading" data-testid="decide-detail">
-      <div className="flex items-center gap-2 text-xs text-muted-ink">
+      <div className="flex items-center gap-2 text-ui-compact text-muted-ink">
         <span className="flex items-center gap-1.5"><Icon className="size-3" aria-hidden />{item.kind === 'job' ? jobT('result') : t(`kind.${item.kind}`)}</span>
         <span className="rounded border border-dashed border-faint px-1.5 py-px">{t('proposalTag')}</span>
-        <span>{item.source === 'job' ? jobT('card') : t(`source.${item.source}`)}</span>
+        <span className={item.source === 'draft' ? 'text-xs' : undefined}>
+          {item.source === 'job' ? jobT('card') : t(`source.${item.source}`)}
+        </span>
       </div>
       <h2 className="mt-2 text-xl leading-7 font-semibold tracking-[-0.01em] break-words">{itemTitle(item)}</h2>
       <p className="mt-1 text-sm leading-6 text-muted-foreground">
@@ -96,7 +98,7 @@ function DecidePage() {
                     <Icon className="mt-1 size-3.5 shrink-0 text-muted-ink" aria-hidden />
                     <span className="min-w-0 flex-1">
                       <span className={cn('block truncate text-sm leading-5', active && 'font-semibold')}>{itemTitle(item)}</span>
-                      <span className="block truncate text-xs leading-5 text-muted-ink">{[item.kind === 'job' ? jobT('result') : t(`kind.${item.kind}`), item.when, t('from', { origin: item.origin })].filter(Boolean).join(' · ')}</span>
+                      <span className="block truncate text-ui-compact leading-5 text-muted-ink">{[item.kind === 'job' ? jobT('result') : t(`kind.${item.kind}`), item.when, t('from', { origin: item.origin })].filter(Boolean).join(' · ')}</span>
                     </span>
                   </button>
                 </li>
