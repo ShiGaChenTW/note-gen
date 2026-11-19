@@ -581,16 +581,16 @@ export function AgentRunTimeline({
                 {eventLabel}
               </span>
               {hasUi && <Badge variant="secondary">{t(`input.agent.ui.${eventUi[0].status === 'pending' ? waitingForUi ? 'waiting' : 'expired' : eventUi[0].status}`)}</Badge>}
-              {v3 && stepWaiting && <span className="shrink-0 font-mono text-[11px] text-faint">{tTask('waiting')}</span>}
+              {v3 && stepWaiting && <span className="shrink-0 text-xs text-faint">{tTask('waiting')}</span>}
               {isApproval && (!v3 || !stepWaiting) && <Badge variant="secondary">{event.editOutcome ? t(`input.agent.changes.${event.editOutcome}`) : t(approvalStatus)}</Badge>}
               {isQuestion && (!v3 || !stepWaiting) && <Badge variant="secondary">{t(`input.agent.ui.${activeQuestion ? 'waiting' : hasRecordedQuestionAnswers(event) ? 'submitted' : event.status === 'error' ? 'cancelled' : 'expired'}`)}</Badge>}
               {displayDuration !== undefined && (
-                <span className={cn("shrink-0 text-xs tabular-nums text-muted-foreground", v3 && "font-mono text-[11px] text-faint")}>
+                <span className={cn("shrink-0 text-xs tabular-nums text-muted-foreground", v3 && "font-mono text-ui-numeric text-faint")}>
                   {formatAgentDuration(displayDuration)}
                 </span>
               )}
               {receivedTokenCount > 0 && (
-                <span className={cn("shrink-0 text-xs tabular-nums text-muted-foreground", v3 && "font-mono text-[11px] text-faint")}>
+                <span className={cn("shrink-0 text-xs tabular-nums text-muted-foreground", v3 && "font-mono text-ui-numeric text-faint")}>
                   · {v3 ? tTask('tokens', { count: receivedTokenCount }) : `${receivedTokenCount.toLocaleString()} tokens`}
                 </span>
               )}
@@ -751,8 +751,8 @@ export function AgentRunTimeline({
         open={processOpen} onOpenChange={setProcessOpen}>
         {v3 && <>
           <div className="flex min-w-0 items-center justify-between gap-2">
-            <h3 className="truncate text-[12.5px] font-semibold text-ink" title={taskTitle}>{taskTitle || tTask('title')}</h3>
-            <span className="shrink-0 font-mono text-[11px] text-faint" role="status">{taskStatus}</span>
+            <h3 className="truncate text-ui-compact font-semibold text-ink" title={taskTitle}>{taskTitle || tTask('title')}</h3>
+            <span className="shrink-0 text-xs text-faint" role="status">{taskStatus}</span>
           </div>
           <div role="progressbar" aria-label={tTask('progress')} aria-valuenow={Math.round(progress)}
             className="h-[3px] overflow-hidden rounded-full bg-line-soft">
@@ -760,7 +760,7 @@ export function AgentRunTimeline({
           </div>
         </>}
         {v3 ? <CollapsibleTrigger asChild>
-          <button type="button" className="flex w-fit items-center gap-1 rounded text-[11px] text-muted-ink hover:text-ink">
+          <button type="button" className="flex w-fit items-center gap-1 rounded text-xs text-muted-ink hover:text-ink">
             {processOpen ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
             {tTask(processOpen ? 'hideSteps' : 'showSteps', { count: events.length })}
           </button>

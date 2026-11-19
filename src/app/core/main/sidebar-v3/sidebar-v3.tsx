@@ -5,6 +5,8 @@
 import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from 'react'
 import { CalendarCheck, CalendarDays, ChevronDown, Download, ListChecks, Library, MessagesSquare, MoreHorizontal, Plus, Search } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { Count } from '@/components/v3/count'
+import { SectionLabel } from '@/components/v3/section-label'
 import { listAgentSettings } from '@/db/agents'
 import { useAgentTaskStore } from '@/lib/agent-tasks'
 import { useAnywhereStore } from '@/lib/anywhere/store'
@@ -47,7 +49,7 @@ const OPEN: Record<NavKey, () => void> = {
 }
 
 const ROW = 'flex h-7 w-full items-center gap-2 px-2 text-left text-[13px] text-muted-ink'
-const VAULT_LABEL = 'flex h-6 w-full items-center gap-1.5 px-2 text-xs font-semibold tracking-[0.08em] text-muted-ink'
+const VAULT_LABEL = 'flex h-6 w-full items-center gap-1.5 px-2 text-muted-ink'
 const LABEL = 'flex h-6 w-full items-center gap-1.5 px-2 text-[11px] font-semibold tracking-[0.08em] text-faint'
 
 function useAgentRows(): AgentRow[] {
@@ -92,7 +94,9 @@ function SectionHeader({ section, collapsed, title, aside, actions }: {
         className={cn(section === 'vault' ? VAULT_LABEL : LABEL, 'min-w-0 flex-1 rounded-md outline-none hover:text-ink focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/60')}
       >
         <ChevronDown className={cn('size-3 shrink-0 transition-transform duration-100', collapsed && '-rotate-90')} aria-hidden />
-        <span className="truncate">{title}</span>
+        {section === 'vault'
+          ? <SectionLabel as="span" className="min-w-0 text-inherit"><span className="block truncate">{title}</span></SectionLabel>
+          : <span className="truncate">{title}</span>}
         {aside}
       </button>
       {actions && (
@@ -187,7 +191,7 @@ export function SidebarV3() {
       <button
         type="button"
         onClick={() => useAnywhereStore.getState().setPaletteOpen(true)}
-        className="mx-0.5 flex h-[30px] shrink-0 cursor-pointer items-center gap-2 rounded-md border border-line-soft bg-bg pr-1.5 pl-2 text-left text-[12.5px] text-muted-ink outline-none hover:border-line focus-visible:ring-1 focus-visible:ring-ink/60"
+        className="mx-0.5 flex h-[30px] shrink-0 cursor-pointer items-center gap-2 rounded-md border border-line-soft bg-bg pr-1.5 pl-2 text-left text-ui-compact text-muted-ink outline-none hover:border-line focus-visible:ring-1 focus-visible:ring-ink/60"
       >
         <Search className="size-4 shrink-0" aria-hidden />
         <span className="flex-1 truncate">{t('search')}</span>
@@ -202,13 +206,11 @@ export function SidebarV3() {
               type="button"
               onClick={OPEN[row.key]}
               aria-current={row.active ? 'page' : undefined}
-              className={cn(ROW, SIDEBAR_ROW, row.active && SIDEBAR_ROW_ACTIVE)}
+              className={cn(ROW, SIDEBAR_ROW, "text-ui-compact", row.active && SIDEBAR_ROW_ACTIVE)}
             >
               <Icon className="size-4 shrink-0" aria-hidden />
               <span className="min-w-0 flex-1 truncate">{t(`nav.${row.key}`)}</span>
-              {row.count > 0 && (
-                <span className="font-mono text-[11px] font-normal text-muted-ink" aria-label={t('count', { count: row.count })}>{row.count > 99 ? '99+' : row.count}</span>
-              )}
+              <Count value={row.count} max={99} emphasis={row.key === 'decide'} label={t('count', { count: row.count })} />
             </button>
           )
         })}

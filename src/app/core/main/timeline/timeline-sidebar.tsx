@@ -18,7 +18,11 @@ import useInboxStore from '@/stores/inbox'
 import useVaultIndexStore from '@/stores/vault-index'
 import { getMarkListItemContent } from '../mark/mark-list-item-content'
 import { MARK_TYPE_ICONS, getMarkTypeIconClasses } from '../mark/mark-type-meta'
-import { Count } from '../page-ui'
+import { Count } from '@/components/v3/count'
+import { EmptyState } from '@/components/v3/empty-state'
+import { SectionLabel } from '@/components/v3/section-label'
+import { useUiV3 } from '@/lib/fork-ui'
+import { Count as ClassicCount } from '../page-ui'
 import { SIDEBAR_ROW } from '../sidebar-row'
 
 const WINDOW_DAYS = 30
@@ -54,6 +58,7 @@ function Row({ item, locale, processedLabel }: { item: TimelineItem, locale: str
 
 export function TimelineSidebar() {
   const t = useTranslations('timeline')
+  const isV3 = useUiV3()
   const locale = useLocale()
   const notes = useVaultIndexStore(state => state.notes)
   const revision = useVaultIndexStore(state => state.revision)
@@ -105,21 +110,29 @@ export function TimelineSidebar() {
     <div className="h-full overflow-y-auto px-2 pb-4" onScroll={onScroll}>
       {days.map(day => (
         <section key={day.day} aria-label={heading(day.day)}>
-          <h3 className="sticky top-0 z-10 flex items-center gap-2 bg-sidebar px-2 pt-3 pb-1 text-xs font-medium text-muted-foreground">
-            <span className="shrink-0">{heading(day.day)}</span>
-            <Count value={day.items.length} className="bg-sidebar-accent" />
-          </h3>
+          {isV3 ? (
+            <SectionLabel as="h3" className="sticky top-0 z-10 bg-bg px-2 pt-3 pb-1" trailing={<Count value={day.items.length} />}>
+              {heading(day.day)}
+            </SectionLabel>
+          ) : (
+            <h3 className="sticky top-0 z-10 flex items-center gap-2 bg-sidebar px-2 pt-3 pb-1 text-xs font-medium text-muted-foreground">
+              <span className="shrink-0">{heading(day.day)}</span>
+              <ClassicCount value={day.items.length} className="bg-sidebar-accent" />
+            </h3>
+          )}
           <div className="flex flex-col gap-px">
             {day.items.map(item => <Row key={item.key} item={item} locale={locale} processedLabel={t('processed')} />)}
           </div>
         </section>
       ))}
-      {days.length === 0 && (
+      {days.length === 0 && (isV3 ? (
+        <EmptyState icon={History} className="px-2 py-4" text={t('empty', { days: WINDOW_DAYS * windows })} />
+      ) : (
         <div className="flex flex-col items-center gap-2 px-4 pt-10 pb-4 text-center text-sm text-muted-foreground">
           <History className="size-5 opacity-60" aria-hidden />
           <p>{t('empty', { days: WINDOW_DAYS * windows })}</p>
         </div>
-      )}
+      ))}
       {hasMore && (
         <button type="button" className={cn('mt-2 flex h-8 w-full items-center justify-center text-xs text-muted-foreground', SIDEBAR_ROW)} onClick={() => setWindows(count => count + 1)}>
           {t('loadMore')}

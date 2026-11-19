@@ -88,7 +88,7 @@ function ReadBody({ properties }: { properties: Property[] }) {
   const shown = properties.filter(property => !isEmptyValue(property))
   if (!shown.length) return null
   return (
-    <dl className="m-0 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-0.5 px-3 pb-2.5 pl-8 text-[13px]">
+    <dl className="m-0 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-0.5 px-3 pb-2.5 pl-8 text-[13px] v3:text-ui-compact">
       {shown.map(property => (
         <div key={property.key} className="contents">
           <dt className="text-muted-foreground">{property.key}</dt>

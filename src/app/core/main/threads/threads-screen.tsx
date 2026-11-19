@@ -22,7 +22,10 @@ import useInboxStore from '@/stores/inbox'
 import usePromptLibraryStore from '@/stores/prompt-library'
 import useThreadsStore from '@/stores/threads'
 import { CreateJobButton } from '../jobs/create-job'
-import { Count, EmptyState, PageHeader, PageSurface } from '../page-ui'
+import { Count } from '@/components/v3/count'
+import { EmptyState } from '@/components/v3/empty-state'
+import { SectionLabel } from '@/components/v3/section-label'
+import { PageHeader, PageSurface } from '../page-ui'
 
 function relativeTime(ms: number, now: number, t: (key: string, values?: Record<string, number>) => string): string {
   const minutes = Math.max(0, Math.round((now - ms) / 60000))
@@ -54,7 +57,7 @@ function ThreadRow({ thread, project, projects, current, now, onOpen, onMove }: 
         aria-current={current ? 'true' : undefined}
         className="grid min-w-0 flex-1 grid-cols-[1fr_auto] gap-x-2 rounded-md px-2.5 py-2 text-left outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring"
       >
-        <span className="flex min-w-0 items-center gap-1.5 text-[13px] font-medium text-ink">
+        <span className="flex min-w-0 items-center gap-1.5 text-ui-compact font-medium text-ink">
           {thread.isPinned && <Pin aria-label={t('pinned')} className="size-3 shrink-0 text-muted-ink" />}
           <span className="truncate">{thread.title || t('untitled')}</span>
         </span>
@@ -135,11 +138,11 @@ function ThreadList() {
       <div className="shrink-0 px-2 pb-1">
         <div className="relative">
           <Search aria-hidden className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-ink" />
-          <Input value={query} onChange={event => setQuery(event.target.value)} placeholder={t('search')} aria-label={t('search')} className="h-8 pl-8 text-[13px]" />
+          <Input value={query} onChange={event => setQuery(event.target.value)} placeholder={t('search')} aria-label={t('search')} className="h-8 pl-8 text-ui-compact" />
         </div>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-3" role="list" aria-label={t('listLabel')}>
-        {total === 0 && <EmptyState icon={MessagesSquare} text={query ? t('noMatch') : t('empty')} />}
+        {total === 0 && <EmptyState className="px-2 py-3" icon={MessagesSquare} text={query ? t('noMatch') : t('empty')} />}
         {groups.map(group => {
           const key = group.project
           const showHeader = mode === 'project'
@@ -151,12 +154,13 @@ function ThreadList() {
                   type="button"
                   onClick={() => toggle(key)}
                   aria-expanded={!closed}
-                  className="flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-left text-xs font-medium text-muted-ink outline-none hover:bg-hover focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring"
+                  className="flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-left text-muted-ink outline-none hover:bg-hover focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring"
                 >
                   <ChevronDown aria-hidden className={cn('size-3 motion-safe:transition-transform', closed && '-rotate-90')} />
                   {key ? <Hash aria-hidden className="size-3" /> : null}
-                  <span className="min-w-0 flex-1 truncate">{key || t('ungrouped')}</span>
-                  <Count value={group.threads.length} />
+                  <SectionLabel as="span" className="flex-1" trailing={<Count value={group.threads.length} />}>
+                    <span className="block truncate">{key || t('ungrouped')}</span>
+                  </SectionLabel>
                 </button>
               )}
               {!closed && group.threads.map(thread => (

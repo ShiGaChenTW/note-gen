@@ -13,10 +13,12 @@ import type { TodayV3Layout, TodoItem } from '@/lib/today-v3/layout'
 import useCollectStore from '@/stores/collect'
 import useDecideStore from '@/stores/decide'
 import useHomeStore from '@/stores/home'
+import { Count } from '@/components/v3/count'
+import { EmptyState } from '@/components/v3/empty-state'
+import { SectionLabel } from '@/components/v3/section-label'
 import { PageHeader, PageSurface } from '../page-ui'
 import { useTodayActions } from '../today/use-today-actions'
 import { TodayComposer } from './composer'
-import { LABEL, RAIL_HEAD } from './styles'
 import { Timeline } from './timeline'
 import { usePendingSlots } from '@/lib/timeslots/use-pending-slots'
 import { useDecisions } from '@/lib/decide/use-decisions'
@@ -34,23 +36,24 @@ function Journal({ layout, now, viewingToday, exists, onOpen }: { layout: TodayV
   const { heading, paragraphs } = layout.journal
   return (
     <div className="flex max-w-[600px] flex-col gap-3.5" data-testid="today-v3-journal">
-      <div className="flex items-center justify-between">
-        <span className={LABEL}>{t('label')} · <span className="font-mono">{viewingToday ? now : `${layout.heading.month}/${layout.heading.day}`}</span></span>
+      <SectionLabel trailing={
         <Button variant="ghost" size="sm" className="rounded-(--r)" aria-pressed={focus} onClick={() => setFocus(value => !value)}>{focus ? t('focusOff') : t('focus')}</Button>
-      </div>
+      }>
+        {t('label')} · <span className="font-mono">{viewingToday ? now : `${layout.heading.month}/${layout.heading.day}`}</span>
+      </SectionLabel>
       {heading && <h2 className={cn('text-2xl leading-8 font-semibold tracking-tight transition-opacity duration-150', focus && 'opacity-35')}>{heading}</h2>}
       {paragraphs.length === 0 && (
-        <p className="text-sm text-muted-ink">
-          {viewingToday ? t('empty') : t(exists ? 'emptyDay' : 'missingDay')}{' '}
-          <button type="button" onClick={onOpen} className="cursor-pointer text-brand outline-none hover:underline focus-visible:ring-1 focus-visible:ring-ring/65">{viewingToday || exists ? t('open') : t('create')}</button>
-        </p>
+        <EmptyState
+          text={viewingToday ? t('empty') : t(exists ? 'emptyDay' : 'missingDay')}
+          action={<button type="button" onClick={onOpen} className="cursor-pointer text-brand outline-none hover:underline focus-visible:ring-1 focus-visible:ring-ring/65">{viewingToday || exists ? t('open') : t('create')}</button>}
+        />
       )}
       {paragraphs.map((text, index) => {
         const active = index === paragraphs.length - 1
         return (
           <p
             key={`${index}:${text}`}
-            className={cn('text-[15px] leading-[1.8] text-note-ink transition-opacity duration-150', active && 'border-l-2 border-line pl-3.5', focus && !active && 'opacity-35')}
+            className={cn('text-ui-emphasis leading-[1.8] text-note-ink transition-opacity duration-150', active && 'border-l-2 border-line pl-3.5', focus && !active && 'opacity-35')}
           >{text}</p>
         )
       })}
@@ -75,8 +78,8 @@ function TodoRow({ item, busy, onToggle }: { item: TodoItem, busy: boolean, onTo
         <span className={cn('grid size-[15px] shrink-0 place-items-center rounded-[4px] border-[1.5px] transition-colors duration-100', item.done ? 'border-brand bg-brand text-brand-ink' : 'border-faint')}>
           {item.done && <Check className="size-2.5" strokeWidth={3} aria-hidden />}
         </span>
-        <span className={cn('min-w-0 flex-1 truncate text-[13.5px]', item.done && 'text-muted-ink line-through')}>{item.title}</span>
-        <span className={cn('shrink-0 text-right text-muted-ink tabular-nums', item.due.kind === 'time' ? 'font-mono text-[11px]' : 'text-xs', item.hot && !item.done && 'font-semibold text-ink')}>{dueText}</span>
+        <span className={cn('min-w-0 flex-1 truncate text-sm', item.done && 'text-muted-ink line-through')}>{item.title}</span>
+        <span className={cn('shrink-0 text-right text-muted-ink tabular-nums', item.due.kind === 'time' ? 'font-mono text-ui-numeric' : 'text-xs', item.hot && !item.done && 'font-semibold text-ink')}>{dueText}</span>
       </button>
     </li>
   )
@@ -87,12 +90,11 @@ function Todo({ layout, busy, viewingToday, onToggle }: { layout: TodayV3Layout,
   const { items, doneCount, total } = layout.todo
   return (
     <div className="mt-7 max-w-[600px]" data-testid="today-v3-todo">
-      <div className={cn(RAIL_HEAD, 'justify-between')}>
-        <span className={LABEL}>{viewingToday ? t('label') : t('labelDay', { month: layout.heading.month, day: layout.heading.day })}</span>
-        <span className={cn(LABEL, 'font-mono')}>{doneCount} / {total}</span>
-      </div>
+      <SectionLabel as="h2" underline trailing={<Count value={doneCount} total={total} />}>
+        {viewingToday ? t('label') : t('labelDay', { month: layout.heading.month, day: layout.heading.day })}
+      </SectionLabel>
       {items.length === 0
-        ? <p className="py-3 text-sm text-muted-ink">{t(viewingToday ? 'empty' : 'emptyDay')}</p>
+        ? <EmptyState className="py-3" text={t(viewingToday ? 'empty' : 'emptyDay')} />
         : <ul>{items.map(item => <TodoRow key={item.key} item={item} busy={busy.has(item.key)} onToggle={onToggle} />)}</ul>}
     </div>
   )
@@ -107,11 +109,8 @@ function DecideRail({ layout }: { layout: TodayV3Layout }) {
   const { count, items } = layout.decide
   return (
     <section data-testid="today-v3-decide">
-      <div className={RAIL_HEAD}>
-        <span className={LABEL}>{t('label')}</span>
-        <span className="rounded-[9px] bg-invert px-[7px] font-mono text-[11px] leading-[18px] font-medium text-invert-ink">{count}</span>
-      </div>
-      {items.length === 0 && <p className="py-3 text-xs text-muted-ink">{t('empty')}</p>}
+      <SectionLabel as="h2" underline trailing={<Count value={count} emphasis />}>{t('label')}</SectionLabel>
+      {items.length === 0 && <EmptyState className="py-3" text={t('empty')} />}
       {items.map(item => (
         <button
           key={item.key}
@@ -119,12 +118,12 @@ function DecideRail({ layout }: { layout: TodayV3Layout }) {
           onClick={() => { show(); select(item.key) }}
           className="-mx-1.5 block w-[calc(100%+12px)] cursor-pointer rounded-md px-1.5 py-2 text-left transition-colors duration-100 outline-none hover:bg-hover focus-visible:ring-1 focus-visible:ring-ring/65"
         >
-          <div className="text-[13px] leading-5 font-medium">{item.title}</div>
+          <div className="text-ui-compact leading-5 font-medium">{item.title}</div>
           <div className="text-xs text-muted-ink">{[item.origin, item.kind === 'job' ? jobT('result') : decideT(`kind.${item.kind}`)].filter(Boolean).join(' · ')}</div>
         </button>
       ))}
       {count > items.length && (
-        <button type="button" onClick={show} className="mt-1 cursor-pointer text-[13px] font-medium text-brand outline-none hover:underline focus-visible:ring-1 focus-visible:ring-ring/65">{t('all')}</button>
+        <button type="button" onClick={show} className="mt-1 cursor-pointer text-ui-compact font-medium text-brand outline-none hover:underline focus-visible:ring-1 focus-visible:ring-ring/65">{t('all')}</button>
       )}
     </section>
   )
@@ -133,20 +132,22 @@ function DecideRail({ layout }: { layout: TodayV3Layout }) {
 function CaptureRail({ layout }: { layout: TodayV3Layout }) {
   const t = useTranslations('todayV3.captures')
   const show = useCollectStore(state => state.show)
-  const { items } = layout.captures
+  const { items, total } = layout.captures
   return (
     <section data-testid="today-v3-captures">
-      <div className={RAIL_HEAD}>
-        <span className={LABEL}>{t('label')}</span>
-        <button type="button" onClick={show} className="cursor-pointer text-[13px] font-medium text-muted-ink outline-none hover:underline focus-visible:ring-1 focus-visible:ring-ring/65">{t('all')}</button>
-      </div>
-      {items.length === 0 && <p className="py-3 text-xs text-muted-ink">{t('empty')}</p>}
+      <SectionLabel underline trailing={
+        <div className="flex shrink-0 items-center gap-2">
+          <Count value={total} />
+          <button type="button" onClick={show} className="cursor-pointer text-ui-compact font-medium text-muted-ink outline-none hover:underline focus-visible:ring-1 focus-visible:ring-ring/65">{t('all')}</button>
+        </div>
+      }>{t('label')}</SectionLabel>
+      {items.length === 0 && <EmptyState className="py-3" text={t('empty')} />}
       {items.map(item => (
         <div key={item.key} className="flex items-baseline gap-2.5 py-1.5">
-          <span className={cn(LABEL, 'w-10 shrink-0')}>{t(`kind.${item.kind}`)}</span>
+          <SectionLabel as="span" className="w-10 shrink-0">{t(`kind.${item.kind}`)}</SectionLabel>
           {item.loading
             ? <span className="flex flex-1 flex-col gap-2" role="status" aria-label={t('reading')}><i className="block h-2 motion-safe:animate-pulse rounded bg-sunken" /><i className="block h-2 w-3/5 motion-safe:animate-pulse rounded bg-sunken" /></span>
-            : <span className="min-w-0 flex-1 truncate text-[13px] leading-5" title={item.title}>{item.title}</span>}
+            : <span className="min-w-0 flex-1 truncate text-ui-compact leading-5" title={item.title}>{item.title}</span>}
         </div>
       ))}
     </section>
@@ -186,7 +187,7 @@ export function TodayV3Screen() {
         subtitle={<span className="tabular-nums">{!viewingToday && `${t('viewing')} · `}{t('dateLabel', { month: heading.month, day: heading.day, weekday: t(`weekday.${heading.weekday}`), week: heading.week })}</span>}
         onBack={hide}
         actions={(
-          <p className="max-w-[520px] text-right text-[13px] leading-5 text-muted-ink" data-testid="today-v3-summary">
+          <p className="max-w-[520px] text-right text-ui-compact leading-5 text-muted-ink" data-testid="today-v3-summary">
             {viewingToday
               ? t('summary', { events: summary.events, tasks: summary.openTasks, decisions: summary.decisions })
               : t('summaryDay', { month: heading.month, day: heading.day, events: summary.events, tasks: summary.openTasks, decisions: summary.decisions })}

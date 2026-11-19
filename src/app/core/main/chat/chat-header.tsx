@@ -104,7 +104,7 @@ export function ChatHeader() {
                 className={cn("px-2 hover:bg-transparent cursor-pointer justify-start gap-1.5", v3 && "h-8 min-w-0 px-1 text-ink hover:bg-hover")}
                 title={v3 ? tEmpty('conversationHistory') : undefined}
               >
-                <span className={cn("text-sm font-medium truncate max-w-30", v3 && "min-w-0 max-w-full text-[13px]")}>
+                <span className={cn("text-sm font-medium truncate max-w-30", v3 && "min-w-0 max-w-full text-ui-compact")}>
                   {v3 && isTemporaryConversation ? tV3('temporaryChat') : dropdownTitle}
                 </span>
                 {!v3 && <span className="text-xs text-muted-foreground">

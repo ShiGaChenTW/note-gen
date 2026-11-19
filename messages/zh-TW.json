@@ -8452,6 +8452,7 @@
     },
     "calendar": "行事曆事件",
     "completed": "已完成的任務",
+    "empty": "這一週沒有行程或任務。",
     "untitledEvent": "無標題事件",
     "reviewProposal": "查看時段提案 {description}",
     "slotUnavailable": "此時段已無法使用，或原任務已變更。",

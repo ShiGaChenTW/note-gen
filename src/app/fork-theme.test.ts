@@ -33,11 +33,12 @@ function contrast(a: string, b: string): number {
   return (hi + 0.05) / (lo + 0.05)
 }
 
+// ALMNC-33：faint 更新為在 bg、panel 上至少 3.5:1。
 // 簡報 §3.1（almanac/2026-11-18_handoff_ornata-style-brief.md）；muted → muted-ink、accent → brand-accent、success → success-ink
 const BRIEF = {
   ':root': {
     bg: '#fcfcfd', panel: '#f9f9fa', sunken: '#e9e9e6', statusbar: '#f7f7f8', menu: '#f7f7f8',
-    ink: '#191919', 'note-ink': '#191919', 'muted-ink': '#6e6e6a', faint: '#a3a39e',
+    ink: '#191919', 'note-ink': '#191919', 'muted-ink': '#6e6e6a', faint: '#85857f',
     line: '#e3e3e0', 'line-soft': '#ececea',
     hover: 'rgba(25, 25, 25, 0.05)', active: 'rgba(25, 25, 25, 0.09)',
     invert: '#1c1c1c', 'invert-ink': '#fbfbfa',
@@ -46,7 +47,7 @@ const BRIEF = {
   },
   '.dark': {
     bg: '#121417', panel: '#17191d', sunken: '#0d0f11', statusbar: '#1a1c20', menu: '#121417',
-    ink: '#ebebe8', 'note-ink': '#cbd0d2', 'muted-ink': '#8f8f8a', faint: '#64645f',
+    ink: '#ebebe8', 'note-ink': '#cbd0d2', 'muted-ink': '#8f8f8a', faint: '#7a7a74',
     line: '#292927', 'line-soft': '#202020',
     hover: 'rgba(235, 235, 232, 0.06)', active: 'rgba(235, 235, 232, 0.1)',
     invert: '#ebebe8', 'invert-ink': '#131313',
@@ -69,6 +70,15 @@ describe('fork-theme v5 tokens', () => {
       expect(contrast(token(selector, 'ink'), bg)).toBeGreaterThanOrEqual(4.5)
       expect(contrast(token(selector, 'muted-ink'), bg)).toBeGreaterThanOrEqual(4.5)
       expect(contrast(token(selector, 'invert-ink'), token(selector, 'invert'))).toBeGreaterThanOrEqual(4.5)
+    })
+
+    it(`${selector} faint keeps >= 3.5:1 on both surfaces and stays softer than muted ink`, () => {
+      for (const surface of ['bg', 'panel']) {
+        const background = token(selector, surface)
+        const faint = contrast(token(selector, 'faint'), background)
+        expect(faint, surface).toBeGreaterThanOrEqual(3.5)
+        expect(faint, surface).toBeLessThan(contrast(token(selector, 'muted-ink'), background))
+      }
     })
 
     it(`${selector} shadcn primary is the monochrome invert, not a hue`, () => {

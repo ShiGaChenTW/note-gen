@@ -17,6 +17,7 @@ import useDecideStore from '@/stores/decide'
 import useVaultIndexStore, { selectAllTasks } from '@/stores/vault-index'
 import { SidebarCalendar } from '../daily/sidebar-calendar'
 import { PageHeader, PageSurface } from '../page-ui'
+import { EmptyState } from '@/components/v3/empty-state'
 import { WeekGrid } from './week-grid'
 
 const NO_EVENTS = [] as const
@@ -83,6 +84,9 @@ function WeekPage() {
           <SidebarCalendar />
         </aside>
         <div className="min-h-0 min-w-0 flex-1 overflow-auto" tabIndex={0} role="region" aria-label={t('gridLabel')}>
+          {indexStatus === 'ready' && access === 'granted' && days.every(day => day.timed.length === 0 && day.untimed.length === 0) && (
+            <EmptyState className="border-b border-line px-4 py-3" text={t('empty')} />
+          )}
           <WeekGrid days={days} today={today} openDecision={openDecision} />
         </div>
       </div>

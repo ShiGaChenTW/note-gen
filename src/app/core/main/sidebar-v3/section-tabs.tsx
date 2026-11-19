@@ -2,6 +2,7 @@
 
 // Fork（almanac ALMNC-20）：整合進同一個導覽項的頁面之間的分頁切換（收集｜Inbox、知識底下的各頁）。
 // 各頁仍是原本的全頁覆蓋層；切換只是開另一頁（互斥由 linkExclusiveOverlays 處理）。只在 v3 顯示。
+import { Count } from '@/components/v3/count'
 import { Segmented } from '@/components/v3/segmented'
 import { useTranslations } from 'next-intl'
 import { useUiV3 } from '@/lib/fork-ui'
@@ -29,7 +30,7 @@ function Tabs<K extends string>({ label, items, active }: { label: string, items
       onChange={key => items.find(item => item.key === key)?.onSelect()}
       items={items.map(({ key, label, badge }) => ({
         value: key,
-        label: <>{label}{badge ? <span className="font-mono text-[11px] font-normal">{badge}</span> : null}</>,
+        label: <>{label}{badge !== undefined && <Count value={badge} />}</>,
       }))}
     />
   )

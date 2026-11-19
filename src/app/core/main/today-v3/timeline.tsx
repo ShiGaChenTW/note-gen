@@ -6,7 +6,8 @@ import { useTranslations } from 'next-intl'
 import { Lock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { TimelineEntry, TimelineProposal, TimelineView } from '@/lib/today-v3/layout'
-import { LABEL } from './styles'
+import { EmptyState } from '@/components/v3/empty-state'
+import { SectionLabel } from '@/components/v3/section-label'
 
 /** 一小時的高度（px）。 */
 export const HOUR_PX = 44
@@ -37,7 +38,7 @@ function Entry({ entry, startHour, onOpenTask }: { entry: TimelineEntry, startHo
   const body = (
     <>
       <span className={cn(calendar ? 'font-normal text-muted-ink' : 'font-medium text-ink')}>{entry.title}</span>{' '}
-      <span className="font-mono text-[11px] text-muted-ink">{entry.time}</span>
+      <span className="font-mono text-ui-numeric text-muted-ink">{entry.time}</span>
       {calendar && <Lock aria-label={t('readOnly')} className="absolute top-1.5 right-1.5 size-3 text-muted-ink" />}
     </>
   )
@@ -63,7 +64,7 @@ function ProposalBlock({ proposal, startHour, busy, onAccept, onReject }: {
       data-testid="today-v3-proposal"
     >
       <span className="text-xs text-muted-ink">{t('proposal')}</span>
-      <span className="font-medium text-ink">{proposal.title} <span className="font-mono text-[11px] text-muted-ink">{proposal.time}–{proposal.end}</span></span>
+      <span className="font-medium text-ink">{proposal.title} <span className="font-mono text-ui-numeric text-muted-ink">{proposal.time}–{proposal.end}</span></span>
       <span className="mt-auto flex gap-1 pt-1">
         <button type="button" disabled={busy} onClick={onAccept} className="cursor-pointer rounded-(--r) bg-invert px-1.5 font-medium text-invert-ink outline-none hover:bg-invert/85 focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50">{t('accept')}</button>
         <button type="button" disabled={busy} onClick={onReject} className="cursor-pointer rounded-(--r) px-1.5 text-muted-ink outline-none hover:bg-hover hover:text-ink focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50">{t('reject')}</button>
@@ -100,7 +101,7 @@ export function Timeline({ view, dayKey, onOpenTask, noAccess, proposals = [], b
 
   return (
     <div ref={rootRef}>
-      <div className={LABEL}>{t('label')}</div>
+      <SectionLabel as="h2">{t('label')}</SectionLabel>
       {view.allDay.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1">
           {view.allDay.map(title => (
@@ -108,12 +109,12 @@ export function Timeline({ view, dayKey, onOpenTask, noAccess, proposals = [], b
           ))}
         </div>
       )}
-      {noAccess && <p className="mt-2 text-xs text-muted-ink">{t('noAccess')}</p>}
+      {noAccess && <EmptyState className="mt-2" text={t('noAccess')} />}
       <div className="relative mt-3" style={{ height }} data-testid="today-v3-timeline">
         {hours.map(hour => (
           <div key={hour} className="absolute right-0 left-0 h-0 border-t border-line-soft" style={{ top: (hour - view.startHour) * HOUR_PX }}>
             {(view.nowMin === null || Math.abs(view.nowMin - hour * 60) >= 22) && (
-              <span className="absolute top-[-8px] left-0 bg-bg pr-1.5 font-mono text-[11px] leading-4 text-muted-ink">{pad(hour)}</span>
+              <span className="absolute top-[-8px] left-0 bg-bg pr-1.5 font-mono text-ui-numeric leading-4 text-muted-ink">{pad(hour)}</span>
             )}
           </div>
         ))}
@@ -136,7 +137,7 @@ export function Timeline({ view, dayKey, onOpenTask, noAccess, proposals = [], b
             data-testid="today-v3-now"
             aria-label={`${t('now')} ${minutesToClock(view.nowMin)}`}
           >
-            <span className="absolute top-[-8px] right-full mr-1 bg-bg font-mono text-[11px] leading-4 font-semibold text-ink">{view.nowTime}</span>
+            <span className="absolute top-[-8px] right-full mr-1 bg-bg font-mono text-ui-numeric leading-4 font-semibold text-ink">{view.nowTime}</span>
           </div>
         )}
       </div>

@@ -45,6 +45,7 @@ npx pnpm@9 install --frozen-lockfile
 
 | 日期 | 檔案 | 修改 | 原因 |
 |---|---|---|---|
+| 2026-11-19 | `src/components/v3/`、`fork-{theme,tokens}.css`、`src/lib/utils.ts`、`src/app/core/main/` | ALMNC-32/33 共用小標、計數、空狀態及字級。淡字亮色 `#85857f`、暗色 `#7a7a74`，placeholder 跟隨 `--faint` | v3 的 `--bg`／`--panel` 對比至少 3.5:1，共用頁面保留 classic 分支 |
 | 2026-10-15 | `src-tauri/tauri.conf.json` | `identifier` → `tw.scottchen.NoteGen`、`productName` → `NoteGen (Scott)` | 資料目錄與官方版分開，可並存（D1） |
 | 2026-10-15 | `src-tauri/tauri.conf.json` | `plugins.updater.endpoints` → `[]` | 防止自動更新把 fork 換回官方版（D4）。「關於」頁按檢查更新會顯示錯誤，屬預期 |
 | 2026-10-15 | `personal/` | 新增：個人文件、custom CSS、NoteGen Today 插件 | D6 |

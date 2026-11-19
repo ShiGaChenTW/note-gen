@@ -27,7 +27,7 @@ function ProposalCard({ view, onAction }: { view: ProposalCardView, onAction: (a
         <span className={cn('min-w-0 flex-1 truncate font-medium text-ink', view.tone === 'muted' && 'text-muted-ink line-through')}>{view.title}</span>
         {view.when && <span className="shrink-0 text-xs text-muted-ink tabular-nums">{view.when}</span>}
       </div>
-      {view.detail && <p className="mt-1.5 text-[12.5px] text-muted-ink">{view.detail}</p>}
+      {view.detail && <p className="mt-1.5 text-ui-compact text-muted-ink">{view.detail}</p>}
       <div className="mt-2 flex items-center gap-1.5">
         {view.actions.includes('accept') && <Button size="sm" onClick={() => onAction('accept')}>{t('accept')}</Button>}
         {view.actions.includes('reject') && <Button size="sm" variant="outline" onClick={() => onAction('reject')}>{t('reject')}</Button>}
@@ -59,8 +59,8 @@ function KickoffCard({ view, onAction }: { view: KickoffCardView, onAction: (act
       </div>
       <ol className="mt-2 flex flex-col gap-1">
         {view.tasks.map(task => (
-          <li key={task.n} className="flex items-center gap-2 text-[13px]">
-            <span className="w-4 shrink-0 font-mono text-[11.5px] text-muted-ink">{task.n}</span>
+          <li key={task.n} className="flex items-center gap-2 text-ui-compact">
+            <span className="w-4 shrink-0 font-mono text-ui-numeric text-muted-ink">{task.n}</span>
             <span className="min-w-0 flex-1 truncate text-ink">
               {task.text}
               {task.dependsOn && task.dependsOn.length > 0 && <span className="text-muted-ink"> · {t('dependsOn', { list: task.dependsOn.join('、') })}</span>}
@@ -78,7 +78,7 @@ function KickoffCard({ view, onAction }: { view: KickoffCardView, onAction: (act
       {view.acceptance.length > 0 && (
         <ul className="mt-2 flex flex-col gap-1 border-t border-line-soft pt-2">
           {view.acceptance.map((item, index) => (
-            <li key={index} className="flex items-center gap-2 text-[12.5px] text-muted-ink">
+            <li key={index} className="flex items-center gap-2 text-ui-compact text-muted-ink">
               <span className={cn('grid size-3.5 shrink-0 place-items-center rounded-[3px] border border-line', item.status === 'ok' && 'border-invert bg-invert text-invert-ink')}>
                 {item.status === 'ok' && <Check aria-hidden className="size-2.5" />}
               </span>

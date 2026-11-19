@@ -1383,6 +1383,18 @@
   color: hsl(var(--muted-foreground) / 0.5);
 }
 
+/* Fork（ALMNC-33）：新介面沿用同一個 placeholder 色。 */
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror p.is-empty::before,
+:where([data-ui="v3"]) .tiptap-placeholder {
+  color: var(--faint);
+}
+
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror .code-block-language-trigger,
+:where([data-ui="v3"]) .code-block-language-option-code,
+:where([data-ui="v3"]) .self-hosted-remote-cursor-label {
+  font-size: var(--text-xs);
+}
+
 /* Bubble Menu 容器 */
 .bubble-menu-container {
   /* Tiptap BubbleMenu 会在运行时自动定位 */

@@ -204,7 +204,7 @@ export function AgentContextTray({
                       {detail.wikiPageId ? <button type="button" className="text-brand hover:underline" onClick={() => void openWikiPage(detail.wikiPageId)}>{wiki('viewPage')}</button> : null}
                     </div> : null}
                     {detail && (
-                      <div className="truncate pl-6 text-[11px] text-muted-foreground">
+                      <div className="truncate pl-6 text-[11px] v3:text-xs text-muted-foreground">
                         {[
                           sourceTypeLabel(detail.sourceType),
                           detail.sourceType === 'article' ? (detail.locator?.filePath || detail.filepath) : undefined,

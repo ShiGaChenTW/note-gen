@@ -303,7 +303,7 @@ const MessageWrapper = React.memo(function MessageWrapper({ chat, children }: { 
           }}
         >
           <div className={cn("min-w-0 max-w-full rounded-2xl bg-foreground px-4 py-3 text-sm leading-6 wrap-break-word text-background",
-            v3 && "rounded-[12px_12px_4px_12px] bg-sunken px-3 py-2 text-[13.5px] leading-relaxed text-ink")}
+            v3 && "rounded-[12px_12px_4px_12px] bg-sunken px-3 py-2 text-sm leading-relaxed text-ink")}
             tabIndex={0}
             onClick={() => {
               if (isMobile) setShowActions(previous => !previous)
@@ -338,7 +338,7 @@ const MessageWrapper = React.memo(function MessageWrapper({ chat, children }: { 
         <MessageCircle className="size-3" />
       </span>}
       <div className={cn('text-sm leading-6 flex-1 word-break min-w-0 overflow-hidden [&_[data-slot=card]]:ring-inset',
-        v3 && "text-[13.5px] text-note-ink")}>
+        v3 && "text-sm text-note-ink")}>
         {children}
         <PluginChatMessageActions conversationId={chat.conversationId} messageId={chat.id} role={chat.role} messageType={chat.type} />
       </div>

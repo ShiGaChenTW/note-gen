@@ -3,6 +3,8 @@
 import { useMemo, useState } from 'react'
 import { ChevronRight } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { EmptyState } from '@/components/v3/empty-state'
+import { useUiV3 } from '@/lib/fork-ui'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { revealInFileTree } from '@/lib/daily/note-io'
@@ -128,6 +130,7 @@ function TagTree({
 
 export default function NoteTagsSidebar() {
   const t = useTranslations('noteTags')
+  const isV3 = useUiV3()
   const status = useVaultIndexStore(state => state.status)
   const notes = useVaultIndexStore(state => state.notes)
   const tree = useVaultIndexStore(selectTagTree)
@@ -156,7 +159,7 @@ export default function NoteTagsSidebar() {
   return (
     <aside aria-label={t('title')} className="h-full overflow-y-auto p-3 text-sm">
       {status !== 'ready' ? <p role="status" className="py-4 text-muted-foreground">{t('indexing')}</p>
-        : tree.length === 0 ? <p className="py-4 text-muted-foreground">{t('empty')}</p>
+        : tree.length === 0 ? (isV3 ? <EmptyState className="py-4" text={t('empty')} /> : <p className="py-4 text-muted-foreground">{t('empty')}</p>)
           : <>
             <Input
               value={query}

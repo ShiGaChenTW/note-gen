@@ -7,6 +7,8 @@ import { Store } from '@tauri-apps/plugin-store'
 import { ArrowDownAZ, ArrowLeft, BrainCircuit, CalendarDays, CloudAlert, CloudCheck, CloudUpload, Columns3, CopyPlus, DownloadCloud, EllipsisVertical, FileInput, FilePlus2, Grid2X2, LayoutGrid, List, Loader2, Palette, Pencil, Pin, PinOff, RefreshCw, RotateCcw, ShieldQuestion, Timer, Trash2, Workflow } from 'lucide-react'
 import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
+import { EmptyState } from '@/components/v3/empty-state'
+import { useUiV3 } from '@/lib/fork-ui'
 import { Button } from '@/components/ui/button'
 import {
   AlertDialog,
@@ -277,6 +279,7 @@ export function CanvasActions() {
 
 export function CanvasSidebar() {
   const t = useTranslations('canvas')
+  const isV3 = useUiV3()
   const projects = useCanvasStore(state => state.projects)
   const deletedProjects = useCanvasStore(state => state.deletedProjects)
   const loadProjects = useCanvasStore(state => state.loadProjects)
@@ -514,7 +517,20 @@ export function CanvasSidebar() {
             </Button>
           </div>
         )}
-        {visibleProjects.length === 0 ? (
+        {visibleProjects.length === 0 ? (isV3 ? (
+          <EmptyState
+            className="px-4 py-4"
+            icon={trashMode ? Trash2 : Palette}
+            text={trashMode ? t('manager.trashEmpty') : t('empty.title')}
+            description={trashMode ? t('manager.trashEmptyDescription') : t('empty.description')}
+            action={trashMode ? undefined : (
+              <Button variant="ghost" size="sm" className="-ml-2" onClick={() => void handleCreate('blank')}>
+                <Palette data-icon="inline-start" />
+                {t('new')}
+              </Button>
+            )}
+          />
+        ) : (
           <Empty className="min-h-72 border-0">
             <EmptyHeader>
               <EmptyMedia variant="icon">{trashMode ? <Trash2 /> : <Palette />}</EmptyMedia>
@@ -534,7 +550,7 @@ export function CanvasSidebar() {
               </EmptyContent>
             )}
           </Empty>
-        ) : (
+        )) : (
           <div className={cn(
             'p-2',
             viewMode === 'grid'

@@ -294,12 +294,12 @@ export function AgentApprovalPanel({
         <div className="flex min-w-0 items-start gap-2 px-3 py-2">
           <ShieldAlert className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
           <div className="min-w-0 flex-1">
-            <h3 className="break-words text-[12.5px] font-semibold" title={fileCount === 1 ? paths[0] : undefined}>{heading}</h3>
+            <h3 className="break-words text-ui-compact font-semibold" title={fileCount === 1 ? paths[0] : undefined}>{heading}</h3>
             {!hasFileTargets && <p className="break-words text-xs text-muted-ink">{summary}</p>}
             {hasFileTargets && originalContent === undefined && <p className="break-words text-xs text-muted-ink">{title}</p>}
             {pendingConfirmation.operation === 'delete' && <p className="break-words text-xs text-muted-ink">{title}</p>}
           </div>
-          {counts && <div className="flex shrink-0 gap-1 font-mono text-[11px]">
+          {counts && <div className="flex shrink-0 gap-1 font-mono text-ui-numeric tabular-nums">
             <span className="text-[var(--success-ink)]" aria-label={t("record.chat.input.agent.changes.addedCount", { count: counts.add })}>+{counts.add}</span>
             <span className="text-danger" aria-label={t("record.chat.input.agent.changes.removedCount", { count: counts.remove })}>−{counts.remove}</span>
           </div>}

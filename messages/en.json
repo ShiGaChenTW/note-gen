@@ -8387,6 +8387,7 @@
     },
     "calendar": "Calendar event",
     "completed": "Completed task",
+    "empty": "This week has no events or tasks.",
     "untitledEvent": "Untitled event",
     "reviewProposal": "Review proposed time slot {description}",
     "slotUnavailable": "This slot is no longer available or the task has changed.",

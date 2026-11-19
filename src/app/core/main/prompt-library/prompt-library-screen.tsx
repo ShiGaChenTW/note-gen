@@ -37,6 +37,8 @@ import { moveFileManagerEntries } from '../file/file-dnd'
 import { PromptDetailPanel } from './prompt-detail-panel'
 import { PageHeader } from '../page-ui'
 import { KnowledgeTabs } from '../sidebar-v3/section-tabs'
+import { Count } from '@/components/v3/count'
+import { EmptyState } from '@/components/v3/empty-state'
 import { useUiV3 } from '@/lib/fork-ui'
 
 const ILLEGAL_NAME_RE = /[\\/:*?"<>|#^[\]\n\r\t]+/g
@@ -226,7 +228,9 @@ export function PromptLibraryScreen() {
 
           <div className="min-h-0 flex-1 overflow-y-auto">
             {sorted.length === 0 ? (
-              <p className="px-3 py-6 text-center text-sm text-muted-foreground">{t('empty')}</p>
+              v3Mode ? <EmptyState className="px-3 py-4" text={t('empty')} /> : (
+                <p className="px-3 py-6 text-center text-sm text-muted-foreground">{t('empty')}</p>
+              )
             ) : sorted.map(note => {
               const path = note.path
               const stats = usage.get(path)
@@ -245,7 +249,11 @@ export function PromptLibraryScreen() {
                     {note.tags.slice(0, 3).map(tag => (
                       <span key={tag} className="rounded bg-muted px-1.5 py-0.5">{tag}</span>
                     ))}
-                    {stats?.useCount ? <span className="ml-auto shrink-0 tabular-nums">{t('useCount', { count: stats.useCount })}</span> : null}
+                    {stats?.useCount ? (
+                      v3Mode ? <span className="ml-auto"><Count value={stats.useCount} label={t('useCount', { count: stats.useCount })} /></span> : (
+                        <span className="ml-auto shrink-0 tabular-nums">{t('useCount', { count: stats.useCount })}</span>
+                      )
+                    ) : null}
                   </div>
                 </button>
               )
@@ -278,7 +286,9 @@ export function PromptLibraryScreen() {
           {selectedPath && promptNotes.some(note => note.path === selectedPath) ? (
             <PromptDetailPanel key={selectedPath} path={selectedPath} onOpenNote={() => void openNote(selectedPath)} />
           ) : (
-            <div className="grid h-full place-items-center text-sm text-muted-foreground">{t('noSelection')}</div>
+            v3Mode ? <EmptyState className="px-4 py-4" text={t('noSelection')} /> : (
+              <div className="grid h-full place-items-center text-sm text-muted-foreground">{t('noSelection')}</div>
+            )
           )}
         </div>
       </div>

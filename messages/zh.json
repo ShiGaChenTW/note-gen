@@ -8387,6 +8387,7 @@
     },
     "calendar": "日历事件",
     "completed": "已完成的任务",
+    "empty": "本周没有日程或任务。",
     "untitledEvent": "无标题事件",
     "reviewProposal": "查看时段提案 {description}",
     "slotUnavailable": "此时段已无法使用，或原任务已变更。",
