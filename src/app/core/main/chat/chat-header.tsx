@@ -5,6 +5,7 @@ import { MessageSquareDashed, MessageSquarePlus, ChevronDown, Search, Trash2, El
 import { TooltipButton } from "@/components/tooltip-button"
 import { ConversationSummaryButton } from "../conversation-summary/summary-dialog" // Fork #33
 import useChatStore from "@/stores/chat"
+import useThreadsStore from '@/stores/threads'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -42,6 +43,7 @@ function formatRelativeTime(timestamp: number, locale: string): string {
 
 export function ChatHeader() {
   const v3 = useChatV3()
+  const inThreads = useThreadsStore(state => v3 && state.chatHost !== null)
   const locale = useLocale()
   const tV3 = useTranslations('record.chat.v3')
   const openSummary = useConversationSummaryStore(state => state.open)
@@ -85,7 +87,7 @@ export function ChatHeader() {
   const currentConversation = conversations.find(c => c.id === currentConversationId)
   const dropdownTitle = currentConversation && currentConversation.messageCount > 0
     ? currentConversation.title
-    : v3 ? tV3('newChat') : tEmpty('conversationHistory')
+    : v3 && !inThreads ? tV3('newChat') : tEmpty('conversationHistory')
 
   return (
     <header className={cn("h-12 w-full flex items-center justify-between border-b px-4 gap-2", v3 && "h-11 shrink-0 border-line-soft px-2 pl-3")}>
@@ -197,14 +199,14 @@ export function ChatHeader() {
             variant={isTemporaryConversation ? 'secondary' : 'ghost'}
           />
         </>}
-        <TooltipButton
+        {!inThreads && <TooltipButton
           icon={<MessageSquarePlus />}
           tooltipText={v3 ? tV3('newChat') : t('record.chat.input.newChat')}
           buttonClassName={v3 ? 'size-8 text-muted-ink hover:bg-hover hover:text-ink' : undefined}
           side="bottom"
           onClick={() => startNewConversation()}
           disabled={isDisabled}
-        />
+        />}
         {v3 && <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button type="button" variant="ghost" size="icon" className="size-8 text-muted-ink hover:bg-hover hover:text-ink"

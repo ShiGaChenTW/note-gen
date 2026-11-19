@@ -4682,7 +4682,7 @@
         "usagePercent": "{percent}%",
         "mode": {
           "label": "对话模式",
-          "shortcut": "按 Tab 切换模式",
+          "shortcut": "按 Tab 在「问」与「交办」之间切换",
           "ask": "问",
           "delegate": "交办",
           "readOnlyHint": "只回答，不修改文件",
@@ -8345,6 +8345,7 @@
     },
     "composer": {
       "modeLabel": "输入模式",
+      "tabHint": "按 Tab 切换到「问」",
       "note": "记",
       "ask": "问",
       "notePlaceholder": "记一笔，或按 Tab 切到“问”",

@@ -21,6 +21,7 @@ import useHomeStore from '@/stores/home'
 import useInboxStore from '@/stores/inbox'
 import usePromptLibraryStore from '@/stores/prompt-library'
 import useThreadsStore from '@/stores/threads'
+import { useSidebarStore } from '@/stores/sidebar'
 import { CreateJobButton } from '../jobs/create-job'
 import { Count } from '@/components/v3/count'
 import { EmptyState } from '@/components/v3/empty-state'
@@ -229,9 +230,16 @@ export function ThreadsScreen() {
   const setChatHost = useThreadsStore(state => state.setChatHost)
   const initConversations = useChatStore(state => state.initConversations)
   const startNewConversation = useChatStore(state => state.startNewConversation)
-  const chatCount = useChatStore(state => state.chats.length)
+  const loading = useChatStore(state => state.loading)
+  const autoCollapseRightSidebar = useSidebarStore(state => state.setThreadsRightSidebarAutoCollapse)
   const hostRef = useCallback((node: HTMLDivElement | null) => setChatHost(node), [setChatHost])
   const active = visible && isV3
+
+  useEffect(() => {
+    if (!active) return
+    autoCollapseRightSidebar(true)
+    return () => autoCollapseRightSidebar(false)
+  }, [active, autoCollapseRightSidebar])
 
   useEffect(() => {
     if (!active) return
@@ -263,7 +271,7 @@ export function ThreadsScreen() {
         actions={(
           <>
             <CreateJobButton />
-            <Button size="sm" className="gap-2 rounded-(--r)" disabled={chatCount === 0} onClick={() => void startNewConversation()}>
+            <Button size="sm" className="gap-2 rounded-(--r) bg-invert text-invert-ink hover:bg-invert/85" disabled={loading} onClick={() => void startNewConversation()}>
               <MessageSquarePlus aria-hidden className="size-4" />{t('newThread')}
             </Button>
           </>
