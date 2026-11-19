@@ -363,6 +363,10 @@ code, kbd, pre, samp {
     outline: 2px solid var(--ink);
     outline-offset: 2px;
   }
+  /* 程式聚焦的容器（全頁畫面、對話框外框，tabindex=-1）不是鍵盤停靠點，不畫焦點框 */
+  :where([data-ui="v3"]) [tabindex="-1"]:focus-visible {
+    outline: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
