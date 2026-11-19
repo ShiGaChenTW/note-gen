@@ -35,6 +35,7 @@ import usePromptLibraryStore from '@/stores/prompt-library'
 import useVaultIndexStore from '@/stores/vault-index'
 import { moveFileManagerEntries } from '../file/file-dnd'
 import { PromptDetailPanel } from './prompt-detail-panel'
+import { PageHeader } from '../page-ui'
 import { KnowledgeTabs } from '../sidebar-v3/section-tabs'
 import { useUiV3 } from '@/lib/fork-ui'
 
@@ -169,22 +170,27 @@ export function PromptLibraryScreen() {
     else toast.success(t('moved'))
   }
 
+  const newPromptButton = (
+    <Button variant="default" size="sm" className="gap-2 v3:rounded-(--r)" onClick={() => setNewPromptOpen(true)}>
+      <Plus className="size-4" aria-hidden />{t('newPrompt')}
+    </Button>
+  )
+
   return (
     <div className="absolute top-0 right-0 bottom-7 left-(--home-left) z-30 flex flex-col bg-card" role="region" aria-label="Prompt Library">
-      <header className="flex h-14 shrink-0 items-center gap-3 border-b px-5">
-        <h1 className="flex items-center gap-2 text-lg font-semibold"><ScrollText className="size-5" aria-hidden />{t('title')}</h1>
-        <KnowledgeTabs active="prompts" />
-        <div className="ml-auto flex items-center gap-2">
-          <Button variant="default" size="sm" className="gap-2" onClick={() => setNewPromptOpen(true)}>
-            <Plus className="size-4" aria-hidden />{t('newPrompt')}
-          </Button>
-          {!v3Mode && (
+      {v3Mode ? (
+        <PageHeader title={t('title')} onBack={hide} tabs={<KnowledgeTabs active="prompts" />} actions={newPromptButton} />
+      ) : (
+        <header className="flex h-14 shrink-0 items-center gap-3 border-b px-5">
+          <h1 className="flex items-center gap-2 text-lg font-semibold"><ScrollText className="size-5" aria-hidden />{t('title')}</h1>
+          <div className="ml-auto flex items-center gap-2">
+            {newPromptButton}
             <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground" onClick={hide}>
               <PanelsTopLeft className="size-4" aria-hidden />{t('backToWorkspace')}
             </Button>
-          )}
-        </div>
-      </header>
+          </div>
+        </header>
+      )}
 
       <div className="flex min-h-0 flex-1">
         <div className="flex w-[380px] min-w-[300px] shrink-0 flex-col border-r">

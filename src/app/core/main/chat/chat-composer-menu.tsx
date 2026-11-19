@@ -400,7 +400,7 @@ export const ChatComposerMenu = forwardRef<
         <div className="flex flex-col gap-0.5">
           {groups.map(group => (
             <div key={group} className="flex flex-col">
-              <div className="px-2 py-1 text-[11px] font-medium text-muted-foreground">
+              <div className="px-2 py-1 text-[11px] v3:text-xs font-medium text-muted-foreground">
                 {group}
               </div>
               {filteredItems.map((item, index) => {
@@ -440,7 +440,7 @@ export const ChatComposerMenu = forwardRef<
                       ) : null}
                     </span>
                     {item.meta ? (
-                      <span className="ml-auto shrink-0 text-[11px] font-normal text-muted-foreground">
+                      <span className="ml-auto shrink-0 text-[11px] v3:text-xs font-normal text-muted-foreground">
                         {item.meta}
                       </span>
                     ) : null}

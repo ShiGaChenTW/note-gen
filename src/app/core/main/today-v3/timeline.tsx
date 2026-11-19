@@ -11,7 +11,7 @@ import { LABEL } from './styles'
 /** 一小時的高度（px）。 */
 export const HOUR_PX = 44
 /** 事件文字左邊留給小時標籤的寬度。 */
-const GUTTER_PX = 40
+const GUTTER_PX = 44
 
 function pad(n: number): string {
   return String(n).padStart(2, '0')
@@ -37,8 +37,8 @@ function Entry({ entry, startHour, onOpenTask }: { entry: TimelineEntry, startHo
   const body = (
     <>
       <span className={cn(calendar ? 'font-normal text-muted-ink' : 'font-medium text-ink')}>{entry.title}</span>{' '}
-      <span className="font-mono text-[10.5px] text-muted-ink">{entry.time}</span>
-      {calendar && <Lock aria-label={t('readOnly')} className="absolute top-1.5 right-1.5 size-3 text-faint" />}
+      <span className="font-mono text-[11px] text-muted-ink">{entry.time}</span>
+      {calendar && <Lock aria-label={t('readOnly')} className="absolute top-1.5 right-1.5 size-3 text-muted-ink" />}
     </>
   )
   const style = { top, height, left, width: `calc(${width} - 2px)` }
@@ -62,11 +62,11 @@ function ProposalBlock({ proposal, startHour, busy, onAccept, onReject }: {
       data-kind="proposal"
       data-testid="today-v3-proposal"
     >
-      <span className="text-[10.5px] text-faint">{t('proposal')}</span>
-      <span className="font-medium text-ink">{proposal.title} <span className="font-mono text-[10.5px] text-muted-ink">{proposal.time}–{proposal.end}</span></span>
-      <span className="mt-auto flex gap-3 pt-1">
-        <button type="button" disabled={busy} onClick={onAccept} className="cursor-pointer rounded-sm font-medium text-ink outline-none hover:underline focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50">{t('accept')}</button>
-        <button type="button" disabled={busy} onClick={onReject} className="cursor-pointer rounded-sm text-muted-ink outline-none hover:text-ink focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50">{t('reject')}</button>
+      <span className="text-xs text-muted-ink">{t('proposal')}</span>
+      <span className="font-medium text-ink">{proposal.title} <span className="font-mono text-[11px] text-muted-ink">{proposal.time}–{proposal.end}</span></span>
+      <span className="mt-auto flex gap-1 pt-1">
+        <button type="button" disabled={busy} onClick={onAccept} className="cursor-pointer rounded-(--r) bg-invert px-1.5 font-medium text-invert-ink outline-none hover:bg-invert/85 focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50">{t('accept')}</button>
+        <button type="button" disabled={busy} onClick={onReject} className="cursor-pointer rounded-(--r) px-1.5 text-muted-ink outline-none hover:bg-hover hover:text-ink focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50">{t('reject')}</button>
       </span>
     </div>
   )
@@ -104,15 +104,17 @@ export function Timeline({ view, dayKey, onOpenTask, noAccess, proposals = [], b
       {view.allDay.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1">
           {view.allDay.map(title => (
-            <span key={title} className="rounded-md bg-sunken px-2 py-0.5 text-xs text-muted-ink"><span className="mr-1 text-faint">{t('allDay')}</span>{title}</span>
+            <span key={title} className="rounded-md bg-sunken px-2 py-0.5 text-xs text-muted-ink"><span className="mr-1 text-muted-ink">{t('allDay')}</span>{title}</span>
           ))}
         </div>
       )}
-      {noAccess && <p className="mt-2 text-xs text-faint">{t('noAccess')}</p>}
+      {noAccess && <p className="mt-2 text-xs text-muted-ink">{t('noAccess')}</p>}
       <div className="relative mt-3" style={{ height }} data-testid="today-v3-timeline">
         {hours.map(hour => (
           <div key={hour} className="absolute right-0 left-0 h-0 border-t border-line-soft" style={{ top: (hour - view.startHour) * HOUR_PX }}>
-            <span className="absolute top-[-8px] left-0 bg-bg pr-1.5 font-mono text-[10.5px] leading-4 text-faint">{pad(hour)}</span>
+            {(view.nowMin === null || Math.abs(view.nowMin - hour * 60) >= 22) && (
+              <span className="absolute top-[-8px] left-0 bg-bg pr-1.5 font-mono text-[11px] leading-4 text-muted-ink">{pad(hour)}</span>
+            )}
           </div>
         ))}
         {view.entries.map(entry => <Entry key={entry.key} entry={entry} startHour={view.startHour} onOpenTask={onOpenTask} />)}
@@ -129,12 +131,12 @@ export function Timeline({ view, dayKey, onOpenTask, noAccess, proposals = [], b
         {view.nowMin !== null && (
           <div
             ref={nowRef}
-            className="absolute right-0 left-7 z-[2] h-0 border-t border-ink before:absolute before:top-[-3.5px] before:left-0 before:size-1.5 before:rounded-full before:bg-ink before:content-['']"
+            className="absolute right-0 left-10 z-[2] h-0 border-t border-ink before:absolute before:top-[-3.5px] before:left-0 before:size-1.5 before:rounded-full before:bg-ink before:content-['']"
             style={{ top: ((view.nowMin - view.startHour * 60) / 60) * HOUR_PX }}
             data-testid="today-v3-now"
             aria-label={`${t('now')} ${minutesToClock(view.nowMin)}`}
           >
-            <span className="absolute top-[-8px] left-[-28px] bg-bg font-mono text-[10px] leading-4 font-semibold text-ink">{view.nowTime}</span>
+            <span className="absolute top-[-8px] right-full mr-1 bg-bg font-mono text-[11px] leading-4 font-semibold text-ink">{view.nowTime}</span>
           </div>
         )}
       </div>

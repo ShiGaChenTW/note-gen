@@ -152,7 +152,7 @@ function SearchResultItem({
           {recordType ? (
             <Badge
               variant="outline"
-              className={cn(getMarkTypeListBadgeClasses(recordType), 'h-4 px-1.5 text-[10px]')}
+              className={cn(getMarkTypeListBadgeClasses(recordType), 'h-4 px-1.5 text-[10px] v3:text-xs')}
             >
               {recordTypeT(recordType)}
             </Badge>
@@ -161,7 +161,7 @@ function SearchResultItem({
             <HighlightedText text={result.title} query={query} />
           </div>
         </div>
-        <div className="mt-0.5 truncate text-[11px] text-muted-foreground">
+        <div className="mt-0.5 truncate text-[11px] v3:text-xs text-muted-foreground">
           <HighlightedText text={result.highlightText} query={query} />
         </div>
       </div>
@@ -614,7 +614,7 @@ export function SidebarSearch({ activeTab, children }: { activeTab: SidebarTab; 
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="shrink-0 px-2 py-2">
         <InputGroup focusRing="subtle" className="h-8 bg-background shadow-none v3:h-[30px] v3:rounded-md v3:border-line-soft v3:bg-bg v3:hover:border-line v3:dark:bg-bg">
-          <InputGroupAddon className="text-muted-foreground v3:text-faint">
+          <InputGroupAddon className="text-muted-foreground v3:text-muted-ink">
             {fileLoading || relatedLoading ? <Spinner /> : <Search />}
           </InputGroupAddon>
           <InputGroupInput

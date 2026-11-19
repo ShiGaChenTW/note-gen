@@ -189,7 +189,7 @@
   --ink: #191919;
   --note-ink: #191919;
   --muted-ink: #6e6e6a;
-  --faint: #a3a39e;          /* 分組標題、placeholder；不可當 focus 色 */
+  --faint: #a3a39e;          /* placeholder、裝飾與停用狀態；不可當 focus 色 */
   --line: #e3e3e0;
   --line-soft: #ececea;
   --hover: rgba(25, 25, 25, 0.05);
@@ -278,7 +278,7 @@
   --ink: #ebebe8;
   --note-ink: #cbd0d2;
   --muted-ink: #8f8f8a;
-  --faint: #64645f;          /* 分組標題、placeholder；不可當 focus 色 */
+  --faint: #64645f;          /* placeholder、裝飾與停用狀態；不可當 focus 色 */
   --line: #292927;
   --line-soft: #202020;
   --hover: rgba(235, 235, 232, 0.06);
@@ -381,4 +381,18 @@ code, kbd, pre, samp {
 }
 :where([data-ui="v3"]) .file-manager-item.active::before {
   background: var(--ink);
+}
+
+/* ALMNC-26：MyVault 與導覽列使用相同字級和未選中色。 */
+:where([data-ui="v3"]) [data-sidebar-v3] .file-manager-item {
+  color: var(--muted-ink);
+  font-size: 13px;
+}
+
+:where([data-ui="v3"]) [data-sidebar-v3] .file-manager-item:is(.active, .file-selected, :hover) {
+  color: var(--ink);
+}
+
+:where([data-ui="v3"]) [data-sidebar-v3] [data-file-manager-item-name] {
+  font-size: inherit;
 }

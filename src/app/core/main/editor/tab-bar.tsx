@@ -173,7 +173,7 @@ function SortableTabWithMenu({
           ) : pluginTab ? (
             <PluginIcon name={pluginIcon} className="size-4 shrink-0" />
           ) : isRecordTab ? (
-            <span className={cn(getMarkTypeListBadgeClasses(tab.markType || 'text'), 'shrink-0 text-[10px]')}>{recordTypeLabel}</span>
+            <span className={cn(getMarkTypeListBadgeClasses(tab.markType || 'text'), 'shrink-0 text-[10px] v3:text-xs')}>{recordTypeLabel}</span>
           ) : isCanvasTab ? (
             <Palette className={cn('size-4 shrink-0', isActive && 'text-ink')} />
           ) : tab.isFolder ? (

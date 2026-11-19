@@ -199,7 +199,7 @@ export function CanvasActions() {
           <Tooltip>
             <TooltipTrigger asChild>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label={t('new')}>
+                <Button variant="ghost" size="icon" className="v3:bg-invert v3:text-invert-ink v3:hover:bg-invert/85 v3:hover:text-invert-ink" aria-label={t('new')}>
                   <FilePlus2 />
                 </Button>
               </DropdownMenuTrigger>

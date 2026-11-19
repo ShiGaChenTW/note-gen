@@ -94,7 +94,7 @@ function getHeadingIcon(level: number) {
   if (level === 3) return <Heading3 />
 
   return (
-    <span className="mt-0.5 w-4 shrink-0 text-center text-[10px] font-medium leading-4 text-muted-foreground">
+    <span className="mt-0.5 w-4 shrink-0 text-center text-[10px] v3:text-xs font-medium leading-4 text-muted-foreground">
       H{level}
     </span>
   )

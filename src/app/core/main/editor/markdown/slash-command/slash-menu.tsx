@@ -352,7 +352,7 @@ export const SlashMenu = forwardRef<SlashMenuRef, SlashMenuProps>(({ editor, ran
               <span className="flex min-w-0 flex-1 flex-col">
                 <span className="flex min-w-0 items-center gap-2">
                   <span className="truncate">{item.title}</span>
-                  <span className="shrink-0 text-[10px] text-muted-foreground">{item.group}</span>
+                  <span className="shrink-0 text-[10px] v3:text-xs text-muted-foreground">{item.group}</span>
                 </span>
                 {item.description && (
                   <span className="truncate text-xs text-muted-foreground">
@@ -393,7 +393,7 @@ export const SlashMenu = forwardRef<SlashMenuRef, SlashMenuProps>(({ editor, ran
                 })}
               >
                 <span className="min-w-0 truncate">{group}</span>
-                <span className="flex shrink-0 items-center gap-1 text-[10px] text-muted-foreground">
+                <span className="flex shrink-0 items-center gap-1 text-[10px] v3:text-xs text-muted-foreground">
                   {groupItems.length}
                   {isSelected && <ChevronRight className="size-3" />}
                 </span>
@@ -405,7 +405,7 @@ export const SlashMenu = forwardRef<SlashMenuRef, SlashMenuProps>(({ editor, ran
 
       <div className="flex max-h-72 min-w-0 flex-col p-1">
         {activeGroup && (
-          <div className="flex h-7 shrink-0 items-center justify-between gap-2 px-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+          <div className="flex h-7 shrink-0 items-center justify-between gap-2 px-2 text-[10px] v3:text-xs font-medium uppercase tracking-wider text-muted-foreground">
             <span className="min-w-0 truncate">{activeGroup[0]}</span>
             <ShortcutHint keys={['↑', '↓']} />
           </div>

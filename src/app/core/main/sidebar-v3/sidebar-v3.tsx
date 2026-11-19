@@ -47,6 +47,7 @@ const OPEN: Record<NavKey, () => void> = {
 }
 
 const ROW = 'flex h-7 w-full items-center gap-2 px-2 text-left text-[13px] text-muted-ink'
+const VAULT_LABEL = 'flex h-6 w-full items-center gap-1.5 px-2 text-xs font-semibold tracking-[0.08em] text-muted-ink'
 const LABEL = 'flex h-6 w-full items-center gap-1.5 px-2 text-[11px] font-semibold tracking-[0.08em] text-faint'
 
 function useAgentRows(): AgentRow[] {
@@ -88,7 +89,7 @@ function SectionHeader({ section, collapsed, title, aside, actions }: {
         type="button"
         aria-expanded={!collapsed}
         onClick={() => void toggle(section)}
-        className={cn(LABEL, 'min-w-0 flex-1 rounded-md outline-none hover:text-ink focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/60')}
+        className={cn(section === 'vault' ? VAULT_LABEL : LABEL, 'min-w-0 flex-1 rounded-md outline-none hover:text-ink focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/60')}
       >
         <ChevronDown className={cn('size-3 shrink-0 transition-transform duration-100', collapsed && '-rotate-90')} aria-hidden />
         <span className="truncate">{title}</span>
@@ -181,16 +182,16 @@ export function SidebarV3() {
     <div className="flex h-full w-full flex-col gap-3 border-r border-line-soft bg-panel px-2 py-3" data-left-sidebar data-sidebar-v3>
       <div className="flex shrink-0 items-baseline gap-2 px-2 py-1">
         <b className="text-sm font-[620] tracking-[-0.01em]">NoteGen</b>
-        <span className="font-mono text-[10.5px] text-faint">v3</span>
+        <span className="text-xs text-faint" aria-hidden>v3</span>
       </div>
       <button
         type="button"
         onClick={() => useAnywhereStore.getState().setPaletteOpen(true)}
-        className="mx-0.5 flex h-[30px] shrink-0 cursor-pointer items-center gap-2 rounded-md border border-line-soft bg-bg pr-1.5 pl-2 text-left text-[12.5px] text-faint outline-none hover:border-line focus-visible:ring-1 focus-visible:ring-ink/60"
+        className="mx-0.5 flex h-[30px] shrink-0 cursor-pointer items-center gap-2 rounded-md border border-line-soft bg-bg pr-1.5 pl-2 text-left text-[12.5px] text-muted-ink outline-none hover:border-line focus-visible:ring-1 focus-visible:ring-ink/60"
       >
         <Search className="size-4 shrink-0" aria-hidden />
         <span className="flex-1 truncate">{t('search')}</span>
-        <kbd className="inline-flex h-[18px] items-center rounded bg-sunken px-[5px] font-mono text-[10.5px] text-muted-ink">⌘K</kbd>
+        <kbd className="inline-flex h-[18px] items-center rounded bg-sunken px-[5px] text-xs text-muted-ink">⌘K</kbd>
       </button>
       <nav aria-label={t('navLabel')} className="flex shrink-0 flex-col gap-px">
         {nav.map(row => {
@@ -206,7 +207,7 @@ export function SidebarV3() {
               <Icon className="size-4 shrink-0" aria-hidden />
               <span className="min-w-0 flex-1 truncate">{t(`nav.${row.key}`)}</span>
               {row.count > 0 && (
-                <span className="font-mono text-[10.5px] font-normal text-faint" aria-label={t('count', { count: row.count })}>{row.count > 99 ? '99+' : row.count}</span>
+                <span className="font-mono text-[11px] font-normal text-muted-ink" aria-label={t('count', { count: row.count })}>{row.count > 99 ? '99+' : row.count}</span>
               )}
             </button>
           )

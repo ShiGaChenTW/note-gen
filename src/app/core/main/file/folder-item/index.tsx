@@ -992,7 +992,7 @@ export function FolderItem({
                     ) : (
                       <Folder className={`${iconSize} shrink-0`} />
                     )} />}
-                    <span className={`text-${fileManagerTextSize} min-w-0 flex-1 truncate ${item.loading ? 'text-muted-foreground' : ''}`}>{item.name}</span>
+                    <span data-file-manager-item-name className={`text-${fileManagerTextSize} min-w-0 flex-1 truncate ${item.loading ? 'text-muted-foreground' : ''}`}>{item.name}</span>
                   </div>
                   <FileTreeDecorations
                     path={path}

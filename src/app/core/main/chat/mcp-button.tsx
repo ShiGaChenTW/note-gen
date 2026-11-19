@@ -60,23 +60,23 @@ export function McpServerList({ onInitialize = false, searchable = true }: McpSe
                   <div className="flex min-w-0 flex-1 flex-col gap-1">
                     <div className="flex min-w-0 items-center gap-2">
                       <span className="truncate font-medium">{server.name}</span>
-                      <Badge variant="outline" className="h-4 px-1 py-0 text-[10px]">
+                      <Badge variant="outline" className="h-4 px-1 py-0 text-[10px] v3:text-xs">
                         {server.type}
                       </Badge>
                       {status === 'connected' ? (
                         <div className="flex items-center gap-1 text-muted-foreground">
                           <PlugZap className="size-3" />
-                          <span className="text-[10px]">{toolCount} {t('tools')}</span>
+                          <span className="text-[10px] v3:text-xs">{toolCount} {t('tools')}</span>
                         </div>
                       ) : status === 'connecting' ? (
                         <div className="flex items-center gap-1 text-muted-foreground">
                           <Plug className="size-3 animate-pulse" />
-                          <span className="text-[10px]">{t('connecting')}</span>
+                          <span className="text-[10px] v3:text-xs">{t('connecting')}</span>
                         </div>
                       ) : (
                         <div className="flex items-center gap-1 text-muted-foreground">
                           <Plug className="size-3" />
-                          <span className="text-[10px]">{t('disconnected')}</span>
+                          <span className="text-[10px] v3:text-xs">{t('disconnected')}</span>
                         </div>
                       )}
                     </div>

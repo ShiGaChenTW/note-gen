@@ -35,7 +35,7 @@ export function MarkLoading({mark}: {mark: MarkQueue}){
           {captureT('elapsedSeconds', { seconds: Math.round((timeNow - mark.startTime) / 1000) })}
         </time>
       </div>
-      <p className="mt-1 pl-6 text-[11px] text-muted-foreground">
+      <p className="mt-1 pl-6 text-[11px] v3:text-xs text-muted-foreground">
         {tagName ? `${captureT('saveTarget')}: ${tagName} · ` : ''}{captureT('processingInBackground')}
       </p>
     </div>

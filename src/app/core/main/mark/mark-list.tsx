@@ -72,21 +72,21 @@ export const MarkList = React.memo(function MarkList({ records, queueTagIds }: {
             {!trashState && filterSummary.hasFilters ? (
               <div className="border-b bg-muted/20 px-3 py-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="secondary" className="rounded-full px-2 py-0 text-[11px]">
+                  <Badge variant="secondary" className="rounded-full px-2 py-0 text-[11px] v3:text-xs">
                     {t('filteredLabel', { count: filteredMarks.length })}
                   </Badge>
                   {filterSummary.search ? (
-                    <Badge variant="outline" className="rounded-full px-2 py-0 text-[11px] font-normal">
+                    <Badge variant="outline" className="rounded-full px-2 py-0 text-[11px] v3:text-xs font-normal">
                       {t('searchChip', { value: filterSummary.search })}
                     </Badge>
                   ) : null}
                   {filterSummary.timePreset !== 'all' ? (
-                    <Badge variant="outline" className="rounded-full px-2 py-0 text-[11px] font-normal">
+                    <Badge variant="outline" className="rounded-full px-2 py-0 text-[11px] v3:text-xs font-normal">
                       {t(`time.${filterSummary.timePreset}`)}
                     </Badge>
                   ) : null}
                   {filterSummary.typeCount > 0 ? (
-                    <Badge variant="outline" className="rounded-full px-2 py-0 text-[11px] font-normal">
+                    <Badge variant="outline" className="rounded-full px-2 py-0 text-[11px] v3:text-xs font-normal">
                       {t('filteredByType', { count: filterSummary.typeCount })}
                     </Badge>
                   ) : null}

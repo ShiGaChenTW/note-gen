@@ -1,8 +1,8 @@
 'use client'
 
 // Fork（almanac ALMNC-23）：今天主畫面上方的日期列。大數字＋星期，一次約兩週，可往前往後翻。
-// v5 視覺（單色）：今天＝粗體＋數字上方一顆小點；選中日＝反白底（bg-invert，和 v5 的 .thread.on／.ditem.on 同一種選取）；
-// 有日記＝星期下方一顆淡點。鍵盤：左右鍵移動、Enter／空白鍵選取、Home／End 到窗口頭尾，焦點環用 ring-ring。
+// v5 視覺（單色）：今天＝粗體＋數字下方短底線；選中日＝反白底（bg-invert，和 v5 的 .thread.on／.ditem.on 同一種選取）；
+// 有日記＝星期下方一顆小點。鍵盤：左右鍵移動、Enter／空白鍵選取、Home／End 到窗口頭尾，焦點環用 ring-ring。
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
@@ -78,7 +78,7 @@ export function DateStrip({ todayKey, selectedKey, noteKeys, onSelect, onToday }
   return (
     <div className="flex shrink-0 items-center gap-1 border-b border-line-soft px-5 py-2" data-testid="today-v3-date-strip">
       <button type="button" className={NAV_BUTTON} aria-label={t('previous')} onClick={() => page(-1)}><ChevronLeft className="size-4" aria-hidden /></button>
-      <div role="group" aria-label={t('label', { range })} onKeyDown={onKeyDown} className="flex min-w-0 flex-1 justify-between gap-0.5">
+      <div role="group" aria-label={t('label', { range })} onKeyDown={onKeyDown} className="scrollbar-hide flex min-w-0 flex-1 justify-between gap-0.5 overflow-x-auto p-px">
         {days.map(day => {
           const weekday = weekdayT(String(day.weekday))
           const label = t('dayLabel', { month: day.date.getMonth() + 1, day: day.day, weekday })
@@ -97,27 +97,27 @@ export function DateStrip({ todayKey, selectedKey, noteKeys, onSelect, onToday }
               onClick={() => { setFocusKey(day.key); onSelect(day.key) }}
               onFocus={() => setFocusKey(day.key)}
               className={cn(
-                'relative flex h-[54px] min-w-0 flex-1 cursor-pointer flex-col items-center justify-center rounded-md transition-colors duration-100 outline-none focus-visible:ring-1 focus-visible:ring-ring',
+                'flex h-[58px] min-w-6 flex-1 cursor-pointer flex-col items-center justify-center rounded-(--r) transition-colors duration-100 outline-none focus-visible:ring-1 focus-visible:ring-ring',
                 day.isSelected ? 'bg-invert text-invert-ink' : 'text-muted-ink hover:bg-hover',
               )}
             >
-              {day.isToday && <i aria-hidden className="absolute top-[5px] size-1 rounded-full bg-current" />}
               <span className={cn('font-mono text-[17px] leading-5 tabular-nums', day.isToday ? 'font-bold' : 'font-medium', !day.isSelected && day.isToday && 'text-ink')}>{day.day}</span>
-              <span className={cn('text-[10.5px] leading-4', day.isToday ? 'font-semibold' : 'font-normal', !day.isSelected && !day.isToday && 'text-faint', !day.isSelected && day.isToday && 'text-ink')}>{weekday.replace(/^星期/, '')}</span>
-              <i aria-hidden className={cn('absolute bottom-[4px] size-[3px] rounded-full bg-current', day.hasNote ? 'opacity-60' : 'opacity-0')} />
+              <span aria-hidden className={cn('h-0.5 w-3 rounded-full', day.isToday && 'bg-current')} />
+              <span className="mt-0.5 text-xs leading-4">{weekday.replace(/^星期/, '')}</span>
+              <span aria-hidden className={cn('mt-0.5 size-[3px] rounded-full', day.hasNote && 'bg-current')} />
             </button>
           )
         })}
       </div>
       <button type="button" className={NAV_BUTTON} aria-label={t('next')} onClick={() => page(1)}><ChevronRight className="size-4" aria-hidden /></button>
-      <span className="ml-1 w-[100px] shrink-0 text-right font-mono text-[11px] whitespace-nowrap text-faint" aria-hidden>{range}</span>
+      <span className="ml-1 w-[100px] shrink-0 text-right font-mono text-[11px] whitespace-nowrap text-muted-ink" aria-hidden>{range}</span>
       <button
         type="button"
         onClick={onToday}
         tabIndex={selectedKey === todayKey ? -1 : 0}
         aria-hidden={selectedKey === todayKey}
         className={cn(
-          'ml-1 h-7 shrink-0 cursor-pointer rounded-md bg-hover px-2.5 text-[12.5px] font-medium text-ink transition-colors duration-100 outline-none hover:bg-active focus-visible:ring-1 focus-visible:ring-ring',
+          'ml-1 h-7 shrink-0 cursor-pointer rounded-(--r) bg-hover px-2.5 text-[12.5px] font-medium text-ink transition-colors duration-100 outline-none hover:bg-active focus-visible:ring-1 focus-visible:ring-ring',
           selectedKey === todayKey && 'invisible',
         )}
       >{t('backToToday')}</button>

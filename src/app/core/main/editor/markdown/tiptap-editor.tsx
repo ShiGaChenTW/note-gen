@@ -8016,7 +8016,7 @@ export function TipTapEditor({
         />
       )}
       {developerMode && developerPerformanceInfo ? (
-        <div className="pointer-events-none absolute left-3 top-3 z-40 rounded-md border bg-background/90 px-2.5 py-2 font-mono text-[11px] leading-5 text-muted-foreground shadow-sm backdrop-blur">
+        <div className="pointer-events-none absolute left-3 top-3 z-40 rounded-md border bg-background/90 px-2.5 py-2 font-mono text-[11px] v3:text-xs leading-5 text-muted-foreground shadow-sm backdrop-blur">
           <div>{t('developerPerformance.documentSize')}: {formatDeveloperDocumentSize(sourceMarkdown)}</div>
           <div>{t('developerPerformance.mode')}: {isLargeDocument ? t('developerPerformance.largeDocument') : t('developerPerformance.standardDocument')}</div>
           <div>{t('developerPerformance.view')}: {effectiveViewMode}</div>
@@ -8026,7 +8026,7 @@ export function TipTapEditor({
       {selfHostedCollaborators.length > 0 ? (
         <div className="absolute right-3 top-3 z-40 flex items-center gap-1 rounded-full border bg-background/90 px-2 py-1 shadow-sm backdrop-blur">
           {selfHostedCollaborators.slice(0, 3).map(collaborator => (
-            <span key={collaborator.deviceId} className="grid size-6 place-items-center rounded-full bg-invert text-[10px] font-medium text-invert-ink" title={collaborator.label}>
+            <span key={collaborator.deviceId} className="grid size-6 place-items-center rounded-full bg-invert text-[10px] v3:text-xs font-medium text-invert-ink" title={collaborator.label}>
               {collaborator.label.slice(0, 1).toUpperCase()}
             </span>
           ))}

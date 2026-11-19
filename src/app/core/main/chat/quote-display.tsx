@@ -56,7 +56,7 @@ export function QuoteDisplay({ quoteData, onRemove }: QuoteDisplayProps) {
         {canExpand && (
           <button
             type="button"
-            className="mt-1 text-[11px] text-ink"
+            className="mt-1 text-[11px] v3:text-xs text-ink"
             onClick={() => setExpanded((value) => !value)}
           >
             {expanded ? tControl('showLess') : tControl('showMore')}

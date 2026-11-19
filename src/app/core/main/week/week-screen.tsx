@@ -54,22 +54,26 @@ function WeekPage() {
   const range = date.formatRange(start, localDay(start, 6))
   return (
     <PageSurface label={t('title')} onDismiss={hide} className="bg-bg text-ink">
-      <PageHeader title={t('title')} onBack={hide}>
-        <div className="flex items-center gap-1">
-          <Button type="button" variant="ghost" size="icon" disabled={calendar.requesting} aria-label={t('previous')} onClick={() => setStart(day => localDay(day, -7))}>
-            <ChevronLeft className="size-4" aria-hidden />
-          </Button>
-          <span className="min-w-28 text-center font-mono text-xs">{range}</span>
-          <Button type="button" variant="ghost" size="icon" disabled={calendar.requesting} aria-label={t('next')} onClick={() => setStart(day => localDay(day, 7))}>
-            <ChevronRight className="size-4" aria-hidden />
-          </Button>
-          <Button type="button" variant="ghost" size="sm" disabled={calendar.requesting} onClick={() => setStart(weekStart(new Date()))}>{t('current')}</Button>
-        </div>
-      </PageHeader>
+      <PageHeader
+        title={t('title')}
+        subtitle={<span className="tabular-nums">{range}</span>}
+        onBack={hide}
+        actions={(
+          <>
+            <Button type="button" variant="ghost" size="icon" disabled={calendar.requesting} aria-label={t('previous')} onClick={() => setStart(day => localDay(day, -7))}>
+              <ChevronLeft className="size-4" aria-hidden />
+            </Button>
+            <Button type="button" variant="ghost" size="icon" disabled={calendar.requesting} aria-label={t('next')} onClick={() => setStart(day => localDay(day, 7))}>
+              <ChevronRight className="size-4" aria-hidden />
+            </Button>
+            <Button type="button" variant="ghost" size="sm" className="rounded-(--r)" disabled={calendar.requesting} onClick={() => setStart(weekStart(new Date()))}>{t('current')}</Button>
+          </>
+        )}
+      />
       {(access !== 'granted' || indexStatus !== 'ready') && (
         <div className="flex shrink-0 flex-wrap items-center gap-x-3 border-b border-line px-5 py-2 text-xs text-muted-ink" role="status">
           {access !== 'granted' && <span>{t(`access.${access}`)}</span>}
-          {access === 'notDetermined' && <Button type="button" size="sm" variant="outline" disabled={calendar.requesting} onClick={calendar.request}>{t('grantAccess')}</Button>}
+          {access === 'notDetermined' && <Button type="button" size="sm" className="rounded-(--r)" disabled={calendar.requesting} onClick={calendar.request}>{t('grantAccess')}</Button>}
           {indexStatus !== 'ready' && <span>{t(indexStatus === 'error' ? 'tasksUnavailable' : 'loadingTasks')}</span>}
         </div>
       )}

@@ -1320,7 +1320,7 @@ ${hasValidRange ? `**仅在用户明确要求修改/改写/补充/插入时才�
               ? t('record.chat.input.agent.deliveryMode.pending.add')
               : t('record.chat.input.send')}
         onClick={showStop ? handleStop : () => void handleSubmit()}
-        buttonClassName={roundStyle ? "size-[30px] rounded-full bg-invert text-invert-ink hover:bg-invert/85 [&_svg]:size-3.5" : dockStyle ? cn(
+        buttonClassName={roundStyle ? "size-8 rounded-(--r) bg-invert text-invert-ink hover:bg-invert/85 [&_svg]:size-3.5" : dockStyle ? cn(
           "size-8 rounded-full border border-border/50 bg-[hsl(var(--component-active-bg))] text-foreground shadow-none hover:bg-[hsl(var(--component-active-bg))] hover:text-foreground",
           showStop && "border-destructive bg-background text-destructive hover:bg-background hover:text-destructive"
         ) : undefined}

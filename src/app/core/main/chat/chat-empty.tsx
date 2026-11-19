@@ -91,10 +91,11 @@ export default function ChatEmpty() {
         {isTemporaryConversation && <p className="mt-1 text-xs text-muted-ink">{tV3('temporaryHint')}</p>}
         <div className="mt-4 flex flex-wrap justify-center gap-1.5">
           {(['first', 'second', 'third'] as const).map(key => (
-            <button key={key} type="button" onClick={() => handleQuickPrompt(tV3(`${mode}.prompts.${key}.insert`))}
-              className="min-h-7 rounded-full border border-line px-3 text-xs text-ink hover:bg-hover">
+            <Button key={key} type="button" variant="outline" size="sm"
+              onClick={() => handleQuickPrompt(tV3(`${mode}.prompts.${key}.insert`))}
+              className="rounded-(--r) border-line bg-transparent text-xs text-ink hover:bg-hover dark:border-line dark:bg-transparent dark:hover:bg-hover">
               {tV3(`${mode}.prompts.${key}.label`)}
-            </button>
+            </Button>
           ))}
         </div>
       </div>

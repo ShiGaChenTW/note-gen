@@ -17,6 +17,7 @@ import useUpdateStore from '@/stores/update'
 import { useToolbarShortcuts } from '@/hooks/use-toolbar-shortcuts'
 import { useSettingsDialogStore } from '@/stores/settings-dialog'
 import { UnifiedRecordButton } from '@/app/core/main/mark/unified-record-dialog'
+import { useUiV3 } from '@/lib/fork-ui'
 import { useWikiNavigation } from '@/components/wiki/use-wiki-navigation'
 
 type Platform = 'macos' | 'windows' | 'linux' | 'unknown'
@@ -49,6 +50,11 @@ export function TitleBar() {
   }
   const { hasUpdate } = useUpdateStore()
   const t = useTranslations()
+  const v3 = useUiV3()
+  const leftLabel = t(leftSidebarVisible ? 'navigation.hideLeftSidebar' : 'navigation.showLeftSidebar')
+  const centerLabel = t(centerPanelVisible ? 'navigation.hideCenterPanel' : 'navigation.showCenterPanel')
+  const rightLabel = t(rightSidebarVisible ? 'navigation.hideRightSidebar' : 'navigation.showRightSidebar')
+  const settingsLabel = t(settingsOpen ? 'common.back' : 'common.settings')
   useToolbarShortcuts()
 
   useEffect(() => {
@@ -186,6 +192,8 @@ export function TitleBar() {
                 variant="ghost"
                 size="icon"
                 className={`h-8 w-8 ${wouldCauseLeftOnly(leftSidebarVisible, 'left') ? 'cursor-not-allowed opacity-50' : ''}`}
+                aria-label={v3 ? leftLabel : undefined}
+                aria-disabled={v3 && wouldCauseLeftOnly(leftSidebarVisible, 'left') ? true : undefined}
                 onClick={() => {
                   if (!wouldCauseLeftOnly(leftSidebarVisible, 'left')) {
                     toggleLeftSidebar()
@@ -196,7 +204,7 @@ export function TitleBar() {
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom">
-              <p>{leftSidebarVisible ? t('navigation.hideLeftSidebar') : t('navigation.showLeftSidebar')}</p>
+              <p>{leftLabel}</p>
             </TooltipContent>
           </Tooltip>
 
@@ -207,6 +215,8 @@ export function TitleBar() {
                 variant="ghost"
                 size="icon"
                 className={`h-8 w-8 ${wouldCauseLeftOnly(centerPanelVisible, 'center') ? 'cursor-not-allowed opacity-50' : ''}`}
+                aria-label={v3 ? centerLabel : undefined}
+                aria-disabled={v3 && wouldCauseLeftOnly(centerPanelVisible, 'center') ? true : undefined}
                 onClick={() => {
                   if (!wouldCauseLeftOnly(centerPanelVisible, 'center')) {
                     toggleCenterPanel()
@@ -217,7 +227,7 @@ export function TitleBar() {
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom">
-              <p>{centerPanelVisible ? t('navigation.hideCenterPanel') : t('navigation.showCenterPanel')}</p>
+              <p>{centerLabel}</p>
             </TooltipContent>
           </Tooltip>
 
@@ -228,6 +238,8 @@ export function TitleBar() {
                 variant="ghost"
                 size="icon"
                 className={`h-8 w-8 ${wouldCauseLeftOnly(rightSidebarVisible, 'right') ? 'cursor-not-allowed opacity-50' : ''}`}
+                aria-label={v3 ? rightLabel : undefined}
+                aria-disabled={v3 && wouldCauseLeftOnly(rightSidebarVisible, 'right') ? true : undefined}
                 onClick={() => {
                   if (!wouldCauseLeftOnly(rightSidebarVisible, 'right')) {
                     toggleRightSidebar()
@@ -238,11 +250,11 @@ export function TitleBar() {
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom">
-              <p>{rightSidebarVisible ? t('navigation.hideRightSidebar') : t('navigation.showRightSidebar')}</p>
+              <p>{rightLabel}</p>
             </TooltipContent>
           </Tooltip>
           
-          <PinToggle />
+          <PinToggle withTooltip={v3} />
           
           <Tooltip>
             <TooltipTrigger asChild>
@@ -250,6 +262,7 @@ export function TitleBar() {
                 variant="ghost"
                 size="icon"
                 className={`h-8 w-8 relative ${settingsOpen ? 'bg-active hover:bg-active' : ''}`}
+                aria-label={v3 ? settingsLabel : undefined}
                 onClick={() => settingsOpen ? closeSettings() : openSettings()}
               >
                 {settingsOpen ? (
@@ -263,7 +276,7 @@ export function TitleBar() {
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom">
-              <p>{settingsOpen ? t('common.back') : t('common.settings')}</p>
+              <p>{settingsLabel}</p>
             </TooltipContent>
           </Tooltip>
           

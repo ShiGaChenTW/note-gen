@@ -96,7 +96,7 @@ function ContextBadge({
     <Badge
       variant="secondary"
       className={v3
-        ? "group/context h-6 min-w-0 gap-1 rounded-full border-line bg-sunken pl-2 pr-0.5 text-[11px] font-normal text-muted-ink max-w-44 [&_svg]:text-muted-ink"
+        ? "group/context h-6 min-w-0 gap-1 rounded-full border-line bg-sunken pl-2 pr-0.5 text-xs font-normal text-muted-ink max-w-44 [&_svg]:text-muted-ink"
         : "group/context h-7 max-w-40 shrink-0 gap-1 rounded-lg pl-2 pr-0.5 font-normal"}
       title={label}
     >

@@ -2,19 +2,16 @@
 
 // Fork（almanac ALMNC-20）：整合進同一個導覽項的頁面之間的分頁切換（收集｜Inbox、知識底下的各頁）。
 // 各頁仍是原本的全頁覆蓋層；切換只是開另一頁（互斥由 linkExclusiveOverlays 處理）。只在 v3 顯示。
+import { Segmented } from '@/components/v3/segmented'
 import { useTranslations } from 'next-intl'
 import { useUiV3 } from '@/lib/fork-ui'
 import { useInboxPendingCount } from '@/lib/inbox/use-inbox-pending'
 import { useKnowledgeOverlay } from '@/lib/sidebar-v3/knowledge'
-import { cn } from '@/lib/utils'
 import useCollectStore from '@/stores/collect'
 import useInboxStore from '@/stores/inbox'
 import usePromptLibraryStore from '@/stores/prompt-library'
 import type { CollectTab } from '@/lib/sidebar-v3/nav'
 import { useKnowledgeTabs } from './use-knowledge-tabs'
-
-const TAB = 'inline-flex h-[26px] cursor-pointer items-center gap-1.5 rounded-md px-2.5 text-[12.5px] text-muted-ink outline-none transition-colors duration-100 hover:bg-hover hover:text-ink focus-visible:ring-1 focus-visible:ring-ring/65'
-const TAB_ACTIVE = 'bg-active font-[560] text-ink'
 
 interface TabItem<K extends string> {
   key: K
@@ -25,21 +22,16 @@ interface TabItem<K extends string> {
 
 function Tabs<K extends string>({ label, items, active }: { label: string, items: TabItem<K>[], active: K }) {
   return (
-    <div role="tablist" aria-label={label} className="flex items-center gap-0.5">
-      {items.map(item => (
-        <button
-          key={item.key}
-          type="button"
-          role="tab"
-          aria-selected={item.key === active}
-          onClick={item.key === active ? undefined : item.onSelect}
-          className={cn(TAB, item.key === active && TAB_ACTIVE)}
-        >
-          {item.label}
-          {item.badge ? <span className="font-mono text-[10.5px] font-normal text-faint">{item.badge}</span> : null}
-        </button>
-      ))}
-    </div>
+    <Segmented
+      kind="tabs"
+      label={label}
+      value={active}
+      onChange={key => items.find(item => item.key === key)?.onSelect()}
+      items={items.map(({ key, label, badge }) => ({
+        value: key,
+        label: <>{label}{badge ? <span className="font-mono text-[11px] font-normal">{badge}</span> : null}</>,
+      }))}
+    />
   )
 }
 

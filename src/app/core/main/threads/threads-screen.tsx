@@ -3,6 +3,7 @@
 // Fork（almanac ALMNC-14）：V3 對話頁。左邊是對話串列表（可依專案分組或依時間），右邊就是既有的對話面板（輸入框、審批、修改比對都沒動）。
 // 做法同收集頁：蓋在編輯器與右側欄上方、留著左側欄；只在新介面（v3）顯示。
 // 對話面板只有一份（chat-dock.tsx 把右側欄那份搬進來），所以這裡不重寫任何對話內部。
+import { Segmented } from '@/components/v3/segmented'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Check, ChevronDown, FolderInput, Hash, MessageSquarePlus, MessagesSquare, Pin, Search } from 'lucide-react'
@@ -57,7 +58,7 @@ function ThreadRow({ thread, project, projects, current, now, onOpen, onMove }: 
           {thread.isPinned && <Pin aria-label={t('pinned')} className="size-3 shrink-0 text-muted-ink" />}
           <span className="truncate">{thread.title || t('untitled')}</span>
         </span>
-        <span className="text-[11.5px] text-faint tabular-nums">{relativeTime(thread.updatedAt, now, t)}</span>
+        <span className="text-xs text-muted-ink tabular-nums">{relativeTime(thread.updatedAt, now, t)}</span>
         <span className="col-span-2 truncate text-xs text-muted-ink">
           {project ? `${project} · ` : ''}{t('messageCount', { count: thread.messageCount })}
         </span>
@@ -133,7 +134,7 @@ function ThreadList() {
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="shrink-0 px-2 pb-1">
         <div className="relative">
-          <Search aria-hidden className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-faint" />
+          <Search aria-hidden className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-ink" />
           <Input value={query} onChange={event => setQuery(event.target.value)} placeholder={t('search')} aria-label={t('search')} className="h-8 pl-8 text-[13px]" />
         </div>
       </div>
@@ -258,7 +259,7 @@ export function ThreadsScreen() {
         actions={(
           <>
             <CreateJobButton />
-            <Button variant="outline" size="sm" className="gap-2" disabled={chatCount === 0} onClick={() => void startNewConversation()}>
+            <Button size="sm" className="gap-2 rounded-(--r)" disabled={chatCount === 0} onClick={() => void startNewConversation()}>
               <MessageSquarePlus aria-hidden className="size-4" />{t('newThread')}
             </Button>
           </>
@@ -266,18 +267,14 @@ export function ThreadsScreen() {
       />
       <div className="flex min-h-0 flex-1">
         <aside className="flex w-[280px] shrink-0 flex-col border-r border-line bg-panel pt-2" aria-label={t('listLabel')}>
-          <div className="mb-2 flex shrink-0 items-center gap-1 px-2" role="group" aria-label={t('groupBy')}>
-            {modes.map(option => (
-              <button
-                key={option}
-                type="button"
-                aria-pressed={mode === option}
-                onClick={() => setMode(option)}
-                className={cn('h-7 flex-1 rounded-md px-2 text-xs text-muted-ink hover:bg-hover', mode === option && 'bg-active font-medium text-ink')}
-              >
-                {t(`mode.${option}`)}
-              </button>
-            ))}
+          <div className="mb-2 shrink-0 px-2">
+            <Segmented
+              label={t('groupBy')}
+              value={mode}
+              onChange={setMode}
+              items={modes.map(value => ({ value, label: t(`mode.${value}`) }))}
+              className="w-full [&>button]:flex-1"
+            />
           </div>
           <ThreadList />
         </aside>

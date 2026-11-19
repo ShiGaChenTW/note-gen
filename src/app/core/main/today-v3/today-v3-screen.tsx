@@ -36,11 +36,11 @@ function Journal({ layout, now, viewingToday, exists, onOpen }: { layout: TodayV
     <div className="flex max-w-[600px] flex-col gap-3.5" data-testid="today-v3-journal">
       <div className="flex items-center justify-between">
         <span className={LABEL}>{t('label')} · <span className="font-mono">{viewingToday ? now : `${layout.heading.month}/${layout.heading.day}`}</span></span>
-        <Button variant="ghost" size="sm" aria-pressed={focus} onClick={() => setFocus(value => !value)}>{focus ? t('focusOff') : t('focus')}</Button>
+        <Button variant="ghost" size="sm" className="rounded-(--r)" aria-pressed={focus} onClick={() => setFocus(value => !value)}>{focus ? t('focusOff') : t('focus')}</Button>
       </div>
       {heading && <h2 className={cn('text-2xl leading-8 font-semibold tracking-tight transition-opacity duration-150', focus && 'opacity-35')}>{heading}</h2>}
       {paragraphs.length === 0 && (
-        <p className="text-sm text-faint">
+        <p className="text-sm text-muted-ink">
           {viewingToday ? t('empty') : t(exists ? 'emptyDay' : 'missingDay')}{' '}
           <button type="button" onClick={onOpen} className="cursor-pointer text-brand outline-none hover:underline focus-visible:ring-1 focus-visible:ring-ring/65">{viewingToday || exists ? t('open') : t('create')}</button>
         </p>
@@ -50,7 +50,7 @@ function Journal({ layout, now, viewingToday, exists, onOpen }: { layout: TodayV
         return (
           <p
             key={`${index}:${text}`}
-            className={cn('text-[15px] leading-[1.8] text-note-ink transition-opacity duration-150', active && 'border-l-2 border-brand pl-3.5', focus && !active && 'opacity-35')}
+            className={cn('text-[15px] leading-[1.8] text-note-ink transition-opacity duration-150', active && 'border-l-2 border-line pl-3.5', focus && !active && 'opacity-35')}
           >{text}</p>
         )
       })}
@@ -75,8 +75,8 @@ function TodoRow({ item, busy, onToggle }: { item: TodoItem, busy: boolean, onTo
         <span className={cn('grid size-[15px] shrink-0 place-items-center rounded-[4px] border-[1.5px] transition-colors duration-100', item.done ? 'border-brand bg-brand text-brand-ink' : 'border-faint')}>
           {item.done && <Check className="size-2.5" strokeWidth={3} aria-hidden />}
         </span>
-        <span className={cn('min-w-0 flex-1 truncate text-[13.5px]', item.done && 'text-faint line-through')}>{item.title}</span>
-        <span className={cn('w-[84px] shrink-0 text-right font-mono text-[11px] text-muted-ink', item.hot && !item.done && 'font-semibold text-ink')}>{dueText}</span>
+        <span className={cn('min-w-0 flex-1 truncate text-[13.5px]', item.done && 'text-muted-ink line-through')}>{item.title}</span>
+        <span className={cn('shrink-0 text-right text-muted-ink tabular-nums', item.due.kind === 'time' ? 'font-mono text-[11px]' : 'text-xs', item.hot && !item.done && 'font-semibold text-ink')}>{dueText}</span>
       </button>
     </li>
   )
@@ -92,7 +92,7 @@ function Todo({ layout, busy, viewingToday, onToggle }: { layout: TodayV3Layout,
         <span className={cn(LABEL, 'font-mono')}>{doneCount} / {total}</span>
       </div>
       {items.length === 0
-        ? <p className="py-3 text-sm text-faint">{t(viewingToday ? 'empty' : 'emptyDay')}</p>
+        ? <p className="py-3 text-sm text-muted-ink">{t(viewingToday ? 'empty' : 'emptyDay')}</p>
         : <ul>{items.map(item => <TodoRow key={item.key} item={item} busy={busy.has(item.key)} onToggle={onToggle} />)}</ul>}
     </div>
   )
@@ -183,16 +183,16 @@ export function TodayV3Screen() {
     <PageSurface label={t('title')} onDismiss={hide}>
       <PageHeader
         title={viewingToday ? t('title') : t('titleDay', { month: layout.heading.month, day: layout.heading.day })}
-        subtitle={<span className="font-mono text-xs">{!viewingToday && `${t('viewing')} · `}{t('dateLabel', { month: heading.month, day: heading.day, weekday: t(`weekday.${heading.weekday}`), week: heading.week })}</span>}
+        subtitle={<span className="tabular-nums">{!viewingToday && `${t('viewing')} · `}{t('dateLabel', { month: heading.month, day: heading.day, weekday: t(`weekday.${heading.weekday}`), week: heading.week })}</span>}
         onBack={hide}
-        backShortcut="⌘⇧H"
-      >
-        <p className="max-w-[520px] min-w-0 flex-1 text-right text-[13px] leading-5 text-muted-ink" data-testid="today-v3-summary">
-          {viewingToday
-            ? t('summary', { events: summary.events, tasks: summary.openTasks, decisions: summary.decisions })
-            : t('summaryDay', { month: heading.month, day: heading.day, events: summary.events, tasks: summary.openTasks, decisions: summary.decisions })}
-        </p>
-      </PageHeader>
+        actions={(
+          <p className="max-w-[520px] text-right text-[13px] leading-5 text-muted-ink" data-testid="today-v3-summary">
+            {viewingToday
+              ? t('summary', { events: summary.events, tasks: summary.openTasks, decisions: summary.decisions })
+              : t('summaryDay', { month: heading.month, day: heading.day, events: summary.events, tasks: summary.openTasks, decisions: summary.decisions })}
+          </p>
+        )}
+      />
       <DateStrip todayKey={todayKey} selectedKey={dayKey} noteKeys={noteKeys} onSelect={selectDay} onToday={() => setPickedKey(null)} />
       <div className="@container min-h-0 flex-1">
       <div className="grid h-full grid-cols-[280px_minmax(0,1fr)_300px] @max-[1000px]:grid-cols-[240px_minmax(0,1fr)]">

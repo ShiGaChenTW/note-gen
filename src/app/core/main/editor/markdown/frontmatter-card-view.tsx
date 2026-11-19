@@ -122,7 +122,7 @@ function EditRow({ property, apply, notePath }: { property: Property; apply: App
 
   let control: React.ReactNode
   if (!property.editable) {
-    control = <><pre className="m-0 whitespace-pre-wrap break-all rounded bg-muted/50 px-2 py-1 font-mono text-xs text-muted-foreground">{property.raw}</pre><p className="m-0 mt-0.5 text-[11px] text-muted-foreground">{t('nestedHint')}</p></>
+    control = <><pre className="m-0 whitespace-pre-wrap break-all rounded bg-muted/50 px-2 py-1 font-mono text-xs text-muted-foreground">{property.raw}</pre><p className="m-0 mt-0.5 text-[11px] v3:text-xs text-muted-foreground">{t('nestedHint')}</p></>
   } else if (property.type === 'checkbox') {
     control = <Switch aria-label={property.key} checked={property.value === true} onCheckedChange={checked => set(checked)} />
   } else if (LIST_TYPES.includes(property.type)) {

@@ -314,7 +314,7 @@ const MessageWrapper = React.memo(function MessageWrapper({ chat, children }: { 
             showActions ? 'opacity-100' : 'pointer-events-none opacity-0',
             !isMobile && 'group-focus-within/user-message:pointer-events-auto group-focus-within/user-message:opacity-100')}
             onClick={event => event.stopPropagation()}>
-            <MessageInfo chat={chat} format="time" className={v3 ? "font-mono text-faint" : undefined} />
+            <MessageInfo chat={chat} format="time" className={v3 ? "text-muted-ink tabular-nums" : undefined} />
             <CopyControl chat={chat} variant="ghost" />
             <TooltipButton icon={<X />} tooltipText={t('delete')} variant="ghost" size="icon-xs" buttonClassName="[&_svg:not([class*='size-'])]:size-3.5" onClick={handleDelete} />
             <PluginChatMessageActions conversationId={chat.conversationId} messageId={chat.id} role={chat.role} messageType={chat.type} />
@@ -678,7 +678,7 @@ const Message = React.memo(function Message({ chat }: { chat: Chat }) {
             <ChatAttachmentSummary attachments={attachments} />
             {/* 显示用户消息中的引用 */}
             {quoteData && (
-              <div className="flex flex-col gap-1 text-[11px]">
+              <div className="flex flex-col gap-1 text-[11px] v3:text-xs">
                 <div className="flex items-center gap-1">
                   <QuoteIcon className="size-3 opacity-75" />
                   <span className="opacity-75">
