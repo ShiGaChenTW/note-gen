@@ -8295,7 +8295,7 @@
       "backToToday": "回到今天"
     },
     "timeline": {
-      "label": "时间",
+      "label": "日程",
       "allDay": "全天",
       "now": "现在",
       "readOnly": "日历事件（只读）",
@@ -8427,7 +8427,7 @@
       "collect": "收集",
       "knowledgeGroup": "知识页面",
       "inbox": "Inbox",
-      "timeline": "时间轴",
+      "timeline": "笔记时间轴",
       "canvases": "画布",
       "noteTags": "标签",
       "prompts": "提示词",

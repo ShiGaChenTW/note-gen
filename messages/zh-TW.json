@@ -8360,7 +8360,7 @@
       "backToToday": "回到今天"
     },
     "timeline": {
-      "label": "時間",
+      "label": "行程",
       "allDay": "全天",
       "now": "現在",
       "readOnly": "行事曆事件（唯讀）",
@@ -8492,7 +8492,7 @@
       "collect": "收集",
       "knowledgeGroup": "知識頁面",
       "inbox": "Inbox",
-      "timeline": "時間軸",
+      "timeline": "筆記時間軸",
       "canvases": "畫布",
       "noteTags": "標籤",
       "prompts": "提示詞",

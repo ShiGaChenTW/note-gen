@@ -8295,7 +8295,7 @@
       "backToToday": "Back to today"
     },
     "timeline": {
-      "label": "Time",
+      "label": "Schedule",
       "allDay": "All day",
       "now": "Now",
       "readOnly": "Calendar event (read-only)",
@@ -8427,7 +8427,7 @@
       "collect": "Collect",
       "knowledgeGroup": "Knowledge pages",
       "inbox": "Inbox",
-      "timeline": "Timeline",
+      "timeline": "Notes timeline",
       "canvases": "Canvas",
       "noteTags": "Tags",
       "prompts": "Prompts",
