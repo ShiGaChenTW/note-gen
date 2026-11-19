@@ -226,7 +226,8 @@ function ResizableWrapper() {
   }
   
   const onLayout = (layout: Layout) => {
-    if (temporaryCenterPanel || useSidebarStore.getState().rightSidebarBeforeThreads !== null) return
+    // 對話頁暫時借用中間面板時，版面不是使用者選的，不存；其他時候（含對話頁期間拖曳分隔線）照常存
+    if (temporaryCenterPanel) return
     // 保存当前面板布局
     const storageKey = `react-resizable-panels:main-layout:${layoutKey}`
     const sizes = ['left', 'center', 'right'].map((id) => layout[id] ?? 0)
