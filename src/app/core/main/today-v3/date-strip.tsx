@@ -102,7 +102,7 @@ export function DateStrip({ todayKey, selectedKey, noteKeys, onSelect, onToday }
             data-note={day.hasNote || undefined}
             onClick={() => { setFocusKey(day.key); onSelect(day.key) }}
             onFocus={() => setFocusKey(day.key)}
-            className="h-[58px] min-w-6 flex-1 text-[17px] leading-5"
+            className="h-[58px] min-w-6 flex-1 text-ui-emphasis leading-5"
           />
         ))}
       </div>
