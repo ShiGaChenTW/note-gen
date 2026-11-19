@@ -23,11 +23,11 @@ export function DiffBlock({ diff, className }: { diff: DiffPreview, className?: 
   return (
     <div className={className} data-testid="decide-diff">
       <pre className="overflow-x-auto rounded-md border border-line-soft bg-bg px-3 py-2 font-mono text-[12.5px] leading-6 whitespace-pre-wrap break-words">
-        {diff.context.map((line, i) => <div key={`c${i}`} className="text-faint">{`  ${line}`}</div>)}
-        {diff.removed.map((line, i) => <div key={`r${i}`} className="text-faint line-through">{`- ${line}`}</div>)}
+        {diff.context.map((line, i) => <div key={`c${i}`} className="text-muted-ink">{`  ${line}`}</div>)}
+        {diff.removed.map((line, i) => <div key={`r${i}`} className="text-muted-ink line-through">{`- ${line}`}</div>)}
         {diff.added.map((line, i) => <div key={`a${i}`}><ins className="rounded-[3px] bg-ink/9 px-0.5 no-underline">{`+ ${line}`}</ins></div>)}
       </pre>
-      {diff.hidden > 0 && <p className="mt-1 text-xs text-faint">{t('diff.hidden', { count: diff.hidden })}</p>}
+      {diff.hidden > 0 && <p className="mt-1 text-xs text-muted-ink">{t('diff.hidden', { count: diff.hidden })}</p>}
     </div>
   )
 }

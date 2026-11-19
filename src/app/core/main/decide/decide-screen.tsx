@@ -33,7 +33,7 @@ function Detail({ item }: { item: DecideItem }) {
   const { diff } = item.preview
   return (
     <article className="max-w-[640px]" data-testid="decide-detail">
-      <div className="flex items-center gap-2 font-mono text-[10.5px] text-faint">
+      <div className="flex items-center gap-2 text-xs text-muted-ink">
         <span className="flex items-center gap-1.5"><Icon className="size-3" aria-hidden />{item.kind === 'job' ? jobT('result') : t(`kind.${item.kind}`)}</span>
         <span className="rounded border border-dashed border-faint px-1.5 py-px">{t('proposalTag')}</span>
         <span>{item.source === 'job' ? jobT('card') : t(`source.${item.source}`)}</span>
@@ -49,7 +49,7 @@ function Detail({ item }: { item: DecideItem }) {
       )}
       {item.organizeMerge && <p className="mt-3 text-sm">{organizeT('mergeEffect', item.organizeMerge)}</p>}
       {diff && <DiffBlock diff={diff} className="mt-3" />}
-      {item.duplicates.length > 0 && <p className="mt-3 text-xs text-faint">{t('merged', { count: item.duplicates.length })}</p>}
+      {item.duplicates.length > 0 && <p className="mt-3 text-xs text-muted-ink">{t('merged', { count: item.duplicates.length })}</p>}
       <div className="mt-5 flex items-center gap-1.5">
         <Button disabled={busy === item.key} onClick={() => void accept(item)}>{t('accept')}</Button>
         <Button variant="outline" disabled={busy === item.key} onClick={() => void reject(item)}>{t('reject')}</Button>
@@ -69,9 +69,12 @@ function DecidePage() {
 
   return (
     <PageSurface label={t('title')} onDismiss={hide}>
-      <PageHeader title={t('title')} subtitle={t('subtitle')} onBack={hide}>
-        <Count value={items.length} label={t('count', { count: items.length })} />
-      </PageHeader>
+      <PageHeader
+        title={t('title')}
+        subtitle={t('subtitle')}
+        onBack={hide}
+        actions={<Count value={items.length} label={t('count', { count: items.length })} />}
+      />
       <OrganizeHistory />
       {items.length === 0 ? (
         <div className="flex flex-1 items-center justify-center"><EmptyState icon={CheckCheck} text={t('empty')} /></div>
@@ -90,10 +93,10 @@ function DecidePage() {
                     data-testid="decide-row"
                     className={cn('flex w-full cursor-pointer items-start gap-2.5 rounded-md px-2.5 py-2 text-left outline-none transition-colors duration-100 hover:bg-hover focus-visible:ring-1 focus-visible:ring-ring/65', active && 'bg-active')}
                   >
-                    <Icon className="mt-1 size-3.5 shrink-0 text-faint" aria-hidden />
+                    <Icon className="mt-1 size-3.5 shrink-0 text-muted-ink" aria-hidden />
                     <span className="min-w-0 flex-1">
                       <span className={cn('block truncate text-[13.5px] leading-5', active && 'font-semibold')}>{itemTitle(item)}</span>
-                      <span className="block truncate text-xs leading-5 text-faint">{[item.kind === 'job' ? jobT('result') : t(`kind.${item.kind}`), item.when, t('from', { origin: item.origin })].filter(Boolean).join(' · ')}</span>
+                      <span className="block truncate text-xs leading-5 text-muted-ink">{[item.kind === 'job' ? jobT('result') : t(`kind.${item.kind}`), item.when, t('from', { origin: item.origin })].filter(Boolean).join(' · ')}</span>
                     </span>
                   </button>
                 </li>

@@ -22,10 +22,10 @@ function ProposalCard({ view, onAction }: { view: ProposalCardView, onAction: (a
       className={cn('rounded-md border bg-bg p-3 text-sm', view.tone === 'pending' ? 'border-dashed border-line' : 'border-line-soft')}
     >
       <div className="flex items-center gap-2">
-        <span className="rounded-sm bg-hover px-1.5 py-0.5 text-[11px] text-muted-ink">{t('proposal')}</span>
+        <span className="rounded-sm bg-hover px-1.5 py-0.5 text-xs text-muted-ink">{t('proposal')}</span>
         <Icon aria-hidden className="size-3.5 shrink-0 text-muted-ink" />
-        <span className={cn('min-w-0 flex-1 truncate font-medium text-ink', view.tone === 'muted' && 'text-faint line-through')}>{view.title}</span>
-        {view.when && <span className="shrink-0 font-mono text-[11.5px] text-muted-ink">{view.when}</span>}
+        <span className={cn('min-w-0 flex-1 truncate font-medium text-ink', view.tone === 'muted' && 'text-muted-ink line-through')}>{view.title}</span>
+        {view.when && <span className="shrink-0 text-xs text-muted-ink tabular-nums">{view.when}</span>}
       </div>
       {view.detail && <p className="mt-1.5 text-[12.5px] text-muted-ink">{view.detail}</p>}
       <div className="mt-2 flex items-center gap-1.5">
@@ -36,7 +36,7 @@ function ProposalCard({ view, onAction }: { view: ProposalCardView, onAction: (a
             {view.tone === 'done' && <Check aria-hidden className="size-3.5" />}{t(view.statusKey)}
           </span>
         )}
-        {view.actions.length > 0 && <span className="ml-auto text-xs text-faint">{t('alsoInInbox')}</span>}
+        {view.actions.length > 0 && <span className="ml-auto text-xs text-muted-ink">{t('alsoInInbox')}</span>}
       </div>
     </div>
   )
@@ -60,10 +60,10 @@ function KickoffCard({ view, onAction }: { view: KickoffCardView, onAction: (act
       <ol className="mt-2 flex flex-col gap-1">
         {view.tasks.map(task => (
           <li key={task.n} className="flex items-center gap-2 text-[13px]">
-            <span className="w-4 shrink-0 font-mono text-[11.5px] text-faint">{task.n}</span>
+            <span className="w-4 shrink-0 font-mono text-[11.5px] text-muted-ink">{task.n}</span>
             <span className="min-w-0 flex-1 truncate text-ink">
               {task.text}
-              {task.dependsOn && task.dependsOn.length > 0 && <span className="text-faint"> · {t('dependsOn', { list: task.dependsOn.join('、') })}</span>}
+              {task.dependsOn && task.dependsOn.length > 0 && <span className="text-muted-ink"> · {t('dependsOn', { list: task.dependsOn.join('、') })}</span>}
             </span>
             {task.owner && <span className="shrink-0 text-xs text-muted-ink">{task.owner}</span>}
             {view.showTaskStatus && (
@@ -93,7 +93,7 @@ function KickoffCard({ view, onAction }: { view: KickoffCardView, onAction: (act
           {view.actions.includes('start') && <Button size="sm" onClick={() => onAction('start')}>{t('start')}</Button>}
           {view.actions.includes('hold') && <Button size="sm" variant="outline" onClick={() => onAction('hold')}>{t('hold')}</Button>}
           {view.actions.includes('reopen') && <Button size="sm" variant="outline" onClick={() => onAction('reopen')}>{t('reopen')}</Button>}
-          {view.actions.includes('start') && <span className="ml-auto text-xs text-faint">{t('maxParallel')}</span>}
+          {view.actions.includes('start') && <span className="ml-auto text-xs text-muted-ink">{t('maxParallel')}</span>}
         </div>
       )}
     </div>

@@ -46,7 +46,7 @@ export function LinkedFileDisplay({ linkedResource, onFileRemove, mobileDockStyl
       className={cn(
         "flex items-center justify-between",
         mobileDockStyle
-          ? "mobile-dock-surface mb-1 min-h-7 w-[calc(100%-1rem)] rounded-xl px-2 py-0.5 text-[11px] leading-none text-[hsl(var(--component-inactive-color))]"
+          ? "mobile-dock-surface mb-1 min-h-7 w-[calc(100%-1rem)] rounded-xl px-2 py-0.5 text-[11px] v3:text-xs leading-none text-[hsl(var(--component-inactive-color))]"
           : "w-full translate-y-2 rounded-xl rounded-b-none border-l border-r border-t bg-third px-2 pb-2 text-sm"
       )}
     >
@@ -60,9 +60,9 @@ export function LinkedFileDisplay({ linkedResource, onFileRemove, mobileDockStyl
         ) : (
           <AtSign className={cn("shrink-0", mobileDockStyle ? "size-2.5" : "size-3")} />
         )}
-        <span className={cn("truncate font-medium", mobileDockStyle ? "text-[11px]" : "text-xs")}>{linkedResource.name}</span>
+        <span className={cn("truncate font-medium", mobileDockStyle ? "text-[11px] v3:text-xs" : "text-xs")}>{linkedResource.name}</span>
         {isFolder && (
-          <span className={cn("shrink-0 opacity-70", mobileDockStyle ? "text-[10px]" : "text-xs")}>
+          <span className={cn("shrink-0 opacity-70 v3:opacity-100 v3:text-muted-ink", mobileDockStyle ? "text-[10px] v3:text-xs" : "text-xs")}>
             ({linkedResource.indexedCount}/{linkedResource.fileCount})
           </span>
         )}

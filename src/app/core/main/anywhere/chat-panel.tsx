@@ -113,7 +113,7 @@ function PanelBody() {
           />
           <Button size="icon-sm" aria-label={t('send')} disabled={!canSend} onClick={send}><ArrowUp aria-hidden /></Button>
         </div>
-        <div className="mt-1.5 flex items-center justify-between px-1 text-[11px] text-faint">
+        <div className="mt-1.5 flex items-center justify-between px-1 text-[11px] text-faint v3:text-xs v3:text-muted-ink">
           <span>{t('hint')}</span>
           <ShortcutKbd shortcut="⌘⇧A" />
         </div>

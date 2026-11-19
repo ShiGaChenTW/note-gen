@@ -1,5 +1,6 @@
 "use client"
 
+import { Segmented } from '@/components/v3/segmented'
 import { ChevronDown, Eye, ShieldCheck, ShieldQuestion } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
@@ -16,16 +17,18 @@ export function ChatModeSwitch({ readOnly, disabled, onChange }: {
 }) {
   const t = useTranslations('record.chat.v3.mode')
   return (
-    <div role="group" aria-label={t('label')} title={t('shortcut')}
-      className="inline-flex shrink-0 self-start rounded-full bg-sunken p-0.5">
-      {([true, false] as const).map(ask => (
-        <button key={String(ask)} type="button" aria-pressed={readOnly === ask} disabled={disabled}
-          onClick={() => onChange(ask)}
-          className="h-[22px] rounded-full px-2.5 text-xs text-muted-ink hover:text-ink aria-pressed:bg-bg aria-pressed:font-semibold aria-pressed:text-ink disabled:opacity-60">
-          {t(ask ? 'ask' : 'delegate')}
-        </button>
-      ))}
-    </div>
+    <Segmented
+      compact
+      label={t('label')}
+      title={t('shortcut')}
+      value={readOnly ? 'ask' : 'delegate'}
+      onChange={mode => onChange(mode === 'ask')}
+      disabled={disabled}
+      items={[
+        { value: 'ask', label: t('ask') },
+        { value: 'delegate', label: t('delegate') },
+      ]}
+    />
   )
 }
 
@@ -67,7 +70,7 @@ export function AgentPermissionModeSelect({ compact = false }: { compact?: boole
           variant="ghost"
           size="sm"
           disabled={loading}
-          className={cn("h-8 gap-1.5 px-2 text-xs text-muted-foreground", compact && "h-6 min-w-0 gap-1 px-1.5 text-[11px] text-faint hover:bg-hover hover:text-ink")}
+          className={cn("h-8 gap-1.5 px-2 text-xs text-muted-foreground", compact && "h-6 min-w-0 gap-1 rounded-(--r) px-1.5 text-xs text-muted-ink hover:bg-hover hover:text-ink")}
           aria-label={t("label")}
         >
           <Icon data-icon="inline-start" className={compact ? "size-3" : MODE_COLORS[agentPermissionMode]} />

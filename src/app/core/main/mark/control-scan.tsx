@@ -797,8 +797,8 @@ export function ControlScan() {
                           <CardContent className="relative flex size-full items-center justify-center overflow-hidden p-0">
                             <Image className="size-full object-cover transition-transform duration-200 group-hover:scale-[1.03]" src={file.path} alt="" width={288} height={192} />
                             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/45 to-transparent px-2 pb-1.5 pt-7">
-                              <p className="line-clamp-1 text-[11px] font-medium text-white">{file.name}</p>
-                              <p className="line-clamp-1 text-[10px] text-white/65">{t('record.capture.screenshotModeWindow')}</p>
+                              <p className="line-clamp-1 text-[11px] v3:text-xs font-medium text-white">{file.name}</p>
+                              <p className="line-clamp-1 text-[10px] v3:text-xs text-white/65">{t('record.capture.screenshotModeWindow')}</p>
                             </div>
                             {isSelected ? (
                               <span className="absolute right-2 top-2 inline-flex size-5 items-center justify-center rounded-full bg-white text-black">

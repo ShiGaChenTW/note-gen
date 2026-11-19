@@ -3,6 +3,7 @@
 // Fork（almanac ALMNC-8）：V3 收集頁。一個框收文字、連結、圖片與檔案，系統拆成筆記、任務、時段等提案，逐條收下、修改或丟掉。
 // 做法同 Inbox 頁：蓋在編輯器與右側欄上方、留著左側欄。只在新介面（v3）顯示。
 // 外觀依 redesign_v5.html：單色、提案是虛線框、收下後變實線。
+import { Segmented } from '@/components/v3/segmented'
 import { useEffect, useMemo, useRef, useState, type ClipboardEvent, type DragEvent } from 'react'
 import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
@@ -97,14 +98,14 @@ function ProposalCard({ item, proposal }: { item: CaptureItem, proposal: Capture
   if (proposal.status === 'ok') {
     return (
       <div className={cn(base, 'border-line-soft bg-hover')} data-status="ok">
-        <div className="flex items-center gap-1.5 font-mono text-[10.5px] text-faint"><Icon className="size-3" aria-hidden />{t(`kind.${proposal.kind}`)}</div>
+        <div className="flex items-center gap-1.5 text-xs text-muted-ink"><Icon className="size-3" aria-hidden />{t(`kind.${proposal.kind}`)}</div>
         <b className="text-[13px] leading-5 font-medium">{proposal.title}</b>
         <div className="flex items-center justify-between gap-1 text-xs text-muted-foreground">
           <span className="flex min-w-0 items-center gap-1"><Check className="size-3 shrink-0" aria-hidden /><span className="truncate">{t('status.ok')}</span></span>
           <span className="flex shrink-0 gap-0.5">
-            <button type="button" onClick={() => void openTarget()} className="cursor-pointer rounded px-1.5 py-0.5 text-brand outline-none hover:bg-hover focus-visible:ring-1 focus-visible:ring-ring/65">{t('open')}</button>
+            <button type="button" onClick={() => void openTarget()} className="cursor-pointer rounded-(--r) px-1.5 py-0.5 text-brand outline-none hover:bg-hover focus-visible:ring-1 focus-visible:ring-ring/65">{t('open')}</button>
             {proposal.result?.record && (
-              <button type="button" onClick={() => void undo(item.id, proposal.id).then(ok => { if (!ok) toast.error(t('undoFailed')) })} className="cursor-pointer rounded px-1.5 py-0.5 outline-none hover:bg-hover focus-visible:ring-1 focus-visible:ring-ring/65">{t('undo')}</button>
+              <button type="button" onClick={() => void undo(item.id, proposal.id).then(ok => { if (!ok) toast.error(t('undoFailed')) })} className="cursor-pointer rounded-(--r) px-1.5 py-0.5 outline-none hover:bg-hover focus-visible:ring-1 focus-visible:ring-ring/65">{t('undo')}</button>
             )}
           </span>
         </div>
@@ -115,7 +116,7 @@ function ProposalCard({ item, proposal }: { item: CaptureItem, proposal: Capture
   if (proposal.status === 'no') {
     return (
       <div className={cn(base, 'border-dashed border-faint opacity-40')} data-status="no">
-        <div className="flex items-center gap-1.5 font-mono text-[10.5px] text-faint"><Icon className="size-3" aria-hidden />{t(`kind.${proposal.kind}`)}</div>
+        <div className="flex items-center gap-1.5 text-xs text-muted-ink"><Icon className="size-3" aria-hidden />{t(`kind.${proposal.kind}`)}</div>
         <b className="text-[13px] leading-5 font-medium line-through">{proposal.title}</b>
         <span className="text-xs text-muted-foreground">{t('status.no')}</span>
       </div>
@@ -125,7 +126,7 @@ function ProposalCard({ item, proposal }: { item: CaptureItem, proposal: Capture
   if (editing) {
     return (
       <div className={cn(base, 'border-dashed border-faint')} data-status="editing">
-        <div className="flex items-center gap-1.5 font-mono text-[10.5px] text-faint"><Icon className="size-3" aria-hidden />{t(`kind.${proposal.kind}`)}</div>
+        <div className="flex items-center gap-1.5 text-xs text-muted-ink"><Icon className="size-3" aria-hidden />{t(`kind.${proposal.kind}`)}</div>
         <input
           autoFocus
           value={proposal.title}
@@ -141,22 +142,22 @@ function ProposalCard({ item, proposal }: { item: CaptureItem, proposal: Capture
             )}
           </div>
         )}
-        <Button size="sm" variant="ghost" className="h-7 self-end px-2" onClick={() => setEditing(false)} disabled={!proposal.title.trim()}>{t('editDone')}</Button>
+        <Button size="sm" variant="ghost" className="h-7 rounded-(--r) self-end px-2" onClick={() => setEditing(false)} disabled={!proposal.title.trim()}>{t('editDone')}</Button>
       </div>
     )
   }
 
   return (
     <div className={cn(base, 'border-dashed border-faint')} data-status="wait">
-      <div className="flex items-center justify-between font-mono text-[10.5px] text-faint">
+      <div className="flex items-center justify-between text-xs text-muted-ink">
         <span className="flex items-center gap-1.5"><Icon className="size-3" aria-hidden />{t(`kind.${proposal.kind}`)}</span>
-        {when && <span>{when}</span>}
+        {when && <span className="tabular-nums">{when}</span>}
       </div>
       <b className="text-[13px] leading-5 font-medium break-words">{proposal.title}</b>
       <span className="truncate text-xs text-muted-foreground" title={destination}>{destination}</span>
       <div className="mt-1 flex items-center gap-0.5">
-        <Button size="sm" className="h-7 px-2.5" onClick={() => void onAccept()} disabled={busy}>{t('accept')}</Button>
-        <Button size="sm" variant="ghost" className="h-7 gap-1 px-2 text-muted-foreground" onClick={() => setEditing(true)}><Pencil className="size-3" aria-hidden />{t('edit')}</Button>
+        <Button size="sm" className="h-7 rounded-(--r) px-2.5" onClick={() => void onAccept()} disabled={busy}>{t('accept')}</Button>
+        <Button size="sm" variant="ghost" className="h-7 gap-1 rounded-(--r) px-2 text-muted-foreground" onClick={() => setEditing(true)}><Pencil className="size-3" aria-hidden />{t('edit')}</Button>
         <Button size="icon" variant="ghost" className="ml-auto size-7 text-muted-foreground" onClick={() => reject(item.id, proposal.id)} aria-label={t('reject')} title={t('reject')}><X className="size-3.5" aria-hidden /></Button>
       </div>
     </div>
@@ -188,14 +189,14 @@ function Entry({ item }: { item: CaptureItem }) {
 
   return (
     <article className="grid grid-cols-[72px_minmax(0,1fr)] gap-4 border-b border-line-soft py-4" data-testid="collect-entry">
-      <div className="flex flex-col gap-1.5 pt-0.5 text-xs text-faint">
+      <div className="flex flex-col gap-1.5 pt-0.5 text-xs text-muted-ink">
         <span className="font-mono">{clock(item.createdAt)}</span>
         <span className="flex items-center gap-1"><Icon className="size-3.5" aria-hidden />{t(`input.${item.input.kind}`)}</span>
       </div>
       <div className="min-w-0">
         <div className="flex items-start gap-2">
           <h3 className="min-w-0 flex-1 text-[15px] leading-[22px] font-semibold tracking-[-0.006em] break-words">{itemTitle(item.input) || t('input.text')}</h3>
-          <button type="button" onClick={() => remove(item.id)} aria-label={t('remove')} title={t('remove')} className="cursor-pointer rounded p-1 text-faint outline-none hover:bg-hover hover:text-ink focus-visible:ring-1 focus-visible:ring-ring/65"><X className="size-3.5" aria-hidden /></button>
+          <button type="button" onClick={() => remove(item.id)} aria-label={t('remove')} title={t('remove')} className="cursor-pointer rounded-(--r) p-1 text-muted-ink outline-none hover:bg-hover hover:text-ink focus-visible:ring-1 focus-visible:ring-ring/65"><X className="size-3.5" aria-hidden /></button>
         </div>
         {excerpt && excerpt !== itemTitle(item.input) && <p className="mt-0.5 line-clamp-2 whitespace-pre-line text-[13.5px] leading-[1.75] break-words text-muted-foreground">{excerpt}</p>}
 
@@ -208,9 +209,9 @@ function Entry({ item }: { item: CaptureItem }) {
             <div className="mt-2.5 flex flex-wrap gap-2">
               {item.proposals.map(proposal => <ProposalCard key={proposal.id} item={item} proposal={proposal} />)}
             </div>
-            <div className="mt-2 flex items-center gap-3 text-xs text-faint">
+            <div className="mt-2 flex items-center gap-3 text-xs text-muted-ink">
               <span>{item.source === 'ai' ? t('source.ai') : t('source.rules')}</span>
-              {pending > 1 && <Button size="sm" variant="ghost" className="ml-auto h-6 px-2 text-xs" onClick={() => void acceptAll()}>{t('acceptAll')}</Button>}
+              {pending > 1 && <Button size="sm" variant="ghost" className="ml-auto h-6 rounded-(--r) px-2 text-xs" onClick={() => void acceptAll()}>{t('acceptAll')}</Button>}
             </div>
           </>
         )}
@@ -312,9 +313,7 @@ export function CollectScreen() {
 
   return (
     <PageSurface label={t('title')} onDismiss={hide}>
-      <PageHeader title={t('title')} subtitle={t('subtitle')} onBack={hide}>
-        <CollectTabs active="collect" />
-      </PageHeader>
+      <PageHeader title={t('title')} subtitle={t('subtitle')} onBack={hide} tabs={<CollectTabs active="collect" />} />
       <div className="grid min-h-0 flex-1 grid-cols-1 overflow-y-auto lg:grid-cols-[minmax(0,1fr)_300px] lg:overflow-hidden">
         <div className="min-w-0 px-6 py-5 lg:overflow-y-auto">
           <div className="mx-auto max-w-[760px]">
@@ -340,35 +339,39 @@ export function CollectScreen() {
                 rows={3}
                 className="block min-h-[76px] w-full resize-none border-0 bg-transparent px-4 pt-3.5 pb-1.5 text-base leading-[26px] outline-none placeholder:text-faint focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring"
               />
-              <div className={cn('mx-3 mb-3 flex min-h-9 items-center gap-2 rounded-md px-2.5 py-1.5 text-[13px]', detected ? 'bg-hover' : 'border border-dashed border-line text-faint')} aria-live="polite">
+              <div className={cn('mx-3 mb-3 flex min-h-9 items-center gap-2 rounded-md px-2.5 py-1.5 text-[13px]', detected ? 'bg-hover' : 'border border-dashed border-line text-muted-ink')} aria-live="polite">
                 {detected ? (
                   <><span className="flex items-center gap-1.5 font-medium">{(() => { const D = detected === 'link' ? Link2 : detected === 'task' ? ListTodo : Type; return <D className="size-3.5" aria-hidden /> })()}{t(`detect.${detected}.name`)}</span><span className="text-muted-foreground">{t(`detect.${detected}.hint`)}</span></>
                 ) : t('detect.empty')}
               </div>
               <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line-soft py-1.5 pr-1.5 pl-3">
                 <div className="flex items-center gap-0.5">
-                  <Button variant="ghost" size="sm" className="h-7 gap-1.5 px-2 text-muted-foreground" onClick={() => fileRef.current?.click()}><ImagePlus className="size-3.5" aria-hidden />{t('pickFile')}</Button>
+                  <Button variant="ghost" size="sm" className="h-7 gap-1.5 rounded-(--r) px-2 text-muted-foreground" onClick={() => fileRef.current?.click()}><ImagePlus className="size-3.5" aria-hidden />{t('pickFile')}</Button>
                   <input ref={fileRef} type="file" multiple className="sr-only" tabIndex={-1} aria-hidden onChange={event => { void addFiles([...(event.target.files ?? [])]); event.target.value = '' }} />
                 </div>
-                <Button size="sm" className="h-8 gap-2 px-3" onClick={send} disabled={!trimmed}>{t('send')}<kbd className="rounded bg-invert-ink/15 px-1 font-mono text-[11px]">⌘↵</kbd></Button>
+                <Button size="sm" className="h-8 gap-2 rounded-(--r) bg-invert px-3 text-invert-ink hover:bg-invert/85" onClick={send} disabled={!trimmed}>{t('send')}<kbd className="rounded bg-invert-ink/15 px-1 text-xs">⌘↵</kbd></Button>
               </div>
             </div>
 
             <div className="mt-2.5 flex flex-wrap items-center gap-1.5" aria-label={t('try')}>
-              <span className="text-xs text-faint">{t('try')}</span>
+              <span className="text-xs text-muted-ink">{t('try')}</span>
               {samples.map(sample => (
-                <button key={sample.key} type="button" onClick={() => { setText(sample.value); areaRef.current?.focus() }} className="flex h-6 cursor-pointer items-center gap-1.5 rounded border border-line-soft px-2 text-xs text-muted-foreground outline-none transition-colors duration-100 hover:bg-hover hover:text-ink focus-visible:ring-1 focus-visible:ring-ring/65">
+                <button key={sample.key} type="button" onClick={() => { setText(sample.value); areaRef.current?.focus() }} className="flex h-6 cursor-pointer items-center gap-1.5 rounded-(--r) border border-line-soft px-2 text-xs text-muted-foreground outline-none transition-colors duration-100 hover:bg-hover hover:text-ink focus-visible:ring-1 focus-visible:ring-ring/65">
                   <sample.icon className="size-3" aria-hidden />{t(`sample.${sample.key}`)}
                 </button>
               ))}
             </div>
 
-            <div className="mt-6 flex gap-0.5 border-b border-line pb-2" role="group" aria-label={t('filter.label')}>
-              {(['all', 'pending', 'done'] as const).map(value => (
-                <button key={value} type="button" aria-pressed={filter === value} onClick={() => setFilter(value)} className={cn('h-[26px] cursor-pointer rounded px-2 text-[12.5px] text-muted-foreground outline-none transition-colors duration-100 hover:bg-hover focus-visible:ring-1 focus-visible:ring-ring/65', filter === value && 'bg-active font-semibold text-ink')}>
-                  {t(`filter.${value}`)}<span className="ml-1.5 font-mono text-[10.5px] text-faint">{counts[value]}</span>
-                </button>
-              ))}
+            <div className="mt-6 border-b border-line pb-2">
+              <Segmented
+                label={t('filter.label')}
+                value={filter}
+                onChange={setFilter}
+                items={(['all', 'pending', 'done'] as const).map(value => ({
+                  value,
+                  label: <>{t(`filter.${value}`)}<span className="font-mono text-[11px] font-normal">{counts[value]}</span></>,
+                }))}
+              />
             </div>
 
             {shown.length === 0 ? (
@@ -381,7 +384,7 @@ export function CollectScreen() {
           <div className="flex items-center gap-2 border-b border-line pb-1.5 text-[12.5px] font-semibold">
             <span>{t('records')}</span><Count value={unprocessed.length} />
           </div>
-          <p className="mt-2 text-xs leading-5 text-faint">{t('recordsHint')}</p>
+          <p className="mt-2 text-xs leading-5 text-muted-ink">{t('recordsHint')}</p>
           {unprocessed.length === 0 ? (
             <EmptyState icon={InboxIcon} text={t('recordsEmpty')} compact />
           ) : (
@@ -411,7 +414,7 @@ export function CollectScreen() {
               })}
             </ul>
           )}
-          <p className="mt-4 text-xs leading-5 text-faint">{t('writeHint')}</p>
+          <p className="mt-4 text-xs leading-5 text-muted-ink">{t('writeHint')}</p>
         </aside>
       </div>
     </PageSurface>

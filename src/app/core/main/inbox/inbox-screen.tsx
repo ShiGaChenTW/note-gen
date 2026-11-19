@@ -15,6 +15,7 @@ import { EmitterRecordEvents } from '@/config/emitters'
 import type { Mark } from '@/db/marks'
 import { prepareActiveEditorPathMutationDurably } from '@/lib/editor-deactivation'
 import emitter from '@/lib/emitter'
+import { useUiV3 } from '@/lib/fork-ui'
 import { addTagToRecords, convertRecordsToNotes, notifyRecordSaved, restoreRecords, setRecordsProcessed, setRecordsUnprocessed, trashRecords } from '@/lib/inbox/actions'
 import { formatListTime } from '@/lib/time-format'
 import { cn } from '@/lib/utils'
@@ -109,6 +110,7 @@ function RecordRow({ record, selected, focused, processed, locale, onToggle, onF
 
 export function InboxScreen() {
   const t = useTranslations('inbox')
+  const isV3 = useUiV3()
   const visible = useInboxStore(state => state.visible)
   const hide = useInboxStore(state => state.hide)
   const records = useInboxStore(state => state.records)
@@ -231,25 +233,30 @@ export function InboxScreen() {
 
   const focusedProcessed = focusedMarkId !== null && processed.has(focusedMarkId)
 
+  const processedToggle = !trash && (
+    <label className="flex items-center gap-2 text-sm text-muted-foreground">
+      <Switch checked={showProcessed} onCheckedChange={setShowProcessed} />
+      {t('showProcessed')}
+    </label>
+  )
+
   return (
     <PageSurface label="Inbox">
       <PageHeader
         title={trash ? t('trash') : 'Inbox'}
         onBack={hide}
+        tabs={<CollectTabs active="inbox" />}
         actions={(
-          <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground" onClick={() => setTrash(!trash)}>
-            {trash ? <Undo2 className="size-4" aria-hidden /> : <Trash2 className="size-4" aria-hidden />}
-            {trash ? t('backToInbox') : t('trash')}
-          </Button>
+          <>
+            {isV3 && processedToggle}
+            <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground v3:rounded-(--r)" onClick={() => setTrash(!trash)}>
+              {trash ? <Undo2 className="size-4" aria-hidden /> : <Trash2 className="size-4" aria-hidden />}
+              {trash ? t('backToInbox') : t('trash')}
+            </Button>
+          </>
         )}
       >
-        <CollectTabs active="inbox" />
-        {!trash && (
-          <label className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Switch checked={showProcessed} onCheckedChange={setShowProcessed} />
-            {t('showProcessed')}
-          </label>
-        )}
+        {!isV3 && processedToggle}
       </PageHeader>
 
       <div className="flex min-h-0 flex-1">

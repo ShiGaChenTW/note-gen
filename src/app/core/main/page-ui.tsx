@@ -63,11 +63,13 @@ export function PageSurface({ label, children, className, onDismiss }: {
   )
 }
 
-/** 頁首：左邊標題（可帶副標），中間放頁面自己的控制，右邊是頁面動作，最右固定「回到工作區」。 */
-export function PageHeader({ title, subtitle, children, actions, onBack, backShortcut }: {
+/** V3 頁首：標題與副標在左、動作在右，頁籤另起一列。 */
+export function PageHeader({ title, subtitle, children, tabs, actions, onBack, backShortcut }: {
   title: ReactNode
   subtitle?: ReactNode
+  /** Classic 的標題與動作之間保留原有控制。 */
   children?: ReactNode
+  tabs?: ReactNode
   actions?: ReactNode
   onBack: () => void
   /** 有快捷鍵可以回到工作區時才顯示。 */
@@ -76,6 +78,22 @@ export function PageHeader({ title, subtitle, children, actions, onBack, backSho
   const t = useTranslations('home')
   // Fork（ALMNC-22）：新介面不放「回到工作區」，改用側欄檔案樹與 ⌘⇧H
   const isV3 = useUiV3()
+  if (isV3) {
+    return (
+      <header className="flex shrink-0 flex-col gap-2 border-b border-line px-5 py-2">
+        <div className="flex min-h-10 flex-wrap items-start justify-between gap-x-5 gap-y-2">
+          <div className="min-w-0">
+            <h1 className="text-xl leading-7 font-semibold tracking-tight text-ink">{title}</h1>
+            {subtitle && <div className="text-[13px] leading-5 text-muted-ink">{subtitle}</div>}
+          </div>
+          {children && <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">{children}</div>}
+          {actions && <div className="ml-auto flex min-w-0 flex-wrap items-center gap-1">{actions}</div>}
+        </div>
+        {tabs && <div className="overflow-x-auto p-0.5 -m-0.5">{tabs}</div>}
+      </header>
+    )
+  }
+
   return (
     <header className="flex min-h-14 shrink-0 flex-wrap items-center gap-x-5 gap-y-2 border-b px-5 py-2">
       <div className="min-w-0">
@@ -85,13 +103,11 @@ export function PageHeader({ title, subtitle, children, actions, onBack, backSho
       {children}
       <div className="ml-auto flex items-center gap-1">
         {actions}
-        {!isV3 && (
-          <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground" onClick={onBack} title={t('backToWorkspace')}>
-            <PanelsTopLeft className="size-4" aria-hidden />
-            {t('backToWorkspace')}
-            {backShortcut && <kbd className="rounded border px-1 text-xs">{backShortcut}</kbd>}
-          </Button>
-        )}
+        <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground" onClick={onBack} title={t('backToWorkspace')}>
+          <PanelsTopLeft className="size-4" aria-hidden />
+          {t('backToWorkspace')}
+          {backShortcut && <kbd className="rounded border px-1 text-xs">{backShortcut}</kbd>}
+        </Button>
       </div>
     </header>
   )

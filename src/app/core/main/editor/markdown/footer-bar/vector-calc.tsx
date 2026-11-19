@@ -78,7 +78,7 @@ export function VectorCalc({
 
         {/* Hover tooltip */}
         {isHoveringVector && (
-          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-0.5 bg-[hsl(var(--foreground))] text-[hsl(var(--background))] rounded text-[10px] whitespace-nowrap">
+          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-0.5 bg-[hsl(var(--foreground))] text-[hsl(var(--background))] rounded text-[10px] v3:text-xs whitespace-nowrap">
             {isProcessing
               ? '正在计算向量...'
               : `最后更新: ${formatLastProcessTime(lastProcessTime)}`}

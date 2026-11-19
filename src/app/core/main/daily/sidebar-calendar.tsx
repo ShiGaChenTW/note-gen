@@ -118,7 +118,7 @@ export function SidebarCalendar() {
                   key === activeKey && 'bg-active text-ink ring-0 hover:bg-active hover:text-ink',
                 )}
               >
-                <span className="text-[10px] opacity-60">{weekdayFormat.format(day)}</span>
+                <span className="text-[10px] opacity-60 v3:text-xs v3:text-muted-ink v3:opacity-100">{weekdayFormat.format(day)}</span>
                 <span className="mt-0.5 mb-1.5 tabular-nums">{day.getDate()}</span>
                 {(withOpenTasks.has(key) || withNote.has(key)) && (
                   <span className={cn('absolute bottom-0.5 size-1 rounded-full', withOpenTasks.has(key) ? 'bg-ink' : 'bg-muted-foreground/70', key === activeKey && 'bg-invert-ink')} />

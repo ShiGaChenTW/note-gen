@@ -32,13 +32,13 @@ export function DecideNeeds() {
               <div className="truncate text-xs text-muted-foreground">{[item.kind === 'job' ? jobT('result') : t(`kind.${item.kind}`), item.when, t('from', { origin: item.origin })].filter(Boolean).join(' · ')}</div>
             </div>
             {item.source === 'job' ? (
-              <Button size="sm" variant="secondary" onClick={() => {
+              <Button size="sm" className="rounded-(--r)" onClick={() => {
                 show()
                 useDecideStore.getState().select(item.key)
               }}>{jobT('openResult')}</Button>
             ) : (
               <>
-                <Button size="sm" variant="secondary" disabled={busy === item.key} onClick={() => void accept(item)}>{t('accept')}</Button>
+                <Button size="sm" className="rounded-(--r)" disabled={busy === item.key} onClick={() => void accept(item)}>{t('accept')}</Button>
                 <Button size="icon" variant="ghost" className="size-7 text-muted-foreground" disabled={busy === item.key} onClick={() => void reject(item)} aria-label={t('reject')} title={t('reject')}><X className="size-3.5" aria-hidden /></Button>
               </>
             )}

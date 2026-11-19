@@ -882,7 +882,7 @@ export function FileItem({
                   className="relative flex min-w-0 flex-1 cursor-default select-none items-center gap-1 overflow-hidden"
                 >
                   <div className="relative flex shrink-0 items-center">{<PluginFileIcon path={path} fallback={renderFileTypeIcon()} className={`${iconSize} shrink-0`} />}</div>
-                  <span className={`text-${fileManagerTextSize} min-w-0 flex-1 truncate`}>{item.name}</span>
+                  <span data-file-manager-item-name className={`text-${fileManagerTextSize} min-w-0 flex-1 truncate`}>{item.name}</span>
                 </div>
                 <FileTreeDecorations
                   path={path}
@@ -936,7 +936,7 @@ export function FileItem({
                   className="relative flex min-w-0 flex-1 cursor-default select-none items-center gap-1 overflow-hidden"
                 >
                   <div className="relative flex shrink-0 items-center">{<PluginFileIcon path={path} fallback={renderFileTypeIcon()} className={`${iconSize} shrink-0`} />}</div>
-                  <span className={`text-${fileManagerTextSize} min-w-0 flex-1 truncate`}>{item.name}</span>
+                  <span data-file-manager-item-name className={`text-${fileManagerTextSize} min-w-0 flex-1 truncate`}>{item.name}</span>
                 </div>
                 <FileTreeDecorations
                   path={path}

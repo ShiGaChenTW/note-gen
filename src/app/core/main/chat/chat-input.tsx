@@ -23,6 +23,7 @@ import { ImageIcon, Sparkles } from "lucide-react"
 import { isMobileDevice } from '@/lib/check'
 import type { PendingQuote } from "@/stores/chat"
 import { isChatModeShortcut, useChatV3 } from "./chat-v3"
+import { COMPOSER_FIELD, COMPOSER_FRAME } from '@/components/v3/composer-styles'
 import { AgentPermissionModeSelect, ChatModeSwitch } from "./agent-permission-mode"
 import { AgentPendingMessageList } from "./agent-pending-message-list"
 import { ContextUsageIndicator } from "./context-usage-indicator"
@@ -1670,7 +1671,7 @@ ${previewLines.join('\n')}
         className={cn(
           "group relative z-10 flex w-full flex-col overflow-hidden border",
           v3
-            ? "gap-1 rounded-[18px] border-line bg-bg p-1.5 transition-colors focus-within:border-faint"
+            ? cn("gap-1 transition-colors", COMPOSER_FRAME)
             : isMobile
             ? "mobile-dock-surface gap-1 rounded-[1.35rem] p-1.5 transition-[background-color,border-color,transform] duration-200"
             : "gap-1 rounded-xl bg-background p-1 transition-colors",
@@ -1716,7 +1717,7 @@ ${previewLines.join('\n')}
           <div className="flex min-w-0 items-start gap-2">
             <ChatModeSwitch readOnly={readOnly} disabled={loading} onChange={changeChatMode} />
             {/* Tab 切換問／交辦；跟今天頁的記／問一樣把快捷鍵寫出來 */}
-            {!isMobile && <kbd className="mt-0.5 hidden h-[18px] shrink-0 items-center rounded bg-sunken px-1.5 font-mono text-[10.5px] text-muted-ink sm:inline-flex">Tab</kbd>}
+            {!isMobile && <kbd className="mt-0.5 hidden h-[18px] shrink-0 items-center rounded bg-sunken px-1.5 text-xs text-muted-ink sm:inline-flex">Tab</kbd>}
             {contextStrip}
           </div>
         ) : contextStrip}
@@ -1731,7 +1732,7 @@ ${previewLines.join('\n')}
               isMobile
                 ? "min-h-[40px] max-h-[220px] bg-transparent text-sm placeholder:text-sm"
                 : "min-h-[36px] max-h-[240px] text-xs placeholder:text-sm md:placeholder:text-sm md:text-sm",
-              v3 && "min-w-0 min-h-[30px] rounded-none bg-transparent px-1 py-1 text-[13px] leading-[22px] text-ink placeholder:text-faint disabled:bg-transparent dark:bg-transparent dark:disabled:bg-transparent"
+              v3 && cn(COMPOSER_FIELD, "rounded-none disabled:bg-transparent dark:bg-transparent dark:disabled:bg-transparent")
             )}
             rows={1}
             disabled={!primaryModel}
@@ -1855,7 +1856,7 @@ ${previewLines.join('\n')}
           </div>
         </div>}
       </div>
-      {v3 && <div className="flex min-h-8 w-full min-w-0 flex-wrap items-center gap-0.5 pt-1 text-[11px] text-faint">
+      {v3 && <div className="flex min-h-8 w-full min-w-0 flex-wrap items-center gap-0.5 pt-1 text-xs text-muted-ink">
         {readOnly
           ? <span className="px-1.5">{t('record.chat.v3.mode.readOnlyHint')}</span>
           : <AgentPermissionModeSelect compact />}

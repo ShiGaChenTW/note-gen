@@ -105,7 +105,7 @@ function LauncherButton({ icon: Icon, title, active, secondary, badge, badgeLabe
     >
       <Icon className="size-4 shrink-0" />
       <span className="min-w-0 flex-1 truncate">{title}</span>
-      {badge ? <Count value={badge} label={badgeLabel} className="min-w-0 bg-transparent px-0 font-mono text-[10.5px] font-normal text-faint" /> : null}
+      {badge ? <Count value={badge} label={badgeLabel} className="min-w-0 bg-transparent px-0 font-mono text-[10.5px] font-normal text-faint v3:text-[11px] v3:text-muted-ink" /> : null}
     </button>
   )
 }

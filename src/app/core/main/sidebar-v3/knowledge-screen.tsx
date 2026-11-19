@@ -45,9 +45,8 @@ function KnowledgePage() {
         subtitle={t('knowledge.subtitle')}
         onBack={hide}
         actions={tab === 'canvases' ? <CanvasActions /> : isPlugin ? <PluginViewToolbar viewKey={tab} /> : undefined}
-      >
-        <KnowledgeTabs active={tab} />
-      </PageHeader>
+        tabs={<KnowledgeTabs active={tab} />}
+      />
       {/* data-left-sidebar：在這裡開筆記時沿用「從左側欄開檔就收起覆蓋層」的規則 */}
       <div className="min-h-0 flex-1 overflow-hidden" data-left-sidebar>
         <div className="mx-auto h-full max-w-[760px] border-x border-line-soft">

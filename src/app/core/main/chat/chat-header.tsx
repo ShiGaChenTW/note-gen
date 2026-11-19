@@ -155,7 +155,7 @@ export function ChatHeader() {
                             </span>
                           </div>
                           <div className="shrink-0 ml-auto flex items-center gap-2">
-                            <span className={cn("text-xs text-muted-foreground", v3 && "font-mono")}>
+                            <span className={cn("text-xs text-muted-foreground", v3 && "tabular-nums")}>
                               {v3 && locale === 'zh-TW'
                                 ? dayjs(conv.updatedAt).locale('zh-tw').fromNow()
                                 : formatRelativeTime(conv.updatedAt, v3 ? locale : language)}

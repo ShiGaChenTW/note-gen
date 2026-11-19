@@ -233,7 +233,7 @@ function ImageRecordStatusBadge({
   return (
     <Badge
       variant={status === 'failed' ? 'destructive' : status === 'pending' ? 'outline' : 'secondary'}
-      className={cn(compact && "h-4 px-1.5 text-[10px]")}
+      className={cn(compact && "h-4 px-1.5 text-[10px] v3:text-xs")}
     >
       {icon}
       <span className="max-w-28 truncate">{label}</span>
