@@ -522,7 +522,6 @@ export function CanvasSidebar() {
             className="px-4 py-4"
             icon={trashMode ? Trash2 : Palette}
             text={trashMode ? t('manager.trashEmpty') : t('empty.title')}
-            description={trashMode ? t('manager.trashEmptyDescription') : t('empty.description')}
             action={trashMode ? undefined : (
               <Button variant="ghost" size="sm" className="-ml-2" onClick={() => void handleCreate('blank')}>
                 <Palette data-icon="inline-start" />

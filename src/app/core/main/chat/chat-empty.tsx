@@ -5,6 +5,7 @@ import useChatStore from '@/stores/chat'
 import { useMemo } from 'react'
 import { Trash2, FileEdit, FileText, Lightbulb, ArrowRight, MessageCircle, MessageSquareDashed } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { EmptyState } from '@/components/v3/empty-state'
 import {
   Empty,
   EmptyDescription,
@@ -84,23 +85,18 @@ export default function ChatEmpty() {
   if (v3) {
     const mode = readOnly ? 'ask' : 'delegate'
     return (
-      <div className="flex w-full flex-1 flex-col items-center justify-center px-4 py-6 text-center">
-        <span aria-hidden="true" className="mb-3 grid size-9 place-items-center rounded-full bg-invert text-invert-ink">
-          {isTemporaryConversation ? <MessageSquareDashed className="size-4" /> : <MessageCircle className="size-4" />}
-        </span>
-        <h2 className="text-ui-emphasis font-semibold text-ink">{tV3(`${mode}.title`)}</h2>
-        <p className="mt-1 max-w-64 text-xs leading-relaxed text-muted-ink">{tV3(`${mode}.description`)}</p>
-        {isTemporaryConversation && <p className="mt-1 text-xs text-muted-ink">{tV3('temporaryHint')}</p>}
-        <div className="mt-4 flex flex-wrap justify-center gap-1.5">
-          {(['first', 'second', 'third'] as const).map(key => (
-            <Button key={key} type="button" variant="outline" size="sm"
-              onClick={() => handleQuickPrompt(tV3(`${mode}.prompts.${key}.insert`))}
-              className="rounded-(--r) border-line bg-transparent text-xs text-ink hover:bg-hover dark:border-line dark:bg-transparent dark:hover:bg-hover">
-              {tV3(`${mode}.prompts.${key}.label`)}
-            </Button>
-          ))}
-        </div>
-      </div>
+      <EmptyState
+        className="px-4 py-4"
+        icon={isTemporaryConversation ? MessageSquareDashed : MessageCircle}
+        text={isTemporaryConversation ? tV3('temporaryHint') : tV3(`${mode}.description`)}
+        action={
+          <Button type="button" variant="outline" size="sm"
+            onClick={() => handleQuickPrompt(tV3(`${mode}.prompts.first.insert`))}
+            className="rounded-(--r) border-line bg-transparent text-ink hover:bg-hover dark:border-line dark:bg-transparent dark:hover:bg-hover">
+            {tV3(`${mode}.prompts.first.label`)}
+          </Button>
+        }
+      />
     )
   }
 

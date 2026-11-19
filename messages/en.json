@@ -8048,7 +8048,7 @@
     "failed": "Something went wrong, please try again",
     "fileTooLarge": "{name} is over 8 MB and was not collected",
     "remove": "Remove this capture",
-    "empty": "Nothing collected yet. Drop in some text, a link or an image.",
+    "empty": "Nothing collected yet. Try pasting some text, a link, or an image.",
     "emptyFilter": "Nothing in this state.",
     "records": "Inbox records",
     "recordsHint": "Unprocessed records in the Inbox can be split into proposals.",
@@ -8069,7 +8069,7 @@
       "recent": "Recent"
     },
     "ungrouped": "Ungrouped",
-    "empty": "No conversations yet. Ask something in the side chat or Anywhere chat and it shows up here.",
+    "empty": "No conversations yet. Ask a question on the right and it will appear here.",
     "noMatch": "No matching threads",
     "newThread": "New thread",
     "untitled": "Untitled thread",
@@ -8301,7 +8301,7 @@
       "readOnly": "Calendar event (read-only)",
       "task": "Task",
       "anchor": "Journal slot",
-      "empty": "Nothing scheduled on the timeline today.",
+      "empty": "Nothing scheduled for this day.",
       "noAccess": "Calendar access is off, so events will not show here.",
       "proposal": "Proposal · Scheduler",
       "accept": "Accept",
@@ -8328,7 +8328,7 @@
     },
     "decide": {
       "label": "Waiting for you",
-      "empty": "All decided.",
+      "empty": "All items have been handled.",
       "all": "All"
     },
     "captures": {

@@ -1,5 +1,7 @@
 'use client'
 
+import { EmptyState } from '@/components/v3/empty-state'
+import { useUiV3 } from '@/lib/fork-ui'
 import { useRef, useState } from 'react'
 import { DndContext, DragOverlay, KeyboardSensor, PointerSensor, closestCenter, pointerWithin, useDroppable, useSensor, useSensors, type CollisionDetection, type DragEndEvent, type DragStartEvent } from '@dnd-kit/core'
 import { SortableContext, horizontalListSortingStrategy, verticalListSortingStrategy, useSortable, sortableKeyboardCoordinates, arrayMove } from '@dnd-kit/sortable'
@@ -40,6 +42,7 @@ function KanbanCard({ card, column, block, disabled, sortable, run }: Shared & {
 }
 
 function KanbanColumn({ column, block, disabled, sortable, run, query }: Shared & { column: Column; query: string }) {
+  const isV3 = useUiV3()
   const [title, setTitle] = useState('')
   const input = useRef<HTMLInputElement>(null)
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id: column.id, disabled: !sortable, data: { kind: 'column' } })
@@ -63,7 +66,11 @@ function KanbanColumn({ column, block, disabled, sortable, run, query }: Shared 
       <SortableContext items={cards.map(card => card.id)} strategy={verticalListSortingStrategy}>
         {cards.map(card => <KanbanCard key={card.id} card={card} column={column} block={block} disabled={disabled} sortable={sortable} run={run} />)}
       </SortableContext>
-      {!cards.length ? <p className="p-4 text-center text-sm text-muted-foreground">{query ? block.labels.noResults : block.labels.emptyColumn}</p> : null}
+      {cards.length === 0 && (isV3 ? (
+        <EmptyState className="p-4" text={query ? block.labels.noResults : block.labels.emptyColumn} />
+      ) : (
+        <p className="p-4 text-center text-sm text-muted-foreground">{query ? block.labels.noResults : block.labels.emptyColumn}</p>
+      ))}
     </div>
     <form onSubmit={event => { event.preventDefault(); void add() }} className="flex items-end gap-1">
       <Field className="min-w-0 flex-1"><FieldLabel htmlFor={`${block.id}-${column.id}-add`} className="sr-only">{block.labels.addCard}</FieldLabel><Input ref={input} id={`${block.id}-${column.id}-add`} value={title} maxLength={240} placeholder={block.labels.addCard} disabled={disabled} onChange={event => setTitle(event.target.value)} onKeyDown={event => {

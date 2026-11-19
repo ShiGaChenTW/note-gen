@@ -87,13 +87,14 @@ export function Timeline({ view, dayKey, onOpenTask, noAccess, proposals = [], b
   const t = useTranslations('todayV3.timeline')
   const hours = Array.from({ length: view.endHour - view.startHour + 1 }, (_, i) => view.startHour + i)
   const height = (view.endHour - view.startHour) * HOUR_PX
+  const hasEntries = view.allDay.length > 0 || view.entries.length > 0 || proposals.length > 0
   const nowRef = useRef<HTMLDivElement>(null)
 
   const rootRef = useRef<HTMLDivElement>(null)
 
   // 進來時、換日時：今天把現在線捲到可視範圍中段，別天捲回頂端
   useEffect(() => {
-    if (nowRef.current) nowRef.current.scrollIntoView({ block: 'center' })
+    if (hasEntries && nowRef.current) nowRef.current.scrollIntoView({ block: 'center' })
     else rootRef.current?.scrollIntoView({ block: 'start' })
     // 只在第一次顯示與換日時捲動（現在線每分鐘移動不重捲）
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -109,7 +110,7 @@ export function Timeline({ view, dayKey, onOpenTask, noAccess, proposals = [], b
           ))}
         </div>
       )}
-      {noAccess && <EmptyState className="mt-2" text={t('noAccess')} />}
+      {(noAccess || !hasEntries) && <EmptyState className="mt-2" text={t(noAccess ? 'noAccess' : 'empty')} />}
       <div className="relative mt-3" style={{ height }} data-testid="today-v3-timeline">
         {hours.map(hour => (
           <div key={hour} className="absolute right-0 left-0 h-0 border-t border-line-soft" style={{ top: (hour - view.startHour) * HOUR_PX }}>

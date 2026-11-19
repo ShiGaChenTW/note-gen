@@ -53,17 +53,17 @@ describe('v3 primitives', () => {
     expect(zero?.classList.contains('font-semibold')).toBe(false)
   })
 
-  it('renders a top-aligned message, optional description, icon and action', () => {
+  it('renders a top-aligned message, icon and action', () => {
     const Icon = ({ className }: { className?: string }) => createElement('svg', { className, 'aria-hidden': true })
     const state = render(createElement(EmptyState, {
-      icon: Icon, text: '尚無筆記', description: '建立第一篇筆記',
+      icon: Icon, text: '尚無筆記',
       action: createElement('button', { type: 'button' }, '新增'),
     }))
     expect(state?.classList.contains('text-ui-compact')).toBe(true)
     expect(state?.classList.contains('items-start')).toBe(true)
     expect(state?.classList.contains('justify-start')).toBe(true)
     expect(state?.querySelector('svg')?.classList.contains('size-4')).toBe(true)
-    expect([...state!.querySelectorAll('p')].map(p => p.textContent)).toEqual(['尚無筆記', '建立第一篇筆記'])
+    expect([...state!.querySelectorAll('p')].map(p => p.textContent)).toEqual(['尚無筆記'])
     expect(state?.querySelector('button')?.textContent).toBe('新增')
   })
 })

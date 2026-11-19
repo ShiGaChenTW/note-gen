@@ -130,13 +130,13 @@ describe('v3 chat', () => {
     emitter.on('quick-prompt-send', send)
     try {
       render(h(ChatEmpty))
-      click('待辦移到最上面')
+      click('整理這篇的重點')
       act(() => {
         useSettingStore.setState({ agentPermissionMode: 'read-only' })
         useChatStore.setState({ isTemporaryConversation: true })
       })
       click('這篇還有什麼沒做完？')
-      expect(insert.mock.calls).toEqual([['把還沒完成的待辦移到最上面'], ['這篇還有什麼沒做完？']])
+      expect(insert.mock.calls).toEqual([['把這篇筆記整理成重點'], ['這篇還有什麼沒做完？']])
       expect(send).not.toHaveBeenCalled()
       expect(container.textContent).toContain('這段臨時對話會自動清除')
       render(h(ChatEmpty), false)

@@ -23,7 +23,7 @@ function OutlineTab() {
     return <Outline key={outlineEditor.documentKey} editor={outlineEditor.editor} documentKey={outlineEditor.documentKey} isOpen variant="sidebar" />
   }
   return (
-    <EmptyState className="px-4 py-4" text={t('navigation.outline')} description={t('editor.outline.sidebarEmpty')} />
+    <EmptyState className="px-4 py-4" text={t('editor.outline.sidebarEmpty')} />
   )
 }
 

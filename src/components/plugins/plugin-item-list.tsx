@@ -1,5 +1,7 @@
 'use client'
 
+import { EmptyState } from '@/components/v3/empty-state'
+import { useUiV3 } from '@/lib/fork-ui'
 import { useTranslations } from 'next-intl'
 import { useRef, useState, type ReactNode } from 'react'
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core'
@@ -114,6 +116,7 @@ function ItemRow({ item, block, pending, spacious, run }: {
 }
 
 export function PluginItemList({ block, scope }: { block: PluginItemListBlock; scope: string }) {
+  const isV3 = useUiV3()
   const settingsLayout = usePluginSettingsLayout()
   const List = settingsLayout ? ItemGroup : 'ul'
   // Sortable note lists keep consistent spacing even when a note has no preview.
@@ -148,6 +151,10 @@ export function PluginItemList({ block, scope }: { block: PluginItemListBlock; s
           {block.items.map(item => <ItemRow key={item.id} item={item} block={block} pending={pending} spacious={spacious} run={run} />)}
         </List>
       </SortableContext>
-    </DndContext> : <p className="px-3 py-8 text-center text-sm text-muted-foreground">{block.emptyText}</p>}
+    </DndContext> : isV3 ? (
+      <EmptyState className="px-3 py-4" text={block.emptyText} />
+    ) : (
+      <p className="px-3 py-8 text-center text-sm text-muted-foreground">{block.emptyText}</p>
+    )}
   </section>
 }

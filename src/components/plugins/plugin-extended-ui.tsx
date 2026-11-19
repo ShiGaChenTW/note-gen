@@ -1,5 +1,7 @@
 'use client'
 
+import { EmptyState } from '@/components/v3/empty-state'
+import { useUiV3 } from '@/lib/fork-ui'
 import { PluginKanban } from './plugin-kanban'
 import { PluginArticlePreview } from './plugin-article-preview'
 
@@ -35,6 +37,7 @@ export function PluginExtendedUi({ block, scope, render, compact = false }: {
   block: Exclude<PluginExtendedUiBlock, { type: 'embedded-view' }>; scope: string; compact?: boolean; render: (blocks: readonly PluginUiBlock[]) => ReactNode
 }) {
   const settingsLayout = usePluginSettingsLayout()
+  const isV3 = useUiV3()
   const [selectedTab, setSelectedTab] = useState('')
   if (block.type === 'document-preview') return <PluginArticlePreview block={block} scope={scope} />
   if (block.type === 'kanban') return <PluginKanban block={block} scope={scope} />
@@ -42,6 +45,9 @@ export function PluginExtendedUi({ block, scope, render, compact = false }: {
   if (block.type === 'markdown') return <Markdown text={block.text} />
   if (block.type === 'badge') return <Badge variant={block.tone ?? 'secondary'}>{block.text}</Badge>
   if (block.type === 'loading') return <div role="status" className="flex items-center gap-2 text-sm text-muted-foreground"><Spinner />{block.label}</div>
+  if (block.type === 'empty' && isV3) {
+    return <EmptyState text={[block.title, block.description].filter(Boolean).join(' · ')} />
+  }
   if (block.type === 'empty') return <Empty><EmptyHeader>{block.icon ? <EmptyMedia variant="icon"><PluginIcon name={block.icon} /></EmptyMedia> : null}<EmptyTitle>{block.title}</EmptyTitle>{block.description ? <EmptyDescription>{block.description}</EmptyDescription> : null}</EmptyHeader></Empty>
   if (block.type === 'toolbar' && settingsLayout) return <Item variant="outline" role="toolbar" aria-label={block.label}>
     <ItemContent className="min-w-0"><ItemTitle>{block.label}</ItemTitle></ItemContent>
