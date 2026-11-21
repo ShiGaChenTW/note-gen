@@ -4257,6 +4257,34 @@
         "moveUp": "上移",
         "moveDown": "下移",
         "remove": "移除"
+      },
+      "readLater": {
+        "title": "稍後讀清單",
+        "desc": "每日精選文章只從這裡取：每天 3 篇、最早存的先送。抓不到正文的文章標成「無法擷取」，不會送進今日簡報。",
+        "placeholder": "貼上文章連結",
+        "add": "加入",
+        "added": "已加入稍後讀清單，正在擷取正文",
+        "duplicate": "這篇已經在稍後讀清單裡",
+        "invalid": "不是有效的文章連結",
+        "empty": "稍後讀清單是空的。",
+        "addedAt": "存於 {date}",
+        "sentAt": "送出於 {date}",
+        "requeue": "放回待送",
+        "retry": "重新擷取",
+        "remove": "移除",
+        "status": {
+          "pending": "待送",
+          "extracting": "擷取中",
+          "sent": "已送電子紙",
+          "unextractable": "無法擷取"
+        },
+        "failure": {
+          "paywall": "付費牆或需要登入",
+          "summary-only": "只抓到摘要",
+          "unreachable": "連不上",
+          "blocked": "網站擋下讀取",
+          "unsupported": "不是網頁文章"
+        }
       }
     }
   },
@@ -8293,6 +8321,10 @@
       "einkUnpin": {
         "title": "取消電子紙釘選",
         "keywords": "eink,unpin,電子紙,取消釘選"
+      },
+      "readLater": {
+        "title": "開啟稍後讀清單",
+        "keywords": "read later,article,稍後讀,文章,電子紙"
       }
     },
     "chat": {

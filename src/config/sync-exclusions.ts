@@ -163,6 +163,8 @@ export const ALWAYS_SYNC_EXCLUDED_FIELDS: string[] = [
   'einkToken',
   'einkPins',
   'einkPrivateItems',
+  // Fork（almanac ALMNC-46）：稍後讀清單含擷取下來的文章全文，留在本機
+  'einkReadLater',
   'syncedFileShas',
   'lastSyncTimes',
   'lastRestoreTimes',

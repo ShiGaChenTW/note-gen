@@ -4192,6 +4192,34 @@
         "moveUp": "上移",
         "moveDown": "下移",
         "remove": "移除"
+      },
+      "readLater": {
+        "title": "稍后读清单",
+        "desc": "每日精选文章只从这里取：每天 3 篇、最早存的先送。抓不到正文的文章标成「无法抓取」，不会送进今日简报。",
+        "placeholder": "粘贴文章链接",
+        "add": "加入",
+        "added": "已加入稍后读清单，正在抓取正文",
+        "duplicate": "这篇已经在稍后读清单里",
+        "invalid": "不是有效的文章链接",
+        "empty": "稍后读清单是空的。",
+        "addedAt": "存于 {date}",
+        "sentAt": "送出于 {date}",
+        "requeue": "放回待送",
+        "retry": "重新抓取",
+        "remove": "移除",
+        "status": {
+          "pending": "待送",
+          "extracting": "抓取中",
+          "sent": "已送电子纸",
+          "unextractable": "无法抓取"
+        },
+        "failure": {
+          "paywall": "付费墙或需要登录",
+          "summary-only": "只抓到摘要",
+          "unreachable": "连不上",
+          "blocked": "网站拦下读取",
+          "unsupported": "不是网页文章"
+        }
       }
     }
   },
@@ -8228,6 +8256,10 @@
       "einkUnpin": {
         "title": "取消电子纸钉选",
         "keywords": "eink,unpin,电子纸,取消钉选"
+      },
+      "readLater": {
+        "title": "打开稍后读清单",
+        "keywords": "read later,article,稍后读,文章,电子纸"
       }
     },
     "chat": {

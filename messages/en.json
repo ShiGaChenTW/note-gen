@@ -4192,6 +4192,34 @@
         "moveUp": "Move up",
         "moveDown": "Move down",
         "remove": "Remove"
+      },
+      "readLater": {
+        "title": "Read-later list",
+        "desc": "Daily articles come only from this list: 3 a day, oldest first. Articles whose text cannot be extracted are marked \"Can't extract\" and never go into the daily briefing.",
+        "placeholder": "Paste an article link",
+        "add": "Add",
+        "added": "Added to the read-later list; extracting the article",
+        "duplicate": "This article is already in the read-later list",
+        "invalid": "Not a valid article link",
+        "empty": "The read-later list is empty.",
+        "addedAt": "Saved {date}",
+        "sentAt": "Sent {date}",
+        "requeue": "Back to queue",
+        "retry": "Extract again",
+        "remove": "Remove",
+        "status": {
+          "pending": "Queued",
+          "extracting": "Extracting",
+          "sent": "Sent to e-paper",
+          "unextractable": "Can't extract"
+        },
+        "failure": {
+          "paywall": "Paywall or sign-in required",
+          "summary-only": "Only a summary was available",
+          "unreachable": "Could not connect",
+          "blocked": "The site blocked reading",
+          "unsupported": "Not a web article"
+        }
       }
     }
   },
@@ -8228,6 +8256,10 @@
       "einkUnpin": {
         "title": "Unpin from e-paper",
         "keywords": "eink,e-paper,unpin"
+      },
+      "readLater": {
+        "title": "Open read-later list",
+        "keywords": "read later,article,e-paper,briefing"
       }
     },
     "chat": {

@@ -9,7 +9,7 @@ import { useTranslations } from 'next-intl'
 import { useTheme } from 'next-themes'
 import { toast } from 'sonner'
 import {
-  FileText, Inbox, House, MessageSquarePlus, MessageCircleQuestion, Moon, PanelLeft, PanelRight, Search, Settings, TabletSmartphone,
+  FileText, Inbox, House, MessageSquarePlus, MessageCircleQuestion, Moon, PanelLeft, PanelRight, Search, Settings, TabletSmartphone, BookmarkPlus,
 } from 'lucide-react'
 import {
   Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandShortcut,
@@ -36,7 +36,7 @@ import { isRecordTabPath } from '../mark/mark-record-tab'
 import { isCanvasTabPath } from '../canvas/canvas-tab'
 
 type CoreCommandId = 'ask' | 'newChat' | 'home' | 'inbox' | 'searchSidebar' | 'leftSidebar' | 'rightSidebar' | 'theme' | 'settings'
-  | 'einkPin' | 'einkUnpin'
+  | 'einkPin' | 'einkUnpin' | 'readLater'
 
 const CORE_COMMAND_ICONS: Record<CoreCommandId, typeof Search> = {
   ask: MessageCircleQuestion,
@@ -50,6 +50,7 @@ const CORE_COMMAND_ICONS: Record<CoreCommandId, typeof Search> = {
   settings: Settings,
   einkPin: TabletSmartphone,
   einkUnpin: TabletSmartphone,
+  readLater: BookmarkPlus,
 }
 const CORE_COMMAND_SHORTCUT: Partial<Record<CoreCommandId, string>> = { ask: '⌘⇧A', home: '⌘⇧H' }
 const CORE_COMMAND_ORDER: CoreCommandId[] = ['ask', 'newChat', 'home', 'inbox', 'searchSidebar', 'leftSidebar', 'rightSidebar', 'theme', 'settings']
@@ -80,6 +81,8 @@ export function AnywhereCommandPalette() {
   const items = useMemo<PaletteItem[]>(() => {
     const coreIds: CoreCommandId[] = [...CORE_COMMAND_ORDER]
     if (einkPinTarget) coreIds.push(einkPinned ? 'einkUnpin' : 'einkPin')
+    // Fork（almanac ALMNC-46）：開啟稍後讀清單（設定 > 電子紙）
+    if (v3) coreIds.push('readLater')
     const core: PaletteItem[] = coreIds.map(id => ({
       id: `${CORE_PREFIX}${id}`,
       kind: 'command',
@@ -107,7 +110,7 @@ export function AnywhereCommandPalette() {
       })
     }
     return [...core, ...plugins, ...noteItems]
-  }, [notes, pluginCommands, t, einkPinTarget, einkPinned])
+  }, [notes, pluginCommands, t, einkPinTarget, einkPinned, v3])
 
   const sections = useMemo(() => buildPaletteSections(items, query), [items, query])
   const byId = useMemo(() => new Map(pluginCommands.map(command => [`${PLUGIN_PREFIX}${command.id}`, command])), [pluginCommands])
@@ -131,6 +134,7 @@ export function AnywhereCommandPalette() {
       case 'einkUnpin':
         if (einkPinTarget) await toggleEinkPin(einkPinTarget, { pinned: tEink('pinned'), unpinned: tEink('unpinned') })
         break
+      case 'readLater': useSettingsDialogStore.getState().openSettings('eink'); break
     }
   }, [resolvedTheme, setTheme, einkPinTarget, tEink])
 
