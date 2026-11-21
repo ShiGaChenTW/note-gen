@@ -50,7 +50,8 @@ const TRANSITIONS: Record<SourceStatus, readonly SourceStatus[]> = {
   // 分析中斷時退回待分析重排，不算新的決定。
   analyzing: ['analyzed', 'rejected', 'pending_analysis'],
   analyzed: [],
-  rejected: [],
+  // Fork（almanac ALMNC-54.8）：工作台資料源分頁的「改回等你決定」（v14）；只有還沒送出（未鎖定）的外部擷取才能改回，見 transitionSource。
+  rejected: ['awaiting_decision'],
 }
 
 export function initialStatus(sourceType: SourceType): SourceStatus {
@@ -112,6 +113,7 @@ export function createSource(input: NewSourceInput, now: number): Source {
 export function transitionSource(source: Source, to: SourceStatus, now: number): Source {
   if (source.archivedAt !== undefined) throw new Error('已封存的資料源不能再改狀態')
   if (!canTransition(source.status, to)) throw new Error(`資料源狀態不能從 ${source.status} 改成 ${to}`)
+  if (to === 'awaiting_decision' && source.lockedAt !== undefined) throw new Error('已送出的資料源不能改回等你決定')
   return {
     ...source,
     status: to,

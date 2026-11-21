@@ -196,3 +196,13 @@ export async function listOutputsToTarget(targetType: OutputTargetType, targetRe
   )
   return rows.map(sourceOutputFromRow)
 }
+
+/** Fork（almanac ALMNC-54.8）：每則資料源的產出數（工作台資料源分頁「N 則產出」）。 */
+export async function countOutputsBySource(): Promise<Map<string, number>> {
+  await initV3SourceDb()
+  const db = await getDb()
+  const rows = await db.select<Array<{ sourceId: string, count: number }>>(
+    'select source_id as sourceId, count(*) as count from source_outputs group by source_id'
+  )
+  return new Map(rows.map(row => [row.sourceId, Number(row.count)]))
+}
