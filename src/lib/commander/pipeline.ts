@@ -3,7 +3,7 @@
 // 只分析「待分析」的資料源：外部擷取的（A5）要等 Scott 在工作台選「處理」才會變成待分析（路由 R1），
 // 自己寫的、系統產生的一進來就是待分析（R2）。所以 A5 進來時不會被轉文字。
 // 分析中途出錯就退回待分析，等下一輪重試；提案批次 id 以資料源為準，重跑不會重複送。
-import type { Source } from '@/lib/v3-model/source'
+import { isLegacyNote, type Source } from '@/lib/v3-model/source'
 import { assign } from './assign'
 import { consolidate } from './consolidate'
 import { draft } from './draft'
@@ -91,7 +91,8 @@ export interface QueueSummary {
 
 /** 上次執行被中斷（App 關掉）而卡在分析中的資料源退回待分析。只在佇列第一次啟動時呼叫。 */
 export async function requeueInterrupted(deps: Pick<CommanderDeps, 'sources'>): Promise<string[]> {
-  const stuck = await deps.sources.list({ status: 'analyzing' })
+  // Fork（almanac ALMNC-54.14）：舊筆記由舊筆記批次自己退回（它可能正在分析），一般佇列不碰。
+  const stuck = (await deps.sources.list({ status: 'analyzing' })).filter(source => !isLegacyNote(source))
   const ids: string[] = []
   for (const source of stuck) {
     await deps.sources.setStatus(source.id, 'pending_analysis')
@@ -102,7 +103,9 @@ export async function requeueInterrupted(deps: Pick<CommanderDeps, 'sources'>): 
 
 /** 依收集時間由舊到新，一則一則分析待分析的資料源；某一則失敗不影響其他的。 */
 export async function runAnalysisQueue(deps: CommanderDeps, options: { limit?: number } = {}): Promise<QueueSummary> {
+  // Fork（almanac ALMNC-54.14）：舊筆記只由舊筆記批次處理（R3：按一次才分批），一般佇列跳過。
   const pending = (await deps.sources.list({ status: 'pending_analysis', limit: 500 }))
+    .filter(source => !isLegacyNote(source))
     .sort((a, b) => a.collectedAt - b.collectedAt)
     .slice(0, options.limit ?? 5)
   const summary: QueueSummary = { analyzed: [], rejected: [], failed: [] }

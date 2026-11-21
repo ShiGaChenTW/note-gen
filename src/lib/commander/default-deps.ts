@@ -65,6 +65,13 @@ export function createDefaultConverters(): Converters {
       const { readTextFile } = await import('@tauri-apps/plugin-fs')
       return readTextFile(ref)
     },
+    // Fork（almanac ALMNC-54.14）：舊筆記資料源（R3）只存 vault 相對路徑，這裡讀檔；只讀不寫。
+    readVaultNote: async path => {
+      const { readNote } = await import('@/lib/daily/note-io')
+      const raw = await readNote(path)
+      if (raw === null) throw new Error(`note not found: ${path}`)
+      return raw
+    },
   }
 }
 

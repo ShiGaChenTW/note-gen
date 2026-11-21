@@ -8475,7 +8475,11 @@
       "captured": "Collected. Splitting into proposals",
       "noModel": "No model configured yet. Pick one in settings first."
     },
-    "titleDay": "{date}"
+    "titleDay": "{date}",
+    "workbench": {
+      "line": "Workbench · {count, number}",
+      "open": "Open the workbench, {count, number} waiting for you"
+    }
   },
   "week": {
     "title": "Plan",
@@ -8632,7 +8636,11 @@
       "reject": "Don't use",
       "handle": "Process",
       "retry": "Retry",
-      "delete": "Delete"
+      "delete": "Delete",
+      "migrate": "Start",
+      "resume": "Continue",
+      "pause": "Pause",
+      "packDone": "Done organizing"
     },
     "listLabel": "Things waiting for you",
     "more": "+{count} more",
@@ -8861,6 +8869,25 @@
       "newThreadShort": "Chat",
       "tbd": "TBD",
       "tbdTip": "Function to be decided"
+    },
+    "legacy": {
+      "title": "Old notes: {count, number}",
+      "summary": "Imported at launch · handed to {name} in batches",
+      "progress": "{done, number} / {total, number} processed",
+      "running": "Processing",
+      "pausing": "Pausing after this note",
+      "paused": "Paused",
+      "by": "System",
+      "hint": "Handed to the commander {size, number} at a time; notes it can’t decide come back one pack at a time under “Organize by hand”.",
+      "packSummary": "{name} couldn’t decide these; organize them yourself",
+      "toast": {
+        "started": "Handing old notes to {name} in batches; progress shows on the card",
+        "pausing": "Pausing after this note",
+        "finished": "Processed {count, number} notes this run; {packs, number} packs need your hands",
+        "allFailed": "Nothing in this batch went through, so it paused. Try Continue later",
+        "allUndecided": "{name} couldn’t decide anything in this batch, so it paused. Check the model settings",
+        "packDone": "Finished the pack starting with “{title}”"
+      }
     }
   },
   "cleanup": {

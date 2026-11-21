@@ -50,6 +50,8 @@ export interface Converters {
   transcribe?: (ref: string) => Promise<string>
   /** 讀文字檔。 */
   readFileText?: (ref: string) => Promise<string>
+  /** Fork（almanac ALMNC-54.14）：讀筆記庫裡的筆記（vault 相對路徑），給舊筆記資料源用；檔案不在時丟錯。 */
+  readVaultNote?: (path: string) => Promise<string>
 }
 
 // ── 2. 拆開與判斷 ────────────────────────────────────────────

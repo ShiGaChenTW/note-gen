@@ -7,6 +7,7 @@ import {
   canDeleteUnsent,
   createSource,
   editSourceContent,
+  LEGACY_NOTE_KIND,
   sourceFromRow,
   sourcesDueForArchive,
   sourceToValues,
@@ -103,17 +104,58 @@ export async function getSource(id: string): Promise<Source | undefined> {
   return rows[0] ? sourceFromRow(rows[0]) : undefined
 }
 
-export async function listSources(options: { status?: SourceStatus; includeArchived?: boolean; limit?: number } = {}): Promise<Source[]> {
+export async function listSources(options: { status?: SourceStatus; includeArchived?: boolean; limit?: number; excludeKind?: string } = {}): Promise<Source[]> {
+  await initV3SourceDb()
+  const db = await getDb()
+  // Fork（almanac ALMNC-54.14）：excludeKind 讓工作台的資料源清單不被上千則舊筆記擠滿（舊筆記另外合成一張批次卡）。
+  const rows = await db.select<SourceRow[]>(
+    `select ${SOURCE_COLUMNS} from sources
+     where ($1 is null or status = $1) and ($2 = 1 or archived_at is null) and ($4 is null or kind != $4)
+     order by collected_at desc
+     limit $3`,
+    [options.status ?? null, options.includeArchived ? 1 : 0, options.limit ?? 500, options.excludeKind ?? null]
+  )
+  return rows.map(sourceFromRow)
+}
+
+/** Fork（almanac ALMNC-54.14）：全部的舊筆記資料源（含封存，不設上限；內容只是路徑，列很小）。 */
+export async function listLegacyNoteSources(): Promise<Source[]> {
   await initV3SourceDb()
   const db = await getDb()
   const rows = await db.select<SourceRow[]>(
-    `select ${SOURCE_COLUMNS} from sources
-     where ($1 is null or status = $1) and ($2 = 1 or archived_at is null)
-     order by collected_at desc
-     limit $3`,
-    [options.status ?? null, options.includeArchived ? 1 : 0, options.limit ?? 500]
+    `select ${SOURCE_COLUMNS} from sources where kind = $1 order by collected_at asc`,
+    [LEGACY_NOTE_KIND]
   )
   return rows.map(sourceFromRow)
+}
+
+/**
+ * Fork（almanac ALMNC-54.14）：整批標記舊筆記。id 由路徑決定，已經標過的跳過（on conflict do nothing），
+ * 所以重跑不會重複；一次寫 50 列，上千則不必一列一列來回。回傳實際新增的筆數。
+ */
+export async function insertLegacyNoteSources(sources: readonly Source[]): Promise<number> {
+  await initV3SourceDb()
+  const db = await getDb()
+  let added = 0
+  for (let start = 0; start < sources.length; start += 50) {
+    const chunk = sources.slice(start, start + 50)
+    const values: (string | number | null)[] = []
+    const tuples = chunk.map((source, row) => {
+      const fields = sourceToValues(source)
+      values.push(...fields)
+      return `(${fields.map((_, col) => `$${row * fields.length + col + 1}`).join(', ')})`
+    })
+    const result = await db.execute(
+      `insert into sources
+         (id, source_type, kind, content, origin, collected_at, collector, status, status_changed_at,
+          version, previous_id, locked_at, archived_at, created_at, updated_at)
+       values ${tuples.join(', ')}
+       on conflict(id) do nothing`,
+      values
+    )
+    added += Number(result.rowsAffected ?? 0)
+  }
+  return added
 }
 
 export async function addSource(input: Omit<NewSourceInput, 'id'> & { id?: string }, now = Date.now()): Promise<Source> {

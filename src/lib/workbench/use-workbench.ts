@@ -16,9 +16,12 @@ import useCollectStore from '@/stores/collect'
 import useInboxStore from '@/stores/inbox'
 import useVaultIndexStore, { selectAllTasks } from '@/stores/vault-index'
 import useWorkbenchStore from '@/stores/workbench'
-import { buildReviewCards, type DomainLike, type WorkbenchCard } from './cards'
+import useDailySettingsStore from '@/stores/daily-settings'
+import { DEFAULT_LEGACY_BATCH_SIZE, legacyPackKey, packsToShow, unmarkedLegacyNotes } from '@/lib/migration/legacy'
+import type { IndexedNote } from '@/lib/vault-index/index-note'
+import { buildReviewCards, type DomainLike, type HandLike, type LegacyBatchLike, type WorkbenchCard } from './cards'
 import { computeDomainProposals, confirmNotesFromIndex, knowledgeNotesFromIndex } from './domain-cards'
-import { hiddenCards, visibleCards } from './put-aside'
+import { hiddenCards, isHidden, visibleCards } from './put-aside'
 import { buildSourceRows, sourceTitle, type SourceListRow } from './sources-tab'
 import { judgementLine } from './judgement'
 
@@ -82,6 +85,54 @@ function useReconfirmIntervals(domains: readonly Domain[], roster: readonly Rost
   return intervals
 }
 
+/** Fork（almanac ALMNC-54.14）：筆記庫裡還沒標記的舊筆記（按批次卡時用；不是 hook，直接讀 store 現況）。 */
+export function currentUnmarkedLegacy(): Array<{ path: string, mtime: number }> {
+  const daily = useDailySettingsStore.getState()
+  return unmarkedLegacyNotes(Array.from(useVaultIndexStore.getState().notes.values()), daily, useWorkbenchStore.getState().legacy.markedIds)
+}
+
+function baseName(path: string): string {
+  return (path.split('/').pop() ?? path).replace(/\.md$/i, '')
+}
+
+/**
+ * Fork（almanac ALMNC-54.14）：舊筆記批次卡與判斷不出來的那一包。批次卡的總數＝已標記＋筆記庫裡還沒標記的舊筆記，
+ * 所以還沒按過也看得到「舊筆記 N 則」；包一次只出現一包（先放著的另外列在「先放著」）。
+ */
+function useLegacyInputs(noteList: readonly IndexedNote[], now: number, commander: string | undefined): { legacy?: LegacyBatchLike, hand: HandLike[] } {
+  const t = useTranslations('workbench.legacy')
+  const roles = useTranslations('agents.roles')
+  const legacy = useWorkbenchStore(state => state.legacy)
+  const aside = useWorkbenchStore(state => state.aside)
+  const dailyFolder = useDailySettingsStore(state => state.dailyFolder)
+  const dailyPattern = useDailySettingsStore(state => state.dailyPattern)
+  const unmarked = useMemo(() => unmarkedLegacyNotes(noteList, { dailyFolder, dailyPattern }, legacy.markedIds).length,
+    [noteList, dailyFolder, dailyPattern, legacy.markedIds])
+  return useMemo(() => {
+    const name = commander || roles('commander')
+    const total = legacy.total + unmarked
+    const progress = t('progress', { done: legacy.processed, total })
+    const summary = legacy.running
+      ? [progress, t(legacy.pausing ? 'pausing' : 'running')].join(' · ')
+      : legacy.processed > 0 ? [progress, t('paused')].join(' · ') : t('summary', { name })
+    const batch: LegacyBatchLike | undefined = total > legacy.processed
+      ? { title: t('title', { count: total }), summary, total, processed: legacy.processed, running: legacy.running, pausing: legacy.pausing, batchSize: DEFAULT_LEGACY_BATCH_SIZE, by: t('by'), at: legacy.firstMarkedAt ?? now }
+      : undefined
+    const hand: HandLike[] = packsToShow(legacy.packs, key => isHidden(aside[key], now)).map(pack => ({
+      key: legacyPackKey(pack.id),
+      label: 'source',
+      title: baseName(pack.items[0]!.path),
+      more: pack.items.length > 1 ? pack.items.length - 1 : undefined,
+      summary: t('packSummary', { name }),
+      by: commander,
+      at: pack.createdAt,
+      notePaths: pack.items.map(item => item.path),
+      packId: pack.id,
+    }))
+    return { legacy: batch, hand }
+  }, [legacy, unmarked, aside, now, commander, t, roles])
+}
+
 export interface ReviewData {
   /** 所有卡片（含先放著的），已排好序。 */
   all: WorkbenchCard[]
@@ -114,6 +165,7 @@ export function useReviewData(): ReviewData {
   [noteList, domains, roster, dismissed, commanderT, commander, now])
   const intervals = useReconfirmIntervals(domains, roster)
   const confirm = useMemo(() => confirmNotesFromIndex(noteList, now, intervals), [noteList, now, intervals])
+  const legacyInputs = useLegacyInputs(noteList, now, commander)
 
   const all = useMemo(() => buildReviewCards({
     proposals,
@@ -135,10 +187,25 @@ export function useReviewData(): ReviewData {
       }),
     domains: domainCards,
     confirm,
+    hand: legacyInputs.hand,
+    legacy: legacyInputs.legacy,
     now,
-  }), [proposals, tasks, sources, judgements, domainCards, confirm, now, t])
+  }), [proposals, tasks, sources, judgements, domainCards, confirm, legacyInputs, now, t])
 
   return useMemo(() => ({ all, visible: visibleCards(all, aside, now), aside: hiddenCards(all, aside, now), now }), [all, aside, now])
+}
+
+/**
+ * Fork（almanac ALMNC-54.14）：工作台等你處理的件數（先放著的不算）——側欄與今天頁「工作台 · N 件」用同一個數字。
+ * 工作台頁沒開過時資料源表還沒讀，這裡補讀一次，數字才不會少算資料源卡與舊筆記批次卡。
+ */
+export function useWorkbenchCount(): number {
+  const loaded = useWorkbenchStore(state => state.sourcesLoaded)
+  useEffect(() => {
+    if (loaded) return
+    void import('./actions').then(module => module.refreshSources()).catch(() => undefined)
+  }, [loaded])
+  return useReviewData().visible.length
 }
 
 function kindKey(kind: string): string {
