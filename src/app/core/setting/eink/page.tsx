@@ -4,6 +4,7 @@
 // 設定值與清單邏輯在 src/lib/eink/*（純函式、有單元測試），保存在 store.json（src/stores/eink.ts）。
 // ALMNC-46：稍後讀清單的管理也放在這頁（read-later-section.tsx）：它只服務今日簡報，和釘選資料並列最好找；
 // 另開全頁覆蓋層要動覆蓋層登記、側欄與互斥邏輯，而入口（Q17）還沒定案，先不擴大範圍。
+// ALMNC-50：區網服務的埠、狀態與要填進電子紙的網址（lan-section.tsx）。
 import { useEffect, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { ArrowDown, ArrowUp, CloudSun, Eye, EyeOff, FileText, KeyRound, MonitorSmartphone, Power, RefreshCw, Router, Trash2 } from 'lucide-react'
@@ -19,6 +20,7 @@ import {
   BRIEFING_SECTIONS, maskEinkToken, normalizeReaderAddress, normalizeWeatherCity, toggleSection,
 } from '@/lib/eink/settings'
 import useEinkStore from '@/stores/eink'
+import { LanServerDetails } from './lan-section'
 import { ReadLaterSection } from './read-later-section'
 
 export default function EinkSettingPage() {
@@ -101,6 +103,7 @@ function DeviceSection() {
             <Switch aria-label={t('lanServer.title')} checked={settings.lanServer} onCheckedChange={lanServer => void updateSettings({ lanServer })} />
           </ItemActions>
         </Item>
+        {settings.lanServer ? <LanServerDetails /> : null}
         <TokenItem />
       </ItemGroup>
     </SettingSection>

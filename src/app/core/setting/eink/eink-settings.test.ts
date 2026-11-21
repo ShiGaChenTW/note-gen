@@ -113,3 +113,29 @@ describe('電子紙入口只在 V3', () => {
     expect(useEinkStore.getState().pins).toEqual([])
   })
 })
+
+// almanac ALMNC-50：區網服務打開後顯示埠、狀態與要填進電子紙的網址（token 遮住）
+describe('區網服務', () => {
+  it('關閉時不顯示網址；服務中顯示休眠畫面網址（遮住 token）與 OPDS 網址', async () => {
+    const { useEinkLanStatus } = await import('@/lib/eink/lan/service')
+    useEinkLanStatus.setState({ refreshStatus: async () => {} })
+    useUiModeStore.setState({ mode: 'v3' })
+    await act(async () => { await useEinkStore.getState().init() })
+    await act(async () => root.render(React.createElement(EinkSettingPage)))
+    expect(container.querySelector('[data-testid="eink-lan-details"]')).toBeNull()
+
+    await act(async () => { await useEinkStore.getState().updateSettings({ enabled: true, lanServer: true }) })
+    expect(container.querySelector('[data-testid="eink-lan-details"]')).not.toBeNull()
+    expect(container.querySelector('[data-testid="eink-lan-sleep-url"]')).toBeNull()
+
+    await act(async () => useEinkLanStatus.getState().setStatus({
+      running: true, address: '192.168.1.5:37424', lanIp: '192.168.1.5', error: null, sleep: null, epub: null, archived: [],
+    }))
+    const token = useEinkStore.getState().token
+    const sleepUrl = container.querySelector('[data-testid="eink-lan-sleep-url"]')!.textContent!
+    expect(sleepUrl.startsWith('http://192.168.1.5:37424/eink/sleep.bmp?token=')).toBe(true)
+    expect(sleepUrl).not.toContain(token)
+    expect(container.querySelector('[data-testid="eink-lan-opds-url"]')!.textContent).toBe('http://192.168.1.5:37424/opds')
+    expect(container.textContent).not.toContain(token)
+  })
+})

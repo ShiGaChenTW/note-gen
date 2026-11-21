@@ -4224,6 +4224,30 @@
         "title": "區網服務",
         "desc": "讓電子紙闔上時向這台 Mac 下載休眠畫面與今日簡報。預設關閉。"
       },
+      "lan": {
+        "port": {
+          "title": "區網服務的埠",
+          "invalid": "埠號要是 1024–65535 的數字"
+        },
+        "status": {
+          "needsEnabled": "先打開「啟用電子紙同步」，區網服務才會啟動。",
+          "running": "服務中：{address}（只在這台 Mac 的區網位址監聽）",
+          "stopped": "尚未啟動",
+          "error": "無法啟動：{error}",
+          "ipChanged": "這台 Mac 的區網 IP 變成 {ip}，電子紙上的網址要更新：重新安裝外掛，或關掉再打開區網服務。"
+        },
+        "sleepUrl": {
+          "title": "休眠畫面網址",
+          "desc": "電子紙闔上時，外掛向這個網址下載休眠畫面（含 token）。"
+        },
+        "opds": {
+          "title": "OPDS 書目",
+          "desc": "在電子紙的 OPDS 設定新增這個網址；帳號 {user}，密碼是上面的 token。列出今日簡報與過去 7 天。",
+          "copyPassword": "複製密碼"
+        },
+        "copy": "複製",
+        "copied": "已複製"
+      },
       "token": {
         "title": "Token",
         "desc": "電子紙下載時要帶的密鑰，只存在這台 Mac。重新產生後，電子紙上的外掛要重新安裝。",

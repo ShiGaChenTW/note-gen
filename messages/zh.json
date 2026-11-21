@@ -4159,6 +4159,30 @@
         "title": "局域网服务",
         "desc": "让电子纸合上时向这台 Mac 下载休眠画面与今日简报。默认关闭。"
       },
+      "lan": {
+        "port": {
+          "title": "局域网服务的端口",
+          "invalid": "端口号须为 1024–65535 的数字"
+        },
+        "status": {
+          "needsEnabled": "先打开“启用电子纸同步”，局域网服务才会启动。",
+          "running": "服务中：{address}（只在这台 Mac 的局域网地址监听）",
+          "stopped": "尚未启动",
+          "error": "无法启动：{error}",
+          "ipChanged": "这台 Mac 的局域网 IP 变成 {ip}，电子纸上的网址要更新：重新安装插件，或关掉再打开局域网服务。"
+        },
+        "sleepUrl": {
+          "title": "休眠画面网址",
+          "desc": "电子纸合上时，插件向这个网址下载休眠画面（含 token）。"
+        },
+        "opds": {
+          "title": "OPDS 书目",
+          "desc": "在电子纸的 OPDS 设置新增这个网址；账号 {user}，密码是上面的 token。列出今日简报与过去 7 天。",
+          "copyPassword": "复制密码"
+        },
+        "copy": "复制",
+        "copied": "已复制"
+      },
       "token": {
         "title": "Token",
         "desc": "电子纸下载时要带的密钥，只存在这台 Mac。重新生成后，电子纸上的插件要重新安装。",

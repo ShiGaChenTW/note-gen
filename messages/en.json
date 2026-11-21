@@ -4159,6 +4159,30 @@
         "title": "Local network service",
         "desc": "Lets the reader download the sleep screen and daily briefing from this Mac when it closes. Off by default."
       },
+      "lan": {
+        "port": {
+          "title": "LAN service port",
+          "invalid": "Port must be a number from 1024 to 65535"
+        },
+        "status": {
+          "needsEnabled": "Turn on e-paper sync first; the LAN service only starts then.",
+          "running": "Running at {address} (listening only on this Mac's LAN address)",
+          "stopped": "Not running",
+          "error": "Could not start: {error}",
+          "ipChanged": "This Mac's LAN IP changed to {ip}. Update the address on the e-paper reader: reinstall the plugin, or turn the LAN service off and on."
+        },
+        "sleepUrl": {
+          "title": "Sleep screen URL",
+          "desc": "When the e-paper reader is closed, the plugin downloads the sleep screen from this URL (includes the token)."
+        },
+        "opds": {
+          "title": "OPDS catalog",
+          "desc": "Add this URL in the reader's OPDS settings; username {user}, password is the token above. Lists today's briefing and the past 7 days.",
+          "copyPassword": "Copy password"
+        },
+        "copy": "Copy",
+        "copied": "Copied"
+      },
       "token": {
         "title": "Token",
         "desc": "The secret the reader sends when downloading. Stored only on this Mac. After regenerating, reinstall the plugin on the reader.",

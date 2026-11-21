@@ -12,6 +12,8 @@ export interface EinkSettings {
   readerAddress: string
   /** 區網服務（給電子紙下載休眠畫面與今日簡報）；預設關閉。 */
   lanServer: boolean
+  /** Fork（almanac ALMNC-50）：區網服務的埠（1024–65535）。 */
+  lanPort: number
   /** 今日簡報要放哪些章節；依 BRIEFING_SECTIONS 的順序存。 */
   sections: BriefingSection[]
   /** 天氣地點：使用者輸入的城市名稱（之後由 Open-Meteo 地理編碼換成座標）。 */
@@ -22,10 +24,14 @@ export const EINK_SETTINGS_KEY = 'einkSettings'
 /** token 獨立一個鍵，並列在設定同步的永遠排除清單：只留在這台 Mac。 */
 export const EINK_TOKEN_KEY = 'einkToken'
 
+/** Fork（almanac ALMNC-50）：區網服務預設埠；避開 web clipper（37421）與本機 MCP（37422）。 */
+export const DEFAULT_LAN_PORT = 37424
+
 export const DEFAULT_EINK_SETTINGS: EinkSettings = {
   enabled: false,
   readerAddress: '',
   lanServer: false,
+  lanPort: DEFAULT_LAN_PORT,
   sections: [...BRIEFING_SECTIONS],
   weatherCity: '',
 }
@@ -53,6 +59,7 @@ export function normalizeEinkSettings(saved: unknown): EinkSettings {
     enabled: typeof value.enabled === 'boolean' ? value.enabled : DEFAULT_EINK_SETTINGS.enabled,
     readerAddress: text(value.readerAddress),
     lanServer: typeof value.lanServer === 'boolean' ? value.lanServer : DEFAULT_EINK_SETTINGS.lanServer,
+    lanPort: normalizeLanPort(value.lanPort) ?? DEFAULT_LAN_PORT,
     sections: Array.isArray(value.sections) ? orderSections(value.sections) : [...DEFAULT_EINK_SETTINGS.sections],
     weatherCity: text(value.weatherCity),
   }
@@ -80,6 +87,12 @@ export function normalizeReaderAddress(value: string): string | null {
   } catch {
     return null
   }
+}
+
+/** Fork（almanac ALMNC-50）：埠號只收 1024–65535 的整數（數字或數字字串）；其他回傳 null。 */
+export function normalizeLanPort(value: unknown): number | null {
+  const port = typeof value === 'string' && /^\d+$/.test(value.trim()) ? Number(value.trim()) : value
+  return typeof port === 'number' && Number.isInteger(port) && port >= 1024 && port <= 65535 ? port : null
 }
 
 /** 天氣地點：城市名稱，去掉多餘空白。 */
