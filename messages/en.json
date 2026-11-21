@@ -4809,6 +4809,25 @@
         },
         "commander": {
           "origin": "{agent} (chat)"
+        },
+        "router": {
+          "ask": "Who should take this?",
+          "askUnavailable": "The local model isn't running. Who should take this?",
+          "routes": {
+            "schedule": "{name} (schedule)",
+            "process": "{name} (process)",
+            "query": "{name} (query)",
+            "preference": "Save as a preference"
+          },
+          "suggested": "suggested",
+          "pickExpert": "Which expert should answer?",
+          "preferenceConfirm": "Save as your preference: “{line}”?",
+          "savePreference": "Save",
+          "notPreference": "Hand to {name}",
+          "cancel": "Cancel",
+          "saved": "Saved to your preferences",
+          "alreadySaved": "Already in your preferences",
+          "saveFailed": "Couldn't save the preference"
         }
       },
       "condensing": "Condensing context...",
@@ -8610,7 +8629,10 @@
       "toCommander": "Hand to {name}",
       "process": "Process as suggested",
       "selfProcess": "Process myself",
-      "reject": "Don't use"
+      "reject": "Don't use",
+      "handle": "Process",
+      "retry": "Retry",
+      "delete": "Delete"
     },
     "listLabel": "Things waiting for you",
     "more": "+{count} more",
@@ -8673,7 +8695,10 @@
       "cannotUndo": "This step can't be undone",
       "nothing": "Nothing to undo",
       "failed": "Something went wrong, please try again",
-      "undo": "Undo"
+      "undo": "Undo",
+      "retried": "Captured “{title}” again",
+      "retryFailed": "Still couldn't capture “{title}”",
+      "deleted": "Deleted “{title}”"
     },
     "sources": {
       "filterLabel": "Filter by status",
@@ -8776,7 +8801,13 @@
           "link": "Link",
           "rule": "Divider"
         }
-      }
+      },
+      "handle": "Process",
+      "putAside": "Put aside",
+      "retry": "Retry",
+      "delete": "Delete",
+      "captureFailed": "Capture failed",
+      "captureFailedHint": "Couldn't read this page. Retry, or delete this source."
     },
     "desk": {
       "title": "Desk",

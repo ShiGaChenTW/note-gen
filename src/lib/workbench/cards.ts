@@ -29,6 +29,9 @@ export type CardAction =
   | 'schedule' | 'done' // 任務
   | 'stillValid' | 'toCommander' // 確認類
   | 'process' | 'selfProcess' | 'reject' // 等你決定的資料源（R1）
+  // Fork（almanac ALMNC-54.10）：「處理」（不帶建議交給指揮官）；擷取失敗的卡片「重試／刪除」。
+  // 沒有初步判斷（或判斷沒有建議）時不顯示「照建議處理」，process 改叫「處理」，handle 不出現。
+  | 'handle' | 'retry' | 'delete'
 
 export const ACTIONS_BY_KIND: Record<CardKind, readonly CardAction[]> = {
   proposal: ['accept', 'discuss', 'drop'],
@@ -40,6 +43,17 @@ export const ACTIONS_BY_KIND: Record<CardKind, readonly CardAction[]> = {
   source: ['process', 'selfProcess', 'reject'],
 }
 
+/** Fork（almanac ALMNC-54.10）：等你決定的資料源卡的按鈕——有建議：照建議處理／處理／自己處理／不採用；沒有建議：處理／自己處理／不採用；擷取失敗：重試／刪除。 */
+export function sourceCardActions(source: Pick<AwaitingSourceLike, 'suggestion' | 'failed'>): readonly CardAction[] {
+  if (source.failed) return ['retry', 'delete']
+  return source.suggestion ? ['process', 'handle', 'selfProcess', 'reject'] : ACTIONS_BY_KIND.source
+}
+
+/** 按鈕上的字：沒有建議時 process 就是「處理」。 */
+export function actionLabelKey(card: Pick<WorkbenchCard, 'kind' | 'hasSuggestion'>, action: CardAction): CardAction {
+  return card.kind === 'source' && action === 'process' && !card.hasSuggestion ? 'handle' : action
+}
+
 /** 單鍵：主要動作一律 A（v14 鍵盤列「A 接受」），其餘照 v14。 */
 export const ACTION_KEY: Partial<Record<CardAction, string>> = {
   accept: 'A', process: 'A', stillValid: 'A', schedule: 'A', answer: 'A',
@@ -47,6 +61,7 @@ export const ACTION_KEY: Partial<Record<CardAction, string>> = {
   drop: 'X', reject: 'X',
   done: 'C',
   desk: 'T',
+  handle: 'P', retry: 'R',
 }
 
 export interface WorkbenchCard {
@@ -80,6 +95,8 @@ export interface WorkbenchCard {
   notePath?: string
   notePaths?: readonly string[]
   domainProposalId?: string
+  /** Fork（almanac ALMNC-54.10）：資料源卡有初步判斷的建議（「照建議處理」才出現）。 */
+  hasSuggestion?: boolean
 }
 
 // —— 投影輸入（結構型別，不綁 store） ——
@@ -92,8 +109,12 @@ export interface AwaitingSourceLike {
   /** 顯示用的標的物：原始檔名、網頁標題或「截圖 · 11/19 14:03」。 */
   title: string
   kindLabel: string
-  /** 初步判斷（R1）；本機模型還沒接上時是空字串。 */
+  /** 初步判斷（R1）一行「類型｜建議」；本機模型無法使用時是空字串（AC#4：卡片照樣出現）。 */
   judgement: string
+  /** Fork（almanac ALMNC-54.10）：判斷裡的建議（沒有就不顯示「照建議處理」）。 */
+  suggestion?: string
+  /** Fork（almanac ALMNC-54.10）：擷取失敗（連結抓不到內文）→ 重試／刪除。 */
+  failed?: boolean
   /** 來處（網址、檔名）；沒有初步判斷時當第三行。 */
   origin?: string
   collectedAt: number
@@ -246,7 +267,8 @@ export function buildReviewCards(input: ReviewInput): WorkbenchCard[] {
     cards.push({
       key: `source:${source.id}`, kind: 'source', group: 'proposal', label: 'source', verb: 'judge',
       title: source.title, path: source.kindLabel, summary: source.judgement || source.origin || '', at: source.collectedAt,
-      actions: ACTIONS_BY_KIND.source, sourceId: source.id,
+      actions: sourceCardActions(source), sourceId: source.id,
+      ...(source.suggestion && !source.failed ? { hasSuggestion: true } : {}),
     })
   }
   for (const domain of input.domains ?? []) {

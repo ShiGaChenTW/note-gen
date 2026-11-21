@@ -1,9 +1,10 @@
 // Fork（almanac ALMNC-54.1）：V3 資料源與「資料源 → 產出」連結表（note.db）。
 // 只是薄薄的 SQL 包裝；狀態流轉、鎖定、改版與封存規則都在 src/lib/v3-model/source.ts。
-// 本模組沒有刪除資料源的函式：不採用的資料源只會封存（archived_at），不刪除。
+// 不採用的資料源只會封存（archived_at），不刪除。唯一的例外是擷取失敗、還沒送出的外部擷取（deleteUnsentSource，ALMNC-54.10）。
 import { getDb } from './index'
 import {
   archiveSource,
+  canDeleteUnsent,
   createSource,
   editSourceContent,
   sourceFromRow,
@@ -205,4 +206,16 @@ export async function countOutputsBySource(): Promise<Map<string, number>> {
     'select source_id as sourceId, count(*) as count from source_outputs group by source_id'
   )
   return new Map(rows.map(row => [row.sourceId, Number(row.count)]))
+}
+
+/**
+ * Fork（almanac ALMNC-54.10）：刪除擷取失敗、還沒送出的外部擷取（卡片上的「刪除」）。條件見 canDeleteUnsent；
+ * 不符合就丟錯，不會刪到已送出或有產出的資料源。
+ */
+export async function deleteUnsentSource(id: string): Promise<void> {
+  const source = await requireSource(id)
+  const outputs = await listOutputsOfSource(id)
+  if (!canDeleteUnsent(source, outputs.length)) throw new Error('只有還沒送出、沒有產出的外部擷取可以刪除')
+  const db = await getDb()
+  await db.execute('delete from sources where id = $1', [id])
 }

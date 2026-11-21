@@ -178,7 +178,8 @@ describe('審核 tab', () => {
     const panel = card('提案 a').querySelector('[data-testid="card-panel"]')!
     expect([...panel.querySelectorAll('[data-action]')].map(b => b.textContent)).toEqual(['接受A', '再次討論D', '放棄X', '先放著S'])
     act(() => (card('白板照片').firstElementChild as HTMLElement).click())
-    expect([...card('白板照片').querySelectorAll('[data-action]')].map(b => b.textContent)).toEqual(['照建議處理A', '自己處理', '不採用X', '先放著S'])
+    // ALMNC-54.10：沒有初步判斷（本機模型無法使用）時卡片照樣出現，「照建議處理」改成「處理」。
+    expect([...card('白板照片').querySelectorAll('[data-action]')].map(b => b.textContent)).toEqual(['處理A', '自己處理', '不採用X', '先放著S'])
     act(() => (card('提案 a').firstElementChild as HTMLElement).click())
     act(() => button('接受A', card('提案 a'))!.click())
     await wait(260)

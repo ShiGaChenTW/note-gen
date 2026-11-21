@@ -6,7 +6,7 @@ import { useState, type ReactNode } from 'react'
 import { useTranslations } from 'next-intl'
 import { Clock, MessagesSquare } from 'lucide-react'
 import { openConversation } from '@/lib/proposals/actions'
-import { ACTION_KEY, ageParts, type CardAction, type WorkbenchCard } from '@/lib/workbench/cards'
+import { ACTION_KEY, actionForKey, actionLabelKey, ageParts, type CardAction, type WorkbenchCard } from '@/lib/workbench/cards'
 import { reminderPresets } from '@/lib/workbench/put-aside'
 import { cn } from '@/lib/utils'
 import useChatStore from '@/stores/chat'
@@ -203,8 +203,8 @@ export function ReviewCard({ card, now, current, expanded, leaving, onDesk, comm
                 className={cn(BTN, index === 0 && !card.choices?.length && BTN_PRIMARY)}
                 onClick={() => click(action)}
               >
-                {t(`actions.${action}`, { name: commanderName })}
-                {ACTION_KEY[action] && <Kbd>{ACTION_KEY[action]}</Kbd>}
+                {t(`actions.${actionLabelKey(card, action)}`, { name: commanderName })}
+                {ACTION_KEY[action] && actionForKey(card, ACTION_KEY[action]!) === action && <Kbd>{ACTION_KEY[action]}</Kbd>}
               </button>
             ))}
             <span className="flex-1" />

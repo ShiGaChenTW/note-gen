@@ -6,6 +6,7 @@
 // 舊資料交給指揮官整理或編輯時，會建立一則 id 固定的資料源（rec_<記錄 id>、cap_<項目 id>），之後清單只列那則資料源，不重複。
 // 狀態篩選：全部／等你決定／未整理／已整理／不採用（v14）；沒有輸入框和搜尋列。
 import type { Source } from '@/lib/v3-model/source'
+import { judgementLine, type SourceJudgement } from './judgement'
 
 export type SourceRowStatus = 'wait' | 'todo' | 'ing' | 'edited' | 'done' | 'no'
 export const SOURCE_FILTERS = ['all', 'wait', 'todo', 'done', 'no'] as const
@@ -37,6 +38,12 @@ export interface SourceListRow {
   sourceId?: string
   markId?: number
   captureId?: string
+  /** Fork（almanac ALMNC-54.10）：等你決定的資料源的初步判斷一行（沒有就是空字串）。 */
+  judgement?: string
+  /** 判斷裡有建議（才顯示「照建議處理」）。 */
+  suggestion?: string
+  /** 擷取失敗：重試／刪除。 */
+  captureFailed?: boolean
 }
 
 // —— 輸入（結構型別） ——
@@ -70,6 +77,8 @@ export interface SourcesTabInput {
   captures?: readonly CaptureLike[]
   /** 改過、還沒送給指揮官的資料源 id（v14「v2 未送出」）。 */
   edited?: ReadonlySet<string>
+  /** Fork（almanac ALMNC-54.10）：資料源 id → 初步判斷。 */
+  judgements?: ReadonlyMap<string, SourceJudgement>
 }
 
 export const RECORD_SOURCE_PREFIX = 'rec_'
@@ -139,7 +148,16 @@ function sourceRow(source: Source, input: SourcesTabInput): SourceListRow {
     outputs: input.outputCounts?.get(source.id) ?? 0,
     version: source.version,
     sourceId: source.id,
+    ...judgementFields(source, input.judgements?.get(source.id)),
   }
+}
+
+/** 只有等你決定的資料源才帶初步判斷。 */
+function judgementFields(source: Source, judgement: SourceJudgement | undefined): Pick<SourceListRow, 'judgement' | 'suggestion' | 'captureFailed'> {
+  if (source.status !== 'awaiting_decision' || !judgement) return {}
+  if (judgement.status === 'capture_failed') return { captureFailed: true }
+  const line = judgementLine(judgement)
+  return line ? { judgement: line, ...(judgement.suggestion ? { suggestion: judgement.suggestion } : {}) } : {}
 }
 
 function recordRow(record: RecordLike, input: SourcesTabInput): SourceListRow {

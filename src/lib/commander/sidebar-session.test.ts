@@ -72,6 +72,27 @@ describe('sidebar commander identity', () => {
   })
 })
 
+describe('ALMNC-54.11 routed runs', () => {
+  const expert = { id: 'e-1', name: 'Alex', role: 'expert' as const, domain: '工業工程', enabled: true }
+
+  it('a routed query answers as the expert, read-only, with the expert\'s instructions and memory', async () => {
+    const { deps } = fakeDeps()
+    const run = await prepareSidebarCommanderRun({ chatId: 1, scottMessages: [], readOnly: true, answerAs: expert, routeNote: 'Router: query' }, deps)
+    expect(run.displayName).toBe('Alex · 工業工程專家')
+    expect(deps.memoryPrompt).toHaveBeenCalledWith(expert)
+    expect(run.rolePrompt).toContain(ROLE_INSTRUCTIONS.expert)
+    expect(run.rolePrompt).toContain(SIDEBAR_ASK_RULES)
+    expect(run.rolePrompt.endsWith('Router: query')).toBe(true)
+  })
+
+  it('answerAs is ignored outside read-only runs（只讀才由專家回答）', async () => {
+    const { deps } = fakeDeps()
+    const run = await prepareSidebarCommanderRun({ chatId: 1, scottMessages: [], answerAs: expert }, deps)
+    expect(run.displayName).toBe('Mia · 指揮官')
+    expect(run.rolePrompt).toContain(SIDEBAR_COMMANDER_RULES)
+  })
+})
+
 describe('sidebar commander changes', () => {
   it('sends note changes to the workbench with the conversation and shows proposal cards; nothing is written', async () => {
     const { deps } = fakeDeps()

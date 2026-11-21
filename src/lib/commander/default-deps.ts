@@ -114,6 +114,11 @@ export async function createDefaultCommanderDeps(): Promise<CommanderDeps> {
         note: Array.from(entry.note).slice(0, 60).join(''),
       })
     },
+    // Fork（almanac ALMNC-54.10）：照建議處理（R1）時把初步判斷交給指揮官。
+    sourceHint: async sourceId => {
+      const [{ getSourceJudgement }, { judgementHint }] = await Promise.all([import('@/db/v3-source-judgements'), import('@/lib/workbench/judgement')])
+      return judgementHint(await getSourceJudgement(sourceId))
+    },
     labels: {
       ...labels,
       origin: values => labels.origin({ ...values, agent: values.agent ? agentDisplayName({ name: values.agent, role: 'commander' }, role) : role('commander') }),

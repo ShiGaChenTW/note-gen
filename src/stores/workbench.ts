@@ -7,6 +7,7 @@ import { loadAside, putAside, saveAside, takeBack, type AsideMap } from '@/lib/w
 import type { SourceFilter } from '@/lib/workbench/sources-tab'
 import type { DeskMaterial } from '@/lib/workbench/desk'
 import type { Source } from '@/lib/v3-model/source'
+import type { SourceJudgement } from '@/lib/workbench/judgement'
 
 export type WorkbenchTab = 'review' | 'sources'
 
@@ -73,6 +74,9 @@ interface WorkbenchState {
   outputCounts: Map<string, number>
   sourcesLoaded: boolean
   setSources: (sources: Source[], outputCounts: Map<string, number>) => void
+  /** Fork（almanac ALMNC-54.10）：外部擷取資料源的初步判斷（資料源 id → 判斷）。 */
+  judgements: Map<string, SourceJudgement>
+  setJudgements: (judgements: Map<string, SourceJudgement>) => void
 
   // —— 檯面 ——
   desk: DeskState
@@ -144,6 +148,8 @@ const useWorkbenchStore = create<WorkbenchState>((set, get) => ({
   outputCounts: new Map(),
   sourcesLoaded: false,
   setSources: (sources, outputCounts) => set({ sources, outputCounts, sourcesLoaded: true }),
+  judgements: new Map(),
+  setJudgements: judgements => set({ judgements }),
 
   desk: CLOSED_DESK,
   openDesk: (materials, cardKey) => set({ desk: { open: true, materials, ...(cardKey ? { cardKey } : {}) } }),
