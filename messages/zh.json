@@ -1,10 +1,10 @@
 {
   "agents": {
-    "title": "代理人",
-    "description": "设置每个代理人可用的工具。笔记提案会进入审核队列。",
-    "loading": "正在加载代理人…",
-    "empty": "还没有代理人。",
-    "add": "添加代理人",
+    "title": "伙伴",
+    "description": "设置每位伙伴可用的工具。笔记提案会进入工作台。",
+    "loading": "正在加载伙伴…",
+    "empty": "还没有伙伴。",
+    "add": "添加伙伴",
     "edit": "编辑",
     "name": "名称",
     "role": "角色",
@@ -14,8 +14,8 @@
     "save": "保存",
     "saving": "保存中…",
     "cancel": "取消",
-    "loadError": "无法加载代理人设置。",
-    "saveError": "无法保存代理人设置。",
+    "loadError": "无法加载伙伴设置。",
+    "saveError": "无法保存伙伴设置。",
     "roles": {
       "organizer": "整理员",
       "scheduler": "排程员",
@@ -4749,7 +4749,7 @@
           "file": "要修改 {name}，可以吗？",
           "files": "要修改 {count} 个文件，可以吗？",
           "apply": "可以，应用",
-          "deny": "不要",
+          "deny": "放弃",
           "showDiff": "查看改动",
           "hideDiff": "收起改动",
           "fileList": "查看文件列表"
@@ -7973,9 +7973,9 @@
     }
   },
   "collect": {
-    "title": "收集",
-    "subtitle": "一个框收所有东西，拆成提案，逐条收下",
-    "inputLabel": "收集内容",
+    "title": "资料源",
+    "subtitle": "贴上任何东西，拆成提案，逐条接受",
+    "inputLabel": "要加入的内容",
     "placeholder": "粘贴链接、一段文字，或拖入截图、文件。直接打一句待办也可以。",
     "detect": {
       "empty": "会自动识别类型",
@@ -7992,7 +7992,7 @@
         "hint": "→ 存成笔记，拆出行动"
       }
     },
-    "send": "收进来",
+    "send": "新增资料源",
     "pickFile": "图片或文件",
     "try": "试试：",
     "sample": {
@@ -8005,7 +8005,7 @@
     "filter": {
       "label": "按状态筛选",
       "all": "全部",
-      "pending": "待收下",
+      "pending": "待决定",
       "done": "已处理"
     },
     "input": {
@@ -8028,34 +8028,34 @@
       "ai": "AI 拆分",
       "rules": "规则拆分（AI 没有响应或尚未设置）"
     },
-    "accept": "收下",
+    "accept": "接受",
     "edit": "修改",
-    "reject": "不要",
+    "reject": "放弃",
     "editDone": "完成",
-    "acceptAll": "全部收下",
+    "acceptAll": "全部接受",
     "fieldTitle": "标题",
     "fieldDate": "日期",
     "fieldTime": "时间",
     "status": {
-      "ok": "已收下",
+      "ok": "已接受",
       "no": "已丢掉"
     },
     "open": "打开",
     "undo": "撤销",
-    "accepted": "已收下：{title}",
-    "acceptedMany": "已收下 {count} 条提案",
+    "accepted": "已接受：{title}",
+    "acceptedMany": "已接受 {count} 条提案",
     "undoFailed": "文件已被修改，无法撤销",
     "failed": "操作失败，请重试",
-    "fileTooLarge": "{name} 超过 8 MB，没有收进来",
-    "remove": "移除这条收集",
+    "fileTooLarge": "{name} 超过 8 MB，没有加入资料源",
+    "remove": "移除这条资料源",
     "empty": "还没有收进内容。试试粘贴一段文字、链接或图片。",
-    "emptyFilter": "这个状态下没有收集。",
-    "records": "Inbox 的记录",
-    "recordsHint": "Inbox 里还没整理的记录，可以拆成提案。",
-    "recordsEmpty": "Inbox 没有未整理的记录",
+    "emptyFilter": "这个状态下没有资料源。",
+    "records": "未整理的旧记录",
+    "recordsHint": "还没整理的旧记录，可以拆成提案。",
+    "recordsEmpty": "没有未整理的旧记录",
     "split": "拆分",
-    "queued": "已在收集",
-    "writeHint": "新笔记、任务和时段都要你收下才会写入；没有收下的提案不会留下任何文件。"
+    "queued": "已在资料源",
+    "writeHint": "新笔记、任务和时段都要你接受才会写入；没有接受的提案不会留下任何文件。"
   },
   "threads": {
     "chatMovedHint": "对话正在中间的对话页显示",
@@ -8091,12 +8091,12 @@
     },
     "cards": {
       "proposal": "提案",
-      "accept": "收下",
-      "reject": "不要",
-      "alsoInInbox": "也在等你定",
-      "proposalWait": "等你定",
-      "proposalOk": "已收下",
-      "proposalNo": "已退回",
+      "accept": "接受",
+      "reject": "放弃",
+      "alsoInInbox": "也在工作台",
+      "proposalWait": "要决定",
+      "proposalOk": "已接受",
+      "proposalNo": "已放弃",
       "kickoff": "开工卡",
       "placeholder": "示范",
       "kickoffProposed": "待开工",
@@ -8142,8 +8142,8 @@
         "keywords": "home,今天,首页"
       },
       "inbox": {
-        "title": "打开收集箱",
-        "keywords": "inbox,收集,待整理"
+        "title": "打开资料源",
+        "keywords": "inbox,资料源,收集,待整理"
       },
       "searchSidebar": {
         "title": "聚焦侧栏搜索",
@@ -8181,11 +8181,11 @@
     }
   },
   "decide": {
-    "title": "等你定",
-    "subtitle": "{count} 件等你定，逐条接受或拒绝",
-    "count": "{count} 件等你定",
-    "needsLabel": "等你定",
-    "listLabel": "等你定的项目",
+    "title": "工作台",
+    "subtitle": "{count} 件，逐条接受或放弃",
+    "count": "工作台 · {count} 件",
+    "needsLabel": "要决定",
+    "listLabel": "工作台的项目",
     "empty": "都处理完了。",
     "proposalTag": "提案",
     "kind": {
@@ -8200,30 +8200,30 @@
       "folder": "新增文件夹"
     },
     "source": {
-      "collect": "收集",
+      "collect": "资料源",
       "draft": "Agent 草稿"
     },
     "from": "来自 {origin}",
-    "writesTo": "收下后写入：",
+    "writesTo": "接受后写入：",
     "dest": {
       "note": "收件文件夹的新笔记",
       "journal": "今日日志的“{section}”",
-      "journalNew": "今日日志的“{section}”（今天的日志还没建立，收下时按模板建立）"
+      "journalNew": "今日日志的“{section}”（今天的日志还没建立，接受时按模板建立）"
     },
     "diff": {
       "hidden": "还有 {count} 行没列出"
     },
-    "merged": "另有 {count} 个来源提了同一件事，收下或不要时一并处理。",
-    "accept": "收下",
-    "reject": "不要",
-    "accepted": "已收下“{title}”",
+    "merged": "另有 {count} 个来源提了同一件事，接受或放弃时一并处理。",
+    "accept": "接受",
+    "reject": "放弃",
+    "accepted": "已接受“{title}”",
     "rejected": "已退回“{title}”",
     "undo": "撤销",
     "undoFailed": "无法撤销，文件已被改过",
     "failed": "处理失败，请重试",
     "conflict": "文件在草稿生成后被改过，请到任务中心逐条确认",
     "openReview": "到任务中心",
-    "viewAll": "等你定共 {count} 件，全部查看"
+    "viewAll": "工作台共 {count} 件，全部查看"
   },
   "jobs": {
     "new": "新建开工卡",
@@ -8234,7 +8234,7 @@
     "title": "开工卡标题",
     "step": "第 {number} 步",
     "stepTitle": "步骤名称",
-    "agent": "代理人",
+    "agent": "伙伴",
     "instructions": "工作指示",
     "criterion": "验收标准",
     "removeStep": "移除第 {number} 步",
@@ -8242,12 +8242,12 @@
     "addStep": "添加步骤",
     "close": "关闭",
     "saveProposal": "保存提案",
-    "loadingAgents": "正在加载代理人…",
-    "noAgents": "请前往「设置 → 常规 → 代理人」启用至少一位代理人。",
-    "agentsFailed": "无法加载代理人。",
+    "loadingAgents": "正在加载伙伴…",
+    "noAgents": "请前往「设置 → 常规 → 伙伴」启用至少一位伙伴。",
+    "agentsFailed": "无法加载伙伴。",
     "modelRequired": "请先配置 AI 模型，或自行添加步骤。",
     "generateFailed": "无法生成有效的步骤。请重试或自行添加。",
-    "invalidPlan": "请为每个步骤填写名称、代理人、工作指示和验收标准。",
+    "invalidPlan": "请为每个步骤填写名称、伙伴、工作指示和验收标准。",
     "invalidDependencies": "请检查是否有循环依赖，或选到了不存在的前置步骤。",
     "saveFailed": "无法保存开工卡。",
     "card": "开工卡",
@@ -8263,7 +8263,7 @@
     "reviewDrafts": "审核草稿",
     "start": "开工",
     "parallel": "最多同时执行 {count} 项",
-    "agentDisabled": "代理人已停用或无法使用。请启用后再重跑。",
+    "agentDisabled": "伙伴已停用或无法使用。请启用后再重跑。",
     "interrupted": "上次执行中断。你可以重跑或取消这个步骤。",
     "status": {
       "waiting": "等待派工",
@@ -8304,8 +8304,8 @@
       "empty": "这天还没有安排日程。",
       "noAccess": "日历还没开放访问，行程不会出现在这里。",
       "proposal": "提案 · 排程员",
-      "accept": "收下",
-      "reject": "不要"
+      "accept": "接受",
+      "reject": "放弃"
     },
     "journal": {
       "label": "日志",
@@ -8327,14 +8327,14 @@
       "emptyDay": "这天没有到期的任务。"
     },
     "decide": {
-      "label": "等你定",
+      "label": "工作台",
       "empty": "都处理完了。",
       "all": "全部"
     },
     "captures": {
-      "label": "今天收进来",
+      "label": "今天新增的资料源",
       "all": "全部",
-      "empty": "今天还没收进东西。",
+      "empty": "今天还没有新增资料源。",
       "reading": "正在识别",
       "kind": {
         "text": "文字",
@@ -8353,14 +8353,14 @@
       "askPlaceholder": "问问题，例如“下午的空档怎么排”",
       "notePlaceholderToday": "记一笔（会记到今天，不是 {date}）",
       "toToday": "记到今天",
-      "submitNote": "收进来",
+      "submitNote": "新增资料源",
       "submitAsk": "问",
       "detect": {
         "task": "任务",
         "link": "链接",
         "text": "笔记"
       },
-      "captured": "收进来了，正在拆分成提案",
+      "captured": "已加入资料源，正在拆分成提案",
       "noModel": "还没设置模型，请先到设置里选一个。"
     },
     "titleDay": "{date}"
@@ -8405,28 +8405,28 @@
     "count": "{count} 件",
     "nav": {
       "today": "今天",
-      "decide": "等你定",
-      "collect": "收集",
+      "decide": "工作台",
+      "collect": "资料源",
       "threads": "对话",
       "knowledge": "知识",
       "plan": "计划"
     },
     "agents": {
-      "title": "代理人",
+      "title": "伙伴",
       "running": "{count} 执行中",
-      "add": "新增代理人",
-      "addFirst": "新增第一位代理人"
+      "add": "新增伙伴",
+      "addFirst": "新增第一位伙伴"
     },
     "vault": "我的笔记",
     "rules": {
       "label": "规则",
-      "text": "代理人只能提案；写入一律经过等你定。"
+      "text": "伙伴只能提案；写入一律经过工作台。"
     },
     "tabs": {
-      "collectGroup": "收集页面",
-      "collect": "收集",
+      "collectGroup": "资料源页面",
+      "collect": "资料源",
       "knowledgeGroup": "知识页面",
-      "inbox": "Inbox",
+      "inbox": "旧记录",
       "timeline": "笔记时间轴",
       "canvases": "画布",
       "noteTags": "标签",
@@ -8440,7 +8440,7 @@
   },
   "organize": {
     "title": "自动整理",
-    "description": "闲置 60 分钟后，最多提出五项变更，在「等你定」逐项确认。",
+    "description": "闲置 60 分钟后，最多提出五项变更，在「工作台」逐项确认。",
     "merge": "将 {detail} 合并到 {path}",
     "tag": "为 {path} 补上标签 #{detail}",
     "link": "从 {path} 链接到 {detail}",
