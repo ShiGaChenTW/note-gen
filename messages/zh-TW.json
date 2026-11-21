@@ -8618,6 +8618,34 @@
     "snapshotFailed": "另存失敗"
   },
   "eink": {
+    "briefing": {
+      "chapters": {
+        "schedule": "今天行程",
+        "weather": "天氣",
+        "pinned": "釘選資料",
+        "articles": "每日精選文章",
+        "review": "每日回顧卡",
+        "report": "知識報告",
+        "workbench": "工作台摘要"
+      },
+      "notes": {
+        "calendarDenied": "行事曆沒有授權，這裡只列出時段與有時間的任務。",
+        "calendarDeniedEmpty": "行事曆沒有授權，讀不到今天的行程。",
+        "scheduleEmpty": "今天沒有行程。",
+        "scheduleError": "今天的行程讀取失敗。",
+        "weatherUnavailable": "天氣暫無資料",
+        "weatherNoCity": "天氣暫無資料（請在設定 > 電子紙填天氣地點）",
+        "workbenchEmpty": "沒有要決定或要完成的事。",
+        "workbenchError": "工作台摘要讀取失敗。"
+      },
+      "dayParts": {
+        "morning": "早",
+        "noon": "午",
+        "evening": "晚",
+        "night": "夜"
+      },
+      "privateLabel": "私人行程"
+    },
     "pin": "釘選到電子紙",
     "unpin": "取消電子紙釘選",
     "pinned": "已釘選到電子紙",

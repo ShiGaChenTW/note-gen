@@ -57,7 +57,7 @@ describe('改名／移動跟著走', () => {
   it('檔案改名：路徑換掉，釘選日、最後送出日與順序不變', () => {
     const pins = markPinsSent(list('a.md', 'b.md'), ['a.md'], T + 100)
     const moved = applyPathMove(pins, 'a.md', '專案/新名字.md')
-    expect(moved[0]).toEqual({ path: '專案/新名字.md', pinnedAt: T, lastSentAt: T + 100, order: 0 })
+    expect(moved[0]).toEqual({ path: '專案/新名字.md', pinnedAt: T, lastSentAt: T + 100, firstSentAt: T + 100, order: 0 })
     expect(moved[1].path).toBe('b.md')
   })
 
@@ -91,6 +91,12 @@ describe('最後送出日', () => {
     const pins = markPinsSent(list('a.md', 'b.md'), ['b.md'], T + 50)
     expect(pins[0].lastSentAt).toBeUndefined()
     expect(pins[1].lastSentAt).toBe(T + 50)
+  })
+
+  it('第一次送出日只記一次，之後送出只更新最後送出日（ALMNC-47）', () => {
+    const again = markPinsSent(markPinsSent(list('a.md'), ['a.md'], T + 50), ['a.md'], T + 90)
+    expect(again[0]).toMatchObject({ firstSentAt: T + 50, lastSentAt: T + 90 })
+    expect(normalizePins(again)[0].firstSentAt).toBe(T + 50)
   })
 })
 

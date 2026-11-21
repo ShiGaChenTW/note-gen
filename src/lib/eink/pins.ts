@@ -9,6 +9,11 @@ export interface EinkPin {
   pinnedAt: number
   /** 最後一次真的送到電子紙的時間（毫秒）；還沒送過就沒有 */
   lastSentAt?: number
+  /**
+   * Fork（almanac ALMNC-47）：第一次真的送到電子紙的時間（毫秒）。lastSentAt 每次送出都會更新，
+   * 判斷「釘選後第一天放全文、之後只列標題」與每日回顧卡要看第一次送出那天。
+   */
+  firstSentAt?: number
   /** 清單順序，0 起算、連續 */
   order: number
 }
@@ -42,6 +47,7 @@ export function normalizePins(saved: unknown): EinkPin[] {
       path,
       pinnedAt: value.pinnedAt,
       ...(typeof value.lastSentAt === 'number' && Number.isFinite(value.lastSentAt) ? { lastSentAt: value.lastSentAt } : {}),
+      ...(typeof value.firstSentAt === 'number' && Number.isFinite(value.firstSentAt) ? { firstSentAt: value.firstSentAt } : {}),
       order: typeof value.order === 'number' && Number.isFinite(value.order) ? value.order : index,
     })
   })
@@ -123,8 +129,8 @@ export function applyPathDelete(pins: readonly EinkPin[], path: string, isFolder
   return remaining.length === pins.length ? [...pins] : renumber(remaining)
 }
 
-/** 真的送到電子紙後（區網下載成功或立即推送）記下最後送出日。 */
+/** 真的送到電子紙後（區網下載成功或立即推送）記下最後送出日；第一次送出另記 firstSentAt（ALMNC-47）。 */
 export function markPinsSent(pins: readonly EinkPin[], paths: readonly string[], at: number): EinkPin[] {
   const sent = new Set(paths.map(normalizePath))
-  return pins.map(pin => (sent.has(pin.path) ? { ...pin, lastSentAt: at } : pin))
+  return pins.map(pin => (sent.has(pin.path) ? { ...pin, lastSentAt: at, firstSentAt: pin.firstSentAt ?? at } : pin))
 }
