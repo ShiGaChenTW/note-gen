@@ -172,3 +172,14 @@ describe('ALMNC-54.5 projectProposals', () => {
     expect(out[0].previousProposalId).toBe('collect:old:p1')
   })
 })
+
+// Fork（almanac ALMNC-54.7）：右側欄指揮官想改的既有檔案，在工作台顯示成檔案變更並帶來源對話。
+describe('file change proposals from the sidebar commander', () => {
+  it('projects the change with a file preview and the source conversation', () => {
+    const change = { toolName: 'note_update_file', args: {}, kind: 'update' as const, path: '領域/工業工程.md', content: 'a\nB\n', baseContent: 'a\nb\n', summary: '修改 領域/工業工程.md（2 → 2 行）' }
+    const items = [item('c1', 10, [{ ...base, id: 'p1', kind: 'note', title: change.summary, status: 'wait', conversationId: 9, change }])]
+    const [entry] = projectDecisions({ items, tasks: [], journal: journal('') })
+    expect(entry).toMatchObject({ kind: 'update', title: '領域/工業工程.md', summary: change.summary, conversationId: 9 })
+    expect(entry.preview).toEqual({ type: 'file', path: '領域/工業工程.md', targetPath: undefined, diff: { context: ['a'], removed: ['b'], added: ['B'], hidden: 0 } })
+  })
+})

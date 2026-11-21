@@ -1,7 +1,7 @@
 // Fork（almanac ALMNC-14）：對話頁的狀態。做法同收集頁、Inbox 頁：同一時間只開一個全頁覆蓋層。
 // 對話本身（列表、目前對話、訊息）仍在 useChatStore，這裡只管頁面開關、專案分組、搜尋，與訊息內嵌卡片。
 import { create } from 'zustand'
-import { applyCardAction, type CardAction, type ThreadCard } from '@/lib/threads/cards'
+import { applyCardAction, type CardAction, type DirectEditCardData, type ThreadCard } from '@/lib/threads/cards'
 import {
   assignProject, dropProject, loadProjectMap, renameProject, saveProjectMap, type ThreadGroupMode, type ThreadProjectMap,
 } from '@/lib/threads/projects'
@@ -52,10 +52,17 @@ interface ThreadsState {
   /** chatId → 掛在那則訊息下面的卡片。只放記憶體：提案本身（收集頁）也還沒持久化。 */
   cards: Record<number, ThreadCard[]>
   attachCard: (chatId: number, card: ThreadCard) => void
+  /** Fork（almanac ALMNC-54.7）：掛一行直接修改的確認卡；undo 只放記憶體（同卡片本身）。 */
+  attachDirectEdit: (chatId: number, card: DirectEditCardData, undo: () => Promise<boolean>) => void
+  /** Fork（almanac ALMNC-54.7）：右側欄指揮官參與的對話標成「處理」。 */
+  markCommanderThread: (conversation: ConversationRef) => Promise<void>
   actOnCard: (chatId: number, cardId: string, action: CardAction) => Promise<void>
 }
 
 type ConversationRef = Pick<Conversation, 'id' | 'syncId'>
+
+/** Fork（almanac ALMNC-54.7）：直接修改卡片的復原函式（卡片 id → 復原）。 */
+const undoers = new Map<string, () => Promise<boolean>>()
 
 const useThreadsStore = create<ThreadsState>((set, get) => {
   async function persist(next: ThreadProjectMap) {
@@ -119,9 +126,29 @@ const useThreadsStore = create<ThreadsState>((set, get) => {
     attachCard: (chatId, card) => set(state => ({
       cards: { ...state.cards, [chatId]: [...(state.cards[chatId] ?? []).filter(entry => entry.id !== card.id), card] },
     })),
+    attachDirectEdit: (chatId, card, undo) => {
+      undoers.set(card.id, undo)
+      get().attachCard(chatId, card)
+    },
+    markCommanderThread: async conversation => {
+      // 有指揮官參與就是「處理」（lib/threads/tags.ts tagFromParticipants）。已經是處理就不寫。
+      // 先確定對照表讀回來了，免得只用這一筆蓋掉 store.json 裡的整張表。
+      await get().loadProjects()
+      if (get().tagMap[keyOf(conversation)] === 'process') return
+      await persistTags(assignTag(get().tagMap, keyOf(conversation), 'process'))
+    },
     actOnCard: async (chatId, cardId, action) => {
       const card = get().cards[chatId]?.find(entry => entry.id === cardId)
       if (!card) return
+      if (card.type === 'direct-edit') {
+        const undo = undoers.get(card.id)
+        if (action !== 'undo' || card.status !== 'done' || !undo) return
+        const ok = await undo()
+        undoers.delete(card.id)
+        const next: DirectEditCardData = { ...card, status: ok ? 'undone' : 'stale' }
+        set(state => ({ cards: { ...state.cards, [chatId]: (state.cards[chatId] ?? []).map(entry => entry.id === cardId ? next : entry) } }))
+        return
+      }
       // 提案卡連著收集頁的提案時，接受／放棄走收集頁的流程（會寫筆記檔或今日日誌）。
       // 再次討論由畫面先呼叫 lib/proposals/actions 的 discussProposal（記說明、回到對話），這裡只改卡片狀態。
       if (card.type === 'proposal' && card.source) {

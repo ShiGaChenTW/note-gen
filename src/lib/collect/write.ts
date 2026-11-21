@@ -9,7 +9,7 @@ import { QUICK_ADD_SECTION, undoWrites, type WriteRecord } from '@/lib/today/tod
 import { insertLinesInSection } from '@/lib/today/today-model'
 import { proposalNoteContent, proposalTaskLine } from './builders'
 import { acceptSlot } from '@/lib/timeslots/apply'
-import type { Proposal } from './types'
+import type { FileChange, Proposal } from './types'
 
 export interface AcceptResult {
   /** 寫入的檔案。 */
@@ -18,9 +18,38 @@ export interface AcceptResult {
   record?: WriteRecord
 }
 
-export async function acceptProposal(proposal: Proposal, options: { noteFolder: string, now?: Date }): Promise<AcceptResult> {
+/** Fork（almanac ALMNC-54.7）：檔案變更提案寫不進去（檔案在提案後被改過＝CONFLICT，或工具回報失敗）。 */
+export class ChangeNotApplied extends Error {
+  constructor(readonly conflict: boolean, detail?: string) {
+    super(detail ?? (conflict ? 'CONFLICT' : 'change not applied'))
+  }
+}
+
+export type ApplyChange = (change: FileChange) => Promise<void>
+
+/**
+ * 預設的檔案變更寫入：同背景任務草稿的審核（agent-tasks/review.ts applyDraft），用原本的工具照 args 寫入，
+ * 寫入前比對提案當下的內容，被改過就不寫。動態載入工具表，收集頁的其他路徑不必連帶載入 agent。
+ */
+const defaultApplyChange: ApplyChange = async change => {
+  const [{ applyDraft }, { agentToolRegistry }] = await Promise.all([
+    import('@/lib/agent-tasks/review'),
+    import('@/lib/agent/tool-registry'),
+  ])
+  const result = await applyDraft(
+    { ...change, id: `proposal-${Date.now().toString(36)}`, state: 'pending' },
+    { readFile: readNote, getTool: name => agentToolRegistry.getTool(name) },
+  )
+  if (result.state !== 'applied') throw new ChangeNotApplied(result.error === 'CONFLICT', result.error)
+}
+
+export async function acceptProposal(proposal: Proposal, options: { noteFolder: string, now?: Date, applyChange?: ApplyChange }): Promise<AcceptResult> {
   const now = options.now ?? new Date()
   if (proposal.slot) return acceptSlot({ ...proposal, slot: proposal.slot }, now)
+  if (proposal.change) {
+    await (options.applyChange ?? defaultApplyChange)(proposal.change)
+    return { path: proposal.change.targetPath ?? proposal.change.path }
+  }
 
   if (proposal.kind === 'note') {
     const name = captureFileName(proposal.title, now)
