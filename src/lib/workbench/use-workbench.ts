@@ -11,6 +11,7 @@ import type { RosterAgent } from '@/lib/commander/types'
 import { useDecisions } from '@/lib/decide/use-decisions'
 import { groupTasks } from '@/lib/today/today-model'
 import type { Domain } from '@/lib/v3-model/domain'
+import type { ReconfirmInterval } from '@/lib/cleanup/interval'
 import useCollectStore from '@/stores/collect'
 import useInboxStore from '@/stores/inbox'
 import useVaultIndexStore, { selectAllTasks } from '@/stores/vault-index'
@@ -67,6 +68,20 @@ function useDomains(): Domain[] {
   return domains
 }
 
+/** Fork（almanac ALMNC-54.12）：各領域的重新確認期限（讀專家的 rules.md）；名單或領域變了就重讀。 */
+function useReconfirmIntervals(domains: readonly Domain[], roster: readonly RosterAgent[]): ReadonlyMap<string, ReconfirmInterval> {
+  const [intervals, setIntervals] = useState<ReadonlyMap<string, ReconfirmInterval>>(() => new Map())
+  useEffect(() => {
+    let active = true
+    import('@/lib/cleanup/runtime')
+      .then(module => module.loadReconfirmIntervals())
+      .then(map => { if (active) setIntervals(map) })
+      .catch(() => undefined)
+    return () => { active = false }
+  }, [domains, roster])
+  return intervals
+}
+
 export interface ReviewData {
   /** 所有卡片（含先放著的），已排好序。 */
   all: WorkbenchCard[]
@@ -97,7 +112,8 @@ export function useReviewData(): ReviewData {
   const domainCards = useMemo<DomainLike[]>(() => computeDomainProposals(knowledgeNotesFromIndex(noteList), domains, roster, dismissed)
     .map(proposal => ({ id: proposal.id, ...describeDomainProposal(proposal, commanderT), notePaths: proposal.notePaths, by: commander, at: now })),
   [noteList, domains, roster, dismissed, commanderT, commander, now])
-  const confirm = useMemo(() => confirmNotesFromIndex(noteList, now), [noteList, now])
+  const intervals = useReconfirmIntervals(domains, roster)
+  const confirm = useMemo(() => confirmNotesFromIndex(noteList, now, intervals), [noteList, now, intervals])
 
   const all = useMemo(() => buildReviewCards({
     proposals,

@@ -97,6 +97,12 @@ export async function createDefaultCommanderDeps(): Promise<CommanderDeps> {
         return instructions
       }
     },
+    // Fork（almanac ALMNC-54.12）：專家撰寫前依領域找類似筆記（筆記庫索引＋知識搜尋），比對重複與衝突。
+    findSimilarNotes: async (domainId, fragment) => {
+      const { defaultSimilarFinder } = await import('@/lib/cleanup/runtime')
+      const find = await defaultSimilarFinder()
+      return (await find(domainId, { title: fragment.title, body: fragment.body })).map(({ path, title }) => ({ path, title }))
+    },
     submitProposals: async batch => {
       const { default: useCollectStore } = await import('@/stores/collect')
       // 先讀回保存的項目，之後的變動才會存檔。

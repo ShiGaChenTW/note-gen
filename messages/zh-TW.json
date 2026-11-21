@@ -8927,5 +8927,97 @@
       "tbd": "待定",
       "tbdTip": "功能待定"
     }
+  },
+  "cleanup": {
+    "actions": {
+      "modify": "修改",
+      "replace": "取代",
+      "verify": "待查證",
+      "supplement": "補情境",
+      "merge": "合併",
+      "archive": "封存"
+    },
+    "bundleTitle": "整理「{domain}」：{count} 項",
+    "singleTitle": "{action}：{title}",
+    "item": "- {action}：{titles}——{evidence}",
+    "origin": "{agent} 整理的清理提案",
+    "originSystem": "清理提案",
+    "confirmTitle": "仍然有效：{title}",
+    "confirmBody": "重新確認後沒有發現過時、矛盾或重複，外部資料也沒有不同說法（{evidence}）。接受後把最後確認日期改成今天。",
+    "confirmBodyNoExternal": "重新比對同領域的筆記，沒有發現過時、矛盾或重複（沒有查到外部資料）。接受後把最後確認日期改成今天。"
+  },
+  "review": {
+    "period": "{month} 月第 {week} 週",
+    "title": "每週回顧 · {period}",
+    "origin": "{agent} 統整的每週回顧",
+    "originSystem": "每週回顧",
+    "tag": "時期回顧",
+    "sections": {
+      "actions": "行動回顧",
+      "records": "這期的紀錄",
+      "research": "研究員調研",
+      "experts": "專家回顧",
+      "due": "到期要重新確認的筆記",
+      "stale": "超過 14 天沒決定的提案",
+      "audit": "記憶稽核",
+      "attached": "另附的提案"
+    },
+    "completed": "完成 {count} 件",
+    "overdue": "逾期 {count} 件",
+    "procrastinated": "拖延：{items}",
+    "time": "時間花在：{items}",
+    "minutes": "{key} {hours} 小時",
+    "researchItem": "{domain}｜{question}：{summary}",
+    "researchUnavailable": "{domain}｜{question}（沒有可用的查詢工具，題目先列著）",
+    "researchNothing": "{domain}｜{question}：沒有新發現",
+    "expertItem": "{agent}（{domain}）：{text}",
+    "expertItemNoName": "{domain}：{text}",
+    "dueItem": "{note}（{date} 到期）",
+    "staleItem": "{title}（等了 {days} 天）",
+    "auditItem": "{memory}：「{text}」和 {note} 重疊",
+    "auditMemory": {
+      "work_notes": "工作筆記",
+      "context": "目前脈絡",
+      "activity": "活動紀錄"
+    },
+    "attached": "清理提案 {cleanup} 則、排程調整 {schedule} 則、記憶稽核 {audit} 則，在工作台另外決定。",
+    "schedule": {
+      "title": "改時間：{task}（{from} → {to}）",
+      "body": "已經逾期 {days} 天，建議改到比較空的一天。"
+    },
+    "audit": {
+      "workNotesTitle": "整理 {agent} 的工作筆記：{count} 行和筆記重疊",
+      "contextTitle": "整理目前脈絡：{count} 項和筆記重疊",
+      "line": "- 「{text}」已經寫在 {note}"
+    },
+    "settings": {
+      "title": "調研與回顧",
+      "description": "研究員調研、專家回顧領域、秘書回顧行動，由指揮官統整成一張回顧提案。衝突或錯誤會立刻提案，不等彙整。",
+      "frequency": "頻率",
+      "weekday": "彙整日",
+      "lastRun": "上次執行：{time}",
+      "never": "還沒執行過",
+      "runNow": "現在執行一次",
+      "running": "執行中…",
+      "saved": "已儲存",
+      "loadError": "讀不到設定",
+      "saveError": "沒辦法儲存",
+      "frequencies": {
+        "daily": "每天",
+        "weekly": "每週",
+        "biweekly": "每兩週",
+        "monthly": "每月",
+        "off": "關閉"
+      },
+      "weekdays": {
+        "0": "星期日",
+        "1": "星期一",
+        "2": "星期二",
+        "3": "星期三",
+        "4": "星期四",
+        "5": "星期五",
+        "6": "星期六"
+      }
+    }
   }
 }

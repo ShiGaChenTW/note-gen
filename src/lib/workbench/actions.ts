@@ -127,12 +127,13 @@ export async function confirmStillValid(path: string, today: string): Promise<Un
   return async () => writeNote(path, raw)
 }
 
-/** 確認類卡片「交給指揮官」：建一則系統產生的資料源請指揮官重新確認（R2，直接分析）。 */
-export async function confirmToCommander(path: string, request: string): Promise<Undo> {
-  const db = await import('@/db/v3-sources')
-  await db.addSource({ sourceType: 'system', kind: 'text', content: request, origin: path, collector: 'system' })
-  await kickCommander()
-  void refreshSources()
+/**
+ * 確認類卡片「交給指揮官」：指揮官重新確認（比對同領域的筆記，查得到外部資料就一起看），結果一律變成提案——
+ * 有問題就是清理提案，沒問題就是「仍然有效」。Fork（almanac ALMNC-54.12）：原本建一則系統資料源，改成直接重新確認。
+ */
+export async function confirmToCommander(path: string): Promise<Undo> {
+  const { recheckFromCard } = await import('@/lib/cleanup/runtime')
+  void recheckFromCard(path).catch(error => console.error('[workbench] recheck failed:', error))
   return undefined
 }
 
@@ -337,5 +338,7 @@ export async function saveDeskNote(draft: { title: string, body: string }, mater
   for (const material of materials) {
     if (material.sourceId) await sources.addSourceOutput(material.sourceId, 'note', path).catch(() => undefined)
   }
+  // Fork（almanac ALMNC-54.12）：親手寫的筆記存檔後也比對衝突（發現時機 2）；背景執行，不擋存檔。
+  void import('@/lib/cleanup/runtime').then(module => module.checkAfterWrite(path, 'handwritten')).catch(() => undefined)
   return path
 }

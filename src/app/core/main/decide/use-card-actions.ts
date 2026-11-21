@@ -148,7 +148,7 @@ export function useCardActions({ visible, commanderName }: { visible: readonly W
         return settle(card, () => confirmStillValid(card.notePath!, dateKey(new Date())), t('toast.stillValid', { title }))
       case 'toCommander':
         if (!card.notePath) return
-        return settle(card, () => confirmToCommander(card.notePath!, t('reconfirmRequest', { path: card.notePath })), t('toast.toCommander', { title, name: commanderName }))
+        return settle(card, () => confirmToCommander(card.notePath!), t('toast.toCommander', { title, name: commanderName }))
       // Fork（almanac ALMNC-54.10）：照建議處理帶著初步判斷交給指揮官；處理不帶建議。兩者都交給指揮官、無法復原。
       case 'process':
       case 'handle':
