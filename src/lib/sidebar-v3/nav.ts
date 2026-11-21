@@ -88,6 +88,8 @@ export interface AgentSource {
   id: string
   name: string
   role: AgentRole
+  /** 專家負責的領域，顯示成「領域＋專家」。 */
+  domain?: string
   enabled: boolean
 }
 

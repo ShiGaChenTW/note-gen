@@ -6,8 +6,10 @@
     "empty": "还没有代理人。",
     "add": "添加代理人",
     "edit": "编辑",
-    "name": "名称",
+    "name": "本名",
     "role": "角色",
+    "domain": "负责领域",
+    "domainPlaceholder": "例如：工业工程",
     "allowedTools": "允许使用的工具",
     "enabled": "启用",
     "disabled": "停用",
@@ -17,11 +19,11 @@
     "loadError": "无法加载代理人设置。",
     "saveError": "无法保存代理人设置。",
     "roles": {
-      "organizer": "整理员",
-      "scheduler": "排程员",
+      "commander": "指挥官",
+      "expert": "专家",
+      "secretary": "秘书",
       "researcher": "研究员",
-      "reviewer": "回顾员",
-      "custom": "自定义"
+      "expertOf": "{domain}专家"
     },
     "tools": {
       "note_list_files": "列出笔记",
@@ -29,7 +31,9 @@
       "calendar_read_day": "读取单日日历",
       "note_create_file": "提案新增笔记",
       "note_update_file": "提案修改笔记"
-    }
+    },
+    "roleTaken": "这个角色只能有一位，已经有人担任。",
+    "domainRequired": "专家要填写负责领域。"
   },
   "agentDiffNavigation": {
     "label": "Agent 改动导航",

@@ -8,6 +8,8 @@
     "edit": "Edit",
     "name": "Name",
     "role": "Role",
+    "domain": "Domain",
+    "domainPlaceholder": "e.g. Industrial engineering",
     "allowedTools": "Allowed tools",
     "enabled": "Enabled",
     "disabled": "Disabled",
@@ -17,11 +19,11 @@
     "loadError": "Could not load agent settings.",
     "saveError": "Could not save agent settings.",
     "roles": {
-      "organizer": "Organizer",
-      "scheduler": "Scheduler",
+      "commander": "Commander",
+      "expert": "Expert",
+      "secretary": "Secretary",
       "researcher": "Researcher",
-      "reviewer": "Reviewer",
-      "custom": "Custom"
+      "expertOf": "{domain} expert"
     },
     "tools": {
       "note_list_files": "List notes",
@@ -29,7 +31,9 @@
       "calendar_read_day": "Read calendar events for one day",
       "note_create_file": "Propose a new note",
       "note_update_file": "Propose changes to a note"
-    }
+    },
+    "roleTaken": "Only one agent can have this role, and it is already taken.",
+    "domainRequired": "Experts need a domain."
   },
   "agentDiffNavigation": {
     "label": "Agent change navigation",

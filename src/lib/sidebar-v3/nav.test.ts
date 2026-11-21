@@ -58,9 +58,9 @@ describe('sidebar v3 nav', () => {
 
 describe('sidebar v3 agents', () => {
   const agents = [
-    { id: 'a', name: '整理員', role: 'organizer' as const, enabled: true },
-    { id: 'b', name: '排程員', role: 'scheduler' as const, enabled: true },
-    { id: 'c', name: '研究員', role: 'researcher' as const, enabled: false },
+    { id: 'a', name: 'Mia', role: 'commander' as const, enabled: true },
+    { id: 'b', name: 'Leo', role: 'secretary' as const, enabled: true },
+    { id: 'c', name: 'Nora', role: 'researcher' as const, enabled: false },
   ]
 
   it('counts agents with a queued or running task, once each', () => {
