@@ -9,36 +9,38 @@ const closed: NavVisibility = {
 }
 
 describe('sidebar v3 nav', () => {
-  it('lists the six items in the v5 order', () => {
-    expect(buildNav({ decideCount: 0, collectPending: 0, visibility: closed }).map(row => row.key))
-      .toEqual(['today', 'decide', 'collect', 'threads', 'knowledge', 'plan'])
+  // Fork（almanac ALMNC-54.8）：收集併進工作台的資料源分頁，主導覽剩五項、沒有「收集」。
+  it('lists five items without 收集 (ALMNC-54.8)', () => {
+    expect(buildNav({ decideCount: 0, visibility: closed }).map(row => row.key))
+      .toEqual(['today', 'decide', 'threads', 'knowledge', 'plan'])
+    expect(NAV_KEYS).not.toContain('collect')
   })
 
-  it('shows decide and collect numbers, hides zeros and clamps junk', () => {
-    const rows = buildNav({ decideCount: 3, collectPending: 0, visibility: closed })
+  it('shows the workbench number, hides zeros and clamps junk', () => {
+    const rows = buildNav({ decideCount: 3, visibility: closed })
     expect(rows.find(row => row.key === 'decide')?.count).toBe(3)
-    expect(rows.find(row => row.key === 'collect')?.count).toBe(0)
     expect(rows.find(row => row.key === 'today')?.count).toBe(0)
-    expect(buildNav({ decideCount: -2, collectPending: 4.9, visibility: closed }).map(row => row.count)).toEqual([0, 0, 4, 0, 0, 0])
+    expect(buildNav({ decideCount: 4.9, visibility: closed }).map(row => row.count)).toEqual([0, 4, 0, 0, 0])
+    expect(buildNav({ decideCount: -2, visibility: closed }).map(row => row.count)).toEqual([0, 0, 0, 0, 0])
   })
 
   it('marks no row active while the workspace is showing', () => {
-    expect(buildNav({ decideCount: 1, collectPending: 1, visibility: closed }).some(row => row.active)).toBe(false)
+    expect(buildNav({ decideCount: 1, visibility: closed }).some(row => row.active)).toBe(false)
   })
 
   it('maps every overlay to its nav item', () => {
     const cases: Array<[Partial<NavVisibility>, string]> = [
       [{ home: true }, 'today'],
       [{ decide: true }, 'decide'],
-      [{ collect: true }, 'collect'],
-      [{ inbox: true }, 'collect'],
+      [{ collect: true }, 'decide'],
+      [{ inbox: true }, 'decide'],
       [{ threads: true }, 'threads'],
       [{ knowledge: true }, 'knowledge'],
       [{ promptLibrary: true }, 'knowledge'],
       [{ week: true }, 'plan'],
     ]
     for (const [open, key] of cases) {
-      const rows = buildNav({ decideCount: 0, collectPending: 0, visibility: { ...closed, ...open } })
+      const rows = buildNav({ decideCount: 0, visibility: { ...closed, ...open } })
       expect(rows.filter(row => row.active).map(row => row.key)).toEqual([key])
     }
     expect(activeNavKey(closed)).toBeNull()
@@ -47,7 +49,8 @@ describe('sidebar v3 nav', () => {
   it('gives every legacy entry a home and every nav item at least one', () => {
     for (const entry of LEGACY_ENTRIES) expect(NAV_KEYS).toContain(ENTRY_HOME[entry])
     for (const key of NAV_KEYS) expect(LEGACY_ENTRIES.some(entry => ENTRY_HOME[entry] === key)).toBe(true)
-    expect(ENTRY_HOME.inbox).toBe('collect')
+    expect(ENTRY_HOME.inbox).toBe('decide')
+    expect(ENTRY_HOME.collect).toBe('decide')
     expect(ENTRY_HOME.week).toBe('plan')
     expect(ENTRY_HOME.calendar).toBe('plan')
     for (const entry of ['notes', 'timeline', 'canvases', 'noteTags', 'prompts'] as const) expect(ENTRY_HOME[entry]).toBe('knowledge')

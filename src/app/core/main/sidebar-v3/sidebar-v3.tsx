@@ -1,9 +1,9 @@
 'use client'
 
 // Fork（almanac ALMNC-20）：v5 側欄，方案 B「導覽＋檔案樹」。left-sidebar.tsx 在 v3 時直接回傳這個元件。
-// 由上而下：品牌、搜尋（⌘K）、六個導覽、可收合的代理人區、可收合的 MyVault 檔案樹、規則。
+// 由上而下：品牌、搜尋（⌘K）、三個新增按鈕（ALMNC-54.8）、五個導覽、可收合的代理人區、可收合的 MyVault 檔案樹、規則。
 import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from 'react'
-import { CalendarCheck, CalendarDays, ChevronDown, Download, ListChecks, Library, MessagesSquare, MoreHorizontal, Plus, Search } from 'lucide-react'
+import { ArrowDownToLine, CalendarCheck, CalendarDays, ChevronDown, ListChecks, Library, MessageSquarePlus, MessagesSquare, MoreHorizontal, Plus, Search, SquareDashed } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { Count } from '@/components/v3/count'
 import { SectionLabel } from '@/components/v3/section-label'
@@ -11,17 +11,16 @@ import { ensureDefaultRoster, listAgentSettings } from '@/db/agents'
 import { agentRoleLabel } from '@/lib/agents/display'
 import { useAgentTaskStore } from '@/lib/agent-tasks'
 import { useAnywhereStore } from '@/lib/anywhere/store'
-import { useDecisions } from '@/lib/decide/use-decisions'
 import { usePageVisibility } from '@/lib/fork-overlays/use-page-visibility'
-import { useInboxPendingCount } from '@/lib/inbox/use-inbox-pending'
 import { useKnowledgeOverlay } from '@/lib/sidebar-v3/knowledge'
 import { useSidebarCollapse, type SidebarSection } from '@/lib/sidebar-v3/collapse'
 import { buildAgentRows, buildNav, runningAgentCount, type AgentRow, type NavKey } from '@/lib/sidebar-v3/nav'
 import type { AgentSettings } from '@/lib/agents/settings'
 import { useWeekOverlay } from '@/lib/week/overlay'
+import { openAddSource, openNewConversation } from '@/lib/workbench/open'
+import { useReviewData } from '@/lib/workbench/use-workbench'
 import { cn } from '@/lib/utils'
 import useArticleStore from '@/stores/article'
-import useCollectStore from '@/stores/collect'
 import useDecideStore from '@/stores/decide'
 import useHomeStore from '@/stores/home'
 import { useSettingsDialogStore } from '@/stores/settings-dialog'
@@ -34,7 +33,6 @@ import { SIDEBAR_ROW, SIDEBAR_ROW_ACTIVE } from '../sidebar-row'
 const ICONS: Record<NavKey, ComponentType<{ className?: string }>> = {
   today: CalendarCheck,
   decide: ListChecks,
-  collect: Download,
   threads: MessagesSquare,
   knowledge: Library,
   plan: CalendarDays,
@@ -43,7 +41,6 @@ const ICONS: Record<NavKey, ComponentType<{ className?: string }>> = {
 const OPEN: Record<NavKey, () => void> = {
   today: () => useHomeStore.getState().show(),
   decide: () => useDecideStore.getState().show(),
-  collect: () => useCollectStore.getState().show(),
   threads: () => useThreadsStore.getState().show(),
   knowledge: () => useKnowledgeOverlay.getState().show(),
   plan: () => useWeekOverlay.getState().show(),
@@ -171,13 +168,59 @@ function VaultSection() {
   )
 }
 
+/**
+ * Fork（almanac ALMNC-54.8）：搜尋下方三個只有圖示的按鈕——新增資料源（N）、新增對話（T）、待定（ALMNC-54.15，還沒有功能）。
+ * 滑鼠停留顯示名稱與快捷鍵；窄螢幕（手機）在圖示下方加小字。
+ */
+function QuickActions() {
+  const t = useTranslations('workbench.quick')
+  const items: Array<{ key: string, icon: ComponentType<{ className?: string }>, label: string, short: string, shortcut?: string, onClick?: () => void }> = [
+    { key: 'source', icon: ArrowDownToLine, label: t('addSource'), short: t('addSourceShort'), shortcut: 'N', onClick: openAddSource },
+    { key: 'thread', icon: MessageSquarePlus, label: t('newThread'), short: t('newThreadShort'), shortcut: 'T', onClick: () => void openNewConversation() },
+    { key: 'tbd', icon: SquareDashed, label: t('tbdTip'), short: t('tbd') },
+  ]
+  return (
+    <div role="group" aria-label={t('label')} className="mx-0.5 grid shrink-0 grid-cols-3 gap-1" data-testid="sidebar-quick">
+      {items.map(item => {
+        const Icon = item.icon
+        const disabled = !item.onClick
+        const tip = item.shortcut ? `${item.label}　${item.shortcut}` : item.label
+        return (
+          <span key={item.key} className="group/quick relative flex">
+            <button
+              type="button"
+              aria-label={disabled ? t('tbd') : item.label}
+              aria-keyshortcuts={item.shortcut}
+              disabled={disabled}
+              onClick={item.onClick}
+              data-quick={item.key}
+              className={cn(
+                'flex min-h-[34px] w-full cursor-pointer flex-col items-center justify-center gap-0.5 rounded-md border border-line bg-bg py-1 text-muted-ink outline-none transition-colors duration-100 hover:border-ink/30 hover:text-ink focus-visible:ring-1 focus-visible:ring-ink/60',
+                disabled && 'cursor-not-allowed border-dashed bg-transparent text-faint hover:border-line hover:text-faint',
+              )}
+            >
+              <Icon className="size-[17px] shrink-0" aria-hidden />
+              <span className="text-[11px] leading-3 md:hidden" aria-hidden>{item.short}</span>
+            </button>
+            <span
+              role="tooltip"
+              className="pointer-events-none absolute top-[calc(100%+6px)] left-1/2 z-30 -translate-x-1/2 rounded-md bg-invert px-2 py-1 text-xs whitespace-nowrap text-invert-ink opacity-0 transition-opacity delay-200 duration-100 group-hover/quick:opacity-100 group-focus-within/quick:opacity-100 max-md:hidden"
+            >
+              {tip}
+            </span>
+          </span>
+        )
+      })}
+    </div>
+  )
+}
+
 export function SidebarV3() {
   const t = useTranslations('sidebarV3')
   const load = useSidebarCollapse(state => state.load)
-  const decideCount = useDecisions().length
-  const collectPending = useInboxPendingCount()
+  const decideCount = useReviewData().visible.length
   const visibility = usePageVisibility()
-  const nav = buildNav({ decideCount, collectPending, visibility })
+  const nav = buildNav({ decideCount, visibility })
 
   useEffect(() => { void load() }, [load])
   // 開發預覽用（不進 production）：截圖時從頁面塞示範檔案樹，window.__almanacSidebar.article.setState({ fileTree })
@@ -200,6 +243,7 @@ export function SidebarV3() {
         <span className="flex-1 truncate">{t('search')}</span>
         <kbd className="inline-flex h-[18px] items-center rounded bg-sunken px-[5px] text-xs text-muted-ink">⌘K</kbd>
       </button>
+      <QuickActions />
       <nav aria-label={t('navLabel')} className="flex shrink-0 flex-col gap-px">
         {nav.map(row => {
           const Icon = ICONS[row.key]

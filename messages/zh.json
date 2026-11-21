@@ -8498,7 +8498,7 @@
     "count": "{count} 件",
     "nav": {
       "today": "今天",
-      "decide": "等你定",
+      "decide": "工作台",
       "collect": "收集",
       "threads": "对话",
       "knowledge": "知识",
@@ -8513,7 +8513,7 @@
     "vault": "我的笔记",
     "rules": {
       "label": "规则",
-      "text": "代理人只能提案；写入一律经过等你定。"
+      "text": "代理人只能提案；写入一律经过工作台。"
     },
     "tabs": {
       "collectGroup": "收集页面",
@@ -8555,6 +8555,281 @@
     "domainProposal": {
       "title": "成立领域「{domain}」，新增专家 {name}",
       "summary": "{count} 则知识笔记还没有领域，主题都是「{topic}」"
+    }
+  },
+  "workbench": {
+    "title": "工作台",
+    "subtitle": "{count} 件等你处理",
+    "subtitleSources": "{done} / {total} 已整理",
+    "tabs": {
+      "label": "工作台分页",
+      "review": "审核",
+      "sources": "资料源"
+    },
+    "filter": {
+      "label": "依标签筛选",
+      "all": "全部"
+    },
+    "labels": {
+      "schedule": "日程",
+      "note": "笔记",
+      "knowledge": "知识",
+      "source": "资料源",
+      "review": "回顾"
+    },
+    "verbs": {
+      "add": "新增",
+      "supplement": "补充",
+      "modify": "修改",
+      "merge": "合并",
+      "replace": "取代",
+      "verify": "待查证",
+      "archive": "封存",
+      "reschedule": "改时间",
+      "judge": "判断",
+      "confirm": "确认",
+      "organize": "整理"
+    },
+    "groups": {
+      "reply": "等你回话",
+      "late": "逾期",
+      "proposal": "提案",
+      "hand": "要你亲手整理",
+      "task": "其他任务"
+    },
+    "actions": {
+      "accept": "接受",
+      "discuss": "再次讨论",
+      "drop": "放弃",
+      "answer": "回答",
+      "pick": "选一个",
+      "desk": "摊到台面",
+      "schedule": "排时间",
+      "done": "完成",
+      "stillValid": "仍然有效",
+      "toCommander": "交给 {name}",
+      "process": "照建议处理",
+      "selfProcess": "自己处理",
+      "reject": "不采用"
+    },
+    "listLabel": "等你处理的事",
+    "more": "等 {count} 则",
+    "onDesk": "台面上",
+    "by": "{name} 建议",
+    "age": {
+      "now": "刚刚",
+      "hour": "{count} 小时",
+      "day": "{count} 天"
+    },
+    "overdue": "逾期 {age}",
+    "confirmSince": "上次确认是 {date}",
+    "reconfirmRequest": "请重新确认这则笔记是否仍然成立：{path}",
+    "writesTo": "接受后写入：{dest}",
+    "empty": "都处理完了",
+    "emptyFiltered": "「{label}」都处理完了",
+    "emptyHint": "新的事进来时，会出现在这里。",
+    "keys": {
+      "label": "键盘操作",
+      "select": "选择",
+      "expand": "展开",
+      "accept": "接受",
+      "putAside": "先放着",
+      "undo": "复原"
+    },
+    "putAside": {
+      "button": "先放着",
+      "entry": "先放着的事",
+      "count": "先放着 {count} 件",
+      "noReminder": "不设提醒",
+      "tomorrow": "明天",
+      "nextWeek": "下周一",
+      "pickDate": "提醒日期",
+      "set": "放着",
+      "remindOn": "{date} 提醒",
+      "noDate": "没有提醒日期",
+      "takeBack": "拿回来",
+      "title": "先放着",
+      "empty": "没有先放着的事。",
+      "back": "回到审核"
+    },
+    "schedule": {
+      "time": "时间",
+      "confirm": "排进今天",
+      "cancel": "取消"
+    },
+    "toast": {
+      "accepted": "已接受「{title}」",
+      "dropped": "已放弃「{title}」",
+      "done": "已完成「{title}」",
+      "scheduled": "已排进今天 {time}「{title}」",
+      "asided": "已先放着「{title}」",
+      "asidedUntil": "已先放着「{title}」，{date} 提醒",
+      "takenBack": "已拿回「{title}」",
+      "processed": "已交给 {name}「{title}」，产出会送到审核",
+      "rejected": "已不采用「{title}」",
+      "stillValid": "已确认「{title}」仍然有效",
+      "toCommander": "已交给 {name} 重新确认「{title}」",
+      "undone": "已复原",
+      "cannotUndo": "这一步无法复原",
+      "nothing": "没有可以复原的动作",
+      "failed": "处理失败，请再试一次",
+      "undo": "复原"
+    },
+    "sources": {
+      "filterLabel": "依状态筛选",
+      "filters": {
+        "all": "全部",
+        "wait": "等你决定",
+        "todo": "未整理",
+        "done": "已整理",
+        "no": "不采用"
+      },
+      "status": {
+        "wait": "等你决定",
+        "todo": "未整理",
+        "ing": "整理中",
+        "edited": "已修改",
+        "done": "已整理",
+        "no": "不采用"
+      },
+      "kind": {
+        "web": "网页",
+        "text": "文字",
+        "shot": "截图",
+        "img": "插图",
+        "file": "档案",
+        "audio": "录音",
+        "todo": "待办",
+        "prompt": "素材"
+      },
+      "listLabel": "资料源清单",
+      "selectAll": "全选",
+      "selectAllLabel": "全选目前清单",
+      "pickRow": "勾选「{title}」",
+      "organised": "{done} / {total} 已整理",
+      "outputs": "{count} 则产出",
+      "noOutputs": "没有产出",
+      "editedSub": "v{version} 未送出",
+      "picked": "已选 {count} 则",
+      "handTo": "交给 {name} 整理",
+      "toDesk": "摊到台面",
+      "clear": "取消",
+      "days": {
+        "today": "今天",
+        "yesterday": "昨天",
+        "week": "本周",
+        "earlier": "更早"
+      },
+      "empty": "没有符合的资料源",
+      "emptyAll": "还没有资料源。按侧栏的「新增资料源」（N）加进来。",
+      "pickOne": "选一则资料源来看",
+      "back": "回到清单",
+      "judgement": "初步判断",
+      "judgementHint": "本机模型 · 只判断，不撰写",
+      "noJudgement": "还没有初步判断，可以直接决定要不要处理。",
+      "process": "照建议处理",
+      "reject": "不采用",
+      "restore": "改回等你决定",
+      "reorganise": "重新整理",
+      "desk": "摊到台面",
+      "edit": "编辑",
+      "send": "送给 {name} 分析",
+      "sendUpdate": "送给 {name} 更新",
+      "analysing": "{name} 正在分析，完成后产出会送到审核",
+      "queued": "排队等 {name} 分析",
+      "locked": "原文已锁定。按「编辑」会另存新版本，{name} 只看改了哪里。",
+      "outputsTitle": "产出",
+      "version": "v{version}",
+      "toast": {
+        "handed": "已交给 {name} 整理 {count} 则，产出会送到审核",
+        "handedRe": "已交给 {name} 整理 {count} 则（其中 {re} 则重新整理），产出会送到审核",
+        "sent": "已送给 {name}「{title}」",
+        "saved": "已储存",
+        "savedVersion": "已存成 v{version}，送给 {name} 才会更新产出",
+        "noChange": "没有修改",
+        "rejected": "已不采用「{title}」",
+        "restored": "已改回等你决定「{title}」"
+      },
+      "editor": {
+        "editing": "正在编辑",
+        "newVersion": "新版本 v{version}",
+        "back": "返回",
+        "cancel": "取消",
+        "save": "储存",
+        "titlePlaceholder": "标题",
+        "bodyPlaceholder": "开始写…",
+        "words": "{count} 字",
+        "keepOld": "储存后原本的 v{version} 会保留",
+        "applyOnSave": "储存后才会套用",
+        "unsaved": "有未储存的修改",
+        "notSaved": "尚未储存",
+        "confirmLeave": "还有没储存的修改，要放弃吗？",
+        "toolbar": "格式",
+        "tools": {
+          "heading": "标题",
+          "bold": "粗体",
+          "italic": "斜体",
+          "bullet": "清单",
+          "numbered": "编号",
+          "task": "勾选",
+          "quote": "引用",
+          "link": "连结",
+          "rule": "分隔线"
+        }
+      }
+    },
+    "desk": {
+      "title": "台面",
+      "heading": "{first} 等 {count} 则",
+      "back": "工作台",
+      "save": "存成笔记",
+      "materials": "素材 · {count} 则",
+      "draft": "工作稿",
+      "help": "协助",
+      "draftTitle": "标题",
+      "draftBody": "在这里汇整、改写…",
+      "saved": "已存成笔记「{path}」",
+      "handTag": "亲手写的",
+      "fallbackName": "台面笔记",
+      "helpStarting": "正在开处理对话…",
+      "helpHint": "处理对话：{name} 和负责的专家都在",
+      "helpFailed": "没办法开处理对话，请到对话页再试一次",
+      "empty": "没有素材",
+      "notesOnly": "只有笔记能做结构操作",
+      "ops": {
+        "label": "结构操作",
+        "move": "搬移",
+        "movePlaceholder": "资料夹，例如 知识/工业工程",
+        "tag": "加标签",
+        "tagPlaceholder": "标签",
+        "link": "连结到…",
+        "assignDomain": "归入领域",
+        "merge": "合并笔记",
+        "mergeLater": "合并笔记之后开放",
+        "apply": "套用",
+        "noDomains": "还没有领域"
+      },
+      "done": {
+        "move": "已搬到 {value}",
+        "tag": "已加上标签 #{value}",
+        "link": "已连结到「{value}」",
+        "assignDomain": "已归入领域「{value}」"
+      }
+    },
+    "add": {
+      "title": "新增资料源",
+      "subtitle": "输入内容，自动分类",
+      "saved": "已加进资料源，交给 {name} 整理",
+      "savedLink": "已加进资料源，等你决定要不要处理"
+    },
+    "quick": {
+      "label": "新增",
+      "addSource": "新增资料源",
+      "addSourceShort": "资料源",
+      "newThread": "新增对话",
+      "newThreadShort": "对话",
+      "tbd": "待定",
+      "tbdTip": "功能待定"
     }
   }
 }

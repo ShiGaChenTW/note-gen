@@ -23,6 +23,9 @@ import useTagStore from '@/stores/tag'
 import { useRecordCompletion } from './use-record-completion'
 import { useTranslations } from 'next-intl'
 import { v4 as uuid } from 'uuid'
+import { addNewSource } from '@/lib/workbench/actions'
+import { openWorkbench } from '@/lib/workbench/open'
+import { useCommanderName } from '@/lib/workbench/use-workbench'
 
 const typeIcon: Record<UnifiedRecordType, ReactNode> = {
   link: <Link2 />,
@@ -88,6 +91,9 @@ export function UnifiedRecordDialog() {
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const onboardingPrefillRef = useRef<string | null>(null)
   const [open, setOpen] = useState(false)
+  // Fork（almanac ALMNC-54.8）：側欄「新增資料源」（N）沿用這個對話框；source 模式存進 V3 資料源表，不寫 Inbox 記錄。
+  const [target, setTarget] = useState<'record' | 'source'>('record')
+  const commanderName = useCommanderName()
   const [selection, setSelection] = useState<UnifiedRecordSelection>('auto')
   const [text, setText] = useState('')
   const [sourceUrl, setSourceUrl] = useState('')
@@ -121,7 +127,8 @@ export function UnifiedRecordDialog() {
   useEffect(() => {
     if (!navigator.platform.toLowerCase().includes('mac')) setModifierLabel('Alt+')
 
-    const openDialog = (payload?: { type?: UnifiedRecordSelection; prefillText?: string }) => {
+    const openDialog = (payload?: { type?: UnifiedRecordSelection; prefillText?: string; target?: 'source' }) => {
+      setTarget(payload?.target ?? 'record')
       setSelection(payload?.type ?? 'auto')
       const prefillText = payload?.prefillText ?? onboardingPrefillRef.current
       if (prefillText) setText(prefillText)
@@ -164,6 +171,21 @@ export function UnifiedRecordDialog() {
   const triggerMedia = (type: UnifiedMediaType) => {
     setOpen(false)
     emitter.emit(`toolbar-shortcut-${type}` as never)
+    // 資料源模式：錄音、截圖、插圖、檔案仍走原本的原生流程（存成記錄），工作台的資料源分頁會把記錄一起列出。
+    if (target === 'source') openWorkbench('sources')
+  }
+
+  const saveSource = async (value: string) => {
+    const todoDraft = resolveUnifiedTodoDraft(text, todo)
+    const type = resolvedType === 'link' || resolvedType === 'todo' || resolvedType === 'prompt-draft' ? resolvedType : 'text'
+    const content = type === 'link'
+      ? normalizeUnifiedLinkUrl(value)
+      : type === 'todo'
+        ? [todoDraft.title, todoDraft.description].filter(Boolean).join('\n\n')
+        : value
+    const rowId = await addNewSource({ type, content, origin: type === 'prompt-draft' ? sourceUrl.trim() || undefined : undefined })
+    toast({ title: type === 'link' ? t('workbench.add.savedLink') : t('workbench.add.saved', { name: commanderName }) })
+    openWorkbench('sources', rowId)
   }
 
   const triggerAudioFile = () => {
@@ -231,7 +253,9 @@ export function UnifiedRecordDialog() {
     }
     setSaving(true)
     try {
-      if (resolvedType === 'link') {
+      if (target === 'source') {
+        await saveSource(value)
+      } else if (resolvedType === 'link') {
         await saveLink(value)
       } else if (resolvedType === 'todo') {
         const result = await insertMark({
@@ -288,8 +312,8 @@ export function UnifiedRecordDialog() {
       <DialogContent className="max-h-[calc(100vh-3rem)] overflow-y-auto sm:max-w-2xl" onKeyDown={handleKeyDown}>
         <DialogHeader className="pr-8">
           <div className="flex items-baseline gap-2">
-            <DialogTitle className="text-base">{t('record.mark.unified.title')}</DialogTitle>
-            <DialogDescription className="text-xs">{t('record.mark.unified.subtitle')}</DialogDescription>
+            <DialogTitle className="text-base">{target === 'source' ? t('workbench.add.title') : t('record.mark.unified.title')}</DialogTitle>
+            <DialogDescription className="text-xs">{target === 'source' ? t('workbench.add.subtitle') : t('record.mark.unified.subtitle')}</DialogDescription>
           </div>
         </DialogHeader>
         <div className="space-y-3">
@@ -334,7 +358,7 @@ export function UnifiedRecordDialog() {
               )}
             </div>
           )}
-          <RecordSaveTarget selectedTagId={selectedTagId} tags={tags} disabled={saving} onTagChange={setSelectedTagId} onCreatingChange={setCreatingTag} />
+          {target === 'record' && <RecordSaveTarget selectedTagId={selectedTagId} tags={tags} disabled={saving} onTagChange={setSelectedTagId} onCreatingChange={setCreatingTag} />}
         </div>
         <DialogFooter>
           <Button type="button" variant="ghost" disabled={saving} onClick={() => setExpanded(value => !value)}>
