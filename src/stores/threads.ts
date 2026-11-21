@@ -5,6 +5,11 @@ import { applyCardAction, type CardAction, type ThreadCard } from '@/lib/threads
 import {
   assignProject, dropProject, loadProjectMap, renameProject, saveProjectMap, type ThreadGroupMode, type ThreadProjectMap,
 } from '@/lib/threads/projects'
+import {
+  assignTag, claimDraftTag, loadTagMap, saveTagMap, tagAfterCommanderJoins, tagOf, type ThreadTag, type ThreadTagMap,
+} from '@/lib/threads/tags'
+import { threadKey as keyOf } from '@/lib/threads/projects'
+import type { Conversation } from '@/db/conversations'
 import useCollectStore from './collect'
 import useHomeStore from './home'
 import useInboxStore from './inbox'
@@ -22,6 +27,19 @@ interface ThreadsState {
   renameProject: (from: string, to: string) => Promise<void>
   removeProject: (project: string) => Promise<void>
 
+  /** Fork（almanac ALMNC-54.4）：對話 key → 查詢／處理／日程。沒有的就是預設「處理」（lib/threads/tags.ts）。 */
+  tagMap: ThreadTagMap
+  setTag: (conversation: ConversationRef, tag: ThreadTag) => Promise<void>
+  /** 把內容交給指揮官或邀請指揮官：查詢、日程改成處理，同一段對話延續。 */
+  commanderJoins: (conversation: ConversationRef) => Promise<void>
+  /** 新對話還沒建立（第一則訊息前）時選的標籤，對話建立後由 claimDraftTag 補進對照表。 */
+  draftTag: { tag: ThreadTag, at: number } | null
+  setDraftTag: (tag: ThreadTag | null) => void
+  claimDraftTag: (conversations: Pick<Conversation, 'id' | 'syncId' | 'createdAt'>[], currentId: number | null) => Promise<void>
+  /** Scott 對「要不要轉給指揮官？」回答「不用」的訊息 id；只放記憶體。 */
+  transferDismissed: number[]
+  dismissTransfer: (chatId: number) => void
+
   mode: ThreadGroupMode
   setMode: (mode: ThreadGroupMode) => void
   query: string
@@ -37,10 +55,17 @@ interface ThreadsState {
   actOnCard: (chatId: number, cardId: string, action: CardAction) => Promise<void>
 }
 
+type ConversationRef = Pick<Conversation, 'id' | 'syncId'>
+
 const useThreadsStore = create<ThreadsState>((set, get) => {
   async function persist(next: ThreadProjectMap) {
     set({ projectMap: next })
     await saveProjectMap(next)
+  }
+  async function persistTags(next: ThreadTagMap) {
+    if (next === get().tagMap) return
+    set({ tagMap: next })
+    await saveTagMap(next)
   }
   return {
     visible: false,
@@ -57,13 +82,30 @@ const useThreadsStore = create<ThreadsState>((set, get) => {
     projectsLoaded: false,
     loadProjects: async () => {
       if (get().projectsLoaded) return
-      const map = await loadProjectMap()
+      const [map, tags] = await Promise.all([loadProjectMap(), loadTagMap()])
       // 載入期間使用者可能已經移動過對話：以已有的為準
-      set(state => ({ projectMap: { ...map, ...state.projectMap }, projectsLoaded: true }))
+      set(state => ({ projectMap: { ...map, ...state.projectMap }, tagMap: { ...tags, ...state.tagMap }, projectsLoaded: true }))
     },
     moveToProject: async (key, project) => persist(assignProject(get().projectMap, key, project)),
     renameProject: async (from, to) => persist(renameProject(get().projectMap, from, to)),
     removeProject: async project => persist(dropProject(get().projectMap, project)),
+
+    tagMap: {},
+    setTag: async (conversation, tag) => persistTags(assignTag(get().tagMap, keyOf(conversation), tag)),
+    commanderJoins: async (conversation) => {
+      const next = tagAfterCommanderJoins(tagOf(get().tagMap, conversation))
+      if (next) await persistTags(assignTag(get().tagMap, keyOf(conversation), next))
+    },
+    draftTag: null,
+    setDraftTag: tag => set({ draftTag: tag ? { tag, at: Date.now() } : null }),
+    claimDraftTag: async (conversations, currentId) => {
+      const claim = claimDraftTag(conversations, currentId, get().draftTag, get().tagMap)
+      if (!claim) return
+      set({ draftTag: null })
+      await persistTags(assignTag(get().tagMap, claim.key, claim.tag))
+    },
+    transferDismissed: [],
+    dismissTransfer: chatId => set(state => ({ transferDismissed: [...state.transferDismissed, chatId] })),
 
     mode: 'project',
     setMode: mode => set({ mode }),

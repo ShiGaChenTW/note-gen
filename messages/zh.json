@@ -8166,6 +8166,22 @@
         "run": "进行中",
         "done": "完成"
       }
+    },
+    "tag": {
+      "query": "查询",
+      "process": "处理",
+      "schedule": "日程",
+      "label": "对话对象",
+      "hint": {
+        "query": "和专家谈，只读，不会改资料",
+        "process": "有指挥官参与，改动都通过提案",
+        "schedule": "和秘书谈，你交代的任务与行程直接生效"
+      },
+      "handoff": "交给指挥官",
+      "handoffHint": "标签改成处理，这段对话直接延续",
+      "transferAsk": "秘书：这像是笔记或知识的问题，要不要转给指挥官？",
+      "transfer": "转给指挥官",
+      "keep": "不用"
     }
   },
   "anywhere": {

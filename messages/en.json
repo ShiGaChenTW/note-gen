@@ -8166,6 +8166,22 @@
         "run": "Running",
         "done": "Done"
       }
+    },
+    "tag": {
+      "query": "Query",
+      "process": "Process",
+      "schedule": "Schedule",
+      "label": "Talk to",
+      "hint": {
+        "query": "With an expert, read-only, changes nothing",
+        "process": "The commander takes part; changes go through proposals",
+        "schedule": "With the secretary; tasks and events you give take effect directly"
+      },
+      "handoff": "Hand to commander",
+      "handoffHint": "The tag becomes Process and this conversation continues",
+      "transferAsk": "Secretary: this sounds like a notes or knowledge question. Hand it to the commander?",
+      "transfer": "Hand to commander",
+      "keep": "No thanks"
     }
   },
   "anywhere": {

@@ -8231,6 +8231,22 @@
         "run": "進行中",
         "done": "完成"
       }
+    },
+    "tag": {
+      "query": "查詢",
+      "process": "處理",
+      "schedule": "日程",
+      "label": "對話對象",
+      "hint": {
+        "query": "和專家談，只讀，不會改資料",
+        "process": "有指揮官參與，改動都透過提案",
+        "schedule": "和秘書談，你交代的任務與行程直接生效"
+      },
+      "handoff": "交給指揮官",
+      "handoffHint": "標籤改成處理，這段對話直接延續",
+      "transferAsk": "秘書：這像是筆記或知識的問題，要不要轉給指揮官？",
+      "transfer": "轉給指揮官",
+      "keep": "不用"
     }
   },
   "anywhere": {
