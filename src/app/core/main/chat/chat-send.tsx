@@ -19,6 +19,10 @@ import { isRequestAbortError } from "@/lib/agent/runtime"
 import { agentDebugLog, previewText } from "@/lib/agent/debug-log"
 import { notifyPendingAgentApproval } from "@/lib/agent/approval-notification"
 import { getToolByName } from "@/lib/agent/tools"
+import type { AgentPermissionMode } from "@/lib/agent/types"
+import { createDefaultSidebarDeps, prepareSidebarCommanderRun } from '@/lib/commander/sidebar-session' // Fork（almanac ALMNC-54.7）
+import useThreadsStore from '@/stores/threads'
+import { useChatV3 } from './chat-v3'
 import { getSessionApprovalScope, matchesSessionApproval } from "@/lib/agent/session-approval"
 import { ImageAttachment } from "./image-attachments"
 import { cn } from "@/lib/utils"
@@ -180,6 +184,7 @@ export const ChatSend = forwardRef<ChatSendHandle, ChatSendProps>(({
   roundStyle = false,
 }, ref) => {
   const { primaryModel, agentPermissionMode } = useSettingStore()
+  const v3 = useChatV3() // Fork（almanac ALMNC-54.7）
   const { currentTagId } = useTagStore()
   const {
     insert,
@@ -461,6 +466,22 @@ export const ChatSend = forwardRef<ChatSendHandle, ChatSendProps>(({
     })
   }
 
+  // Fork（almanac ALMNC-54.7）：右側欄指揮官的一次執行（工作指示、記憶、工具替換、提案卡、直接修改的確認卡）。
+  async function prepareCommanderRun(placeholder: Chat, requestText: string, readOnly: boolean) {
+    const { chats } = useChatStore.getState()
+    const scottMessages = [requestText, ...chats.filter(chat => chat.role === 'user' && chat.id !== placeholder.id).map(chat => chat.content ?? '').reverse()]
+      .filter(text => text.trim())
+      .slice(0, 6)
+    const conversation = useChatStore.getState().conversations.find(entry => entry.id === placeholder.conversationId)
+    // 「處理」才標成處理（指揮官會透過提案改資料）；「問」不動 Scott 選的標籤。
+    if (conversation && !readOnly) void useThreadsStore.getState().markCommanderThread(conversation).catch(error => console.debug('[commander] thread tag skipped:', error))
+    const deps = await createDefaultSidebarDeps({
+      roleLabel: (key, values) => t(`agents.roles.${key}` as Parameters<typeof t>[0], values),
+      originLabel: agent => t('record.chat.v3.commander.origin', { agent }),
+    })
+    return prepareSidebarCommanderRun({ conversationId: placeholder.conversationId ?? undefined, chatId: placeholder.id, scottMessages, readOnly }, deps)
+  }
+
   async function handleAgentMode(
     request: AgentRequestSnapshot,
     userMessage: Chat,
@@ -569,6 +590,18 @@ export const ChatSend = forwardRef<ChatSendHandle, ChatSendProps>(({
       })
     }
 
+    // Fork（almanac ALMNC-54.7）：新介面右側欄的 AI 就是指揮官。「處理」模式下寫檔工具換成提案，
+    // 只有 Scott 親口交代的任務和行程由秘書直接寫；準備失敗就退回只讀，絕不退回會直接改檔的工具。
+    // 「問」模式也以指揮官身分回答，但不換工具、維持只讀。
+    const commanderMode = v3 && agentPermissionMode !== 'read-only'
+    const commanderRun = v3
+      ? await prepareCommanderRun(placeholderMessage, request.requestText, !commanderMode).catch(error => {
+          console.error('[commander] sidebar run unavailable, answering read-only:', error)
+          return null
+        })
+      : null
+    const runPermissionMode: AgentPermissionMode = commanderMode ? (commanderRun ? 'auto-edit' : 'read-only') : agentPermissionMode
+
     // 每次都创建新的 AgentHandler，使用当前的 placeholderMessage
     const agentWorkspacePath = useSettingStore.getState().workspacePath
     const workspaceFingerprint = await fingerprintWorkspaceIdentity(getSkillWorkspaceIdentity(await getWorkspacePath()))
@@ -586,7 +619,9 @@ export const ChatSend = forwardRef<ChatSendHandle, ChatSendProps>(({
       useMemories: !useChatStore.getState().isTemporaryConversation,
       activeFilePath: activeArticle.activeFilePath,
       activeCanvasId: activeCanvasId || undefined,
-      permissionMode: agentPermissionMode,
+      permissionMode: runPermissionMode,
+      rolePrompt: commanderRun?.rolePrompt,
+      transformTools: commanderMode ? commanderRun?.transformTools : undefined,
       requestConfirmation: (toolName, params, context) => requestConfirmation(toolName, params, context, { chatId: placeholderMessage.id, conversationId: placeholderMessage.conversationId, workspacePath: agentWorkspacePath }),
       requestUserQuestion: (questions, signal) => requestUserQuestion(questions, signal, placeholderMessage.conversationId),
       requestUserInteraction: (uiRequest, context) => requestChatUiInteraction(uiRequest, context, {
@@ -1145,6 +1180,8 @@ ${hasValidRange ? `**仅在用户明确要求修改/改写/补充/插入时才�
       console.error('Agent execution error:', error)
     } finally {
       agentSession.setActiveRunner(null)
+      // Fork（almanac ALMNC-54.7）：這次想改的檔案送進工作台，訊息下面掛提案卡。
+      await commanderRun?.finish().catch(error => console.error('[commander] proposals not submitted:', error))
     }
   }
 

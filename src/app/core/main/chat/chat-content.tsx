@@ -52,6 +52,7 @@ import { ChatUiMessages } from '@/components/chat-ui/chat-ui-messages'
 import { ChatResponse } from '@/components/chat-ui/chat-response'
 import { JobMessages } from '../jobs/job-result'
 import { ThreadMessageCards } from '../threads/thread-cards'
+import { CommanderSpeaker } from './commander-name' // Fork（almanac ALMNC-54.7）
 
 interface DisplayedConversationCompaction {
   revision: number
@@ -349,6 +350,7 @@ MessageWrapper.displayName = 'MessageWrapper'
 
 const Message = React.memo(function Message({ chat }: { chat: Chat }) {
   const t = useTranslations()
+  const v3 = useChatV3()
   const { chats, deleteChat, getMcpToolCallsByChatId, loading, agentState, saveChat } = useChatStore()
   const content = chat.content
   const isActiveAgentMessage = chat.role === 'system' && agentState.activeChatId === chat.id
@@ -621,6 +623,7 @@ const Message = React.memo(function Message({ chat }: { chat: Chat }) {
         {chat.role === 'system' ? (
           // AI 消息：所有内容放在一个容器中
           <div className="w-full space-y-2">
+            {v3 && <CommanderSpeaker />}
             {/* 合并的 RAG 和 Agent 面板 - 只在有 agentHistory 时显示（历史模式） */}
             {/* 实时执行时，RAG 和 Agent 步骤在 AgentExecutionStatusWrapper 中统一显示 */}
             {chat.agentHistory && !isLiveAgentVisible && (

@@ -58,3 +58,14 @@ describe('acceptProposal', () => {
   })
 
 })
+
+// Fork（almanac ALMNC-54.7）：檔案變更提案接受時才寫入（同背景任務的草稿審核）。
+describe('acceptProposal with a file change', () => {
+  it('applies the change only when accepted and reports the target path', async () => {
+    const change = { toolName: 'note_move_file', args: { filePath: 'a.md', targetFolderPath: 'b' }, kind: 'move' as const, path: 'a.md', targetPath: 'b/a.md', baseContent: 'x', summary: '搬移 a.md → b/a.md' }
+    const applied: unknown[] = []
+    const result = await acceptProposal({ ...base, id: 'c1', kind: 'note', title: change.summary, change }, { noteFolder: '10 Inbox', now, applyChange: async value => { applied.push(value) } })
+    expect(applied).toEqual([change])
+    expect(result).toEqual({ path: 'b/a.md' })
+  })
+})

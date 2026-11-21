@@ -49,6 +49,25 @@ export interface Proposal {
   project?: string
   /** 撰寫草稿的角色（C1 專家／C2 指揮官／C3 秘書）與它的固定編號。 */
   drafter?: { role: 'commander' | 'expert' | 'secretary', agentId?: string }
+  /**
+   * Fork（almanac ALMNC-54.7）：右側欄指揮官想改的既有檔案（新增、修改、刪除、搬移、複製、新增資料夾）。
+   * 有這個欄位時 kind 一律是 note，接受時用原本的工具照 args 寫入（同背景任務的草稿審核），寫入前先比對衝突。
+   */
+  change?: FileChange
+}
+
+/** Fork（almanac ALMNC-54.7）：一筆還沒寫入的檔案變更。欄位同背景任務的草稿（agent-tasks/types.ts DraftChange）。 */
+export interface FileChange {
+  toolName: string
+  args: Record<string, unknown>
+  kind: 'create' | 'update' | 'delete' | 'move' | 'copy' | 'folder'
+  path: string
+  targetPath?: string
+  /** 新增或修改後的完整內容。 */
+  content?: string
+  /** 提案當下的原內容；null 表示當時檔案不存在。 */
+  baseContent: string | null
+  summary: string
 }
 
 export type SplitSource = 'ai' | 'rules'

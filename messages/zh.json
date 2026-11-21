@@ -4729,19 +4729,20 @@
         "summary": "对话摘要",
         "more": "更多对话操作",
         "sendToBackground": "改为后台任务",
-        "backgroundRequiresDelegate": "切到「交办」即可将草稿发送到后台执行。",
+        "backgroundRequiresDelegate": "切到「处理」就能将草稿送到后台执行。",
         "scrollToEnd": "滚动到对话底部",
         "usagePercent": "{percent}%",
         "mode": {
           "label": "对话模式",
-          "shortcut": "按 Tab 在「问」与「交办」之间切换",
+          "shortcut": "按 Tab 在「问」与「处理」之间切换",
           "ask": "问",
-          "delegate": "交办",
+          "delegate": "处理",
           "readOnlyHint": "只回答，不修改文件",
           "ask-before-edit": "修改前先问我",
           "auto-edit": "自动修改",
           "askPlaceholder": "问这篇笔记任何事",
-          "delegatePlaceholder": "交代一件事，例如：把待办移到最上面"
+          "delegatePlaceholder": "交代一件事，例如：明天 10:00 跟 A 开会",
+          "processHint": "改动会变成提案；你交代的任务和行程直接加上"
         },
         "empty": {
           "ask": {
@@ -4763,8 +4764,8 @@
             }
           },
           "delegate": {
-            "title": "交办一件事给我",
-            "description": "我会列出步骤，并按照你选择的权限处理文件。",
+            "title": "交给指挥官处理",
+            "description": "{name}：改动笔记会先变成提案，等你接受；你交代的任务和行程直接加上。",
             "prompts": {
               "first": {
                 "label": "整理这篇的重点",
@@ -4805,6 +4806,9 @@
           "showDiff": "查看改动",
           "hideDiff": "收起改动",
           "fileList": "查看文件列表"
+        },
+        "commander": {
+          "origin": "{agent}（对话）"
         }
       },
       "condensing": "正在压缩上下文...",
@@ -8167,7 +8171,12 @@
         "done": "完成"
       },
       "discuss": "再次讨论",
-      "proposalTalk": "再次讨论中"
+      "proposalTalk": "再次讨论中",
+      "directAdded": "已新增：{what}",
+      "undo": "撤销",
+      "directDone": "已新增",
+      "directUndone": "已撤销",
+      "directStale": "文件之后改过，没有撤销"
     },
     "tag": {
       "query": "查询",
