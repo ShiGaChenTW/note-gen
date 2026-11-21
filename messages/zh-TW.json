@@ -8540,7 +8540,11 @@
       "captured": "收進來了，正在拆分成提案",
       "noModel": "還沒設定模型，請先到設定選一個。"
     },
-    "titleDay": "{date}"
+    "titleDay": "{date}",
+    "workbench": {
+      "line": "工作台 · {count, number} 件",
+      "open": "打開工作台，{count, number} 件等你處理"
+    }
   },
   "week": {
     "title": "計畫",
@@ -8697,7 +8701,11 @@
       "reject": "不採用",
       "handle": "處理",
       "retry": "重試",
-      "delete": "刪除"
+      "delete": "刪除",
+      "migrate": "開始處理",
+      "resume": "繼續處理",
+      "pause": "暫停",
+      "packDone": "整理好了"
     },
     "listLabel": "等你處理的事",
     "more": "等 {count} 則",
@@ -8926,6 +8934,25 @@
       "newThreadShort": "對話",
       "tbd": "待定",
       "tbdTip": "功能待定"
+    },
+    "legacy": {
+      "title": "舊筆記 {count, number} 則",
+      "summary": "上線時轉入 · 分批交給 {name}",
+      "progress": "已處理 {done, number} / {total, number}",
+      "running": "處理中",
+      "pausing": "這則做完就暫停",
+      "paused": "已暫停",
+      "by": "系統",
+      "hint": "每批 {size, number} 則交給指揮官；判斷不出來的會一包一包回到「要你親手整理」。",
+      "packSummary": "{name} 判斷不出來，要你親手整理",
+      "toast": {
+        "started": "已開始分批交給 {name}，進度會顯示在卡片上",
+        "pausing": "這則做完就暫停",
+        "finished": "這輪處理了 {count, number} 則，{packs, number} 包要你親手整理",
+        "allFailed": "這批都沒處理成功，先暫停；稍後再按「繼續處理」",
+        "allUndecided": "這批 {name} 都判斷不出來，先暫停；請檢查模型設定",
+        "packDone": "已整理好「{title}」那一包"
+      }
     }
   },
   "cleanup": {

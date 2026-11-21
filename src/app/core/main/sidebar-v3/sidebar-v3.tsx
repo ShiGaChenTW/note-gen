@@ -18,7 +18,7 @@ import { buildAgentRows, buildNav, runningAgentCount, type AgentRow, type NavKey
 import type { AgentSettings } from '@/lib/agents/settings'
 import { useWeekOverlay } from '@/lib/week/overlay'
 import { openAddSource, openNewConversation } from '@/lib/workbench/open'
-import { useReviewData } from '@/lib/workbench/use-workbench'
+import { useWorkbenchCount } from '@/lib/workbench/use-workbench'
 import { cn } from '@/lib/utils'
 import useArticleStore from '@/stores/article'
 import useDecideStore from '@/stores/decide'
@@ -218,7 +218,8 @@ function QuickActions() {
 export function SidebarV3() {
   const t = useTranslations('sidebarV3')
   const load = useSidebarCollapse(state => state.load)
-  const decideCount = useReviewData().visible.length
+  // Fork（almanac ALMNC-54.14）：和今天頁「工作台 · N 件」同一個數字。
+  const decideCount = useWorkbenchCount()
   const visibility = usePageVisibility()
   const nav = buildNav({ decideCount, visibility })
 

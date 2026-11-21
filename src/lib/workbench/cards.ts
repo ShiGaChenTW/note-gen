@@ -6,6 +6,9 @@ import type { DecideItem } from '@/lib/decide/project'
 import { PROPOSAL_STALE_DAYS, DAY_MS } from '@/lib/proposals/trail'
 import type { TaskRef } from '@/lib/vault-index/index-core'
 
+/** Fork（almanac ALMNC-54.14）：舊筆記批次卡的鍵（也是先放著的鍵）。 */
+export const LEGACY_BATCH_KEY = 'legacy-batch'
+
 /** 標籤：這件事是關於什麼（第四節「標籤」）。 */
 export const CARD_LABELS = ['schedule', 'note', 'knowledge', 'source', 'review'] as const
 export type CardLabel = typeof CARD_LABELS[number]
@@ -20,7 +23,8 @@ export const CARD_GROUPS = ['reply', 'late', 'proposal', 'hand', 'task'] as cons
 export type CardGroup = typeof CARD_GROUPS[number]
 
 /** 卡片類型決定按鈕（第四節「按鈕代表動作」；資料源卡依 v14 加上照建議處理／自己處理／不採用）。 */
-export type CardKind = 'proposal' | 'reply' | 'hand' | 'task' | 'confirm' | 'source' | 'domain'
+// Fork（almanac ALMNC-54.14）：legacy＝舊筆記批次卡（R3，「舊筆記 1,240 則」）。
+export type CardKind = 'proposal' | 'reply' | 'hand' | 'task' | 'confirm' | 'source' | 'domain' | 'legacy'
 
 export type CardAction =
   | 'accept' | 'discuss' | 'drop' // 提案
@@ -32,6 +36,8 @@ export type CardAction =
   // Fork（almanac ALMNC-54.10）：「處理」（不帶建議交給指揮官）；擷取失敗的卡片「重試／刪除」。
   // 沒有初步判斷（或判斷沒有建議）時不顯示「照建議處理」，process 改叫「處理」，handle 不出現。
   | 'handle' | 'retry' | 'delete'
+  // Fork（almanac ALMNC-54.14）：舊筆記批次卡「開始處理／繼續處理／暫停」；判斷不出來的那一包「整理好了」。
+  | 'migrate' | 'resume' | 'pause' | 'packDone'
 
 export const ACTIONS_BY_KIND: Record<CardKind, readonly CardAction[]> = {
   proposal: ['accept', 'discuss', 'drop'],
@@ -41,7 +47,17 @@ export const ACTIONS_BY_KIND: Record<CardKind, readonly CardAction[]> = {
   task: ['schedule', 'done'],
   confirm: ['stillValid', 'toCommander'],
   source: ['process', 'selfProcess', 'reject'],
+  legacy: ['migrate'],
 }
+
+/** Fork（almanac ALMNC-54.14）：舊筆記批次卡的按鈕——跑的時候只有「暫停」，否則「開始處理」（處理過一些就是「繼續處理」）。 */
+export function legacyCardActions(batch: Pick<LegacyBatchLike, 'running' | 'processed'>): readonly CardAction[] {
+  if (batch.running) return ['pause']
+  return batch.processed > 0 ? ['resume'] : ['migrate']
+}
+
+/** 判斷不出來的那一包：攤到檯面（親手整理）、整理好了。 */
+export const PACK_ACTIONS: readonly CardAction[] = ['desk', 'packDone']
 
 /** Fork（almanac ALMNC-54.10）：等你決定的資料源卡的按鈕——有建議：照建議處理／處理／自己處理／不採用；沒有建議：處理／自己處理／不採用；擷取失敗：重試／刪除。 */
 export function sourceCardActions(source: Pick<AwaitingSourceLike, 'suggestion' | 'failed'>): readonly CardAction[] {
@@ -62,6 +78,7 @@ export const ACTION_KEY: Partial<Record<CardAction, string>> = {
   done: 'C',
   desk: 'T',
   handle: 'P', retry: 'R',
+  migrate: 'A', resume: 'A', packDone: 'C',
 }
 
 export interface WorkbenchCard {
@@ -97,6 +114,10 @@ export interface WorkbenchCard {
   domainProposalId?: string
   /** Fork（almanac ALMNC-54.10）：資料源卡有初步判斷的建議（「照建議處理」才出現）。 */
   hasSuggestion?: boolean
+  /** Fork（almanac ALMNC-54.14）：舊筆記批次卡的進度。 */
+  legacy?: LegacyBatchLike
+  /** Fork（almanac ALMNC-54.14）：判斷不出來的那一包（批次 id）。 */
+  packId?: string
 }
 
 // —— 投影輸入（結構型別，不綁 store） ——
@@ -139,6 +160,27 @@ export interface HandLike {
   by?: string
   at: number
   notePaths?: readonly string[]
+  /** Fork（almanac ALMNC-54.14）：舊筆記判斷不出來的那一包；有的話多一個「整理好了」。 */
+  packId?: string
+}
+
+/** Fork（almanac ALMNC-54.14）：舊筆記批次（R3）。total＝已標記＋還沒標記的舊筆記；processed＝已分析或不採用。 */
+export interface LegacyBatchLike {
+  /** 「舊筆記 1,240 則」（依語系組好）。 */
+  title: string
+  /** 「上線時轉入 · 分批交給 Mia」或「已處理 M / N」（依語系組好）。 */
+  summary: string
+  total: number
+  processed: number
+  running: boolean
+  /** 正在停（這一則做完就停）。 */
+  pausing?: boolean
+  /** 每批幾則（卡片說明用）。 */
+  batchSize?: number
+  /** 分批交給誰（指揮官本名）。 */
+  by?: string
+  /** 最早標記的時間；還沒標記就是現在。 */
+  at: number
 }
 
 export interface ConfirmLike {
@@ -169,6 +211,8 @@ export interface ReviewInput {
   hand?: readonly HandLike[]
   confirm?: readonly ConfirmLike[]
   domains?: readonly DomainLike[]
+  /** Fork（almanac ALMNC-54.14）：還有舊筆記沒處理時才給。 */
+  legacy?: LegacyBatchLike
   now: number
 }
 
@@ -299,7 +343,16 @@ export function buildReviewCards(input: ReviewInput): WorkbenchCard[] {
     cards.push({
       key: hand.key, kind: 'hand', group: 'hand', label: hand.label, verb: 'organize',
       title: hand.title, more: hand.more, summary: hand.summary, by: hand.by, at: hand.at,
-      actions: ACTIONS_BY_KIND.hand, notePaths: hand.notePaths,
+      actions: hand.packId ? PACK_ACTIONS : ACTIONS_BY_KIND.hand, notePaths: hand.notePaths,
+      ...(hand.packId ? { packId: hand.packId } : {}),
+    })
+  }
+  // Fork（almanac ALMNC-54.14）：舊筆記合成一張卡（v14：要你親手整理・資料源・整理・系統）。標題與進度字由畫面依語系組（legacy 欄位）。
+  if (input.legacy && input.legacy.total > input.legacy.processed) {
+    const legacy = input.legacy
+    cards.push({
+      key: LEGACY_BATCH_KEY, kind: 'legacy', group: 'hand', label: 'source', verb: 'organize',
+      title: legacy.title, summary: legacy.summary, by: legacy.by, at: legacy.at, actions: legacyCardActions(legacy), legacy,
     })
   }
   for (const task of input.otherTasks ?? []) cards.push(taskCard(task, 'task', now))

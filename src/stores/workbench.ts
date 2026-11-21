@@ -8,6 +8,23 @@ import type { SourceFilter } from '@/lib/workbench/sources-tab'
 import type { DeskMaterial } from '@/lib/workbench/desk'
 import type { Source } from '@/lib/v3-model/source'
 import type { SourceJudgement } from '@/lib/workbench/judgement'
+import type { LegacyPack } from '@/lib/migration/legacy'
+
+/** Fork（almanac ALMNC-54.14）：舊筆記批次（R3）的現況，從資料源表與 legacy_undecided 讀來。 */
+export interface LegacyState {
+  /** 已標記的舊筆記資料源 id（判斷筆記庫裡哪些還沒標）。 */
+  markedIds: Set<string>
+  total: number
+  processed: number
+  /** 最早標記的時間；還沒標過是 undefined。 */
+  firstMarkedAt?: number
+  /** 還沒整理好的包，舊的在前。 */
+  packs: LegacyPack[]
+  running: boolean
+  pausing: boolean
+}
+
+export const EMPTY_LEGACY: LegacyState = { markedIds: new Set(), total: 0, processed: 0, packs: [], running: false, pausing: false }
 
 export type WorkbenchTab = 'review' | 'sources'
 
@@ -77,6 +94,9 @@ interface WorkbenchState {
   /** Fork（almanac ALMNC-54.10）：外部擷取資料源的初步判斷（資料源 id → 判斷）。 */
   judgements: Map<string, SourceJudgement>
   setJudgements: (judgements: Map<string, SourceJudgement>) => void
+  /** Fork（almanac ALMNC-54.14）：舊筆記批次。 */
+  legacy: LegacyState
+  setLegacy: (patch: Partial<LegacyState>) => void
 
   // —— 檯面 ——
   desk: DeskState
@@ -150,6 +170,8 @@ const useWorkbenchStore = create<WorkbenchState>((set, get) => ({
   setSources: (sources, outputCounts) => set({ sources, outputCounts, sourcesLoaded: true }),
   judgements: new Map(),
   setJudgements: judgements => set({ judgements }),
+  legacy: EMPTY_LEGACY,
+  setLegacy: patch => set(state => ({ legacy: { ...state.legacy, ...patch } })),
 
   desk: CLOSED_DESK,
   openDesk: (materials, cardKey) => set({ desk: { open: true, materials, ...(cardKey ? { cardKey } : {}) } }),

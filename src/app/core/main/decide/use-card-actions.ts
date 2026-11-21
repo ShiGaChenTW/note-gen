@@ -14,9 +14,10 @@ import { dateKey } from '@/lib/today/today-model'
 import type { CardAction, WorkbenchCard } from '@/lib/workbench/cards'
 import { nextCursor } from '@/lib/workbench/cards'
 import {
-  acceptCard, completeTask, confirmStillValid, confirmToCommander, deleteFailedSource, dropCard, processSource, rejectSource, retryCapture,
-  scheduleCardTask, type Undo,
+  acceptCard, completeTask, confirmStillValid, confirmToCommander, deleteFailedSource, dropCard, pauseLegacy, processSource, rejectSource,
+  resolveLegacyPack, retryCapture, scheduleCardTask, startLegacy, type Undo,
 } from '@/lib/workbench/actions'
+import { currentUnmarkedLegacy } from '@/lib/workbench/use-workbench'
 import type { DeskMaterial } from '@/lib/workbench/desk'
 import useWorkbenchStore from '@/stores/workbench'
 
@@ -176,6 +177,27 @@ export function useCardActions({ visible, commanderName }: { visible: readonly W
       case 'desk':
         openDesk(card)
         return
+      // Fork（almanac ALMNC-54.14）：舊筆記批次卡。開始／繼續處理：標記還沒標的舊筆記，分批交給指揮官；卡片留在清單上顯示進度。
+      case 'migrate':
+      case 'resume': {
+        toast(t('legacy.toast.started', { name: commanderName }))
+        try {
+          const summary = await startLegacy(currentUnmarkedLegacy())
+          if (summary.reason === 'all_undecided') toast.error(t('legacy.toast.allUndecided', { name: commanderName }))
+          else if (summary.reason === 'all_failed') toast.error(t('legacy.toast.allFailed'))
+          else if (summary.reason === 'finished') toast(t('legacy.toast.finished', { count: summary.done, packs: summary.packs }))
+        } catch (error) {
+          fail(error)
+        }
+        return
+      }
+      case 'pause':
+        await pauseLegacy()
+        toast(t('legacy.toast.pausing'))
+        return
+      case 'packDone':
+        if (!card.packId) return
+        return settle(card, () => resolveLegacyPack(card.packId!), t('legacy.toast.packDone', { title }))
       case 'answer':
       case 'pick':
         if (card.conversationId !== undefined) await openConversation(card.conversationId)

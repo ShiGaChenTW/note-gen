@@ -1,7 +1,7 @@
 // Fork（almanac ALMNC-54.6）：分析第一步「轉成看得懂的內容」——截圖辨識文字、會議轉逐字稿、網頁抓全文。
 // 只在資料源進入分析（狀態改成分析中）時呼叫；外部擷取的資料源（A5）進來時保留原檔，不在這裡以外的地方轉。
 // 轉換器沒設定或失敗時保留原始內容並標記，不讓分析整個停下來。
-import type { Source } from '@/lib/v3-model/source'
+import { LEGACY_NOTE_KIND, type Source } from '@/lib/v3-model/source'
 import { ConverterUnavailableError, type ConversionResult, type ConverterName, type Converters } from './types'
 
 /** 交給模型的文字上限（字元）；超過就截短並在 note 註明。 */
@@ -97,6 +97,9 @@ export async function toText(source: Source, converters: Converters): Promise<Co
       const { ref, caption } = refOf(source)
       return cap(await run(source, 'file', converters.readFileText, ref, caption))
     }
+    // Fork（almanac ALMNC-54.14）：舊筆記資料源只存路徑，分析時才讀筆記庫裡的檔案（不改檔）。
+    case LEGACY_NOTE_KIND:
+      return cap(await run(source, 'file', converters.readVaultNote, source.content.trim() || source.origin?.trim(), ''))
     default:
       return cap(asText())
   }
