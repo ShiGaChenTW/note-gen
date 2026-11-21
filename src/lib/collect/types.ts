@@ -1,4 +1,5 @@
 import type { SlotTarget } from '@/lib/timeslots/model'
+import type { NoteType } from '@/lib/v3-model/note'
 
 // Fork（almanac ALMNC-8）：收集頁的資料型別。全是純資料，不碰 I/O，方便單元測試。
 
@@ -35,6 +36,19 @@ export interface Proposal {
   conversationId?: number
   /** Fork（almanac ALMNC-54.5）：指揮官依「再次討論」修改後重新提出時，被取代的那則提案（工作台項目 key）。 */
   previousProposalId?: string
+  // Fork（almanac ALMNC-54.6）：指揮官分析資料源產生的提案才有下面這些欄位。
+  /** 來源資料源 id；接受後才寫進 source_outputs 連結表與筆記 frontmatter 的 sources。 */
+  sourceIds?: string[]
+  /** 筆記類型（知識／紀錄／專案）；只有 note 會有。 */
+  noteType?: NoteType
+  /** 所屬領域 id；只有 note 會有。 */
+  domains?: string[]
+  /** 相關的人。 */
+  people?: string[]
+  /** 所屬專案。 */
+  project?: string
+  /** 撰寫草稿的角色（C1 專家／C2 指揮官／C3 秘書）與它的固定編號。 */
+  drafter?: { role: 'commander' | 'expert' | 'secretary', agentId?: string }
 }
 
 export type SplitSource = 'ai' | 'rules'

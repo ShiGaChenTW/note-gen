@@ -172,14 +172,14 @@ export function buildSplitPrompt(input: CollectInput, now: Date): string {
   ].join('\n')
 }
 
-function isValidYmd(value: string): boolean {
+export function isValidYmd(value: string): boolean {
   const m = value.match(/^(\d{4})-(\d{2})-(\d{2})$/)
   if (!m) return false
   const d = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])))
   return d.getUTCFullYear() === Number(m[1]) && d.getUTCMonth() === Number(m[2]) - 1 && d.getUTCDate() === Number(m[3])
 }
 
-function normalizeTime(value: string): string {
+export function normalizeTime(value: string): string {
   const m = value.trim().match(/^(\d{1,2}):(\d{2})$/)
   if (!m || Number(m[1]) > 23 || Number(m[2]) > 59) return ''
   return `${m[1].padStart(2, '0')}:${m[2]}`
@@ -189,7 +189,7 @@ function asString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
 }
 
-function extractJson(raw: string): unknown {
+export function extractJson(raw: string): unknown {
   const cleaned = raw.replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/```(?:json)?/gi, '').trim()
   const start = cleaned.search(/[{[]/)
   if (start < 0) return null

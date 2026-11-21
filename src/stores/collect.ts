@@ -6,6 +6,7 @@ import { askCollectModel } from '@/lib/collect/ai'
 import { loadItems, mergeItems, saveItems } from '@/lib/collect/persist'
 import { splitInput } from '@/lib/collect/split'
 import { acceptProposal, undoAccepted, type AcceptResult } from '@/lib/collect/write'
+import { linkAcceptedOutputs } from '@/lib/commander/consolidate'
 import type { CollectInput, Proposal, SplitSource } from '@/lib/collect/types'
 import { setRecordsProcessed } from '@/lib/inbox/actions'
 import { useUiModeStore } from '@/lib/fork-ui'
@@ -118,6 +119,11 @@ const useCollectStore = create<CollectState>((set, get) => ({
     await useDailySettingsStore.getState().initSettings()
     const result = await acceptProposal(proposal, { noteFolder: useDailySettingsStore.getState().inboxFolder })
     set(state => ({ items: patchProposal(state.items, itemId, proposalId, { status: 'ok', result }) }))
+    // Fork（almanac ALMNC-54.6）：指揮官的提案接受、寫入之後才建立「資料源 → 產出」連結；筆記 frontmatter 的 sources 已同時寫好，
+    // 連結表寫失敗也查得到來源（lib/v3-model/links.ts sourcesOfNote 取聯集），所以只記錯、不擋接受。
+    if (proposal.sourceIds?.length) {
+      await linkAcceptedOutputs(proposal, result).catch(error => console.error('[collect] source output link failed:', error))
+    }
     const updated = get().items.find(entry => entry.id === itemId)
     if (updated?.recordId !== undefined && updated.proposals.every(entry => entry.status !== 'wait')) {
       const note = updated.proposals.find(entry => entry.status === 'ok' && entry.kind === 'note')
