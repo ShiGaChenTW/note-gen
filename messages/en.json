@@ -4137,7 +4137,63 @@
     },
     "searchPlaceholder": "Search settings...",
     "noSearchResults": "No matching settings found",
-    "title": "Settings"
+    "title": "Settings",
+    "eink": {
+      "title": "E-paper",
+      "desc": "Send the daily briefing and sleep screen to the e-paper reader (Xteink X4 Pro + CrossPoint). These settings stay on this Mac and are not synced.",
+      "sections": {
+        "device": "E-paper reader",
+        "briefing": "Daily briefing"
+      },
+      "enabled": {
+        "title": "Enable e-paper sync",
+        "desc": "When off, no daily briefing or sleep screen is generated."
+      },
+      "readerAddress": {
+        "title": "Reader address",
+        "desc": "The reader's address on your local network (shown in File Transfer mode), e.g. 192.168.1.20.",
+        "invalid": "Invalid address, e.g. 192.168.1.20 or http://x4.local",
+        "placeholder": "192.168.1.20"
+      },
+      "lanServer": {
+        "title": "Local network service",
+        "desc": "Lets the reader download the sleep screen and daily briefing from this Mac when it closes. Off by default."
+      },
+      "token": {
+        "title": "Token",
+        "desc": "The secret the reader sends when downloading. Stored only on this Mac. After regenerating, reinstall the plugin on the reader.",
+        "show": "Show token",
+        "hide": "Hide token",
+        "regenerate": "Regenerate",
+        "regenerated": "New token generated"
+      },
+      "briefingSections": {
+        "title": "Briefing sections",
+        "desc": "Choose which sections go into the daily briefing. The order is fixed.",
+        "schedule": "Today's schedule",
+        "pinned": "Pinned notes",
+        "articles": "Daily articles",
+        "review": "Daily review cards",
+        "report": "Knowledge report",
+        "workbench": "Workbench summary"
+      },
+      "weatherCity": {
+        "title": "Weather location",
+        "desc": "Enter a city; the sleep screen and daily briefing use its forecast.",
+        "placeholder": "Taipei"
+      },
+      "pins": {
+        "title": "Pinned notes",
+        "desc": "Add notes with \"Pin to e-paper\" in the file tree, an editor tab or ⌘K. They go into the daily briefing in this order.",
+        "empty": "Nothing pinned yet.",
+        "pinnedAt": "Pinned {date}",
+        "lastSentAt": "Last sent {date}",
+        "neverSent": "Not sent yet",
+        "moveUp": "Move up",
+        "moveDown": "Move down",
+        "remove": "Remove"
+      }
+    }
   },
   "bases": {
     "title": "Bases",
@@ -8164,6 +8220,14 @@
       "settings": {
         "title": "Open settings",
         "keywords": "settings,preferences"
+      },
+      "einkPin": {
+        "title": "Pin to e-paper",
+        "keywords": "eink,e-paper,pin,briefing"
+      },
+      "einkUnpin": {
+        "title": "Unpin from e-paper",
+        "keywords": "eink,e-paper,unpin"
       }
     },
     "chat": {
@@ -8455,5 +8519,16 @@
     "saveSnapshot": "Save the original as a copy",
     "snapshotSaved": "Saved {count} file(s) with “整理前” in the name",
     "snapshotFailed": "Could not save the copy"
+  },
+  "eink": {
+    "pin": "Pin to e-paper",
+    "unpin": "Unpin from e-paper",
+    "pinned": "Pinned to e-paper",
+    "unpinned": "Unpinned from e-paper",
+    "private": {
+      "label": "Private",
+      "mark": "Mark as private",
+      "unmark": "Unmark private"
+    }
   }
 }

@@ -13,6 +13,7 @@ import useSettingStore from '@/stores/setting'
 import {
   settingSections,
   isPluginSettingSection,
+  isV3OnlySettingSection,
   type BuiltinSettingSection,
   type SettingSection,
   useSettingsDialogStore,
@@ -39,6 +40,8 @@ import SyncPage from '../sync/page'
 import BackupPage from '../backup/page'
 import TemplatePage from '../template/page'
 import WebSearchSettingPage from '../webSearch/page'
+import EinkSettingPage from '../eink/page'
+import { useUiV3 } from '@/lib/fork-ui'
 import { SettingTab } from './setting-tab'
 import { hasPluginSettingsContent } from '@/lib/plugins/display-preferences'
 import { useShallow } from 'zustand/react/shallow'
@@ -68,6 +71,7 @@ const settingPages: Record<BuiltinSettingSection, ComponentType> = {
   shortcuts: ShortcutsPage,
   imageMethod: ImageMethodPage,
   audio: AudioPage,
+  eink: EinkSettingPage,
 }
 
 export function SettingsDialog() {
@@ -86,10 +90,12 @@ export function SettingsDialog() {
   const [mountedSections, setMountedSections] = useState<SettingSection[]>([activeSection])
   const pluginSectionAvailable = useCallback((section: string) => settingsPlugins.some(plugin =>
     `plugin:${plugin.manifest.id}` === section), [settingsPlugins])
+  const v3 = useUiV3()
+  // Fork（almanac ALMNC-45）：classic 下不停在 V3 專屬分頁（例如上次停在電子紙後切回 classic）
   const selectedSection = isPluginSettingSection(activeSection) && initialized && !pluginSectionAvailable(activeSection)
-    ? 'plugins' : activeSection
+    ? 'plugins' : !v3 && isV3OnlySettingSection(activeSection) ? 'general' : activeSection
   const sectionsToRender = [...new Set([...mountedSections, selectedSection])].filter(section =>
-    !isPluginSettingSection(section) || pluginSectionAvailable(section))
+    (!isPluginSettingSection(section) || pluginSectionAvailable(section)) && (v3 || !isV3OnlySettingSection(section)))
 
   useEffect(() => {
     if (initialized && isPluginSettingSection(activeSection) && !pluginSectionAvailable(activeSection)) {

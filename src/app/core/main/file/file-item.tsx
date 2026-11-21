@@ -8,7 +8,8 @@ import useArticleStore, { DirTree } from "@/stores/article";
 import { BaseDirectory, exists, rename, writeTextFile } from "@tauri-apps/plugin-fs";
 import { moveSelfHostedWorkspacePath } from '@/lib/self-hosted-sync/files'
 import { withWorkspacePathMove } from '@/lib/sync/workspace-path-moves'
-import { Copy, Download, ExternalLink, File, FileCode, FileJson, FileLock, FileText, FileUp, FolderOpen, ImageIcon, LoaderCircle, Trash2 } from "lucide-react"
+import { Copy, Download, ExternalLink, File, FileCode, FileJson, FileLock, FileText, FileUp, FolderOpen, ImageIcon, LoaderCircle, TabletSmartphone, Trash2 } from "lucide-react"
+import { useEinkPinAction } from "@/components/fork/eink-pin"
 import { useEffect, useRef, useState, useCallback } from "react";
 import { platform } from '@tauri-apps/plugin-os';
 import { cloneDeep } from "lodash-es";
@@ -168,6 +169,8 @@ export function FileItem({
 
   const readingWorkspacePath = useSettingStore(state => state.workspacePath)
   const tReading = useTranslations('editor.readingMode')
+  // Fork（almanac ALMNC-45）：V3 的「釘選到電子紙」（classic 是 null，不顯示）
+  const einkPin = useEinkPinAction(item.isLocale ? path : null)
   const canSetReadOnly = /\.(md|txt|markdown|py|js|ts|jsx|tsx|css|scss|less|html|xml|json|yaml|yml|sh|bash|java|c|cpp|h|go|rs|sql|rb|php|vue|svelte|astro|toml|ini|conf|cfg|gitignore|env|example|template)$/i.test(item.name)
   const setFileReadOnly = (value: boolean): boolean => {
     if (!useEditorReadingStore.getState().setReadOnly(readingWorkspacePath, path, value)) {
@@ -1018,6 +1021,12 @@ export function FileItem({
                 <FolderOpen className="mr-2 h-4 w-4" />
                 {t('context.viewDirectory')}
               </ContextMenuItem>
+              {einkPin ? (
+                <ContextMenuItem inset onClick={() => void einkPin.toggle()} menuType="file">
+                  <TabletSmartphone className="mr-2 h-4 w-4" />
+                  {einkPin.label}
+                </ContextMenuItem>
+              ) : null}
               <PluginFileMenuItems context={{
                 kind: 'file',
                 relativePath: path,

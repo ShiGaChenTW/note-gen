@@ -60,7 +60,8 @@ export function SettingTab({
   const t = useTranslations('settings')
   const messages = useMessages()
   const [query, setQuery] = useState(() => mobileSettingQueryCache)
-  const notMobilePages = ['about', 'backup', 'shortcuts', 'plugins']
+  // Fork（almanac ALMNC-45）：電子紙只做 macOS 桌面版
+  const notMobilePages = ['about', 'backup', 'shortcuts', 'plugins', 'eink']
   
   const config = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase()

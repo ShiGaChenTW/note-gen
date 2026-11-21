@@ -9,7 +9,7 @@ import { useTranslations } from 'next-intl'
 import { useTheme } from 'next-themes'
 import { toast } from 'sonner'
 import {
-  FileText, Inbox, House, MessageSquarePlus, MessageCircleQuestion, Moon, PanelLeft, PanelRight, Search, Settings,
+  FileText, Inbox, House, MessageSquarePlus, MessageCircleQuestion, Moon, PanelLeft, PanelRight, Search, Settings, TabletSmartphone,
 } from 'lucide-react'
 import {
   Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandShortcut,
@@ -28,8 +28,15 @@ import useHomeStore from '@/stores/home'
 import useInboxStore from '@/stores/inbox'
 import { useSidebarStore } from '@/stores/sidebar'
 import { useSettingsDialogStore } from '@/stores/settings-dialog'
+import { useUiV3 } from '@/lib/fork-ui'
+import { isPinned } from '@/lib/eink/pins'
+import useEinkStore from '@/stores/eink'
+import { toggleEinkPin } from '@/components/fork/eink-pin'
+import { isRecordTabPath } from '../mark/mark-record-tab'
+import { isCanvasTabPath } from '../canvas/canvas-tab'
 
 type CoreCommandId = 'ask' | 'newChat' | 'home' | 'inbox' | 'searchSidebar' | 'leftSidebar' | 'rightSidebar' | 'theme' | 'settings'
+  | 'einkPin' | 'einkUnpin'
 
 const CORE_COMMAND_ICONS: Record<CoreCommandId, typeof Search> = {
   ask: MessageCircleQuestion,
@@ -41,6 +48,8 @@ const CORE_COMMAND_ICONS: Record<CoreCommandId, typeof Search> = {
   rightSidebar: PanelRight,
   theme: Moon,
   settings: Settings,
+  einkPin: TabletSmartphone,
+  einkUnpin: TabletSmartphone,
 }
 const CORE_COMMAND_SHORTCUT: Partial<Record<CoreCommandId, string>> = { ask: '⌘⇧A', home: '⌘⇧H' }
 const CORE_COMMAND_ORDER: CoreCommandId[] = ['ask', 'newChat', 'home', 'inbox', 'searchSidebar', 'leftSidebar', 'rightSidebar', 'theme', 'settings']
@@ -57,12 +66,21 @@ export function AnywhereCommandPalette() {
   const notes = useVaultIndexStore(state => state.notes)
   const [query, setQuery] = useState('')
   const [pluginCommands, setPluginCommands] = useState<RegisteredPluginCommand[]>(() => getPluginCommands())
+  // Fork（almanac ALMNC-45）：V3 才有的電子紙指令；目前開著的是檔案才能釘選
+  const v3 = useUiV3()
+  const tEink = useTranslations('eink')
+  const activeFilePath = useArticleStore(state => state.activeFilePath)
+  const einkPinTarget = v3 && activeFilePath && !isRecordTabPath(activeFilePath) && !isCanvasTabPath(activeFilePath) ? activeFilePath : null
+  const einkPinned = useEinkStore(state => Boolean(einkPinTarget) && isPinned(state.pins, einkPinTarget!))
+  useEffect(() => { if (v3 && open) void useEinkStore.getState().init() }, [v3, open])
 
   useEffect(() => subscribePluginCommands(() => setPluginCommands(getPluginCommands())), [])
   useEffect(() => { if (open) setQuery('') }, [open])
 
   const items = useMemo<PaletteItem[]>(() => {
-    const core: PaletteItem[] = CORE_COMMAND_ORDER.map(id => ({
+    const coreIds: CoreCommandId[] = [...CORE_COMMAND_ORDER]
+    if (einkPinTarget) coreIds.push(einkPinned ? 'einkUnpin' : 'einkPin')
+    const core: PaletteItem[] = coreIds.map(id => ({
       id: `${CORE_PREFIX}${id}`,
       kind: 'command',
       title: t(`commands.${id}.title`),
@@ -89,7 +107,7 @@ export function AnywhereCommandPalette() {
       })
     }
     return [...core, ...plugins, ...noteItems]
-  }, [notes, pluginCommands, t])
+  }, [notes, pluginCommands, t, einkPinTarget, einkPinned])
 
   const sections = useMemo(() => buildPaletteSections(items, query), [items, query])
   const byId = useMemo(() => new Map(pluginCommands.map(command => [`${PLUGIN_PREFIX}${command.id}`, command])), [pluginCommands])
@@ -109,8 +127,12 @@ export function AnywhereCommandPalette() {
       case 'rightSidebar': await sidebar.toggleRightSidebar(); break
       case 'theme': setTheme(resolvedTheme === 'dark' ? 'light' : 'dark'); break
       case 'settings': useSettingsDialogStore.getState().openSettings(); break
+      case 'einkPin':
+      case 'einkUnpin':
+        if (einkPinTarget) await toggleEinkPin(einkPinTarget, { pinned: tEink('pinned'), unpinned: tEink('unpinned') })
+        break
     }
-  }, [resolvedTheme, setTheme])
+  }, [resolvedTheme, setTheme, einkPinTarget, tEink])
 
   const openNote = useCallback(async (path: string) => {
     const sidebar = useSidebarStore.getState()
