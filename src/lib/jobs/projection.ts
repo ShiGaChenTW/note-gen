@@ -18,5 +18,8 @@ export function projectJobDecisions(jobs: Job[]): DecideItem[] {
     preview: { type: 'job', result: step.result ?? '', criterion: step.criterion, diff: null },
     duplicates: [],
     ref: { source: 'job', jobId: job.id, stepId: step.id },
+    // Fork（almanac ALMNC-54.5）：工作是從對話建立的，記下那段對話（threadKey），投影時換成對話 id。
+    status: 'wait',
+    conversationKey: job.threadKey,
   })))
 }

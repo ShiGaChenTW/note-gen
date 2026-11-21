@@ -10,6 +10,7 @@ import type { DecideItem, DecideKind, DecidePreview, DiffPreview } from '@/lib/d
 import { OrganizeConflict } from '@/lib/organize/transaction'
 import { SlotUnavailable } from '@/lib/timeslots/apply'
 import { useAgentTaskStore } from '@/lib/agent-tasks'
+import { discussProposal } from '@/lib/proposals/actions'
 
 export const KIND_ICON: Record<DecideKind, typeof FileText> = {
   job: ListTodo, note: FileText, task: ListTodo, event: CalendarClock,
@@ -84,5 +85,20 @@ export function useDecideActions() {
     }
   }
 
-  return { busy, accept, reject }
+  // Fork（almanac ALMNC-54.5）：再次討論——附說明回到來源對話（沒有就開一段「處理」對話），等指揮官修改後重新提案。
+  async function discuss(item: DecideItem, note: string) {
+    setBusy(item.key)
+    const title = item.source === 'draft' ? item.summary || item.title : item.title
+    try {
+      const id = await discussProposal({ key: item.key, conversationId: item.conversationId }, note, text => t('discuss.message', { title, note: text }))
+      if (id !== null) toast(t('discuss.done', { title }))
+    } catch (error) {
+      console.error('[decide] discuss failed:', error)
+      toast.error(t('failed'))
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  return { busy, accept, reject, discuss }
 }

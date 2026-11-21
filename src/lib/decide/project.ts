@@ -10,6 +10,8 @@ import type { Job } from '@/lib/jobs/schedule'
 import { scheduleSlot, slotEndLabel } from '@/lib/timeslots/model'
 import { ORGANIZE_TOOL } from '@/lib/organize/drafts'
 import type { Proposal } from '@/lib/collect/types'
+import { threadKey } from '@/lib/threads/projects'
+import { statusOf, type ProposalDiscussion, type ProposalStatus, type ProposalTrail } from '@/lib/proposals/trail'
 
 export type DecideSource = 'collect' | 'draft' | 'job'
 export type DecideKind = 'job' | 'note' | 'task' | 'event' | 'create' | 'update' | 'delete' | 'move' | 'copy' | 'folder'
@@ -48,6 +50,16 @@ export interface DecideItem {
   duplicates: DecideRef[]
   organizeMerge?: { removed: string; keeper: string }
   ref: DecideRef
+  // Fork（almanac ALMNC-54.5）：提案的來源對話與再次討論。
+  /** 產生這則提案的對話；來源沒記時用再次討論開的那段（lib/proposals/trail.ts）。 */
+  conversationId?: number
+  /** 來源只記得對話的 threadKey（工作）：投影時依 conversations 換成 conversationId。 */
+  conversationKey?: string
+  /** wait＝等接受或放棄；discussing＝再次討論中（不在工作台清單裡，但對話上仍算待決定）。 */
+  status: ProposalStatus
+  discussion?: ProposalDiscussion
+  /** 這則是哪一則提案修改後重新提出的（那則的 key）；舊的就算被取代，不再算待決定。 */
+  previousProposalId?: string
 }
 
 export type DecideRef =
@@ -79,6 +91,8 @@ export interface DraftLike {
 
 export interface TaskLike {
   id: string
+  /** Fork（almanac ALMNC-54.5）：從哪段對話派出的任務。 */
+  conversationId?: number
   title: string
   status: string
   updatedAt: number
@@ -103,6 +117,10 @@ export interface ProjectInput {
   journal: JournalSnapshot | null
   jobs?: Job[]
   workspace?: string
+  /** Fork（almanac ALMNC-54.5）：再次討論、來源對話、取代關係。 */
+  trail?: ProposalTrail
+  /** 把 conversationKey（threadKey）換成對話 id 用。 */
+  conversations?: ReadonlyArray<{ id: number, syncId: string }>
 }
 
 export const PREVIEW_MAX_LINES = 8
@@ -193,6 +211,9 @@ function projectCollect(items: CollectItemLike[], journal: JournalSnapshot | nul
         preview,
         duplicates: [],
         ref,
+        status: 'wait',
+        ...(proposal.conversationId !== undefined ? { conversationId: proposal.conversationId } : {}),
+        ...(proposal.previousProposalId ? { previousProposalId: proposal.previousProposalId } : {}),
       }
       seen.set(sameThingKey(proposal), entry)
       out.push(entry)
@@ -228,17 +249,42 @@ function projectDrafts(tasks: TaskLike[], workspace: string | undefined): Decide
         duplicates: [],
         ...(organizeMerge ? { organizeMerge } : {}),
         ref: { source: 'draft', taskId: task.id, draftId: draft.id },
+        status: 'wait',
+        ...(task.conversationId !== undefined ? { conversationId: task.conversationId } : {}),
       })
     }
   }
   return out
 }
 
-/** 等你定清單：兩個來源合併，等得最久的在最上面；同時間維持來源內的原順序。 */
-export function projectDecisions(input: ProjectInput): DecideItem[] {
+/**
+ * Fork（almanac ALMNC-54.5）：所有還沒決定的提案——等接受或放棄的、再次討論中的都在；被重新提案取代的不在。
+ * 對話上的「還有 N 則提案待決定」與每週回顧的 14 天清單都從這裡算。等得最久的在最上面；同時間維持來源內的原順序。
+ */
+export function projectProposals(input: ProjectInput): DecideItem[] {
+  const trail = input.trail ?? {}
+  const byKey = new Map((input.conversations ?? []).map(conversation => [threadKey(conversation), conversation.id]))
   const all = [...projectCollect(input.items, input.journal, input.workspace), ...projectDrafts(input.tasks, input.workspace), ...projectJobDecisions(input.jobs ?? [])]
+    .map(item => withTrail(item, trail, byKey))
+  const replaced = new Set(all.flatMap(item => item.previousProposalId ? [item.previousProposalId] : []))
   return all
+    .filter(item => !replaced.has(item.key) && !trail[item.key]?.supersededBy)
     .map((item, index) => ({ item, index }))
     .sort((x, y) => x.item.at - y.item.at || x.index - y.index)
     .map(entry => entry.item)
+}
+
+function withTrail(item: DecideItem, trail: ProposalTrail, byKey: Map<string, number>): DecideItem {
+  const entry = trail[item.key]
+  const next: DecideItem = { ...item, status: statusOf(trail, item.key) }
+  if (next.conversationId === undefined && item.conversationKey) next.conversationId = byKey.get(item.conversationKey)
+  if (next.conversationId === undefined && entry?.conversationId !== undefined) next.conversationId = entry.conversationId
+  if (next.conversationId === undefined) delete next.conversationId
+  if (entry?.discussion) next.discussion = entry.discussion
+  return next
+}
+
+/** 等你定清單：只列等你接受或放棄的；再次討論中的回到對話，不在這裡。 */
+export function projectDecisions(input: ProjectInput): DecideItem[] {
+  return projectProposals(input).filter(item => item.status === 'wait')
 }

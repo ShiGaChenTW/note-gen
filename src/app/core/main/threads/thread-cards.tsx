@@ -2,18 +2,25 @@
 
 // Fork（almanac ALMNC-14）：訊息下面的內嵌卡片。只在新介面（v3）顯示。
 // 判斷都在 lib/threads/cards.ts 的 resolveThreadCard，這裡只畫。外觀依 redesign_v5：提案是虛線框、處理後變實線；開工卡是實線框。
+import { useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { toast } from 'sonner'
 import { Check, CalendarClock, FileText, ListTodo, LoaderCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useUiV3 } from '@/lib/fork-ui'
 import { resolveThreadCard, type CardAction, type KickoffCardView, type ProposalCardView, type ThreadCard } from '@/lib/threads/cards'
 import { cn } from '@/lib/utils'
+import { discussProposal } from '@/lib/proposals/actions'
+import useChatStore from '@/stores/chat'
 import useThreadsStore from '@/stores/threads'
+import { DiscussForm } from '../decide/discuss-form'
 
 const KIND_ICON = { note: FileText, task: ListTodo, event: CalendarClock } as const
 
-function ProposalCard({ view, onAction }: { view: ProposalCardView, onAction: (action: CardAction) => void }) {
+function ProposalCard({ view, onAction, onDiscuss }: { view: ProposalCardView, onAction: (action: CardAction) => void, onDiscuss: (note: string) => Promise<void> }) {
   const t = useTranslations('threads.cards')
+  const [discussing, setDiscussing] = useState(false)
+  const [busy, setBusy] = useState(false)
   const Icon = KIND_ICON[view.kind]
   return (
     <div
@@ -30,7 +37,8 @@ function ProposalCard({ view, onAction }: { view: ProposalCardView, onAction: (a
       {view.detail && <p className="mt-1.5 text-ui-compact text-muted-ink">{view.detail}</p>}
       <div className="mt-2 flex items-center gap-1.5">
         {view.actions.includes('accept') && <Button size="sm" onClick={() => onAction('accept')}>{t('accept')}</Button>}
-        {view.actions.includes('reject') && <Button size="sm" variant="outline" onClick={() => onAction('reject')}>{t('reject')}</Button>}
+        {view.actions.includes('discuss') && <Button size="sm" variant="outline" aria-expanded={discussing} onClick={() => setDiscussing(open => !open)}>{t('discuss')}</Button>}
+        {view.actions.includes('reject') && <Button size="sm" variant="ghost" onClick={() => onAction('reject')}>{t('reject')}</Button>}
         {view.actions.length === 0 && (
           <span className="flex items-center gap-1 text-ui-compact text-muted-ink">
             {view.tone === 'done' && <Check aria-hidden className="size-3.5" />}{t(view.statusKey)}
@@ -38,6 +46,20 @@ function ProposalCard({ view, onAction }: { view: ProposalCardView, onAction: (a
         )}
         {view.actions.length > 0 && <span className="ml-auto text-ui-compact text-muted-ink">{t('alsoInInbox')}</span>}
       </div>
+      {discussing && view.actions.includes('discuss') && (
+        <DiscussForm
+          className="mt-2"
+          busy={busy}
+          onCancel={() => setDiscussing(false)}
+          onSubmit={note => {
+            setBusy(true)
+            void onDiscuss(note).finally(() => {
+              setBusy(false)
+              setDiscussing(false)
+            })
+          }}
+        />
+      )}
     </div>
   )
 }
@@ -103,17 +125,32 @@ function KickoffCard({ view, onAction }: { view: KickoffCardView, onAction: (act
 /** 掛在每則訊息下面：這則訊息沒有卡片、或不是新介面時什麼都不畫。 */
 export function ThreadMessageCards({ chatId }: { chatId: number }) {
   const isV3 = useUiV3()
+  const t = useTranslations('decide')
   const cards = useThreadsStore(state => state.cards[chatId])
   const act = useThreadsStore(state => state.actOnCard)
+  // 卡片掛在哪則訊息，就來自那則訊息所在的對話
+  const conversationId = useChatStore(state => state.chats.find(chat => chat.id === chatId)?.conversationId ?? state.currentConversationId ?? undefined)
   if (!isV3 || !cards?.length) return null
   return (
     <div className="mt-2 flex flex-col gap-2" data-slot="thread-cards">
       {cards.map((card: ThreadCard) => {
         const view = resolveThreadCard(card)
         const onAction = (action: CardAction) => void act(chatId, card.id, action)
+        // Fork（almanac ALMNC-54.5）：再次討論——連著收集提案時用工作台同一個 key，工作台那邊也會一起變成討論中。
+        const onDiscuss = async (note: string) => {
+          if (card.type !== 'proposal') return
+          const key = card.source ? `collect:${card.source.itemId}:${card.source.proposalId}` : `thread-card:${card.id}`
+          try {
+            const id = await discussProposal({ key, conversationId }, note, text => t('discuss.message', { title: card.title, note: text }))
+            if (id !== null) await act(chatId, card.id, 'discuss')
+          } catch (error) {
+            console.error('[threads] discuss failed:', error)
+            toast.error(t('failed'))
+          }
+        }
         if (view.type === 'kickoff-result' && view.placeholder) return null
         return view.type === 'proposal'
-          ? <ProposalCard key={card.id} view={view} onAction={onAction} />
+          ? <ProposalCard key={card.id} view={view} onAction={onAction} onDiscuss={onDiscuss} />
           : <KickoffCard key={card.id} view={view} onAction={onAction} />
       })}
     </div>
