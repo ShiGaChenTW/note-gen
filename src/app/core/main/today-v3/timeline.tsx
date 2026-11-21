@@ -3,11 +3,14 @@
 // Fork（almanac ALMNC-16.2）：v5 的左欄時間軸。06–24，行事曆事件是灰底唯讀、任務與日誌時段是 ink 疊透明底，現在是一條 ink 線。
 import { useEffect, useRef } from 'react'
 import { useTranslations } from 'next-intl'
-import { Lock } from 'lucide-react'
+import { EyeOff, Lock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { TimelineEntry, TimelineProposal, TimelineView } from '@/lib/today-v3/layout'
 import { EmptyState } from '@/components/v3/empty-state'
 import { SectionLabel } from '@/components/v3/section-label'
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu'
+import { privacyKey } from '@/lib/eink/privacy'
+import useEinkStore from '@/stores/eink'
 
 /** 一小時的高度（px）。 */
 export const HOUR_PX = 44
@@ -22,8 +25,12 @@ function minutesToClock(min: number): string {
   return `${pad(Math.floor(min / 60) % 24)}:${pad(min % 60)}`
 }
 
-function Entry({ entry, startHour, onOpenTask }: { entry: TimelineEntry, startHour: number, onOpenTask: (path: string) => void }) {
+function Entry({ entry, startHour, dayKey, onOpenTask }: { entry: TimelineEntry, startHour: number, dayKey: string, onOpenTask: (path: string) => void }) {
   const t = useTranslations('todayV3.timeline')
+  const tEink = useTranslations('eink.private')
+  // Fork（almanac ALMNC-45）：右鍵把行程標成「私人」；休眠畫面之後只顯示「私人行程」和時間
+  const key = privacyKey(entry, dayKey)
+  const isPrivate = useEinkStore(state => state.privateItems.includes(key))
   const top = ((entry.startMin - startHour * 60) / 60) * HOUR_PX + 1
   const height = Math.max(((entry.endMin - entry.startMin) / 60) * HOUR_PX - 3, 20)
   const width = `calc((100% - ${GUTTER_PX}px) / ${entry.lanes})`
@@ -37,15 +44,26 @@ function Entry({ entry, startHour, onOpenTask }: { entry: TimelineEntry, startHo
   )
   const body = (
     <>
+      {isPrivate && <EyeOff aria-label={tEink('label')} className="mr-1 inline size-3 align-[-1px] text-muted-ink" data-testid="today-v3-private" />}
       <span className={cn(calendar ? 'font-normal text-muted-ink' : 'font-medium text-ink')}>{entry.title}</span>{' '}
       <span className="font-mono text-ui-numeric text-muted-ink">{entry.time}</span>
       {calendar && <Lock aria-label={t('readOnly')} className="absolute top-1.5 right-1.5 size-3 text-muted-ink" />}
     </>
   )
   const style = { top, height, left, width: `calc(${width} - 2px)` }
-  return clickable
-    ? <button type="button" className={className} style={style} data-kind={entry.kind} onClick={() => onOpenTask(entry.task!.path)}>{body}</button>
-    : <div className={className} style={style} data-kind={entry.kind}>{body}</div>
+  const block = clickable
+    ? <button type="button" className={className} style={style} data-kind={entry.kind} data-private={isPrivate || undefined} onClick={() => onOpenTask(entry.task!.path)}>{body}</button>
+    : <div className={className} style={style} data-kind={entry.kind} data-private={isPrivate || undefined}>{body}</div>
+  return (
+    <ContextMenu>
+      <ContextMenuTrigger asChild>{block}</ContextMenuTrigger>
+      <ContextMenuContent>
+        <ContextMenuItem onClick={() => void useEinkStore.getState().setPrivate(key, !isPrivate)}>
+          <EyeOff />{tEink(isPrivate ? 'unmark' : 'mark')}
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
+  )
 }
 
 /** 排程員的時段提案：虛線框，收下／不要直接走等你定（ALMNC-16）。 */
@@ -91,6 +109,7 @@ export function Timeline({ view, dayKey, onOpenTask, noAccess, proposals = [], b
   const nowRef = useRef<HTMLDivElement>(null)
 
   const rootRef = useRef<HTMLDivElement>(null)
+  useEffect(() => { void useEinkStore.getState().init() }, [])
 
   // 進來時、換日時：今天把現在線捲到可視範圍中段，別天捲回頂端
   useEffect(() => {
@@ -119,7 +138,7 @@ export function Timeline({ view, dayKey, onOpenTask, noAccess, proposals = [], b
             )}
           </div>
         ))}
-        {view.entries.map(entry => <Entry key={entry.key} entry={entry} startHour={view.startHour} onOpenTask={onOpenTask} />)}
+        {view.entries.map(entry => <Entry key={entry.key} entry={entry} startHour={view.startHour} dayKey={dayKey} onOpenTask={onOpenTask} />)}
         {proposals.map(proposal => (
           <ProposalBlock
             key={proposal.key}

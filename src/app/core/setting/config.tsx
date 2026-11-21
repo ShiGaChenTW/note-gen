@@ -21,6 +21,7 @@ import {
   Palette,
   Blocks,
   CalendarDays,
+  TabletSmartphone,
 } from "lucide-react"
 import type { ReactNode } from 'react'
 import type { BuiltinSettingSection } from '@/stores/settings-dialog'
@@ -35,6 +36,8 @@ export type SettingNavigationItem =
   | {
       icon: ReactNode
       anchor: BuiltinSettingSection
+      /** Fork（almanac ALMNC-45）：只在新介面（V3）顯示 */
+      v3Only?: boolean
     }
   | {
       group: SettingNavigationGroup
@@ -136,6 +139,11 @@ const baseConfig: SettingNavigationItem[] = [
   },
   {
     group: 'extensions',
+  },
+  {
+    icon: <TabletSmartphone className="size-4" />,
+    anchor: 'eink',
+    v3Only: true,
   },
   {
     icon: <Blocks className="size-4" />,

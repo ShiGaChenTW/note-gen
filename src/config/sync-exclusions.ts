@@ -158,6 +158,13 @@ export const ALWAYS_SYNC_EXCLUDED_FIELDS: string[] = [
   // User CSS can alter or hide the entire interface, so another device must not apply it remotely.
   'customCss',
   'excludeSensitiveConfig',
+  // Fork（almanac ALMNC-45）：電子紙只在這台 Mac 用區網連線；token 不能離開這台機器，設定與清單也不跟著同步。
+  'einkSettings',
+  'einkToken',
+  'einkPins',
+  'einkPrivateItems',
+  // Fork（almanac ALMNC-46）：稍後讀清單含擷取下來的文章全文，留在本機
+  'einkReadLater',
   'syncedFileShas',
   'lastSyncTimes',
   'lastRestoreTimes',

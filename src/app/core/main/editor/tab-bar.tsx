@@ -7,7 +7,8 @@ import { WikiFolderIcon } from '@/components/wiki/wiki-folder-icon'
 import { isWikiFolderPath } from '@/lib/wiki/path'
 import { isWritingAssetsFolder } from '@/lib/writing-assets-path'
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ExternalLink, FileLock, FilePlus2, FileText, Folder, Globe2, LockKeyholeOpen, Maximize2, MessageSquareText, MoreHorizontal, PackageOpen, Palette, PanelBottom, PanelLeft, PanelRight, PanelTop, Pin, PinOff, Plus, Redo2, RotateCw, Undo2, X } from 'lucide-react'
+import { ExternalLink, FileLock, FilePlus2, FileText, Folder, Globe2, LockKeyholeOpen, Maximize2, MessageSquareText, MoreHorizontal, PackageOpen, Palette, PanelBottom, PanelLeft, PanelRight, PanelTop, Pin, PinOff, Plus, Redo2, RotateCw, TabletSmartphone, Undo2, X } from 'lucide-react'
+import { useEinkPinAction } from '@/components/fork/eink-pin'
 import { platform } from '@tauri-apps/plugin-os'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { checkIsTauri } from '@/lib/check'
@@ -140,6 +141,9 @@ function SortableTabWithMenu({
   const hasClosableLeftTabs = tabs.slice(0, currentIndex).some(item => !item.pinned)
   const hasClosableRightTabs = tabs.slice(currentIndex + 1).some(item => !item.pinned)
   const hasClosableUnpinnedTabs = tabs.some(item => !item.pinned && (tabs.length > 1 || item.kind !== 'blank'))
+  // Fork（almanac ALMNC-45）：編輯器分頁的「釘選到電子紙」（只給檔案分頁；classic 是 null）
+  const isFileTab = !isRecordTab && !isCanvasTab && !pluginTab && tab.kind !== 'blank' && tab.kind !== 'browser' && !tab.isFolder
+  const einkPin = useEinkPinAction(isFileTab ? tab.path : null)
 
   return (
     <ContextMenu>
@@ -228,6 +232,11 @@ function SortableTabWithMenu({
             {tab.pinned ? <PinOff /> : <Pin />}
             {t(tab.pinned ? 'unpinTab' : 'pinTab')}
           </ContextMenuItem>
+          {einkPin ? (
+            <ContextMenuItem onClick={() => void einkPin.toggle()}>
+              <TabletSmartphone />{einkPin.label}
+            </ContextMenuItem>
+          ) : null}
         </ContextMenuGroup>
         <ContextMenuSeparator />
         <ContextMenuGroup>

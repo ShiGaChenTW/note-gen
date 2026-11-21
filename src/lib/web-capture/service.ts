@@ -248,6 +248,7 @@ export async function capturePublicWebPage(
         }
       }
 
+      options.onHtml?.(text)
       return extractWebPage(text, requestedUrl, finalUrl)
     }
 
