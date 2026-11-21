@@ -165,6 +165,8 @@ export const ALWAYS_SYNC_EXCLUDED_FIELDS: string[] = [
   'einkPrivateItems',
   // Fork（almanac ALMNC-46）：稍後讀清單含擷取下來的文章全文，留在本機
   'einkReadLater',
+  // Fork（almanac ALMNC-47）：今日簡報的回顧卡出現紀錄與知識報告送出紀錄
+  'einkBriefingLog',
   'syncedFileShas',
   'lastSyncTimes',
   'lastRestoreTimes',

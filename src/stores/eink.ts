@@ -7,7 +7,7 @@ import {
   type EinkSettings,
 } from '@/lib/eink/settings'
 import {
-  EINK_PINS_KEY, applyPathDelete, applyPathMove, movePinBy, normalizePins, removePin, togglePin, type EinkPin,
+  EINK_PINS_KEY, applyPathDelete, applyPathMove, markPinsSent, movePinBy, normalizePins, removePin, togglePin, type EinkPin,
 } from '@/lib/eink/pins'
 import { EINK_PRIVATE_KEY, normalizePrivateItems, setPrivate } from '@/lib/eink/privacy'
 import { persistEink, readEinkKeys } from '@/lib/eink/storage'
@@ -27,6 +27,8 @@ interface EinkState {
   handlePathMove: (oldPath: string, newPath: string) => Promise<void>
   handlePathDelete: (path: string, isFolder: boolean) => Promise<void>
   setPrivate: (key: string, on: boolean) => Promise<void>
+  /** Fork（almanac ALMNC-47）：真的送到電子紙後記下送出日（只由今日簡報的 commitSent 呼叫）。 */
+  markPinsSent: (paths: readonly string[], at: number) => Promise<void>
 }
 
 let loading: Promise<void> | null = null
@@ -109,6 +111,12 @@ const useEinkStore = create<EinkState>((set, get) => {
       await ready()
       const pins = applyPathDelete(get().pins, path, isFolder)
       if (pins.length !== get().pins.length) await savePins(pins)
+    },
+
+    markPinsSent: async (paths, at) => {
+      await ready()
+      if (paths.length === 0) return
+      await savePins(markPinsSent(get().pins, paths, at))
     },
 
     setPrivate: async (key, on) => {

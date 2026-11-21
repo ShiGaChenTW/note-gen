@@ -384,6 +384,8 @@ export default function RootLayout({
         const { initEinkPinSync } = await import('@/lib/eink/pin-sync')
         if (cancelled) return
         stopEinkPins = initEinkPinSync()
+        // Fork（almanac ALMNC-47）：開發模式在開發者工具提供 window.__almanacBriefingPreview() 看今日簡報資料（只讀）
+        if (process.env.NODE_ENV !== 'production') void import('@/lib/eink/briefing').then(m => m.registerBriefingPreview())
         stopManagedBackup = initManagedBackupRuntime()
         stopGitVersionAutoSnapshot = initGitVersionAutoSnapshotRuntime()
 
