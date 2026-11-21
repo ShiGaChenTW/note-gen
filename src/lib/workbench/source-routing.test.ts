@@ -1,0 +1,167 @@
+// Fork（almanac ALMNC-54.10）：工作台的資料源動作接到資料庫與指揮官佇列——照建議處理／處理／不採用／先放著、
+// 新增時的 R1／R2 分流、擷取失敗的重試／刪除。資料庫、佇列、本機模型都換成記憶體裡的假的。
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { canDeleteUnsent, createSource, transitionSource, type NewSourceInput, type Source, type SourceStatus } from '@/lib/v3-model/source'
+import type { SourceJudgement } from './judgement'
+
+const fake = vi.hoisted(() => ({
+  rows: new Map<string, unknown>(),
+  judgements: new Map<string, unknown>(),
+  kick: vi.fn(async () => ({ analyzed: [], rejected: [], failed: [] })),
+  generate: vi.fn(async () => '會議紀錄｜存成紀錄筆記＋拆出任務'),
+  available: vi.fn(async () => true),
+  capture: vi.fn(async () => ({ status: 'success', title: '頁面', contentMarkdown: '內文', plainText: '' } as Record<string, unknown>)),
+  seq: 0,
+}))
+
+vi.mock('@/db/v3-sources', () => ({
+  addSource: async (input: Omit<NewSourceInput, 'id'> & { id?: string }) => {
+    const source = createSource({ ...input, id: input.id ?? `s${++fake.seq}` }, 1000)
+    fake.rows.set(source.id, source)
+    return source
+  },
+  getSource: async (id: string) => fake.rows.get(id),
+  listSources: async () => [...fake.rows.values()],
+  countOutputsBySource: async () => new Map(),
+  setSourceStatus: async (id: string, to: SourceStatus) => {
+    const next = transitionSource(fake.rows.get(id) as Source, to, 2000)
+    fake.rows.set(id, next)
+    return next
+  },
+  deleteUnsentSource: async (id: string) => {
+    if (!canDeleteUnsent(fake.rows.get(id) as Source)) throw new Error('not deletable')
+    fake.rows.delete(id)
+  },
+}))
+vi.mock('@/db/v3-source-judgements', () => ({
+  saveSourceJudgement: async (judgement: SourceJudgement) => { fake.judgements.set(judgement.sourceId, judgement) },
+  getSourceJudgement: async (id: string) => fake.judgements.get(id),
+  listSourceJudgements: async () => new Map(fake.judgements as Map<string, SourceJudgement>),
+  setFollowSuggestion: async (id: string, on: boolean) => {
+    const current = fake.judgements.get(id) as SourceJudgement | undefined
+    if (current) fake.judgements.set(id, { ...current, followSuggestion: on })
+  },
+  deleteSourceJudgement: async (id: string) => { fake.judgements.delete(id) },
+}))
+vi.mock('@/lib/commander/default-deps', () => ({ commanderQueue: async () => ({ kick: fake.kick }) }))
+vi.mock('@/lib/local-model/default', () => ({
+  defaultLocalModel: async () => ({ config: { judgeModel: 'qwen3.5:2b' }, available: fake.available, generate: fake.generate, embed: vi.fn() }),
+}))
+vi.mock('@/lib/web-capture/service', () => ({ capturePublicWebPage: fake.capture }))
+
+const actions = await import('./actions')
+const { default: useWorkbenchStore } = await import('@/stores/workbench')
+const { visibleCards } = await import('./put-aside')
+
+async function settle() {
+  for (let i = 0; i < 5; i++) await new Promise(resolve => setTimeout(resolve, 0))
+}
+
+function status(id: string): SourceStatus | undefined {
+  return (fake.rows.get(id) as Source | undefined)?.status
+}
+
+beforeEach(() => {
+  fake.rows.clear()
+  fake.judgements.clear()
+  fake.kick.mockClear()
+  fake.generate.mockClear()
+  fake.available.mockResolvedValue(true)
+  fake.capture.mockResolvedValue({ status: 'success', title: '頁面', contentMarkdown: '內文', plainText: '' })
+  vi.spyOn(console, 'debug').mockImplementation(() => undefined)
+})
+
+describe('新增資料源（R1／R2）', () => {
+  it('AC#1: a link → 等你決定 with a one-line judgement in the store; the commander is not called', async () => {
+    const rowId = await actions.addNewSource({ type: 'link', content: 'https://example.com/a' })
+    await settle()
+    const id = rowId.replace('src:', '')
+    expect(status(id)).toBe('awaiting_decision')
+    expect(fake.kick).not.toHaveBeenCalled()
+    expect(fake.capture).toHaveBeenCalledWith('https://example.com/a')
+    expect(useWorkbenchStore.getState().judgements.get(id)).toMatchObject({ status: 'ready', type: '會議紀錄', suggestion: '存成紀錄筆記＋拆出任務' })
+  })
+
+  it('AC#3 / R2: typed text goes straight to the commander（待分析＋kick）, no judgement', async () => {
+    const rowId = await actions.addNewSource({ type: 'text', content: '明天要寄報價單', pastedChars: 0 })
+    await settle()
+    expect(status(rowId.replace('src:', ''))).toBe('pending_analysis')
+    expect(fake.kick).toHaveBeenCalledTimes(1)
+    expect(fake.generate).not.toHaveBeenCalled()
+  })
+
+  it('pasted content counts as external（等你決定）', async () => {
+    const content = '一整段從網頁貼過來的文章內容'
+    const rowId = await actions.addNewSource({ type: 'text', content, pastedChars: content.length })
+    await settle()
+    expect(status(rowId.replace('src:', ''))).toBe('awaiting_decision')
+    expect(fake.generate).toHaveBeenCalledTimes(1)
+  })
+
+  it('AC#4: ollama not running → the source still waits for a decision, with no judgement line', async () => {
+    fake.available.mockResolvedValue(false)
+    const rowId = await actions.addNewSource({ type: 'text', content: '貼上的內容', pastedChars: 99 })
+    await settle()
+    const id = rowId.replace('src:', '')
+    expect(status(id)).toBe('awaiting_decision')
+    expect(useWorkbenchStore.getState().judgements.get(id)).toMatchObject({ status: 'unavailable' })
+  })
+
+  it('capture failure → capture_failed; 重試 succeeds later; 刪除 removes the unsent source', async () => {
+    fake.capture.mockResolvedValue({ status: 'blocked', errorCode: 'blocked' })
+    const id = (await actions.addNewSource({ type: 'link', content: 'https://example.com/b' })).replace('src:', '')
+    await settle()
+    expect(fake.judgements.get(id)).toMatchObject({ status: 'capture_failed' })
+
+    fake.capture.mockResolvedValue({ status: 'success', title: '頁面', contentMarkdown: '內文', plainText: '' })
+    expect(await actions.retryCapture(id)).toMatchObject({ status: 'ready' })
+
+    fake.capture.mockResolvedValue({ status: 'failed', errorMessage: 'timeout' })
+    expect(await actions.retryCapture(id)).toMatchObject({ status: 'capture_failed' })
+    await actions.deleteFailedSource(id)
+    expect(fake.rows.has(id)).toBe(false)
+    expect(fake.judgements.has(id)).toBe(false)
+  })
+})
+
+describe('等你［資料源］卡的動作（AC#2）', () => {
+  async function waiting(): Promise<string> {
+    const id = (await actions.addNewSource({ type: 'link', content: 'https://example.com/c' })).replace('src:', '')
+    await settle()
+    fake.kick.mockClear()
+    return id
+  }
+
+  it('照建議處理 → 待分析＋交給指揮官，並記下要附上建議', async () => {
+    const id = await waiting()
+    await actions.processSource(id, { followSuggestion: true })
+    expect(status(id)).toBe('pending_analysis')
+    expect(fake.kick).toHaveBeenCalledTimes(1)
+    expect(fake.judgements.get(id)).toMatchObject({ followSuggestion: true })
+  })
+
+  it('處理 → 待分析＋交給指揮官，不附建議', async () => {
+    const id = await waiting()
+    await actions.processSource(id)
+    expect(status(id)).toBe('pending_analysis')
+    expect(fake.kick).toHaveBeenCalledTimes(1)
+    expect(fake.judgements.get(id)).toMatchObject({ followSuggestion: false })
+  })
+
+  it('不採用 → rejected, undo puts it back to 等你決定; the commander is not called', async () => {
+    const id = await waiting()
+    const undo = await actions.rejectSource(id)
+    expect(status(id)).toBe('rejected')
+    expect(fake.kick).not.toHaveBeenCalled()
+    await undo!()
+    expect(status(id)).toBe('awaiting_decision')
+  })
+
+  it('先放著 → the card is hidden, the source stays 等你決定', async () => {
+    const id = await waiting()
+    const card = { key: `source:${id}`, title: 'c' }
+    useWorkbenchStore.getState().putAside(card)
+    expect(visibleCards([card], useWorkbenchStore.getState().aside, Date.now())).toEqual([])
+    expect(status(id)).toBe('awaiting_decision')
+  })
+})

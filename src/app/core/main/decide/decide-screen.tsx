@@ -129,7 +129,7 @@ function useWorkbenchKeys(data: ReviewData, rows: SourceListRow[], actions: Retu
       if (key === 'z') { event.preventDefault(); void actions.undo(); return }
       if (!current) return
       if (key === ' ') { event.preventDefault(); store.setPicked(togglePick(store.picked, current.id)); return }
-      const button = key === 'e' ? 'edit' : key === 'a' ? 'process' : key === 'x' ? 'reject' : null
+      const button = key === 'e' ? 'edit' : key === 'a' ? 'process' : key === 'x' ? 'reject' : key === 'r' ? 'retry' : null
       if (!button) return
       const target = document.querySelector<HTMLButtonElement>(`[data-testid="source-detail"] [data-source-action="${button}"]`)
       if (!target) return

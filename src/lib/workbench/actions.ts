@@ -8,6 +8,7 @@ import useWorkbenchStore from '@/stores/workbench'
 import type { WorkbenchCard, TaskLike } from './cards'
 import { applyStructuralOp, handwrittenNote, noteFileName, type DeskMaterial, type NoteIo, type StructuralOp } from './desk'
 import { bridgeInput, planHandToCommander, type SourceListRow } from './sources-tab'
+import { ingestSource, judgeSource, newSourceType, type SourceJudgement } from './judgement'
 
 export type Undo = (() => Promise<unknown>) | undefined
 
@@ -30,6 +31,36 @@ export async function refreshSources(): Promise<void> {
   } catch (error) {
     console.debug('[workbench] sources unavailable:', error)
   }
+  // Fork（almanac ALMNC-54.10）：初步判斷另外讀；讀不到卡片照樣出現（AC#4）。
+  try {
+    const { listSourceJudgements } = await import('@/db/v3-source-judgements')
+    useWorkbenchStore.getState().setJudgements(await listSourceJudgements())
+  } catch (error) {
+    console.debug('[workbench] judgements unavailable:', error)
+  }
+}
+
+/**
+ * Fork（almanac ALMNC-54.10）：替一則等你決定的資料源做初步判斷（R1），存進 source_judgements 後重讀清單。
+ * 本機模型（ollama）沒開、抓不到網頁都不會丟錯：沒有判斷、或標成擷取失敗。
+ */
+export async function requestJudgement(source: Pick<Source, 'id' | 'kind' | 'content' | 'origin'>): Promise<SourceJudgement> {
+  const [judgements, { defaultLocalModel }] = await Promise.all([import('@/db/v3-source-judgements'), import('@/lib/local-model/default')])
+  const model = await defaultLocalModel().catch(() => undefined)
+  const previous = await judgements.getSourceJudgement(source.id).catch(() => undefined)
+  const result = await judgeSource(source, {
+    model,
+    previous,
+    fetchPage: async url => {
+      const { capturePublicWebPage } = await import('@/lib/web-capture/service')
+      const page = await capturePublicWebPage(url)
+      if (page.status === 'failed' || page.status === 'blocked') throw new Error(page.errorMessage || page.errorCode || page.status)
+      return [page.title, page.contentMarkdown || page.plainText].filter(Boolean).join('\n\n')
+    },
+    save: judgements.saveSourceJudgement,
+  })
+  await refreshSources()
+  return result
 }
 
 // —— 審核：卡片動作 ——
@@ -107,12 +138,37 @@ export async function confirmToCommander(path: string, request: string): Promise
 
 // —— 資料源 ——
 
-/** 照建議處理（R1）：等你決定 → 待分析，交給指揮官。已送出就不能復原。 */
-export async function processSource(sourceId: string): Promise<void> {
+/**
+ * 照建議處理／處理（R1）：等你決定 → 待分析，交給指揮官。已送出就不能復原。
+ * Fork（almanac ALMNC-54.10）：followSuggestion 時（照建議處理）先記下來，指揮官分析時會拿到初步判斷當提示；「處理」不帶提示。
+ */
+export async function processSource(sourceId: string, options: { followSuggestion?: boolean } = {}): Promise<void> {
   const db = await import('@/db/v3-sources')
+  try {
+    const { setFollowSuggestion } = await import('@/db/v3-source-judgements')
+    await setFollowSuggestion(sourceId, Boolean(options.followSuggestion))
+  } catch (error) {
+    console.debug('[workbench] judgement flag skipped:', error)
+  }
   await db.setSourceStatus(sourceId, 'pending_analysis')
   await refreshSources()
   await kickCommander()
+}
+
+/** Fork（almanac ALMNC-54.10）：擷取失敗的卡片「重試」：再抓一次、再判斷一次。 */
+export async function retryCapture(sourceId: string): Promise<SourceJudgement | undefined> {
+  const db = await import('@/db/v3-sources')
+  const source = await db.getSource(sourceId)
+  if (!source || source.status !== 'awaiting_decision') return undefined
+  return requestJudgement(source)
+}
+
+/** Fork（almanac ALMNC-54.10）：擷取失敗的卡片「刪除」：只刪還沒送出、沒有產出的外部擷取（連同判斷）。 */
+export async function deleteFailedSource(sourceId: string): Promise<void> {
+  const [db, judgements] = await Promise.all([import('@/db/v3-sources'), import('@/db/v3-source-judgements')])
+  await db.deleteUnsentSource(sourceId)
+  await judgements.deleteSourceJudgement(sourceId).catch(() => undefined)
+  await refreshSources()
 }
 
 /** 不採用；可以改回等你決定（只限還沒送出的）。 */
@@ -204,22 +260,30 @@ export interface NewSourceRequest {
   type: 'text' | 'link' | 'todo' | 'prompt-draft'
   content: string
   origin?: string
+  /** Fork（almanac ALMNC-54.10）：對話框裡貼上的字數；大部分是貼上的文字算外部擷取。 */
+  pastedChars?: number
 }
 
-/** 連結是外部擷取（等你決定，R1）；其他是自己寫的（直接交給指揮官，R2）。回傳清單列 id。 */
+/**
+ * 連結、貼上的內容是外部擷取（等你決定，背景做初步判斷，R1）；自己打的字、待辦、Prompt 素材是自己寫的（直接交給指揮官，R2）。
+ * 回傳清單列 id。
+ */
 export async function addNewSource(request: NewSourceRequest): Promise<string> {
   const db = await import('@/db/v3-sources')
-  const external = request.type === 'link'
+  const sourceType = newSourceType(request)
   const kind = request.type === 'prompt-draft' ? 'prompt' : request.type
-  const source = await db.addSource({
-    sourceType: external ? 'external' : 'self',
+  const source = await ingestSource({
+    sourceType,
     kind,
     content: request.content,
-    origin: request.origin || (external ? request.content : undefined),
+    origin: request.origin || (request.type === 'link' ? request.content : undefined),
     collector: 'scott',
+  }, {
+    add: input => db.addSource(input),
+    kick: kickCommander,
+    judge: requestJudgement,
   })
   await refreshSources()
-  if (!external) await kickCommander()
   return `src:${source.id}`
 }
 

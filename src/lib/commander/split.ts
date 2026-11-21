@@ -40,6 +40,8 @@ export interface SplitContext {
   origin?: string
   /** 上一版的內容：有的話只分析新增或改動的部分（規格：只分析新舊版本的差異）。 */
   previousText?: string
+  /** Fork（almanac ALMNC-54.10）：Scott 選了「照建議處理」時的初步判斷（「類型｜建議」）。 */
+  hint?: string
 }
 
 export function buildFragmentPrompt(text: string, context: SplitContext): string {
@@ -61,6 +63,9 @@ export function buildFragmentPrompt(text: string, context: SplitContext): string
     '只輸出 JSON，不要任何說明或程式碼框：',
     '{"fragments":[{"kind":"event|task|note|reject","noteType":"knowledge|record|project","title":"","body":"","date":"","time":"","people":[],"project":"","domainHint":"","tags":[],"reason":""}]}',
   ]
+  if (context.hint?.trim()) {
+    lines.push(`Scott 看過初步判斷「${context.hint.trim()}」，選了照建議處理：拆片段時以這個建議為準，除非內容明顯不符。`)
+  }
   if (context.previousText?.trim()) {
     lines.push('這則資料源是改過的新版本。只拆出新增或改動的部分；和上一版相同的內容不要再拆。', '--- 上一版 ---', context.previousText.trim())
   }

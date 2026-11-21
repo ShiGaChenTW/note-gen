@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import type { DecideItem } from '@/lib/decide/project'
 import type { TaskRef } from '@/lib/vault-index/index-core'
 import {
-  ACTIONS_BY_KIND, CARD_LABELS, CARD_VERBS, actionForKey, ageParts, buildReviewCards, filterCards, groupCards, labelCounts, nextCursor,
+  ACTIONS_BY_KIND, actionLabelKey, sourceCardActions, CARD_LABELS, CARD_VERBS, actionForKey, ageParts, buildReviewCards, filterCards, groupCards, labelCounts, nextCursor,
   proposalLabel, proposalVerb,
 } from './cards'
 
@@ -136,5 +136,38 @@ describe('keyboard helpers', () => {
     expect(ageParts(NOW - 60_000, NOW)).toEqual({ unit: 'now', value: 0 })
     expect(ageParts(NOW - 3 * 3600_000, NOW)).toEqual({ unit: 'hour', value: 3 })
     expect(ageParts(NOW - 2 * DAY, NOW)).toEqual({ unit: 'day', value: 2 })
+  })
+})
+
+describe('ALMNC-54.10 等你［資料源］卡', () => {
+  const base = { id: 's1', title: 'https://example.com/a', kindLabel: '網頁', origin: 'https://example.com/a', collectedAt: NOW - DAY }
+
+  it('AC#1/#2: one-line judgement on the third line; 照建議處理／處理／自己處理／不採用（先放著在每張卡上）', () => {
+    const [card] = buildReviewCards({ now: NOW, proposals: [], awaitingSources: [{ ...base, judgement: '研究報告｜存成知識筆記', suggestion: '存成知識筆記' }] })
+    expect(card).toMatchObject({ summary: '研究報告｜存成知識筆記', actions: ['process', 'handle', 'selfProcess', 'reject'], hasSuggestion: true })
+    expect(actionForKey(card, 'a')).toBe('process')
+    expect(actionForKey(card, 'p')).toBe('handle')
+    expect(actionForKey(card, 'x')).toBe('reject')
+    expect(actionLabelKey(card, 'process')).toBe('process')
+  })
+
+  it('AC#4: without a judgement the card still shows; 照建議處理 becomes 處理', () => {
+    const [card] = buildReviewCards({ now: NOW, proposals: [], awaitingSources: [{ ...base, judgement: '' }] })
+    expect(card).toMatchObject({ kind: 'source', summary: 'https://example.com/a', actions: ['process', 'selfProcess', 'reject'] })
+    expect(card.hasSuggestion).toBeUndefined()
+    expect(actionLabelKey(card, 'process')).toBe('handle')
+    expect(actionForKey(card, 'a')).toBe('process')
+  })
+
+  it('a type-only judgement (no suggestion) still has no 照建議處理', () => {
+    expect(sourceCardActions({ suggestion: undefined })).toEqual(ACTIONS_BY_KIND.source)
+  })
+
+  it('capture failed → 重試／刪除', () => {
+    const [card] = buildReviewCards({ now: NOW, proposals: [], awaitingSources: [{ ...base, judgement: '擷取失敗', failed: true, suggestion: 'x' }] })
+    expect(card).toMatchObject({ summary: '擷取失敗', actions: ['retry', 'delete'] })
+    expect(card.hasSuggestion).toBeUndefined()
+    expect(actionForKey(card, 'r')).toBe('retry')
+    expect(actionForKey(card, 'x')).toBeUndefined() // 刪除沒有單鍵
   })
 })

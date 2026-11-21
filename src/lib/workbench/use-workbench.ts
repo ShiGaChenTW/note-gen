@@ -19,6 +19,7 @@ import { buildReviewCards, type DomainLike, type WorkbenchCard } from './cards'
 import { computeDomainProposals, confirmNotesFromIndex, knowledgeNotesFromIndex } from './domain-cards'
 import { hiddenCards, visibleCards } from './put-aside'
 import { buildSourceRows, sourceTitle, type SourceListRow } from './sources-tab'
+import { judgementLine } from './judgement'
 
 const MINUTE = 60_000
 
@@ -84,6 +85,7 @@ export function useReviewData(): ReviewData {
   const notes = useVaultIndexStore(state => state.notes)
   const revision = useVaultIndexStore(state => state.revision)
   const sources = useWorkbenchStore(state => state.sources)
+  const judgements = useWorkbenchStore(state => state.judgements)
   const aside = useWorkbenchStore(state => state.aside)
   const dismissed = useWorkbenchStore(state => state.dismissed)
   const roster = useRoster()
@@ -103,11 +105,22 @@ export function useReviewData(): ReviewData {
     otherTasks: tasks.upcoming.flatMap(day => day.tasks),
     awaitingSources: sources
       .filter(source => source.status === 'awaiting_decision' && source.archivedAt === undefined)
-      .map(source => ({ id: source.id, title: sourceTitle(source), kindLabel: t(`sources.kind.${kindKey(source.kind)}`), judgement: '', origin: source.origin, collectedAt: source.collectedAt })),
+      .map(source => {
+        // Fork（almanac ALMNC-54.10）：附上初步判斷（R1）；沒有判斷時卡片照樣出現（AC#4），擷取失敗改成重試／刪除。
+        const judgement = judgements.get(source.id)
+        const failed = judgement?.status === 'capture_failed'
+        return {
+          id: source.id, title: sourceTitle(source), kindLabel: t(`sources.kind.${kindKey(source.kind)}`),
+          judgement: failed ? t('sources.captureFailed') : judgementLine(judgement),
+          ...(judgement?.status === 'ready' && judgement.suggestion ? { suggestion: judgement.suggestion } : {}),
+          ...(failed ? { failed } : {}),
+          origin: source.origin, collectedAt: source.collectedAt,
+        }
+      }),
     domains: domainCards,
     confirm,
     now,
-  }), [proposals, tasks, sources, domainCards, confirm, now, t])
+  }), [proposals, tasks, sources, judgements, domainCards, confirm, now, t])
 
   return useMemo(() => ({ all, visible: visibleCards(all, aside, now), aside: hiddenCards(all, aside, now), now }), [all, aside, now])
 }
@@ -121,11 +134,12 @@ export function useSourceRows(): SourceListRow[] {
   const sources = useWorkbenchStore(state => state.sources)
   const outputCounts = useWorkbenchStore(state => state.outputCounts)
   const edited = useWorkbenchStore(state => state.edited)
+  const judgements = useWorkbenchStore(state => state.judgements)
   const records = useInboxStore(state => state.records)
   const processed = useInboxStore(state => state.processed)
   const captures = useCollectStore(state => state.items)
   return useMemo(
-    () => buildSourceRows({ sources, outputCounts, records, processed, captures, edited }),
-    [sources, outputCounts, records, processed, captures, edited],
+    () => buildSourceRows({ sources, outputCounts, records, processed, captures, edited, judgements }),
+    [sources, outputCounts, records, processed, captures, edited, judgements],
   )
 }

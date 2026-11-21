@@ -14,7 +14,8 @@ import { dateKey } from '@/lib/today/today-model'
 import type { CardAction, WorkbenchCard } from '@/lib/workbench/cards'
 import { nextCursor } from '@/lib/workbench/cards'
 import {
-  acceptCard, completeTask, confirmStillValid, confirmToCommander, dropCard, processSource, rejectSource, scheduleCardTask, type Undo,
+  acceptCard, completeTask, confirmStillValid, confirmToCommander, deleteFailedSource, dropCard, processSource, rejectSource, retryCapture,
+  scheduleCardTask, type Undo,
 } from '@/lib/workbench/actions'
 import type { DeskMaterial } from '@/lib/workbench/desk'
 import useWorkbenchStore from '@/stores/workbench'
@@ -148,9 +149,26 @@ export function useCardActions({ visible, commanderName }: { visible: readonly W
       case 'toCommander':
         if (!card.notePath) return
         return settle(card, () => confirmToCommander(card.notePath!, t('reconfirmRequest', { path: card.notePath })), t('toast.toCommander', { title, name: commanderName }))
+      // Fork（almanac ALMNC-54.10）：照建議處理帶著初步判斷交給指揮官；處理不帶建議。兩者都交給指揮官、無法復原。
       case 'process':
+      case 'handle':
         if (!card.sourceId) return
-        return settle(card, async () => { await processSource(card.sourceId!); return undefined }, t('toast.processed', { title, name: commanderName }))
+        return settle(card, async () => {
+          await processSource(card.sourceId!, { followSuggestion: action === 'process' && Boolean(card.hasSuggestion) })
+          return undefined
+        }, t('toast.processed', { title, name: commanderName }))
+      case 'retry':
+        if (!card.sourceId) return
+        try {
+          const judgement = await retryCapture(card.sourceId)
+          toast(judgement?.status === 'capture_failed' ? t('toast.retryFailed', { title }) : t('toast.retried', { title }))
+        } catch (error) {
+          fail(error)
+        }
+        return
+      case 'delete':
+        if (!card.sourceId) return
+        return settle(card, async () => { await deleteFailedSource(card.sourceId!); return undefined }, t('toast.deleted', { title }))
       case 'reject':
         if (!card.sourceId) return
         return settle(card, () => rejectSource(card.sourceId!), t('toast.rejected', { title }))

@@ -93,6 +93,11 @@ describe('splitAndClassify', () => {
     expect(prompt).toContain('transcript')
   })
 
+  it('ALMNC-54.10：照建議處理的初步判斷放進提示', () => {
+    expect(buildFragmentPrompt('內容', { today: TODAY, hint: '會議紀錄｜拆出任務' })).toContain('以這個建議為準')
+    expect(buildFragmentPrompt('內容', { today: TODAY })).not.toContain('初步判斷')
+  })
+
   it('保底片段沒有標題時用來處', () => {
     expect(fallbackFragment('', 'meeting.m4a').title).toBe('meeting.m4a')
   })

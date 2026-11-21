@@ -8675,7 +8675,10 @@
       "toCommander": "交給 {name}",
       "process": "照建議處理",
       "selfProcess": "自己處理",
-      "reject": "不採用"
+      "reject": "不採用",
+      "handle": "處理",
+      "retry": "重試",
+      "delete": "刪除"
     },
     "listLabel": "等你處理的事",
     "more": "等 {count} 則",
@@ -8738,7 +8741,10 @@
       "cannotUndo": "這一步無法復原",
       "nothing": "沒有可以復原的動作",
       "failed": "處理失敗，請再試一次",
-      "undo": "復原"
+      "undo": "復原",
+      "retried": "已重新擷取「{title}」",
+      "retryFailed": "還是抓不到「{title}」",
+      "deleted": "已刪除「{title}」"
     },
     "sources": {
       "filterLabel": "依狀態篩選",
@@ -8841,7 +8847,13 @@
           "link": "連結",
           "rule": "分隔線"
         }
-      }
+      },
+      "handle": "處理",
+      "putAside": "先放著",
+      "retry": "重試",
+      "delete": "刪除",
+      "captureFailed": "擷取失敗",
+      "captureFailedHint": "抓不到這個網頁的內容。可以重試，或刪除這則資料源。"
     },
     "desk": {
       "title": "檯面",

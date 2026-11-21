@@ -8610,7 +8610,10 @@
       "toCommander": "交给 {name}",
       "process": "照建议处理",
       "selfProcess": "自己处理",
-      "reject": "不采用"
+      "reject": "不采用",
+      "handle": "处理",
+      "retry": "重试",
+      "delete": "删除"
     },
     "listLabel": "等你处理的事",
     "more": "等 {count} 则",
@@ -8673,7 +8676,10 @@
       "cannotUndo": "这一步无法复原",
       "nothing": "没有可以复原的动作",
       "failed": "处理失败，请再试一次",
-      "undo": "复原"
+      "undo": "复原",
+      "retried": "已重新抓取「{title}」",
+      "retryFailed": "还是抓不到「{title}」",
+      "deleted": "已删除「{title}」"
     },
     "sources": {
       "filterLabel": "依状态筛选",
@@ -8776,7 +8782,13 @@
           "link": "连结",
           "rule": "分隔线"
         }
-      }
+      },
+      "handle": "处理",
+      "putAside": "先放着",
+      "retry": "重试",
+      "delete": "删除",
+      "captureFailed": "抓取失败",
+      "captureFailedHint": "抓不到这个网页的内容。可以重试，或删除这则资料源。"
     },
     "desk": {
       "title": "台面",
