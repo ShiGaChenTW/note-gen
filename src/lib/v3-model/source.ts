@@ -1,0 +1,262 @@
+// Fork（almanac ALMNC-54.1）：V3 資料三層架構的第一層「資料源」——型別、狀態流轉、送出鎖定、改版與封存規則。
+// 規格見 almanac/2026-11-19_proposal_role-data-model.md 第一節 §1；術語見 almanac/GLOSSARY.md「資料源」。
+// 這裡全是純函式，SQL 放在 src/db/v3-sources.ts。
+
+/** 三大來源：外部擷取、自己寫的、系統產生的。 */
+export type SourceType = 'external' | 'self' | 'system'
+
+/** 內容形式（文字、連結、截圖…），只做標示，不影響流程。 */
+export type SourceKind = 'text' | 'link' | 'image' | 'file' | 'transcript' | 'email' | 'voice' | (string & {})
+
+/**
+ * 等你決定（只有外部擷取）→ 待分析 → 分析中 → 已分析／不採用。
+ * 「封存」不是狀態，而是 archivedAt 有值；封存後狀態仍是 rejected，資料不刪除。
+ */
+export type SourceStatus = 'awaiting_decision' | 'pending_analysis' | 'analyzing' | 'analyzed' | 'rejected'
+
+export const SOURCE_TYPES: readonly SourceType[] = ['external', 'self', 'system']
+export const SOURCE_STATUSES: readonly SourceStatus[] = ['awaiting_decision', 'pending_analysis', 'analyzing', 'analyzed', 'rejected']
+
+export interface Source {
+  id: string
+  sourceType: SourceType
+  kind: SourceKind
+  /** 原始內容；送出（lockedAt 有值）後不再原地修改。 */
+  content: string
+  /** 來處：網址、檔名或對話參照。 */
+  origin?: string
+  collectedAt: number
+  /** 收集者：scott 或代理人名稱。 */
+  collector: string
+  status: SourceStatus
+  /** 狀態最後一次改變的時間；30 天封存從進入 rejected 的這一刻起算。 */
+  statusChangedAt: number
+  /** 版本號，第一版是 1。 */
+  version: number
+  /** 上一版的 id；第一版沒有。 */
+  previousId?: string
+  lockedAt?: number
+  archivedAt?: number
+  createdAt: number
+  updatedAt: number
+}
+
+/** 不採用的資料源保留多久後自動封存。 */
+export const REJECTED_ARCHIVE_AFTER_MS = 30 * 24 * 60 * 60 * 1000
+
+const TRANSITIONS: Record<SourceStatus, readonly SourceStatus[]> = {
+  awaiting_decision: ['pending_analysis', 'rejected'],
+  pending_analysis: ['analyzing'],
+  // 分析中斷時退回待分析重排，不算新的決定。
+  analyzing: ['analyzed', 'rejected', 'pending_analysis'],
+  analyzed: [],
+  rejected: [],
+}
+
+export function initialStatus(sourceType: SourceType): SourceStatus {
+  return sourceType === 'external' ? 'awaiting_decision' : 'pending_analysis'
+}
+
+export function canTransition(from: SourceStatus, to: SourceStatus): boolean {
+  return TRANSITIONS[from].includes(to)
+}
+
+export function isSourceType(value: unknown): value is SourceType {
+  return typeof value === 'string' && (SOURCE_TYPES as readonly string[]).includes(value)
+}
+
+export function isSourceStatus(value: unknown): value is SourceStatus {
+  return typeof value === 'string' && (SOURCE_STATUSES as readonly string[]).includes(value)
+}
+
+export function isLocked(source: Pick<Source, 'lockedAt'>): boolean {
+  return source.lockedAt !== undefined
+}
+
+export interface NewSourceInput {
+  id: string
+  sourceType: SourceType
+  kind: SourceKind
+  content: string
+  origin?: string
+  collector: string
+  /** 預設等於 now。 */
+  collectedAt?: number
+}
+
+/**
+ * 建立第一版資料源。自己寫的與系統產生的一進來就交給指揮官分析，等於已送出，所以直接鎖定；
+ * 外部擷取的先等 Scott 決定，送出前是可修改的草稿。
+ */
+export function createSource(input: NewSourceInput, now: number): Source {
+  const status = initialStatus(input.sourceType)
+  return {
+    id: input.id,
+    sourceType: input.sourceType,
+    kind: input.kind,
+    content: input.content,
+    origin: input.origin || undefined,
+    collectedAt: input.collectedAt ?? now,
+    collector: input.collector,
+    status,
+    statusChangedAt: now,
+    version: 1,
+    previousId: undefined,
+    lockedAt: status === 'pending_analysis' ? now : undefined,
+    archivedAt: undefined,
+    createdAt: now,
+    updatedAt: now,
+  }
+}
+
+export function transitionSource(source: Source, to: SourceStatus, now: number): Source {
+  if (source.archivedAt !== undefined) throw new Error('已封存的資料源不能再改狀態')
+  if (!canTransition(source.status, to)) throw new Error(`資料源狀態不能從 ${source.status} 改成 ${to}`)
+  return {
+    ...source,
+    status: to,
+    statusChangedAt: now,
+    // 進入待分析就是送出：原始內容從此鎖定。
+    lockedAt: source.lockedAt ?? (to === 'pending_analysis' ? now : undefined),
+    updatedAt: now,
+  }
+}
+
+/** 送出分析（Scott 選「處理」）：等你決定 → 待分析，並鎖定原始內容。 */
+export function submitSource(source: Source, now: number): Source {
+  return transitionSource(source, 'pending_analysis', now)
+}
+
+export type SourceEditResult =
+  /** 還沒送出：原地修改同一列。 */
+  | { kind: 'updated'; source: Source }
+  /** 已送出：舊版原封不動，產生新版交給指揮官分析差異。 */
+  | { kind: 'versioned'; previous: Source; source: Source }
+
+/**
+ * 修改原始內容。草稿原地改；已鎖定的產生新版本（previousId 連回舊版、版本號 +1），
+ * 新版一建立就是送出狀態（待分析、已鎖定），舊版保留不動。
+ */
+export function editSourceContent(source: Source, content: string, now: number, newId: string): SourceEditResult {
+  if (source.archivedAt !== undefined) throw new Error('已封存的資料源不能修改')
+  if (!isLocked(source)) return { kind: 'updated', source: { ...source, content, updatedAt: now } }
+  if (newId === source.id) throw new Error('新版本需要新的 id')
+  return {
+    kind: 'versioned',
+    previous: source,
+    source: {
+      ...source,
+      id: newId,
+      content,
+      status: 'pending_analysis',
+      statusChangedAt: now,
+      version: source.version + 1,
+      previousId: source.id,
+      lockedAt: now,
+      archivedAt: undefined,
+      createdAt: now,
+      updatedAt: now,
+    },
+  }
+}
+
+/** 不採用滿 30 天、還沒封存的資料源 id；呼叫端只設 archivedAt，絕不刪除。 */
+export function sourcesDueForArchive(
+  sources: readonly Pick<Source, 'id' | 'status' | 'statusChangedAt' | 'archivedAt'>[],
+  now: number,
+  afterMs = REJECTED_ARCHIVE_AFTER_MS
+): string[] {
+  return sources
+    .filter(source => source.status === 'rejected' && source.archivedAt === undefined && now - source.statusChangedAt >= afterMs)
+    .map(source => source.id)
+}
+
+export function archiveSource(source: Source, now: number): Source {
+  if (source.status !== 'rejected') throw new Error('只有不採用的資料源會封存')
+  if (source.archivedAt !== undefined) return source
+  return { ...source, archivedAt: now, updatedAt: now }
+}
+
+/** 從某一版往回找到第一版，回傳由舊到新的版本鏈。 */
+export function versionChain(sources: readonly Source[], id: string): Source[] {
+  const byId = new Map(sources.map(source => [source.id, source]))
+  const chain: Source[] = []
+  const seen = new Set<string>()
+  let current = byId.get(id)
+  while (current && !seen.has(current.id)) {
+    seen.add(current.id)
+    chain.unshift(current)
+    current = current.previousId ? byId.get(current.previousId) : undefined
+  }
+  return chain
+}
+
+/** 只留每條版本鏈的最新一版（沒有被任何資料源當成上一版的）。 */
+export function latestVersions(sources: readonly Source[]): Source[] {
+  const superseded = new Set(sources.map(source => source.previousId).filter((id): id is string => !!id))
+  return sources.filter(source => !superseded.has(source.id))
+}
+
+// ── 資料庫列 ↔ 模型 ──────────────────────────────────────────
+
+/** src/db/v3-sources.ts 以別名選出的列（欄位已轉成 camelCase）。 */
+export interface SourceRow {
+  id: string
+  sourceType: string
+  kind: string
+  content: string
+  origin: string | null
+  collectedAt: number
+  collector: string
+  status: string
+  statusChangedAt: number
+  version: number
+  previousId: string | null
+  lockedAt: number | null
+  archivedAt: number | null
+  createdAt: number
+  updatedAt: number
+}
+
+export function sourceFromRow(row: SourceRow): Source {
+  if (!isSourceType(row.sourceType)) throw new Error(`未知的來源類型：${row.sourceType}`)
+  if (!isSourceStatus(row.status)) throw new Error(`未知的資料源狀態：${row.status}`)
+  return {
+    id: row.id,
+    sourceType: row.sourceType,
+    kind: row.kind,
+    content: row.content,
+    origin: row.origin ?? undefined,
+    collectedAt: row.collectedAt,
+    collector: row.collector,
+    status: row.status,
+    statusChangedAt: row.statusChangedAt,
+    version: row.version,
+    previousId: row.previousId ?? undefined,
+    lockedAt: row.lockedAt ?? undefined,
+    archivedAt: row.archivedAt ?? undefined,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  }
+}
+
+/** 依 insert 欄位順序排好的值。 */
+export function sourceToValues(source: Source): (string | number | null)[] {
+  return [
+    source.id,
+    source.sourceType,
+    source.kind,
+    source.content,
+    source.origin ?? null,
+    source.collectedAt,
+    source.collector,
+    source.status,
+    source.statusChangedAt,
+    source.version,
+    source.previousId ?? null,
+    source.lockedAt ?? null,
+    source.archivedAt ?? null,
+    source.createdAt,
+    source.updatedAt,
+  ]
+}
