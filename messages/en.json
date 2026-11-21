@@ -8539,5 +8539,13 @@
     "saveSnapshot": "Save the original as a copy",
     "snapshotSaved": "Saved {count} file(s) with “整理前” in the name",
     "snapshotFailed": "Could not save the copy"
+  },
+  "commander": {
+    "origin": "Source analysed by {agent}: {source}",
+    "unconverted": "(Could not convert to text; the original file is kept: {origin})",
+    "domainProposal": {
+      "title": "Create the domain \"{domain}\" with a new expert, {name}",
+      "summary": "{count} knowledge notes have no domain yet, all about \"{topic}\""
+    }
   }
 }

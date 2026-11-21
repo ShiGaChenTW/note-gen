@@ -8539,5 +8539,13 @@
     "saveSnapshot": "另存整理前内容",
     "snapshotSaved": "已另存 {count} 个文件（文件名加上“整理前”）",
     "snapshotFailed": "另存失败"
+  },
+  "commander": {
+    "origin": "{agent} 分析的数据源：{source}",
+    "unconverted": "（无法转成文字，已保留原文件：{origin}）",
+    "domainProposal": {
+      "title": "成立领域「{domain}」，新增专家 {name}",
+      "summary": "{count} 则知识笔记还没有领域，主题都是「{topic}」"
+    }
   }
 }
