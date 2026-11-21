@@ -350,6 +350,7 @@ export default function RootLayout({
     let stopQuickRecord: (() => void) | undefined
     let stopWiki: (() => void) | undefined
     let stopEinkPins: (() => void) | undefined
+    let stopEinkLan: (() => void) | undefined
 
     void reportAppStart()
 
@@ -384,6 +385,10 @@ export default function RootLayout({
         const { initEinkPinSync } = await import('@/lib/eink/pin-sync')
         if (cancelled) return
         stopEinkPins = initEinkPinSync()
+        // Fork（almanac ALMNC-50）：依設定開關電子紙的區網服務（預設關閉），開著時推送休眠畫面與今日簡報
+        const { initEinkLanService } = await import('@/lib/eink/lan/service')
+        if (cancelled) return
+        stopEinkLan = initEinkLanService()
         // Fork（almanac ALMNC-47）：開發模式在開發者工具提供 window.__almanacBriefingPreview() 看今日簡報資料（只讀）
         if (process.env.NODE_ENV !== 'production') void import('@/lib/eink/briefing').then(m => m.registerBriefingPreview())
         // Fork（almanac ALMNC-48）：開發模式提供 window.__almanacEpubPreview() 下載今天的今日簡報 EPUB（只讀）
@@ -426,6 +431,7 @@ export default function RootLayout({
       stopQuickRecord?.()
       stopWiki?.()
       stopEinkPins?.()
+      stopEinkLan?.()
     }
   }, [])
 

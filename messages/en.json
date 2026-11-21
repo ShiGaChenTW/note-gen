@@ -4159,6 +4159,72 @@
         "title": "Local network service",
         "desc": "Lets the reader download the sleep screen and daily briefing from this Mac when it closes. Off by default."
       },
+      "lan": {
+        "port": {
+          "title": "LAN service port",
+          "invalid": "Port must be a number from 1024 to 65535"
+        },
+        "status": {
+          "needsEnabled": "Turn on e-paper sync first; the LAN service only starts then.",
+          "running": "Running at {address} (listening only on this Mac's LAN address)",
+          "stopped": "Not running",
+          "error": "Could not start: {error}",
+          "ipChanged": "This Mac's LAN IP changed to {ip}. Update the address on the e-paper reader: reinstall the plugin, or turn the LAN service off and on."
+        },
+        "sleepUrl": {
+          "title": "Sleep screen URL",
+          "desc": "When the e-paper reader is closed, the plugin downloads the sleep screen from this URL (includes the token)."
+        },
+        "opds": {
+          "title": "OPDS catalog",
+          "desc": "Add this URL in the reader's OPDS settings; username {user}, password is the token above. Lists today's briefing and the past 7 days.",
+          "copyPassword": "Copy password"
+        },
+        "copy": "Copy",
+        "copied": "Copied"
+      },
+      "reader": {
+        "title": "Install on the e-paper reader",
+        "desc": "While the reader is in File Transfer mode, install the plugin, a Chinese font and the OPDS catalog in one step. Only /plugins/almanac*/, /Books/Almanac/, /sleep.bmp and the chosen font are touched.",
+        "steps": {
+          "fileTransfer": "On the reader: Home > File Transfer > Join a Network, on the same Wi-Fi as this Mac.",
+          "address": "Enter the IP shown on the reader as the reader address above, and turn on the LAN service.",
+          "detect": "Click Detect reader (it only connects when you click).",
+          "install": "Click Install: writes the plugin (with the server URL and token), the optional Chinese font, and adds the NoteGen OPDS catalog on the reader.",
+          "readerSettings": "On the reader: Settings > Connectivity > Plugins: Enabled, Settings > Display > Sleep Screen: Custom, then restart once."
+        },
+        "detect": {
+          "title": "Detect reader",
+          "desc": "Only sends a request to the reader address when you click.",
+          "action": "Detect reader",
+          "needsAddress": "Enter the reader address first.",
+          "found": "Connected to CrossPoint {version} ({device})",
+          "notFound": "Reader not found: make sure it is in File Transfer mode, the address is right, and it is on the same Wi-Fi as this Mac."
+        },
+        "install": {
+          "title": "Install",
+          "desc": "Reinstalling updates the plugin and the OPDS catalog without adding duplicates. Reinstall after changing the token or this Mac's IP.",
+          "needsServer": "Turn on the LAN service first (the plugin needs its server URL).",
+          "includeBriefing": "Also install the daily briefing plugin: download the briefing on sleep (experimental; turn on after the device check confirms it works)",
+          "action": "Install",
+          "done": "Installed ({count} files written). Enable plugins on the reader and restart it.",
+          "failed": "Install did not finish: {error}"
+        },
+        "font": {
+          "none": "No Chinese font",
+          "selected": "Chinese font: {name}",
+          "choose": "Choose font file…",
+          "clear": "No font",
+          "invalid": "Font file names may only use letters, digits and ._-, ending in .ttf or .otf"
+        },
+        "push": {
+          "title": "Push now",
+          "desc": "Upload today's briefing to /Books/Almanac/ and the sleep screen to /sleep.bmp directly (for when the plugin cannot fetch them).",
+          "action": "Push now",
+          "done": "Pushed today's briefing and sleep screen",
+          "failed": "Push did not finish: {error}"
+        }
+      },
       "token": {
         "title": "Token",
         "desc": "The secret the reader sends when downloading. Stored only on this Mac. After regenerating, reinstall the plugin on the reader.",

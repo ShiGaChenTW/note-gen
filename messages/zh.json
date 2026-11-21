@@ -4159,6 +4159,72 @@
         "title": "局域网服务",
         "desc": "让电子纸合上时向这台 Mac 下载休眠画面与今日简报。默认关闭。"
       },
+      "lan": {
+        "port": {
+          "title": "局域网服务的端口",
+          "invalid": "端口号须为 1024–65535 的数字"
+        },
+        "status": {
+          "needsEnabled": "先打开“启用电子纸同步”，局域网服务才会启动。",
+          "running": "服务中：{address}（只在这台 Mac 的局域网地址监听）",
+          "stopped": "尚未启动",
+          "error": "无法启动：{error}",
+          "ipChanged": "这台 Mac 的局域网 IP 变成 {ip}，电子纸上的网址要更新：重新安装插件，或关掉再打开局域网服务。"
+        },
+        "sleepUrl": {
+          "title": "休眠画面网址",
+          "desc": "电子纸合上时，插件向这个网址下载休眠画面（含 token）。"
+        },
+        "opds": {
+          "title": "OPDS 书目",
+          "desc": "在电子纸的 OPDS 设置新增这个网址；账号 {user}，密码是上面的 token。列出今日简报与过去 7 天。",
+          "copyPassword": "复制密码"
+        },
+        "copy": "复制",
+        "copied": "已复制"
+      },
+      "reader": {
+        "title": "安装到电子纸",
+        "desc": "电子纸在 File Transfer 模式时，一次装好插件、中文字体与 OPDS 书目；只会动 /plugins/almanac*/、/Books/Almanac/、/sleep.bmp 与选的字体。",
+        "steps": {
+          "fileTransfer": "电子纸：Home > File Transfer > Join a Network，连上和这台 Mac 同一个 Wi-Fi。",
+          "address": "把电子纸屏幕上显示的 IP 填进上面的“阅读器地址”，并打开“局域网服务”。",
+          "detect": "按“检测阅读器”（按下才会连接）。",
+          "install": "按“安装”：写入插件（含服务器网址与 token）、选用的中文字体，并在电子纸新增 NoteGen 的 OPDS 书目。",
+          "readerSettings": "电子纸：设置 > Connectivity > Plugins 选 Enabled、设置 > Display > Sleep Screen 选 Custom，然后重启一次。"
+        },
+        "detect": {
+          "title": "检测阅读器",
+          "desc": "按下后才向阅读器地址发出请求。",
+          "action": "检测阅读器",
+          "needsAddress": "先填阅读器地址。",
+          "found": "已连上 CrossPoint {version}（{device}）",
+          "notFound": "找不到阅读器：确认电子纸在 File Transfer 模式、地址正确、和 Mac 在同一个 Wi-Fi。"
+        },
+        "install": {
+          "title": "安装",
+          "desc": "重新安装会更新插件与 OPDS 书目，不会重复新增。换了 token 或 Mac 的 IP 后要重新安装。",
+          "needsServer": "先打开局域网服务（安装时要把服务器网址写进插件）。",
+          "includeBriefing": "也安装“今日简报”插件：合上时自动下载简报（实验，等实机验证确认可行再打开）",
+          "action": "安装",
+          "done": "已安装（写入 {count} 个文件）。请到电子纸打开插件并重启。",
+          "failed": "安装没有完成：{error}"
+        },
+        "font": {
+          "none": "不安装中文字体",
+          "selected": "中文字体：{name}",
+          "choose": "选择字体文件…",
+          "clear": "不装字体",
+          "invalid": "字体文件名只能用英文数字与 ._-，扩展名 .ttf 或 .otf"
+        },
+        "push": {
+          "title": "立即推送",
+          "desc": "直接把今日简报放进 /Books/Almanac/、把休眠画面写到 /sleep.bmp（插件抓不到时用）。",
+          "action": "立即推送",
+          "done": "已推送今日简报与休眠画面",
+          "failed": "推送没有完成：{error}"
+        }
+      },
       "token": {
         "title": "Token",
         "desc": "电子纸下载时要带的密钥，只存在这台 Mac。重新生成后，电子纸上的插件要重新安装。",

@@ -35,11 +35,11 @@ afterEach(() => configureEinkStorage(null))
 describe('useEinkStore 保存', () => {
   it('設定值重開後還在', async () => {
     await useEinkStore.getState().updateSettings({
-      enabled: true, readerAddress: 'http://192.168.1.20', lanServer: true, sections: ['schedule', 'pinned'], weatherCity: '臺北',
+      enabled: true, readerAddress: 'http://192.168.1.20', lanServer: true, lanPort: 9000, sections: ['schedule', 'pinned'], weatherCity: '臺北',
     })
     const state = await reopen()
     expect(state.settings).toEqual({
-      enabled: true, readerAddress: 'http://192.168.1.20', lanServer: true, sections: ['schedule', 'pinned'], weatherCity: '臺北',
+      enabled: true, readerAddress: 'http://192.168.1.20', lanServer: true, lanPort: 9000, sections: ['schedule', 'pinned'], weatherCity: '臺北',
     })
     expect(storage.data.get(EINK_SETTINGS_KEY)).toEqual(state.settings)
   })

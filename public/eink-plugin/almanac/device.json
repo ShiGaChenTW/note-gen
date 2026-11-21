@@ -1,0 +1,15 @@
+{
+  "title": "Almanac",
+  "description": "NoteGen 休眠畫面：闔上時下載今天的行程圖",
+  "token": { "file": "token.json", "path": "token" },
+  "config": { "file": "config.json" },
+  "events": {
+    "sleep.enter": {
+      "download": {
+        "url": "{cfg.server}/eink/sleep.bmp?token={token}",
+        "headers": { "Authorization": "Bearer {token}" },
+        "dest": "/sleep.bmp"
+      }
+    }
+  }
+}
