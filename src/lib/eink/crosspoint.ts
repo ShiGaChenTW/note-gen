@@ -61,3 +61,35 @@ export function pluginTokenJson(token: string): string {
 export function pluginConfigJson(server: string): string {
   return `${JSON.stringify({ [PLUGIN_CONFIG_SERVER_KEY]: server })}\n`
 }
+
+// ---------------------------------------------------------------------------
+// Fork（almanac ALMNC-52）：File Transfer 模式的 HTTP API（電子紙在 Home > File Transfer 時才回應）
+// 依據：crosspoint-reader docs/webserver-endpoints.md（develop@ca1a8c1）；用法參考 ptk862010/obsidian-xteink-sync
+// src/device.ts（MIT，commit 58e09e8）。實機沒驗證過（ALMNC-44）。
+//   GET  /api/status                         {"version","firmwareFamily","ip","mode","device",...}
+//   GET  /api/files?path=<dir>               [{"name","size","isDirectory","isEpub"}]
+//   POST /upload?path=<dir>&overwrite=1      multipart 欄位 file；overwrite 時先寫 <name>.part，完整才換掉舊檔
+//   POST /mkdir                              form：name、path（父資料夾）
+//   POST /delete                             form：path
+//   GET  /api/opds                           [{"index","name","url","username","hasPassword"}]
+//   POST /api/opds                           JSON {name,url,username,password[,index]}；帶 index 是更新；最多 8 個
+// 中文字型：可以把 .ttf／.otf 直接放進 /fonts/（docs/sd-card-fonts.md，需要外接 RAM 的機型；X4 Pro 是 S3）。
+// ---------------------------------------------------------------------------
+
+export const DEVICE_API = {
+  status: '/api/status',
+  files: '/api/files',
+  upload: '/upload',
+  mkdir: '/mkdir',
+  delete: '/delete',
+  opds: '/api/opds',
+} as const
+
+export const FONT_ROOT = '/fonts'
+export const MAX_OPDS_SERVERS = 8
+/** 電子紙 OPDS 清單裡的名稱；重新安裝時用名稱或網址找回同一筆來更新，不重複新增 */
+export const OPDS_ENTRY_NAME = 'NoteGen Almanac'
+/** 上傳中斷時韌體可能留下的暫存檔副檔名 */
+export const UPLOAD_PART_SUFFIX = '.part'
+/** 立即推送時書庫裡保留幾本 almanac-YYYY-MM-DD.epub */
+export const PUSHED_BRIEFINGS_KEEP = 7

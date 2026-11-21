@@ -139,3 +139,35 @@ describe('區網服務', () => {
     expect(container.textContent).not.toContain(token)
   })
 })
+
+// almanac ALMNC-52：偵測沒開時不發任何區網請求（AC #4）；偵測到閱讀器後才能安裝與推送
+describe('安裝到電子紙', () => {
+  it('打開設定頁、填了閱讀器位址也不發請求；按「偵測閱讀器」才發一個 GET /api/status', async () => {
+    const { configureDeviceHttp } = await import('@/lib/eink/device/http')
+    const http = vi.fn(async () => ({ status: 200, text: JSON.stringify({ version: '2.1.0', firmwareFamily: 'crosspoint', device: 'X4' }) }))
+    configureDeviceHttp(http)
+    const { useEinkLanStatus } = await import('@/lib/eink/lan/service')
+    useEinkLanStatus.setState({ status: null, refreshStatus: async () => {} })
+    try {
+      useUiModeStore.setState({ mode: 'v3' })
+      await act(async () => { await useEinkStore.getState().init() })
+      await act(async () => { await useEinkStore.getState().updateSettings({ enabled: true, readerAddress: 'http://192.168.1.20' }) })
+      await act(async () => root.render(React.createElement(EinkSettingPage)))
+      expect(container.querySelector('[data-testid="eink-reader-steps"]')!.children).toHaveLength(5)
+      const button = (label: string) => [...container.querySelectorAll('button')].find(item => item.textContent === label)!
+      expect(button(en.settings.eink.reader.install.action).disabled).toBe(true)
+      expect(button(en.settings.eink.reader.push.action).disabled).toBe(true)
+      expect(http).not.toHaveBeenCalled()
+
+      await act(async () => button(en.settings.eink.reader.detect.action).click())
+      expect(http).toHaveBeenCalledTimes(1)
+      expect(http).toHaveBeenCalledWith(expect.objectContaining({ method: 'GET', url: 'http://192.168.1.20/api/status' }))
+      expect(container.querySelector('[data-testid="eink-reader-detect-status"]')!.textContent).toContain('CrossPoint 2.1.0')
+      expect(button(en.settings.eink.reader.push.action).disabled).toBe(false)
+      // 區網服務沒開：還不能安裝（外掛需要伺服器網址）
+      expect(button(en.settings.eink.reader.install.action).disabled).toBe(true)
+    } finally {
+      configureDeviceHttp(null)
+    }
+  })
+})
