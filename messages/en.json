@@ -8862,5 +8862,23 @@
       "tbd": "TBD",
       "tbdTip": "Function to be decided"
     }
+  },
+  "cleanup": {
+    "actions": {
+      "modify": "Modify",
+      "replace": "Replace",
+      "verify": "Needs verification",
+      "supplement": "Add context",
+      "merge": "Merge",
+      "archive": "Archive"
+    },
+    "bundleTitle": "Tidy up “{domain}”: {count} items",
+    "singleTitle": "{action}: {title}",
+    "item": "- {action}: {titles} — {evidence}",
+    "origin": "Cleanup proposal from {agent}",
+    "originSystem": "Cleanup proposal",
+    "confirmTitle": "Still valid: {title}",
+    "confirmBody": "Re-checked: nothing outdated, contradictory or duplicated, and external sources agree ({evidence}). Accepting sets the last-confirmed date to today.",
+    "confirmBodyNoExternal": "Re-compared with the notes in this domain: nothing outdated, contradictory or duplicated (no external sources found). Accepting sets the last-confirmed date to today."
   }
 }

@@ -3,6 +3,7 @@
 import { domainProposal, type DomainProposal, type KnowledgeNoteLike } from '@/lib/commander/domain-proposal'
 import type { RosterAgent } from '@/lib/commander/types'
 import type { Domain } from '@/lib/v3-model/domain'
+import { notesDueForConfirm, ymd, type ReconfirmInterval } from '@/lib/cleanup/interval'
 import type { ConfirmLike } from './cards'
 
 export interface IndexedNoteLike {
@@ -11,8 +12,6 @@ export interface IndexedNoteLike {
   tags: readonly string[]
 }
 
-/** 專家的重新確認頻率預設 1 年（commander/domain-proposal.ts expertRules）。 */
-export const RECONFIRM_DAYS = 365
 
 function strings(value: unknown): string[] {
   if (Array.isArray(value)) return value.filter((entry): entry is string => typeof entry === 'string' && entry.trim() !== '').map(entry => entry.trim())
@@ -42,18 +41,13 @@ export function knowledgeNotesFromIndex(notes: Iterable<IndexedNoteLike>): Knowl
   return out
 }
 
-/** 上次確認超過 RECONFIRM_DAYS 天的知識筆記（舊的在前）。 */
-export function confirmNotesFromIndex(notes: Iterable<IndexedNoteLike>, now: number, days = RECONFIRM_DAYS): ConfirmLike[] {
-  const out: ConfirmLike[] = []
-  for (const note of notes) {
-    const last = note.frontmatter?.lastConfirmed
-    if (note.frontmatter?.type !== 'knowledge' || typeof last !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(last)) continue
-    if (note.frontmatter.status === 'archived' || note.frontmatter.status === 'superseded') continue
-    const at = Date.parse(`${last}T00:00:00`)
-    if (!Number.isFinite(at) || now - at < days * 86_400_000) continue
-    out.push({ path: note.path, title: titleOf(note), lastConfirmed: last })
-  }
-  return out.sort((a, b) => a.lastConfirmed.localeCompare(b.lastConfirmed))
+/**
+ * 最後確認日期超過領域期限的知識筆記（到期早的在前）。Fork（almanac ALMNC-54.12）：期限改成依領域——
+ * 負責專家的 rules.md 寫的（例如「重新確認頻率：6 個月」），沒寫就是技術類 6 個月、一般知識 1 年（lib/cleanup/interval.ts）。
+ */
+export function confirmNotesFromIndex(notes: Iterable<IndexedNoteLike>, now: number, intervals: ReadonlyMap<string, ReconfirmInterval> = new Map()): ConfirmLike[] {
+  return notesDueForConfirm(notes, intervals, ymd(new Date(now)))
+    .map(({ path, title, lastConfirmed, dueDate }) => ({ path, title, lastConfirmed, dueDate }))
 }
 
 let latest = new Map<string, DomainProposal>()

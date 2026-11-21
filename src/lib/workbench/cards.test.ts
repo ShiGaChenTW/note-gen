@@ -171,3 +171,17 @@ describe('ALMNC-54.10 等你［資料源］卡', () => {
     expect(actionForKey(card, 'x')).toBeUndefined() // 刪除沒有單鍵
   })
 })
+
+// Fork（almanac ALMNC-54.12）：清理提案（同領域打包＝知識／整理；單則＝筆記＋處理方式）、確認、每週回顧由提案自己指定卡片。
+describe('proposal card hints', () => {
+  const file = { type: 'file' as const, path: '知識/工業工程/節拍.md', diff: null }
+  it('uses the hinted label and verb, shows the folder and 等 N 則 for bundles', () => {
+    const bundle = proposal('c1', NOW - DAY, { title: '整理「工業工程」：3 項', preview: file, card: { label: 'knowledge', verb: 'organize' }, notePaths: ['知識/工業工程/節拍.md', 'a.md', 'b.md'] })
+    const [card] = buildReviewCards({ now: NOW, proposals: [bundle] })
+    expect(card).toMatchObject({ label: 'knowledge', verb: 'organize', title: '整理「工業工程」：3 項', path: '知識/工業工程', more: 2, actions: ACTIONS_BY_KIND.proposal })
+    expect(proposalVerb(proposal('c2', NOW, { card: { label: 'note', verb: 'verify' } }))).toBe('verify')
+    expect(proposalLabel(proposal('r1', NOW, { card: { label: 'review', verb: 'add' } }), NOW)).toBe('review')
+    // 超過 14 天沒決定的一律列進回顧。
+    expect(proposalLabel(proposal('c3', NOW - 15 * DAY, { card: { label: 'note', verb: 'verify' } }), NOW)).toBe('review')
+  })
+})

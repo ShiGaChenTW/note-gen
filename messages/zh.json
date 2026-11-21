@@ -8862,5 +8862,23 @@
       "tbd": "待定",
       "tbdTip": "功能待定"
     }
+  },
+  "cleanup": {
+    "actions": {
+      "modify": "修改",
+      "replace": "取代",
+      "verify": "待查证",
+      "supplement": "补情境",
+      "merge": "合并",
+      "archive": "封存"
+    },
+    "bundleTitle": "整理「{domain}」：{count} 项",
+    "singleTitle": "{action}：{title}",
+    "item": "- {action}：{titles}——{evidence}",
+    "origin": "{agent} 整理的清理提案",
+    "originSystem": "清理提案",
+    "confirmTitle": "仍然有效：{title}",
+    "confirmBody": "重新确认后没有发现过时、矛盾或重复，外部资料也没有不同说法（{evidence}）。接受后把最后确认日期改成今天。",
+    "confirmBodyNoExternal": "重新比对同领域的笔记，没有发现过时、矛盾或重复（没有查到外部资料）。接受后把最后确认日期改成今天。"
   }
 }

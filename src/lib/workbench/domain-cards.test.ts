@@ -32,6 +32,15 @@ describe('domain and confirm cards', () => {
   })
 
   it('lists knowledge notes not confirmed for a year, oldest first, skipping archived ones', () => {
-    expect(confirmNotesFromIndex(notes, NOW)).toEqual([{ path: 'k/old.md', title: 'old', lastConfirmed: '2025-08-20' }])
+    expect(confirmNotesFromIndex(notes, NOW)).toEqual([{ path: 'k/old.md', title: 'old', lastConfirmed: '2025-08-20', dueDate: '2026-08-20' }])
+  })
+
+  // Fork（almanac ALMNC-54.12）：期限依領域（專家 rules.md），取代原本固定的一年。
+  it('uses the per-domain interval from the expert rules', () => {
+    const intervals = new Map([['dom_1', { amount: 2, unit: 'year' as const, from: 'rules' as const }]])
+    expect(confirmNotesFromIndex(notes, NOW, intervals)).toEqual([])
+    const short = new Map([['dom_x', { amount: 1, unit: 'month' as const, from: 'rules' as const }]])
+    const fresh = [note('k/f.md', { type: 'knowledge', lastConfirmed: '2026-10-01', domains: ['dom_x'] })]
+    expect(confirmNotesFromIndex(fresh, NOW, short).map(entry => entry.dueDate)).toEqual(['2026-11-01'])
   })
 })

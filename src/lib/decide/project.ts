@@ -9,7 +9,7 @@ import { projectJobDecisions } from '@/lib/jobs/projection'
 import type { Job } from '@/lib/jobs/schedule'
 import { scheduleSlot, slotEndLabel } from '@/lib/timeslots/model'
 import { ORGANIZE_TOOL } from '@/lib/organize/drafts'
-import type { Proposal } from '@/lib/collect/types'
+import type { Proposal, ProposalCardHint } from '@/lib/collect/types'
 import { threadKey } from '@/lib/threads/projects'
 import { statusOf, type ProposalDiscussion, type ProposalStatus, type ProposalTrail } from '@/lib/proposals/trail'
 
@@ -60,6 +60,10 @@ export interface DecideItem {
   discussion?: ProposalDiscussion
   /** 這則是哪一則提案修改後重新提出的（那則的 key）；舊的就算被取代，不再算待決定。 */
   previousProposalId?: string
+  /** Fork（almanac ALMNC-54.12）：提案指定的卡片標籤與動詞（清理提案、確認、每週回顧）。 */
+  card?: ProposalCardHint
+  /** Fork（almanac ALMNC-54.12）：清理提案涵蓋的筆記（多則時卡片顯示「等 N 則」）。 */
+  notePaths?: string[]
 }
 
 export type DecideRef =
@@ -159,6 +163,11 @@ export function sameThingKey(proposal: Proposal): string {
   // Fork（almanac ALMNC-54.7）：檔案變更以「哪個檔案、怎麼改、改成什麼」為準。
   if (proposal.change) return JSON.stringify(['change', proposal.change.kind, proposal.change.path, proposal.change.targetPath ?? '', proposal.change.content ?? ''])
   if (proposal.slot) return JSON.stringify(['scheduler', proposal.slot.path, proposal.slot.line, proposal.due, proposal.time])
+  // Fork（almanac ALMNC-54.12）：多則變更（清理、確認、稽核）以「改哪些東西、改成什麼」為準。
+  if (proposal.edits?.length || proposal.domainEdits?.length || proposal.memoryEdits?.length) {
+    return JSON.stringify(['edits', proposal.edits?.map(edit => [edit.path, edit.content]) ?? [], proposal.domainEdits?.map(edit => [edit.domainId, edit.overview]) ?? [],
+      proposal.memoryEdits?.map(edit => edit.target === 'work_notes' ? [edit.agent.id, edit.content] : ['context', JSON.stringify(edit.context)]) ?? []])
+  }
   return [proposal.kind, proposal.title.trim().replace(/\s+/g, ' ').toLowerCase(), proposal.due, proposal.time].join('|')
 }
 
@@ -192,7 +201,11 @@ function projectCollect(items: CollectItemLike[], journal: JournalSnapshot | nul
 
       let preview: DecidePreview
       const change = proposal.change
-      if (change) {
+      const edit = proposal.edits?.[0]
+      if (edit) {
+        // Fork（almanac ALMNC-54.12）：清理提案預覽第一則筆記的修改前後。
+        preview = { type: 'file', path: edit.path, diff: previewDiff(edit.baseContent ?? '', edit.content) }
+      } else if (change) {
         // Fork（almanac ALMNC-54.7）：右側欄指揮官的檔案變更，預覽同背景任務的草稿。
         preview = {
           type: 'file', path: change.path, targetPath: change.targetPath,
@@ -223,6 +236,8 @@ function projectCollect(items: CollectItemLike[], journal: JournalSnapshot | nul
         status: 'wait',
         ...(proposal.conversationId !== undefined ? { conversationId: proposal.conversationId } : {}),
         ...(proposal.previousProposalId ? { previousProposalId: proposal.previousProposalId } : {}),
+        ...(proposal.card ? { card: proposal.card } : {}),
+        ...(proposal.edits?.length ? { notePaths: Array.from(new Set(proposal.edits.map(item => item.path))) } : {}),
       }
       seen.set(sameThingKey(proposal), entry)
       out.push(entry)

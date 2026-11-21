@@ -129,8 +129,8 @@ export interface Draft {
     /** ai＝模型寫的；fallback＝模型失敗或漏寫，直接用片段內容。 */
     writtenBy: 'ai' | 'fallback'
     /**
-     * 專家比對的類似筆記。'unavailable'＝目前沒有「依領域找類似筆記」的工具，
-     * 這一步留給 ALMNC-54.12（衝突偵測）接上；不假裝比對過。
+     * 專家比對的類似筆記。'unavailable'＝找類似筆記的工具沒接上或失敗，不假裝比對過。
+     * Fork（almanac ALMNC-54.12）：預設由 lib/cleanup/similar.ts（筆記庫索引＋知識搜尋）提供。
      */
     similarNotes?: SimilarNote[] | 'unavailable'
   }
