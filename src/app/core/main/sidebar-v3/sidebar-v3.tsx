@@ -7,7 +7,8 @@ import { CalendarCheck, CalendarDays, ChevronDown, Download, ListChecks, Library
 import { useTranslations } from 'next-intl'
 import { Count } from '@/components/v3/count'
 import { SectionLabel } from '@/components/v3/section-label'
-import { listAgentSettings } from '@/db/agents'
+import { ensureDefaultRoster, listAgentSettings } from '@/db/agents'
+import { agentRoleLabel } from '@/lib/agents/display'
 import { useAgentTaskStore } from '@/lib/agent-tasks'
 import { useAnywhereStore } from '@/lib/anywhere/store'
 import { useDecisions } from '@/lib/decide/use-decisions'
@@ -62,7 +63,9 @@ function useAgentRows(): AgentRow[] {
     if (settingsOpen) return
     // 開發預覽用（不進 production）：瀏覽器沒有 Tauri 資料庫，截圖時從頁面塞 window.__almanacAgentsDemo = AgentSettings[]
     let active = true
-    listAgentSettings().then(rows => { if (active) setAgents(rows) }).catch(() => undefined)
+    // Fork（almanac ALMNC-54.2）：第一次使用時先建立預設的指揮官、秘書、研究員。
+    ensureDefaultRoster().catch(() => false).then(() => listAgentSettings())
+      .then(rows => { if (active) setAgents(rows) }).catch(() => undefined)
     return () => { active = false }
   }, [settingsOpen])
 
@@ -136,7 +139,7 @@ function AgentSection() {
               <button type="button" onClick={openAgentSettings} className={cn(ROW, SIDEBAR_ROW, 'group/row')}>
                 <span aria-hidden className={cn('size-1.5 shrink-0 rounded-full bg-faint', row.running && 'bg-ink')} />
                 <span className={cn('min-w-0 truncate', !row.enabled && 'opacity-60')}>{row.name}</span>
-                <span className="ml-auto shrink-0 text-[11px] text-faint group-hover/row:hidden">{tRoles(row.role)}</span>
+                <span className="ml-auto shrink-0 text-[11px] text-faint group-hover/row:hidden">{agentRoleLabel(row, tRoles)}</span>
                 <MoreHorizontal className="ml-auto hidden size-3.5 shrink-0 text-faint group-hover/row:inline-flex" aria-hidden />
               </button>
             </li>

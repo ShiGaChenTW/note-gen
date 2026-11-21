@@ -16,7 +16,7 @@ import { useUiModeStore } from '@/lib/fork-ui'
 import { SlotUnavailable } from './apply'
 import { offerTodaySlots } from './service'
 
-const agent = { id: 'scheduler', role: 'scheduler', name: 'Calendar planner', enabled: true, allowedTools: ['note_read_file', 'calendar_read_day'] }
+const agent = { id: 'scheduler', role: 'secretary', name: 'Calendar planner', enabled: true, allowedTools: ['note_read_file', 'calendar_read_day'] }
 const original = '# Today\n- [ ] Write budget\n- [ ] Sign off\n'
 let content = original
 
