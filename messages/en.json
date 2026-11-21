@@ -7223,6 +7223,13 @@
       "confirm": "Confirm",
       "committed": "Created a new prompt version",
       "commitFailed": "Failed to create the version"
+    },
+    "docTitle": {
+      "label": "Title",
+      "placeholder": "Untitled",
+      "renameFailed": "Could not rename to this title",
+      "fileExists": "A file with this name already exists",
+      "busy": "This file is busy, try again shortly"
     }
   },
   "editorWindow": {
@@ -8863,12 +8870,14 @@
     },
     "quick": {
       "label": "Add",
+      "newDoc": "New document",
+      "newDocShort": "Doc",
       "addSource": "Add source",
       "addSourceShort": "Source",
       "newThread": "New conversation",
       "newThreadShort": "Chat",
-      "tbd": "TBD",
-      "tbdTip": "Function to be decided"
+      "tbd": "To be decided",
+      "tbdTip": "To be decided"
     },
     "legacy": {
       "title": "Old notes: {count, number}",

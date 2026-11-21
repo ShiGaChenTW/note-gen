@@ -7223,6 +7223,13 @@
       "confirm": "确认",
       "committed": "已建立新的提示词版本",
       "commitFailed": "建立版本失败"
+    },
+    "docTitle": {
+      "label": "标题",
+      "placeholder": "未命名",
+      "renameFailed": "没有改成这个标题",
+      "fileExists": "已有同名文件，请换一个标题",
+      "busy": "这个文件正在处理，请稍后再试"
     }
   },
   "editorWindow": {
@@ -8863,12 +8870,14 @@
     },
     "quick": {
       "label": "新增",
+      "newDoc": "新增文件",
+      "newDocShort": "文件",
       "addSource": "新增资料源",
       "addSourceShort": "资料源",
       "newThread": "新增对话",
       "newThreadShort": "对话",
-      "tbd": "待定",
-      "tbdTip": "功能待定"
+      "tbd": "待确定",
+      "tbdTip": "功能待确定"
     },
     "legacy": {
       "title": "旧笔记 {count, number} 则",

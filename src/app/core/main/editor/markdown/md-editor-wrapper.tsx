@@ -25,6 +25,7 @@ import {
   workspaceRootsReferToSameLocation,
 } from '@/lib/editor-deactivation'
 import { writeSelfHostedWorkspaceText } from '@/lib/self-hosted-sync/files'
+import { DocTitleField, focusEditorBodyStart } from './doc-title-field'
 
 interface MdEditorProps {
   tabContentsRef: RefObject<Record<string, string>>
@@ -387,6 +388,18 @@ export function MdEditor({ tabContentsRef, filePath, isActive, disabled = false 
     setEditorReady(false)
   }, [filePath])
 
+  // Fork（almanac ALMNC-54.16）：標題欄位按 Enter／下方向鍵時把游標移到內文開頭。
+  // 改名會讓編輯器換一個實例，換好之前先記著，等新的編輯器好了再移。
+  const editorInstanceRef = useRef<any>(null)
+  const pendingBodyFocusRef = useRef(false)
+  useEffect(() => {
+    editorInstanceRef.current = editorInstance
+    if (pendingBodyFocusRef.current && focusEditorBodyStart(editorInstance)) pendingBodyFocusRef.current = false
+  }, [editorInstance])
+  const focusBody = useCallback(() => {
+    pendingBodyFocusRef.current = !focusEditorBodyStart(editorInstanceRef.current)
+  }, [])
+
   // Auto-create untitled.md file
   async function createUntitledFile(content: string) {
     try {
@@ -506,6 +519,7 @@ export function MdEditor({ tabContentsRef, filePath, isActive, disabled = false 
       <div className="relative min-h-0 flex-1">
       <TipTapEditor
         initialContent={initialContent ?? ''}
+        header={filePath ? <DocTitleField path={filePath} onFocusBody={focusBody} disabled={disabled || isThisEditorPulling} /> : undefined}
         onChange={handleContentChange}
         placeholder={tEditor('placeholder')}
         activeFilePath={filePath}

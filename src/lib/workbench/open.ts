@@ -1,4 +1,4 @@
-// Fork（almanac ALMNC-54.8）：打開工作台、新增資料源、新增對話的入口（側欄三個按鈕、N／T 快捷鍵、舊的收集／Inbox 入口都走這裡）。
+// Fork（almanac ALMNC-54.8、54.16）：打開工作台、新增文件、新增資料源、新增對話的入口（側欄四個按鈕、N／T 快捷鍵、舊的收集／Inbox 入口都走這裡）。
 import emitter from '@/lib/emitter'
 import useDecideStore from '@/stores/decide'
 import useWorkbenchStore, { type WorkbenchTab } from '@/stores/workbench'
@@ -20,4 +20,15 @@ export async function openNewConversation(): Promise<void> {
   const [{ default: useThreadsStore }, { default: useChatStore }] = await Promise.all([import('@/stores/threads'), import('@/stores/chat')])
   useThreadsStore.getState().show()
   await useChatStore.getState().startNewConversation()
+}
+
+/** Fork（almanac ALMNC-54.16）：新增文件：建立「未命名.md」、打開編輯頁，游標在標題欄位。 */
+export async function openNewDocument(): Promise<void> {
+  try {
+    const { createNewDocument } = await import('@/lib/new-doc/create')
+    await createNewDocument()
+  } catch (error) {
+    const { toast } = await import('@/hooks/use-toast')
+    toast({ title: error instanceof Error ? error.message : String(error), variant: 'destructive' })
+  }
 }

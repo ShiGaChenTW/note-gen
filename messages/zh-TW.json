@@ -7288,6 +7288,13 @@
       "confirm": "確認",
       "committed": "已建立新的提示詞版本",
       "commitFailed": "建立版本失敗"
+    },
+    "docTitle": {
+      "label": "標題",
+      "placeholder": "未命名",
+      "renameFailed": "沒有改成這個標題",
+      "fileExists": "已有同名檔案，請換一個標題",
+      "busy": "這個檔案正在處理，請稍後再試"
     }
   },
   "editorWindow": {
@@ -8928,12 +8935,14 @@
     },
     "quick": {
       "label": "新增",
+      "newDoc": "新增文件",
+      "newDocShort": "文件",
       "addSource": "新增資料源",
       "addSourceShort": "資料源",
       "newThread": "新增對話",
       "newThreadShort": "對話",
-      "tbd": "待定",
-      "tbdTip": "功能待定"
+      "tbd": "待確定",
+      "tbdTip": "功能待確定"
     },
     "legacy": {
       "title": "舊筆記 {count, number} 則",

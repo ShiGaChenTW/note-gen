@@ -42,7 +42,7 @@ import { BasesBlock } from './bases-block-extension' // Fork (2-3b)：```base �
 import { withRawTableRoundtrip } from './table-raw-extension'
 import { WikiMetadata } from './wiki-metadata-extension'
 import { SearchReplacePanel } from './search-replace-panel'
-import { useEffect, useId, useLayoutEffect, useRef, useCallback, useMemo, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent, type UIEvent as ReactUIEvent, type WheelEvent as ReactWheelEvent } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useCallback, useMemo, useState, type CSSProperties, type ReactNode, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent, type UIEvent as ReactUIEvent, type WheelEvent as ReactWheelEvent } from 'react'
 import { createPortal } from 'react-dom'
 import { openPath, openUrl } from '@tauri-apps/plugin-opener'
 import { open } from '@tauri-apps/plugin-dialog'
@@ -2379,6 +2379,8 @@ interface TipTapEditorProps {
   isActive?: boolean
   exposeToPluginHost?: boolean
   onTerminate?: () => void
+  /** Fork（almanac ALMNC-54.16）：放在內文上方、跟著內文捲動的區塊（V3 標題欄位）；原始碼模式不顯示。 */
+  header?: ReactNode
 }
 
 type MobileSelectionContext =
@@ -2493,6 +2495,7 @@ export function TipTapEditor({
   isActive = true,
   exposeToPluginHost = true,
   onTerminate,
+  header,
 }: TipTapEditorProps) {
   const editorRenderStartedAtRef = useRef(
     typeof performance === 'undefined' ? Date.now() : performance.now(),
@@ -8236,6 +8239,7 @@ export function TipTapEditor({
               />,
               editorDragHandleElement,
             ) : null}
+            {header}
             {!readOnly && editor ? <FrontmatterCreateButton editor={editor} path={activeFilePath} /> : null}
             <EditorContent editor={editor} className={cn("relative select-text", scrollable && "h-full")}>
               <SmartFileLink editor={editor} activeFilePath={activeFilePath} />

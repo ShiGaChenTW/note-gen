@@ -1,9 +1,9 @@
 'use client'
 
 // Fork（almanac ALMNC-20）：v5 側欄，方案 B「導覽＋檔案樹」。left-sidebar.tsx 在 v3 時直接回傳這個元件。
-// 由上而下：品牌、搜尋（⌘K）、三個新增按鈕（ALMNC-54.8）、五個導覽、可收合的代理人區、可收合的 MyVault 檔案樹、規則。
+// 由上而下：品牌、搜尋（⌘K）、四個新增按鈕（ALMNC-54.8、54.16）、五個導覽、可收合的代理人區、可收合的 MyVault 檔案樹、規則。
 import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from 'react'
-import { ArrowDownToLine, CalendarCheck, CalendarDays, ChevronDown, ListChecks, Library, MessageSquarePlus, MessagesSquare, MoreHorizontal, Plus, Search, SquareDashed } from 'lucide-react'
+import { ArrowDownToLine, CalendarCheck, CalendarDays, ChevronDown, FilePen, ListChecks, Library, MessageSquarePlus, MessagesSquare, MoreHorizontal, Plus, Search, SquareDashed } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { Count } from '@/components/v3/count'
 import { SectionLabel } from '@/components/v3/section-label'
@@ -17,7 +17,7 @@ import { useSidebarCollapse, type SidebarSection } from '@/lib/sidebar-v3/collap
 import { buildAgentRows, buildNav, runningAgentCount, type AgentRow, type NavKey } from '@/lib/sidebar-v3/nav'
 import type { AgentSettings } from '@/lib/agents/settings'
 import { useWeekOverlay } from '@/lib/week/overlay'
-import { openAddSource, openNewConversation } from '@/lib/workbench/open'
+import { openAddSource, openNewConversation, openNewDocument } from '@/lib/workbench/open'
 import { useWorkbenchCount } from '@/lib/workbench/use-workbench'
 import { cn } from '@/lib/utils'
 import useArticleStore from '@/stores/article'
@@ -174,13 +174,15 @@ function VaultSection() {
  */
 function QuickActions() {
   const t = useTranslations('workbench.quick')
+  // Fork（almanac ALMNC-54.16）：依序為新增文件、新增資料源、新增對話、待確定（停用）。
   const items: Array<{ key: string, icon: ComponentType<{ className?: string }>, label: string, short: string, shortcut?: string, onClick?: () => void }> = [
+    { key: 'doc', icon: FilePen, label: t('newDoc'), short: t('newDocShort'), onClick: () => void openNewDocument() },
     { key: 'source', icon: ArrowDownToLine, label: t('addSource'), short: t('addSourceShort'), shortcut: 'N', onClick: openAddSource },
     { key: 'thread', icon: MessageSquarePlus, label: t('newThread'), short: t('newThreadShort'), shortcut: 'T', onClick: () => void openNewConversation() },
     { key: 'tbd', icon: SquareDashed, label: t('tbdTip'), short: t('tbd') },
   ]
   return (
-    <div role="group" aria-label={t('label')} className="mx-0.5 grid shrink-0 grid-cols-3 gap-1" data-testid="sidebar-quick">
+    <div role="group" aria-label={t('label')} className="mx-0.5 grid shrink-0 grid-cols-4 gap-1" data-testid="sidebar-quick">
       {items.map(item => {
         const Icon = item.icon
         const disabled = !item.onClick
