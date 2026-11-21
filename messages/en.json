@@ -8880,5 +8880,79 @@
     "confirmTitle": "Still valid: {title}",
     "confirmBody": "Re-checked: nothing outdated, contradictory or duplicated, and external sources agree ({evidence}). Accepting sets the last-confirmed date to today.",
     "confirmBodyNoExternal": "Re-compared with the notes in this domain: nothing outdated, contradictory or duplicated (no external sources found). Accepting sets the last-confirmed date to today."
+  },
+  "review": {
+    "period": "Week {week} of {month}/{year}",
+    "title": "Weekly review · {period}",
+    "origin": "Weekly review compiled by {agent}",
+    "originSystem": "Weekly review",
+    "tag": "period-review",
+    "sections": {
+      "actions": "Actions",
+      "records": "Records this period",
+      "research": "Research",
+      "experts": "Expert reviews",
+      "due": "Notes due for re-confirmation",
+      "stale": "Proposals undecided for over 14 days",
+      "audit": "Memory audit",
+      "attached": "Attached proposals"
+    },
+    "completed": "{count} completed",
+    "overdue": "{count} overdue",
+    "procrastinated": "Slipping: {items}",
+    "time": "Time spent on: {items}",
+    "minutes": "{key} {hours} h",
+    "researchItem": "{domain} | {question}: {summary}",
+    "researchUnavailable": "{domain} | {question} (no lookup tool available; question listed for later)",
+    "researchNothing": "{domain} | {question}: nothing new",
+    "expertItem": "{agent} ({domain}): {text}",
+    "expertItemNoName": "{domain}: {text}",
+    "dueItem": "{note} (due {date})",
+    "staleItem": "{title} (waiting {days} days)",
+    "auditItem": "{memory}: “{text}” overlaps {note}",
+    "auditMemory": {
+      "work_notes": "Work notes",
+      "context": "Current context",
+      "activity": "Activity log"
+    },
+    "attached": "{cleanup} cleanup, {schedule} schedule and {audit} memory-audit proposals are decided separately on the workbench.",
+    "schedule": {
+      "title": "Reschedule: {task} ({from} → {to})",
+      "body": "Overdue for {days} days; suggest moving it to a lighter day."
+    },
+    "audit": {
+      "workNotesTitle": "Tidy {agent}'s work notes: {count} lines overlap notes",
+      "contextTitle": "Tidy current context: {count} items overlap notes",
+      "line": "- “{text}” is already in {note}"
+    },
+    "settings": {
+      "title": "Research and reviews",
+      "description": "The researcher researches, experts review their domains and the secretary reviews actions; the commander compiles one review proposal. Conflicts and errors are proposed immediately, not held for the bundle.",
+      "frequency": "Frequency",
+      "weekday": "Compile on",
+      "lastRun": "Last run: {time}",
+      "never": "Not run yet",
+      "runNow": "Run once now",
+      "running": "Running…",
+      "saved": "Saved",
+      "loadError": "Couldn't load settings",
+      "saveError": "Couldn't save",
+      "frequencies": {
+        "daily": "Daily",
+        "weekly": "Weekly",
+        "biweekly": "Every two weeks",
+        "monthly": "Monthly",
+        "off": "Off"
+      },
+      "weekdays": {
+        "0": "Sunday",
+        "1": "Monday",
+        "2": "Tuesday",
+        "3": "Wednesday",
+        "4": "Thursday",
+        "5": "Friday",
+        "6": "Saturday"
+      }
+    }
   }
 }

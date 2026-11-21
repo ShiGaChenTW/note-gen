@@ -20,6 +20,8 @@ vi.mock('@/db/agents', () => ({
 
 // Fork（almanac ALMNC-54.3）：Agent 設定區有自己的測試（agent-memory-settings.test.ts），這裡只要不碰資料庫。
 vi.mock('./agent-memory-settings', () => ({ AgentMemorySettings: () => null }))
+// Fork（almanac ALMNC-54.13）：調研與回顧的設定有自己的測試（review-settings.test.ts）。
+vi.mock('./review-settings', () => ({ ReviewSettings: () => null }))
 
 vi.mock('next-intl', async importOriginal => {
   const intl = await importOriginal<typeof import('next-intl')>()

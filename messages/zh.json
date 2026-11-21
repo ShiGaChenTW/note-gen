@@ -8880,5 +8880,79 @@
     "confirmTitle": "仍然有效：{title}",
     "confirmBody": "重新确认后没有发现过时、矛盾或重复，外部资料也没有不同说法（{evidence}）。接受后把最后确认日期改成今天。",
     "confirmBodyNoExternal": "重新比对同领域的笔记，没有发现过时、矛盾或重复（没有查到外部资料）。接受后把最后确认日期改成今天。"
+  },
+  "review": {
+    "period": "{month} 月第 {week} 周",
+    "title": "每周回顾 · {period}",
+    "origin": "{agent} 统整的每周回顾",
+    "originSystem": "每周回顾",
+    "tag": "时期回顾",
+    "sections": {
+      "actions": "行动回顾",
+      "records": "这期的记录",
+      "research": "研究员调研",
+      "experts": "专家回顾",
+      "due": "到期要重新确认的笔记",
+      "stale": "超过 14 天没决定的提案",
+      "audit": "记忆稽核",
+      "attached": "另附的提案"
+    },
+    "completed": "完成 {count} 件",
+    "overdue": "逾期 {count} 件",
+    "procrastinated": "拖延：{items}",
+    "time": "时间花在：{items}",
+    "minutes": "{key} {hours} 小时",
+    "researchItem": "{domain}｜{question}：{summary}",
+    "researchUnavailable": "{domain}｜{question}（没有可用的查询工具，题目先列着）",
+    "researchNothing": "{domain}｜{question}：没有新发现",
+    "expertItem": "{agent}（{domain}）：{text}",
+    "expertItemNoName": "{domain}：{text}",
+    "dueItem": "{note}（{date} 到期）",
+    "staleItem": "{title}（等了 {days} 天）",
+    "auditItem": "{memory}：「{text}」和 {note} 重叠",
+    "auditMemory": {
+      "work_notes": "工作笔记",
+      "context": "目前脉络",
+      "activity": "活动记录"
+    },
+    "attached": "清理提案 {cleanup} 則、排程调整 {schedule} 則、记忆稽核 {audit} 則，在工作台另外决定。",
+    "schedule": {
+      "title": "改时间：{task}（{from} → {to}）",
+      "body": "已经逾期 {days} 天，建议改到比较空的一天。"
+    },
+    "audit": {
+      "workNotesTitle": "整理 {agent} 的工作笔记：{count} 行和笔记重叠",
+      "contextTitle": "整理目前脉络：{count} 项和笔记重叠",
+      "line": "- 「{text}」已经写在 {note}"
+    },
+    "settings": {
+      "title": "调研与回顾",
+      "description": "研究员调研、专家回顾领域、秘书回顾行动，由指挥官统整成一张回顾提案。冲突或错误会立刻提案，不等汇整。",
+      "frequency": "频率",
+      "weekday": "汇整日",
+      "lastRun": "上次执行：{time}",
+      "never": "还没执行过",
+      "runNow": "现在执行一次",
+      "running": "执行中…",
+      "saved": "已储存",
+      "loadError": "读不到设定",
+      "saveError": "没办法储存",
+      "frequencies": {
+        "daily": "每天",
+        "weekly": "每周",
+        "biweekly": "每两周",
+        "monthly": "每月",
+        "off": "关闭"
+      },
+      "weekdays": {
+        "0": "星期日",
+        "1": "星期一",
+        "2": "星期二",
+        "3": "星期三",
+        "4": "星期四",
+        "5": "星期五",
+        "6": "星期六"
+      }
+    }
   }
 }

@@ -17,6 +17,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { SettingSection } from '../components/setting-base'
 import { AgentMemorySettings } from './agent-memory-settings'
+import { ReviewSettings } from './review-settings'
 
 const field = 'w-full rounded-md border border-line bg-bg px-3 py-2 text-ink'
 
@@ -197,6 +198,8 @@ function AgentSettingsPanel() {
       </SettingSection>
       {/* Fork（almanac ALMNC-54.3）：Agent 設定區接在代理人名單下面。 */}
       {!!agents?.length && <AgentMemorySettings agents={agents} />}
+      {/* Fork（almanac ALMNC-54.13）：調研與回顧的頻率也在 Agent 設定區。 */}
+      {agents !== null && <ReviewSettings />}
     </>
   )
 }

@@ -15,6 +15,7 @@ import { useWeekOverlay } from '@/lib/week/overlay'
 import { useKnowledgeOverlay } from '@/lib/sidebar-v3/knowledge'
 import { KnowledgeScreen } from '../sidebar-v3/knowledge-screen'
 import { SlotService } from '../week/slot-service'
+import { ReviewService } from '../review/review-service'
 import { WeekScreen } from '../week/week-screen'
 import { CollectScreen } from '../collect/collect-screen'
 import { DecideScreen } from '../decide/decide-screen'
@@ -137,6 +138,7 @@ export function HomeService() {
       <WeekScreen />
       <KnowledgeScreen />
       <SlotService />
+      <ReviewService />
     </>
   )
 }
