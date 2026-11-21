@@ -8620,6 +8620,32 @@
       "trimmedImages": "精选文章的图片已移除。",
       "trimmedImageNote": "［图片因文件大小限制移除］"
     },
+    "sleep": {
+      "updatedAt": "更新于 {time}",
+      "weatherTitle": "天气",
+      "scheduleTitle": "今天行程",
+      "reviewTitle": "每日回顾卡",
+      "allDay": "全天",
+      "more": "另有 {count} 件 · 见简报第 1 章",
+      "highLow": "高 {high}° 低 {low}°",
+      "precipitation": "降雨 {value}%",
+      "hintPages": "今日简报 约 {pages} 页",
+      "hintNew": "新：{items}",
+      "hintArticles": "文章 {count}",
+      "hintPinned": "钉选 {count}",
+      "hintReview": "回顾 {count}",
+      "hintReport": "报告",
+      "hintNone": "今日简报已备好",
+      "weekdays": {
+        "sun": "星期日",
+        "mon": "星期一",
+        "tue": "星期二",
+        "wed": "星期三",
+        "thu": "星期四",
+        "fri": "星期五",
+        "sat": "星期六"
+      }
+    },
     "pin": "钉选到电子纸",
     "unpin": "取消电子纸钉选",
     "pinned": "已钉选到电子纸",

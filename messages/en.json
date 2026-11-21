@@ -8620,6 +8620,32 @@
       "trimmedImages": "Images in daily articles were removed.",
       "trimmedImageNote": "[Image removed to fit the file size limit]"
     },
+    "sleep": {
+      "updatedAt": "Updated {time}",
+      "weatherTitle": "Weather",
+      "scheduleTitle": "Today",
+      "reviewTitle": "Daily review card",
+      "allDay": "All day",
+      "more": "{count} more · see briefing chapter 1",
+      "highLow": "H {high}° L {low}°",
+      "precipitation": "Rain {value}%",
+      "hintPages": "Daily briefing ~{pages} pages",
+      "hintNew": "New: {items}",
+      "hintArticles": "{count} articles",
+      "hintPinned": "{count} pinned",
+      "hintReview": "{count} reviews",
+      "hintReport": "report",
+      "hintNone": "Daily briefing ready",
+      "weekdays": {
+        "sun": "Sunday",
+        "mon": "Monday",
+        "tue": "Tuesday",
+        "wed": "Wednesday",
+        "thu": "Thursday",
+        "fri": "Friday",
+        "sat": "Saturday"
+      }
+    },
     "pin": "Pin to e-paper",
     "unpin": "Unpin from e-paper",
     "pinned": "Pinned to e-paper",
