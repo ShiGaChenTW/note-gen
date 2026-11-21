@@ -1,0 +1,263 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`排版快照（AC #5：上述情況都有快照） > busy 1`] = `
+"rect 0,0 480x800 g3
+text 460,31 right sans13 g1 w88 "更新於 06:42"
+text 20,31 mono13b g0 w80 "ALMANAC"
+text 89,31 sans13 g1 w271 "臺北市"
+rect 20,37 440x1 g0
+text 20,80 mono30b g0 w440 "2026-11-21"
+text 212,80 sans30b g0 w248 "星期六"
+text 20,102 sans13 g1 w440 "高 22° 低 10° · 降雨 80%"
+text 20,131 mono13b g0 w40 "§01"
+text 52,131 sans13b g0 w408 "天氣"
+rect 20,135 440x1 g0
+text 20,158 sans13 g1 w106 "早"
+text 20,186 mono24b g0 w106 "14°"
+text 20,204 sans13 g1 w106 "降雨 10%"
+rect 129,144 1x62 g2
+text 140,158 sans13 g1 w96 "午"
+text 140,186 mono24b g0 w96 "21°"
+text 140,204 sans13 g1 w96 "降雨 30%"
+rect 239,144 1x62 g2
+text 250,158 sans13 g1 w96 "晚"
+text 250,186 mono24b g0 w96 "17°"
+text 250,204 sans13 g1 w96 "降雨 80%"
+rect 349,144 1x62 g2
+text 360,158 sans13 g1 w96 "夜"
+text 360,186 mono24b g0 w96 "12°"
+text 360,204 sans13 g1 w96 "降雨 60%"
+text 20,237 mono13b g0 w40 "§02"
+text 52,237 sans13b g0 w408 "今天行程"
+rect 20,241 440x1 g0
+rect 20,248 36x24 g0
+text 25,265 sans13b g3 w30 "全天"
+frame 20,248 440x24 g0
+text 64,265 sans15 g0 w390 "員工旅遊報名截止"
+rect 83,295 1x35 g0
+dot 83.5,295 r4.5 g0
+text 20,300 mono15 g0 w46 "08:00"
+text 100,300 sans15 g0 w360 "第 1 件行程"
+text 100,318 sans13 g1 w360 "08:00–08:45 · 45m · 地點 1"
+rect 83,330 1x50 g0
+dot 83.5,345 r4.5 g0
+text 20,350 mono15 g0 w46 "09:00"
+text 100,350 sans15 g0 w360 "第 2 件行程"
+text 100,368 sans13 g1 w360 "09:00–09:45 · 45m"
+rect 83,380 1x50 g0
+dot 83.5,395 r4.5 g0
+text 20,400 mono15 g0 w46 "10:00"
+text 100,400 sans15 g0 w360 "第 3 件行程"
+text 100,418 sans13 g1 w360 "10:00–10:45 · 45m"
+rect 83,430 1x50 g0
+dot 83.5,445 r4.5 g0
+text 20,450 mono15 g0 w46 "11:00"
+text 100,450 sans15 g0 w360 "第 4 件行程"
+text 100,468 sans13 g1 w360 "11:00–11:45 · 45m · 地點 4"
+rect 83,480 1x50 g0
+dot 83.5,495 r4.5 g0
+text 20,500 mono15 g0 w46 "12:00"
+text 100,500 sans15 g0 w360 "第 5 件行程"
+text 100,518 sans13 g1 w360 "12:00–12:45 · 45m"
+rect 83,530 1x50 g0
+dot 83.5,545 r4.5 g0
+text 20,550 mono15 g0 w46 "13:00"
+text 100,550 sans15 g0 w360 "第 6 件行程"
+text 100,568 sans13 g1 w360 "13:00–13:45 · 45m"
+rect 83,580 1x50 g0
+dot 83.5,595 r4.5 g0
+text 20,600 mono15 g0 w46 "14:00"
+text 100,600 sans15 g0 w360 "第 7 件行程"
+text 100,618 sans13 g1 w360 "14:00–14:45 · 45m · 地點 7"
+rect 83,630 1x15 g0
+dot 83.5,645 r4.5 g0
+text 20,650 mono15 g0 w46 "15:00"
+text 100,650 sans15 g0 w360 "第 8 件行程"
+text 100,668 sans13 g1 w360 "15:00–15:45 · 45m"
+text 100,696 sans13b g0 w360 "另有 3 件 · 見簡報第 1 章"
+rect 20,764 440x1 g0
+text 20,786 sans13 g1 w440 "今日簡報 約 24 頁 · 新：釘選 1 · 文章 3 · 回顧 1 · 報告""
+`;
+
+exports[`排版快照（AC #5：上述情況都有快照） > empty 1`] = `
+"rect 0,0 480x800 g3
+text 460,31 right sans13 g1 w88 "更新於 06:42"
+text 20,31 mono13b g0 w80 "ALMANAC"
+text 89,31 sans13 g1 w271 "臺北市"
+rect 20,37 440x1 g0
+text 20,80 mono30b g0 w440 "2026-11-21"
+text 212,80 sans30b g0 w248 "星期六"
+text 20,102 sans13 g1 w440 "高 22° 低 10° · 降雨 80%"
+text 20,131 mono13b g0 w40 "§01"
+text 52,131 sans13b g0 w408 "天氣"
+rect 20,135 440x1 g0
+text 20,158 sans13 g1 w106 "早"
+text 20,186 mono24b g0 w106 "14°"
+text 20,204 sans13 g1 w106 "降雨 10%"
+rect 129,144 1x62 g2
+text 140,158 sans13 g1 w96 "午"
+text 140,186 mono24b g0 w96 "21°"
+text 140,204 sans13 g1 w96 "降雨 30%"
+rect 239,144 1x62 g2
+text 250,158 sans13 g1 w96 "晚"
+text 250,186 mono24b g0 w96 "17°"
+text 250,204 sans13 g1 w96 "降雨 80%"
+rect 349,144 1x62 g2
+text 360,158 sans13 g1 w96 "夜"
+text 360,186 mono24b g0 w96 "12°"
+text 360,204 sans13 g1 w96 "降雨 60%"
+text 20,237 mono13b g0 w40 "§02"
+text 52,237 sans13b g0 w408 "今天行程"
+rect 20,241 440x1 g0
+text 20,264 sans15 g1 w440 "今天沒有行程。"
+frame 20,280 440x194 g0
+text 34,307 sans13b g1 w412 "每日回顧卡"
+text 34,339 sans17b g0 w412 "知識/間隔重複"
+text 34,367 sans15 g0 w412 "間隔重複是把複習排在快要忘記的時候：第一次隔一天、再隔"
+text 34,389 sans15 g0 w412 "三天、再隔一週，每次成功回想就把間隔拉長。重點不是複習"
+text 34,411 sans15 g0 w412 "的次數，而是每次都在「有點難想起來」的時候提取，提取本"
+text 34,433 sans15 g0 w412 "身才是讓記憶變牢的動作。"
+text 34,455 sans13 g1 w412 "知識/間隔重複.md"
+rect 20,764 440x1 g0
+text 20,786 sans13 g1 w440 "今日簡報 約 24 頁 · 新：文章 3 · 回顧 1 · 報告""
+`;
+
+exports[`排版快照（AC #5：上述情況都有快照） > normal 1`] = `
+"rect 0,0 480x800 g3
+text 460,31 right sans13 g1 w88 "更新於 06:42"
+text 20,31 mono13b g0 w80 "ALMANAC"
+text 89,31 sans13 g1 w271 "臺北市"
+rect 20,37 440x1 g0
+text 20,80 mono30b g0 w440 "2026-11-21"
+text 212,80 sans30b g0 w248 "星期六"
+text 20,102 sans13 g1 w440 "高 22° 低 10° · 降雨 80%"
+text 20,131 mono13b g0 w40 "§01"
+text 52,131 sans13b g0 w408 "天氣"
+rect 20,135 440x1 g0
+text 20,158 sans13 g1 w106 "早"
+text 20,186 mono24b g0 w106 "14°"
+text 20,204 sans13 g1 w106 "降雨 10%"
+rect 129,144 1x62 g2
+text 140,158 sans13 g1 w96 "午"
+text 140,186 mono24b g0 w96 "21°"
+text 140,204 sans13 g1 w96 "降雨 30%"
+rect 239,144 1x62 g2
+text 250,158 sans13 g1 w96 "晚"
+text 250,186 mono24b g0 w96 "17°"
+text 250,204 sans13 g1 w96 "降雨 80%"
+rect 349,144 1x62 g2
+text 360,158 sans13 g1 w96 "夜"
+text 360,186 mono24b g0 w96 "12°"
+text 360,204 sans13 g1 w96 "降雨 60%"
+text 20,237 mono13b g0 w40 "§02"
+text 52,237 sans13b g0 w408 "今天行程"
+rect 20,241 440x1 g0
+rect 20,248 36x24 g0
+text 25,265 sans13b g3 w30 "全天"
+frame 20,248 440x24 g0
+text 64,265 sans15 g0 w390 "連假補班日"
+rect 83,295 1x35 g0
+dot 83.5,295 r4.5 g0
+text 20,300 mono15 g0 w46 "09:30"
+text 100,300 sans15 g0 w360 "almanac 站會"
+text 100,318 sans13 g1 w360 "09:30–10:00 · 30m · 線上"
+rect 83,330 1x70 g0
+dot 83.5,345 r4.5 g0
+text 20,350 mono15 g0 w46 "11:00"
+text 100,350 sans15 g0 w360 "V3 驗收：對話頁與開工卡，順便確認 CrossPoint"
+text 100,370 sans15 g0 w360 "的 SD 外掛下載流程、Wi-Fi 喚醒時間與 1 MB…"
+text 100,388 sans13 g1 w360 "11:00–12:30 · 1h30 · 公司 3F 會議室"
+rect 83,400 1x50 g0
+dot 83.5,415 r4.5 g0
+text 20,420 mono15 g0 w46 "14:00"
+text 100,420 sans15 g0 w360 "牙醫回診"
+text 100,438 sans13 g1 w360 "14:00–15:00 · 1h · 信義路診所"
+rect 83,450 1x32 g0
+dot 83.5,465 r4.5 g0
+text 20,470 mono15 g0 w46 "15:00"
+text 100,470 sans15 g0 w360 "寄報價給客戶"
+rect 83,482 1x15 g0
+dot 83.5,497 r4.5 g0
+text 20,502 mono15 g0 w46 "19:30"
+text 100,502 sans15 g0 w360 "讀書會"
+text 100,520 sans13 g1 w360 "19:30–21:00 · 1h30"
+rect 20,764 440x1 g0
+text 20,786 sans13 g1 w440 "今日簡報 約 24 頁 · 新：釘選 1 · 文章 3 · 回顧 1 · 報告""
+`;
+
+exports[`排版快照（AC #5：上述情況都有快照） > private 1`] = `
+"rect 0,0 480x800 g3
+text 460,31 right sans13 g1 w88 "更新於 06:42"
+text 20,31 mono13b g0 w80 "ALMANAC"
+text 89,31 sans13 g1 w271 "臺北市"
+rect 20,37 440x1 g0
+text 20,80 mono30b g0 w440 "2026-11-21"
+text 212,80 sans30b g0 w248 "星期六"
+text 20,102 sans13 g1 w440 "高 22° 低 10° · 降雨 80%"
+text 20,131 mono13b g0 w40 "§01"
+text 52,131 sans13b g0 w408 "天氣"
+rect 20,135 440x1 g0
+text 20,158 sans13 g1 w106 "早"
+text 20,186 mono24b g0 w106 "14°"
+text 20,204 sans13 g1 w106 "降雨 10%"
+rect 129,144 1x62 g2
+text 140,158 sans13 g1 w96 "午"
+text 140,186 mono24b g0 w96 "21°"
+text 140,204 sans13 g1 w96 "降雨 30%"
+rect 239,144 1x62 g2
+text 250,158 sans13 g1 w96 "晚"
+text 250,186 mono24b g0 w96 "17°"
+text 250,204 sans13 g1 w96 "降雨 80%"
+rect 349,144 1x62 g2
+text 360,158 sans13 g1 w96 "夜"
+text 360,186 mono24b g0 w96 "12°"
+text 360,204 sans13 g1 w96 "降雨 60%"
+text 20,237 mono13b g0 w40 "§02"
+text 52,237 sans13b g0 w408 "今天行程"
+rect 20,241 440x1 g0
+rect 20,248 36x24 g0
+text 25,265 sans13b g3 w30 "全天"
+frame 20,248 440x24 g0
+text 64,265 sans15 g0 w390 "私人行程"
+rect 83,295 1x35 g0
+dot 83.5,295 r4.5 g0
+text 20,300 mono15 g0 w46 "10:00"
+text 100,300 sans15 g0 w360 "產品週會"
+text 100,318 sans13 g1 w360 "10:00–11:00 · 1h · 大會議室"
+rect 83,330 1x50 g0
+dot 83.5,345 r4.5 g0
+text 20,350 mono15 g0 w46 "13:00"
+text 100,350 sans15 g1 w360 "私人行程"
+text 100,368 sans13 g1 w360 "13:00–14:00 · 1h"
+rect 83,380 1x15 g0
+dot 83.5,395 r4.5 g0
+text 20,400 mono15 g0 w46 "16:00"
+text 100,400 sans15 g0 w360 "寫週報"
+text 100,418 sans13 g1 w360 "16:00–17:00 · 1h"
+rect 20,764 440x1 g0
+text 20,786 sans13 g1 w440 "今日簡報 約 24 頁 · 新：釘選 1 · 文章 3 · 回顧 1 · 報告""
+`;
+
+exports[`排版快照（AC #5：上述情況都有快照） > unavailable 1`] = `
+"rect 0,0 480x800 g3
+text 460,31 right sans13 g1 w88 "更新於 06:42"
+text 20,31 mono13b g0 w80 "ALMANAC"
+rect 20,37 440x1 g0
+text 20,80 mono30b g0 w440 "2026-11-21"
+text 212,80 sans30b g0 w248 "星期六"
+text 20,111 mono13b g0 w40 "§01"
+text 52,111 sans13b g0 w408 "天氣"
+rect 20,115 440x1 g0
+text 20,138 sans15 g1 w440 "天氣暫無資料"
+text 20,171 mono13b g0 w40 "§02"
+text 52,171 sans13b g0 w408 "今天行程"
+rect 20,175 440x1 g0
+text 20,198 sans15 g1 w440 "行事曆沒有授權，讀不到今天的行程。"
+frame 20,214 440x128 g0
+text 34,241 sans13b g1 w412 "每日回顧卡"
+text 34,273 sans17b g0 w412 "舊"
+text 34,301 sans15 g0 w412 "舊.md 的重點段落。"
+text 34,323 sans13 g1 w412 "舊.md"
+rect 20,764 440x1 g0
+text 20,786 sans13 g1 w440 "今日簡報 約 24 頁 · 新：釘選 1 · 文章 3 · 回顧 1 · 報告""
+`;

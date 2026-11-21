@@ -386,6 +386,10 @@ export default function RootLayout({
         stopEinkPins = initEinkPinSync()
         // Fork（almanac ALMNC-47）：開發模式在開發者工具提供 window.__almanacBriefingPreview() 看今日簡報資料（只讀）
         if (process.env.NODE_ENV !== 'production') void import('@/lib/eink/briefing').then(m => m.registerBriefingPreview())
+        // Fork（almanac ALMNC-48）：開發模式提供 window.__almanacEpubPreview() 下載今天的今日簡報 EPUB（只讀）
+        if (process.env.NODE_ENV !== 'production') void import('@/lib/eink/epub').then(m => m.registerEpubPreview())
+        // Fork（almanac ALMNC-49）：開發模式提供 window.__almanacSleepPreview() 下載今天的休眠畫面 sleep.bmp（只讀）
+        if (process.env.NODE_ENV !== 'production') void import('@/lib/eink/sleep').then(m => m.registerSleepPreview())
         stopManagedBackup = initManagedBackupRuntime()
         stopGitVersionAutoSnapshot = initGitVersionAutoSnapshotRuntime()
 
