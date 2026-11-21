@@ -4874,6 +4874,25 @@
         },
         "commander": {
           "origin": "{agent}（對話）"
+        },
+        "router": {
+          "ask": "這句要交給誰？",
+          "askUnavailable": "本機模型沒有開，先問你：這句要交給誰？",
+          "routes": {
+            "schedule": "{name}（日程）",
+            "process": "{name}（處理）",
+            "query": "{name}（查詢）",
+            "preference": "存成偏好"
+          },
+          "suggested": "建議",
+          "pickExpert": "要問哪位專家？",
+          "preferenceConfirm": "存成你的偏好：「{line}」？",
+          "savePreference": "存起來",
+          "notPreference": "交給 {name} 處理",
+          "cancel": "取消",
+          "saved": "已存進你的偏好",
+          "alreadySaved": "偏好裡已經有這一句",
+          "saveFailed": "偏好沒有存成功"
         }
       },
       "condensing": "正在壓縮上下文…",

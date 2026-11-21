@@ -1,0 +1,205 @@
+{
+ "_note": "ALMNC-54.9 實測的 40 句指令（gold 是正確類別），只給 RUN_OLLAMA=1 的實機比對測試用。",
+ "commands": [
+  {
+   "text": "明天下午三點跟 Alice 開會，幫我排進行程",
+   "gold": "schedule",
+   "origin": "constructed"
+  },
+  {
+   "text": "下週一 06:00 提醒我產生側寫",
+   "gold": "schedule",
+   "origin": "adapted"
+  },
+  {
+   "text": "把今天沒做完的任務移到明天",
+   "gold": "schedule",
+   "origin": "constructed"
+  },
+  {
+   "text": "我週四晚上有空嗎",
+   "gold": "schedule",
+   "origin": "constructed"
+  },
+  {
+   "text": "十一月底前要交預算表，幫我加一個任務",
+   "gold": "schedule",
+   "origin": "constructed"
+  },
+  {
+   "text": "這週的行程幫我排一下，週三留給寫報告",
+   "gold": "schedule",
+   "origin": "constructed"
+  },
+  {
+   "text": "取消週五的牙醫預約",
+   "gold": "schedule",
+   "origin": "constructed"
+  },
+  {
+   "text": "我要改成每個禮拜做一次",
+   "gold": "schedule",
+   "origin": "real"
+  },
+  {
+   "text": "每天早上八點提醒我看電子紙簡報",
+   "gold": "schedule",
+   "origin": "constructed"
+  },
+  {
+   "text": "後天幫我留兩個小時做 almanac 驗測",
+   "gold": "schedule",
+   "origin": "constructed"
+  },
+  {
+   "text": "把這篇筆記整理成重點",
+   "gold": "process",
+   "origin": "real"
+  },
+  {
+   "text": "請記住我今天中午吃了牛肉麵",
+   "gold": "process",
+   "origin": "real"
+  },
+  {
+   "text": "幫我把 11/19 會議紀錄拆成任務和紀錄",
+   "gold": "process",
+   "origin": "constructed"
+  },
+  {
+   "text": "這三篇關於電子紙的筆記幫我合併成一篇",
+   "gold": "process",
+   "origin": "constructed"
+  },
+  {
+   "text": "下週二開會，順便整理上次的紀錄",
+   "gold": "process",
+   "origin": "constructed"
+  },
+  {
+   "text": "研究一下 genui 跟 hermes-ui-cards 的差異，整理成筆記",
+   "gold": "process",
+   "origin": "adapted"
+  },
+  {
+   "text": "這段錄音轉成文字後整理成會議紀錄",
+   "gold": "process",
+   "origin": "constructed"
+  },
+  {
+   "text": "把這篇文章的重點存進工業工程領域",
+   "gold": "process",
+   "origin": "constructed"
+  },
+  {
+   "text": "幫我檢查這兩則筆記是不是互相矛盾",
+   "gold": "process",
+   "origin": "constructed"
+  },
+  {
+   "text": "出一份研究筆記放進資料源",
+   "gold": "process",
+   "origin": "adapted"
+  },
+  {
+   "text": "我今天中午吃了什麼？",
+   "gold": "query",
+   "origin": "real"
+  },
+  {
+   "text": "目前專案進度？",
+   "gold": "query",
+   "origin": "real"
+  },
+  {
+   "text": "我之前寫過哪些關於深度工作的筆記",
+   "gold": "query",
+   "origin": "constructed"
+  },
+  {
+   "text": "Q3 規劃會議上 Alice 說了什麼",
+   "gold": "query",
+   "origin": "constructed"
+  },
+  {
+   "text": "電子紙同步的方案最後決定用哪一個",
+   "gold": "query",
+   "origin": "constructed"
+  },
+  {
+   "text": "我剛問你什麼？",
+   "gold": "query",
+   "origin": "real"
+  },
+  {
+   "text": "幫我確認zephyr的設定內容有哪些可以調整？",
+   "gold": "query",
+   "origin": "real"
+  },
+  {
+   "text": "工業工程領域裡有哪些還沒解決的問題",
+   "gold": "query",
+   "origin": "constructed"
+  },
+  {
+   "text": "上個月讀了哪幾本書",
+   "gold": "query",
+   "origin": "constructed"
+  },
+  {
+   "text": "詳細說明這個repo的功能與使用方式",
+   "gold": "query",
+   "origin": "adapted"
+  },
+  {
+   "text": "我甜點喜歡吃香草口味",
+   "gold": "preference",
+   "origin": "real"
+  },
+  {
+   "text": "卡片文字不要用粗體字",
+   "gold": "preference",
+   "origin": "real"
+  },
+  {
+   "text": "以後回答都用繁體中文",
+   "gold": "preference",
+   "origin": "constructed"
+  },
+  {
+   "text": "會議紀錄以後都幫我拆出待辦",
+   "gold": "preference",
+   "origin": "constructed"
+  },
+  {
+   "text": "秘書排行程時不要排在中午十二點到一點",
+   "gold": "preference",
+   "origin": "constructed"
+  },
+  {
+   "text": "研究員的調研改成每個月彙整一次",
+   "gold": "preference",
+   "origin": "adapted"
+  },
+  {
+   "text": "我不喜歡太長的摘要，三句話就好",
+   "gold": "preference",
+   "origin": "constructed"
+  },
+  {
+   "text": "幫我把指揮官的名字改成 Mia",
+   "gold": "preference",
+   "origin": "constructed"
+  },
+  {
+   "text": "你帮我换成女生的声音可以吗",
+   "gold": "preference",
+   "origin": "real"
+  },
+  {
+   "text": "每週回顧的提案不要超過十條",
+   "gold": "preference",
+   "origin": "constructed"
+  }
+ ]
+}

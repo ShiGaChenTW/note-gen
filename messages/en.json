@@ -4809,6 +4809,25 @@
         },
         "commander": {
           "origin": "{agent} (chat)"
+        },
+        "router": {
+          "ask": "Who should take this?",
+          "askUnavailable": "The local model isn't running. Who should take this?",
+          "routes": {
+            "schedule": "{name} (schedule)",
+            "process": "{name} (process)",
+            "query": "{name} (query)",
+            "preference": "Save as a preference"
+          },
+          "suggested": "suggested",
+          "pickExpert": "Which expert should answer?",
+          "preferenceConfirm": "Save as your preference: “{line}”?",
+          "savePreference": "Save",
+          "notPreference": "Hand to {name}",
+          "cancel": "Cancel",
+          "saved": "Saved to your preferences",
+          "alreadySaved": "Already in your preferences",
+          "saveFailed": "Couldn't save the preference"
         }
       },
       "condensing": "Condensing context...",
