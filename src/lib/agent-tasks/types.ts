@@ -56,4 +56,6 @@ export interface AgentTask {
   createdAt: number
   updatedAt: number
   finishedAt?: number
+  /** Fork（almanac ALMNC-54.5）：從哪段對話派出的任務；它的草稿就是來自那段對話的提案。 */
+  conversationId?: number
 }

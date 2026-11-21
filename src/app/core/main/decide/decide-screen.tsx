@@ -3,15 +3,18 @@
 // Fork（almanac ALMNC-10）：V3「等你定」頁。左邊是清單、右邊是選中那條的詳情與差異預覽，一次只給一個主要動作（收下），「不要」是次要。
 // 清單是 lib/decide 從收集與任務中心投影出來的，和首頁「需要你處理」裡的等你定項目同一份；這一頁不存任何待決狀態。
 // 外觀依 redesign_v5.html：單色、提案是虛線框。只在新介面（v3）出現。
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { CheckCheck } from 'lucide-react'
+import { CheckCheck, MessagesSquare } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAgentTaskStore } from '@/lib/agent-tasks'
 import { useUiV3 } from '@/lib/fork-ui'
 import { refreshJournal } from '@/lib/decide/actions'
 import type { DecideItem } from '@/lib/decide/project'
-import { useDecisions } from '@/lib/decide/use-decisions'
+import { useDecisions, useStaleProposals } from '@/lib/decide/use-decisions'
+import { openConversation } from '@/lib/proposals/actions'
+import useChatStore from '@/stores/chat'
+import useProposalTrailStore from '@/stores/proposals'
 import { cn } from '@/lib/utils'
 import useCollectStore from '@/stores/collect'
 import useDecideStore from '@/stores/decide'
@@ -20,6 +23,7 @@ import { JobReviewPreview } from '../jobs/job-result'
 import { EmptyState } from '@/components/v3/empty-state'
 import { PageHeader, PageSurface } from '../page-ui'
 import { DiffBlock, KIND_ICON, destinationText, useDecideActions } from './decide-parts'
+import { DiscussForm } from './discuss-form'
 
 function itemTitle(item: DecideItem) {
   return item.source === 'draft' ? item.summary || item.title : item.title
@@ -29,7 +33,11 @@ function Detail({ item }: { item: DecideItem }) {
   const t = useTranslations('decide')
   const jobT = useTranslations('jobs')
   const organizeT = useTranslations('organize')
-  const { busy, accept, reject } = useDecideActions()
+  const { busy, accept, reject, discuss } = useDecideActions()
+  const [discussing, setDiscussing] = useState(false)
+  const conversationTitle = useChatStore(state => item.conversationId === undefined
+    ? undefined
+    : state.conversations.find(entry => entry.id === item.conversationId)?.title)
   const Icon = KIND_ICON[item.kind]
   const { diff } = item.preview
   return (
@@ -53,10 +61,31 @@ function Detail({ item }: { item: DecideItem }) {
       {item.organizeMerge && <p className="mt-3 text-sm">{organizeT('mergeEffect', item.organizeMerge)}</p>}
       {diff && <DiffBlock diff={diff} className="mt-3" />}
       {item.duplicates.length > 0 && <p className="mt-3 text-xs text-muted-ink">{t('merged', { count: item.duplicates.length })}</p>}
+      {/* Fork（almanac ALMNC-54.5）：提案記錄來自哪段對話，可以直接回去。 */}
+      {item.conversationId !== undefined && (
+        <button
+          type="button"
+          data-testid="decide-source-conversation"
+          onClick={() => void openConversation(item.conversationId!)}
+          className="mt-3 flex max-w-full cursor-pointer items-center gap-1.5 rounded-md text-left text-ui-compact text-muted-ink outline-none hover:text-ink focus-visible:ring-1 focus-visible:ring-ring/65"
+        >
+          <MessagesSquare aria-hidden className="size-3.5 shrink-0" />
+          <span className="truncate">{t('discuss.fromConversation', { title: conversationTitle || t('discuss.conversation') })}</span>
+        </button>
+      )}
       <div className="mt-5 flex items-center gap-1.5">
         <Button disabled={busy === item.key} onClick={() => void accept(item)}>{t('accept')}</Button>
-        <Button variant="outline" disabled={busy === item.key} onClick={() => void reject(item)}>{t('reject')}</Button>
+        <Button variant="outline" disabled={busy === item.key} aria-expanded={discussing} onClick={() => setDiscussing(open => !open)}>{t('discuss.button')}</Button>
+        <Button variant="ghost" disabled={busy === item.key} onClick={() => void reject(item)}>{t('reject')}</Button>
       </div>
+      {discussing && (
+        <DiscussForm
+          className="mt-3"
+          busy={busy === item.key}
+          onCancel={() => setDiscussing(false)}
+          onSubmit={note => void discuss(item, note)}
+        />
+      )}
     </article>
   )
 }
@@ -69,6 +98,9 @@ function DecidePage() {
   const select = useDecideStore(state => state.select)
   const items = useDecisions()
   const current = useMemo(() => items.find(item => item.key === selected) ?? items[0] ?? null, [items, selected])
+  // Fork（almanac ALMNC-54.5）：超過 14 天沒決定的提案會列進每週回顧（這裡只提醒數量，不會讓它們消失）。
+  const [now] = useState(() => Date.now())
+  const stale = useStaleProposals(now)
 
   return (
     <PageSurface label={t('title')} onDismiss={hide}>
@@ -78,6 +110,11 @@ function DecidePage() {
         onBack={hide}
       />
       <OrganizeHistory />
+      {stale.length > 0 && (
+        <p className="shrink-0 border-b border-line-soft px-5 py-2 text-ui-compact text-muted-ink" data-testid="decide-stale">
+          {t('stale', { count: stale.length })}
+        </p>
+      )}
       {items.length === 0 ? (
         <EmptyState className="px-5 py-4" icon={CheckCheck} text={t('empty')} />
       ) : (
@@ -117,12 +154,15 @@ export function DecideScreen() {
   const isV3 = useUiV3()
   const visible = useDecideStore(state => state.visible)
   const hydrate = useCollectStore(state => state.hydrate)
+  const hydrateTrail = useProposalTrailStore(state => state.hydrate)
   const items = useCollectStore(state => state.items)
   const waiting = useMemo(() => items.reduce((n, item) => n + item.proposals.filter(p => p.status === 'wait').length, 0), [items])
 
   useEffect(() => {
-    if (isV3) void hydrate()
-  }, [isV3, hydrate])
+    if (!isV3) return
+    void hydrate()
+    void hydrateTrail()
+  }, [isV3, hydrate, hydrateTrail])
   useEffect(() => {
     if (isV3) void refreshJournal()
   }, [isV3, visible, waiting])

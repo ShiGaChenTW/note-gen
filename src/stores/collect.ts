@@ -40,7 +40,8 @@ interface CollectState {
   show: () => void
   hide: () => void
   submit: (input: CollectInput, options?: { recordId?: number }) => Promise<void>
-  addProposals: (id: string, origin: string, proposals: Proposal[]) => void
+  /** Fork（almanac ALMNC-54.5）：conversationId＝這批提案來自哪段對話（沒有自帶的才補上）。 */
+  addProposals: (id: string, origin: string, proposals: Proposal[], options?: { conversationId?: number }) => void
   accept: (itemId: string, proposalId: string) => Promise<AcceptResult>
   reject: (itemId: string, proposalId: string) => void
   edit: (itemId: string, proposalId: string, patch: Partial<Pick<Proposal, 'title' | 'due' | 'time'>>) => void
@@ -94,7 +95,7 @@ const useCollectStore = create<CollectState>((set, get) => ({
     }))
   },
 
-  addProposals: (id, origin, proposals) => set(state => {
+  addProposals: (id, origin, proposals, options) => set(state => {
     if (!proposals.length || state.items.some(item => item.id === id)) return state
     return { items: [{
       id,
@@ -102,7 +103,11 @@ const useCollectStore = create<CollectState>((set, get) => ({
       createdAt: Date.now(),
       state: 'ready',
       source: 'ai',
-      proposals: proposals.map(proposal => ({ ...proposal, status: 'wait' })),
+      proposals: proposals.map(proposal => ({
+        ...proposal,
+        ...(proposal.conversationId === undefined && options?.conversationId !== undefined ? { conversationId: options.conversationId } : {}),
+        status: 'wait',
+      })),
     }, ...state.items] }
   }),
 

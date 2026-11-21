@@ -5,11 +5,13 @@
 // - ThreadStatusBar：對話面板標題下面一行。新對話還沒有訊息時選對象（標籤）；開始後只能「交給指揮官」升級成處理；
 //   日程對話問到筆記或知識時，秘書在這裡問要不要轉給指揮官（只提示，不自動轉）。
 // 判斷都在 lib/threads/tags.ts，這裡只畫。
+// Fork（almanac ALMNC-54.5）：同一行右邊顯示「還有 N 則提案待決定」——對話不結案，只提醒還有幾則沒決定。
 import { useEffect, useMemo, type ReactNode } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Segmented } from '@/components/v3/segmented'
 import { useUiV3 } from '@/lib/fork-ui'
+import { usePendingCounts } from '@/lib/decide/use-decisions'
 import { canChangeTag, DEFAULT_THREAD_TAG, tagOf, transferSuggestion, THREAD_TAGS, type ThreadTag } from '@/lib/threads/tags'
 import useChatStore from '@/stores/chat'
 import useThreadsStore from '@/stores/threads'
@@ -30,6 +32,13 @@ export function useCurrentThreadTag(): ThreadTag {
   return tagOf(tagMap, conversation)
 }
 
+/** 還有幾則提案待決定（等接受或放棄的、再次討論中的都算）；沒有就不顯示。 */
+export function PendingProposalsNote({ count, className }: { count: number, className?: string }) {
+  const t = useTranslations('threads')
+  if (count <= 0) return null
+  return <span data-slot="thread-pending" className={className ?? 'shrink-0 text-muted-ink tabular-nums'}>{t('pending', { count })}</span>
+}
+
 export function ThreadStatusBar({ trailing }: { trailing?: ReactNode }) {
   const t = useTranslations('threads.tag')
   const isV3 = useUiV3()
@@ -45,6 +54,7 @@ export function ThreadStatusBar({ trailing }: { trailing?: ReactNode }) {
   const dismissed = useThreadsStore(state => state.transferDismissed)
   const dismissTransfer = useThreadsStore(state => state.dismissTransfer)
   const tag = useCurrentThreadTag()
+  const pendingCounts = usePendingCounts()
 
   const conversation = conversations.find(entry => entry.id === currentId)
   const hasMessages = (conversation?.messageCount ?? 0) > 0 || chats.length > 0
@@ -93,6 +103,7 @@ export function ThreadStatusBar({ trailing }: { trailing?: ReactNode }) {
             <span className="min-w-0 flex-1 truncate text-muted-ink">{t(`hint.${tag}`)}</span>
           </>
         )}
+        {currentId !== null && <PendingProposalsNote count={pendingCounts.get(currentId) ?? 0} />}
         {trailing}
       </div>
       {suggestion !== null && conversation && (

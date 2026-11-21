@@ -122,7 +122,8 @@ const useThreadsStore = create<ThreadsState>((set, get) => {
     actOnCard: async (chatId, cardId, action) => {
       const card = get().cards[chatId]?.find(entry => entry.id === cardId)
       if (!card) return
-      // 提案卡連著收集頁的提案時，收下／不要走收集頁的流程（會寫筆記檔或今日日誌）。
+      // 提案卡連著收集頁的提案時，接受／放棄走收集頁的流程（會寫筆記檔或今日日誌）。
+      // 再次討論由畫面先呼叫 lib/proposals/actions 的 discussProposal（記說明、回到對話），這裡只改卡片狀態。
       if (card.type === 'proposal' && card.source) {
         const collect = useCollectStore.getState()
         if (action === 'accept') await collect.accept(card.source.itemId, card.source.proposalId)

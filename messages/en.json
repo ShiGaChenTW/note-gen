@@ -8144,11 +8144,11 @@
     "cards": {
       "proposal": "Proposal",
       "accept": "Accept",
-      "reject": "Reject",
+      "reject": "Discard",
       "alsoInInbox": "Also waiting in Inbox",
       "proposalWait": "Waiting",
       "proposalOk": "Accepted",
-      "proposalNo": "Rejected",
+      "proposalNo": "Discarded",
       "kickoff": "Kickoff card",
       "placeholder": "Sample",
       "kickoffProposed": "Ready to start",
@@ -8165,7 +8165,9 @@
         "wait": "Queued",
         "run": "Running",
         "done": "Done"
-      }
+      },
+      "discuss": "Discuss again",
+      "proposalTalk": "Discussing again"
     },
     "tag": {
       "query": "Query",
@@ -8182,7 +8184,8 @@
       "transferAsk": "Secretary: this sounds like a notes or knowledge question. Hand it to the commander?",
       "transfer": "Hand to commander",
       "keep": "No thanks"
-    }
+    },
+    "pending": "{count, plural, one {# proposal} other {# proposals}} still to decide"
   },
   "anywhere": {
     "palette": {
@@ -8283,15 +8286,28 @@
     },
     "merged": "{count} other source(s) proposed the same thing; accepting or declining handles them together.",
     "accept": "Accept",
-    "reject": "Decline",
+    "reject": "Discard",
     "accepted": "Accepted \"{title}\"",
-    "rejected": "Declined \"{title}\"",
+    "rejected": "Discarded \"{title}\"",
     "undo": "Undo",
     "undoFailed": "Can't undo, the file was changed since",
     "failed": "Something went wrong, please try again",
     "conflict": "The file changed after the draft was made. Review it in the task center.",
     "openReview": "Open task center",
-    "viewAll": "{count} waiting for you, view all"
+    "viewAll": "{count} waiting for you, view all",
+    "stale": "{count, plural, one {# proposal has} other {# proposals have}} waited over 14 days; they go into the weekly review and never disappear on their own",
+    "discuss": {
+      "button": "Discuss again",
+      "label": "Note for discussing again",
+      "placeholder": "What should the commander change? e.g. a shorter title, move it to next week",
+      "send": "Send and return to the conversation",
+      "cancel": "Cancel",
+      "hint": "⌘↩ to send",
+      "message": "Discuss again \"{title}\": {note}",
+      "done": "Back in the conversation: \"{title}\"",
+      "fromConversation": "From conversation: {title}",
+      "conversation": "this conversation"
+    }
   },
   "jobs": {
     "new": "New job card",

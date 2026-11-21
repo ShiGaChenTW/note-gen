@@ -26,7 +26,8 @@ import { Count } from '@/components/v3/count'
 import { EmptyState } from '@/components/v3/empty-state'
 import { SectionLabel } from '@/components/v3/section-label'
 import { PageHeader, PageSurface } from '../page-ui'
-import { ThreadTagPrefix } from './thread-status'
+import { PendingProposalsNote, ThreadTagPrefix } from './thread-status'
+import { usePendingCounts } from '@/lib/decide/use-decisions'
 import { tagOf, type ThreadTag } from '@/lib/threads/tags'
 
 function relativeTime(ms: number, now: number, t: (key: string, values?: Record<string, number>) => string): string {
@@ -38,10 +39,12 @@ function relativeTime(ms: number, now: number, t: (key: string, values?: Record<
   return t('time.days', { count: Math.round(hours / 24) })
 }
 
-function ThreadRow({ thread, tag, project, projects, current, now, onOpen, onMove }: {
+function ThreadRow({ thread, tag, pending, project, projects, current, now, onOpen, onMove }: {
   thread: ThreadConversation
   /** Fork（almanac ALMNC-54.4）：名稱前的標籤。 */
   tag: ThreadTag
+  /** Fork（almanac ALMNC-54.5）：還有幾則提案待決定。 */
+  pending: number
   project: string
   projects: string[]
   current: boolean
@@ -68,6 +71,7 @@ function ThreadRow({ thread, tag, project, projects, current, now, onOpen, onMov
         <span className="text-xs text-muted-ink tabular-nums">{relativeTime(thread.updatedAt, now, t)}</span>
         <span className="col-span-2 truncate text-ui-compact text-muted-ink">
           {project ? `${project} · ` : ''}<span className="text-xs tabular-nums">{t('messageCount', { count: thread.messageCount })}</span>
+          {pending > 0 && <> · <PendingProposalsNote count={pending} className="text-ink tabular-nums" /></>}
         </span>
       </button>
       <DropdownMenu>
@@ -107,6 +111,7 @@ function ThreadList() {
   const switchConversation = useChatStore(state => state.switchConversation)
   const projectMap = useThreadsStore(state => state.projectMap)
   const tagMap = useThreadsStore(state => state.tagMap)
+  const pendingCounts = usePendingCounts()
   const mode = useThreadsStore(state => state.mode)
   const query = useThreadsStore(state => state.query)
   const setQuery = useThreadsStore(state => state.setQuery)
@@ -173,6 +178,7 @@ function ThreadList() {
                   key={thread.id}
                   thread={thread}
                   tag={tagOf(tagMap, thread)}
+                  pending={pendingCounts.get(thread.id) ?? 0}
                   project={mode === 'recent' ? projectOf(projectMap, thread) : ''}
                   projects={projects}
                   current={thread.id === currentId}

@@ -59,3 +59,19 @@ describe('mergeItems', () => {
     expect(merged).toEqual([{ id: 'b', createdAt: 9, v: 'disk' }, { id: 'a', createdAt: 5, v: 'mem' }])
   })
 })
+
+// Fork（almanac ALMNC-54.5）：提案記錄來自哪段對話，重開後還在。
+describe('proposal source conversation', () => {
+  it('keeps conversationId and previousProposalId through save and load', () => {
+    const saved = serializeItems([item({ proposals: [{ ...base, id: 'p1', kind: 'task', title: '甲', status: 'wait', conversationId: 12, previousProposalId: 'collect:c0:p1' }] })])
+    expect(saved[0].proposals[0]).toMatchObject({ conversationId: 12, previousProposalId: 'collect:c0:p1' })
+    expect(parseItems(saved, NOW)[0].proposals[0]).toMatchObject({ conversationId: 12, previousProposalId: 'collect:c0:p1' })
+  })
+  it('drops only malformed link fields, not the proposal', () => {
+    const raw = [{ ...item(), proposals: [{ ...base, id: 'p1', kind: 'task', title: '甲', status: 'wait', conversationId: 'x', previousProposalId: 3 }] }]
+    const [proposal] = parseItems(raw, NOW)[0].proposals
+    expect(proposal.id).toBe('p1')
+    expect(proposal).not.toHaveProperty('conversationId')
+    expect(proposal).not.toHaveProperty('previousProposalId')
+  })
+})

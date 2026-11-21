@@ -51,6 +51,8 @@ export function serializeItems(items: readonly ItemLike[]): PersistedItem[] {
       id: proposal.id, kind: proposal.kind, title: proposal.title, body: proposal.body,
       due: proposal.due, time: proposal.time, tags: [...proposal.tags],
       ...(proposal.slot ? { slot: proposal.slot } : {}),
+      ...(proposal.conversationId !== undefined ? { conversationId: proposal.conversationId } : {}),
+      ...(proposal.previousProposalId ? { previousProposalId: proposal.previousProposalId } : {}),
       status: proposal.status,
       result: proposal.result ? { path: proposal.result.path } : undefined,
     })),
@@ -66,6 +68,16 @@ function isProposal(value: unknown): value is PersistedProposal {
     && Array.isArray(p.tags) && (p.status === 'wait' || p.status === 'ok' || p.status === 'no')
 }
 
+/** Fork（almanac ALMNC-54.5）：來源對話與取代關係型別不對時只丟那個欄位，提案本身留著。 */
+function cleanLinks(proposal: PersistedProposal): PersistedProposal {
+  const { conversationId, previousProposalId, ...rest } = proposal
+  return {
+    ...rest,
+    ...(typeof conversationId === 'number' && Number.isInteger(conversationId) ? { conversationId } : {}),
+    ...(typeof previousProposalId === 'string' && previousProposalId ? { previousProposalId } : {}),
+  }
+}
+
 /** 讀檔後：丟掉壞資料與太舊且已處理完的項目。 */
 export function parseItems(value: unknown, now: number): PersistedItem[] {
   if (!Array.isArray(value)) return []
@@ -77,7 +89,7 @@ export function parseItems(value: unknown, now: number): PersistedItem[] {
     const input = item.input as Record<string, unknown> | undefined
     if (typeof item.id !== 'string' || typeof item.createdAt !== 'number' || !input || typeof input.text !== 'string') continue
     if (input.kind !== 'text' && input.kind !== 'link' && input.kind !== 'image' && input.kind !== 'file') continue
-    const proposals = Array.isArray(item.proposals) ? item.proposals.filter(isProposal) : []
+    const proposals = Array.isArray(item.proposals) ? item.proposals.filter(isProposal).map(cleanLinks) : []
     const waiting = proposals.some(proposal => proposal.status === 'wait')
     if (proposals.length && proposals.every(proposal => proposal.slot && proposal.due < today)) continue
     if (!waiting && now - item.createdAt > DECIDED_KEEP_MS) continue

@@ -3,7 +3,8 @@
 // 元件（threads/thread-cards.tsx）只負責把 resolveThreadCard 的結果畫出來，不在元件裡做判斷。
 import type { ProposalKind } from '@/lib/collect/types'
 
-export type CardStatus = 'wait' | 'ok' | 'no'
+/** Fork（almanac ALMNC-54.5）：talk＝再次討論中（附了說明，等指揮官修改後重新提案）。 */
+export type CardStatus = 'wait' | 'ok' | 'no' | 'talk'
 
 export interface ProposalCardData {
   type: 'proposal'
@@ -17,7 +18,7 @@ export interface ProposalCardData {
   /** HH:mm */
   time?: string
   status: CardStatus
-  /** 對應收集頁的提案；有的話「收下」會走收集頁的寫入流程（筆記檔、今日日誌）。 */
+  /** 對應收集頁的提案；有的話「接受」會走收集頁的寫入流程（筆記檔、今日日誌）。 */
   source?: { itemId: string; proposalId: string }
 }
 
@@ -41,7 +42,7 @@ export interface KickoffResultCardData {
 
 export type ThreadCard = ProposalCardData | KickoffResultCardData
 
-export type CardAction = 'accept' | 'reject' | 'start' | 'hold' | 'reopen'
+export type CardAction = 'accept' | 'reject' | 'discuss' | 'start' | 'hold' | 'reopen'
 
 export type ProposalTone = 'pending' | 'done' | 'muted'
 
@@ -54,7 +55,7 @@ export interface ProposalCardView {
   /** 日期與時間合成一句，沒有就空字串。 */
   when: string
   /** i18n key（threads.cards.*）。 */
-  statusKey: 'proposalWait' | 'proposalOk' | 'proposalNo'
+  statusKey: 'proposalWait' | 'proposalOk' | 'proposalNo' | 'proposalTalk'
   tone: ProposalTone
   actions: CardAction[]
 }
@@ -79,7 +80,7 @@ export interface KickoffCardView {
 export type ThreadCardView = ProposalCardView | KickoffCardView
 
 const PROPOSAL_KINDS = new Set<ProposalKind>(['note', 'task', 'event'])
-const STATUSES = new Set<CardStatus>(['wait', 'ok', 'no'])
+const STATUSES = new Set<CardStatus>(['wait', 'ok', 'no', 'talk'])
 const KICKOFF_STATES = new Set<KickoffState>(['proposed', 'running', 'done', 'cancelled'])
 const TASK_STATUSES = new Set<KickoffTaskStatus>(['wait', 'run', 'done'])
 const ACCEPT_STATUSES = new Set<KickoffAcceptStatus>(['open', 'ok', 'look'])
@@ -156,9 +157,11 @@ export function resolveThreadCard(card: ThreadCard): ThreadCardView {
       title: card.title,
       detail: card.detail ?? '',
       when: formatWhen(card.due, card.time),
-      statusKey: card.status === 'ok' ? 'proposalOk' : card.status === 'no' ? 'proposalNo' : 'proposalWait',
-      tone: card.status === 'wait' ? 'pending' : card.status === 'ok' ? 'done' : 'muted',
-      actions: card.status === 'wait' ? ['accept', 'reject'] : [],
+      statusKey: card.status === 'ok' ? 'proposalOk' : card.status === 'no' ? 'proposalNo' : card.status === 'talk' ? 'proposalTalk' : 'proposalWait',
+      // 再次討論中仍是待決定：維持虛線框，只是沒有按鈕
+      tone: card.status === 'wait' || card.status === 'talk' ? 'pending' : card.status === 'ok' ? 'done' : 'muted',
+      // Fork（almanac ALMNC-54.5）：按鈕是接受／再次討論／放棄
+      actions: card.status === 'wait' ? ['accept', 'discuss', 'reject'] : [],
     }
   }
   const done = card.tasks.filter(task => task.status === 'done').length
@@ -185,6 +188,7 @@ export function applyCardAction(card: ThreadCard, action: CardAction): ThreadCar
     if (card.status !== 'wait') return card
     if (action === 'accept') return { ...card, status: 'ok' }
     if (action === 'reject') return { ...card, status: 'no' }
+    if (action === 'discuss') return { ...card, status: 'talk' }
     return card
   }
   if (card.state === 'proposed' && action === 'start') return { ...card, state: 'running' }

@@ -8208,12 +8208,12 @@
     },
     "cards": {
       "proposal": "提案",
-      "accept": "收下",
-      "reject": "不要",
+      "accept": "接受",
+      "reject": "放棄",
       "alsoInInbox": "也在等你定",
       "proposalWait": "等你定",
-      "proposalOk": "已收下",
-      "proposalNo": "已退回",
+      "proposalOk": "已接受",
+      "proposalNo": "已放棄",
       "kickoff": "開工卡",
       "placeholder": "示範",
       "kickoffProposed": "待開工",
@@ -8230,7 +8230,9 @@
         "wait": "排隊",
         "run": "進行中",
         "done": "完成"
-      }
+      },
+      "discuss": "再次討論",
+      "proposalTalk": "再次討論中"
     },
     "tag": {
       "query": "查詢",
@@ -8247,7 +8249,8 @@
       "transferAsk": "秘書：這像是筆記或知識的問題，要不要轉給指揮官？",
       "transfer": "轉給指揮官",
       "keep": "不用"
-    }
+    },
+    "pending": "還有 {count} 則提案待決定"
   },
   "anywhere": {
     "palette": {
@@ -8347,16 +8350,29 @@
       "hidden": "還有 {count} 行沒列出"
     },
     "merged": "另有 {count} 個來源提了同一件事，收下或不要時一併處理。",
-    "accept": "收下",
-    "reject": "不要",
-    "accepted": "已收下「{title}」",
-    "rejected": "已退回「{title}」",
+    "accept": "接受",
+    "reject": "放棄",
+    "accepted": "已接受「{title}」",
+    "rejected": "已放棄「{title}」",
     "undo": "復原",
     "undoFailed": "無法復原，檔案已被改過",
     "failed": "處理失敗，請再試一次",
     "conflict": "檔案在草稿產生後被改過，請到任務中心逐條確認",
     "openReview": "到任務中心",
-    "viewAll": "等你定共 {count} 件，全部查看"
+    "viewAll": "等你定共 {count} 件，全部查看",
+    "stale": "{count} 則提案超過 14 天沒決定，會列進每週回顧，不會自動消失",
+    "discuss": {
+      "button": "再次討論",
+      "label": "再次討論的說明",
+      "placeholder": "要指揮官怎麼改？例如：標題改短一點、日期改到下週",
+      "send": "送出並回到對話",
+      "cancel": "取消",
+      "hint": "⌘↩ 送出",
+      "message": "再次討論「{title}」：{note}",
+      "done": "已帶回對話：「{title}」",
+      "fromConversation": "來自對話：{title}",
+      "conversation": "這段對話"
+    }
   },
   "jobs": {
     "new": "新增開工卡",

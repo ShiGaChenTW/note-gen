@@ -133,3 +133,40 @@ describe('ALMNC-54.4 AC#3: secretary asks before handing notes questions to the 
     expect(useThreadsStore.getState().tagMap.s1).toBe('schedule')
   })
 })
+
+// Fork（almanac ALMNC-54.5）：對話不結案，只顯示還有幾則提案待決定；提案卡的按鈕是接受／再次討論／放棄。
+describe('ALMNC-54.5 AC#3: 還有 N 則提案待決定', () => {
+  it('shows the count in the conversation bar and the list, counting discussing proposals too', async () => {
+    const useCollectStore = (await import('@/stores/collect')).default
+    const useProposalTrailStore = (await import('@/stores/proposals')).default
+    const p = (id: string, conversationId?: number) => ({ id, kind: 'task' as const, title: id, body: '', due: '', time: '', tags: [], status: 'wait' as const, conversationId })
+    useCollectStore.setState({ items: [{ id: 'c1', input: { kind: 'text', text: 'x' }, createdAt: 1, state: 'ready', proposals: [p('a', 1), p('b', 1), p('c', 2), p('d')] }] })
+    useProposalTrailStore.setState({ trail: { 'collect:c1:b': { conversationId: 1, discussion: { note: '改', at: 2 } } } })
+    useChatStore.setState({ conversations: [conversation(1, '會議紀錄整理'), conversation(2, '行程')], currentConversationId: 1 })
+
+    render(h(ThreadStatusBar))
+    expect(container.querySelector('[data-slot="thread-pending"]')?.textContent).toBe('還有 2 則提案待決定')
+
+    act(() => root.render(h(NextIntlClientProvider, { locale: 'zh-TW', messages, timeZone: 'Asia/Taipei', children: h(ThreadsScreen) })))
+    act(() => useThreadsStore.getState().show())
+    const pending = [...container.querySelectorAll('[data-thread-id]')].map(row => [row.getAttribute('data-thread-id'), row.querySelector('[data-slot="thread-pending"]')?.textContent ?? null])
+    expect(pending).toEqual([['1', '還有 2 則提案待決定'], ['2', '還有 1 則提案待決定']])
+
+    useCollectStore.setState({ items: [] })
+    useProposalTrailStore.setState({ trail: {} })
+  })
+})
+
+describe('ALMNC-54.5 AC#2: proposal card buttons in the conversation', () => {
+  it('offers 接受／再次討論／放棄 and asks for a note before discussing again', async () => {
+    const { ThreadMessageCards } = await import('./thread-cards')
+    useChatStore.setState({ conversations: [conversation(1, '會議')], currentConversationId: 1, chats: [{ id: 5, role: 'system', type: 'chat', conversationId: 1, inserted: false, createdAt: 0 }] })
+    useThreadsStore.getState().attachCard(5, { type: 'proposal', id: 'k1', kind: 'task', title: '寄報價', status: 'wait' })
+    render(h(ThreadMessageCards, { chatId: 5 }))
+    const labels = [...container.querySelectorAll('[data-card="proposal"] button')].map(b => b.textContent)
+    expect(labels).toEqual(['接受', '再次討論', '放棄'])
+    act(() => button('再次討論')!.click())
+    const send = button(messages.decide.discuss.send)!
+    expect(send.disabled).toBe(true)
+  })
+})
