@@ -8143,12 +8143,12 @@
     },
     "cards": {
       "proposal": "提案",
-      "accept": "收下",
-      "reject": "不要",
+      "accept": "接受",
+      "reject": "放弃",
       "alsoInInbox": "也在等你定",
       "proposalWait": "等你定",
-      "proposalOk": "已收下",
-      "proposalNo": "已退回",
+      "proposalOk": "已接受",
+      "proposalNo": "已放弃",
       "kickoff": "开工卡",
       "placeholder": "示范",
       "kickoffProposed": "待开工",
@@ -8165,8 +8165,27 @@
         "wait": "排队",
         "run": "进行中",
         "done": "完成"
-      }
-    }
+      },
+      "discuss": "再次讨论",
+      "proposalTalk": "再次讨论中"
+    },
+    "tag": {
+      "query": "查询",
+      "process": "处理",
+      "schedule": "日程",
+      "label": "对话对象",
+      "hint": {
+        "query": "和专家谈，只读，不会改资料",
+        "process": "有指挥官参与，改动都通过提案",
+        "schedule": "和秘书谈，你交代的任务与行程直接生效"
+      },
+      "handoff": "交给指挥官",
+      "handoffHint": "标签改成处理，这段对话直接延续",
+      "transferAsk": "秘书：这像是笔记或知识的问题，要不要转给指挥官？",
+      "transfer": "转给指挥官",
+      "keep": "不用"
+    },
+    "pending": "还有 {count} 则提案待决定"
   },
   "anywhere": {
     "palette": {
@@ -8266,16 +8285,29 @@
       "hidden": "还有 {count} 行没列出"
     },
     "merged": "另有 {count} 个来源提了同一件事，收下或不要时一并处理。",
-    "accept": "收下",
-    "reject": "不要",
-    "accepted": "已收下“{title}”",
-    "rejected": "已退回“{title}”",
+    "accept": "接受",
+    "reject": "放弃",
+    "accepted": "已接受“{title}”",
+    "rejected": "已放弃“{title}”",
     "undo": "撤销",
     "undoFailed": "无法撤销，文件已被改过",
     "failed": "处理失败，请重试",
     "conflict": "文件在草稿生成后被改过，请到任务中心逐条确认",
     "openReview": "到任务中心",
-    "viewAll": "等你定共 {count} 件，全部查看"
+    "viewAll": "等你定共 {count} 件，全部查看",
+    "stale": "{count} 则提案超过 14 天没决定，会列进每周回顾，不会自动消失",
+    "discuss": {
+      "button": "再次讨论",
+      "label": "再次讨论的说明",
+      "placeholder": "要指挥官怎么改？例如：标题改短一点、日期改到下周",
+      "send": "送出并回到对话",
+      "cancel": "取消",
+      "hint": "⌘↩ 送出",
+      "message": "再次讨论“{title}”：{note}",
+      "done": "已带回对话：“{title}”",
+      "fromConversation": "来自对话：{title}",
+      "conversation": "这段对话"
+    }
   },
   "jobs": {
     "new": "新建开工卡",

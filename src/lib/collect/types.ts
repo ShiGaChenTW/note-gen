@@ -31,6 +31,10 @@ export interface Proposal {
   tags: string[]
   /** Scheduler proposal for an existing task in the daily note. */
   slot?: SlotTarget
+  /** Fork（almanac ALMNC-54.5）：產生這則提案的對話 id；收集頁直接拆出來的沒有。 */
+  conversationId?: number
+  /** Fork（almanac ALMNC-54.5）：指揮官依「再次討論」修改後重新提出時，被取代的那則提案（工作台項目 key）。 */
+  previousProposalId?: string
 }
 
 export type SplitSource = 'ai' | 'rules'
