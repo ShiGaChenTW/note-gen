@@ -6920,7 +6920,8 @@
       "sentNewVersion": "内容有更新，已把新版本发送给指挥官",
       "alreadySent": "这篇已经发送过了，内容没有变",
       "emptyNote": "这篇笔记是空的，没有发送",
-      "sendFailed": "发送给指挥官失败"
+      "sendFailed": "发送给指挥官失败",
+      "saveBeforeSendFailed": "尚未保存的修改无法写入文件，所以没有发送"
     },
     "statusBar": {
       "documentActions": {

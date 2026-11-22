@@ -24,6 +24,16 @@ const send = vi.hoisted(() => ({
 }))
 vi.mock('@/lib/daily/note-io', () => ({ readNote: async (path: string) => send.files.get(path) ?? null }))
 vi.mock('@/lib/workbench/actions', () => ({ sendNoteToCommander: send.outcome }))
+// 編輯器先把還在 500 ms 計時裡的修改交給存檔佇列（假的：直接寫進檔案）；flushOk 為 false 時表示存不進去。
+const flush = vi.hoisted(() => ({ ok: true, pending: null as string | null, calls: [] as string[] }))
+vi.mock('@/lib/editor-deactivation', async importOriginal => ({
+  ...(await importOriginal<typeof import('@/lib/editor-deactivation')>()),
+  prepareActiveEditorDeactivationDurably: async (path: string) => {
+    flush.calls.push(`editor:${path}`)
+    if (flush.ok && flush.pending !== null) send.files.set(path, flush.pending)
+    return flush.ok
+  },
+}))
 vi.mock('sonner', () => ({ toast: send.toast }))
 // platform() 被 mock 後 checkIsTauri() 為真，置頂／收藏會寫 note-marks.json：換成記憶體裡的 store。
 const persisted = vi.hoisted(() => new Map<string, Map<string, unknown>>())
@@ -335,6 +345,35 @@ it('sends the current note to the commander and reports each outcome with a toas
   send.outcome.mockRejectedValueOnce(new Error('db down'))
   await act(async () => button('送給指揮官').click())
   expect(send.toast.error).toHaveBeenLastCalledWith('送給指揮官失敗', { description: 'db down' })
+})
+
+// 送出畫面上的內容：剛打的字還沒自動存檔，按下去也會先存檔再讀檔送出。
+it('flushes the pending save before sending, so a just-typed change is included', async () => {
+  const { default: useArticleStore } = await import('@/stores/article')
+  send.files.set('work/a.md', '# A\n舊內容')
+  flush.pending = '# A\n舊內容\n剛打的字'
+  flush.ok = true
+  flush.calls = []
+  send.outcome.mockClear()
+  useArticleStore.setState({
+    activeFilePath: 'work/a.md',
+    flushPendingArticleSavesForPaths: async (paths: string[]) => { flush.calls.push(`store:${paths.join(',')}`) },
+  })
+  await render()
+  await act(async () => button('送給指揮官').click())
+  expect(flush.calls).toEqual(['editor:work/a.md', 'store:work/a.md'])
+  expect(send.outcome).toHaveBeenCalledWith({ path: 'work/a.md', content: '# A\n舊內容\n剛打的字' })
+
+  // 存不進去就不送，顯示失敗。
+  flush.ok = false
+  send.outcome.mockClear()
+  send.toast.error.mockClear()
+  await act(async () => button('送給指揮官').click())
+  expect(send.outcome).not.toHaveBeenCalled()
+  expect(send.toast.error).toHaveBeenLastCalledWith('送給指揮官失敗', { description: '還沒存進檔案的修改存不進去，所以沒有送出' })
+  flush.ok = true
+  flush.pending = null
+  useArticleStore.setState({ activeFilePath: '' })
 })
 
 it('does not offer 送給指揮官 for canvas tabs', async () => {

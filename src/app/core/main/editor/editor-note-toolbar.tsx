@@ -9,7 +9,7 @@
 // 筆記專屬的按鈕只給 .md 筆記；編輯區窄於 720px 時第三、四組收進「⋯」。圖示刻意不用參考稿那套（箭頭、放大鏡、標籤、圖釘、星號⋯⋯）。
 // ALMNC-56.2：按鈕與分隔線改用 components/v3/toolbar（和底部格式列同一套，A11 roving tabindex、V07 外觀）；列本身不帶底色。
 // 命令面板：⌘K 在編輯器裡是「插入連結」，所以提示只寫編輯器內外都能用的 ⌘⇧P（ALMNC-54.18，取代 A09 的「⌘K，編輯器外」）。
-// ALMNC-54.20：第二組最後加「送給指揮官」——把目前這篇筆記送成自己寫的資料源（id 由路徑決定，重送不重複建立，內容改了接新版）。
+// ALMNC-54.20：第二組最後加「送給指揮官」——先存檔再把畫面上這篇筆記送成自己寫的資料源（id 由路徑決定，重送不重複建立，內容改了接新版）。
 // 第二組不會收進「⋯」，所以窄版也一直看得到。
 import { useEffect, useMemo, useRef, useState, type ReactNode, type Ref } from 'react'
 import {
@@ -171,7 +171,7 @@ export function EditorNoteToolbar({ activeTab, isActiveGroup, canGoBack, canGoFo
     if (!notePath || sending) return
     setSending(true)
     try {
-      const outcome = await sendNoteToCommander(notePath)
+      const outcome = await sendNoteToCommander(notePath, t('saveBeforeSendFailed'))
       if (outcome === 'added') toast.success(t('sentToCommander'))
       else if (outcome === 'versioned') toast.success(t('sentNewVersion'))
       else if (outcome === 'unchanged') toast(t('alreadySent'))
@@ -276,10 +276,18 @@ export function EditorNoteToolbar({ activeTab, isActiveGroup, canGoBack, canGoFo
 }
 
 /**
- * 「送給指揮官」送出的內容：筆記庫裡存好的檔案（和存檔、分析讀到的是同一份；編輯器會自動存檔）。
+ * 「送給指揮官」送出的內容：畫面上的這篇筆記。先把編輯器還在等的修改存進檔案（視覺編輯器有 500 ms 的序列化計時，
+ * 加上文章存檔佇列；和切換檔案、移到新視窗前同一套），再讀筆記庫裡的檔案送出。存不進去就不送，讓按鈕顯示失敗。
  */
-async function sendNoteToCommander(path: string) {
-  const [{ readNote }, { sendNoteToCommander: send }] = await Promise.all([import('@/lib/daily/note-io'), import('@/lib/workbench/actions')])
+async function sendNoteToCommander(path: string, saveFailed: string) {
+  const [{ default: useArticleStore }, { prepareActiveEditorDeactivationDurably }, { readNote }, { sendNoteToCommander: send }] = await Promise.all([
+    import('@/stores/article'),
+    import('@/lib/editor-deactivation'),
+    import('@/lib/daily/note-io'),
+    import('@/lib/workbench/actions'),
+  ])
+  if (useArticleStore.getState().activeFilePath === path && !await prepareActiveEditorDeactivationDurably(path)) throw new Error(saveFailed)
+  await useArticleStore.getState().flushPendingArticleSavesForPaths([path])
   return send({ path, content: (await readNote(path)) ?? '' })
 }
 

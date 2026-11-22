@@ -6920,7 +6920,8 @@
       "sentNewVersion": "The note changed; sent the new version to the commander",
       "alreadySent": "Already sent, and the note hasn't changed",
       "emptyNote": "This note is empty, so nothing was sent",
-      "sendFailed": "Couldn't send to the commander"
+      "sendFailed": "Couldn't send to the commander",
+      "saveBeforeSendFailed": "Couldn't save the latest changes, so nothing was sent"
     },
     "statusBar": {
       "documentActions": {
