@@ -8815,12 +8815,48 @@
       "timeline": "笔记时间轴",
       "canvases": "画布",
       "noteTags": "标签",
+      "domains": "领域",
       "prompts": "提示词",
       "outline": "大纲"
     },
     "knowledge": {
       "title": "整理",
-      "subtitle": "时间轴、画布与标签，笔记文件树在左侧的「{vault}」"
+      "subtitle": "领域、时间轴、画布与标签，笔记文件树在左侧的「{vault}」"
+    },
+    "domains": {
+      "label": "领域",
+      "all": "全部领域",
+      "indexing": "正在建立笔记索引…",
+      "loading": "正在读取领域…",
+      "loadError": "读取领域失败",
+      "empty": "还没有领域。同一主题累积 3 则以上知识笔记后，指挥官会在工作台提议成立领域。",
+      "count": "{count} 则知识笔记",
+      "updated": "最后更新 {date}",
+      "missing": "找不到这个领域，可能已被删除。",
+      "overview": "总览",
+      "coreConcepts": "核心概念",
+      "keyConclusions": "重点结论",
+      "openQuestions": "矛盾与未解问题",
+      "notes": "知识笔记",
+      "related": "相关领域",
+      "parent": "上层",
+      "children": "下层",
+      "siblings": "同层",
+      "emptyOverview": "还没有总览。",
+      "emptyCoreConcepts": "还没有核心概念。领域的专家整理后，会写在这里。",
+      "emptyKeyConclusions": "还没有重点结论。领域的专家整理后，会写在这里，每点附出处笔记。",
+      "emptyOpenQuestions": "目前没有矛盾或未解问题。整理时发现说法不同的笔记，会列在这里。",
+      "emptyNotes": "这个领域还没有知识笔记。",
+      "emptyRelated": "没有相关领域。",
+      "openNote": "打开笔记「{title}」",
+      "missingNote": "找不到笔记「{target}」",
+      "status": {
+        "valid": "有效",
+        "disputed": "待查证",
+        "superseded": "已被取代",
+        "archived": "封存"
+      },
+      "confirmed": "最后确认 {date}"
     }
   },
   "organize": {

@@ -2,6 +2,7 @@
 
 // Fork（almanac ALMNC-20）：v5「知識」頁。把原本左側欄下半部的 Timeline、Canvas、Tags 搬進來，
 // 設定放在左側欄的大綱與外掛左側欄視圖也是這裡的分頁；提示詞庫是它自己的頁（分頁切過去）；筆記檔案樹留在側欄 MyVault。
+// Fork（almanac ALMNC-54.23）：加「領域」分頁（領域頁，domains-tab.tsx）。
 import { useTranslations } from 'next-intl'
 import { PluginViewSurface } from '@/components/plugins/plugin-view-surface'
 import { EmptyState } from '@/components/v3/empty-state'
@@ -13,6 +14,7 @@ import { Outline } from '../editor/markdown/outline'
 import NoteTagsSidebar from '../note-tags/note-tags-sidebar'
 import { TimelineSidebar } from '../timeline/timeline-sidebar'
 import { PageHeader, PageSurface } from '../page-ui'
+import { DomainsTab } from './domains-tab'
 import { KnowledgeTabs } from './section-tabs'
 import { useKnowledgeTabs } from './use-knowledge-tabs'
 import { useVaultName } from './use-vault-name'
@@ -54,6 +56,7 @@ function KnowledgePage() {
             </>
           )}
           {tab === 'noteTags' && <NoteTagsSidebar />}
+          {tab === 'domains' && <DomainsTab />}
           {tab === 'outline' && <OutlineTab />}
           {isPlugin && <div className="h-full overflow-y-auto"><PluginViewSurface key={tab} viewKey={tab} /></div>}
         </div>
