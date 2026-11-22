@@ -186,7 +186,7 @@ export class CrossPointClient {
       // 實機（ALMNC-44，2026-11-22）：有的 CrossPoint 版本不認 overwrite=1，同名檔回 400「File already exists」。
       // 這時先刪掉舊檔再傳一次；這條路沒有 .part 保護，傳到一半斷線舊檔就沒了（外掛會沿用上一張休眠圖，下次安裝補回）。
       if (response.status === 400 && /already exists/i.test(response.text)) {
-        await this.delete(path)
+        await this.removeExisting(path, dir, name)
         response = await send()
       }
       if (response.status !== 200) throw new DeviceError(`upload ${path}: ${response.status} ${response.text.slice(0, 120)}`)
@@ -199,6 +199,25 @@ export class CrossPointClient {
       if (entry) await this.delete(path).catch(() => {})
       throw new DeviceError(`upload ${path}: size mismatch (${entry?.size ?? 'missing'} != ${bytes.length})`)
     }
+  }
+
+  /**
+   * 不認 overwrite 的韌體：刪掉同名檔，並列資料夾確認真的不在了。表單刪不掉時再用網址參數試一次；
+   * 兩種都刪不掉就把閱讀器的回應寫進錯誤訊息，方便對照韌體實際的 API（實機 ALMNC-44）。
+   */
+  private async removeExisting(path: string, dir: string, name: string): Promise<void> {
+    const stillThere = async () => (await this.listFiles(dir)).some(item => !item.isDirectory && item.name === name)
+    const tries: string[] = []
+    const attempts: Array<() => Promise<{ status: number, text: string }>> = [
+      () => this.http({ url: this.url(DEVICE_API.delete), method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: formUrlEncoded({ path }) }),
+      () => this.http({ url: this.url(`${DEVICE_API.delete}?path=${encodeURIComponent(path)}`), method: 'POST' }),
+    ]
+    for (const attempt of attempts) {
+      const response = await withTimeout(attempt(), this.timeoutMs, 'delete')
+      tries.push(`${response.status} ${response.text.slice(0, 80)}`)
+      if (!(await stillThere())) return
+    }
+    throw new DeviceError(`delete ${path}: file is still there after delete (${tries.join(' / ')})`)
   }
 
   private async cleanupPart(dir: string, name: string): Promise<void> {
