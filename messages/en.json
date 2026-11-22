@@ -9017,7 +9017,12 @@
       "meeting": "Meeting transcript",
       "meetingAdded": "Imported {count, plural, one {# meeting} other {# meetings}}; waiting for your decision",
       "meetingEmpty": "No transcript found in the file (.vtt, .srt, .txt and .docx are supported)",
-      "meetingFailed": "{count, plural, one {# file} other {# files}} could not be read: {names}."
+      "meetingFailed": "{count, plural, one {# file} other {# files}} could not be read: {names}.",
+      "busy": {
+        "email": "Importing email…",
+        "meeting": "Importing meeting transcripts…",
+        "rss": "Subscribing to RSS…"
+      }
     }
   },
   "cleanup": {

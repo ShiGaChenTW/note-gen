@@ -6,6 +6,9 @@
 // - V13：唯一彩色（text-brand、bg-brand…）只出現在白名單用途：連結、已勾選任務、caret、引言色條。
 // - V14：圓角只用 --r-kbd、--r、--r-md（rounded-(--r-kbd) 等），圓形用 rounded-full。
 // - V15：鍵盤提示用 components/ui/kbd.tsx（不直接寫 <kbd>）；閱讀寬度用 max-w-ui-reading（不寫 max-w-[720px]）。
+// - 調色盤顏色：不寫 text-red-500 這類 Tailwind 調色盤色，用 token（danger、success-ink、ink⋯）。
+// - 原生 select：V3 用下拉選單（DropdownMenu），不用原生 <select>（白名單內的既有用法除外）。
+// 記錄／新增資料源對話框（mark/）新舊介面共用，V3 才有的部分抽到 mark/record-dialog-v3.tsx，掃那個檔案（ALMNC-56 重跑稽核）。
 // classic 專用與行動版的檔案不在掃描範圍。
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
@@ -26,6 +29,7 @@ const TARGETS = [
   'app/core/main/sidebar-row.ts',
   'app/core/main/editor/editor-note-toolbar.tsx',
   'app/core/main/editor/markdown/bottom-format-toolbar.tsx',
+  'app/core/main/mark/record-dialog-v3.tsx',
 ]
 
 function sourceFiles(path: string): string[] {
@@ -72,6 +76,9 @@ const BRAND_ALLOWLIST: Array<{ file: string, contains: string, purpose: 'link' |
   { file: 'app/core/main/decide/decide-needs.tsx', contains: 'text-brand outline-none hover:underline', purpose: 'link' },
 ]
 
+/** 原生 select 的既有用法：工作台檯面的連結／歸類選單（已用 token 圓角與邊框，RPT-2026-009 沒有列）。新的用法改用 DropdownMenu。 */
+const NATIVE_SELECT_ALLOWLIST = ['app/core/main/decide/desk.tsx']
+
 describe('V3 style lint (RPT-2026-009)', () => {
   it('scans the V3 component sources', () => {
     expect(FILES.length).toBeGreaterThan(30)
@@ -105,6 +112,24 @@ describe('V3 style lint (RPT-2026-009)', () => {
     const ok = /^rounded(?:-[trblse]{1,2})?-(?:\((?:--r-kbd|--r|--r-md)\)|full|none)$/
     const pattern = new RegExp(`${VARIANTS}rounded(?:-[trblse]{1,2})?(?:-\\[[^\\]]+\\]|-\\([^)]+\\)|-[a-z0-9]+)?(?![\\w-])`, 'g')
     expect(show(scan(pattern, hit => ok.test(hit.match.replace(/^.*:/, ''))))).toEqual([])
+  })
+
+  it('palette colours: no Tailwind palette colours such as text-red-500 (use tokens like text-danger)', () => {
+    const palette = 'red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|slate|gray|zinc|neutral|stone'
+    const pattern = new RegExp(`${VARIANTS}(?:text|bg|border|ring|fill|stroke|decoration|outline|caret|accent|from|to|via|shadow)-(?:${palette})-\\d{2,3}(?:\\/\\d+)?(?![\\w-])`, 'g')
+    expect(show(scan(pattern))).toEqual([])
+  })
+
+  it('native select: V3 uses DropdownMenu instead of <select>', () => {
+    expect(show(scan(/<select\b/g, hit => NATIVE_SELECT_ALLOWLIST.includes(hit.file)))).toEqual([])
+  })
+
+  it('record／add-source dialog: the V3-only parts live in mark/record-dialog-v3.tsx and the shared dialog uses them under V3', () => {
+    const dialog = readFileSync(join(SRC, 'app/core/main/mark/unified-record-dialog.tsx'), 'utf8')
+    expect(FILES.map(file => relative(SRC, file))).toContain('app/core/main/mark/record-dialog-v3.tsx')
+    expect(dialog).toMatch(/isV3 \? V3_STOP_RECORDING_CLASS : 'text-red-500 hover:text-red-600'/)
+    expect(dialog).toMatch(/\{isV3 \? \(\s*<V3TypeRow/)
+    expect(dialog).toContain('<ImportProgress kind={importBusy} />')
   })
 
   it('V06: primary buttons in 對話, 收集, 工作台 share V3_BUTTON_SHAPE and the Button colours (no manual bg-invert)', () => {

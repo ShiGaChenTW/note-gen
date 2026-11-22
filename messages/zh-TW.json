@@ -9082,7 +9082,12 @@
       "meeting": "會議逐字稿",
       "meetingAdded": "已匯入 {count} 場會議，等你決定要不要處理",
       "meetingEmpty": "檔案裡沒有讀得出來的逐字稿（支援 .vtt、.srt、.txt、.docx）",
-      "meetingFailed": "{count} 個檔案讀不出來：{names}。"
+      "meetingFailed": "{count} 個檔案讀不出來：{names}。",
+      "busy": {
+        "email": "正在匯入 Email…",
+        "meeting": "正在匯入會議逐字稿…",
+        "rss": "正在訂閱 RSS…"
+      }
     }
   },
   "cleanup": {

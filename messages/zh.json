@@ -9017,7 +9017,12 @@
       "meeting": "会议逐字稿",
       "meetingAdded": "已导入 {count} 场会议，等你决定要不要处理",
       "meetingEmpty": "文件里没有读得出来的逐字稿（支持 .vtt、.srt、.txt、.docx）",
-      "meetingFailed": "{count} 个文件读不出来：{names}。"
+      "meetingFailed": "{count} 个文件读不出来：{names}。",
+      "busy": {
+        "email": "正在导入 Email…",
+        "meeting": "正在导入会议逐字稿…",
+        "rss": "正在订阅 RSS…"
+      }
     }
   },
   "cleanup": {
