@@ -4284,6 +4284,72 @@
         "title": "區網服務",
         "desc": "讓電子紙闔上時向這台 Mac 下載休眠畫面與今日簡報。預設關閉。"
       },
+      "lan": {
+        "port": {
+          "title": "區網服務的埠",
+          "invalid": "埠號要是 1024–65535 的數字"
+        },
+        "status": {
+          "needsEnabled": "先打開「啟用電子紙同步」，區網服務才會啟動。",
+          "running": "服務中：{address}（只在這台 Mac 的區網位址監聽）",
+          "stopped": "尚未啟動",
+          "error": "無法啟動：{error}",
+          "ipChanged": "這台 Mac 的區網 IP 變成 {ip}，電子紙上的網址要更新：重新安裝外掛，或關掉再打開區網服務。"
+        },
+        "sleepUrl": {
+          "title": "休眠畫面網址",
+          "desc": "電子紙闔上時，外掛向這個網址下載休眠畫面（含 token）。"
+        },
+        "opds": {
+          "title": "OPDS 書目",
+          "desc": "在電子紙的 OPDS 設定新增這個網址；帳號 {user}，密碼是上面的 token。列出今日簡報與過去 7 天。",
+          "copyPassword": "複製密碼"
+        },
+        "copy": "複製",
+        "copied": "已複製"
+      },
+      "reader": {
+        "title": "安裝到電子紙",
+        "desc": "電子紙在 File Transfer 模式時，一次裝好外掛、中文字型與 OPDS 書目；只會動 /plugins/almanac*/、/Books/Almanac/、/sleep.bmp 與選的字型。",
+        "steps": {
+          "fileTransfer": "電子紙：Home > File Transfer > Join a Network，連上和這台 Mac 同一個 Wi-Fi。",
+          "address": "把電子紙畫面上顯示的 IP 填進上面的「閱讀器位址」，並打開「區網服務」。",
+          "detect": "按「偵測閱讀器」（按下才會連線）。",
+          "install": "按「安裝」：寫入外掛（含伺服器網址與 token）、選用的中文字型，並在電子紙新增 NoteGen 的 OPDS 書目。",
+          "readerSettings": "電子紙：設定 > Connectivity > Plugins 選 Enabled、設定 > Display > Sleep Screen 選 Custom，然後重新開機一次。"
+        },
+        "detect": {
+          "title": "偵測閱讀器",
+          "desc": "按下後才向閱讀器位址發出請求。",
+          "action": "偵測閱讀器",
+          "needsAddress": "先填閱讀器位址。",
+          "found": "已連上 CrossPoint {version}（{device}）",
+          "notFound": "找不到閱讀器：確認電子紙在 File Transfer 模式、位址正確、和 Mac 在同一個 Wi-Fi。"
+        },
+        "install": {
+          "title": "安裝",
+          "desc": "重新安裝會更新外掛與 OPDS 書目，不會重複新增。換了 token 或 Mac 的 IP 後要重新安裝。",
+          "needsServer": "先打開區網服務（安裝時要把伺服器網址寫進外掛）。",
+          "includeBriefing": "也安裝「今日簡報」外掛：闔上時自動下載簡報（實驗，等實機驗證確認可行再打開）",
+          "action": "安裝",
+          "done": "已安裝（寫入 {count} 個檔）。請到電子紙打開外掛並重新開機。",
+          "failed": "安裝沒有完成：{error}"
+        },
+        "font": {
+          "none": "不安裝中文字型",
+          "selected": "中文字型：{name}",
+          "choose": "選擇字型檔…",
+          "clear": "不裝字型",
+          "invalid": "字型檔名只能用英數與 ._-，副檔名 .ttf 或 .otf"
+        },
+        "push": {
+          "title": "立即推送",
+          "desc": "直接把今日簡報放進 /Books/Almanac/、把休眠畫面寫到 /sleep.bmp（外掛抓不到時用）。",
+          "action": "立即推送",
+          "done": "已推送今日簡報與休眠畫面",
+          "failed": "推送沒有完成：{error}"
+        }
+      },
       "token": {
         "title": "Token",
         "desc": "電子紙下載時要帶的密鑰，只存在這台 Mac。重新產生後，電子紙上的外掛要重新安裝。",

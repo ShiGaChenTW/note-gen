@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   BRIEFING_SECTIONS, DEFAULT_EINK_SETTINGS, generateEinkToken, isValidEinkToken, maskEinkToken, normalizeEinkSettings,
-  normalizeReaderAddress, normalizeWeatherCity, orderSections, toggleSection,
+  normalizeLanPort, normalizeReaderAddress, normalizeWeatherCity, orderSections, toggleSection,
 } from './settings'
 
 describe('normalizeEinkSettings', () => {
@@ -10,13 +10,14 @@ describe('normalizeEinkSettings', () => {
     expect(normalizeEinkSettings(undefined)).toEqual(DEFAULT_EINK_SETTINGS)
     expect(DEFAULT_EINK_SETTINGS.enabled).toBe(false)
     expect(DEFAULT_EINK_SETTINGS.lanServer).toBe(false)
+    expect(DEFAULT_EINK_SETTINGS.lanPort).toBe(37424)
     expect(DEFAULT_EINK_SETTINGS.sections).toEqual([...BRIEFING_SECTIONS])
   })
 
   it('讀回存好的值；壞欄位用預設補上，不認得的章節丟掉', () => {
     expect(normalizeEinkSettings({
       enabled: true, readerAddress: ' http://192.168.1.20 ', lanServer: 'yes', sections: ['report', 'bogus', 'schedule', 'report'], weatherCity: ' 臺北 ',
-    })).toEqual({ enabled: true, readerAddress: 'http://192.168.1.20', lanServer: false, sections: ['schedule', 'report'], weatherCity: '臺北' })
+    })).toEqual({ enabled: true, readerAddress: 'http://192.168.1.20', lanServer: false, lanPort: 37424, sections: ['schedule', 'report'], weatherCity: '臺北' })
   })
 
   it('章節全部取消時保留空陣列（不會被補回預設）', () => {
@@ -72,5 +73,19 @@ describe('token', () => {
     expect(isValidEinkToken(42)).toBe(false)
     expect(maskEinkToken('ab'.repeat(24))).toBe('••••••••abab')
     expect(maskEinkToken('')).toBe('')
+  })
+})
+
+// almanac ALMNC-50：區網服務的埠
+describe('normalizeLanPort', () => {
+  it('只收 1024–65535 的整數', () => {
+    expect(normalizeLanPort(37424)).toBe(37424)
+    expect(normalizeLanPort(' 8080 ')).toBe(8080)
+    expect(normalizeLanPort(80)).toBeNull()
+    expect(normalizeLanPort(70000)).toBeNull()
+    expect(normalizeLanPort(1.5)).toBeNull()
+    expect(normalizeLanPort('80a')).toBeNull()
+    expect(normalizeEinkSettings({ lanPort: 22 }).lanPort).toBe(37424)
+    expect(normalizeEinkSettings({ lanPort: 9000 }).lanPort).toBe(9000)
   })
 })

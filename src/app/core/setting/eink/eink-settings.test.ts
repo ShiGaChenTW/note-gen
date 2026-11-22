@@ -113,3 +113,61 @@ describe('電子紙入口只在 V3', () => {
     expect(useEinkStore.getState().pins).toEqual([])
   })
 })
+
+// almanac ALMNC-50：區網服務打開後顯示埠、狀態與要填進電子紙的網址（token 遮住）
+describe('區網服務', () => {
+  it('關閉時不顯示網址；服務中顯示休眠畫面網址（遮住 token）與 OPDS 網址', async () => {
+    const { useEinkLanStatus } = await import('@/lib/eink/lan/service')
+    useEinkLanStatus.setState({ refreshStatus: async () => {} })
+    useUiModeStore.setState({ mode: 'v3' })
+    await act(async () => { await useEinkStore.getState().init() })
+    await act(async () => root.render(React.createElement(EinkSettingPage)))
+    expect(container.querySelector('[data-testid="eink-lan-details"]')).toBeNull()
+
+    await act(async () => { await useEinkStore.getState().updateSettings({ enabled: true, lanServer: true }) })
+    expect(container.querySelector('[data-testid="eink-lan-details"]')).not.toBeNull()
+    expect(container.querySelector('[data-testid="eink-lan-sleep-url"]')).toBeNull()
+
+    await act(async () => useEinkLanStatus.getState().setStatus({
+      running: true, address: '192.168.1.5:37424', lanIp: '192.168.1.5', error: null, sleep: null, epub: null, archived: [],
+    }))
+    const token = useEinkStore.getState().token
+    const sleepUrl = container.querySelector('[data-testid="eink-lan-sleep-url"]')!.textContent!
+    expect(sleepUrl.startsWith('http://192.168.1.5:37424/eink/sleep.bmp?token=')).toBe(true)
+    expect(sleepUrl).not.toContain(token)
+    expect(container.querySelector('[data-testid="eink-lan-opds-url"]')!.textContent).toBe('http://192.168.1.5:37424/opds')
+    expect(container.textContent).not.toContain(token)
+  })
+})
+
+// almanac ALMNC-52：偵測沒開時不發任何區網請求（AC #4）；偵測到閱讀器後才能安裝與推送
+describe('安裝到電子紙', () => {
+  it('打開設定頁、填了閱讀器位址也不發請求；按「偵測閱讀器」才發一個 GET /api/status', async () => {
+    const { configureDeviceHttp } = await import('@/lib/eink/device/http')
+    const http = vi.fn(async () => ({ status: 200, text: JSON.stringify({ version: '2.1.0', firmwareFamily: 'crosspoint', device: 'X4' }) }))
+    configureDeviceHttp(http)
+    const { useEinkLanStatus } = await import('@/lib/eink/lan/service')
+    useEinkLanStatus.setState({ status: null, refreshStatus: async () => {} })
+    try {
+      useUiModeStore.setState({ mode: 'v3' })
+      await act(async () => { await useEinkStore.getState().init() })
+      await act(async () => { await useEinkStore.getState().updateSettings({ enabled: true, readerAddress: 'http://192.168.1.20' }) })
+      await act(async () => root.render(React.createElement(EinkSettingPage)))
+      expect(container.querySelector('[data-testid="eink-reader-steps"]')!.children).toHaveLength(5)
+      const button = (label: string) => [...container.querySelectorAll('button')].find(item => item.textContent === label)!
+      expect(button(en.settings.eink.reader.install.action).disabled).toBe(true)
+      expect(button(en.settings.eink.reader.push.action).disabled).toBe(true)
+      expect(http).not.toHaveBeenCalled()
+
+      await act(async () => button(en.settings.eink.reader.detect.action).click())
+      expect(http).toHaveBeenCalledTimes(1)
+      expect(http).toHaveBeenCalledWith(expect.objectContaining({ method: 'GET', url: 'http://192.168.1.20/api/status' }))
+      expect(container.querySelector('[data-testid="eink-reader-detect-status"]')!.textContent).toContain('CrossPoint 2.1.0')
+      expect(button(en.settings.eink.reader.push.action).disabled).toBe(false)
+      // 區網服務沒開：還不能安裝（外掛需要伺服器網址）
+      expect(button(en.settings.eink.reader.install.action).disabled).toBe(true)
+    } finally {
+      configureDeviceHttp(null)
+    }
+  })
+})

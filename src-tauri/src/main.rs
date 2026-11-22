@@ -14,6 +14,8 @@ mod database_recovery;
 mod deep_link;
 mod device;
 mod document_parser;
+// Fork（almanac ALMNC-50）：電子紙的區網服務（和本機 MCP 分開，預設關閉）
+mod eink_lan;
 mod file_open;
 mod fonts;
 mod fuzzy_search;
@@ -58,6 +60,7 @@ use cloud_folder_sync::{
 };
 use device::get_device_id;
 use fonts::list_system_fonts;
+use eink_lan::{eink_lan_configure, eink_lan_publish, eink_lan_status, EinkLanState};
 use fuzzy_search::{fuzzy_search, fuzzy_search_parallel};
 use git_versions::{
     git_version_commit, git_version_detect, git_version_diff, git_version_enable,
@@ -164,6 +167,7 @@ fn main() {
         .manage(plugin_terminal::PluginTerminalManager::default())
         .manage(WebClipperState::new())
         .manage(LocalMcpState::new())
+        .manage(EinkLanState::new())
         .manage(GitVersionState::default())
         .manage(deep_link::PendingPluginInstallRequests::default())
         // 系统级插件
@@ -186,6 +190,9 @@ fn main() {
         // 注册命令处理器
         .invoke_handler(tauri::generate_handler![
             get_desktop_update_target,
+            eink_lan_configure,
+            eink_lan_status,
+            eink_lan_publish,
             browser::browser_create,
             browser::browser_set_theme,
             browser::browser_set_bounds,
