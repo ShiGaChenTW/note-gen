@@ -171,6 +171,17 @@ describe('ALMNC-54.5 projectProposals', () => {
     expect(out.map(entry => entry.key)).toEqual(['collect:new:p1'])
     expect(out[0].previousProposalId).toBe('collect:old:p1')
   })
+
+  it('shows a body-only revision ahead of deduplication and keeps the original closed after acceptance', () => {
+    const items = [
+      item('old', 1, [wait('p1', { kind: 'note', title: '同樣的標題', body: '舊內容' })]),
+      item('new', 2, [wait('p2', { kind: 'note', title: '同樣的標題', body: '新內容', previousProposalId: 'collect:old:p1' })]),
+    ]
+    const input = { items, tasks: [], journal: null }
+    expect(projectDecisions(input).map(entry => entry.key)).toEqual(['collect:new:p2'])
+    items[1].proposals[0].status = 'ok'
+    expect(projectDecisions(input)).toEqual([])
+  })
 })
 
 // Fork（almanac ALMNC-54.7）：右側欄指揮官想改的既有檔案，在工作台顯示成檔案變更並帶來源對話。

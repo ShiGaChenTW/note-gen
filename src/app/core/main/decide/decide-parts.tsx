@@ -90,7 +90,9 @@ export function useDecideActions() {
     setBusy(item.key)
     const title = item.source === 'draft' ? item.summary || item.title : item.title
     try {
-      const id = await discussProposal({ key: item.key, conversationId: item.conversationId }, note, text => t('discuss.message', { title, note: text }))
+      const id = await discussProposal({ key: item.key, conversationId: item.conversationId }, note,
+        text => t('discuss.message', { title, note: text }),
+        revised => t('discuss.revised', { title: revised }))
       if (id !== null) toast(t('discuss.done', { title }))
     } catch (error) {
       console.error('[decide] discuss failed:', error)

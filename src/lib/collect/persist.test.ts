@@ -62,6 +62,17 @@ describe('mergeItems', () => {
 
 // Fork（almanac ALMNC-54.5）：提案記錄來自哪段對話，重開後還在。
 describe('proposal source conversation', () => {
+  it('keeps the revision’s write operations and workbench label through save and load', () => {
+    const proposal = {
+      ...base, id: 'p1', kind: 'note' as const, title: '改筆記', status: 'wait' as const,
+      previousProposalId: 'collect:c0:p1',
+      edits: [{ path: 'a.md', baseContent: '舊', content: '修訂', summary: '改筆記' }],
+      card: { label: 'knowledge' as const, verb: 'modify' as const },
+    }
+    const saved = serializeItems([item({ proposals: [proposal] })])
+    expect(parseItems(saved, NOW)[0].proposals[0]).toMatchObject(proposal)
+  })
+
   it('keeps conversationId and previousProposalId through save and load', () => {
     const saved = serializeItems([item({ proposals: [{ ...base, id: 'p1', kind: 'task', title: '甲', status: 'wait', conversationId: 12, previousProposalId: 'collect:c0:p1' }] })])
     expect(saved[0].proposals[0]).toMatchObject({ conversationId: 12, previousProposalId: 'collect:c0:p1' })

@@ -8334,6 +8334,7 @@
       },
       "discuss": "再次討論",
       "proposalTalk": "再次討論中",
+      "proposalReplaced": "已被新版取代",
       "directAdded": "已新增：{what}",
       "undo": "復原",
       "directDone": "已新增",
@@ -8476,6 +8477,7 @@
       "hint": "⌘↩ 送出",
       "message": "再次討論「{title}」：{note}",
       "done": "已帶回對話：「{title}」",
+      "revised": "我已修訂「{title}」，請確認新版提案。",
       "fromConversation": "來自對話：{title}",
       "conversation": "這段對話"
     }
