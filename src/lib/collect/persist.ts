@@ -4,6 +4,7 @@
 // 不需要另開資料表或新增檔案位置。
 import { toDateKey } from '@/lib/daily/format'
 import { isSlotTarget } from '@/lib/timeslots/model'
+import { NOTE_TYPES } from '@/lib/v3-model/note'
 import type { CollectInput, Proposal, SplitSource } from './types'
 
 export const COLLECT_ITEMS_KEY = 'collectItems'
@@ -53,6 +54,7 @@ export function serializeItems(items: readonly ItemLike[]): PersistedItem[] {
       ...(proposal.slot ? { slot: proposal.slot } : {}),
       ...(proposal.conversationId !== undefined ? { conversationId: proposal.conversationId } : {}),
       ...(proposal.previousProposalId ? { previousProposalId: proposal.previousProposalId } : {}),
+      ...commanderFields(proposal),
       status: proposal.status,
       result: proposal.result ? { path: proposal.result.path } : undefined,
     })),
@@ -68,13 +70,50 @@ function isProposal(value: unknown): value is PersistedProposal {
     && Array.isArray(p.tags) && (p.status === 'wait' || p.status === 'ok' || p.status === 'no')
 }
 
+// Fork（almanac ALMNC-54.6）：指揮官提案的來源資料源、筆記類型、領域、相關的人、專案與撰寫者。
+// 存檔與讀檔共用：型別不對的欄位只丟那個欄位，提案本身留著。
+type CommanderFields = Pick<Proposal, 'sourceIds' | 'noteType' | 'domains' | 'people' | 'project' | 'drafter'>
+const DRAFTER_ROLES = ['commander', 'expert', 'secretary']
+const COMMANDER_KEYS = ['sourceIds', 'noteType', 'domains', 'people', 'project', 'drafter'] as const
+
+function stringArray(value: unknown): string[] | undefined {
+  if (!Array.isArray(value)) return undefined
+  const items = value.filter((item): item is string => typeof item === 'string' && item.trim() !== '')
+  return items.length ? items : undefined
+}
+
+function commanderFields(raw: Record<string, unknown> | Proposal): CommanderFields {
+  const value = raw as Record<string, unknown>
+  const out: CommanderFields = {}
+  const sourceIds = stringArray(value.sourceIds)
+  if (sourceIds) out.sourceIds = sourceIds
+  if (typeof value.noteType === 'string' && (NOTE_TYPES as readonly string[]).includes(value.noteType)) out.noteType = value.noteType as CommanderFields['noteType']
+  const domains = stringArray(value.domains)
+  if (domains) out.domains = domains
+  const people = stringArray(value.people)
+  if (people) out.people = people
+  if (typeof value.project === 'string' && value.project.trim()) out.project = value.project
+  const drafter = value.drafter as Record<string, unknown> | undefined
+  if (drafter && typeof drafter === 'object' && typeof drafter.role === 'string' && DRAFTER_ROLES.includes(drafter.role)) {
+    out.drafter = {
+      role: drafter.role as NonNullable<CommanderFields['drafter']>['role'],
+      ...(typeof drafter.agentId === 'string' && drafter.agentId ? { agentId: drafter.agentId } : {}),
+    }
+  }
+  return out
+}
+
 /** Fork（almanac ALMNC-54.5）：來源對話與取代關係型別不對時只丟那個欄位，提案本身留著。 */
 function cleanLinks(proposal: PersistedProposal): PersistedProposal {
-  const { conversationId, previousProposalId, ...rest } = proposal
+  const { conversationId, previousProposalId, ...others } = proposal
+  const rest: Record<string, unknown> = { ...others }
+  for (const key of COMMANDER_KEYS) delete rest[key]
   return {
+    ...(rest as Omit<PersistedProposal, 'conversationId' | 'previousProposalId'>),
     ...rest,
     ...(typeof conversationId === 'number' && Number.isInteger(conversationId) ? { conversationId } : {}),
     ...(typeof previousProposalId === 'string' && previousProposalId ? { previousProposalId } : {}),
+    ...commanderFields(proposal),
   }
 }
 

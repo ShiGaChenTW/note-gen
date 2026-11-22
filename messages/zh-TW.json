@@ -8604,5 +8604,13 @@
     "saveSnapshot": "另存整理前內容",
     "snapshotSaved": "已另存 {count} 個檔案（檔名加上「整理前」）",
     "snapshotFailed": "另存失敗"
+  },
+  "commander": {
+    "origin": "{agent} 分析的資料源：{source}",
+    "unconverted": "（沒辦法轉成文字，已保留原檔：{origin}）",
+    "domainProposal": {
+      "title": "成立領域「{domain}」，新增專家 {name}",
+      "summary": "{count} 則知識筆記還沒有領域，主題都是「{topic}」"
+    }
   }
 }
