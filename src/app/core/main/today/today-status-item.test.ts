@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// Fork（almanac ALMNC-56.7，RPT-2026-009 P05）：V3 不顯示「需處理」的時候（索引還沒好）不掃整個 vault；classic 照舊。
+// Fork（almanac ALMNC-56.7，RPT-2026-009 P05）：V3 完全不放「需處理」、也不掃整個 vault；classic 照舊。
 import { act, createElement as h } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { NextIntlClientProvider } from 'next-intl'
@@ -29,7 +29,7 @@ vi.mock('@/stores/inbox', async () => {
 vi.mock('../status-bar-order', () => ({ StatusBarItem: ({ children }: { children: unknown }) => children }))
 
 const useVaultIndexStore = (await import('@/stores/vault-index')).default
-const { needsAttentionScan, TodayStatusItem } = await import('./today-status-item')
+const { TodayStatusItem } = await import('./today-status-item')
 
 const OLD = Date.now() - 30 * 86_400_000
 const note = (path: string): [string, IndexedNote] =>
@@ -56,21 +56,13 @@ function render() {
   act(() => root.render(h(NextIntlClientProvider, { locale: 'zh-TW', messages: zhTW, timeZone: 'Asia/Taipei', children: h(TodayStatusItem) })))
 }
 
-it('needsAttentionScan: V3 only scans once the index is ready; classic always does', () => {
-  expect(needsAttentionScan({ isV3: true, status: 'scanning' })).toBe(false)
-  expect(needsAttentionScan({ isV3: true, status: 'idle' })).toBe(false)
-  expect(needsAttentionScan({ isV3: true, status: 'ready' })).toBe(true)
-  expect(needsAttentionScan({ isV3: false, status: 'scanning' })).toBe(true)
-})
-
-it('P05: V3 does not scan the vault while the item cannot show, and shows the reminder once ready', () => {
+it('P05: V3 never renders the 需處理 item and never scans the vault, even once the index is ready', () => {
   useUiModeStore.setState({ mode: 'v3' })
   render()
   expect(container.innerHTML).toBe('')
+  act(() => useVaultIndexStore.setState({ status: 'ready', revision: 2 }))
+  expect(container.innerHTML).toBe('')
   expect(spy.stale).not.toHaveBeenCalled()
-  act(() => useVaultIndexStore.setState({ status: 'ready' }))
-  expect(spy.stale).toHaveBeenCalledTimes(1)
-  expect(container.textContent).toContain('1')
 })
 
 it('classic keeps computing and showing the entry as before', () => {
@@ -78,4 +70,6 @@ it('classic keeps computing and showing the entry as before', () => {
   render()
   expect(spy.stale).toHaveBeenCalled()
   expect(container.querySelector('button')).not.toBeNull()
+  act(() => useVaultIndexStore.setState({ status: 'ready' }))
+  expect(container.textContent).toContain('1')
 })

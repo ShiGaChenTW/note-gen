@@ -13,16 +13,17 @@ import { StatusBarItem } from '../status-bar-order'
 import { openTodayTab } from './today-tab'
 
 /**
- * Fork（almanac ALMNC-56.7，RPT-2026-009 P05）：要不要算「需處理」（含掃整個 vault 的 Inbox 積壓）。
- * V3 只在索引好了、有提醒時才顯示這一項，索引還沒好時一定不顯示，就不掃；classic 照舊一直算。
+ * Fork（almanac ALMNC-56.7，RPT-2026-009 P05）：V3 的狀態列不放「需處理」這一項（2026-11-22 Scott 決定），
+ * 所以 V3 完全不掛這個元件、也不掃整個筆記庫算 Inbox 積壓；classic 照舊。
  */
-export function needsAttentionScan(state: { isV3: boolean, status: string }): boolean {
-  return !state.isV3 || state.status === 'ready'
+export function TodayStatusItem() {
+  const isV3 = useUiV3()
+  if (isV3) return null
+  return <ClassicTodayStatusItem />
 }
 
-export function TodayStatusItem() {
+function ClassicTodayStatusItem() {
   const t = useTranslations('today')
-  const isV3 = useUiV3()
   const notes = useVaultIndexStore(state => state.notes)
   const revision = useVaultIndexStore(state => state.revision)
   const status = useVaultIndexStore(state => state.status)
@@ -40,18 +41,15 @@ export function TodayStatusItem() {
     return () => window.clearInterval(timer)
   }, [])
 
-  const scan = needsAttentionScan({ isV3, status })
   const count = useMemo(() => {
-    if (!scan) return 0
     const now = new Date()
     const groups = groupTasks(selectAllTasks({ notes, revision }), now)
     const staleRecords = selectStaleRecords({ records, processed }, staleDays, now).length
     return needAttentionCount(groups, staleInboxNotes(notes.values(), inboxFolder, staleDays, now).length + staleRecords)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scan, notes, revision, inboxFolder, staleDays, day, records, processed])
+  }, [notes, revision, inboxFolder, staleDays, day, records, processed])
 
   const hasReminder = status === 'ready' && count > 0
-  if (isV3 && !hasReminder) return null
 
   const label = hasReminder ? t('status.need', { count }) : t('status.open')
   return (
