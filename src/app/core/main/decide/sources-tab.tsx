@@ -170,7 +170,7 @@ function Detail({ row, commanderName, onDesk }: { row: SourceListRow, commanderN
         <button type="button" aria-label={t('back')} onClick={() => selectRow(null)} className="grid size-7 cursor-pointer place-items-center rounded-(--r-kbd) hover:bg-hover md:hidden"><ArrowLeft className="size-4" aria-hidden /></button>
         <span className="font-semibold text-ink">{t(`kind.${row.kind}`)}</span>
         <StatusTag status={row.status} />
-        {row.archived && <span className="rounded-[5px] bg-hover px-1.5 py-px text-[11px] whitespace-nowrap text-muted-ink" data-testid="source-archived">{t('archived')}</span>}
+        {row.archived && <span className="rounded-(--r-kbd) bg-hover px-1.5 py-px text-ui-numeric whitespace-nowrap text-muted-ink" data-testid="source-archived">{t('archived')}</span>}
         {row.version > 1 && <span className="tabular-nums">{t('version', { version: row.version })}</span>}
         <span className="flex-1" />
         {!inJudgement && actions.map(action => (
