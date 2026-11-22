@@ -72,6 +72,7 @@ async function run(
  * 把資料源轉成文字，記下跑了哪一個轉換器。
  * - text／transcript／email 與未知形式：原本就是文字。
  * - link：抓網頁全文。
+ * - rss：存下來的標題與摘要＋抓文章全文（ALMNC-57.2）。
  * - image：辨識文字（VLM → OCR）。
  * - voice：轉逐字稿；內容已經是文字（例如錄音時已轉好）就直接用。
  * - file：文字檔直接讀；PDF／Office 由 anydoc 解析；讀不出來時帶著原因（ALMNC-54.19）。
@@ -85,6 +86,13 @@ export async function toText(source: Source, converters: Converters): Promise<Co
       const caption = isUrl(source.content) ? '' : source.content.trim()
       const result = await run(source, 'web', converters.fetchWeb, url, caption)
       return cap(result.status === 'converted' ? { ...result, text: `${url}\n\n${result.text}` } : result)
+    }
+    // Fork（almanac ALMNC-57.2）：RSS 文章只存了標題、連結、摘要；分析時用既有的網頁擷取抓全文，摘要放在前面。
+    // 抓不到就用存下來的摘要（標成 failed，分析照樣進行）。
+    case 'rss': {
+      const url = isUrl(source.origin ?? '') ? source.origin!.trim() : undefined
+      if (!url) return cap(asText())
+      return cap(await run(source, 'web', converters.fetchWeb, url, source.content.trim()))
     }
     case 'image': {
       const { ref, caption } = refOf(source)

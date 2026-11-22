@@ -4254,7 +4254,43 @@
     },
     "searchPlaceholder": "搜尋設定...",
     "noSearchResults": "找不到相關設定",
-    "title": "設定"
+    "title": "設定",
+    "rss": {
+      "title": "RSS 訂閱",
+      "desc": "貼上 RSS 或 Atom 網址（網站首頁也可以，會自動找 feed）。App 開著時每 6 小時抓一次、啟動時補抓一次，新文章存成資料源等你決定；第一次只收最新 10 篇。",
+      "urlLabel": "Feed 網址",
+      "urlPlaceholder": "https://example.com/feed.xml",
+      "nameLabel": "名稱",
+      "namePlaceholder": "名稱（可省略，預設用 feed 標題）",
+      "subscribe": "訂閱",
+      "subscribing": "訂閱中…",
+      "refreshNow": "立即更新",
+      "refreshing": "更新中…",
+      "loading": "正在載入訂閱…",
+      "loadError": "讀不到訂閱清單。",
+      "empty": "還沒有訂閱。",
+      "renameLabel": "「{name}」的名稱",
+      "pause": "暫停",
+      "resume": "繼續",
+      "delete": "刪除",
+      "paused": "已暫停",
+      "never": "還沒抓過",
+      "lastFetched": "上次更新 {time}，新增 {count} 篇",
+      "lastError": "上次錯誤（{time}）：{message}",
+      "subscribed": "已訂閱「{name}」，收進 {count} 篇",
+      "refreshed": "已更新，新增 {count} 篇",
+      "refreshedWithErrors": "已更新，新增 {count} 篇；{failed} 個訂閱抓取失敗",
+      "deleted": "已刪除「{name}」（收進來的資料源不會刪除）",
+      "duplicate": "已經訂閱過「{name}」",
+      "errors": {
+        "http": "伺服器回應 {detail}",
+        "not_feed": "這個網址不是 RSS 或 Atom feed",
+        "timeout": "連線逾時",
+        "network": "連不上：{detail}",
+        "invalid_url": "網址格式不對",
+        "unknown": "抓取失敗：{detail}"
+      }
+    }
   },
   "bases": {
     "title": "Bases",
@@ -9017,7 +9053,9 @@
       "skipped": "{count} 則之前匯入過，已略過。",
       "truncated": "共 {total} 封，只收最新的 {limit} 封。",
       "failed": "匯入失敗",
-      "dropUnsupported": "可以拖進 .eml、.mbox 檔"
+      "dropUnsupported": "可以拖進 .eml、.mbox 檔",
+      "subscribeRss": "訂閱 RSS",
+      "rssSubscribed": "已訂閱「{name}」，收進 {count} 篇，等你決定要不要處理"
     }
   },
   "cleanup": {

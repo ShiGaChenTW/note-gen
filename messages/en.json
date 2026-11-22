@@ -4189,7 +4189,43 @@
     },
     "searchPlaceholder": "Search settings...",
     "noSearchResults": "No matching settings found",
-    "title": "Settings"
+    "title": "Settings",
+    "rss": {
+      "title": "RSS subscriptions",
+      "desc": "Paste an RSS or Atom URL (a site's home page works too; the feed is found automatically). While the app is open it checks every 6 hours and once at startup; new posts become sources waiting for your decision. The first fetch only takes the newest 10 posts.",
+      "urlLabel": "Feed URL",
+      "urlPlaceholder": "https://example.com/feed.xml",
+      "nameLabel": "Name",
+      "namePlaceholder": "Name (optional; defaults to the feed title)",
+      "subscribe": "Subscribe",
+      "subscribing": "Subscribing…",
+      "refreshNow": "Update now",
+      "refreshing": "Updating…",
+      "loading": "Loading subscriptions…",
+      "loadError": "Could not load subscriptions.",
+      "empty": "No subscriptions yet.",
+      "renameLabel": "Name of “{name}”",
+      "pause": "Pause",
+      "resume": "Resume",
+      "delete": "Delete",
+      "paused": "Paused",
+      "never": "Not fetched yet",
+      "lastFetched": "Updated {time}, {count, plural, one {# new post} other {# new posts}}",
+      "lastError": "Last error ({time}): {message}",
+      "subscribed": "Subscribed to “{name}”; {count, plural, one {# post} other {# posts}} added",
+      "refreshed": "Updated; {count, plural, one {# new post} other {# new posts}}",
+      "refreshedWithErrors": "Updated; {count, plural, one {# new post} other {# new posts}}, {failed, plural, one {# subscription} other {# subscriptions}} failed",
+      "deleted": "Deleted “{name}” (sources already added are kept)",
+      "duplicate": "Already subscribed to “{name}”",
+      "errors": {
+        "http": "Server responded {detail}",
+        "not_feed": "This URL is not an RSS or Atom feed",
+        "timeout": "Connection timed out",
+        "network": "Could not connect: {detail}",
+        "invalid_url": "Invalid URL",
+        "unknown": "Fetch failed: {detail}"
+      }
+    }
   },
   "bases": {
     "title": "Bases",
@@ -8952,7 +8988,9 @@
       "skipped": "{count} already imported, skipped.",
       "truncated": "{total} emails in total; only the newest {limit} were imported.",
       "failed": "Import failed",
-      "dropUnsupported": "You can drop .eml or .mbox files here"
+      "dropUnsupported": "You can drop .eml or .mbox files here",
+      "subscribeRss": "Subscribe to RSS",
+      "rssSubscribed": "Subscribed to “{name}”; {count, plural, one {# post} other {# posts}} added and waiting for your decision"
     }
   },
   "cleanup": {

@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState, type DragEvent, type KeyboardEvent, type ReactNode } from 'react'
-import { FileAudio, FileUp, ImagePlus, Link2, Mail, Mic, Plus, ScanText, Square } from 'lucide-react'
+import { FileAudio, FileUp, ImagePlus, Link2, Mail, Mic, Plus, Rss, ScanText, Square } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -29,6 +29,7 @@ import { openAddSource, openWorkbench } from '@/lib/workbench/open'
 import { useCommanderName } from '@/lib/workbench/use-workbench'
 import { MBOX_LIMIT } from '@/lib/source-import/email'
 import { extensionOf, importEmailFiles, pickImportFiles, readDroppedFiles, type ImportFile } from '@/lib/source-import/import-files'
+import { rssErrorText, rssSubscribeErrorText } from '@/lib/source-import/rss-errors'
 
 const typeIcon: Record<UnifiedRecordType, ReactNode> = {
   link: <Link2 />,
@@ -96,6 +97,7 @@ export function UnifiedRecordButton({ compact = false, target }: { compact?: boo
 
 export function UnifiedRecordDialog() {
   const t = useTranslations()
+  const rssT = useTranslations('settings.rss')
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const onboardingPrefillRef = useRef<string | null>(null)
   const [open, setOpen] = useState(false)
@@ -224,6 +226,27 @@ export function UnifiedRecordDialog() {
       openWorkbench('sources', summary.firstRowId)
     } catch (error) {
       toast({ title: t('workbench.import.failed'), description: error instanceof Error ? error.message : String(error), variant: 'destructive' })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  // Fork（almanac ALMNC-57.2）：資料源模式貼的是網址時可以直接訂閱 RSS（網站首頁也行，會自動找 feed）；第一次只收最新 10 篇。
+  const subscribeRss = async () => {
+    if (saving) return
+    setSaving(true)
+    try {
+      const { default: useRssStore } = await import('@/lib/source-import/rss-store')
+      const { feed, result } = await useRssStore.getState().subscribe({ url: text.trim() })
+      if (!result.ok) {
+        toast({ title: t('workbench.import.failed'), description: rssErrorText(rssT, result.error ?? { code: 'unknown' }), variant: 'destructive' })
+        return
+      }
+      toast({ title: t('workbench.import.rssSubscribed', { name: feed.name, count: result.added }) })
+      resetAfterSave()
+      openWorkbench('sources')
+    } catch (error) {
+      toast({ title: t('workbench.import.failed'), description: rssSubscribeErrorText(rssT, error), variant: 'destructive' })
     } finally {
       setSaving(false)
     }
@@ -428,6 +451,9 @@ export function UnifiedRecordDialog() {
           <Button type="button" variant="ghost" disabled={saving} onClick={() => setExpanded(value => !value)}>
             {t(expanded ? 'record.mark.unified.collapse' : 'record.mark.unified.expand')}
           </Button>
+          {target === 'source' && resolvedType === 'link' && (
+            <Button type="button" variant="outline" disabled={saving} onClick={() => void subscribeRss()}><Rss />{t('workbench.import.subscribeRss')}</Button>
+          )}
           <Button type="button" disabled={saving || creatingTag} onClick={() => void handleSave()}>
             {resolvedType === 'link' ? t('record.mark.unified.captureLink') : t('record.mark.unified.saveAs', { type: typeLabel })}
           </Button>
