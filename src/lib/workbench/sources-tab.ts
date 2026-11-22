@@ -47,6 +47,8 @@ export interface SourceListRow {
   suggestion?: string
   /** 擷取失敗：重試／刪除。 */
   captureFailed?: boolean
+  /** Fork（almanac ALMNC-54.1）：不採用滿 30 天已封存（仍在清單、搜尋得到，只是不能再改回等你決定）。 */
+  archived?: boolean
 }
 
 // —— 輸入（結構型別） ——
@@ -157,6 +159,7 @@ function sourceRow(source: Source, input: SourcesTabInput): SourceListRow {
     outputs: input.outputCounts?.get(source.id) ?? 0,
     version: source.version,
     sourceId: source.id,
+    ...(source.archivedAt !== undefined ? { archived: true } : {}),
     ...judgementFields(source, input.judgements?.get(source.id)),
   }
 }

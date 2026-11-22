@@ -41,7 +41,8 @@ export async function refreshSources(): Promise<void> {
   try {
     const db = await import('@/db/v3-sources')
     // Fork（almanac ALMNC-54.14）：舊筆記不進資料源清單（另外合成批次卡），見 refreshLegacy。
-    const [all, counts] = await Promise.all([db.listSources({ limit: 500, excludeKind: LEGACY_NOTE_KIND }), db.countOutputsBySource()])
+    // Fork（almanac ALMNC-54.1，AC#6）：封存的不採用資料源仍留在清單裡（「不採用」篩選），所以一起讀。
+    const [all, counts] = await Promise.all([db.listSources({ limit: 500, excludeKind: LEGACY_NOTE_KIND, includeArchived: true }), db.countOutputsBySource()])
     useWorkbenchStore.getState().setSources(latestVersions(all), counts)
   } catch (error) {
     if (await inDesktopApp()) {

@@ -8866,6 +8866,7 @@
       "process": "Process as suggested",
       "reject": "Don't use",
       "restore": "Back to awaiting you",
+      "archived": "Archived (rejected over 30 days)",
       "reorganise": "Organize again",
       "desk": "Lay out on the desk",
       "edit": "Edit",

@@ -157,7 +157,7 @@ function Detail({ row, commanderName, onDesk }: { row: SourceListRow, commanderN
       { key: 'reorganise', label: t('reorganise'), run: () => void act(() => handToCommander([row]), t('toast.handedRe', { name: commanderName, count: 1, re: 1 })) },
       { key: 'desk', label: t('desk'), run: () => onDesk([row]) },
     ]
-  } else if (row.status === 'no' && sourceId && row.origin === 'source') {
+  } else if (row.status === 'no' && sourceId && row.origin === 'source' && !row.archived) {
     actions = [{ key: 'restore', label: t('restore'), run: () => void act(() => restoreSource(sourceId), t('toast.restored', { title: row.title })) }]
   }
   const inJudgement = row.status === 'wait'
@@ -168,6 +168,7 @@ function Detail({ row, commanderName, onDesk }: { row: SourceListRow, commanderN
         <button type="button" aria-label={t('back')} onClick={() => selectRow(null)} className="grid size-7 cursor-pointer place-items-center rounded-md hover:bg-hover md:hidden"><ArrowLeft className="size-4" aria-hidden /></button>
         <span className="font-[650] tracking-[0.04em] text-ink">{t(`kind.${row.kind}`)}</span>
         <StatusTag status={row.status} />
+        {row.archived && <span className="rounded-[5px] bg-hover px-1.5 py-px text-[11px] whitespace-nowrap text-muted-ink" data-testid="source-archived">{t('archived')}</span>}
         {row.version > 1 && <span className="tabular-nums">{t('version', { version: row.version })}</span>}
         <span className="flex-1" />
         {!inJudgement && actions.map(action => (

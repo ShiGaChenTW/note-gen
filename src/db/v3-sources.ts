@@ -3,13 +3,13 @@
 // 不採用的資料源只會封存（archived_at），不刪除。唯一的例外是擷取失敗、還沒送出的外部擷取（deleteUnsentSource，ALMNC-54.10）。
 import { getDb } from './index'
 import {
-  archiveSource,
   canDeleteUnsent,
   createSource,
   editSourceContent,
   LEGACY_NOTE_KIND,
   sourceFromRow,
-  sourcesDueForArchive,
+  latestVersions,
+  searchSources,
   sourceToValues,
   transitionSource,
   type NewSourceInput,
@@ -18,6 +18,7 @@ import {
   type SourceRow,
   type SourceStatus,
 } from '@/lib/v3-model/source'
+import { sweepRejectedSources } from '@/lib/v3-model/archive-sweep'
 import { sourceOutputFromRow, type OutputTargetType, type SourceOutput, type SourceOutputRow } from '@/lib/v3-model/links'
 
 const SOURCE_COLUMNS = `id, source_type as sourceType, kind, content, origin, collected_at as collectedAt, collector,
@@ -204,19 +205,24 @@ export async function editSource(id: string, content: string, now = Date.now()):
   return result
 }
 
-/** 封存不採用滿 30 天的資料源，回傳這次封存的 id。 */
+/** 封存不採用滿 30 天的資料源，回傳這次封存的 id。只設 archived_at，不刪除。 */
 export async function archiveDueRejectedSources(now = Date.now()): Promise<string[]> {
   await initV3SourceDb()
-  const db = await getDb()
-  const rows = await db.select<SourceRow[]>(
-    `select ${SOURCE_COLUMNS} from sources where status = 'rejected' and archived_at is null`
-  )
-  const candidates = rows.map(sourceFromRow)
-  const due = new Set(sourcesDueForArchive(candidates, now))
-  for (const source of candidates) {
-    if (due.has(source.id)) await updateSource(archiveSource(source, now))
-  }
-  return Array.from(due)
+  return sweepRejectedSources({
+    now: () => now,
+    listRejected: async () => {
+      const db = await getDb()
+      const rows = await db.select<SourceRow[]>(`select ${SOURCE_COLUMNS} from sources where status = 'rejected' and archived_at is null`)
+      return rows.map(sourceFromRow)
+    },
+    save: updateSource,
+  })
+}
+
+/** 搜尋資料源（含封存的不採用資料源）；每條版本鏈只留最新一版。 */
+export async function searchSourcesByText(query: string, limit = 200): Promise<Source[]> {
+  const found = searchSources(await listSources({ includeArchived: true, limit: 5000 }), query)
+  return latestVersions(found).slice(0, limit)
 }
 
 // ── 產出連結 ────────────────────────────────────────────────

@@ -218,6 +218,16 @@ export function sourcesDueForArchive(
     .map(source => source.id)
 }
 
+/** 資料源的搜尋比對：原文、來處、形式任一包含關鍵字（不分大小寫）；封存的不採用資料源也照樣找得到。 */
+export function searchSources<T extends Pick<Source, 'content' | 'origin' | 'kind'>>(sources: readonly T[], query: string): T[] {
+  const terms = query.toLowerCase().split(/\s+/).filter(Boolean)
+  if (!terms.length) return [...sources]
+  return sources.filter(source => {
+    const haystack = `${source.content}\n${source.origin ?? ''}\n${source.kind}`.toLowerCase()
+    return terms.every(term => haystack.includes(term))
+  })
+}
+
 export function archiveSource(source: Source, now: number): Source {
   if (source.status !== 'rejected') throw new Error('只有不採用的資料源會封存')
   if (source.archivedAt !== undefined) return source

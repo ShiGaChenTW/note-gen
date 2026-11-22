@@ -8931,6 +8931,7 @@
       "process": "照建議處理",
       "reject": "不採用",
       "restore": "改回等你決定",
+      "archived": "已封存（不採用滿 30 天）",
       "reorganise": "重新整理",
       "desk": "攤到檯面",
       "edit": "編輯",
