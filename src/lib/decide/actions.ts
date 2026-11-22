@@ -23,6 +23,8 @@ export class DraftNotApplied extends Error {
 export interface AcceptOutcome {
   /** 任務、時段寫進今日日誌時可復原。 */
   undo?: () => Promise<boolean>
+  /** Fork（almanac ALMNC-54.21）：寫到哪個檔案（活動紀錄的對象連結）；不知道就沒有。 */
+  path?: string
 }
 
 /** 重新讀今日日誌，給預覽與「已在日誌裡」去重用；讀不到（沒有 Tauri 等）就維持原樣。 */
@@ -52,13 +54,14 @@ export async function acceptDecision(item: DecideItem): Promise<AcceptOutcome> {
     // 同一件事的重複提案：寫過一次就夠，其餘標成不要
     for (const dup of item.duplicates) if (dup.source === 'collect') store.reject(dup.itemId, dup.proposalId)
     void refreshJournal()
+    const path = result.path ? { path: result.path } : {}
     return result.record
-      ? { undo: async () => {
+      ? { ...path, undo: async () => {
           const ok = await useCollectStore.getState().undo(ref.itemId, ref.proposalId)
           void refreshJournal()
           return ok
         } }
-      : {}
+      : path
   }
   if (ref.source === 'job') {
     await jobCenter.act(ref.jobId, ref.stepId, 'accept')
@@ -70,7 +73,8 @@ export async function acceptDecision(item: DecideItem): Promise<AcceptOutcome> {
   await applyTaskDraft(ref.taskId, ref.draftId)
   const draft = agentTaskCenter.get(ref.taskId)?.drafts.find(entry => entry.id === ref.draftId)
   if (draft?.state === 'failed') throw new DraftNotApplied(ref.taskId, draft.error === 'CONFLICT', draft.error)
-  return {}
+  const path = draft?.targetPath ?? draft?.path
+  return path ? { path } : {}
 }
 
 export async function rejectDecision(item: DecideItem): Promise<void> {

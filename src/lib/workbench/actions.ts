@@ -2,6 +2,7 @@
 // 清單由投影自然更新；能復原的回傳 undo（給審核分頁的 Z）。需要 Tauri 的模組一律動態載入，測試時可以 mock。
 import { acceptDecision, rejectDecision } from '@/lib/decide/actions'
 import type { DecideItem } from '@/lib/decide/project'
+import { acceptedFromDecide, logAcceptedProposal } from '@/lib/proposals/accepted-activity'
 import { LEGACY_NOTE_KIND, latestVersions, type Source } from '@/lib/v3-model/source'
 import { legacyProgress, type LegacyRunSummary } from '@/lib/migration/legacy'
 import useCollectStore from '@/stores/collect'
@@ -136,14 +137,17 @@ export async function requestJudgement(source: Pick<Source, 'id' | 'kind' | 'con
 
 // —— 審核：卡片動作 ——
 
+// Fork（almanac ALMNC-54.21）：接受後記一筆活動紀錄（誰提的、改了什麼、來源對話）；記不進去不擋接受。
 export async function acceptCard(card: WorkbenchCard): Promise<Undo> {
   if (card.decide) {
     const outcome = await acceptDecision(card.decide)
+    await logAcceptedProposal(acceptedFromDecide(card.decide, outcome.path))
     return outcome.undo
   }
   if (card.kind === 'domain' && card.domainProposalId) {
     const { acceptDomainCard } = await import('./domain-cards')
     await acceptDomainCard(card.domainProposalId)
+    await logAcceptedProposal({ key: card.domainProposalId, kind: 'domain', what: card.title, drafter: { role: 'commander' } })
     return undefined
   }
   return undefined

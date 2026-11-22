@@ -101,6 +101,8 @@ export interface WorkbenchCard {
   /** 進來的時間（排序與「等多久」）。 */
   at: number
   overdue?: boolean
+  /** Fork（almanac ALMNC-54.21）：沒排日期的任務（排在其他任務最後，不顯示等多久）。 */
+  undated?: boolean
   actions: readonly CardAction[]
   conversationId?: number
   /** 回話卡的選項（「選一個」）。 */
@@ -205,6 +207,7 @@ export interface DomainLike {
 export interface ReviewInput {
   proposals: readonly DecideItem[]
   overdueTasks?: readonly TaskLike[]
+  /** 還沒逾期的任務（今天以後到期的、沒排日期的都在這裡；沒日期的會排到最後）。 */
   otherTasks?: readonly TaskLike[]
   awaitingSources?: readonly AwaitingSourceLike[]
   replies?: readonly ReplyLike[]
@@ -295,6 +298,7 @@ function taskCard(task: TaskLike, group: 'late' | 'task', now: number): Workbenc
     summary: baseName(task.path),
     at: Number.isFinite(dueAt) ? dueAt : now,
     overdue: group === 'late',
+    ...(task.due ? {} : { undated: true }),
     actions: ACTIONS_BY_KIND.task,
     task,
   }
@@ -359,12 +363,14 @@ export function buildReviewCards(input: ReviewInput): WorkbenchCard[] {
   return sortCards(cards)
 }
 
-/** 排序：分組依序；逾期任務最久的在前、提案舊的在前；同一時間維持輸入順序。 */
+/** 排序：分組依序；逾期任務最久的在前、提案舊的在前；其他任務照到期日，沒排日期的在最後；同一時間維持輸入順序。 */
 export function sortCards(cards: readonly WorkbenchCard[]): WorkbenchCard[] {
   const rank = new Map(CARD_GROUPS.map((group, index) => [group, index]))
   return cards
     .map((card, index) => ({ card, index }))
-    .sort((a, b) => (rank.get(a.card.group)! - rank.get(b.card.group)!) || (a.card.at - b.card.at) || (a.index - b.index))
+    .sort((a, b) => (rank.get(a.card.group)! - rank.get(b.card.group)!)
+      || (Number(Boolean(a.card.undated)) - Number(Boolean(b.card.undated)))
+      || (a.card.at - b.card.at) || (a.index - b.index))
     .map(entry => entry.card)
 }
 

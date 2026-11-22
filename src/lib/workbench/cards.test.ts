@@ -66,6 +66,21 @@ describe('buildReviewCards', () => {
   })
 })
 
+describe('schedule lists every unfinished task (ALMNC-54.21 AC#1)', () => {
+  it('keeps overdue first, then dated tasks by due date (even weeks away), undated tasks last', () => {
+    const undated = { ...task('沒排日期的事', '', 9) }
+    const cards = buildReviewCards({
+      now: NOW,
+      proposals: [],
+      overdueTasks: [task('逾期', '2026-11-18', 1)],
+      otherTasks: [task('下個月', '2026-12-20', 2), undated, task('今天', '2026-11-21', 3), task('5 天後', '2026-11-26', 4)],
+    })
+    expect(cards.map(card => card.title)).toEqual(['逾期', '今天', '5 天後', '下個月', '沒排日期的事'])
+    expect(cards.at(-1)).toMatchObject({ group: 'task', label: 'schedule', undated: true, path: 'daily', actions: ['schedule', 'done'] })
+    expect(cards.filter(card => card.undated)).toHaveLength(1)
+  })
+})
+
 describe('labels and verbs', () => {
   it('has exactly the eleven verbs and five labels of the spec', () => {
     expect(CARD_VERBS).toEqual(['add', 'supplement', 'modify', 'merge', 'replace', 'verify', 'archive', 'reschedule', 'judge', 'confirm', 'organize'])

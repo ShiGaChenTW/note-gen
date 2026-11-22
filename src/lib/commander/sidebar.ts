@@ -12,6 +12,7 @@ import type { DraftChange } from '@/lib/agent-tasks/types'
 import { newProposalId } from '@/lib/collect/split'
 import type { FileChange, Proposal } from '@/lib/collect/types'
 import { buildScheduleTools, SCHEDULE_TOOL_NAMES, type ScheduleDeps } from './schedule-direct'
+import { buildAwaitReplyTool, withAwaitingQuestion } from './await-reply'
 
 /** 會改檔、要換成提案版本的原工具（同背景任務的草稿工具）。 */
 const DRAFTABLE_TOOL_NAMES = new Set(Object.keys(DRAFT_TOOL_KINDS))
@@ -65,6 +66,15 @@ export interface SidebarToolDeps {
   schedule: ScheduleDeps
   /** ask_user_question 有回答時呼叫（交代得不夠具體、Scott 選了之後才能直接寫）。 */
   onChoiceAnswered: () => void
+  /**
+   * Fork（almanac ALMNC-54.21）：秘書在等 Scott 回話（工作台「等你回話」）。onAsk＝schedule_await_reply 記下這一輪收尾的問句；
+   * open／close＝ask_user_question 開著／結束。沒給就不提供 schedule_await_reply。
+   */
+  awaitReply?: {
+    onAsk: (question: string) => void
+    open: (line: { question: string, choices?: string[] }) => void
+    close: () => void
+  }
 }
 
 const PROPOSAL_NOTE = '\n(Right sidebar: this does not change any file. It becomes a proposal on the workbench and is written only after Scott accepts it.)'
@@ -118,9 +128,14 @@ export function buildSidebarCommanderTools(tools: AgentTool[], deps: SidebarTool
       continue
     }
     if (tool.risk !== 'read') continue
-    offered.push(tool.name === 'ask_user_question' ? withChoiceTracking(tool, deps.onChoiceAnswered) : tool)
+    if (tool.name === 'ask_user_question') {
+      const tracked = withChoiceTracking(tool, deps.onChoiceAnswered)
+      offered.push(deps.awaitReply ? withAwaitingQuestion(tracked, deps.awaitReply) : tracked)
+      continue
+    }
+    offered.push(tool)
   }
-  return [...offered, ...buildScheduleTools(deps.schedule)]
+  return [...offered, ...buildScheduleTools(deps.schedule), ...(deps.awaitReply ? [buildAwaitReplyTool(deps.awaitReply.onAsk)] : [])]
 }
 
 /** 收集到的檔案變更 → 工作台的提案（記來源對話與撰寫者）。 */
@@ -149,6 +164,7 @@ export const SIDEBAR_COMMANDER_RULES = [
   '- Tasks and time blocks are handled by the secretary tools schedule_add_task and schedule_add_event. Use them only when Scott himself asks for a task or appointment, and pass his exact words as quote. These are written directly and Scott gets a one-line confirmation with undo.',
   '- If Scott did not say exactly when (for example "find time next week to meet A"), ask him with ask_user_question before adding anything. His choice is applied directly, without a proposal.',
   '- Tasks or time blocks you suggest on your own initiative must not be added directly; they become proposals.',
+  '- If a task or appointment is waiting on Scott\'s answer to an open question (no concrete options), call schedule_await_reply with that question in one line, then ask it and stop. The question waits on his workbench until he replies.',
 ].join('\n')
 
 /** 系統提示詞裡指揮官那一段：角色工作指示、記憶（soul、rules、工作筆記、Scott 的偏好、目前脈絡）、顯示名稱與右側欄規則。 */

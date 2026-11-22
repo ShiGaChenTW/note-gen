@@ -7,6 +7,7 @@ import { ROLE_INSTRUCTIONS } from '@/lib/agents/instructions'
 import { agentDisplayName } from '@/lib/agents/display'
 import type { AgentRole } from '@/lib/agents/settings'
 import type { Proposal } from '@/lib/collect/types'
+import type { AwaitingReply } from '@/lib/threads/awaiting'
 import type { DirectEditCardData, ProposalCardData } from '@/lib/threads/cards'
 import { describeDirectEdit, type DirectEdit } from './schedule-direct'
 import { buildCommanderSidebarPrompt, buildSidebarCommanderTools, changesToProposals, createChangeCollector } from './sidebar'
@@ -33,6 +34,9 @@ export interface SidebarRunDeps {
   attachDirectEdit: (chatId: number, card: DirectEditCardData, undo: () => Promise<boolean>) => void
   /** 活動紀錄（#111）；失敗只記錯。 */
   logActivity: (entry: { actorId: string, actorRole: AgentRole, targetLink: string, conversationId?: number, note: string }) => Promise<void>
+  /** Fork（almanac ALMNC-54.21）：工作台「等你回話」記一筆／拿掉（沒給就不記，也不提供 schedule_await_reply）。 */
+  markAwaiting?: (entry: AwaitingReply) => void
+  clearAwaiting?: (conversationId: number, via: AwaitingReply['via']) => void
   /** 角色名稱（agents.roles）。 */
   roleLabel: RoleTranslator
   /** 工作台上這批提案的來源名稱，例如「Mia · 指揮官（對話）」。 */
@@ -99,11 +103,24 @@ export async function prepareSidebarCommanderRun(
   const secretaryProposals: Proposal[] = []
   let choiceAnswered = false
   let directCount = 0
+  // Fork（almanac ALMNC-54.21）：秘書這一輪以問句收尾（schedule_await_reply），執行結束時記到「等你回話」。
+  let awaitedQuestion: string | null = null
+  const conversationId = input.conversationId
+  const markAwaiting = deps.markAwaiting
+  const awaitReply = conversationId !== undefined && markAwaiting ? {
+    onAsk: (question: string) => { awaitedQuestion = question },
+    open: (line: { question: string, choices?: string[] }) => markAwaiting({
+      conversationId, chatId: input.chatId, question: line.question, ...(line.choices ? { choices: line.choices } : {}),
+      by: displayName, at: deps.now().getTime(), via: 'live',
+    }),
+    close: () => deps.clearAwaiting?.(conversationId, 'live'),
+  } : undefined
 
   const transformTools = (tools: AgentTool[]) => buildSidebarCommanderTools(tools, {
     collector,
     readFile: deps.readFile,
     onChoiceAnswered: () => { choiceAnswered = true },
+    ...(awaitReply ? { awaitReply } : {}),
     schedule: {
       now: deps.now,
       scottMessages: () => input.scottMessages,
@@ -139,6 +156,9 @@ export async function prepareSidebarCommanderRun(
     rolePrompt,
     transformTools,
     finish: async () => {
+      if (awaitedQuestion && conversationId !== undefined) {
+        markAwaiting?.({ conversationId, chatId: input.chatId, question: awaitedQuestion, by: secretaryName, at: deps.now().getTime(), via: 'turn' })
+      }
       const proposals = [
         ...changesToProposals(collector.changes(), { conversationId: input.conversationId, agentId: commander?.id }),
         ...secretaryProposals.map(proposal => ({
@@ -170,7 +190,7 @@ export async function prepareSidebarCommanderRun(
 
 /** App 內的實際依賴。需要 Tauri（資料庫、檔案）才跑得起來，單元測試用假的。 */
 export async function createDefaultSidebarDeps(labels: { roleLabel: RoleTranslator, originLabel: (agent: string) => string }): Promise<SidebarRunDeps> {
-  const [agentsDb, memoryDb, noteIo, write, { default: useCollectStore }, { default: useThreadsStore }, { default: useDailySettingsStore }] = await Promise.all([
+  const [agentsDb, memoryDb, noteIo, write, { default: useCollectStore }, { default: useThreadsStore }, { default: useDailySettingsStore }, { default: useAwaitingRepliesStore }] = await Promise.all([
     import('@/db/agents'),
     import('@/db/agent-memory'),
     import('@/lib/daily/note-io'),
@@ -178,6 +198,7 @@ export async function createDefaultSidebarDeps(labels: { roleLabel: RoleTranslat
     import('@/stores/collect'),
     import('@/stores/threads'),
     import('@/stores/daily-settings'),
+    import('@/stores/awaiting-replies'),
   ])
   return {
     roster: async () => {
@@ -198,6 +219,8 @@ export async function createDefaultSidebarDeps(labels: { roleLabel: RoleTranslat
     },
     attachCard: (chatId, card) => useThreadsStore.getState().attachCard(chatId, card),
     attachDirectEdit: (chatId, card, undo) => useThreadsStore.getState().attachDirectEdit(chatId, card, undo),
+    markAwaiting: entry => useAwaitingRepliesStore.getState().mark(entry),
+    clearAwaiting: (conversationId, via) => useAwaitingRepliesStore.getState().clear(conversationId, via),
     logActivity: async entry => {
       await memoryDb.appendActivity('system', {
         actorId: entry.actorId,
