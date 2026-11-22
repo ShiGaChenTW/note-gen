@@ -536,6 +536,9 @@ const Message = React.memo(function Message({ chat }: { chat: Chat }) {
       )
     }
 
+    case 'desk_context':
+      return null
+
     case 'conversation_prompt': {
       if (!chat.content) return null
       return (

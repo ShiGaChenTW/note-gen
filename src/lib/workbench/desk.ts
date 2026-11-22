@@ -1,6 +1,7 @@
 // Fork（almanac ALMNC-54.8）：檯面（專注模式）——素材、工作稿、協助三欄。
 // 檯面上的結構操作直接生效，不走提案（第四節「檯面上的整理直接生效」）：搬移、加標籤、連結、合併筆記、歸入領域。
-// 這裡是純函式與注入的寫入介面；真正寫檔的實作在 desk-io.ts（需要 Tauri）。
+// 寫檔由 actions.ts 提供 Tauri I/O。
+import { archiveMergedNote } from '@/lib/cleanup/plan'
 import { parseV3Note, writeV3NoteFields, createV3Note } from '@/lib/v3-model/note'
 
 export type DeskMaterialKind = 'note' | 'source' | 'record' | 'capture'
@@ -15,6 +16,8 @@ export interface DeskMaterial {
   path?: string
   /** 資料源 id（存成筆記時寫進 sources 欄位）。 */
   sourceId?: string
+  /** 已讀取的筆記原文（包含 frontmatter），供合併寫入前比對。 */
+  noteRaw?: string
 }
 
 export type StructuralOp =
@@ -22,23 +25,15 @@ export type StructuralOp =
   | { op: 'tag', path: string, tag: string }
   | { op: 'link', path: string, target: string }
   | { op: 'assignDomain', path: string, domainId: string }
-  | { op: 'merge', paths: string[] }
 
-/** 這張卡片目前能做的結構操作；合併筆記要逐段對照，這張卡先不開放（見 ALMNC-54.8 實作說明）。 */
+/** 作用在單一素材上的結構操作。合併在頁首套用整份工作稿。 */
 export const STRUCTURAL_OPS = ['move', 'tag', 'link', 'assignDomain'] as const
-export const STUBBED_OPS = ['merge'] as const
 
 export interface NoteIo {
   read: (path: string) => Promise<string | null>
   write: (path: string, content: string) => Promise<void>
   /** 搬到資料夾，回傳新路徑。 */
   move: (path: string, folder: string) => Promise<string>
-}
-
-export class DeskOpUnsupported extends Error {
-  constructor(readonly op: StructuralOp['op']) {
-    super(`desk op not supported yet: ${op}`)
-  }
 }
 
 function cleanTag(tag: string): string {
@@ -51,7 +46,6 @@ function wikiTarget(path: string): string {
 
 /** 執行一個結構操作，回傳操作後筆記的路徑（搬移會改路徑）與能復原的寫入。 */
 export async function applyStructuralOp(op: StructuralOp, io: NoteIo): Promise<{ path?: string, undo?: () => Promise<void> }> {
-  if (op.op === 'merge') throw new DeskOpUnsupported('merge')
   if (op.op === 'move') {
     const folder = op.folder.trim().replace(/^\/+|\/+$/g, '')
     const from = op.path
@@ -88,7 +82,7 @@ export function deskHeading(materials: readonly DeskMaterial[]): { first: string
 export function initialDraft(materials: readonly DeskMaterial[]): { title: string, body: string } {
   return {
     title: materials[0]?.title ?? '',
-    body: materials.map(material => `## ${material.title}\n\n${material.text.trim()}`).join('\n\n'),
+    body: materials.filter(material => material.text.trim()).map(material => `## ${material.title}\n\n${material.text.trim()}`).join('\n\n'),
   }
 }
 
@@ -102,6 +96,51 @@ export function handwrittenNote(draft: { title: string, body: string }, material
     related,
     tags: [handTag],
   }, draft.body.trim() ? `${draft.body.trim()}\n` : '')
+}
+
+export function mergeDeskDraft(
+  draft: { title: string, body: string },
+  materials: readonly DeskMaterial[],
+  target: string,
+  options: { handTag: string, today: string, reason: string, sourceIds?: readonly string[] },
+) {
+  const originals = new Map<string, string>()
+  for (const material of materials) {
+    if (!material.path) continue
+    if (material.noteRaw === undefined || material.path === target) throw new Error('Missing original note or invalid merge target')
+    originals.set(material.path, material.noteRaw)
+  }
+  if (originals.size < 2 || !draft.body.trim()) throw new Error('Merging requires at least two notes and a working draft')
+
+  const fields = Array.from(originals.values(), raw => {
+    const note = parseV3Note(raw)
+    if (note.issues.some(issue => issue.startsWith('sources')) || note.fields.status === 'archived' || note.fields.status === 'superseded') {
+      throw new Error('Cannot merge an inactive note or a note with invalid sources')
+    }
+    return note.fields
+  })
+  const types = new Set(fields.flatMap(field => field.type ? [field.type] : []))
+  const [type] = types
+  const sources = Array.from(new Set([
+    ...fields.flatMap(field => field.sources),
+    ...materials.flatMap(material => material.sourceId ?? []),
+    ...(options.sourceIds ?? []),
+  ]))
+  const content = createV3Note({
+    title: draft.title.trim() || null,
+    type: types.size === 1 ? type : undefined,
+    status: 'valid',
+    lastConfirmed: options.today,
+    sources,
+    tags: [options.handTag, ...fields.flatMap(field => field.tags)],
+    domains: fields.flatMap(field => field.domains),
+    related: [...Array.from(originals.keys(), path => `[[${wikiTarget(path)}]]`), ...fields.flatMap(field => field.related)]
+      .filter(link => link !== target && link !== `[[${wikiTarget(target)}]]`),
+  }, `${draft.body.trim()}\n`)
+  const writes = Array.from(originals, ([path, before]) => ({
+    path, before, after: archiveMergedNote(before, target, options.today, options.reason),
+  }))
+  return { content, sources, writes }
 }
 
 /** 存成筆記的檔名：標題去掉不能用的字元。 */

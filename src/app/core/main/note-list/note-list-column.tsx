@@ -6,10 +6,13 @@
 // Fork（almanac ALMNC-56.7，A07）：頁首有關閉鈕、清單裡按 Esc 收起；中間面板窄於約 640 px 時自動收起。
 // Fork（almanac ALMNC-56.3 P03）：清單虛擬化（和檔案樹一樣用 @tanstack/react-virtual），只畫看得到的列；
 // 自動存檔只把變動的那一則搬到該在的位置（nextNoteList），不重排整份清單，其他列的物件不變、不重繪。
-import { memo, useEffect, useMemo, useRef, useState } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { FileText, X } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
+import { useIsMobile } from '@/hooks/use-mobile'
+import useDecideStore from '@/stores/decide'
+import useWorkbenchStore from '@/stores/workbench'
 import { EmptyState } from '@/components/v3/empty-state'
 import { useUiV3 } from '@/lib/fork-ui'
 import { crossedBelow, folderName, nextNoteList, relativeTimeLabel, useNoteListStore, type NoteListItem, type NoteListSnapshot } from '@/lib/note-list/note-list'
@@ -35,8 +38,9 @@ function useNow() {
 export function NoteListColumn() {
   const isV3 = useUiV3()
   const visible = useNoteListStore(state => state.visible)
+  const folder = useNoteListStore(state => state.folder)
   if (!isV3 || !visible) return null
-  return <NoteList />
+  return <NoteList key={folder} />
 }
 
 /** 量中間面板（清單的父層）寬度；從夠寬變窄時收起清單。 */
@@ -66,6 +70,16 @@ export function focusAfterNoteListClose(opener: HTMLElement | null) {
 
 function NoteList() {
   const t = useTranslations('sidebarV3')
+  const isMobile = useIsMobile()
+  const [selecting, setSelecting] = useState(false)
+  const selectButton = useRef<HTMLButtonElement>(null)
+  const [picked, setPicked] = useState<ReadonlySet<string>>(() => new Set())
+  const togglePick = useCallback((path: string) => setPicked(previous => {
+    const next = new Set(previous)
+    if (next.has(path)) next.delete(path)
+    else next.add(path)
+    return next
+  }), [])
   const ref = useRef<HTMLElement>(null)
   useAutoCollapse(ref)
   const locale = useLocale()
@@ -103,6 +117,14 @@ function NoteList() {
   const vaultName = useVaultName()
   const title = folder ? folderName(folder) : vaultName
 
+  const selectionMode = selecting && !isMobile
+  const selectedItems = selectionMode && picked.size ? items.filter(item => picked.has(item.path)) : []
+  function spread() {
+    if (!selectedItems.length) return
+    useWorkbenchStore.getState().openDesk(selectedItems.map(({ path, title }) => ({ id: path, path, title, kind: 'note', text: '' })))
+    useDecideStore.getState().show()
+  }
+
   return (
     <aside
       ref={ref}
@@ -112,12 +134,26 @@ function NoteList() {
       onKeyDown={event => {
         if (event.key !== 'Escape' || event.defaultPrevented || event.nativeEvent.isComposing) return
         event.preventDefault()
-        close()
+        if (selectionMode) {
+          setSelecting(false)
+          setPicked(new Set())
+          selectButton.current?.focus()
+        } else {
+          close()
+        }
       }}
     >
       <header className="flex h-11 shrink-0 items-center gap-2 border-b border-line-soft pr-2 pl-4">
         <h2 className="min-w-0 flex-1 truncate text-sm font-semibold text-ink" title={folder || title}>{title}</h2>
         <span className="shrink-0 text-xs tabular-nums text-faint" aria-label={t('count', { count: items.length })}>{items.length}</span>
+        {!isMobile && items.length > 0 && (
+          <button ref={selectButton} type="button" aria-pressed={selectionMode} data-testid="note-list-select" onClick={() => {
+            setSelecting(!selecting)
+            setPicked(new Set())
+          }} className={cn(SIDEBAR_ROW, 'shrink-0 px-2 text-xs text-muted-ink')}>
+            {t('noteList.select')}
+          </button>
+        )}
         <button
           type="button"
           aria-label={t('noteList.close')}
@@ -130,11 +166,21 @@ function NoteList() {
           <X className="size-4" aria-hidden />
         </button>
       </header>
+      {selectionMode && (
+        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-line-soft px-3 py-1">
+          <span className="text-xs text-muted-ink" role="status">{t('noteList.selected', { count: selectedItems.length })}</span>
+          <button type="button" data-testid="note-list-spread" onClick={spread} disabled={!selectedItems.length}
+            className={cn(SIDEBAR_ROW, 'px-2 text-xs text-ink disabled:opacity-50')}>
+            {t('noteList.spread')}
+          </button>
+        </div>
+      )}
       {items.length === 0 ? (
         // Fork（almanac ALMNC-56.6，V12）：共用的 V3 空狀態（靠左、13 px）。
         <EmptyState icon={FileText} text={t('noteList.empty')} className="px-4 py-4" />
       ) : (
-        <VirtualNoteRows items={items} activeFilePath={activeFilePath} now={now} locale={locale} vaultName={vaultName} />
+        <VirtualNoteRows items={items} activeFilePath={activeFilePath} now={now} locale={locale} vaultName={vaultName}
+          picked={selectionMode ? picked : undefined} togglePick={togglePick} />
       )}
     </aside>
   )
@@ -145,12 +191,14 @@ const ROW_ESTIMATE_PX = 54
 /** 清單上下內距（原本 p-1.5） */
 const LIST_PADDING_PX = 6
 
-function VirtualNoteRows({ items, activeFilePath, now, locale, vaultName }: {
+function VirtualNoteRows({ items, activeFilePath, now, locale, vaultName, picked, togglePick }: {
   items: readonly NoteListItem[]
   activeFilePath: string
   now: number
   locale: string
   vaultName: string
+  picked?: ReadonlySet<string>
+  togglePick: (path: string) => void
 }) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const virtualizer = useVirtualizer({
@@ -180,6 +228,8 @@ function VirtualNoteRows({ items, activeFilePath, now, locale, vaultName }: {
             >
               <NoteListRow
                 item={item}
+                checked={picked?.has(item.path)}
+                togglePick={togglePick}
                 selected={item.path === activeFilePath}
                 meta={[item.folder || vaultName, relativeTimeLabel(item.mtime, now, locale)].filter(Boolean).join(' · ')}
               />
@@ -192,7 +242,24 @@ function VirtualNoteRows({ items, activeFilePath, now, locale, vaultName }: {
 }
 
 /** 一列筆記。props 沒變就不重繪：自動存檔時只有變動的那一則會重畫。 */
-const NoteListRow = memo(function NoteListRow({ item, selected, meta }: { item: NoteListItem, selected: boolean, meta: string }) {
+const NoteListRow = memo(function NoteListRow({ item, selected, meta, checked, togglePick }: {
+  item: NoteListItem
+  selected: boolean
+  meta: string
+  checked?: boolean
+  togglePick: (path: string) => void
+}) {
+  if (checked !== undefined) {
+    return (
+      <label className={cn(SIDEBAR_ROW, 'flex w-full gap-2 px-3 py-2 text-ink', checked && 'bg-active')}>
+        <input type="checkbox" checked={checked} onChange={() => togglePick(item.path)} aria-label={item.title} />
+        <span className="flex min-w-0 flex-col gap-0.5">
+          <span className="truncate text-sm leading-5 font-semibold" title={item.title}>{item.title}</span>
+          <span className="truncate text-xs leading-4 text-muted-ink" title={item.folder || undefined}>{meta}</span>
+        </span>
+      </label>
+    )
+  }
   return (
     <button
       type="button"

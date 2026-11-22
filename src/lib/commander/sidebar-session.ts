@@ -8,6 +8,7 @@ import { agentDisplayName } from '@/lib/agents/display'
 import type { AgentRole } from '@/lib/agents/settings'
 import type { Proposal } from '@/lib/collect/types'
 import type { DirectEditCardData, ProposalCardData } from '@/lib/threads/cards'
+import { deskMaterialPrompt, type DeskContext } from '@/lib/workbench/desk-context'
 import { describeDirectEdit, type DirectEdit } from './schedule-direct'
 import { buildCommanderSidebarPrompt, buildSidebarCommanderTools, changesToProposals, createChangeCollector } from './sidebar'
 
@@ -67,6 +68,9 @@ export async function prepareSidebarCommanderRun(
     answerAs?: SidebarRosterAgent
     /** Fork（almanac ALMNC-54.11）：路由器的決定，接在規則後面給模型參考（例如「這是交代秘書的日程」）。 */
     routeNote?: string
+    deskContext?: DeskContext
+    expertToolTitle?: string
+    askExpert?: (system: string, question: string, signal?: AbortSignal) => Promise<string>
   },
   deps: SidebarRunDeps,
 ): Promise<SidebarCommanderRun> {
@@ -90,9 +94,46 @@ export async function prepareSidebarCommanderRun(
     }
   }
   // 「問」模式也是指揮官在回答，只是規則換成只讀（工具由 runtime 的 read-only 篩掉，這裡不替換）。
+  const materials = input.deskContext ? deskMaterialPrompt(input.deskContext) : ''
+  const experts = roster.filter(agent => agent.enabled && agent.role === 'expert' && input.deskContext?.expertIds.includes(agent.id))
+  const askExpert = input.askExpert
+  const expertTool: AgentTool | undefined = experts.length && askExpert ? {
+    name: 'desk_consult_expert',
+    title: input.expertToolTitle ?? 'Consult a desk domain expert',
+    description: `Ask for a read-only assessment of the desk materials. Available experts: ${experts.map(expert => `${expert.id} = ${expert.name} (${expert.domain})`).join(', ')}.`,
+    category: 'system',
+    risk: 'read',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        expertId: { type: 'string', enum: experts.map(expert => expert.id) },
+        question: { type: 'string' },
+      },
+      required: ['expertId', 'question'],
+      additionalProperties: false,
+    },
+    execute: async ({ expertId, question }, context) => {
+      const expert = experts.find(agent => agent.id === expertId)
+      if (!expert || typeof question !== 'string' || !question.trim()) {
+        return { ok: false, error: 'INVALID_EXPERT_REQUEST', message: 'Choose a desk expert and ask a specific question.' }
+      }
+      const expertMemory = await deps.memoryPrompt(expert).catch(() => '')
+      const system = [
+        ROLE_INSTRUCTIONS.expert,
+        `You are ${expert.name}, responsible for ${expert.domain}. Give a read-only opinion based on the supplied materials. State where evidence is missing.`,
+        expertMemory,
+        materials,
+      ].filter(Boolean).join('\n\n')
+      context?.signal?.throwIfAborted()
+      const answer = await askExpert(system, question, context?.signal)
+      return { ok: true, message: `${expert.name} (${expert.domain}): ${answer}` }
+    },
+  } : undefined
   const rolePrompt = [
     buildCommanderSidebarPrompt({ instructions: ROLE_INSTRUCTIONS[speaker?.role ?? 'commander'], memory, displayName, readOnly: input.readOnly }),
     input.routeNote?.trim() ?? '',
+    materials,
+    expertTool ? 'When Scott asks for a domain expert or the question needs domain judgment, consult the relevant expert with desk_consult_expert and attribute their assessment in your reply.' : '',
   ].filter(Boolean).join('\n\n')
 
   const collector = createChangeCollector()
@@ -137,7 +178,10 @@ export async function prepareSidebarCommanderRun(
   return {
     displayName,
     rolePrompt,
-    transformTools,
+    transformTools: tools => {
+      const selected = input.readOnly ? tools : transformTools(tools)
+      return expertTool ? [...selected, expertTool] : selected
+    },
     finish: async () => {
       const proposals = [
         ...changesToProposals(collector.changes(), { conversationId: input.conversationId, agentId: commander?.id }),

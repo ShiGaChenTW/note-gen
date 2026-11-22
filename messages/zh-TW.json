@@ -8864,6 +8864,9 @@
     "collapseSection": "收合{title}",
     "expandSection": "展開{title}",
     "noteList": {
+      "select": "勾選",
+      "selected": "已選 {count} 則",
+      "spread": "攤到檯面",
       "label": "「{folder}」的筆記清單",
       "empty": "這個資料夾還沒有筆記",
       "close": "關閉筆記清單"
@@ -9288,8 +9291,14 @@
       "handTag": "親手寫的",
       "fallbackName": "檯面筆記",
       "helpStarting": "正在開處理對話…",
-      "helpHint": "處理對話：{name} 和負責的專家都在",
-      "helpFailed": "沒辦法開處理對話，請到對話頁再試一次",
+      "consultExpert": "向領域專家請教",
+      "materialsUnavailable": "有些素材無法讀取。",
+      "helpHint": "處理對話 · {name}",
+      "helpFailed": "無法開啟處理對話。",
+      "mergeConfirm": "合併這 {count} 則筆記？工作稿會存成一則新筆記，並保留所有來源。原筆記將封存並標記合併去向。",
+      "mergeReason": "在檯面合併",
+      "merged": "已合併成「{path}」",
+      "mergeFailed": "無法合併筆記。請重新攤開素材並確認原筆記仍可讀取。",
       "empty": "沒有素材",
       "notesOnly": "只有筆記能做結構操作",
       "ops": {
@@ -9301,7 +9310,6 @@
         "link": "連結到…",
         "assignDomain": "歸入領域",
         "merge": "合併筆記",
-        "mergeLater": "合併筆記之後開放",
         "apply": "套用",
         "noDomains": "還沒有領域"
       },

@@ -1,7 +1,7 @@
-// Fork（almanac ALMNC-54.8）：檯面（AC#5）——結構操作直接生效（搬移、加標籤、連結、歸入領域）；合併筆記先不開放。
+// Fork（almanac ALMNC-54.8）：檯面（AC#5）——結構操作直接生效（搬移、加標籤、連結、歸入領域）。
 import { describe, expect, it, vi } from 'vitest'
 import { parseV3Note } from '@/lib/v3-model/note'
-import { DeskOpUnsupported, STRUCTURAL_OPS, STUBBED_OPS, applyStructuralOp, deskHeading, handwrittenNote, initialDraft, noteFileName, type NoteIo } from './desk'
+import { STRUCTURAL_OPS, applyStructuralOp, deskHeading, handwrittenNote, initialDraft, mergeDeskDraft, noteFileName, type NoteIo } from './desk'
 
 function memoryIo(files: Record<string, string>): NoteIo & { files: Record<string, string> } {
   return {
@@ -18,9 +18,8 @@ function memoryIo(files: Record<string, string>): NoteIo & { files: Record<strin
 }
 
 describe('desk structural operations', () => {
-  it('offers move, tag, link and assign-domain; merge is stubbed', () => {
+  it('offers the four operations that apply to individual notes', () => {
     expect(STRUCTURAL_OPS).toEqual(['move', 'tag', 'link', 'assignDomain'])
-    expect(STUBBED_OPS).toEqual(['merge'])
   })
 
   it('AC#5: tag, link and assign-domain write the note frontmatter directly and can be undone', async () => {
@@ -53,9 +52,6 @@ describe('desk structural operations', () => {
     expect(write).not.toHaveBeenCalled()
   })
 
-  it('merge is not available yet', async () => {
-    await expect(applyStructuralOp({ op: 'merge', paths: ['a.md', 'b.md'] }, memoryIo({}))).rejects.toBeInstanceOf(DeskOpUnsupported)
-  })
 })
 
 describe('desk draft', () => {
@@ -75,5 +71,38 @@ describe('desk draft', () => {
     expect(note.body.trim()).toBe('整條線的產出由最慢的工站決定。')
     expect(noteFileName('產線/平衡: 瓶頸?', '檯面筆記')).toBe('產線 平衡 瓶頸.md')
     expect(noteFileName('  ', '檯面筆記')).toBe('檯面筆記.md')
+  })
+})
+
+
+describe('ALMNC-54.22 desk merge', () => {
+  const original = [
+    { id: 'a', kind: 'note' as const, path: 'a.md', title: 'A', text: '原文 A', noteRaw: '---\nsources: [one, two]\ndomains: [d1]\ncustom: 珍惜\n---\n原文 A\n' },
+    { id: 'b', kind: 'note' as const, path: 'b.md', title: 'B', text: '原文 B', noteRaw: '---\nsources: [two, three]\ndomains: [d2]\n---\n原文 B\n' },
+  ]
+  const options = { today: '2026-11-23', handTag: '親手寫的', reason: '在檯面合併', sourceIds: ['three', 'db-only'] }
+  const draft = { title: '合併後', body: 'Scott 寫的新稿' }
+
+  it('uses the edited draft, unions sources and archives originals with a merge link and history', () => {
+    const plan = mergeDeskDraft(draft, original, 'merged.md', options)
+    const merged = parseV3Note(plan.content)
+    expect(plan.sources).toEqual(['one', 'two', 'three', 'db-only'])
+    expect(merged.fields).toMatchObject({
+      title: '合併後', sources: plan.sources, domains: ['d1', 'd2'], related: ['[[a]]', '[[b]]'], tags: ['親手寫的'],
+    })
+    expect(merged.body).toBe('Scott 寫的新稿\n')
+    expect(plan.writes.map(write => write.before)).toEqual(original.map(note => note.noteRaw))
+    for (const [index, write] of plan.writes.entries()) {
+      const archived = parseV3Note(write.after)
+      expect(archived.fields).toMatchObject({ status: 'archived', related: ['[[merged]]'] })
+      expect(archived.body).toContain(original[index].text)
+      expect(archived.body).toContain('已合併到 [[merged]]')
+    }
+    expect(parseV3Note(plan.writes[0].after).extra).toMatchObject({ custom: '珍惜' })
+  })
+
+  it('rejects duplicate paths and missing originals', () => {
+    expect(() => mergeDeskDraft(draft, [original[0], original[0]], 'merged.md', options)).toThrow()
+    expect(() => mergeDeskDraft(draft, [original[0], { ...original[1], noteRaw: undefined }], 'merged.md', options)).toThrow()
   })
 })

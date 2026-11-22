@@ -8799,6 +8799,9 @@
     "collapseSection": "收起{title}",
     "expandSection": "展开{title}",
     "noteList": {
+      "select": "勾选",
+      "selected": "已选 {count} 则",
+      "spread": "摊到台面",
       "label": "「{folder}」的笔记列表",
       "empty": "这个文件夹还没有笔记",
       "close": "关闭笔记列表"
@@ -9223,8 +9226,14 @@
       "handTag": "亲手写的",
       "fallbackName": "台面笔记",
       "helpStarting": "正在开处理对话…",
-      "helpHint": "处理对话：{name} 和负责的专家都在",
-      "helpFailed": "没办法开处理对话，请到对话页再试一次",
+      "consultExpert": "向领域专家请教",
+      "materialsUnavailable": "部分素材无法读取。",
+      "helpHint": "处理对话 · {name}",
+      "helpFailed": "无法打开处理对话。",
+      "mergeConfirm": "合并这 {count} 则笔记？工作稿会存成一则新笔记，并保留所有来源。原笔记将归档并标记合并去向。",
+      "mergeReason": "在台面合并",
+      "merged": "已合并成“{path}”",
+      "mergeFailed": "无法合并笔记。请重新摊开素材并确认原笔记仍可读取。",
       "empty": "没有素材",
       "notesOnly": "只有笔记能做结构操作",
       "ops": {
@@ -9236,7 +9245,6 @@
         "link": "连结到…",
         "assignDomain": "归入领域",
         "merge": "合并笔记",
-        "mergeLater": "合并笔记之后开放",
         "apply": "套用",
         "noDomains": "还没有领域"
       },
