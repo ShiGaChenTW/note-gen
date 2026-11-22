@@ -55,7 +55,7 @@ describe('sidebar v3 nav', () => {
     expect(ENTRY_HOME.calendar).toBe('plan')
     for (const entry of ['notes', 'timeline', 'canvases', 'noteTags', 'prompts'] as const) expect(ENTRY_HOME[entry]).toBe('knowledge')
     expect(COLLECT_TABS).toEqual(['collect', 'inbox'])
-    expect(KNOWLEDGE_TABS).toEqual(['timeline', 'canvases', 'noteTags', 'prompts'])
+    expect(KNOWLEDGE_TABS).toEqual(['timeline', 'canvases', 'noteTags', 'domains', 'prompts'])
   })
 })
 

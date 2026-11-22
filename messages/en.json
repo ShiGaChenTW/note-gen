@@ -8815,12 +8815,48 @@
       "timeline": "Notes timeline",
       "canvases": "Canvas",
       "noteTags": "Tags",
+      "domains": "Domains",
       "prompts": "Prompts",
       "outline": "Outline"
     },
     "knowledge": {
       "title": "Organize",
-      "subtitle": "Timeline, canvases and tags; the notes tree is in {vault} on the left"
+      "subtitle": "Domains, timeline, canvases and tags; the notes tree is in {vault} on the left"
+    },
+    "domains": {
+      "label": "Domains",
+      "all": "All domains",
+      "indexing": "Indexing notes…",
+      "loading": "Loading domains…",
+      "loadError": "Could not load domains",
+      "empty": "No domains yet. Once 3 or more knowledge notes pile up on one topic, the commander proposes a domain in the Workbench.",
+      "count": "{count, plural, one {# knowledge note} other {# knowledge notes}}",
+      "updated": "Updated {date}",
+      "missing": "This domain was not found. It may have been deleted.",
+      "overview": "Overview",
+      "coreConcepts": "Core concepts",
+      "keyConclusions": "Key conclusions",
+      "openQuestions": "Contradictions and open questions",
+      "notes": "Knowledge notes",
+      "related": "Related domains",
+      "parent": "Parent",
+      "children": "Sub-domains",
+      "siblings": "Same level",
+      "emptyOverview": "No overview yet.",
+      "emptyCoreConcepts": "No core concepts yet. They appear here once the domain's expert has organized them.",
+      "emptyKeyConclusions": "No key conclusions yet. They appear here once the domain's expert has organized them, each with its source note.",
+      "emptyOpenQuestions": "No contradictions or open questions. Notes found to disagree during organizing are listed here.",
+      "emptyNotes": "This domain has no knowledge notes yet.",
+      "emptyRelated": "No related domains.",
+      "openNote": "Open note \"{title}\"",
+      "missingNote": "Note \"{target}\" not found",
+      "status": {
+        "valid": "Valid",
+        "disputed": "Needs verification",
+        "superseded": "Superseded",
+        "archived": "Archived"
+      },
+      "confirmed": "Confirmed {date}"
     }
   },
   "organize": {
