@@ -200,6 +200,16 @@ describe('不認 overwrite=1 的韌體（實機 ALMNC-44）', () => {
   })
 })
 
+describe('SD 卡不分大小寫（實機 ALMNC-44）', () => {
+  it('已有小寫的 /books 時不再建 /Books，直接放進去', async () => {
+    const reader = createFakeReader({ '/books/': '' })
+    const commit = vi.fn(async () => {})
+    await pushNow(reader.http, READER, { date: '2026-11-21', epub: new Uint8Array([1, 2, 3]), sleep: new Uint8Array([4, 5]), briefing }, commit)
+    expect(reader.writes).not.toContain('mkdir /Books')
+    expect(commit).toHaveBeenCalledWith(briefing)
+  })
+})
+
 describe('立即推送', () => {
   it('今日簡報放進 /Books/Almanac/、休眠畫面寫到 /sleep.bmp，都確認後才 commitSent；只動白名單', async () => {
     const reader = createFakeReader({ '/Books/Mine/book.epub': 'mine' })

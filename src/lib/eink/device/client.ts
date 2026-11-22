@@ -144,7 +144,8 @@ export class CrossPointClient {
       const parentDir = current || '/'
       current = `${current}/${segment}`
       const entries = await this.listFiles(parentDir)
-      if (entries.some(entry => entry.isDirectory && entry.name === segment)) continue
+      // SD 卡是 FAT，不分大小寫：實機已有 /books 時，建 /Books 會回 400（實機 ALMNC-44，CrossPoint 2.0.6）
+      if (entries.some(entry => entry.isDirectory && entry.name.toLowerCase() === segment.toLowerCase())) continue
       assertAllowedDir(current)
       const response = await withTimeout(this.http({
         url: this.url(DEVICE_API.mkdir),
