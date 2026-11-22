@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>工業工程週報 &amp; 筆記</title>
+    <atom:link href="https://ie.example.com/feed.xml" rel="self" type="application/rss+xml"/>
+    <link>https://ie.example.com/</link>
+    <description>每週的精實生產筆記</description>
+    <image><title>logo</title><url>https://ie.example.com/logo.png</url></image>
+    <item>
+      <title><![CDATA[精實生產的 5S：<b>整理</b>先於整頓]]></title>
+      <link>https://ie.example.com/posts/5s</link>
+      <guid isPermaLink="true">https://ie.example.com/posts/5s</guid>
+      <pubDate>Fri, 20 Nov 2026 08:00:00 +0800</pubDate>
+      <dc:creator>Scott</dc:creator>
+      <description><![CDATA[<p>5S 的第一步是<strong>整理</strong>：把不需要的東西拿掉。</p><p>第二段 &amp; 更多。</p>]]></description>
+    </item>
+    <item>
+      <title>看板（Kanban）的 WIP 上限</title>
+      <link>/posts/wip</link>
+      <guid isPermaLink="false">1042</guid>
+      <pubDate>Wed, 18 Nov 2026 09:30:00 GMT</pubDate>
+      <description>&lt;p&gt;WIP 上限讓流程&lt;em&gt;可見&lt;/em&gt;。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>沒有 guid 的文章</title>
+      <link>https://ie.example.com/posts/no-guid</link>
+      <pubDate>Mon, 16 Nov 2026 07:00:00 +0000</pubDate>
+      <content:encoded><![CDATA[<p>只有 content:encoded 的內文。</p>]]></content:encoded>
+    </item>
+  </channel>
+</rss>

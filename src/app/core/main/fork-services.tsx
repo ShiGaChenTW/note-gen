@@ -15,6 +15,8 @@ import { HomeService } from './home/home-service'
 import { ConversationSummaryDialog } from './conversation-summary/summary-dialog'
 import { OrganizeService } from './organize/organize-service'
 import { AnywhereService } from './anywhere/anywhere-service'
+import { RssService } from './rss/rss-service'
+import { SourceArchiveService } from './decide/source-archive-service'
 
 /**
  * F3: keep the vault index in sync with the active workspace.
@@ -50,6 +52,8 @@ export function ForkServices() {
       <HomeService />
       <ConversationSummaryDialog />
       <AnywhereService />
+      <RssService />
+      <SourceArchiveService />
     </>
   )
 }

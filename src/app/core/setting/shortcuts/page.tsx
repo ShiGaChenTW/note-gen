@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import useShortcutStore from "@/stores/shortcut";
 import ShortcutsInput from "./shorcut-input";
 import { EditorShortcutsSection } from "./editor-shortcuts-section";
+import { WorkbenchKeysSection } from "./workbench-keys-section";
 
 export default function ShortcutsPage() {
   const t = useTranslations('settings.shortcuts');
@@ -32,6 +33,7 @@ export default function ShortcutsPage() {
         </ItemGroup>
       </SettingSection>
       <EditorShortcutsSection />
+      <WorkbenchKeysSection />
     </div>
   </SettingType>
 }

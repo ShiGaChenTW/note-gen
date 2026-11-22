@@ -76,6 +76,6 @@ export async function offerTodaySlots(): Promise<void> {
 }
 
 function canSchedule(agent: AgentSettings | undefined): agent is AgentSettings {
-  return !!agent && agent.role === 'scheduler' && agent.enabled
+  return !!agent && agent.role === 'secretary' && agent.enabled
     && agent.allowedTools.includes('note_read_file') && agent.allowedTools.includes('calendar_read_day')
 }

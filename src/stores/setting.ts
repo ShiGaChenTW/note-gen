@@ -156,6 +156,10 @@ interface SettingState {
   autostartMinimized: boolean
   setAutostartMinimized: (enabled: boolean) => Promise<void>
 
+  /** Fork（almanac ALMNC-56.4，A02）：V3 工作台開著時，單鍵 N 新增資料源、T 新增對話；設定裡可以關掉。 */
+  workbenchSingleKeys: boolean
+  setWorkbenchSingleKeys: (enabled: boolean) => Promise<void>
+
   developerMode: boolean
   setDeveloperMode: (enabled: boolean) => Promise<void>
 
@@ -1059,6 +1063,14 @@ const useSettingStore = create<SettingState>((set, get) => ({
     set({ autostartMinimized })
     const store = await Store.load('store.json')
     await store.set('autostartMinimized', autostartMinimized)
+    await store.save()
+  },
+
+  workbenchSingleKeys: true,
+  setWorkbenchSingleKeys: async (workbenchSingleKeys) => {
+    set({ workbenchSingleKeys })
+    const store = await Store.load('store.json')
+    await store.set('workbenchSingleKeys', workbenchSingleKeys)
     await store.save()
   },
 

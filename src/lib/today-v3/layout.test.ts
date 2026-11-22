@@ -37,7 +37,7 @@ function decision(key: string, overrides: Partial<DecideItem> = {}): DecideItem 
   return {
     key, source: 'collect', kind: 'task', title: key, origin: '收集', summary: '', when: '', at: 0,
     preview: { type: 'newNote', diff: { context: [], removed: [], added: [], hidden: 0 } },
-    duplicates: [], ref: { source: 'collect', itemId: key, proposalId: key },
+    duplicates: [], ref: { source: 'collect', itemId: key, proposalId: key }, status: 'wait',
     ...overrides,
   }
 }

@@ -8,20 +8,27 @@ import en from '../../../../../messages/en.json'
 import zh from '../../../../../messages/zh.json'
 import zhTW from '../../../../../messages/zh-TW.json'
 
-const { list, create, update } = vi.hoisted(() => ({
+const { list, create, update, seed } = vi.hoisted(() => ({
+  seed: vi.fn(async () => false),
   list: vi.fn<() => Promise<SavedAgent[]>>(),
   create: vi.fn<(input: AgentSettingsInput) => Promise<string>>(),
   update: vi.fn<(id: string, input: AgentSettingsInput) => Promise<void>>(),
 }))
 vi.mock('@/db/agents', () => ({
-  listAgentSettings: list, createAgentSettings: create, updateAgentSettings: update,
+  listAgentSettings: list, createAgentSettings: create, updateAgentSettings: update, ensureDefaultRoster: seed,
 }))
+
+// Fork（almanac ALMNC-54.3）：Agent 設定區有自己的測試（agent-memory-settings.test.ts），這裡只要不碰資料庫。
+vi.mock('./agent-memory-settings', () => ({ AgentMemorySettings: () => null }))
+// Fork（almanac ALMNC-54.13）：調研與回顧的設定有自己的測試（review-settings.test.ts）。
+vi.mock('./review-settings', () => ({ ReviewSettings: () => null }))
 
 vi.mock('next-intl', async importOriginal => {
   const intl = await importOriginal<typeof import('next-intl')>()
   return {
     ...intl,
-    useTranslations: () => intl.createTranslator({ locale: 'en', messages: { agents: en.agents }, namespace: 'agents' }),
+    useTranslations: (namespace?: string) =>
+      intl.createTranslator({ locale: 'en', messages: { agents: en.agents }, namespace: (namespace ?? 'agents') as 'agents' }),
   }
 })
 
@@ -68,25 +75,37 @@ it('shows settings only in V3 and can create, edit and disable an agent', async 
     await act(async () => useUiModeStore.setState({ mode: 'v3' }))
     expect(container.textContent).toContain(en.agents.empty)
     await act(async () => button(en.agents.add).click())
-    await changeName('My organizer')
+    expect(seed).toHaveBeenCalled()
+    await changeName('Alex')
     const role = container.querySelector('select')!
+    expect([...role.options].map(option => option.value)).toEqual(['commander', 'expert', 'secretary', 'researcher'])
     await act(async () => {
-      role.value = 'organizer'
+      role.value = 'expert'
       role.dispatchEvent(new Event('change', { bubbles: true }))
+    })
+    // 專家沒填領域不能存。
+    await act(async () => button(en.agents.save).click())
+    expect(create).not.toHaveBeenCalled()
+    expect(container.textContent).toContain(en.agents.domainRequired)
+    const domain = container.querySelector<HTMLInputElement>(`input[placeholder="${en.agents.domainPlaceholder}"]`)!
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(domain, 'Industrial engineering')
+      domain.dispatchEvent(new Event('input', { bubbles: true }))
     })
     await act(async () => button(en.agents.save).click())
     expect(create).toHaveBeenCalledWith({
-      name: 'My organizer', role: 'organizer', enabled: true,
+      name: 'Alex', role: 'expert', domain: 'Industrial engineering', enabled: true,
       allowedTools: ['note_list_files', 'note_read_file', 'note_create_file'],
     })
-    expect(container.textContent).toContain('My organizer')
+    expect(container.textContent).toContain('Alex')
+    expect(container.textContent).toContain('Industrial engineering expert')
 
     await act(async () => button(en.agents.edit).click())
-    await changeName('Renamed organizer')
+    await changeName('Renamed expert')
     const enabled = [...container.querySelectorAll('label')].find(label => label.textContent === en.agents.enabled)!
     await act(async () => enabled.querySelector('input')!.click())
     await act(async () => button(en.agents.save).click())
-    expect(update).toHaveBeenCalledWith('a', expect.objectContaining({ name: 'Renamed organizer', enabled: false }))
+    expect(update).toHaveBeenCalledWith('a', expect.objectContaining({ name: 'Renamed expert', enabled: false }))
     expect(container.textContent).toContain(en.agents.disabled)
 
     await act(async () => useUiModeStore.setState({ mode: 'classic' }))

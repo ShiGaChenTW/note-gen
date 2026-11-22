@@ -14,6 +14,7 @@ import { History, RotateCcw } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 
 import { toast } from '@/hooks/use-toast'
+import emitter from '@/lib/emitter'
 import { cn } from '@/lib/utils'
 import { getWorkspaceAbsolutePath } from '@/lib/workspace'
 import { saveLocalFile } from '@/lib/sync/auto-sync'
@@ -119,6 +120,14 @@ export function VersionHistorySheet({ editor, prepareExternalAction, onMarkdownC
     if (!open || !activeFilePath) return
     void loadHistory(activeFilePath, { resetFilter: true })
   }, [open, activeFilePath, loadHistory])
+
+  // Fork（almanac）：V3 編輯區右上角工具列的「版本歷史」按鈕也打開這個面板。
+  // 狀態列只掛使用中那篇的 FooterBar（MainStatusBarPortal），所以只有使用中的面板會收到。
+  useEffect(() => {
+    const openFromToolbar = () => setOpen(true)
+    emitter.on('editor-open-version-history', openFromToolbar)
+    return () => emitter.off('editor-open-version-history', openFromToolbar)
+  }, [])
 
   useEffect(() => {
     if (!diffPair || !activeFilePath) {

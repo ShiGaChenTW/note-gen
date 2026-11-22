@@ -3,7 +3,8 @@ import type { AgentTool } from '@/lib/agent/types'
 import type { AgentTask, AgentRunnerKind } from '@/lib/agent-tasks/types'
 import type { AgentSettings } from './settings'
 
-const { getSettings, recordRefusal, request, preview, execute, readNote } = vi.hoisted(() => ({
+const { getSettings, recordRefusal, request, preview, execute, readNote, memoryPrompt } = vi.hoisted(() => ({
+  memoryPrompt: vi.fn(async () => '## Your identity (soul.md)\n- 本名：Mia'),
   getSettings: vi.fn<(id: string) => Promise<AgentSettings | undefined>>(),
   recordRefusal: vi.fn(async () => {}),
   request: vi.fn(),
@@ -19,6 +20,7 @@ const makeTool = (name: string, risk: AgentTool['risk']): AgentTool => ({
 })
 
 vi.mock('@/db/agents', () => ({ getAgentSettings: getSettings, recordAgentToolRefusal: recordRefusal }))
+vi.mock('@/db/agent-memory', () => ({ loadAgentMemoryPrompt: memoryPrompt }))
 vi.mock('@/lib/daily/note-io', () => ({ readNote }))
 vi.mock('@/lib/workspace', () => ({ getWorkspacePath: async () => ({ isCustom: true, path: '/test' }) }))
 vi.mock('@/lib/skills/runtime', () => ({ getSkillWorkspaceIdentity: () => '/test', getSkillScriptPermissionKey: vi.fn() }))
@@ -88,7 +90,7 @@ async function* finalReply() {
 describe('P5 agent runners and permissions', () => {
   it('filters the model schema, audits unsolicited calls before preview, and stages the allowed draft for review', async () => {
     const agent: AgentSettings = {
-      id: 'organizer', name: 'Organizer', role: 'organizer', enabled: true,
+      id: 'commander', name: 'Mia', role: 'commander', enabled: true,
       allowedTools: ['note_create_file'], createdAt: 1, updatedAt: 1,
     }
     getSettings.mockResolvedValue(agent)
@@ -104,7 +106,7 @@ describe('P5 agent runners and permissions', () => {
     )).mockImplementationOnce(finalReply)
 
     const { center, persisted, notify, legacyRuntime } = fixtureCenter()
-    const kind: AgentRunnerKind = 'agent:organizer'
+    const kind: AgentRunnerKind = 'agent:commander'
     const task = await center.enqueue({ kind, prompt: 'Organize this capture' })
     await vi.waitFor(() => expect(center.get(task.id)?.status).toBe('queued'))
     expect(legacyRuntime).not.toHaveBeenCalled()
@@ -114,6 +116,10 @@ describe('P5 agent runners and permissions', () => {
     expect(persisted.get(task.id)?.status, JSON.stringify(request.mock.calls.map(([p]) => p.messages.filter((m: { role: string }) => m.role === 'tool')))).toBe('awaiting_review')
     expect(notify).toHaveBeenCalledWith('awaiting_review', expect.objectContaining({ id: task.id }))
     expect(request.mock.calls[0][0].tools).toEqual([{ type: 'function', function: { name: 'note_create_file' } }])
+    // Fork（almanac ALMNC-54.3）：系統提示帶入這個 agent 的記憶。
+    expect(memoryPrompt).toHaveBeenCalledWith(agent)
+    // runtime 把傳入的 system 訊息轉成「App Context」，所以只檢查內容有帶到。
+    expect(JSON.stringify(request.mock.calls[0][0].messages)).toContain('本名：Mia')
     const toolMessages = request.mock.calls[1][0].messages.filter((message: { role: string }) => message.role === 'tool')
     expect(toolMessages.slice(0, 4)).toEqual(Array.from({ length: 4 }, () =>
       expect.objectContaining({ content: expect.stringContaining('AGENT_TOOL_REFUSED') }),
@@ -138,7 +144,7 @@ describe('P5 agent runners and permissions', () => {
     const record = vi.fn(async () => {})
     const context = { agentId: 'a', taskId: 't' }
     const agent: AgentSettings = {
-      id: 'a', name: 'A', role: 'custom', enabled: true,
+      id: 'a', name: 'A', role: 'expert', domain: 'Testing', enabled: true,
       allowedTools: ['note_read_file'], createdAt: 0, updatedAt: 0,
     }
     expect(await authorizeAgentTool('note_read_file', true, agent, context, record)).toBeUndefined()

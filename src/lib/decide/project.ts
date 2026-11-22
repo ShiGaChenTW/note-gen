@@ -9,7 +9,9 @@ import { projectJobDecisions } from '@/lib/jobs/projection'
 import type { Job } from '@/lib/jobs/schedule'
 import { scheduleSlot, slotEndLabel } from '@/lib/timeslots/model'
 import { ORGANIZE_TOOL } from '@/lib/organize/drafts'
-import type { Proposal } from '@/lib/collect/types'
+import type { Proposal, ProposalCardHint } from '@/lib/collect/types'
+import { threadKey } from '@/lib/threads/projects'
+import { replacedProposalKeys, statusOf, type ProposalDiscussion, type ProposalStatus, type ProposalTrail } from '@/lib/proposals/trail'
 
 export type DecideSource = 'collect' | 'draft' | 'job'
 export type DecideKind = 'job' | 'note' | 'task' | 'event' | 'create' | 'update' | 'delete' | 'move' | 'copy' | 'folder'
@@ -48,6 +50,20 @@ export interface DecideItem {
   duplicates: DecideRef[]
   organizeMerge?: { removed: string; keeper: string }
   ref: DecideRef
+  // Fork（almanac ALMNC-54.5）：提案的來源對話與再次討論。
+  /** 產生這則提案的對話；來源沒記時用再次討論開的那段（lib/proposals/trail.ts）。 */
+  conversationId?: number
+  /** 來源只記得對話的 threadKey（工作）：投影時依 conversations 換成 conversationId。 */
+  conversationKey?: string
+  /** wait＝等接受或放棄；discussing＝再次討論中（不在工作台清單裡，但對話上仍算待決定）。 */
+  status: ProposalStatus
+  discussion?: ProposalDiscussion
+  /** 這則是哪一則提案修改後重新提出的（那則的 key）；舊的就算被取代，不再算待決定。 */
+  previousProposalId?: string
+  /** Fork（almanac ALMNC-54.12）：提案指定的卡片標籤與動詞（清理提案、確認、每週回顧）。 */
+  card?: ProposalCardHint
+  /** Fork（almanac ALMNC-54.12）：清理提案涵蓋的筆記（多則時卡片顯示「等 N 則」）。 */
+  notePaths?: string[]
 }
 
 export type DecideRef =
@@ -79,6 +95,8 @@ export interface DraftLike {
 
 export interface TaskLike {
   id: string
+  /** Fork（almanac ALMNC-54.5）：從哪段對話派出的任務。 */
+  conversationId?: number
   title: string
   status: string
   updatedAt: number
@@ -103,6 +121,10 @@ export interface ProjectInput {
   journal: JournalSnapshot | null
   jobs?: Job[]
   workspace?: string
+  /** Fork（almanac ALMNC-54.5）：再次討論、來源對話、取代關係。 */
+  trail?: ProposalTrail
+  /** 把 conversationKey（threadKey）換成對話 id 用。 */
+  conversations?: ReadonlyArray<{ id: number, syncId: string }>
 }
 
 export const PREVIEW_MAX_LINES = 8
@@ -138,7 +160,14 @@ export function journalInsertPreview(snapshot: JournalSnapshot, proposal: Propos
 
 /** 同一件事的比對鍵：種類、標題、日期、時間（標題不分大小寫與前後空白）。 */
 export function sameThingKey(proposal: Proposal): string {
+  // Fork（almanac ALMNC-54.7）：檔案變更以「哪個檔案、怎麼改、改成什麼」為準。
+  if (proposal.change) return JSON.stringify(['change', proposal.change.kind, proposal.change.path, proposal.change.targetPath ?? '', proposal.change.content ?? ''])
   if (proposal.slot) return JSON.stringify(['scheduler', proposal.slot.path, proposal.slot.line, proposal.due, proposal.time])
+  // Fork（almanac ALMNC-54.12）：多則變更（清理、確認、稽核）以「改哪些東西、改成什麼」為準。
+  if (proposal.edits?.length || proposal.domainEdits?.length || proposal.memoryEdits?.length) {
+    return JSON.stringify(['edits', proposal.edits?.map(edit => [edit.path, edit.content]) ?? [], proposal.domainEdits?.map(edit => [edit.domainId, edit.overview]) ?? [],
+      proposal.memoryEdits?.map(edit => edit.target === 'work_notes' ? [edit.agent.id, edit.content] : ['context', JSON.stringify(edit.context)]) ?? []])
+  }
   return [proposal.kind, proposal.title.trim().replace(/\s+/g, ' ').toLowerCase(), proposal.due, proposal.time].join('|')
 }
 
@@ -153,13 +182,14 @@ function whenOf(proposal: Proposal): string {
   return [m ? `${Number(m[1])}/${Number(m[2])}` : proposal.due, time].filter(Boolean).join(' ')
 }
 
-function projectCollect(items: CollectItemLike[], journal: JournalSnapshot | null, workspace?: string): DecideItem[] {
+function projectCollect(items: CollectItemLike[], journal: JournalSnapshot | null, workspace: string | undefined, trail: ProposalTrail, isReplaced: (key: string) => boolean): DecideItem[] {
   const out: DecideItem[] = []
   const seen = new Map<string, DecideItem>()
   for (const item of items) {
     if (item.state !== 'ready') continue
     for (const proposal of item.proposals) {
-      if (proposal.status !== 'wait') continue
+      const key = `collect:${item.id}:${proposal.id}`
+      if (proposal.status !== 'wait' || isReplaced(key)) continue
       const slot = proposal.slot
       if (slot && (!journal || proposal.due !== journal.today || slot.path !== journal.path
         || slot.workspace !== journal.workspace || slot.workspace !== workspace)) continue
@@ -167,11 +197,23 @@ function projectCollect(items: CollectItemLike[], journal: JournalSnapshot | nul
       // 去重一：同一件事已經在今日日誌裡（例如其他管道寫過了），不再問第二次。
       if (!slot && journal && proposal.kind !== 'note' && journal.before.split(/\r?\n/).includes(proposalTaskLine(proposal, journal.today))) continue
       // 去重二：兩個來源各提了同一件事，只列一次。
-      const same = seen.get(sameThingKey(proposal))
+      const identity = statusOf(trail, key) === 'discussing' ? key : sameThingKey(proposal)
+      const same = seen.get(identity)
       if (same) { same.duplicates.push(ref); continue }
 
       let preview: DecidePreview
-      if (slot && journal) {
+      const change = proposal.change
+      const edit = proposal.edits?.[0]
+      if (edit) {
+        // Fork（almanac ALMNC-54.12）：清理提案預覽第一則筆記的修改前後。
+        preview = { type: 'file', path: edit.path, diff: previewDiff(edit.baseContent ?? '', edit.content) }
+      } else if (change) {
+        // Fork（almanac ALMNC-54.7）：右側欄指揮官的檔案變更，預覽同背景任務的草稿。
+        preview = {
+          type: 'file', path: change.path, targetPath: change.targetPath,
+          diff: change.kind === 'create' || change.kind === 'update' ? previewDiff(change.baseContent ?? '', change.content ?? '') : null,
+        }
+      } else if (slot && journal) {
         const after = scheduleSlot(journal.before, slot, proposal.due, proposal.time)
         preview = { type: 'file', path: slot.path, diff: after === null ? null : previewDiff(journal.before, after) }
       } else if (proposal.kind === 'note') {
@@ -182,19 +224,24 @@ function projectCollect(items: CollectItemLike[], journal: JournalSnapshot | nul
         preview = { type: 'journal', section: '', fileMissing: false, diff: { context: [], removed: [], added: [], hidden: 0 } }
       }
       const entry: DecideItem = {
-        key: `collect:${item.id}:${proposal.id}`,
+        key,
         source: 'collect',
-        kind: proposal.kind,
-        title: proposal.title,
+        kind: change ? change.kind : proposal.kind,
+        title: change ? change.path : proposal.title,
         origin: itemOrigin(item),
-        summary: '',
+        summary: change ? change.summary : '',
         when: whenOf(proposal),
         at: item.createdAt,
         preview,
         duplicates: [],
         ref,
+        status: 'wait',
+        ...(proposal.conversationId !== undefined ? { conversationId: proposal.conversationId } : {}),
+        ...(proposal.previousProposalId ? { previousProposalId: proposal.previousProposalId } : {}),
+        ...(proposal.card ? { card: proposal.card } : {}),
+        ...(proposal.edits?.length ? { notePaths: Array.from(new Set(proposal.edits.map(item => item.path))) } : {}),
       }
-      seen.set(sameThingKey(proposal), entry)
+      seen.set(identity, entry)
       out.push(entry)
     }
   }
@@ -228,17 +275,43 @@ function projectDrafts(tasks: TaskLike[], workspace: string | undefined): Decide
         duplicates: [],
         ...(organizeMerge ? { organizeMerge } : {}),
         ref: { source: 'draft', taskId: task.id, draftId: draft.id },
+        status: 'wait',
+        ...(task.conversationId !== undefined ? { conversationId: task.conversationId } : {}),
       })
     }
   }
   return out
 }
 
-/** 等你定清單：兩個來源合併，等得最久的在最上面；同時間維持來源內的原順序。 */
-export function projectDecisions(input: ProjectInput): DecideItem[] {
-  const all = [...projectCollect(input.items, input.journal, input.workspace), ...projectDrafts(input.tasks, input.workspace), ...projectJobDecisions(input.jobs ?? [])]
+/**
+ * Fork（almanac ALMNC-54.5）：所有還沒決定的提案——等接受或放棄的、再次討論中的都在；被重新提案取代的不在。
+ * 對話上的「還有 N 則提案待決定」與每週回顧的 14 天清單都從這裡算。等得最久的在最上面；同時間維持來源內的原順序。
+ */
+export function projectProposals(input: ProjectInput): DecideItem[] {
+  const trail = input.trail ?? {}
+  const byKey = new Map((input.conversations ?? []).map(conversation => [threadKey(conversation), conversation.id]))
+  const replaced = replacedProposalKeys(input.items)
+  const isReplaced = (key: string) => replaced.has(key) || Boolean(trail[key]?.supersededBy)
+  const all = [...projectCollect(input.items, input.journal, input.workspace, trail, isReplaced), ...projectDrafts(input.tasks, input.workspace), ...projectJobDecisions(input.jobs ?? [])]
   return all
+    .filter(item => !isReplaced(item.key))
+    .map(item => withTrail(item, trail, byKey))
     .map((item, index) => ({ item, index }))
     .sort((x, y) => x.item.at - y.item.at || x.index - y.index)
     .map(entry => entry.item)
+}
+
+function withTrail(item: DecideItem, trail: ProposalTrail, byKey: Map<string, number>): DecideItem {
+  const entry = trail[item.key]
+  const next: DecideItem = { ...item, status: statusOf(trail, item.key) }
+  if (next.conversationId === undefined && item.conversationKey) next.conversationId = byKey.get(item.conversationKey)
+  if (entry?.conversationId !== undefined) next.conversationId = entry.conversationId
+  if (next.conversationId === undefined) delete next.conversationId
+  if (entry?.discussion) next.discussion = entry.discussion
+  return next
+}
+
+/** 等你定清單：只列等你接受或放棄的；再次討論中的回到對話，不在這裡。 */
+export function projectDecisions(input: ProjectInput): DecideItem[] {
+  return projectProposals(input).filter(item => item.status === 'wait')
 }

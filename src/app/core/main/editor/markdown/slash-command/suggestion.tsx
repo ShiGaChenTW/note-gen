@@ -218,7 +218,8 @@ async function getMarkdownHrefForFilePath(path: string, currentFilePath: string)
   return encodeLocalLinkHref(toMarkdownRelativePath(currentFilePath, normalizedPath))
 }
 
-async function createMarkdownLinksForFilePaths(paths: string[], currentFilePath: string): Promise<string[]> {
+// Fork（almanac ALMNC-54.17）：匯出給 V3 底部格式列的「附件」按鈕共用。
+export async function createMarkdownLinksForFilePaths(paths: string[], currentFilePath: string): Promise<string[]> {
   return await Promise.all(
     paths.map(async (path) => {
       const href = await getMarkdownHrefForFilePath(path, currentFilePath)

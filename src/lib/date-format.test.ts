@@ -31,10 +31,11 @@ it.each([
   }
 })
 
+// Fork（almanac ALMNC-54.8）：decide 這一項打開的是工作台頁（workbench.title）。
 it.each([en, zh, zhTW])('matches the six v3 page titles to their navigation labels', messages => {
   const { today, decide, collect, threads, knowledge, plan } = messages.sidebarV3.nav
   expect([
-    messages.todayV3.title, messages.decide.title, messages.collect.title,
+    messages.todayV3.title, messages.workbench.title, messages.collect.title,
     messages.threads.title, messages.sidebarV3.knowledge.title, messages.week.title,
   ]).toEqual([today, decide, collect, threads, knowledge, plan])
 })
