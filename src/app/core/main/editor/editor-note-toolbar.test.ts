@@ -16,6 +16,15 @@ import { EditorNoteToolbar } from './editor-note-toolbar'
 import type { TabInfo } from './tab-bar'
 
 vi.mock('@tauri-apps/plugin-os', () => ({ platform: () => 'macos' }))
+// ALMNC-54.20：「送給指揮官」讀筆記庫裡的檔案、交給工作台；toast 換成記錄呼叫的假的。
+const send = vi.hoisted(() => ({
+  files: new Map<string, string>(),
+  outcome: vi.fn<(note: { path: string, content: string }) => Promise<string>>(async () => 'added'),
+  toast: Object.assign(vi.fn(), { success: vi.fn(), error: vi.fn() }),
+}))
+vi.mock('@/lib/daily/note-io', () => ({ readNote: async (path: string) => send.files.get(path) ?? null }))
+vi.mock('@/lib/workbench/actions', () => ({ sendNoteToCommander: send.outcome }))
+vi.mock('sonner', () => ({ toast: send.toast }))
 // platform() 被 mock 後 checkIsTauri() 為真，置頂／收藏會寫 note-marks.json：換成記憶體裡的 store。
 const persisted = vi.hoisted(() => new Map<string, Map<string, unknown>>())
 vi.mock('@tauri-apps/plugin-store', () => ({
@@ -123,7 +132,7 @@ it('shows the four groups for a markdown note, in order, with shortcuts in the l
   await render()
   expect(labels()).toEqual([
     '返回 (⌘[)', '前進 (⌘])',
-    '在筆記中尋找 (⌘F)', '標籤', '置頂', '收藏',
+    '在筆記中尋找 (⌘F)', '標籤', '置頂', '收藏', '送給指揮官',
     '開啟大綱 (⇧⌘O)', '版本歷史', '筆記資訊', '命令面板 (⌘⇧P)',
     '復原 (⌘Z)', '重做 (⌘Shift+Z)',
   ])
@@ -291,12 +300,44 @@ it('hides the toolbar for record tabs and outside the active group', async () =>
 it('collapses the third and fourth groups into a more menu on narrow editors', async () => {
   observedWidth = 600
   await render()
-  expect(labels()).toEqual(['返回 (⌘[)', '前進 (⌘])', '在筆記中尋找 (⌘F)', '標籤', '置頂', '收藏', '更多'])
+  // ALMNC-54.20：「送給指揮官」在第二組，不收進「⋯」，窄版也看得到。
+  expect(labels()).toEqual(['返回 (⌘[)', '前進 (⌘])', '在筆記中尋找 (⌘F)', '標籤', '置頂', '收藏', '送給指揮官', '更多'])
 })
 
 it('hides only undo/redo when the undo/redo setting is off', async () => {
   useSettingStore.setState({ showEditorUndoRedo: false })
   await render()
   expect(labels().at(-1)).toBe('命令面板 (⌘⇧P)')
-  expect(labels()).toHaveLength(10)
+  expect(labels()).toHaveLength(11)
+})
+
+// ALMNC-54.20 AC#2：右上筆記工具列的「送給指揮官」——送目前這篇筆記，結果用 toast 告訴 Scott。
+it('sends the current note to the commander and reports each outcome with a toast', async () => {
+  send.files.set('work/a.md', '# A\n內容')
+  send.outcome.mockClear()
+  send.toast.mockClear(); send.toast.success.mockClear(); send.toast.error.mockClear()
+  await render()
+  const sendButton = button('送給指揮官')
+  expect(sendButton.querySelector('svg.lucide-send')).not.toBeNull()
+  await act(async () => sendButton.click())
+  expect(send.outcome).toHaveBeenCalledWith({ path: 'work/a.md', content: '# A\n內容' })
+  expect(send.toast.success).toHaveBeenLastCalledWith('已送給指揮官')
+
+  send.outcome.mockResolvedValueOnce('unchanged')
+  await act(async () => button('送給指揮官').click())
+  expect(send.toast).toHaveBeenLastCalledWith('這篇已經送過了，內容沒有變')
+
+  send.outcome.mockResolvedValueOnce('versioned')
+  await act(async () => button('送給指揮官').click())
+  expect(send.toast.success).toHaveBeenLastCalledWith('內容有更新，已把新版本送給指揮官')
+
+  vi.spyOn(console, 'error').mockImplementation(() => undefined)
+  send.outcome.mockRejectedValueOnce(new Error('db down'))
+  await act(async () => button('送給指揮官').click())
+  expect(send.toast.error).toHaveBeenLastCalledWith('送給指揮官失敗', { description: 'db down' })
+})
+
+it('does not offer 送給指揮官 for canvas tabs', async () => {
+  await render({ activeTab: { id: 'c', path: 'canvas://1', name: 'Board', isFolder: false, kind: 'canvas', canvasId: '1' } })
+  expect(labels()).not.toContain('送給指揮官')
 })

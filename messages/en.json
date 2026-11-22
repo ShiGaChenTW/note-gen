@@ -6914,7 +6914,13 @@
       "infoModified": "Modified",
       "infoLength": "Length",
       "command": "Command palette",
-      "more": "More"
+      "more": "More",
+      "sendToCommander": "Send to commander",
+      "sentToCommander": "Sent to the commander",
+      "sentNewVersion": "The note changed; sent the new version to the commander",
+      "alreadySent": "Already sent, and the note hasn't changed",
+      "emptyNote": "This note is empty, so nothing was sent",
+      "sendFailed": "Couldn't send to the commander"
     },
     "statusBar": {
       "documentActions": {

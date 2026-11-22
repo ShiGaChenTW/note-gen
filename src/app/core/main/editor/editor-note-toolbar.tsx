@@ -9,9 +9,11 @@
 // 筆記專屬的按鈕只給 .md 筆記；編輯區窄於 720px 時第三、四組收進「⋯」。圖示刻意不用參考稿那套（箭頭、放大鏡、標籤、圖釘、星號⋯⋯）。
 // ALMNC-56.2：按鈕與分隔線改用 components/v3/toolbar（和底部格式列同一套，A11 roving tabindex、V07 外觀）；列本身不帶底色。
 // 命令面板：⌘K 在編輯器裡是「插入連結」，所以提示只寫編輯器內外都能用的 ⌘⇧P（ALMNC-54.18，取代 A09 的「⌘K，編輯器外」）。
+// ALMNC-54.20：第二組最後加「送給指揮官」——把目前這篇筆記送成自己寫的資料源（id 由路徑決定，重送不重複建立，內容改了接新版）。
+// 第二組不會收進「⋯」，所以窄版也一直看得到。
 import { useEffect, useMemo, useRef, useState, type ReactNode, type Ref } from 'react'
 import {
-  ArrowLeft, ArrowRight, ArrowUpToLine, Ellipsis, FileText, Hash, Heart, History, ListTree, Redo2, SquareSlash,
+  ArrowLeft, ArrowRight, ArrowUpToLine, Ellipsis, FileText, Hash, Heart, History, ListTree, Redo2, Send, SquareSlash,
   TextSearch, Undo2, X,
 } from 'lucide-react'
 import { platform } from '@tauri-apps/plugin-os'
@@ -136,6 +138,7 @@ export function EditorNoteToolbar({ activeTab, isActiveGroup, canGoBack, canGoFo
   const favorite = Boolean(notePath) && hasMarkedPath(favoriteList, notePath)
 
   useEffect(() => { setInfoOpen(false) }, [notePath])
+  const [sending, setSending] = useState(false)
 
   if (scope === 'hidden') return null
 
@@ -164,6 +167,22 @@ export function EditorNoteToolbar({ activeTab, isActiveGroup, canGoBack, canGoFo
   const openPalette = () => useAnywhereStore.getState().setPaletteOpen(true)
   const openHistory = () => emitter.emit('editor-open-version-history')
   const toggleOutline = () => noteEditor?.toggleOutline()
+  const sendToCommander = async () => {
+    if (!notePath || sending) return
+    setSending(true)
+    try {
+      const outcome = await sendNoteToCommander(notePath)
+      if (outcome === 'added') toast.success(t('sentToCommander'))
+      else if (outcome === 'versioned') toast.success(t('sentNewVersion'))
+      else if (outcome === 'unchanged') toast(t('alreadySent'))
+      else toast(t('emptyNote'))
+    } catch (error) {
+      console.error('Failed to send note to commander:', error)
+      toast.error(t('sendFailed'), { description: error instanceof Error ? error.message : String(error) })
+    } finally {
+      setSending(false)
+    }
+  }
 
   return (
     <TooltipProvider>
@@ -187,6 +206,7 @@ export function EditorNoteToolbar({ activeTab, isActiveGroup, canGoBack, canGoFo
               <TagsButton editor={noteEditor?.editor ?? null} label={t('tags')} />
               <ToolbarButton label={labels.pin} icon={<ArrowUpToLine />} pressed={pinned} onClick={() => toggleMark('pinned')} />
               <ToolbarButton label={labels.favorite} icon={<Heart />} pressed={favorite} onClick={() => toggleMark('favorites')} />
+              <ToolbarButton label={t('sendToCommander')} icon={<Send />} disabled={sending} onClick={() => void sendToCommander()} />
             </>
           ) : null}
 
@@ -253,6 +273,14 @@ export function EditorNoteToolbar({ activeTab, isActiveGroup, canGoBack, canGoFo
       </Popover>
     </TooltipProvider>
   )
+}
+
+/**
+ * 「送給指揮官」送出的內容：筆記庫裡存好的檔案（和存檔、分析讀到的是同一份；編輯器會自動存檔）。
+ */
+async function sendNoteToCommander(path: string) {
+  const [{ readNote }, { sendNoteToCommander: send }] = await Promise.all([import('@/lib/daily/note-io'), import('@/lib/workbench/actions')])
+  return send({ path, content: (await readNote(path)) ?? '' })
 }
 
 /** frontmatter 節點的原文；沒有 frontmatter 時回傳 null。 */

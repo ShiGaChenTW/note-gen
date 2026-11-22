@@ -6914,7 +6914,13 @@
       "infoModified": "修改时间",
       "infoLength": "字数",
       "command": "命令面板",
-      "more": "更多"
+      "more": "更多",
+      "sendToCommander": "发送给指挥官",
+      "sentToCommander": "已发送给指挥官",
+      "sentNewVersion": "内容有更新，已把新版本发送给指挥官",
+      "alreadySent": "这篇已经发送过了，内容没有变",
+      "emptyNote": "这篇笔记是空的，没有发送",
+      "sendFailed": "发送给指挥官失败"
     },
     "statusBar": {
       "documentActions": {

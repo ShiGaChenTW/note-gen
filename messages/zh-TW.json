@@ -6979,7 +6979,13 @@
       "infoModified": "修改時間",
       "infoLength": "字數",
       "command": "命令面板",
-      "more": "更多"
+      "more": "更多",
+      "sendToCommander": "送給指揮官",
+      "sentToCommander": "已送給指揮官",
+      "sentNewVersion": "內容有更新，已把新版本送給指揮官",
+      "alreadySent": "這篇已經送過了，內容沒有變",
+      "emptyNote": "這篇筆記是空的，沒有送出",
+      "sendFailed": "送給指揮官失敗"
     },
     "statusBar": {
       "documentActions": {
