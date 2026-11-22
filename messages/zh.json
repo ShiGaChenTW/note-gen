@@ -9132,6 +9132,7 @@
       "failed": "导入失败",
       "dropUnsupported": "可以拖进 .eml、.mbox、.vtt、.srt 文件",
       "subscribeRss": "订阅 RSS",
+      "readLater": "稍后读",
       "rssSubscribed": "已订阅「{name}」，收进 {count} 篇，等你决定要不要处理",
       "meeting": "会议逐字稿",
       "meetingAdded": "已导入 {count} 场会议，等你决定要不要处理",
