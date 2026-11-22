@@ -107,7 +107,7 @@ it('maps the visible Plan entry to the week overlay and removes the V3 navigatio
 it('shows the three icon-only quick buttons under search and no 收集 in the nav', async () => {
   await render(React.createElement(LeftSidebar))
   const nav = host.querySelector('[data-sidebar-v3] nav')!
-  expect([...nav.querySelectorAll('button')].map(button => button.textContent?.replace(/\d+$/, ''))).toEqual(['今天', '工作台', '對話', '知識', '計畫'])
+  expect([...nav.querySelectorAll('button')].map(button => button.textContent?.replace(/\d+$/, ''))).toEqual(['今天', '工作台', '對話', '整理', '計畫'])
   const quick = host.querySelector('[data-testid="sidebar-quick"]')!
   expect(quick.className).toContain('grid-cols-3')
   const buttons = [...quick.querySelectorAll('button')]

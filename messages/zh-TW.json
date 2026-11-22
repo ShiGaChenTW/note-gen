@@ -215,7 +215,7 @@
     "quit": "退出 NoteGen"
   },
   "today": {
-    "title": "今日",
+    "title": "今天",
     "summary": "今天到期 {today} 項，逾期 {overdue} 項",
     "greeting": {
       "morning": "早安",
@@ -246,7 +246,7 @@
     "mits": "三件 MIT · 完成 {done} / {total}",
     "done": "已完成",
     "agenda": {
-      "title": "今日進程",
+      "title": "今天的進程",
       "sources": "錨點時段 · 有時間的任務 · 行事曆",
       "empty": "今天還沒有時段或有時間的任務",
       "showPast": "已過 {count} 個時段 · 展開",
@@ -302,7 +302,7 @@
       "action": "開始復盤"
     },
     "status": {
-      "open": "今日",
+      "open": "今天",
       "need": "需處理 {count}",
       "aria": "需處理 {count} 項，開啟首頁"
     },
@@ -335,10 +335,10 @@
     "quickAdd": {
       "label": "快速新增任務",
       "placeholder": "買菜 @明天 9am !high #家",
-      "hint": "@日期、時間、!優先序、#標籤，按 Enter 寫入今日筆記",
+      "hint": "@日期、時間、!優先序、#標籤，按 Enter 寫入今天的每日筆記",
       "needTitle": "再輸入任務內容",
       "preview": "將新增",
-      "added": "已新增「{name}」到今日筆記",
+      "added": "已新增「{name}」到今天的每日筆記",
       "priority": {
         "highest": "最高",
         "high": "高",
@@ -1750,20 +1750,20 @@
       "title": "每日筆記",
       "desc": "設定每日筆記的位置、檔名格式與範本。NoteGen 會用與 Obsidian 相同的檔案，不會另外儲存資料。",
       "sections": {
-        "today": "今日筆記",
+        "today": "今天的每日筆記",
         "location": "位置與檔名",
         "templates": "範本",
         "reminders": "提醒"
       },
       "open": {
-        "button": "開啟今日筆記",
+        "button": "開啟今天的每日筆記",
         "preview": "今天的筆記：{path}",
-        "created": "已依範本建立今日筆記",
-        "opened": "已開啟今日筆記",
-        "error": "無法開啟今日筆記"
+        "created": "已依範本建立今天的每日筆記",
+        "opened": "已開啟今天的每日筆記",
+        "error": "無法開啟今天的每日筆記"
       },
       "openOnLaunch": {
-        "title": "啟動時開啟今日筆記",
+        "title": "啟動時開啟今天的每日筆記",
         "desc": "每次啟動 App 時開啟今天的筆記；還不存在就依範本建立。"
       },
       "dailyFolder": {
@@ -7597,7 +7597,7 @@
     "moveUp": "上移",
     "moveDown": "下移",
     "showOnStartup": "啟動時顯示首頁",
-    "todayMoved": "今日頁已經移到首頁的「日程」卡片。",
+    "todayMoved": "「今天」頁已經移到首頁的「日程」卡片。",
     "empty": "所有卡片都關掉了。",
     "capture": {
       "label": "快速記錄",
@@ -7609,9 +7609,9 @@
     },
     "needs": {
       "title": "需要你處理",
-      "review": "待審草稿",
+      "review": "待決定的提案",
       "reviewAction": "審核",
-      "drafts": "{count} 項草稿待審",
+      "drafts": "{count} 項提案待決定",
       "unfinished": "沒做完",
       "resume": "繼續",
       "signal": "提醒",
@@ -8159,7 +8159,7 @@
       },
       "task": {
         "name": "待辦",
-        "hint": "→ 加到今日的每日筆記，有時間就排成時段"
+        "hint": "→ 加到今天的每日筆記，有時間就排成時段"
       },
       "text": {
         "name": "文字",
@@ -8195,7 +8195,7 @@
     },
     "to": {
       "inbox": "筆記 → 收件資料夾",
-      "today": "今日的每日筆記"
+      "today": "今天的每日筆記"
     },
     "reading": "辨識中",
     "source": {
@@ -8224,9 +8224,9 @@
     "remove": "移除這筆收集",
     "empty": "還沒收進東西。貼一段文字、連結或圖片試試。",
     "emptyFilter": "這個狀態下沒有收集。",
-    "records": "Inbox 的記錄",
-    "recordsHint": "Inbox 裡還沒整理的記錄，可以拆成提案。",
-    "recordsEmpty": "Inbox 沒有未整理的記錄",
+    "records": "未整理的記錄",
+    "recordsHint": "Inbox 資料夾裡還沒整理的記錄，可以拆成提案。",
+    "recordsEmpty": "沒有未整理的記錄",
     "split": "拆分",
     "queued": "已在收集",
     "writeHint": "新筆記、任務和時段都要你收下才會寫入；沒有收下的提案不會留下任何檔案。"
@@ -8399,7 +8399,7 @@
     },
     "source": {
       "collect": "收集",
-      "draft": "Agent 草稿"
+      "draft": "夥伴提案"
     },
     "from": "來自 {origin}",
     "writesTo": "收下後寫入：",
@@ -8419,7 +8419,7 @@
     "undo": "復原",
     "undoFailed": "無法復原，檔案已被改過",
     "failed": "處理失敗，請再試一次",
-    "conflict": "檔案在草稿產生後被改過，請到任務中心逐條確認",
+    "conflict": "檔案在提案產生後被改過，請到任務中心逐條確認",
     "openReview": "到任務中心",
     "viewAll": "等你定共 {count} 件，全部查看",
     "stale": "{count} 則提案超過 14 天沒決定，會列進每週回顧，不會自動消失",
@@ -8623,7 +8623,7 @@
       "decide": "工作台",
       "collect": "收集",
       "threads": "對話",
-      "knowledge": "知識",
+      "knowledge": "整理",
       "plan": "計畫"
     },
     "agents": {
@@ -8646,8 +8646,8 @@
     "tabs": {
       "collectGroup": "收集頁面",
       "collect": "收集",
-      "knowledgeGroup": "知識頁面",
-      "inbox": "Inbox",
+      "knowledgeGroup": "整理頁面",
+      "inbox": "未整理",
       "timeline": "筆記時間軸",
       "canvases": "畫布",
       "noteTags": "標籤",
@@ -8655,7 +8655,7 @@
       "outline": "大綱"
     },
     "knowledge": {
-      "title": "知識",
+      "title": "整理",
       "subtitle": "時間軸、畫布與標籤，筆記檔案樹在左側的「我的筆記」"
     }
   },

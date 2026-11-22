@@ -215,7 +215,7 @@
     "quit": "退出 NoteGen"
   },
   "today": {
-    "title": "今日",
+    "title": "今天",
     "summary": "今天到期 {today} 项，逾期 {overdue} 项",
     "greeting": {
       "morning": "早上好",
@@ -246,7 +246,7 @@
     "mits": "三件 MIT · 完成 {done} / {total}",
     "done": "已完成",
     "agenda": {
-      "title": "今日进程",
+      "title": "今天的进程",
       "sources": "锚点时段 · 有时间的任务 · 日历",
       "empty": "今天还没有时段或有时间的任务",
       "showPast": "已过 {count} 个时段 · 展开",
@@ -302,7 +302,7 @@
       "action": "开始复盘"
     },
     "status": {
-      "open": "今日",
+      "open": "今天",
       "need": "需处理 {count}",
       "aria": "需处理 {count} 项，打开首页"
     },
@@ -335,10 +335,10 @@
     "quickAdd": {
       "label": "快速添加任务",
       "placeholder": "买菜 @明天 9am !high #家",
-      "hint": "@日期、时间、!优先级、#标签，按 Enter 写入今日笔记",
+      "hint": "@日期、时间、!优先级、#标签，按 Enter 写入今天的笔记",
       "needTitle": "再输入任务内容",
       "preview": "将添加",
-      "added": "已添加「{name}」到今日笔记",
+      "added": "已添加「{name}」到今天的笔记",
       "priority": {
         "highest": "最高",
         "high": "高",
@@ -1750,20 +1750,20 @@
       "title": "日记",
       "desc": "设置每日笔记的位置、文件名格式和模板。NoteGen 与 Obsidian 使用相同的文件，不会另外保存数据。",
       "sections": {
-        "today": "今日笔记",
+        "today": "今天的笔记",
         "location": "位置与文件名",
         "templates": "模板",
         "reminders": "提醒"
       },
       "open": {
-        "button": "打开今日笔记",
+        "button": "打开今天的笔记",
         "preview": "今天的笔记：{path}",
-        "created": "已根据模板创建今日笔记",
-        "opened": "已打开今日笔记",
-        "error": "无法打开今日笔记"
+        "created": "已根据模板创建今天的笔记",
+        "opened": "已打开今天的笔记",
+        "error": "无法打开今天的笔记"
       },
       "openOnLaunch": {
-        "title": "启动时打开今日笔记",
+        "title": "启动时打开今天的笔记",
         "desc": "每次启动应用时打开今天的笔记；不存在时根据模板创建。"
       },
       "dailyFolder": {
@@ -1777,7 +1777,7 @@
       },
       "inboxFolder": {
         "title": "Inbox 文件夹",
-        "desc": "收件箱的位置，今日页会提醒积压的笔记。"
+        "desc": "收件箱的位置，“今天”页会提醒积压的笔记。"
       },
       "templatesDesc": "模板支持 '{{date}}'、'{{date:FORMAT}}'、'{{time}}'、'{{weekday}}'、'{{title}}'、'{{random:笔记路径}}'。",
       "defaultTemplate": {
@@ -7532,7 +7532,7 @@
     "moveUp": "上移",
     "moveDown": "下移",
     "showOnStartup": "启动时显示首页",
-    "todayMoved": "今日页已移到首页的“日程”卡片。",
+    "todayMoved": "“今天”页已移到首页的“日程”卡片。",
     "empty": "所有卡片都已关闭。",
     "capture": {
       "label": "快速记录",
@@ -7544,9 +7544,9 @@
     },
     "needs": {
       "title": "需要你处理",
-      "review": "待审草稿",
+      "review": "待决定的提案",
       "reviewAction": "审核",
-      "drafts": "{count} 项草稿待审",
+      "drafts": "{count} 项提案待决定",
       "unfinished": "未完成",
       "resume": "继续",
       "signal": "提醒",
@@ -8094,7 +8094,7 @@
       },
       "task": {
         "name": "待办",
-        "hint": "→ 加到今日日志，有时间就排成时段"
+        "hint": "→ 加到今天的日志，有时间就排成时段"
       },
       "text": {
         "name": "文字",
@@ -8130,7 +8130,7 @@
     },
     "to": {
       "inbox": "笔记 → 收件文件夹",
-      "today": "今日日志"
+      "today": "今天的日志"
     },
     "reading": "识别中",
     "source": {
@@ -8159,9 +8159,9 @@
     "remove": "移除这条收集",
     "empty": "还没有收进内容。试试粘贴一段文字、链接或图片。",
     "emptyFilter": "这个状态下没有收集。",
-    "records": "Inbox 的记录",
-    "recordsHint": "Inbox 里还没整理的记录，可以拆成提案。",
-    "recordsEmpty": "Inbox 没有未整理的记录",
+    "records": "未整理的记录",
+    "recordsHint": "Inbox 文件夹里还没整理的记录，可以拆成提案。",
+    "recordsEmpty": "没有未整理的记录",
     "split": "拆分",
     "queued": "已在收集",
     "writeHint": "新笔记、任务和时段都要你收下才会写入；没有收下的提案不会留下任何文件。"
@@ -8334,14 +8334,14 @@
     },
     "source": {
       "collect": "收集",
-      "draft": "Agent 草稿"
+      "draft": "伙伴提案"
     },
     "from": "来自 {origin}",
     "writesTo": "收下后写入：",
     "dest": {
       "note": "收件文件夹的新笔记",
-      "journal": "今日日志的“{section}”",
-      "journalNew": "今日日志的“{section}”（今天的日志还没建立，收下时按模板建立）"
+      "journal": "今天日志的“{section}”",
+      "journalNew": "今天日志的“{section}”（今天的日志还没建立，收下时按模板建立）"
     },
     "diff": {
       "hidden": "还有 {count} 行没列出"
@@ -8354,7 +8354,7 @@
     "undo": "撤销",
     "undoFailed": "无法撤销，文件已被改过",
     "failed": "处理失败，请重试",
-    "conflict": "文件在草稿生成后被改过，请到任务中心逐条确认",
+    "conflict": "文件在提案生成后被改过，请到任务中心逐条确认",
     "openReview": "到任务中心",
     "viewAll": "等你定共 {count} 件，全部查看",
     "stale": "{count} 则提案超过 14 天没决定，会列进每周回顾，不会自动消失",
@@ -8558,7 +8558,7 @@
       "decide": "工作台",
       "collect": "收集",
       "threads": "对话",
-      "knowledge": "知识",
+      "knowledge": "整理",
       "plan": "计划"
     },
     "agents": {
@@ -8581,8 +8581,8 @@
     "tabs": {
       "collectGroup": "收集页面",
       "collect": "收集",
-      "knowledgeGroup": "知识页面",
-      "inbox": "Inbox",
+      "knowledgeGroup": "整理页面",
+      "inbox": "未整理",
       "timeline": "笔记时间轴",
       "canvases": "画布",
       "noteTags": "标签",
@@ -8590,7 +8590,7 @@
       "outline": "大纲"
     },
     "knowledge": {
-      "title": "知识",
+      "title": "整理",
       "subtitle": "时间轴、画布与标签，笔记文件树在左侧的「我的笔记」"
     }
   },
