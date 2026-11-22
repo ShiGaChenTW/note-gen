@@ -86,6 +86,17 @@ export function relativeTimeLabel(mtime: number, now: number, locale: string): s
   return new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', ...(new Date(mtime).getFullYear() !== new Date(now).getFullYear() ? { year: 'numeric' } : {}) }).format(mtime)
 }
 
+/** Fork（almanac ALMNC-56.7，A07）：中間面板窄於這個寬度時自動收起筆記清單（清單 280 px，編輯器留不到約 360 px）。 */
+export const NOTE_LIST_COLLAPSE_PX = 640
+
+/**
+ * 中間面板從夠寬變成窄於門檻的那一刻才收起（右側欄打開、視窗縮小）。
+ * 本來就窄時使用者自己打開的清單不收（previous 為 null 代表剛開始量）。
+ */
+export function crossedBelow(previous: number | null, width: number, threshold = NOTE_LIST_COLLAPSE_PX): boolean {
+  return previous !== null && previous >= threshold && width < threshold
+}
+
 interface NoteListState {
   visible: boolean
   /** 開著的資料夾；空字串代表「我的筆記」根目錄 */

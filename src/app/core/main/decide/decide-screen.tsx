@@ -12,6 +12,7 @@ import { Clock } from 'lucide-react'
 import { useAgentTaskStore } from '@/lib/agent-tasks'
 import { useUiV3 } from '@/lib/fork-ui'
 import { refreshJournal } from '@/lib/decide/actions'
+import { useJournalPolling } from '@/lib/decide/journal-refresh'
 import { isEditableKeyboardTarget } from '@/lib/is-editable-keyboard-target'
 import { actionForKey } from '@/lib/workbench/cards'
 import { globalShortcutFor, keyBelongsToTarget } from '@/lib/workbench/keyboard-target'
@@ -267,11 +268,8 @@ export function DecideScreen() {
   useEffect(() => {
     if (isV3) void refreshJournal()
   }, [isV3, visible, waiting])
-  useEffect(() => {
-    if (!isV3) return
-    const timer = setInterval(() => void refreshJournal(), 60_000)
-    return () => clearInterval(timer)
-  }, [isV3])
+  // Fork（almanac ALMNC-56.7，P06）：只在工作台開著、視窗沒隱藏時每分鐘讀一次日誌。
+  useJournalPolling(isV3 && visible, refreshJournal)
   // Fork（almanac ALMNC-54.8）：主選單沒有「收集」了；舊入口（命令面板、記錄存好的「查看」…）打開收集或 Inbox 時改開資料源分頁。
   useEffect(() => {
     if (!isV3) return

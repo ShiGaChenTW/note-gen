@@ -3,6 +3,7 @@
 import { create } from 'zustand'
 import { useUiModeStore } from '@/lib/fork-ui'
 import type { JournalSnapshot } from '@/lib/decide/project'
+import { sameJournal } from '@/lib/decide/journal-refresh'
 import useCollectStore from './collect'
 import useHomeStore from './home'
 import useInboxStore from './inbox'
@@ -32,7 +33,8 @@ const useDecideStore = create<DecideState>(set => ({
   },
   hide: () => set({ visible: false }),
   select: key => set({ selected: key }),
-  setJournal: journal => set({ journal }),
+  // Fork（almanac ALMNC-56.7，P06）：內容沒變就不更新，免得每次輪詢都重算提案、側欄徽章與今天頁。
+  setJournal: journal => set(state => sameJournal(state.journal, journal) ? state : { journal }),
 }))
 
 // 其他全頁覆蓋層打開時收起；切回舊介面時也收起。

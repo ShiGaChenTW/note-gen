@@ -8617,7 +8617,8 @@
     "expandSection": "展开{title}",
     "noteList": {
       "label": "「{folder}」的笔记列表",
-      "empty": "这个文件夹还没有笔记"
+      "empty": "这个文件夹还没有笔记",
+      "close": "关闭笔记列表"
     },
     "rules": {
       "label": "规则",
@@ -8855,6 +8856,8 @@
       },
       "empty": "没有符合的资料源",
       "emptyAll": "还没有资料源。按侧栏的「新增资料源」（N）加进来。",
+      "loadFailed": "读不到资料源，列表可能不完整。",
+      "loadRetry": "重试",
       "pickOne": "选一则资料源来看",
       "back": "回到清单",
       "judgement": "初步判断",
@@ -8881,7 +8884,8 @@
         "savedVersion": "已存成 v{version}，送给 {name} 才会更新产出",
         "noChange": "没有修改",
         "rejected": "已不采用「{title}」",
-        "restored": "已改回等你决定「{title}」"
+        "restored": "已改回等你决定「{title}」",
+        "handFailed": "没能交给 {name}，勾选已还原，请再试一次"
       },
       "editor": {
         "editing": "正在编辑",

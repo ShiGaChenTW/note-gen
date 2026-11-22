@@ -8682,7 +8682,8 @@
     "expandSection": "展開{title}",
     "noteList": {
       "label": "「{folder}」的筆記清單",
-      "empty": "這個資料夾還沒有筆記"
+      "empty": "這個資料夾還沒有筆記",
+      "close": "關閉筆記清單"
     },
     "rules": {
       "label": "規則",
@@ -8920,6 +8921,8 @@
       },
       "empty": "沒有符合的資料源",
       "emptyAll": "還沒有資料源。按側欄的「新增資料源」（N）加進來。",
+      "loadFailed": "讀不到資料源，清單可能不完整。",
+      "loadRetry": "重試",
       "pickOne": "選一則資料源來看",
       "back": "回到清單",
       "judgement": "初步判斷",
@@ -8946,7 +8949,8 @@
         "savedVersion": "已存成 v{version}，送給 {name} 才會更新產出",
         "noChange": "沒有修改",
         "rejected": "已不採用「{title}」",
-        "restored": "已改回等你決定「{title}」"
+        "restored": "已改回等你決定「{title}」",
+        "handFailed": "沒能交給 {name}，勾選已還原，請再試一次"
       },
       "editor": {
         "editing": "正在編輯",

@@ -81,6 +81,7 @@ const useWorkbenchStore = (await import('@/stores/workbench')).default
 const useVaultIndexStore = (await import('@/stores/vault-index')).default
 const useSettingStore = (await import('@/stores/setting')).default
 const { EMPTY_LEGACY } = await import('@/stores/workbench')
+const { refreshSources } = await import('@/lib/workbench/actions')
 const { DecideScreen } = await import('./decide-screen')
 
 let container: HTMLDivElement
@@ -144,7 +145,7 @@ beforeEach(async () => {
     tab: 'review', filter: 'all', cursor: null, expanded: null, leaving: [], aside: {}, showAside: false, history: [], dismissed: [],
     sourceFilter: 'all', picked: new Set(), selectedRow: null, editing: false, edited: new Set(),
     sources: [source('w', 'awaiting_decision', '白板照片\n第三站 → SMED'), source('d', 'analyzed', '七大浪費\n過量生產、等待')],
-    outputCounts: new Map([['d', 2]]), desk: { open: false, materials: [] },
+    outputCounts: new Map([['d', 2]]), sourcesError: false, desk: { open: false, materials: [] },
     hydrateAside: vi.fn(async () => {}),
     legacy: EMPTY_LEGACY,
   })
@@ -388,6 +389,41 @@ describe('資料源 tab', () => {
     await act(async () => hand.click())
     expect(mocks.handToCommander).toHaveBeenCalledWith([expect.objectContaining({ id: 'src:w', status: 'wait' })])
     expect(mocks.toast).toHaveBeenCalledWith('已交給 Mia 整理 1 則，產出會送到審核')
+  })
+
+  // Fork（almanac ALMNC-56.7，A06）
+  it('A06: when handing to the commander fails, an error toast shows and the picks come back', async () => {
+    mocks.handToCommander.mockRejectedValueOnce(new Error('db down'))
+    act(() => $<HTMLButtonElement>('[data-row="src:w"] [role="checkbox"]')!.click())
+    act(() => $<HTMLButtonElement>('[data-row="rec:5"] [role="checkbox"]')!.click())
+    await act(async () => $<HTMLButtonElement>('[data-testid="hand-to-commander"]')!.click())
+    expect(mocks.toast.error).toHaveBeenCalledWith('沒能交給 Mia，勾選已還原，請再試一次')
+    expect([...useWorkbenchStore.getState().picked].sort()).toEqual(['rec:5', 'src:w'])
+    expect($('[data-testid="source-multi"]')!.textContent).toContain('已選 2 則')
+  })
+
+  it('A06: a failed source load shows an error state with 重試 instead of 「沒有資料」', async () => {
+    act(() => useWorkbenchStore.setState({ sourcesError: true }))
+    const error = $('[data-testid="sources-error"]')!
+    expect(error.getAttribute('role')).toBe('alert')
+    expect(error.textContent).toContain('讀不到資料源')
+    vi.mocked(refreshSources).mockClear()
+    await act(async () => button('重試', error)!.click())
+    expect(refreshSources).toHaveBeenCalledTimes(1)
+    act(() => useWorkbenchStore.setState({ sourcesError: false }))
+    expect($('[data-testid="sources-error"]')).toBeNull()
+  })
+
+  it('A06: with no rows at all, the error state replaces the empty message', () => {
+    act(() => {
+      useInboxStore.setState({ records: [] })
+      useCollectStore.setState({ items: [] })
+      useWorkbenchStore.setState({ sources: [], sourcesError: true })
+    })
+    expect(container.querySelector('[data-testid="sources-tab"]')!.textContent).not.toContain(messages.workbench.sources.emptyAll)
+    expect($('[data-testid="sources-error"]')).not.toBeNull()
+    act(() => useWorkbenchStore.setState({ sourcesError: false }))
+    expect(container.querySelector('[data-testid="sources-tab"]')!.textContent).toContain(messages.workbench.sources.emptyAll)
   })
 
   it('攤到檯面 from the selection opens the desk with those materials', async () => {

@@ -222,13 +222,17 @@ export function TodayV3Screen() {
             onReject={key => { const item = decisionByKey(key); if (item) void decide.reject(item) }}
           />
         </div>
-        <div className="min-w-0 overflow-y-auto border-l border-line-soft px-10 pt-8 pb-28" data-testid="today-v3-center">
-          <Journal layout={layout} dateLabel={viewingToday ? clock : shortDate} viewingToday={viewingToday} exists={journalExists} onOpen={openJournal} />
-          <Todo layout={layout} busy={busy} shortDate={shortDate} viewingToday={viewingToday} onToggle={item => toggleTask(item.task, !item.done)} />
-        </div>
-        <div className="flex min-w-0 flex-col gap-6 overflow-y-auto border-l border-line-soft px-6 pt-5 pb-24 @max-[1000px]:hidden" data-testid="today-v3-right">
-          <DecideRail layout={layout} />
-          <CaptureRail layout={layout} />
+        {/* Fork（almanac ALMNC-56.7，A12）：寬的時候中欄、右欄各自是格線的一欄（contents）；窄於 1000 px 時合成一欄一起捲動，
+            右欄（等你定、今天收進來）接在中欄下方，不再整欄隱藏。 */}
+        <div className="contents @max-[1000px]:block @max-[1000px]:min-w-0 @max-[1000px]:overflow-y-auto @max-[1000px]:border-l @max-[1000px]:border-line-soft @max-[1000px]:pb-28" data-testid="today-v3-main">
+          <div className="min-w-0 overflow-y-auto border-l border-line-soft px-10 pt-8 pb-28 @max-[1000px]:overflow-visible @max-[1000px]:border-l-0 @max-[1000px]:pb-8" data-testid="today-v3-center">
+            <Journal layout={layout} dateLabel={viewingToday ? clock : shortDate} viewingToday={viewingToday} exists={journalExists} onOpen={openJournal} />
+            <Todo layout={layout} busy={busy} shortDate={shortDate} viewingToday={viewingToday} onToggle={item => toggleTask(item.task, !item.done)} />
+          </div>
+          <div className="flex min-w-0 flex-col gap-6 overflow-y-auto border-l border-line-soft px-6 pt-5 pb-24 @max-[1000px]:overflow-visible @max-[1000px]:border-t @max-[1000px]:border-l-0 @max-[1000px]:px-10 @max-[1000px]:pt-7 @max-[1000px]:pb-0" data-testid="today-v3-right">
+            <DecideRail layout={layout} />
+            <CaptureRail layout={layout} />
+          </div>
         </div>
       </div>
       </div>

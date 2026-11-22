@@ -7,9 +7,9 @@ import { useTranslations } from 'next-intl'
 import { ArrowLeft, Check, Lock } from 'lucide-react'
 import { toast } from 'sonner'
 import {
-  SOURCE_FILTERS, dayBucket, filterCounts, filterRows, organisedSummary, pickState, toggleAll, togglePick, type SourceListRow,
+  SOURCE_FILTERS, dayBucket, filterCounts, filterRows, organisedSummary, pickState, restorePicks, toggleAll, togglePick, type SourceListRow,
 } from '@/lib/workbench/sources-tab'
-import { deleteFailedSource, handToCommander, processSource, rejectSource, restoreSource, retryCapture, sendToCommander } from '@/lib/workbench/actions'
+import { deleteFailedSource, handToCommander, processSource, refreshSources, rejectSource, restoreSource, retryCapture, sendToCommander } from '@/lib/workbench/actions'
 import type { DeskMaterial } from '@/lib/workbench/desk'
 import { cn } from '@/lib/utils'
 import useWorkbenchStore from '@/stores/workbench'
@@ -217,6 +217,7 @@ export function SourcesTab({ rows, commanderName, onDesk }: { rows: SourceListRo
   const selected = useWorkbenchStore(state => state.selectedRow)
   const selectRow = useWorkbenchStore(state => state.selectRow)
   const editing = useWorkbenchStore(state => state.editing)
+  const loadError = useWorkbenchStore(state => state.sourcesError)
 
   const visible = filterRows(rows, filter)
   const counts = filterCounts(rows)
@@ -233,12 +234,16 @@ export function SourcesTab({ rows, commanderName, onDesk }: { rows: SourceListRo
   async function hand() {
     const list = pickedRows.filter(row => row.status !== 'ing')
     if (!list.length) return
+    const before = picked
     setPicked(new Set())
     try {
       const { count, reorganise } = await handToCommander(list)
       toast(reorganise ? t('toast.handedRe', { name: commanderName, count, re: reorganise }) : t('toast.handed', { name: commanderName, count }))
     } catch (error) {
+      // Fork（almanac ALMNC-56.7，A06）：失敗時跳錯誤通知，勾選還原，可以直接再按一次。
       console.error('[workbench] hand to commander failed:', error)
+      setPicked(restorePicks(useWorkbenchStore.getState().picked, before))
+      toast.error(t('toast.handFailed', { name: commanderName }))
     }
   }
 
@@ -259,8 +264,15 @@ export function SourcesTab({ rows, commanderName, onDesk }: { rows: SourceListRo
           <span className="flex-1" />
           <span className="tabular-nums" data-testid="organised-summary">{t('organised', summary)}</span>
         </div>
+        {/* Fork（almanac ALMNC-56.7，A06）：讀不到資料源表時顯示錯誤與「重試」，不和「沒有資料」混在一起。 */}
+        {loadError && (
+          <div role="alert" className="mx-1 mt-3 flex items-center gap-2.5 rounded-[10px] border border-line px-3 py-2.5 text-ui-compact text-muted-ink" data-testid="sources-error">
+            <span className="min-w-0 flex-1">{t('loadFailed')}</span>
+            <button type="button" className={BTN} onClick={() => void refreshSources()}>{t('loadRetry')}</button>
+          </div>
+        )}
         <div role="list" aria-label={t('listLabel')}>
-          {visible.length === 0 && <p className="px-2.5 pt-3.5 text-xs font-semibold text-faint">{rows.length ? t('empty') : t('emptyAll')}</p>}
+          {visible.length === 0 && !loadError && <p className="px-2.5 pt-3.5 text-xs font-semibold text-faint">{rows.length ? t('empty') : t('emptyAll')}</p>}
           {visible.map(row => {
             const bucket = dayBucket(row.at, now)
             const heading = bucket !== lastBucket

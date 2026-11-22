@@ -8617,7 +8617,8 @@
     "expandSection": "Expand {title}",
     "noteList": {
       "label": "Notes in {folder}",
-      "empty": "No notes in this folder yet"
+      "empty": "No notes in this folder yet",
+      "close": "Close note list"
     },
     "rules": {
       "label": "Rule",
@@ -8855,6 +8856,8 @@
       },
       "empty": "No matching sources",
       "emptyAll": "No sources yet. Use “Add source” (N) in the sidebar.",
+      "loadFailed": "Couldn't load sources. The list may be incomplete.",
+      "loadRetry": "Retry",
       "pickOne": "Pick a source to read",
       "back": "Back to list",
       "judgement": "First judgement",
@@ -8881,7 +8884,8 @@
         "savedVersion": "Saved as v{version}; send it to {name} to update the outputs",
         "noChange": "No changes",
         "rejected": "Not using “{title}”",
-        "restored": "“{title}” is awaiting you again"
+        "restored": "“{title}” is awaiting you again",
+        "handFailed": "Couldn't hand to {name}. Your selection is back; please try again."
       },
       "editor": {
         "editing": "Editing",

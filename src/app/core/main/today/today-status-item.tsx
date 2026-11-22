@@ -12,6 +12,14 @@ import { useUiV3 } from '@/lib/fork-ui'
 import { StatusBarItem } from '../status-bar-order'
 import { openTodayTab } from './today-tab'
 
+/**
+ * Fork（almanac ALMNC-56.7，RPT-2026-009 P05）：要不要算「需處理」（含掃整個 vault 的 Inbox 積壓）。
+ * V3 只在索引好了、有提醒時才顯示這一項，索引還沒好時一定不顯示，就不掃；classic 照舊一直算。
+ */
+export function needsAttentionScan(state: { isV3: boolean, status: string }): boolean {
+  return !state.isV3 || state.status === 'ready'
+}
+
 export function TodayStatusItem() {
   const t = useTranslations('today')
   const isV3 = useUiV3()
@@ -32,13 +40,15 @@ export function TodayStatusItem() {
     return () => window.clearInterval(timer)
   }, [])
 
+  const scan = needsAttentionScan({ isV3, status })
   const count = useMemo(() => {
+    if (!scan) return 0
     const now = new Date()
     const groups = groupTasks(selectAllTasks({ notes, revision }), now)
     const staleRecords = selectStaleRecords({ records, processed }, staleDays, now).length
     return needAttentionCount(groups, staleInboxNotes(notes.values(), inboxFolder, staleDays, now).length + staleRecords)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [notes, revision, inboxFolder, staleDays, day, records, processed])
+  }, [scan, notes, revision, inboxFolder, staleDays, day, records, processed])
 
   const hasReminder = status === 'ready' && count > 0
   if (isV3 && !hasReminder) return null

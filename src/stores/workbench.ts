@@ -91,6 +91,9 @@ interface WorkbenchState {
   outputCounts: Map<string, number>
   sourcesLoaded: boolean
   setSources: (sources: Source[], outputCounts: Map<string, number>) => void
+  /** Fork（almanac ALMNC-56.7，A06）：上次讀資料源表失敗（和「真的沒有資料」分開）；讀成功就清掉。 */
+  sourcesError: boolean
+  setSourcesError: (value: boolean) => void
   /** Fork（almanac ALMNC-54.10）：外部擷取資料源的初步判斷（資料源 id → 判斷）。 */
   judgements: Map<string, SourceJudgement>
   setJudgements: (judgements: Map<string, SourceJudgement>) => void
@@ -167,7 +170,9 @@ const useWorkbenchStore = create<WorkbenchState>((set, get) => ({
   sources: [],
   outputCounts: new Map(),
   sourcesLoaded: false,
-  setSources: (sources, outputCounts) => set({ sources, outputCounts, sourcesLoaded: true }),
+  setSources: (sources, outputCounts) => set({ sources, outputCounts, sourcesLoaded: true, sourcesError: false }),
+  sourcesError: false,
+  setSourcesError: sourcesError => set(state => state.sourcesError === sourcesError ? state : { sourcesError }),
   judgements: new Map(),
   setJudgements: judgements => set({ judgements }),
   legacy: EMPTY_LEGACY,

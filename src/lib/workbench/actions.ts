@@ -23,7 +23,19 @@ export async function kickCommander(): Promise<void> {
   }
 }
 
-/** 重讀資料源表（只留每條版本鏈最新一版）與產出數；沒有 Tauri 時維持原樣。 */
+/** 是不是在桌面 App 裡（有 Tauri）；瀏覽器預覽讀不到資料庫是正常的，不算讀取失敗。 */
+async function inDesktopApp(): Promise<boolean> {
+  try {
+    return (await import('@tauri-apps/api/core')).isTauri()
+  } catch {
+    return false
+  }
+}
+
+/**
+ * 重讀資料源表（只留每條版本鏈最新一版）與產出數；沒有 Tauri 時維持原樣。
+ * Fork（almanac ALMNC-56.7，A06）：桌面 App 裡讀失敗時記下 sourcesError，資料源分頁顯示錯誤狀態與「重試」。
+ */
 export async function refreshSources(): Promise<void> {
   try {
     const db = await import('@/db/v3-sources')
@@ -31,7 +43,12 @@ export async function refreshSources(): Promise<void> {
     const [all, counts] = await Promise.all([db.listSources({ limit: 500, excludeKind: LEGACY_NOTE_KIND }), db.countOutputsBySource()])
     useWorkbenchStore.getState().setSources(latestVersions(all), counts)
   } catch (error) {
-    console.debug('[workbench] sources unavailable:', error)
+    if (await inDesktopApp()) {
+      console.error('[workbench] sources failed to load:', error)
+      useWorkbenchStore.getState().setSourcesError(true)
+    } else {
+      console.debug('[workbench] sources unavailable:', error)
+    }
   }
   await refreshLegacy()
   // Fork（almanac ALMNC-54.10）：初步判斷另外讀；讀不到卡片照樣出現（AC#4）。

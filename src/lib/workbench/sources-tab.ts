@@ -272,6 +272,13 @@ export function togglePick(picked: ReadonlySet<string>, id: string): Set<string>
   return next
 }
 
+/**
+ * Fork（almanac ALMNC-56.7，A06）：「交給指揮官」失敗時還原勾選——把送出前勾的加回去，送出後又勾的保留。
+ */
+export function restorePicks(current: ReadonlySet<string>, before: ReadonlySet<string>): Set<string> {
+  return new Set([...before, ...current])
+}
+
 /** 全選框的狀態：目前清單全勾、部分勾、沒勾。 */
 export function pickState(visibleIds: readonly string[], picked: ReadonlySet<string>): 'all' | 'some' | 'none' {
   const on = visibleIds.filter(id => picked.has(id)).length

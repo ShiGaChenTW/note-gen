@@ -4,7 +4,7 @@ import { createSource, type Source } from '@/lib/v3-model/source'
 import type { SourceJudgement } from './judgement'
 import {
   bridgeInput, buildSourceRows, captureSourceId, dayBucket, filterCounts, filterRows, isUserCapture, organisedSummary, pickState,
-  planHandToCommander, recordSourceId, sourceDisplayKind, sourceTitle, toggleAll, togglePick, waitingCount, type CaptureLike, type RecordLike,
+  planHandToCommander, recordSourceId, restorePicks, sourceDisplayKind, sourceTitle, toggleAll, togglePick, waitingCount, type CaptureLike, type RecordLike,
 } from './sources-tab'
 
 const NOW = new Date(2026, 10, 21, 10).getTime()
@@ -156,5 +156,14 @@ describe('sourceDisplayKind（ALMNC-57）', () => {
     expect(sourceDisplayKind('meeting')).toBe('meeting')
     expect(sourceDisplayKind('link')).toBe('web')
     expect(sourceDisplayKind('legacy_note')).toBe('file')
+  })
+})
+
+// Fork（almanac ALMNC-56.7，A06）
+describe('restorePicks', () => {
+  it('puts back what was picked before handing over, keeping picks made since', () => {
+    expect([...restorePicks(new Set(), new Set(['a', 'b']))].sort()).toEqual(['a', 'b'])
+    expect([...restorePicks(new Set(['c']), new Set(['a']))].sort()).toEqual(['a', 'c'])
+    expect([...restorePicks(new Set(['a']), new Set(['a']))]).toEqual(['a'])
   })
 })
