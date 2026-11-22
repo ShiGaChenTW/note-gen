@@ -9,15 +9,24 @@ import { NoteListColumn } from './note-list/note-list-column'
 import { PluginRightSidebar } from '@/components/plugins/plugin-right-sidebar'
 import dynamic from 'next/dynamic'
 import { useSidebarStore } from "@/stores/sidebar"
+import { useShallow } from "zustand/react/shallow"
 import useThreadsStore from "@/stores/threads"
-import { useEffect, useState, useRef } from 'react'
+import { memo, useEffect, useState, useRef } from 'react'
 import { Store } from '@tauri-apps/plugin-store'
 import { Layout, PanelImperativeHandle } from 'react-resizable-panels'
 import { restoreEditorWindows } from '@/lib/editor-windows'
 import { MainStatusBar, WorkspaceCoveredContext } from './main-status-bar'
 import { RightSidebarCollapsedContext } from './right-sidebar-visibility'
 import { ForkServices } from './fork-services'
-import { measurePageBox, pageBoxStyle, type PageBox } from './page-box'
+import { measurePageBox, pageBoxStyle, samePageBox, type PageBox } from './page-box'
+
+// Fork（almanac ALMNC-56.3 P02）：拖分隔線、縮放視窗時 ResizableWrapper 會更新尺寸 state；
+// 各面板內容不吃 props，用 memo 擋住，外層重繪時不連帶重繪整個 app。
+const LeftSidebarPanel = memo(LeftSidebar)
+const NoteListPanel = memo(NoteListColumn)
+const RightSidebarPanel = memo(PluginRightSidebar)
+const StatusBar = memo(MainStatusBar)
+const Services = memo(ForkServices)
 
 function getDefaultLayout(layoutKey: string) {
   const storageKey = `react-resizable-panels:main-layout:${layoutKey}`
@@ -61,14 +70,22 @@ function getDefaultLayout(layoutKey: string) {
 }
 
 function ResizableWrapper() {
-  const { 
-    leftSidebarVisible, 
+  // Fork（almanac ALMNC-56.3 P02）：只取用到的欄位；取整個 store 時，側欄任何欄位一變（分頁、搜尋字…）整個 app 都重繪。
+  const {
+    leftSidebarVisible,
     centerPanelVisible: preferredCenterPanelVisible,
-    rightSidebarVisible, 
+    rightSidebarVisible,
     initSidebarState,
     toggleLeftSidebar,
     toggleRightSidebar,
-  } = useSidebarStore()
+  } = useSidebarStore(useShallow(state => ({
+    leftSidebarVisible: state.leftSidebarVisible,
+    centerPanelVisible: state.centerPanelVisible,
+    rightSidebarVisible: state.rightSidebarVisible,
+    initSidebarState: state.initSidebarState,
+    toggleLeftSidebar: state.toggleLeftSidebar,
+    toggleRightSidebar: state.toggleRightSidebar,
+  })))
   
   const leftPanelRef = useRef<PanelImperativeHandle>(null)
   const centerPanelRef = useRef<PanelImperativeHandle>(null)
@@ -91,6 +108,7 @@ function ResizableWrapper() {
   const [leftPanelWidth, setLeftPanelWidth] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
   const [pageBox, setPageBox] = useState<PageBox | null>(null)
+  const pageBoxRef = useRef<PageBox | null>(null)
 
   // Fork（UI 一致性）：首頁與 Inbox 頁蓋在工作區面板上，位置與圓角跟工作區面板一致。
   // 直接量元素：面板是平貼（預設）還是卡片（自訂 CSS 的內距與圓角）都對得上。
@@ -99,7 +117,13 @@ function ResizableWrapper() {
     const group = container?.querySelector<HTMLElement>(':scope > [data-slot="resizable-panel-group"]')
     if (!container || !group) return
     const panels = [...group.querySelectorAll<HTMLElement>(':scope > [data-slot="resizable-panel"]')]
-    const measure = () => setPageBox(measurePageBox(container, group, panels, isV3))
+    const measure = () => {
+      const measured = measurePageBox(container, group, panels, isV3)
+      // 尺寸沒變就不呼叫 setState（連一次「算完才發現一樣」的重繪都不要）
+      if (samePageBox(pageBoxRef.current, measured)) return
+      pageBoxRef.current = measured
+      setPageBox(measured)
+    }
     measure()
     const observer = new ResizeObserver(measure)
     observer.observe(container)
@@ -254,10 +278,10 @@ function ResizableWrapper() {
         collapsedSize="0%"
         onResize={(size) => {
           setLeftPanelCollapsed(size.asPercentage < 0.1)
-          setLeftPanelWidth(size.inPixels)
+          setLeftPanelWidth(Math.round(size.inPixels))
         }}
       >
-        <LeftSidebar />
+        <LeftSidebarPanel />
       </ResizablePanel>
     )
 
@@ -292,7 +316,7 @@ function ResizableWrapper() {
           {/* Fork（almanac ALMNC-54.17）：V3「我的筆記」三欄——筆記清單在編輯器左邊；沒開清單（與 classic）時只有編輯器。
               外框兩種介面都套，切換介面時 EditorLayout 不會被重新掛載。 */}
           <div className="flex h-full w-full min-h-0 min-w-0 flex-1">
-            <NoteListColumn />
+            <NoteListPanel />
             <div className="flex h-full min-h-0 min-w-0 flex-1">
               <EditorLayout />
             </div>
@@ -331,7 +355,7 @@ function ResizableWrapper() {
         collapsedSize="0%"
         onResize={(size) => setRightPanelCollapsed(size.asPercentage < 0.1)}
       >
-        <PluginRightSidebar />
+        <RightSidebarPanel />
       </ResizablePanel>
     )
 
@@ -352,9 +376,9 @@ function ResizableWrapper() {
       >
         {renderLayout()}
       </ResizablePanelGroup>
-      <MainStatusBar workspaceCovered={workspaceCovered} />
+      <StatusBar workspaceCovered={workspaceCovered} />
       <RightSidebarCollapsedContext.Provider value={rightPanelCollapsed}>
-        <ForkServices />
+        <Services />
       </RightSidebarCollapsedContext.Provider>
     </div>
   )

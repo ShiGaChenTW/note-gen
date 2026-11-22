@@ -1,7 +1,7 @@
 'use client'
 
 import useArticleStore from '@/stores/article'
-import { useEffect, useState, useCallback, useRef, RefObject } from 'react'
+import { memo, useEffect, useState, useCallback, useRef, RefObject } from 'react'
 import { TipTapEditor } from './tiptap-editor'
 import { Outline } from './outline'
 import { PromptVersionBanner } from './prompt-version-banner'
@@ -35,7 +35,8 @@ interface MdEditorProps {
   disabled?: boolean
 }
 
-export function MdEditor({ tabContentsRef, filePath, isActive, disabled = false }: MdEditorProps) {
+// Fork（almanac ALMNC-56.3 P01）：memo——父層重繪（拖曳、版面狀態）時，props 沒變就不重繪編輯器。
+export const MdEditor = memo(function MdEditor({ tabContentsRef, filePath, isActive, disabled = false }: MdEditorProps) {
   const {
     saveCurrentArticle,
     isPulling,
@@ -563,6 +564,6 @@ export function MdEditor({ tabContentsRef, filePath, isActive, disabled = false 
       {showOutline && outlinePosition === 'right' ? renderOutline() : null}
     </div>
   )
-}
+})
 
 export default MdEditor

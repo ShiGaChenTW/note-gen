@@ -2,7 +2,7 @@
 
 import useInboxStore from '@/stores/inbox'
 import { PluginEmbeddedViews } from '@/components/plugins/plugin-embedded-views'
-import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
+import { Fragment, memo, useCallback, useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import {
   DndContext,
@@ -324,7 +324,8 @@ function EditorGroupPane({
   )
 }
 
-export function EditorLayout() {
+// Fork（almanac ALMNC-56.3 P02）：memo——拖分隔線、縮放視窗時外層 ResizableWrapper 重繪，編輯區不必跟著重繪。
+export const EditorLayout = memo(function EditorLayout() {
   const {
     activeFilePath, fileTree, fileTreeInitialized, fileTreeWorkspaceKey,
     setActiveFilePath, openTabs, activeTabId,
@@ -353,9 +354,14 @@ export function EditorLayout() {
     initOpenTabs: state.initOpenTabs,
     initShowCloudFiles: state.initShowCloudFiles,
   })))
-  const { setLeftSidebarTab, rightSidebarVisible, toggleRightSidebar } = useSidebarStore()
+  // Fork（almanac ALMNC-56.3 P01）：只取用到的欄位。取整個 store 時，AI 回覆串流每段都會讓整個編輯區重繪。
+  const { setLeftSidebarTab, rightSidebarVisible, toggleRightSidebar } = useSidebarStore(useShallow(state => ({
+    setLeftSidebarTab: state.setLeftSidebarTab,
+    rightSidebarVisible: state.rightSidebarVisible,
+    toggleRightSidebar: state.toggleRightSidebar,
+  })))
   const workspacePath = useSettingStore(state => state.workspacePath)
-  const { setOnboardingPromptDraft } = useChatStore()
+  const setOnboardingPromptDraft = useChatStore(state => state.setOnboardingPromptDraft)
   const setActiveMarkId = useMarkStore(state => state.setActiveMarkId)
   const clearActiveMark = useMarkStore(state => state.clearActiveMark)
   const setActiveCanvasId = useCanvasStore(state => state.setActiveCanvasId)
@@ -2046,4 +2052,4 @@ export function EditorLayout() {
       </Dialog>
     </DndContext>
   )
-}
+})
