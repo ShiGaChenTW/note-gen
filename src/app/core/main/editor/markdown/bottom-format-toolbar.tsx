@@ -8,7 +8,8 @@
 // - A03：列開著時給 ProseMirror scrollThreshold／scrollMargin（下方 64 px），打字、換行時游標行一進到列的範圍就捲到列的上方；
 //   style.css 另給捲動容器 scroll-padding-bottom。
 // - P04：亮起狀態用 useEditorState 加比對函式取得，打字時狀態不變就不重繪整列。
-// - A11：整列只佔一個 Tab 停靠點，左右鍵在列內移動（components/v3/toolbar，和右上筆記工具列同一套）。
+// - A11、V07：按鈕、分隔線與 roving tabindex 用 components/v3/toolbar（和右上筆記工具列同一套）。
+// - V10：列的陰影用 shadow-float token。
 import { useEffect, useMemo, useRef, useState, type ComponentType, type MouseEvent, type ReactNode } from 'react'
 import type { Editor } from '@tiptap/core'
 import { useEditorState } from '@tiptap/react'
@@ -21,7 +22,7 @@ import { open } from '@tauri-apps/plugin-dialog'
 import { useTranslations } from 'next-intl'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuShortcut, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { useRovingToolbar } from '@/components/v3/toolbar'
+import { ToolbarDivider, ToolbarIconButton, useRovingToolbar } from '@/components/v3/toolbar'
 import { toast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
 import useArticleStore from '@/stores/article'
@@ -41,8 +42,6 @@ const ICONS: Partial<Record<BottomToolbarItemId, ComponentType<{ className?: str
   bulletList: List, table: Table2, image: ImagePlus, link: Link2, attachment: Paperclip,
   orderedList: ListOrdered, taskList: CheckSquare, blockquote: Quote, codeBlock: Code2, horizontalRule: Minus, clearFormatting: Eraser,
 }
-
-const BUTTON = 'grid size-7 shrink-0 cursor-pointer place-items-center rounded-full text-muted-ink outline-none transition-colors duration-100 hover:bg-hover hover:text-ink focus-visible:ring-1 focus-visible:ring-ink/60 disabled:cursor-not-allowed disabled:opacity-40 [&_svg]:size-4'
 
 /**
  * 列顯示時給 ProseMirror 的捲動設定（A03）。列底距 16 px＋列高 36 px＝52 px，下方讓出 64 px：
@@ -83,16 +82,9 @@ function ToolbarButton({ label, active, onClick, children }: { label: string, ac
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <button
-          type="button"
-          aria-label={label}
-          aria-pressed={active === undefined ? undefined : active}
-          onMouseDown={keepEditorFocus}
-          onClick={onClick}
-          className={cn(BUTTON, active && 'bg-active text-ink')}
-        >
+        <ToolbarIconButton aria-label={label} pressed={active} onMouseDown={keepEditorFocus} onClick={onClick}>
           {children}
-        </button>
+        </ToolbarIconButton>
       </TooltipTrigger>
       <TooltipContent side="top"><p>{label}</p></TooltipContent>
     </Tooltip>
@@ -204,18 +196,14 @@ export function BottomFormatToolbar({ editor, onInsertImage, onOpenLink }: {
         data-testid="bottom-format-toolbar"
         onMouseDown={keepEditorFocus}
         {...roving}
-        className="pointer-events-auto absolute bottom-4 left-1/2 z-30 flex max-w-[calc(100%-1.5rem)] -translate-x-1/2 items-center gap-0.5 overflow-x-auto rounded-full border border-line bg-panel px-1.5 py-1 shadow-md [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="pointer-events-auto absolute bottom-4 left-1/2 z-30 flex max-w-[calc(100%-1.5rem)] -translate-x-1/2 items-center gap-0.5 overflow-x-auto rounded-[10px] bg-panel p-1 shadow-float [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {BOTTOM_TOOLBAR_GROUPS.map((group, index) => (
           <div key={group[0].id} className="flex shrink-0 items-center gap-0.5">
-            {index > 0 && <span aria-hidden className="mx-1 h-4 w-px shrink-0 bg-line" />}
+            {index > 0 && <ToolbarDivider />}
             {group.map(item => {
               if (item.id === 'highlight' || item.id === 'textColor') {
-                return (
-                  <span key={item.id} className="shrink-0 [&_button]:size-7 [&_button]:rounded-full [&_button]:text-muted-ink [&_button:hover]:text-ink [&_svg]:size-4">
-                    <ColorMenu editor={editor} owner={OWNER} highlight={item.id === 'highlight'} />
-                  </span>
-                )
+                return <ColorMenu key={item.id} editor={editor} owner={OWNER} highlight={item.id === 'highlight'} toolbar />
               }
               const Icon = ICONS[item.id]
               return (
@@ -226,14 +214,14 @@ export function BottomFormatToolbar({ editor, onInsertImage, onOpenLink }: {
             })}
           </div>
         ))}
-        <span aria-hidden className="mx-1 h-4 w-px shrink-0 bg-line" />
+        <ToolbarDivider />
         <DropdownMenu modal={false}>
           <Tooltip>
             <TooltipTrigger asChild>
               <DropdownMenuTrigger asChild>
-                <button type="button" aria-label={tToolbar('more')} onMouseDown={keepEditorFocus} className={BUTTON}>
+                <ToolbarIconButton aria-label={tToolbar('more')} onMouseDown={keepEditorFocus}>
                   <MoreVertical />
-                </button>
+                </ToolbarIconButton>
               </DropdownMenuTrigger>
             </TooltipTrigger>
             <TooltipContent side="top"><p>{tToolbar('more')}</p></TooltipContent>

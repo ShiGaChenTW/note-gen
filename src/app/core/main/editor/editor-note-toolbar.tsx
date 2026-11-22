@@ -7,7 +7,7 @@
 // - 版本歷史：送 editor-open-version-history，打開狀態列上同一個版本歷史面板。命令面板：同側欄「搜尋或下指令」。
 // - 標籤：讀寫 frontmatter 的 tags（寫法同屬性卡片，只改 tags 那一行）。置頂／收藏：stores/note-marks（每個工作區一份）。
 // 筆記專屬的按鈕只給 .md 筆記；編輯區窄於 720px 時第三、四組收進「⋯」。圖示刻意不用參考稿那套（箭頭、放大鏡、標籤、圖釘、星號⋯⋯）。
-// ALMNC-56.2：整列只佔一個 Tab 停靠點，左右鍵在列內移動（components/v3/toolbar，A11）。
+// ALMNC-56.2：按鈕與分隔線改用 components/v3/toolbar（和底部格式列同一套，A11 roving tabindex、V07 外觀）；列本身不帶底色。
 // 命令面板的 ⌘K 在編輯器裡是「插入連結」（anywhere-service 不攔截），提示註明「編輯器外」（A09）。
 import { useEffect, useMemo, useRef, useState, type ReactNode, type Ref } from 'react'
 import {
@@ -18,7 +18,6 @@ import { platform } from '@tauri-apps/plugin-os'
 import { useEditorState, type Editor } from '@tiptap/react'
 import { useLocale, useTranslations } from 'next-intl'
 import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
 import {
   DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
   DropdownMenuShortcut, DropdownMenuTrigger,
@@ -26,7 +25,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { useRovingToolbar } from '@/components/v3/toolbar'
+import { ToolbarDivider, ToolbarIconButton, useRovingToolbar } from '@/components/v3/toolbar'
 import { useAnywhereStore } from '@/lib/anywhere/store'
 import { getEditorStatistics } from '@/lib/editor-statistics'
 import emitter from '@/lib/emitter'
@@ -36,7 +35,6 @@ import { hasMarkedPath, noteMarksWorkspaceKey } from '@/lib/note-toolbar/note-ma
 import { addTag, planTagsWrite, readFrontmatterTags, removeTagAt } from '@/lib/note-toolbar/note-tags'
 import { isCompactToolbar, noteToolbarScope } from '@/lib/note-toolbar/toolbar-layout'
 import { loadObsidianPropertyTypes } from '@/lib/obsidian-types'
-import { cn } from '@/lib/utils'
 import { getFilePathOptions } from '@/lib/workspace'
 import { useActiveNoteEditorStore } from '@/stores/active-note-editor'
 import useEditorShortcutStore from '@/stores/editor-shortcut'
@@ -46,9 +44,6 @@ import { formatShortcutLabel } from './markdown/bottom-format-toolbar-items'
 import { WIKI_METADATA_NODE_NAME } from './markdown/wiki-metadata-tokenizer'
 import { useEditorUndoRedo } from './editor-undo-redo'
 import type { TabInfo } from './tab-bar'
-
-const BUTTON = 'relative size-7 text-muted-ink hover:text-ink'
-const PRESSED = 'bg-active text-ink'
 
 function useIsMac() {
   const [mac, setMac] = useState(false)
@@ -88,19 +83,9 @@ function ToolbarButton({ label, icon, onClick, disabled, pressed, buttonRef, wra
   wrap?: (button: ReactNode) => ReactNode
 }) {
   const button = (
-    <Button
-      ref={buttonRef}
-      type="button"
-      variant="ghost"
-      size="icon"
-      aria-label={label}
-      aria-pressed={pressed === undefined ? undefined : pressed}
-      disabled={disabled}
-      onClick={onClick}
-      className={cn(BUTTON, pressed && PRESSED)}
-    >
+    <ToolbarIconButton ref={buttonRef} aria-label={label} pressed={pressed} disabled={disabled} onClick={onClick}>
       {icon}
-    </Button>
+    </ToolbarIconButton>
   )
   return (
     <Tooltip>
@@ -109,8 +94,6 @@ function ToolbarButton({ label, icon, onClick, disabled, pressed, buttonRef, wra
     </Tooltip>
   )
 }
-
-const Divider = () => <span aria-hidden className="mx-1 h-4 w-px shrink-0 bg-line" />
 
 interface EditorNoteToolbarProps {
   activeTab?: TabInfo
@@ -188,7 +171,7 @@ export function EditorNoteToolbar({ activeTab, isActiveGroup, canGoBack, canGoFo
           role="toolbar"
           aria-label={t('label')}
           aria-orientation="horizontal"
-          className="absolute top-2 right-3 z-20 flex items-center gap-0.5 rounded-md bg-background/80 text-muted-ink"
+          className="absolute top-2 right-3 z-20 flex items-center gap-0.5 text-muted-ink"
           data-testid="editor-note-toolbar"
           {...roving}
         >
@@ -197,7 +180,7 @@ export function EditorNoteToolbar({ activeTab, isActiveGroup, canGoBack, canGoFo
 
           {isNote ? (
             <>
-              <Divider />
+              <ToolbarDivider />
               <ToolbarButton label={labels.find} icon={<TextSearch />} onClick={() => emitter.emit('editor-search-trigger')} />
               <TagsButton editor={noteEditor?.editor ?? null} label={t('tags')} />
               <ToolbarButton label={labels.pin} icon={<ArrowUpToLine />} pressed={pinned} onClick={() => toggleMark('pinned')} />
@@ -205,7 +188,7 @@ export function EditorNoteToolbar({ activeTab, isActiveGroup, canGoBack, canGoFo
             </>
           ) : null}
 
-          <Divider />
+          <ToolbarDivider />
           {compact ? (
             <DropdownMenu>
               <ToolbarButton
@@ -256,7 +239,7 @@ export function EditorNoteToolbar({ activeTab, isActiveGroup, canGoBack, canGoFo
               <ToolbarButton label={labels.command} icon={<SquareSlash />} onClick={openPalette} />
               {showEditorUndoRedo ? (
                 <>
-                  <Divider />
+                  <ToolbarDivider />
                   <ToolbarButton label={labels.undo} icon={<Undo2 />} disabled={!canUndo} onClick={() => runUndoRedo(false)} />
                   <ToolbarButton label={labels.redo} icon={<Redo2 />} disabled={!canRedo} onClick={() => runUndoRedo(true)} />
                 </>

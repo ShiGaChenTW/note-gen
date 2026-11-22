@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// almanac ALMNC-56.2 A11：工具列的 roving tabindex。
+// almanac ALMNC-56.2 A11、V07：工具列共用按鈕與 roving tabindex。
 import { act, createElement, useRef, useState } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -8,7 +8,7 @@ await vi.hoisted(async () => {
   vi.stubGlobal('React', (await import('react')).default)
 })
 
-const { rovingTargetIndex, useRovingToolbar } = await import('./toolbar')
+const { ToolbarIconButton, rovingTargetIndex, useRovingToolbar } = await import('./toolbar')
 
 let host: HTMLDivElement
 let root: Root
@@ -34,7 +34,7 @@ function render(initial: Array<{ label: string, disabled?: boolean }>) {
     setItems = update
     const roving = useRovingToolbar(ref)
     return createElement('div', { ref, role: 'toolbar', ...roving },
-      ...items.map(item => createElement('button', { key: item.label, type: 'button', 'aria-label': item.label, disabled: item.disabled })))
+      ...items.map(item => createElement(ToolbarIconButton, { key: item.label, 'aria-label': item.label, disabled: item.disabled })))
   }
   act(() => root.render(createElement(Fixture)))
 }
@@ -103,3 +103,26 @@ describe('useRovingToolbar', () => {
   })
 })
 
+describe('ToolbarIconButton', () => {
+  it('shares one shape, hover and focus ring, and only sets aria-pressed for toggles', () => {
+    act(() => root.render(createElement('div', null,
+      createElement(ToolbarIconButton, { 'aria-label': 'plain' }),
+      createElement(ToolbarIconButton, { 'aria-label': 'toggle', pressed: true }),
+      createElement(ToolbarIconButton, { 'aria-label': 'menu', active: true }),
+    )))
+    const [plain, toggle, menu] = buttons()
+    for (const button of [plain, toggle, menu]) {
+      expect(button.type).toBe('button')
+      expect(button.className).toContain('size-7')
+      expect(button.className).toContain('rounded-md')
+      expect(button.className).toContain('enabled:hover:bg-hover')
+      expect(button.className).toContain('focus-visible:ring-1')
+    }
+    expect(plain.hasAttribute('aria-pressed')).toBe(false)
+    expect(plain.className).not.toContain('bg-active')
+    expect(toggle.getAttribute('aria-pressed')).toBe('true')
+    expect(toggle.className).toContain('bg-active')
+    expect(menu.hasAttribute('aria-pressed')).toBe(false)
+    expect(menu.className).toContain('bg-active')
+  })
+})

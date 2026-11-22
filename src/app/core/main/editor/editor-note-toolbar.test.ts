@@ -130,12 +130,17 @@ it('shows the four groups for a markdown note, in order, with shortcuts in the l
   expect(host.querySelectorAll('[data-testid="editor-note-toolbar"] > span[aria-hidden]')).toHaveLength(3)
 })
 
-// ALMNC-56.2 A11：整列只有一個 Tab 停靠點，左右鍵在列內移動（跳過停用的「前進」）。
-it('is a single tab stop with arrow-key movement', async () => {
+// ALMNC-56.2 A11、V07：整列只有一個 Tab 停靠點，左右鍵在列內移動（跳過停用的「前進」）；按鈕用共用元件，列本身不帶底色。
+it('is a single tab stop with arrow-key movement, shared buttons and no panel background', async () => {
   await render()
   const toolbar = host.querySelector<HTMLElement>('[data-testid="editor-note-toolbar"]')!
   expect(toolbar.getAttribute('role')).toBe('toolbar')
+  expect(toolbar.className).not.toMatch(/\bbg-/)
   expect(toolbarButtons().filter(item => item.tabIndex === 0).map(item => item.getAttribute('aria-label'))).toEqual(['返回 (⌘[)'])
+  for (const item of toolbarButtons()) {
+    expect(item.className).toContain('rounded-md')
+    expect(item.className).toContain('enabled:hover:bg-hover')
+  }
   const press = async (key: string) => {
     const target = document.activeElement as HTMLElement
     await act(async () => { target.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true })) })

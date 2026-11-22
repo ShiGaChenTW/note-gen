@@ -125,8 +125,8 @@ it('shows the four icon-only quick buttons under search and no 收集 in the nav
   emitter.off('unified-record-open', opened)
 })
 
-// Fork（almanac ALMNC-56.2 A08、A10）：「我的筆記」收合鈕和標題鈕讀起來不同名；新增代理人鈕 24 px。
-it('names the 我的筆記 collapse toggle apart from its title', async () => {
+// Fork（almanac ALMNC-56.2 A08、V03、A10）：「我的筆記」收合鈕和標題鈕讀起來不同名；底色在整列外層；新增代理人鈕 24 px。
+it('names the 我的筆記 collapse toggle apart from its title and paints the row as one piece', async () => {
   useSidebarCollapse.setState({ vault: false, agents: false })
   useNoteListStore.setState({ visible: true, folder: '' })
   await render(React.createElement(LeftSidebar))
@@ -136,6 +136,11 @@ it('names the 我的筆記 collapse toggle apart from its title', async () => {
   const title = vault.querySelector<HTMLButtonElement>('button[aria-current="page"]')!
   expect(title.getAttribute('aria-label')).toBeNull()
   expect(title.textContent).toBe('我的筆記')
+  expect(title.className).not.toContain('bg-')
+  const row = toggle.parentElement!
+  expect(row.className).toContain('hover:bg-hover')
+  expect(row.className).toContain('bg-active')
+  expect(row.querySelector('.bg-panel')).toBeNull()
   // 掛載時會從 store.json 讀回收合狀態；之後再設定，代理人區才確定展開
   await act(async () => useSidebarCollapse.setState({ vault: true, agents: false }))
   expect(toggle.getAttribute('aria-label')).toBe('展開我的筆記')

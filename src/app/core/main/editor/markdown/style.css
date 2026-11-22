@@ -1687,6 +1687,11 @@
   color: hsl(var(--foreground));
 }
 
+/* Fork（almanac ALMNC-56.2 V10）：V3 的 tippy 浮層用選單陰影 token；classic 維持上面的寫死值。 */
+:where([data-ui="v3"]) .tippy-content {
+  box-shadow: var(--sh-menu);
+}
+
 .tippy-arrow {
   position: absolute;
   width: 16px;

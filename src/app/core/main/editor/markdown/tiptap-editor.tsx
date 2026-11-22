@@ -8023,8 +8023,9 @@ export function TipTapEditor({
           disabled={readOnly || !editable || isInitializingVisualContent}
         />
       )}
+      {/* Fork（almanac ALMNC-56.2 V10）：編輯區的浮層在 V3 改用陰影 token（v3:shadow-*）；classic 維持 Tailwind 的 shadow-sm／md。 */}
       {developerMode && developerPerformanceInfo ? (
-        <div className="pointer-events-none absolute left-3 top-3 z-40 rounded-md border bg-background/90 px-2.5 py-2 font-mono text-[11px] v3:text-xs leading-5 text-muted-foreground shadow-sm backdrop-blur">
+        <div className="pointer-events-none absolute left-3 top-3 z-40 rounded-md border bg-background/90 px-2.5 py-2 font-mono text-[11px] v3:text-xs leading-5 text-muted-foreground shadow-sm v3:shadow-float backdrop-blur">
           <div>{t('developerPerformance.documentSize')}: {formatDeveloperDocumentSize(sourceMarkdown)}</div>
           <div>{t('developerPerformance.mode')}: {isLargeDocument ? t('developerPerformance.largeDocument') : t('developerPerformance.standardDocument')}</div>
           <div>{t('developerPerformance.view')}: {effectiveViewMode}</div>
@@ -8032,7 +8033,7 @@ export function TipTapEditor({
         </div>
       ) : null}
       {selfHostedCollaborators.length > 0 ? (
-        <div className="absolute right-3 top-3 z-40 flex items-center gap-1 rounded-full border bg-background/90 px-2 py-1 shadow-sm backdrop-blur">
+        <div className="absolute right-3 top-3 z-40 flex items-center gap-1 rounded-full border bg-background/90 px-2 py-1 shadow-sm v3:shadow-float backdrop-blur">
           {selfHostedCollaborators.slice(0, 3).map(collaborator => (
             <span key={collaborator.deviceId} className="grid size-6 place-items-center rounded-full bg-invert text-[10px] v3:text-xs font-medium text-invert-ink" title={collaborator.label}>
               {collaborator.label.slice(0, 1).toUpperCase()}
@@ -8096,7 +8097,7 @@ export function TipTapEditor({
             'pointer-events-none absolute inset-0 z-40 flex items-center justify-center border-2 border-ink/60 bg-hover transition-colors duration-150',
             isCanvasDropPending && 'border-transparent bg-transparent'
           )}>
-            <div className="flex items-center gap-2 rounded-md border bg-background/95 px-3 py-2 text-sm text-foreground shadow-md backdrop-blur">
+            <div className="flex items-center gap-2 rounded-md border bg-background/95 px-3 py-2 text-sm text-foreground shadow-md v3:shadow-toast backdrop-blur">
               {isCanvasDropPending && <Loader2 className="size-4 animate-spin text-ink" aria-hidden="true" />}
               <span>{t(isCanvasDropPending ? 'canvasDrop.generating' : 'canvasDrop.hint')}</span>
             </div>
@@ -8368,7 +8369,7 @@ export function TipTapEditor({
       {/* AI Generation Overlay */}
       {showOverlay && (
         <div className="absolute inset-0 z-50 flex items-start justify-end p-4 bg-background/20 pointer-events-none">
-          <div className="flex items-center gap-2 bg-background/90 border rounded-md px-3 py-2 shadow-md pointer-events-auto">
+          <div className="flex items-center gap-2 bg-background/90 border rounded-md px-3 py-2 shadow-md v3:shadow-toast pointer-events-auto">
             <Loader2 className="size-4 animate-spin text-muted-foreground" />
             <span className="text-xs text-muted-foreground">AI 整理中</span>
             {onTerminate && (

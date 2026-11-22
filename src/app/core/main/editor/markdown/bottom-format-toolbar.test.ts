@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// almanac ALMNC-56.2：V3 底部格式列——打字時不重繪（P04）、roving tabindex（A11）、scrollMargin（A03）。
+// almanac ALMNC-56.2：V3 底部格式列——打字時不重繪（P04）、roving tabindex（A11）、scrollMargin（A03）、共用按鈕與陰影 token（V07、V10）。
 import React, { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { NextIntlClientProvider } from 'next-intl'
@@ -114,3 +114,14 @@ it('keeps the caret line above the toolbar while it is shown', async () => {
   expect(editor.view.someProp('scrollThreshold')).toBeUndefined()
 })
 
+it('uses the shared toolbar buttons and the float shadow token', async () => {
+  await render()
+  expect(toolbar().className).toContain('shadow-float')
+  expect(toolbar().className).not.toMatch(/\bshadow-(sm|md|lg)\b/)
+  expect(toolbar().className).not.toContain('rounded-full')
+  for (const item of buttons().filter(entry => !['螢光筆', '文字顏色'].includes(entry.getAttribute('aria-label') ?? ''))) {
+    expect(item.className).toContain('rounded-md')
+    expect(item.className).toContain('enabled:hover:bg-hover')
+    expect(item.className).toContain('focus-visible:ring-1')
+  }
+})

@@ -6,9 +6,15 @@ import { useTranslations } from 'next-intl'
 import { Type, Highlighter } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuGroup, DropdownMenuRadioGroup, DropdownMenuRadioItem } from '@/components/ui/dropdown-menu'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { ToolbarIconButton } from '@/components/v3/toolbar'
 import { TEXT_COLORS, HIGHLIGHT_COLORS, normalizeTextColor } from './color-marks'
 
-export function ColorMenu({ editor, highlight = false, owner }: { editor: Editor; highlight?: boolean; owner: string }) {
+/**
+ * toolbar：Fork（almanac ALMNC-56.2 V07）V3 底部格式列用工具列共用的圖示按鈕與 Tooltip（需外層 TooltipProvider）；
+ * 沒給時維持 bubble menu 原本的按鈕。
+ */
+export function ColorMenu({ editor, highlight = false, owner, toolbar = false }: { editor: Editor; highlight?: boolean; owner: string; toolbar?: boolean }) {
   const t = useTranslations('editor.bubbleMenu.colors')
   const menuLabel = useTranslations('editor.bubbleMenu')
   const mark = highlight ? 'highlight' : 'textColor'
@@ -27,6 +33,8 @@ export function ColorMenu({ editor, highlight = false, owner }: { editor: Editor
     if (color === 'clear') chain.unsetMark(mark).run()
     else chain.setMark(mark, { color: color === 'default' ? null : color }).run()
   }
+  const label = t(highlight ? 'highlight' : 'text')
+  const indicator = <span aria-hidden="true" className="pointer-events-none absolute bottom-0.5 left-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full" style={{ backgroundColor: indicatorColor }} />
   return (
     <DropdownMenu modal={false} onOpenChange={open => {
       if (!open) return
@@ -34,12 +42,26 @@ export function ColorMenu({ editor, highlight = false, owner }: { editor: Editor
       selection.current = { from, to, doc: editor.state.doc }
       restoreFocus.current = false
     }}>
-      <DropdownMenuTrigger asChild>
-        <Button type="button" variant={editor.isActive(mark) ? 'secondary' : 'ghost'} size="icon-sm" title={t(highlight ? 'highlight' : 'text')} aria-label={t(highlight ? 'highlight' : 'text')} className="relative">
-          <Icon />
-          <span aria-hidden="true" className="pointer-events-none absolute bottom-0.5 left-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full" style={{ backgroundColor: indicatorColor }} />
-        </Button>
-      </DropdownMenuTrigger>
+      {toolbar ? (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <DropdownMenuTrigger asChild>
+              <ToolbarIconButton active={editor.isActive(mark)} aria-label={label}>
+                <Icon />
+                {indicator}
+              </ToolbarIconButton>
+            </DropdownMenuTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="top"><p>{label}</p></TooltipContent>
+        </Tooltip>
+      ) : (
+        <DropdownMenuTrigger asChild>
+          <Button type="button" variant={editor.isActive(mark) ? 'secondary' : 'ghost'} size="icon-sm" title={label} aria-label={label} className="relative">
+            <Icon />
+            {indicator}
+          </Button>
+        </DropdownMenuTrigger>
+      )}
       <DropdownMenuContent data-editor-bubble-menu-owner={owner} align="start" collisionPadding={8}
         onEscapeKeyDown={() => { restoreFocus.current = true }}
         onCloseAutoFocus={event => {

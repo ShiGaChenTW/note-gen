@@ -50,6 +50,8 @@ const OPEN: Record<NavKey, () => void> = {
 const ROW = 'flex h-7 w-full items-center gap-2 px-2 text-left text-[13px] text-muted-ink'
 const VAULT_LABEL = 'flex h-6 w-full items-center gap-1.5 px-2 text-ui-compact text-muted-ink'
 const LABEL = 'flex h-6 w-full items-center gap-1.5 px-2 text-[11px] font-semibold tracking-[0.08em] text-faint'
+/** 「我的筆記」標題鈕：底色交給整列外層（V03），這裡只管字色與 focus 外框。 */
+const VAULT_TITLE = 'cursor-pointer rounded-md outline-none transition-colors duration-100 ease-out hover:text-ink focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/60'
 
 function useAgentRows(): AgentRow[] {
   const [agents, setAgents] = useState<AgentSettings[]>([])
@@ -91,9 +93,10 @@ function SectionHeader({ section, collapsed, title, aside, actions, onTitleClick
   const t = useTranslations('sidebarV3')
   const toggle = useSidebarCollapse(state => state.toggle)
   if (onTitleClick) {
-    // ALMNC-56.2 A08：箭頭鈕的讀屏名稱是「收合／展開＋標題」，和開清單的標題鈕分得出來。
+    // ALMNC-56.2 V03：滑過與選中的底色放在整列外層，右側動作區透明，整列一起變色、沒有缺口。
+    // A08：箭頭鈕的讀屏名稱是「收合／展開＋標題」，和開清單的標題鈕分得出來。
     return (
-      <div className="group/section relative flex items-center">
+      <div className={cn('group/section relative flex items-center rounded-md transition-colors duration-100 ease-out hover:bg-hover', titleActive && 'bg-active')}>
         <button
           type="button"
           aria-expanded={!collapsed}
@@ -107,13 +110,13 @@ function SectionHeader({ section, collapsed, title, aside, actions, onTitleClick
           type="button"
           onClick={onTitleClick}
           aria-current={titleActive ? 'page' : undefined}
-          className={cn(VAULT_LABEL, SIDEBAR_ROW, 'min-w-0 flex-1 pl-0.5', titleActive && SIDEBAR_ROW_ACTIVE)}
+          className={cn(VAULT_LABEL, VAULT_TITLE, 'min-w-0 flex-1 pl-0.5', titleActive && 'font-[560] text-ink')}
         >
           <SectionLabel as="span" className="min-w-0 text-inherit"><span className="block truncate">{title}</span></SectionLabel>
           {aside}
         </button>
         {actions && (
-          <div className="absolute inset-y-0 right-1 flex items-center bg-panel pl-1 opacity-0 transition-opacity duration-100 group-hover/section:opacity-100 focus-within:opacity-100">
+          <div className="absolute inset-y-0 right-1 flex items-center pl-1 opacity-0 transition-opacity duration-100 group-hover/section:opacity-100 focus-within:opacity-100">
             {actions}
           </div>
         )}
