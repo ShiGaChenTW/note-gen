@@ -30,6 +30,7 @@ import useThreadsStore from '@/stores/threads'
 import { FileSidebar } from '../file'
 import { FileActions } from '../file/file-actions'
 import { SIDEBAR_ROW, SIDEBAR_ROW_ACTIVE } from '../sidebar-row'
+import { useVaultName } from './use-vault-name'
 
 const ICONS: Record<NavKey, ComponentType<{ className?: string }>> = {
   today: CalendarCheck,
@@ -192,16 +193,17 @@ function AgentSection() {
 }
 
 function VaultSection() {
-  const t = useTranslations('sidebarV3')
   const collapsed = useSidebarCollapse(state => state.vault)
   // Fork（almanac ALMNC-54.17）：點「我的筆記」開中間欄，列出整個 vault 的筆記。
   const rootListOpen = useNoteListStore(state => state.visible && state.folder === '')
+  // ALMNC-43.12：標題顯示筆記庫資料夾的實際名稱，取不到時用「我的筆記」。
+  const vaultName = useVaultName()
   return (
-    <section aria-label={t('vault')} className={cn('flex min-h-0 flex-col', collapsed ? 'shrink-0' : 'flex-1')}>
+    <section aria-label={vaultName} className={cn('flex min-h-0 flex-col', collapsed ? 'shrink-0' : 'flex-1')}>
       <SectionHeader
         section="vault"
         collapsed={collapsed}
-        title={t('vault')}
+        title={vaultName}
         actions={!collapsed && <FileActions />}
         onTitleClick={() => useNoteListStore.getState().show('')}
         titleActive={rootListOpen}

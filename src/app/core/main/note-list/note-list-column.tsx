@@ -15,6 +15,7 @@ import useNoteMarksStore, { selectWorkspaceMarks } from '@/stores/note-marks'
 import useSettingStore from '@/stores/setting'
 import useVaultIndexStore from '@/stores/vault-index'
 import { SIDEBAR_ROW } from '../sidebar-row'
+import { useVaultName } from '../sidebar-v3/use-vault-name'
 
 /** 每分鐘重算一次相對時間（「現在」→「1 分鐘前」）。 */
 function useNow() {
@@ -50,7 +51,9 @@ function NoteList() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [notes, revision, folder, pinned],
   )
-  const title = folder ? folderName(folder) : t('vault')
+  // ALMNC-43.12：根目錄標題與根目錄筆記的位置都用筆記庫名稱（和側欄檔案樹標題同一個）。
+  const vaultName = useVaultName()
+  const title = folder ? folderName(folder) : vaultName
 
   return (
     <aside
@@ -71,7 +74,7 @@ function NoteList() {
         <ul className="min-h-0 flex-1 overflow-y-auto p-1.5" role="list">
           {items.map(item => {
             const selected = item.path === activeFilePath
-            const meta = [item.folder || t('vault'), relativeTimeLabel(item.mtime, now, locale)].filter(Boolean).join(' · ')
+            const meta = [item.folder || vaultName, relativeTimeLabel(item.mtime, now, locale)].filter(Boolean).join(' · ')
             return (
               <li key={item.path}>
                 <button

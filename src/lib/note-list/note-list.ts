@@ -36,7 +36,7 @@ export function noteFolder(path: string): string {
   return parts.slice(0, -1).join('/')
 }
 
-/** 資料夾顯示名稱：路徑最後一段；根目錄（空字串）交給畫面端顯示「我的筆記」。 */
+/** 資料夾顯示名稱：路徑最後一段；根目錄（空字串）交給畫面端顯示筆記庫名稱（ALMNC-43.12）。 */
 export function folderName(folder: string): string {
   return trimSlashes(folder).split('/').pop() ?? ''
 }

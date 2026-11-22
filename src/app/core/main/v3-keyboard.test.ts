@@ -150,6 +150,22 @@ it('names the 我的筆記 collapse toggle apart from its title and paints the r
   useNoteListStore.setState({ visible: false })
 })
 
+// Fork（almanac ALMNC-43.12）：檔案樹標題顯示筆記庫資料夾名稱，切換筆記庫時跟著變；讀屏名稱一起換。
+it('titles the file tree with the vault folder name and follows workspace switches', async () => {
+  useSidebarCollapse.setState({ vault: false, agents: false })
+  useSettingStore.setState({ workspacePath: '/Users/scott/Documents/Almanac' })
+  await render(React.createElement(LeftSidebar))
+  await act(async () => useSidebarCollapse.setState({ vault: false, agents: false }))
+  const section = () => host.querySelector<HTMLElement>('[data-sidebar-v3] section:last-of-type')!
+  expect(section().getAttribute('aria-label')).toBe('Almanac')
+  expect(section().querySelector('button[aria-expanded]')!.getAttribute('aria-label')).toBe('收合Almanac')
+  expect(section().querySelector('button:not([aria-expanded])')!.textContent).toBe('Almanac')
+  await act(async () => useSettingStore.setState({ workspacePath: '/Users/scott/Personal/' }))
+  expect(section().getAttribute('aria-label')).toBe('Personal')
+  expect(section().querySelector('button[aria-expanded]')!.getAttribute('aria-label')).toBe('收合Personal')
+  useSettingStore.setState({ workspacePath: '' })
+})
+
 it('creates a new document from the first quick button', async () => {
   const create = await import('@/lib/new-doc/create')
   const spy = vi.spyOn(create, 'createNewDocument').mockResolvedValue('未命名.md')

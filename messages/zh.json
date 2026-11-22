@@ -8591,7 +8591,7 @@
     },
     "knowledge": {
       "title": "整理",
-      "subtitle": "时间轴、画布与标签，笔记文件树在左侧的「我的笔记」"
+      "subtitle": "时间轴、画布与标签，笔记文件树在左侧的「{vault}」"
     }
   },
   "organize": {

@@ -8591,7 +8591,7 @@
     },
     "knowledge": {
       "title": "Organize",
-      "subtitle": "Timeline, canvases and tags; the notes tree is in MyVault on the left"
+      "subtitle": "Timeline, canvases and tags; the notes tree is in {vault} on the left"
     }
   },
   "organize": {

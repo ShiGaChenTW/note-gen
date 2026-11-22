@@ -44,6 +44,7 @@ import { formatShortcutLabel } from './markdown/bottom-format-toolbar-items'
 import { WIKI_METADATA_NODE_NAME } from './markdown/wiki-metadata-tokenizer'
 import { useEditorUndoRedo } from './editor-undo-redo'
 import type { TabInfo } from './tab-bar'
+import { useVaultName } from '../sidebar-v3/use-vault-name'
 
 function useIsMac() {
   const [mac, setMac] = useState(false)
@@ -378,7 +379,8 @@ interface FileTimes { created: number | null, modified: number | null }
 
 function NoteInfoContent({ path, editor }: { path: string, editor: Editor | null }) {
   const t = useTranslations('editor.noteToolbar')
-  const tVault = useTranslations('sidebarV3')
+  // ALMNC-43.12：根目錄的筆記，資料夾欄顯示筆記庫名稱（和側欄檔案樹標題同一個）。
+  const vaultName = useVaultName()
   const tStats = useTranslations('settings.editor.stats')
   const locale = useLocale()
   const [times, setTimes] = useState<FileTimes | null>(null)
@@ -406,7 +408,7 @@ function NoteInfoContent({ path, editor }: { path: string, editor: Editor | null
   const folder = noteFolder(path)
   const rows: Array<[string, string]> = [
     [t('infoFileName'), fileName],
-    [t('infoFolder'), folder || tVault('vault')],
+    [t('infoFolder'), folder || vaultName],
     [t('infoCreated'), times ? formatTime(times.created) : '…'],
     [t('infoModified'), times ? formatTime(times.modified) : '…'],
     [t('infoLength'), `${tStats('characters', { count: statistics.characters })} · ${tStats('readingTime', { count: statistics.readingMinutes })}`],

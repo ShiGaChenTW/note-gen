@@ -8656,7 +8656,7 @@
     },
     "knowledge": {
       "title": "整理",
-      "subtitle": "時間軸、畫布與標籤，筆記檔案樹在左側的「我的筆記」"
+      "subtitle": "時間軸、畫布與標籤，筆記檔案樹在左側的「{vault}」"
     }
   },
   "organize": {
