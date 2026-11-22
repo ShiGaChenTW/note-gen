@@ -8850,7 +8850,10 @@
         "file": "檔案",
         "audio": "錄音",
         "todo": "待辦",
-        "prompt": "素材"
+        "prompt": "素材",
+        "email": "Email",
+        "rss": "RSS",
+        "meeting": "會議"
       },
       "listLabel": "資料源清單",
       "selectAll": "全選",
@@ -9005,6 +9008,16 @@
         "allUndecided": "這批 {name} 都判斷不出來，先暫停；請檢查模型設定",
         "packDone": "已整理好「{title}」那一包"
       }
+    },
+    "import": {
+      "email": "Email",
+      "emailAdded": "已匯入 {count} 封信，等你決定要不要處理",
+      "emailEmpty": "檔案裡沒有認得出來的信（支援 .eml 與 .mbox）",
+      "nothingNew": "都匯入過了，沒有新增",
+      "skipped": "{count} 則之前匯入過，已略過。",
+      "truncated": "共 {total} 封，只收最新的 {limit} 封。",
+      "failed": "匯入失敗",
+      "dropUnsupported": "可以拖進 .eml、.mbox 檔"
     }
   },
   "cleanup": {

@@ -20,6 +20,12 @@ vi.mock('@/db/v3-sources', () => ({
     fake.rows.set(source.id, source)
     return source
   },
+  addSourceIfAbsent: async (input: NewSourceInput, now: number) => {
+    if (fake.rows.has(input.id)) return undefined
+    const source = createSource(input, now)
+    fake.rows.set(source.id, source)
+    return source
+  },
   getSource: async (id: string) => fake.rows.get(id),
   listSources: async () => [...fake.rows.values()],
   countOutputsBySource: async () => new Map(),
@@ -121,6 +127,40 @@ describe('新增資料源（R1／R2）', () => {
     await actions.deleteFailedSource(id)
     expect(fake.rows.has(id)).toBe(false)
     expect(fake.judgements.has(id)).toBe(false)
+  })
+})
+
+describe('匯入的資料源（ALMNC-57：Email、RSS、會議逐字稿）', () => {
+  it('外部擷取：等你決定、不叫指揮官；初步判斷一則一則排隊做；同一個 id 再匯入會跳過', async () => {
+    let inFlight = 0
+    let maxInFlight = 0
+    fake.generate.mockImplementation(async () => {
+      inFlight++
+      maxInFlight = Math.max(maxInFlight, inFlight)
+      await new Promise(resolve => setTimeout(resolve, 0))
+      inFlight--
+      return '其他｜存成紀錄筆記'
+    })
+    const inputs = [
+      { id: 'src_email:a@x', kind: 'email' as const, content: '主旨 A\n\n內文', origin: 'inbox.mbox' },
+      { id: 'src_email:b@x', kind: 'email' as const, content: '主旨 B\n\n內文', origin: 'inbox.mbox' },
+    ]
+    const first = await actions.addImportedSources(inputs, 5000)
+    expect(first.added.map(source => source.id)).toEqual(['src_email:a@x', 'src_email:b@x'])
+    expect(first.skipped).toBe(0)
+    // 傳進來的順序就是清單順序：第一則的收集時間最新。
+    expect(first.added.map(source => source.collectedAt)).toEqual([5000, 4999])
+    expect(first.added.every(source => source.sourceType === 'external' && source.status === 'awaiting_decision')).toBe(true)
+    for (let i = 0; i < 20; i++) await settle()
+    expect(fake.kick).not.toHaveBeenCalled()
+    expect(fake.generate).toHaveBeenCalledTimes(2)
+    expect(maxInFlight).toBe(1)
+    expect(useWorkbenchStore.getState().judgements.get('src_email:b@x')).toMatchObject({ status: 'ready', type: '其他' })
+
+    const again = await actions.addImportedSources([inputs[1], { id: 'src_email:c@x', kind: 'email', content: '主旨 C' }], 6000)
+    expect(again.added.map(source => source.id)).toEqual(['src_email:c@x'])
+    expect(again.skipped).toBe(1)
+    fake.generate.mockImplementation(async () => '會議紀錄｜存成紀錄筆記＋拆出任務')
   })
 })
 

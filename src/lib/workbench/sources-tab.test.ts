@@ -4,7 +4,7 @@ import { createSource, type Source } from '@/lib/v3-model/source'
 import type { SourceJudgement } from './judgement'
 import {
   bridgeInput, buildSourceRows, captureSourceId, dayBucket, filterCounts, filterRows, isUserCapture, organisedSummary, pickState,
-  planHandToCommander, recordSourceId, sourceTitle, toggleAll, togglePick, waitingCount, type CaptureLike, type RecordLike,
+  planHandToCommander, recordSourceId, sourceDisplayKind, sourceTitle, toggleAll, togglePick, waitingCount, type CaptureLike, type RecordLike,
 } from './sources-tab'
 
 const NOW = new Date(2026, 10, 21, 10).getTime()
@@ -146,5 +146,15 @@ describe('ALMNC-54.10 初步判斷', () => {
     expect(byId['src:n'].judgement).toBeUndefined() // AC#4：沒有判斷，列照樣出現
     expect(byId['src:n'].status).toBe('wait')
     expect(byId['src:p'].judgement).toBeUndefined()
+  })
+})
+
+describe('sourceDisplayKind（ALMNC-57）', () => {
+  it('Email、RSS、會議有自己的類型字，看得出是從哪個入口進來的；不認得的當檔案', () => {
+    expect(sourceDisplayKind('email')).toBe('email')
+    expect(sourceDisplayKind('rss')).toBe('rss')
+    expect(sourceDisplayKind('meeting')).toBe('meeting')
+    expect(sourceDisplayKind('link')).toBe('web')
+    expect(sourceDisplayKind('legacy_note')).toBe('file')
   })
 })

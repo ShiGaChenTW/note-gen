@@ -8785,7 +8785,10 @@
         "file": "档案",
         "audio": "录音",
         "todo": "待办",
-        "prompt": "素材"
+        "prompt": "素材",
+        "email": "Email",
+        "rss": "RSS",
+        "meeting": "会议"
       },
       "listLabel": "资料源清单",
       "selectAll": "全选",
@@ -8940,6 +8943,16 @@
         "allUndecided": "这批 {name} 都判断不出来，先暂停；请检查模型设置",
         "packDone": "已整理好「{title}」那一包"
       }
+    },
+    "import": {
+      "email": "Email",
+      "emailAdded": "已导入 {count} 封邮件，等你决定要不要处理",
+      "emailEmpty": "文件里没有认得出来的邮件（支持 .eml 与 .mbox）",
+      "nothingNew": "都导入过了，没有新增",
+      "skipped": "{count} 条之前导入过，已跳过。",
+      "truncated": "共 {total} 封，只收最新的 {limit} 封。",
+      "failed": "导入失败",
+      "dropUnsupported": "可以拖进 .eml、.mbox 文件"
     }
   },
   "cleanup": {

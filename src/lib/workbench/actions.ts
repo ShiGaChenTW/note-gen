@@ -96,7 +96,7 @@ export async function resolveLegacyPack(packId: string): Promise<Undo> {
  * Fork（almanac ALMNC-54.10）：替一則等你決定的資料源做初步判斷（R1），存進 source_judgements 後重讀清單。
  * 本機模型（ollama）沒開、抓不到網頁都不會丟錯：沒有判斷、或標成擷取失敗。
  */
-export async function requestJudgement(source: Pick<Source, 'id' | 'kind' | 'content' | 'origin'>): Promise<SourceJudgement> {
+export async function requestJudgement(source: Pick<Source, 'id' | 'kind' | 'content' | 'origin'>, options: { refresh?: boolean } = {}): Promise<SourceJudgement> {
   const [judgements, { defaultLocalModel }] = await Promise.all([import('@/db/v3-source-judgements'), import('@/lib/local-model/default')])
   const model = await defaultLocalModel().catch(() => undefined)
   const previous = await judgements.getSourceJudgement(source.id).catch(() => undefined)
@@ -111,7 +111,7 @@ export async function requestJudgement(source: Pick<Source, 'id' | 'kind' | 'con
     },
     save: judgements.saveSourceJudgement,
   })
-  await refreshSources()
+  if (options.refresh !== false) await refreshSources()
   return result
 }
 
@@ -338,6 +338,55 @@ export async function addNewSource(request: NewSourceRequest): Promise<string> {
   })
   await refreshSources()
   return `src:${source.id}`
+}
+
+/** Fork（almanac ALMNC-57）：匯入的一則資料源。id 由原始識別決定（src_email:<Message-ID>、src_rss:<guid>…），重複匯入會跳過。 */
+export interface ImportedSourceInput {
+  id: string
+  kind: 'email' | 'rss' | 'meeting'
+  content: string
+  origin?: string
+}
+
+export interface ImportedSourcesResult {
+  /** 這次新增的資料源（照傳進來的順序）。 */
+  added: Source[]
+  /** 已經匯入過、這次跳過的數量。 */
+  skipped: number
+}
+
+/**
+ * Fork（almanac ALMNC-57）：Email、RSS、會議逐字稿匯入的資料源都是外部擷取（R1）：存成等你決定，背景做初步判斷。
+ * 一次可能好幾百則，所以初步判斷一則一則排隊做（不同時叫本機模型好幾百次），全部判斷完再重讀一次清單。
+ * 傳進來的順序就是清單上的順序（第一則最上面）：收集時間依序差 1 毫秒。
+ */
+export async function addImportedSources(inputs: readonly ImportedSourceInput[], now = Date.now()): Promise<ImportedSourcesResult> {
+  const db = await import('@/db/v3-sources')
+  const added: Source[] = []
+  let skipped = 0
+  for (const [index, input] of inputs.entries()) {
+    const source = await db.addSourceIfAbsent({
+      id: input.id,
+      sourceType: 'external',
+      kind: input.kind,
+      content: input.content,
+      origin: input.origin,
+      collector: 'scott',
+      collectedAt: now - index,
+    }, now)
+    if (source) added.push(source)
+    else skipped++
+  }
+  await refreshSources()
+  if (added.length) {
+    void (async () => {
+      for (const source of added) {
+        await requestJudgement(source, { refresh: false }).catch(error => console.warn('[judgement] failed:', error))
+      }
+      await refreshSources()
+    })()
+  }
+  return { added, skipped }
 }
 
 // —— 檯面 ——

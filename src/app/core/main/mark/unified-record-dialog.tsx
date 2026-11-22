@@ -1,7 +1,7 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
-import { FileAudio, FileUp, ImagePlus, Link2, Mic, Plus, ScanText, Square } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState, type DragEvent, type KeyboardEvent, type ReactNode } from 'react'
+import { FileAudio, FileUp, ImagePlus, Link2, Mail, Mic, Plus, ScanText, Square } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -27,6 +27,8 @@ import { addNewSource } from '@/lib/workbench/actions'
 import { newSourceType } from '@/lib/workbench/judgement'
 import { openAddSource, openWorkbench } from '@/lib/workbench/open'
 import { useCommanderName } from '@/lib/workbench/use-workbench'
+import { MBOX_LIMIT } from '@/lib/source-import/email'
+import { extensionOf, importEmailFiles, pickImportFiles, readDroppedFiles, type ImportFile } from '@/lib/source-import/import-files'
 
 const typeIcon: Record<UnifiedRecordType, ReactNode> = {
   link: <Link2 />,
@@ -198,6 +200,46 @@ export function UnifiedRecordDialog() {
     openWorkbench('sources', rowId)
   }
 
+  // Fork（almanac ALMNC-57）：資料源模式的檔案入口。選檔或拖進對話框；一封信一則外部資料源（等你決定），重複的跳過。
+  const runImport = async (loadFiles: () => Promise<ImportFile[]>) => {
+    if (saving) return
+    setSaving(true)
+    try {
+      const files = await loadFiles()
+      if (!files.length) return
+      const summary = await importEmailFiles(files)
+      if (!summary.total) {
+        toast({ title: t('common.warning'), description: t('workbench.import.emailEmpty'), variant: 'destructive' })
+        return
+      }
+      const notes = [
+        summary.skipped > 0 ? t('workbench.import.skipped', { count: summary.skipped }) : '',
+        summary.dropped > 0 ? t('workbench.import.truncated', { total: summary.total - summary.duplicates, limit: MBOX_LIMIT }) : '',
+      ].filter(Boolean).join(' ')
+      toast({
+        title: summary.added ? t('workbench.import.emailAdded', { count: summary.added }) : t('workbench.import.nothingNew'),
+        ...(notes ? { description: notes } : {}),
+      })
+      setOpen(false)
+      openWorkbench('sources', summary.firstRowId)
+    } catch (error) {
+      toast({ title: t('workbench.import.failed'), description: error instanceof Error ? error.message : String(error), variant: 'destructive' })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const acceptsFileDrop = (event: DragEvent<HTMLDivElement>) => target === 'source' && Array.from(event.dataTransfer.types).includes('Files')
+
+  const handleFileDrop = (event: DragEvent<HTMLDivElement>) => {
+    if (!acceptsFileDrop(event)) return
+    event.preventDefault()
+    const files = Array.from(event.dataTransfer.files)
+    const emails = files.filter(file => ['eml', 'mbox'].includes(extensionOf(file.name)))
+    if (emails.length) void runImport(() => readDroppedFiles(emails))
+    else if (files.length) toast({ title: t('workbench.import.dropUnsupported') })
+  }
+
   const triggerAudioFile = () => {
     setOpen(false)
     emitter.emit('toolbar-shortcut-recording-file')
@@ -326,7 +368,11 @@ export function UnifiedRecordDialog() {
             <DialogDescription className="text-xs">{target === 'source' ? t('workbench.add.subtitle') : t('record.mark.unified.subtitle')}</DialogDescription>
           </div>
         </DialogHeader>
-        <div className="space-y-3">
+        <div
+          className="space-y-3"
+          onDragOver={event => { if (acceptsFileDrop(event)) event.preventDefault() }}
+          onDrop={handleFileDrop}
+        >
           <Textarea
             ref={inputRef}
             value={text}
@@ -346,6 +392,10 @@ export function UnifiedRecordDialog() {
             <Button type="button" variant="ghost" size="sm" disabled={saving} onClick={() => triggerMedia('recording')}><Mic />{t('record.mark.type.recording')}</Button>
             <Button type="button" variant="ghost" size="sm" disabled={saving} onClick={() => triggerMedia('scan')}><ScanText />{t('record.mark.type.screenshot')}</Button>
             <Button type="button" variant="ghost" size="sm" disabled={saving} onClick={triggerAudioFile}><FileAudio />{t('record.mark.unified.selectAudioFile')}</Button>
+            {target === 'source' && (
+              // Mail.app 匯出的 .mbox 是資料夾，裡面的「mbox」檔沒有副檔名，所以不限制副檔名（看內容判斷）。
+              <Button type="button" variant="ghost" size="sm" disabled={saving} onClick={() => void runImport(() => pickImportFiles())}><Mail />{t('workbench.import.email')}</Button>
+            )}
           </div>
           <div className="flex flex-wrap items-center gap-3 rounded-lg bg-muted/60 px-3 py-2 text-xs">
             <div className="flex min-w-0 items-center gap-2 font-medium">{typeIcon[resolvedType]}<span>{t(selection === 'auto' ? 'record.mark.unified.detected' : 'record.mark.unified.manual', { type: typeLabel })}</span></div>

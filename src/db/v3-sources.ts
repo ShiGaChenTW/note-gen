@@ -165,6 +165,25 @@ export async function addSource(input: Omit<NewSourceInput, 'id'> & { id?: strin
   return source
 }
 
+/**
+ * Fork（almanac ALMNC-57）：匯入的資料源（Email、RSS、會議逐字稿）用由原始識別決定的 id（src_email:<Message-ID> 等），
+ * 已經有同一個 id 就跳過（on conflict do nothing），回傳 undefined；同一封信、同一篇文章再匯入不會重複。
+ */
+export async function addSourceIfAbsent(input: NewSourceInput, now = Date.now()): Promise<Source | undefined> {
+  await initV3SourceDb()
+  const source = createSource(input, now)
+  const db = await getDb()
+  const result = await db.execute(
+    `insert into sources
+       (id, source_type, kind, content, origin, collected_at, collector, status, status_changed_at,
+        version, previous_id, locked_at, archived_at, created_at, updated_at)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+     on conflict(id) do nothing`,
+    sourceToValues(source)
+  )
+  return Number(result.rowsAffected ?? 0) > 0 ? source : undefined
+}
+
 async function requireSource(id: string): Promise<Source> {
   const source = await getSource(id)
   if (!source) throw new Error(`找不到資料源：${id}`)

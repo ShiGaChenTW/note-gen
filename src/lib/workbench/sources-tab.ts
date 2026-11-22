@@ -12,8 +12,11 @@ export type SourceRowStatus = 'wait' | 'todo' | 'ing' | 'edited' | 'done' | 'no'
 export const SOURCE_FILTERS = ['all', 'wait', 'todo', 'done', 'no'] as const
 export type SourceFilter = typeof SOURCE_FILTERS[number]
 
-/** 顯示用的內容形式（v14 的類型字：網頁、文字、截圖、插圖、檔案、錄音、待辦、素材）。 */
-export type SourceDisplayKind = 'web' | 'text' | 'shot' | 'img' | 'file' | 'audio' | 'todo' | 'prompt'
+/**
+ * 顯示用的內容形式（v14 的類型字：網頁、文字、截圖、插圖、檔案、錄音、待辦、素材）。
+ * Fork（almanac ALMNC-57）：加上 Email、RSS、會議，資料源分頁看得出是從哪個入口進來的。
+ */
+export type SourceDisplayKind = 'web' | 'text' | 'shot' | 'img' | 'file' | 'audio' | 'todo' | 'prompt' | 'email' | 'rss' | 'meeting'
 
 export type SourceRowOrigin = 'source' | 'record' | 'capture'
 
@@ -93,7 +96,13 @@ export function captureSourceId(captureId: string): string {
 }
 
 const SOURCE_KIND: Record<string, SourceDisplayKind> = {
-  text: 'text', link: 'web', image: 'shot', file: 'file', transcript: 'audio', voice: 'audio', email: 'text', todo: 'todo', prompt: 'prompt',
+  text: 'text', link: 'web', image: 'shot', file: 'file', transcript: 'audio', voice: 'audio', email: 'email', todo: 'todo', prompt: 'prompt',
+  rss: 'rss', meeting: 'meeting',
+}
+
+/** V3 資料源的形式 → 顯示用的類型字（不認得的當檔案）。 */
+export function sourceDisplayKind(kind: string): SourceDisplayKind {
+  return SOURCE_KIND[kind] ?? 'file'
 }
 const RECORD_KIND: Record<RecordLike['type'], SourceDisplayKind> = {
   scan: 'shot', text: 'text', image: 'img', link: 'web', file: 'file', recording: 'audio', todo: 'todo', 'prompt-draft': 'prompt',
@@ -138,7 +147,7 @@ function sourceRow(source: Source, input: SourcesTabInput): SourceListRow {
   return {
     id: `src:${source.id}`,
     origin: 'source',
-    kind: SOURCE_KIND[source.kind] ?? 'file',
+    kind: sourceDisplayKind(source.kind),
     title,
     excerpt: excerptOf(readable, title),
     content: readable,

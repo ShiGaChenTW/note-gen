@@ -8785,7 +8785,10 @@
         "file": "File",
         "audio": "Audio",
         "todo": "To-do",
-        "prompt": "Material"
+        "prompt": "Material",
+        "email": "Email",
+        "rss": "RSS",
+        "meeting": "Meeting"
       },
       "listLabel": "Sources",
       "selectAll": "Select all",
@@ -8940,6 +8943,16 @@
         "allUndecided": "{name} couldn’t decide anything in this batch, so it paused. Check the model settings",
         "packDone": "Finished the pack starting with “{title}”"
       }
+    },
+    "import": {
+      "email": "Email",
+      "emailAdded": "Imported {count, plural, one {# email} other {# emails}}; waiting for your decision",
+      "emailEmpty": "No emails found in the file (.eml and .mbox are supported)",
+      "nothingNew": "Everything was already imported",
+      "skipped": "{count} already imported, skipped.",
+      "truncated": "{total} emails in total; only the newest {limit} were imported.",
+      "failed": "Import failed",
+      "dropUnsupported": "You can drop .eml or .mbox files here"
     }
   },
   "cleanup": {
