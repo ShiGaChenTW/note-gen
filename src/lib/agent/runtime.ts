@@ -654,6 +654,11 @@ function repairEditorWriteArgs(
   return repaired ? { ...repairedArgs, operations } : repairedArgs
 }
 
+// Fork（almanac ALMNC-54.7）：角色的工作指示與記憶（例如右側欄的指揮官）放進系統提示詞，排在記憶前面。
+function withRolePrompt(rolePrompt: string | undefined, memoryText: string) {
+  return [rolePrompt?.trim(), memoryText].filter(Boolean).join('\n\n')
+}
+
 function selectToolsForContext(
   context: AgentContextSnapshot,
   tools: AgentTool[],
@@ -850,7 +855,7 @@ export class AgentRuntime {
       context,
       tools,
       customSystemPrompt,
-      memoryContextService.formatMemoryContext(memoryContext)
+      withRolePrompt(input.rolePrompt, memoryContextService.formatMemoryContext(memoryContext))
     )
     const baseMessages = this.contextManager.prepareMessages(input.messages || [])
       .map(normalizeBaseMessage)
@@ -1320,7 +1325,7 @@ export class AgentRuntime {
         context,
         tools,
         customSystemPrompt,
-        memoryContextService.formatMemoryContext(memoryContext)
+        withRolePrompt(input.rolePrompt, memoryContextService.formatMemoryContext(memoryContext))
       )
       messages[0] = { role: 'system', content: systemPrompt }
 

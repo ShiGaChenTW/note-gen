@@ -275,6 +275,8 @@ export interface AgentRuntimeInput {
   transformTools?: (tools: AgentTool[]) => AgentTool[]
   /** Return a refusal before the runtime parses arguments, previews, or executes a tool call. */
   authorizeToolCall?: (toolName: string, offered: boolean) => Promise<AgentToolResult | undefined>
+  /** Fork（almanac ALMNC-54.7）：角色的工作指示與記憶（右側欄的指揮官），附在系統提示詞裡；不取代自訂系統提示詞。 */
+  rolePrompt?: string
   /** #57：「用這個提示詞開新對話」設定的系統提示詞，取代（不是附加於）全域的自訂系統提示詞設定。 */
   systemPromptOverride?: string
 }

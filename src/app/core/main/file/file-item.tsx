@@ -5,9 +5,7 @@ import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator,
 import { Input } from "@/components/ui/input";
 import { Kbd } from "@/components/ui/kbd";
 import useArticleStore, { DirTree } from "@/stores/article";
-import { BaseDirectory, exists, rename, writeTextFile } from "@tauri-apps/plugin-fs";
-import { moveSelfHostedWorkspacePath } from '@/lib/self-hosted-sync/files'
-import { withWorkspacePathMove } from '@/lib/sync/workspace-path-moves'
+import { exists, writeTextFile } from "@tauri-apps/plugin-fs";
 import { Copy, Download, ExternalLink, File, FileCode, FileJson, FileLock, FileText, FileUp, FolderOpen, ImageIcon, LoaderCircle, TabletSmartphone, Trash2 } from "lucide-react"
 import { useEinkPinAction } from "@/components/fork/eink-pin"
 import { useEffect, useRef, useState, useCallback } from "react";
@@ -38,12 +36,8 @@ import { Badge } from '@/components/ui/badge'
 import { getFileTreeSyncStatus, getSyncConfiguration, validateFileTreeName, type FileTreeSyncStatus } from "./file-tree-action-policy";
 import { useSettingsDialogStore } from "@/stores/settings-dialog";
 import { FileTreeDecorations, type FileTreeRagStatus } from "./file-tree-decorations";
-import { rewriteWorkspaceMarkdownMediaPaths } from '@/lib/markdown-media-path'
-import { requestLinkRewrite } from '../link-rewrite/link-rewrite-store' // Fork L7
-import {
-  prepareActiveEditorDeactivationDurably,
-  prepareActiveEditorPathMutationDurably,
-} from '@/lib/editor-deactivation'
+import { prepareActiveEditorDeactivationDurably } from '@/lib/editor-deactivation'
+import { renameWorkspaceFile } from './rename-workspace-file'
 import { canOpenInEditorWindow, openEditorWindow } from '@/lib/editor-windows'
 import { useFileDeletion } from './use-file-deletion'
 import useFileDeletionStore, { isFileDeletionPending } from '@/stores/file-deletion'
@@ -119,7 +113,6 @@ export function FileItem({
     checkFileVectorIndexed,
     cleanTabsByDeletedFile,
     cleanTabsByDeletedFolder,
-    syncOpenTabsForPathChange,
     setSelectedFilePaths,
     setEntryLoading,
     setEntrySyncError,
@@ -136,7 +129,6 @@ export function FileItem({
     checkFileVectorIndexed: state.checkFileVectorIndexed,
     cleanTabsByDeletedFile: state.cleanTabsByDeletedFile,
     cleanTabsByDeletedFolder: state.cleanTabsByDeletedFolder,
-    syncOpenTabsForPathChange: state.syncOpenTabsForPathChange,
     setSelectedFilePaths: state.setSelectedFilePaths,
     setEntryLoading: state.setEntryLoading,
     setEntrySyncError: state.setEntrySyncError,
@@ -406,14 +398,7 @@ export function FileItem({
         targetRelativePath: renamePlan.targetRelativePath,
       })
       const { displayName, operation, targetRelativePath } = renamePlan
-      if (!await prepareActiveEditorDeactivationDurably(activeFilePath)) {
-        setTimeout(() => inputRef.current?.focus(), 0)
-        return
-      }
-      if (
-        operation === 'rename'
-        && !await prepareActiveEditorPathMutationDurably(activeFilePath, [path])
-      ) {
+      if (operation === 'create' && !await prepareActiveEditorDeactivationDurably(activeFilePath)) {
         setTimeout(() => inputRef.current?.focus(), 0)
         return
       }
@@ -434,70 +419,13 @@ export function FileItem({
       }
       // 确定是重命名现有文件还是创建新文件
       if (operation === 'rename') {
-        // 重命名现有文件
-        // 获取源路径和目标路径
-        const oldPathOptions = await getFilePathOptions(path)
-        const newPathOptions = await getFilePathOptions(targetRelativePath)
-        const targetExists = workspace.isCustom
-          ? await exists(newPathOptions.path)
-          : await exists(newPathOptions.path, { baseDir: newPathOptions.baseDir })
-        if (targetExists) {
-          setRenameError(t('error.fileExists'))
+        // Fork（almanac ALMNC-54.16）：改名流程抽到 rename-workspace-file.ts，和 V3 標題欄位共用。
+        const result = await renameWorkspaceFile(path, targetRelativePath, { onMoved: () => setIsEditing(false) })
+        if (result === 'exists') setRenameError(t('error.fileExists'))
+        if (result === 'busy') setRenameError(tCommon('loading'))
+        if (result !== 'renamed') {
           setTimeout(() => inputRef.current?.focus(), 0)
           return
-        }
-        
-        // 根据工作区类型执行重命名操作
-        const renameOperationId = useArticleStore.getState().beginFileTreeRename(path, targetRelativePath)
-        if (!renameOperationId) {
-          setRenameError(tCommon('loading'))
-          return
-        }
-        try {
-          await withWorkspacePathMove(path, targetRelativePath, async () => {
-            if (await moveSelfHostedWorkspacePath(path, targetRelativePath)) {
-              // Rust journal already completed the atomic move.
-            } else if (workspace.isCustom) {
-              await rename(oldPathOptions.path, newPathOptions.path)
-            } else {
-              await rename(oldPathOptions.path, newPathOptions.path, {
-                newPathBaseDir: BaseDirectory.AppData,
-                oldPathBaseDir: BaseDirectory.AppData
-              })
-            }
-            await syncOpenTabsForPathChange(path, targetRelativePath, false)
-            try {
-              await rewriteWorkspaceMarkdownMediaPaths([{
-                sourcePath: path,
-                targetPath: targetRelativePath,
-              }])
-            } catch (error) {
-              if (await moveSelfHostedWorkspacePath(targetRelativePath, path)) {
-                // Rust journal already completed the rollback.
-              } else if (workspace.isCustom) {
-                await rename(newPathOptions.path, oldPathOptions.path)
-              } else {
-                await rename(newPathOptions.path, oldPathOptions.path, {
-                  newPathBaseDir: BaseDirectory.AppData,
-                  oldPathBaseDir: BaseDirectory.AppData,
-                })
-              }
-              await syncOpenTabsForPathChange(targetRelativePath, path, false)
-              throw error
-            }
-            useArticleStore.getState().completeFileTreeRename(path, targetRelativePath, renameOperationId)
-            setIsEditing(false)
-          })
-          const { renameVectorDocumentsByFilename } = await import('@/db/vector')
-          await renameVectorDocumentsByFilename(path, targetRelativePath)
-          // Fork L7：改名成功後詢問是否改寫連入的連結；內部自行 catch，不影響上面的改名結果
-          await requestLinkRewrite([{ sourcePath: path, targetPath: targetRelativePath }])
-        } catch (error) {
-          setRenameError(error instanceof Error ? error.message : String(error))
-          setTimeout(() => inputRef.current?.focus(), 0)
-          return
-        } finally {
-          useArticleStore.getState().finishFileTreeRename(path, targetRelativePath, renameOperationId)
         }
       } else {
         // 创建新文件

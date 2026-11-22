@@ -169,7 +169,8 @@ export function TitleBar() {
         data-tauri-drag-region
       >
         <div id="onboarding-target-record-toolbar" className="flex items-center gap-0.5 px-2 shrink-0" data-tauri-drag-region="false">
-          <UnifiedRecordButton compact />
+          {/* Fork（almanac ALMNC-54.18）：V3 左上＋改開新增資料源；classic 照舊開記錄對話框 */}
+          <UnifiedRecordButton compact target={v3 ? 'source' : undefined} />
         </div>
 
         <PluginTitleBar location="title-bar-left" />

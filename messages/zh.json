@@ -1,27 +1,29 @@
 {
   "agents": {
-    "title": "代理人",
-    "description": "设置每个代理人可用的工具。笔记提案会进入审核队列。",
-    "loading": "正在加载代理人…",
-    "empty": "还没有代理人。",
-    "add": "添加代理人",
+    "title": "伙伴",
+    "description": "设置每位伙伴可用的工具。笔记提案会进入工作台。",
+    "loading": "正在加载伙伴…",
+    "empty": "还没有伙伴。",
+    "add": "添加伙伴",
     "edit": "编辑",
-    "name": "名称",
+    "name": "本名",
     "role": "角色",
+    "domain": "负责领域",
+    "domainPlaceholder": "例如：工业工程",
     "allowedTools": "允许使用的工具",
     "enabled": "启用",
     "disabled": "停用",
     "save": "保存",
     "saving": "保存中…",
     "cancel": "取消",
-    "loadError": "无法加载代理人设置。",
-    "saveError": "无法保存代理人设置。",
+    "loadError": "无法加载伙伴设置。",
+    "saveError": "无法保存伙伴设置。",
     "roles": {
-      "organizer": "整理员",
-      "scheduler": "排程员",
+      "commander": "指挥官",
+      "expert": "专家",
+      "secretary": "秘书",
       "researcher": "研究员",
-      "reviewer": "回顾员",
-      "custom": "自定义"
+      "expertOf": "{domain}专家"
     },
     "tools": {
       "note_list_files": "列出笔记",
@@ -29,6 +31,56 @@
       "calendar_read_day": "读取单日日历",
       "note_create_file": "提案新增笔记",
       "note_update_file": "提案修改笔记"
+    },
+    "roleTaken": "这个角色只能有一位，已经有人担任。",
+    "domainRequired": "专家要填写负责领域。",
+    "memory": {
+      "title": "Agent 设置区",
+      "description": "每个角色的个别记忆、共用工作记忆和你的偏好。数据存在系统内部，不放进笔记库。",
+      "agent": "角色",
+      "soul": "soul.md（个性）",
+      "soulHint": "只有你能修改。",
+      "rules": "rules.md（工作规则）",
+      "rulesHint": "agent 想修改时会送提案给你。",
+      "workNotes": "工作笔记",
+      "workNotesHint": "agent 从经验学到的做事偏好，不记领域内容。",
+      "template": "目前显示的是模板，保存后才会成为正式内容。",
+      "save": "保存",
+      "saving": "保存中…",
+      "saved": "已保存。",
+      "saveError": "无法保存。",
+      "loadError": "无法加载 Agent 设置区。",
+      "context": "目前脉络",
+      "contextHint": "由指挥官维护，你也可以直接修改。只放名称和链接。",
+      "projects": "进行中的项目（最多 10 个，一行一个：名称 | 链接）",
+      "weeklyFocus": "本周重点（最多 5 项，一行一项：名称 | 链接）",
+      "people": "常出现的人（一行一位）",
+      "tooManyProjects": "进行中的项目最多 10 个。",
+      "tooManyFocus": "本周重点最多 5 项。",
+      "tooManyPeople": "常出现的人最多 20 位。",
+      "titleRequired": "每一行都要有名称。",
+      "titleTooLong": "名称最多 80 字。",
+      "activity": "活动记录",
+      "activityHint": "系统自动写入，只能新增，不能修改。超过 90 天会归档。",
+      "activityEmpty": "还没有活动记录。",
+      "correctsEntry": "更正 #{id}",
+      "sourceConversation": "对话 {ref}",
+      "sourceProposal": "提案 {ref}",
+      "scott": "Scott",
+      "preferences": "Scott 的偏好",
+      "preferencesHint": "所有 agent 共读，只有你能修改。例如回复语言、摘要长度。",
+      "actions": {
+        "instructed": "交代",
+        "drafted": "起草",
+        "proposed": "提案",
+        "accepted": "接受",
+        "rejected": "放弃",
+        "created": "新增",
+        "updated": "修改",
+        "linked": "链接",
+        "reported": "回报",
+        "corrected": "更正"
+      }
     }
   },
   "agentDiffNavigation": {
@@ -163,7 +215,7 @@
     "quit": "退出 NoteGen"
   },
   "today": {
-    "title": "今日",
+    "title": "今天",
     "summary": "今天到期 {today} 项，逾期 {overdue} 项",
     "greeting": {
       "morning": "早上好",
@@ -194,7 +246,7 @@
     "mits": "三件 MIT · 完成 {done} / {total}",
     "done": "已完成",
     "agenda": {
-      "title": "今日进程",
+      "title": "今天的进程",
       "sources": "锚点时段 · 有时间的任务 · 日历",
       "empty": "今天还没有时段或有时间的任务",
       "showPast": "已过 {count} 个时段 · 展开",
@@ -250,7 +302,7 @@
       "action": "开始复盘"
     },
     "status": {
-      "open": "今日",
+      "open": "今天",
       "need": "需处理 {count}",
       "aria": "需处理 {count} 项，打开首页"
     },
@@ -283,10 +335,10 @@
     "quickAdd": {
       "label": "快速添加任务",
       "placeholder": "买菜 @明天 9am !high #家",
-      "hint": "@日期、时间、!优先级、#标签，按 Enter 写入今日笔记",
+      "hint": "@日期、时间、!优先级、#标签，按 Enter 写入今天的笔记",
       "needTitle": "再输入任务内容",
       "preview": "将添加",
-      "added": "已添加「{name}」到今日笔记",
+      "added": "已添加「{name}」到今天的笔记",
       "priority": {
         "highest": "最高",
         "high": "高",
@@ -1698,20 +1750,20 @@
       "title": "日记",
       "desc": "设置每日笔记的位置、文件名格式和模板。NoteGen 与 Obsidian 使用相同的文件，不会另外保存数据。",
       "sections": {
-        "today": "今日笔记",
+        "today": "今天的笔记",
         "location": "位置与文件名",
         "templates": "模板",
         "reminders": "提醒"
       },
       "open": {
-        "button": "打开今日笔记",
+        "button": "打开今天的笔记",
         "preview": "今天的笔记：{path}",
-        "created": "已根据模板创建今日笔记",
-        "opened": "已打开今日笔记",
-        "error": "无法打开今日笔记"
+        "created": "已根据模板创建今天的笔记",
+        "opened": "已打开今天的笔记",
+        "error": "无法打开今天的笔记"
       },
       "openOnLaunch": {
-        "title": "启动时打开今日笔记",
+        "title": "启动时打开今天的笔记",
         "desc": "每次启动应用时打开今天的笔记；不存在时根据模板创建。"
       },
       "dailyFolder": {
@@ -1725,7 +1777,7 @@
       },
       "inboxFolder": {
         "title": "Inbox 文件夹",
-        "desc": "收件箱的位置，今日页会提醒积压的笔记。"
+        "desc": "收件箱的位置，“今天”页会提醒积压的笔记。"
       },
       "templatesDesc": "模板支持 '{{date}}'、'{{date:FORMAT}}'、'{{time}}'、'{{weekday}}'、'{{title}}'、'{{random:笔记路径}}'。",
       "defaultTemplate": {
@@ -3892,6 +3944,14 @@
         "title": "全局快捷键",
         "desc": "这些快捷键由系统注册，NoteGen 不在前台时也可能触发。"
       },
+      "workbenchKeys": {
+        "title": "工作台单键",
+        "desc": "工作台开着、没在打字时，按一个字母就能做事。",
+        "singleKeys": {
+          "title": "N 新增资料源、T 新增对话",
+          "desc": "只在工作台画面开着时有效。关掉后请用侧栏的按钮。"
+        }
+      },
       "editorShortcuts": {
         "title": "编辑器快捷键",
         "desc": "这些快捷键只在 Markdown 编辑器聚焦时生效。",
@@ -4287,6 +4347,47 @@
           "unsupported": "不是网页文章"
         }
       }
+    },
+    "rss": {
+      "title": "RSS 订阅",
+      "desc": "粘贴 RSS 或 Atom 网址（网站首页也可以，会自动找 feed）。App 开着时每 6 小时抓一次、启动时补抓一次，新文章存成资料源等你决定；第一次只收最新 10 篇。",
+      "urlLabel": "Feed 网址",
+      "urlPlaceholder": "https://example.com/feed.xml",
+      "nameLabel": "名称",
+      "namePlaceholder": "名称（可省略，默认用 feed 标题）",
+      "subscribe": "订阅",
+      "subscribing": "订阅中…",
+      "refreshNow": "立即更新",
+      "refreshing": "更新中…",
+      "loading": "正在加载订阅…",
+      "loadError": "读不到订阅列表。",
+      "empty": "还没有订阅。",
+      "renameLabel": "「{name}」的名称",
+      "pause": "暂停",
+      "resume": "继续",
+      "delete": "删除",
+      "paused": "已暂停",
+      "never": "还没抓过",
+      "lastFetched": "上次更新 {time}，新增 {count} 篇",
+      "lastError": "上次错误（{time}）：{message}",
+      "subscribed": "已订阅「{name}」，收进 {count} 篇",
+      "refreshed": "已更新，新增 {count} 篇",
+      "refreshedWithErrors": "已更新，新增 {count} 篇；{failed} 个订阅抓取失败",
+      "deleted": "已删除「{name}」（收进来的资料源不会删除）",
+      "duplicate": "已经订阅过「{name}」",
+      "errors": {
+        "http": "服务器响应 {detail}",
+        "not_feed": "这个网址不是 RSS 或 Atom feed",
+        "timeout": "连接超时",
+        "network": "连不上：{detail}",
+        "invalid_url": "网址格式不对",
+        "unknown": "抓取失败：{detail}"
+      },
+      "undo": "复原",
+      "deleteError": "没有删掉「{name}」，请再试一次",
+      "pauseError": "没有暂停「{name}」，请再试一次",
+      "resumeError": "没有继续「{name}」，请再试一次",
+      "restoreError": "没有复原「{name}」，请重新订阅"
     }
   },
   "bases": {
@@ -4827,19 +4928,20 @@
         "summary": "对话摘要",
         "more": "更多对话操作",
         "sendToBackground": "改为后台任务",
-        "backgroundRequiresDelegate": "切到「交办」即可将草稿发送到后台执行。",
+        "backgroundRequiresDelegate": "切到「处理」就能将草稿送到后台执行。",
         "scrollToEnd": "滚动到对话底部",
         "usagePercent": "{percent}%",
         "mode": {
           "label": "对话模式",
-          "shortcut": "按 Tab 在「问」与「交办」之间切换",
+          "shortcut": "按 Tab 在「问」与「处理」之间切换",
           "ask": "问",
-          "delegate": "交办",
+          "delegate": "处理",
           "readOnlyHint": "只回答，不修改文件",
           "ask-before-edit": "修改前先问我",
           "auto-edit": "自动修改",
           "askPlaceholder": "问这篇笔记任何事",
-          "delegatePlaceholder": "交代一件事，例如：把待办移到最上面"
+          "delegatePlaceholder": "交代一件事，例如：明天 10:00 跟 A 开会",
+          "processHint": "改动会变成提案；你交代的任务和行程直接加上"
         },
         "empty": {
           "ask": {
@@ -4861,8 +4963,8 @@
             }
           },
           "delegate": {
-            "title": "交办一件事给我",
-            "description": "我会列出步骤，并按照你选择的权限处理文件。",
+            "title": "交给指挥官处理",
+            "description": "{name}：改动笔记会先变成提案，等你接受；你交代的任务和行程直接加上。",
             "prompts": {
               "first": {
                 "label": "整理这篇的重点",
@@ -4899,10 +5001,32 @@
           "file": "要修改 {name}，可以吗？",
           "files": "要修改 {count} 个文件，可以吗？",
           "apply": "可以，应用",
-          "deny": "不要",
+          "deny": "放弃",
           "showDiff": "查看改动",
           "hideDiff": "收起改动",
           "fileList": "查看文件列表"
+        },
+        "commander": {
+          "origin": "{agent}（对话）"
+        },
+        "router": {
+          "ask": "这句要交给谁？",
+          "askUnavailable": "本机模型没有开，先问你：这句要交给谁？",
+          "routes": {
+            "schedule": "{name}（日程）",
+            "process": "{name}（处理）",
+            "query": "{name}（查询）",
+            "preference": "存成偏好"
+          },
+          "suggested": "建议",
+          "pickExpert": "要问哪位专家？",
+          "preferenceConfirm": "存成你的偏好：「{line}」？",
+          "savePreference": "存起来",
+          "notPreference": "交给 {name} 处理",
+          "cancel": "取消",
+          "saved": "已存进你的偏好",
+          "alreadySaved": "偏好里已经有这一句",
+          "saveFailed": "偏好没有存成功"
         }
       },
       "condensing": "正在压缩上下文...",
@@ -6915,6 +7039,40 @@
     "description": "点击选择记录工具，快速创建记录"
   },
   "editor": {
+    "bottomToolbar": {
+      "label": "格式工具栏",
+      "more": "更多格式"
+    },
+    "noteToolbar": {
+      "label": "笔记工具栏",
+      "back": "返回",
+      "forward": "前进",
+      "find": "在笔记中查找",
+      "tags": "标签",
+      "noTags": "还没有标签",
+      "addTag": "添加标签，按 Enter",
+      "removeTag": "移除 {tag}",
+      "tagsReadOnly": "标签格式较复杂，请在属性卡片的源码中修改",
+      "pin": "置顶",
+      "unpin": "取消置顶",
+      "favorite": "收藏",
+      "unfavorite": "取消收藏",
+      "info": "笔记信息",
+      "infoFileName": "文件名",
+      "infoFolder": "文件夹",
+      "infoCreated": "创建时间",
+      "infoModified": "修改时间",
+      "infoLength": "字数",
+      "command": "命令面板",
+      "more": "更多",
+      "sendToCommander": "发送给指挥官",
+      "sentToCommander": "已发送给指挥官",
+      "sentNewVersion": "内容有更新，已把新版本发送给指挥官",
+      "alreadySent": "这篇已经发送过了，内容没有变",
+      "emptyNote": "这篇笔记是空的，没有发送",
+      "sendFailed": "发送给指挥官失败",
+      "saveBeforeSendFailed": "尚未保存的修改无法写入文件，所以没有发送"
+    },
     "statusBar": {
       "documentActions": {
         "copy": "复制",
@@ -7298,6 +7456,13 @@
       "confirm": "确认",
       "committed": "已建立新的提示词版本",
       "commitFailed": "建立版本失败"
+    },
+    "docTitle": {
+      "label": "标题",
+      "placeholder": "未命名",
+      "renameFailed": "没有改成这个标题",
+      "fileExists": "已有同名文件，请换一个标题",
+      "busy": "这个文件正在处理，请稍后再试"
     }
   },
   "editorWindow": {
@@ -7573,7 +7738,7 @@
     "moveUp": "上移",
     "moveDown": "下移",
     "showOnStartup": "启动时显示首页",
-    "todayMoved": "今日页已移到首页的“日程”卡片。",
+    "todayMoved": "“今天”页已移到首页的“日程”卡片。",
     "empty": "所有卡片都已关闭。",
     "capture": {
       "label": "快速记录",
@@ -7585,9 +7750,9 @@
     },
     "needs": {
       "title": "需要你处理",
-      "review": "待审草稿",
+      "review": "待决定的提案",
       "reviewAction": "审核",
-      "drafts": "{count} 项草稿待审",
+      "drafts": "{count} 项提案待决定",
       "unfinished": "未完成",
       "resume": "继续",
       "signal": "提醒",
@@ -7852,6 +8017,7 @@
     "showProcessed": "显示已整理",
     "trash": "回收站",
     "backToInbox": "回到 Inbox",
+    "backToRecords": "返回记录",
     "backToWorkspace": "回到工作区",
     "selectAll": "全选",
     "selected": "已选 {count} 条",
@@ -8123,9 +8289,9 @@
     }
   },
   "collect": {
-    "title": "收集",
-    "subtitle": "一个框收所有东西，拆成提案，逐条收下",
-    "inputLabel": "收集内容",
+    "title": "资料源",
+    "subtitle": "贴上任何东西，拆成提案，逐条接受",
+    "inputLabel": "要加入的内容",
     "placeholder": "粘贴链接、一段文字，或拖入截图、文件。直接打一句待办也可以。",
     "detect": {
       "empty": "会自动识别类型",
@@ -8135,14 +8301,14 @@
       },
       "task": {
         "name": "待办",
-        "hint": "→ 加到今日日志，有时间就排成时段"
+        "hint": "→ 加到今天的日志，有时间就排成时段"
       },
       "text": {
         "name": "文字",
         "hint": "→ 存成笔记，拆出行动"
       }
     },
-    "send": "收进来",
+    "send": "新增资料源",
     "pickFile": "图片或文件",
     "try": "试试：",
     "sample": {
@@ -8155,7 +8321,7 @@
     "filter": {
       "label": "按状态筛选",
       "all": "全部",
-      "pending": "待收下",
+      "pending": "待决定",
       "done": "已处理"
     },
     "input": {
@@ -8171,41 +8337,41 @@
     },
     "to": {
       "inbox": "笔记 → 收件文件夹",
-      "today": "今日日志"
+      "today": "今天的日志"
     },
     "reading": "识别中",
     "source": {
       "ai": "AI 拆分",
       "rules": "规则拆分（AI 没有响应或尚未设置）"
     },
-    "accept": "收下",
+    "accept": "接受",
     "edit": "修改",
-    "reject": "不要",
+    "reject": "放弃",
     "editDone": "完成",
-    "acceptAll": "全部收下",
+    "acceptAll": "全部接受",
     "fieldTitle": "标题",
     "fieldDate": "日期",
     "fieldTime": "时间",
     "status": {
-      "ok": "已收下",
-      "no": "已丢掉"
+      "ok": "已接受",
+      "no": "已放弃"
     },
     "open": "打开",
     "undo": "撤销",
-    "accepted": "已收下：{title}",
-    "acceptedMany": "已收下 {count} 条提案",
+    "accepted": "已接受：{title}",
+    "acceptedMany": "已接受 {count} 条提案",
     "undoFailed": "文件已被修改，无法撤销",
     "failed": "操作失败，请重试",
-    "fileTooLarge": "{name} 超过 8 MB，没有收进来",
-    "remove": "移除这条收集",
-    "empty": "还没有收进内容。试试粘贴一段文字、链接或图片。",
-    "emptyFilter": "这个状态下没有收集。",
-    "records": "Inbox 的记录",
-    "recordsHint": "Inbox 里还没整理的记录，可以拆成提案。",
-    "recordsEmpty": "Inbox 没有未整理的记录",
+    "fileTooLarge": "{name} 超过 8 MB，没有加入资料源",
+    "remove": "移除这条资料源",
+    "empty": "还没有资料源。试试粘贴文字、链接或图片。",
+    "emptyFilter": "这个状态下没有资料源。",
+    "records": "未整理的记录",
+    "recordsHint": "Inbox 文件夹里还没整理的记录，可以拆成提案。",
+    "recordsEmpty": "没有未整理的记录",
     "split": "拆分",
-    "queued": "已在收集",
-    "writeHint": "新笔记、任务和时段都要你收下才会写入；没有收下的提案不会留下任何文件。"
+    "queued": "已在资料源",
+    "writeHint": "新笔记、任务和时段都要你接受才会写入；没有接受的提案不会留下任何文件。"
   },
   "threads": {
     "chatMovedHint": "对话正在中间的对话页显示",
@@ -8241,12 +8407,12 @@
     },
     "cards": {
       "proposal": "提案",
-      "accept": "收下",
-      "reject": "不要",
-      "alsoInInbox": "也在等你定",
-      "proposalWait": "等你定",
-      "proposalOk": "已收下",
-      "proposalNo": "已退回",
+      "accept": "接受",
+      "reject": "放弃",
+      "alsoInInbox": "也在工作台",
+      "proposalWait": "要决定",
+      "proposalOk": "已接受",
+      "proposalNo": "已放弃",
       "kickoff": "开工卡",
       "placeholder": "示范",
       "kickoffProposed": "待开工",
@@ -8263,8 +8429,33 @@
         "wait": "排队",
         "run": "进行中",
         "done": "完成"
-      }
-    }
+      },
+      "discuss": "再次讨论",
+      "proposalTalk": "再次讨论中",
+      "proposalReplaced": "已被新版取代",
+      "directAdded": "已新增：{what}",
+      "undo": "撤销",
+      "directDone": "已新增",
+      "directUndone": "已撤销",
+      "directStale": "文件之后改过，没有撤销"
+    },
+    "tag": {
+      "query": "查询",
+      "process": "处理",
+      "schedule": "日程",
+      "label": "对话对象",
+      "hint": {
+        "query": "和专家谈，只读，不会改资料",
+        "process": "有指挥官参与，改动都通过提案",
+        "schedule": "和秘书谈，你交代的任务与行程直接生效"
+      },
+      "handoff": "交给指挥官",
+      "handoffHint": "标签改成处理，这段对话直接延续",
+      "transferAsk": "秘书：这像是笔记或知识的问题，要不要转给指挥官？",
+      "transfer": "转给指挥官",
+      "keep": "不用"
+    },
+    "pending": "还有 {count} 则提案待决定"
   },
   "anywhere": {
     "palette": {
@@ -8291,9 +8482,13 @@
         "title": "打开首页",
         "keywords": "home,今天,首页"
       },
+      "collect": {
+        "title": "打开资料源",
+        "keywords": "资料源,新增资料源"
+      },
       "inbox": {
-        "title": "打开收集箱",
-        "keywords": "inbox,收集,待整理"
+        "title": "打开旧记录",
+        "keywords": "旧记录,未整理"
       },
       "searchSidebar": {
         "title": "聚焦侧栏搜索",
@@ -8343,11 +8538,11 @@
     }
   },
   "decide": {
-    "title": "等你定",
-    "subtitle": "{count} 件等你定，逐条接受或拒绝",
-    "count": "{count} 件等你定",
-    "needsLabel": "等你定",
-    "listLabel": "等你定的项目",
+    "title": "工作台",
+    "subtitle": "{count} 件，逐条接受或放弃",
+    "count": "工作台 · {count} 件",
+    "needsLabel": "要决定",
+    "listLabel": "工作台的项目",
     "empty": "都处理完了。",
     "proposalTag": "提案",
     "kind": {
@@ -8362,30 +8557,46 @@
       "folder": "新增文件夹"
     },
     "source": {
-      "collect": "收集",
-      "draft": "Agent 草稿"
+      "collect": "资料源",
+      "draft": "伙伴提案"
     },
     "from": "来自 {origin}",
-    "writesTo": "收下后写入：",
+    "writesTo": "接受后写入：",
     "dest": {
       "note": "收件文件夹的新笔记",
       "journal": "今日日志的“{section}”",
-      "journalNew": "今日日志的“{section}”（今天的日志还没建立，收下时按模板建立）"
+      "journalNew": "今日日志的“{section}”（今天的日志还没建立，接受时按模板建立）"
     },
     "diff": {
       "hidden": "还有 {count} 行没列出"
     },
-    "merged": "另有 {count} 个来源提了同一件事，收下或不要时一并处理。",
-    "accept": "收下",
-    "reject": "不要",
-    "accepted": "已收下“{title}”",
-    "rejected": "已退回“{title}”",
+    "merged": "另有 {count} 个来源提了同一件事，接受或放弃时一并处理。",
+    "accept": "接受",
+    "reject": "放弃",
+    "accepted": "已接受“{title}”",
+    "rejected": "已放弃“{title}”",
     "undo": "撤销",
     "undoFailed": "无法撤销，文件已被改过",
     "failed": "处理失败，请重试",
-    "conflict": "文件在草稿生成后被改过，请到任务中心逐条确认",
+    "conflict": "文件在提案生成后被改过，请到任务中心逐条确认",
     "openReview": "到任务中心",
-    "viewAll": "等你定共 {count} 件，全部查看"
+    "viewAll": "工作台共 {count} 件，全部查看",
+    "stale": "{count} 则提案超过 14 天没决定，会列进每周回顾，不会自动消失",
+    "discuss": {
+      "button": "再次讨论",
+      "label": "再次讨论的说明",
+      "placeholder": "要指挥官怎么改？例如：标题改短一点、日期改到下周",
+      "send": "送出并回到对话",
+      "cancel": "取消",
+      "hint": "⌘↩ 送出",
+      "message": "再次讨论“{title}”：{note}",
+      "done": "已带回对话：“{title}”",
+      "revised": "我已修订「{title}」，请确认新版提案。",
+      "fromConversation": "来自对话：{title}",
+      "conversation": "这段对话",
+      "sending": "送出中…",
+      "failed": "没有送出，你写的说明还在，可以再送一次。"
+    }
   },
   "jobs": {
     "new": "新建开工卡",
@@ -8396,7 +8607,7 @@
     "title": "开工卡标题",
     "step": "第 {number} 步",
     "stepTitle": "步骤名称",
-    "agent": "代理人",
+    "agent": "伙伴",
     "instructions": "工作指示",
     "criterion": "验收标准",
     "removeStep": "移除第 {number} 步",
@@ -8404,12 +8615,12 @@
     "addStep": "添加步骤",
     "close": "关闭",
     "saveProposal": "保存提案",
-    "loadingAgents": "正在加载代理人…",
-    "noAgents": "请前往「设置 → 常规 → 代理人」启用至少一位代理人。",
-    "agentsFailed": "无法加载代理人。",
+    "loadingAgents": "正在加载伙伴…",
+    "noAgents": "请前往「设置 → 常规 → 伙伴」启用至少一位伙伴。",
+    "agentsFailed": "无法加载伙伴。",
     "modelRequired": "请先配置 AI 模型，或自行添加步骤。",
     "generateFailed": "无法生成有效的步骤。请重试或自行添加。",
-    "invalidPlan": "请为每个步骤填写名称、代理人、工作指示和验收标准。",
+    "invalidPlan": "请为每个步骤填写名称、伙伴、工作指示和验收标准。",
     "invalidDependencies": "请检查是否有循环依赖，或选到了不存在的前置步骤。",
     "saveFailed": "无法保存开工卡。",
     "card": "开工卡",
@@ -8425,7 +8636,7 @@
     "reviewDrafts": "审核草稿",
     "start": "开工",
     "parallel": "最多同时执行 {count} 项",
-    "agentDisabled": "代理人已停用或无法使用。请启用后再重跑。",
+    "agentDisabled": "伙伴已停用或无法使用。请启用后再重跑。",
     "interrupted": "上次执行中断。你可以重跑或取消这个步骤。",
     "status": {
       "waiting": "等待派工",
@@ -8466,8 +8677,9 @@
       "empty": "这天还没有安排日程。",
       "noAccess": "日历还没开放访问，行程不会出现在这里。",
       "proposal": "提案 · 排程员",
-      "accept": "收下",
-      "reject": "不要"
+      "accept": "接受",
+      "reject": "放弃",
+      "namedAction": "{action}「{title}」"
     },
     "journal": {
       "label": "日志",
@@ -8489,14 +8701,14 @@
       "emptyDay": "这天没有到期的任务。"
     },
     "decide": {
-      "label": "等你定",
+      "label": "工作台",
       "empty": "都处理完了。",
       "all": "全部"
     },
     "captures": {
-      "label": "今天收进来",
+      "label": "今天新增的资料源",
       "all": "全部",
-      "empty": "今天还没收进东西。",
+      "empty": "今天还没有新增资料源。",
       "reading": "正在识别",
       "kind": {
         "text": "文字",
@@ -8510,22 +8722,26 @@
       "tabHint": "按 Tab 切换到「问」",
       "note": "记",
       "ask": "问",
-      "notePlaceholder": "记一笔，或按 Tab 切到“问”",
-      "noteOnlyPlaceholder": "记一笔",
+      "notePlaceholder": "新增资料源，或按 Tab 切到“问”",
+      "noteOnlyPlaceholder": "新增资料源",
       "askPlaceholder": "问问题，例如“下午的空档怎么排”",
-      "notePlaceholderToday": "记一笔（会记到今天，不是 {date}）",
-      "toToday": "记到今天",
-      "submitNote": "收进来",
+      "notePlaceholderToday": "新增至今天的资料源（当前查看 {date}）",
+      "toToday": "加到今天",
+      "submitNote": "新增资料源",
       "submitAsk": "问",
       "detect": {
         "task": "任务",
         "link": "链接",
         "text": "笔记"
       },
-      "captured": "收进来了，正在拆分成提案",
+      "captured": "已加入资料源，正在拆分成提案",
       "noModel": "还没设置模型，请先到设置里选一个。"
     },
-    "titleDay": "{date}"
+    "titleDay": "{date}",
+    "workbench": {
+      "line": "工作台 · {count, number} 件",
+      "open": "打开工作台，{count, number} 件等你处理"
+    }
   },
   "week": {
     "title": "计划",
@@ -8567,28 +8783,35 @@
     "count": "{count} 件",
     "nav": {
       "today": "今天",
-      "decide": "等你定",
-      "collect": "收集",
+      "decide": "工作台",
+      "collect": "资料源",
       "threads": "对话",
-      "knowledge": "知识",
+      "knowledge": "整理",
       "plan": "计划"
     },
     "agents": {
-      "title": "代理人",
+      "title": "伙伴",
       "running": "{count} 执行中",
-      "add": "新增代理人",
-      "addFirst": "新增第一位代理人"
+      "add": "新增伙伴",
+      "addFirst": "新增第一位伙伴"
     },
     "vault": "我的笔记",
+    "collapseSection": "收起{title}",
+    "expandSection": "展开{title}",
+    "noteList": {
+      "label": "「{folder}」的笔记列表",
+      "empty": "这个文件夹还没有笔记",
+      "close": "关闭笔记列表"
+    },
     "rules": {
       "label": "规则",
-      "text": "代理人只能提案；写入一律经过等你定。"
+      "text": "伙伴只能提案；写入一律经过工作台。"
     },
     "tabs": {
-      "collectGroup": "收集页面",
-      "collect": "收集",
-      "knowledgeGroup": "知识页面",
-      "inbox": "Inbox",
+      "collectGroup": "资料源页面",
+      "collect": "资料源",
+      "knowledgeGroup": "整理页面",
+      "inbox": "未整理",
       "timeline": "笔记时间轴",
       "canvases": "画布",
       "noteTags": "标签",
@@ -8596,13 +8819,13 @@
       "outline": "大纲"
     },
     "knowledge": {
-      "title": "知识",
-      "subtitle": "时间轴、画布与标签，笔记文件树在左侧的「我的笔记」"
+      "title": "整理",
+      "subtitle": "时间轴、画布与标签，笔记文件树在左侧的「{vault}」"
     }
   },
   "organize": {
     "title": "自动整理",
-    "description": "闲置 60 分钟后，最多提出五项变更，在「等你定」逐项确认。",
+    "description": "闲置 60 分钟后，最多提出五项变更，在「工作台」逐项确认。",
     "merge": "将 {detail} 合并到 {path}",
     "tag": "为 {path} 补上标签 #{detail}",
     "link": "从 {path} 链接到 {detail}",
@@ -8720,6 +8943,456 @@
       "label": "私人",
       "mark": "标为私人",
       "unmark": "取消私人"
+    }
+  },
+  "commander": {
+    "origin": "{agent} 分析的数据源：{source}",
+    "unconverted": "（无法转成文字，已保留原文件：{origin}）",
+    "unconvertedReason": "（没办法转成文字：{reason}已保留原文件：{origin}）",
+    "fileReason": {
+      "scannedPdf": "这份 PDF 没有可读取的文字（可能是扫描件），请先做 OCR 或改存成图片。",
+      "encrypted": "文件已加密或有密码保护，读不到内容。",
+      "malformed": "文件损坏或缺少必要内容，读不出文字。",
+      "resourceLimit": "文件内容太复杂，超过安全解析的上限。",
+      "fileTooLarge": "文件超过 100 MB，没有解析。",
+      "readFailed": "读不到这个文件（可能已移动或删除）。",
+      "parseFailed": "文件解析失败。",
+      "unsupported": "目前不支持这种文件格式。",
+      "noText": "文件里没有可读取的文字。"
+    },
+    "domainProposal": {
+      "title": "成立领域「{domain}」，新增专家 {name}",
+      "summary": "{count} 则知识笔记还没有领域，主题都是「{topic}」"
+    }
+  },
+  "workbench": {
+    "title": "工作台",
+    "subtitle": "{count} 件等你处理",
+    "subtitleSources": "{done} / {total} 已整理",
+    "tabs": {
+      "label": "工作台分页",
+      "review": "审核",
+      "sources": "资料源"
+    },
+    "filter": {
+      "label": "依标签筛选",
+      "all": "全部"
+    },
+    "labels": {
+      "schedule": "日程",
+      "note": "笔记",
+      "knowledge": "知识",
+      "source": "资料源",
+      "review": "回顾"
+    },
+    "verbs": {
+      "add": "新增",
+      "supplement": "补充",
+      "modify": "修改",
+      "merge": "合并",
+      "replace": "取代",
+      "verify": "待查证",
+      "archive": "封存",
+      "reschedule": "改时间",
+      "judge": "判断",
+      "confirm": "确认",
+      "organize": "整理"
+    },
+    "groups": {
+      "reply": "等你回话",
+      "late": "逾期",
+      "proposal": "提案",
+      "hand": "要你亲手整理",
+      "task": "其他任务"
+    },
+    "actions": {
+      "accept": "接受",
+      "discuss": "再次讨论",
+      "drop": "放弃",
+      "answer": "回答",
+      "pick": "选一个",
+      "desk": "摊到台面",
+      "schedule": "排时间",
+      "done": "完成",
+      "stillValid": "仍然有效",
+      "toCommander": "交给 {name}",
+      "process": "照建议处理",
+      "selfProcess": "自己处理",
+      "reject": "不采用",
+      "handle": "处理",
+      "retry": "重试",
+      "delete": "删除",
+      "migrate": "开始处理",
+      "resume": "继续处理",
+      "pause": "暂停",
+      "packDone": "整理好了"
+    },
+    "listLabel": "等你处理的事",
+    "more": "等 {count} 则",
+    "onDesk": "台面上",
+    "by": "{name} 建议",
+    "age": {
+      "now": "刚刚",
+      "hour": "{count} 小时",
+      "day": "{count} 天"
+    },
+    "overdue": "逾期 {age}",
+    "confirmSince": "上次确认是 {date}",
+    "reconfirmRequest": "请重新确认这则笔记是否仍然成立：{path}",
+    "writesTo": "接受后写入：{dest}",
+    "empty": "都处理完了",
+    "emptyFiltered": "「{label}」都处理完了",
+    "emptyHint": "新的事进来时，会出现在这里。",
+    "keys": {
+      "label": "键盘操作",
+      "select": "选择",
+      "expand": "展开",
+      "accept": "接受",
+      "putAside": "先放着",
+      "undo": "复原"
+    },
+    "putAside": {
+      "button": "先放着",
+      "entry": "先放着的事",
+      "count": "先放着 {count} 件",
+      "noReminder": "不设提醒",
+      "tomorrow": "明天",
+      "nextWeek": "下周一",
+      "pickDate": "提醒日期",
+      "set": "放着",
+      "remindOn": "{date} 提醒",
+      "noDate": "没有提醒日期",
+      "takeBack": "拿回来",
+      "title": "先放着",
+      "empty": "没有先放着的事。",
+      "back": "回到审核"
+    },
+    "schedule": {
+      "time": "时间",
+      "confirm": "排进今天",
+      "cancel": "取消"
+    },
+    "toast": {
+      "accepted": "已接受「{title}」",
+      "dropped": "已放弃「{title}」",
+      "done": "已完成「{title}」",
+      "scheduled": "已排进今天 {time}「{title}」",
+      "asided": "已先放着「{title}」",
+      "asidedUntil": "已先放着「{title}」，{date} 提醒",
+      "takenBack": "已拿回「{title}」",
+      "processed": "已交给 {name}「{title}」，产出会送到审核",
+      "rejected": "已不采用「{title}」",
+      "stillValid": "已确认「{title}」仍然有效",
+      "toCommander": "已交给 {name} 重新确认「{title}」",
+      "undone": "已复原",
+      "cannotUndo": "这一步无法复原",
+      "nothing": "没有可以复原的动作",
+      "failed": "处理失败，请再试一次",
+      "undo": "复原",
+      "retried": "已重新抓取「{title}」",
+      "retryFailed": "还是抓不到「{title}」",
+      "deleted": "已删除「{title}」"
+    },
+    "sources": {
+      "filterLabel": "依状态筛选",
+      "filters": {
+        "all": "全部",
+        "wait": "等你决定",
+        "todo": "未整理",
+        "done": "已整理",
+        "no": "不采用"
+      },
+      "status": {
+        "wait": "等你决定",
+        "todo": "未整理",
+        "ing": "整理中",
+        "edited": "已修改",
+        "done": "已整理",
+        "no": "不采用"
+      },
+      "kind": {
+        "web": "网页",
+        "text": "文字",
+        "shot": "截图",
+        "img": "插图",
+        "file": "档案",
+        "audio": "录音",
+        "todo": "待办",
+        "prompt": "素材",
+        "email": "Email",
+        "rss": "RSS",
+        "meeting": "会议"
+      },
+      "listLabel": "资料源清单",
+      "selectAll": "全选",
+      "selectAllLabel": "全选目前清单",
+      "pickRow": "勾选「{title}」",
+      "organised": "{done} / {total} 已整理",
+      "outputs": "{count} 则产出",
+      "noOutputs": "没有产出",
+      "editedSub": "v{version} 未送出",
+      "picked": "已选 {count} 则",
+      "handTo": "交给 {name} 整理",
+      "toDesk": "摊到台面",
+      "clear": "取消",
+      "days": {
+        "today": "今天",
+        "yesterday": "昨天",
+        "week": "本周",
+        "earlier": "更早"
+      },
+      "empty": "没有符合的资料源",
+      "emptyAll": "还没有资料源。按侧栏的「新增资料源」（N）加进来。",
+      "loadFailed": "读不到资料源，列表可能不完整。",
+      "loadRetry": "重试",
+      "pickOne": "选一则资料源来看",
+      "back": "回到清单",
+      "judgement": "初步判断",
+      "judgementHint": "本机模型 · 只判断，不撰写",
+      "noJudgement": "还没有初步判断，可以直接决定要不要处理。",
+      "process": "照建议处理",
+      "reject": "不采用",
+      "restore": "改回等你决定",
+      "archived": "已封存（不采用满 30 天）",
+      "reorganise": "重新整理",
+      "desk": "摊到台面",
+      "edit": "编辑",
+      "send": "送给 {name} 分析",
+      "sendUpdate": "送给 {name} 更新",
+      "analysing": "{name} 正在分析，完成后产出会送到审核",
+      "queued": "排队等 {name} 分析",
+      "locked": "原文已锁定。按「编辑」会另存新版本，{name} 只看改了哪里。",
+      "outputsTitle": "产出",
+      "version": "v{version}",
+      "toast": {
+        "handed": "已交给 {name} 整理 {count} 则，产出会送到审核",
+        "handedRe": "已交给 {name} 整理 {count} 则（其中 {re} 则重新整理），产出会送到审核",
+        "sent": "已送给 {name}「{title}」",
+        "saved": "已储存",
+        "savedVersion": "已存成 v{version}，送给 {name} 才会更新产出",
+        "noChange": "没有修改",
+        "rejected": "已不采用「{title}」",
+        "restored": "已改回等你决定「{title}」",
+        "handFailed": "没能交给 {name}，勾选已还原，请再试一次"
+      },
+      "editor": {
+        "editing": "正在编辑",
+        "newVersion": "新版本 v{version}",
+        "back": "返回",
+        "cancel": "取消",
+        "save": "储存",
+        "titlePlaceholder": "标题",
+        "bodyPlaceholder": "开始写…",
+        "words": "{count} 字",
+        "keepOld": "储存后原本的 v{version} 会保留",
+        "applyOnSave": "储存后才会套用",
+        "unsaved": "有未储存的修改",
+        "notSaved": "尚未储存",
+        "confirmLeave": "还有没储存的修改，要放弃吗？",
+        "toolbar": "格式",
+        "tools": {
+          "heading": "标题",
+          "bold": "粗体",
+          "italic": "斜体",
+          "bullet": "清单",
+          "numbered": "编号",
+          "task": "勾选",
+          "quote": "引用",
+          "link": "连结",
+          "rule": "分隔线"
+        }
+      },
+      "handle": "处理",
+      "putAside": "先放着",
+      "retry": "重试",
+      "delete": "删除",
+      "captureFailed": "抓取失败",
+      "captureFailedHint": "抓不到这个网页的内容。可以重试，或删除这则资料源。"
+    },
+    "desk": {
+      "title": "台面",
+      "heading": "{first} 等 {count} 则",
+      "back": "工作台",
+      "save": "存成笔记",
+      "materials": "素材 · {count} 则",
+      "draft": "工作稿",
+      "help": "协助",
+      "draftTitle": "标题",
+      "draftBody": "在这里汇整、改写…",
+      "saved": "已存成笔记「{path}」",
+      "handTag": "亲手写的",
+      "fallbackName": "台面笔记",
+      "helpStarting": "正在开处理对话…",
+      "helpHint": "处理对话：{name} 和负责的专家都在",
+      "helpFailed": "没办法开处理对话，请到对话页再试一次",
+      "empty": "没有素材",
+      "notesOnly": "只有笔记能做结构操作",
+      "ops": {
+        "label": "结构操作",
+        "move": "搬移",
+        "movePlaceholder": "资料夹，例如 知识/工业工程",
+        "tag": "加标签",
+        "tagPlaceholder": "标签",
+        "link": "连结到…",
+        "assignDomain": "归入领域",
+        "merge": "合并笔记",
+        "mergeLater": "合并笔记之后开放",
+        "apply": "套用",
+        "noDomains": "还没有领域"
+      },
+      "done": {
+        "move": "已搬到 {value}",
+        "tag": "已加上标签 #{value}",
+        "link": "已连结到「{value}」",
+        "assignDomain": "已归入领域「{value}」"
+      }
+    },
+    "add": {
+      "title": "新增资料源",
+      "subtitle": "输入内容，自动分类",
+      "saved": "已加进资料源，交给 {name} 整理",
+      "savedLink": "已加进资料源，等你决定要不要处理"
+    },
+    "quick": {
+      "label": "新增",
+      "newDoc": "新增文件",
+      "newDocShort": "文件",
+      "addSource": "新增资料源",
+      "addSourceShort": "资料源",
+      "newThread": "新增对话",
+      "newThreadShort": "对话"
+    },
+    "legacy": {
+      "title": "旧笔记 {count, number} 则",
+      "summary": "上线时转入 · 分批交给 {name}",
+      "progress": "已处理 {done, number} / {total, number}",
+      "running": "处理中",
+      "pausing": "这则做完就暂停",
+      "paused": "已暂停",
+      "by": "系统",
+      "hint": "每批 {size, number} 则交给指挥官；判断不出来的会一包一包回到「要你亲手整理」。",
+      "packSummary": "{name} 判断不出来，要你亲手整理",
+      "toast": {
+        "started": "已开始分批交给 {name}，进度会显示在卡片上",
+        "pausing": "这则做完就暂停",
+        "finished": "这轮处理了 {count, number} 则，{packs, number} 包要你亲手整理",
+        "allFailed": "这批都没处理成功，先暂停；稍后再按「继续处理」",
+        "allUndecided": "这批 {name} 都判断不出来，先暂停；请检查模型设置",
+        "packDone": "已整理好「{title}」那一包"
+      }
+    },
+    "import": {
+      "email": "Email",
+      "emailAdded": "已导入 {count} 封邮件，等你决定要不要处理",
+      "emailEmpty": "文件里没有认得出来的邮件（支持 .eml 与 .mbox）",
+      "nothingNew": "都导入过了，没有新增",
+      "skipped": "{count} 条之前导入过，已跳过。",
+      "truncated": "共 {total} 封，只收最新的 {limit} 封。",
+      "failed": "导入失败",
+      "dropUnsupported": "可以拖进 .eml、.mbox、.vtt、.srt 文件",
+      "subscribeRss": "订阅 RSS",
+      "rssSubscribed": "已订阅「{name}」，收进 {count} 篇，等你决定要不要处理",
+      "meeting": "会议逐字稿",
+      "meetingAdded": "已导入 {count} 场会议，等你决定要不要处理",
+      "meetingEmpty": "文件里没有读得出来的逐字稿（支持 .vtt、.srt、.txt、.docx）",
+      "meetingFailed": "{count} 个文件读不出来：{names}。",
+      "busy": {
+        "email": "正在导入 Email…",
+        "meeting": "正在导入会议逐字稿…",
+        "rss": "正在订阅 RSS…"
+      }
+    }
+  },
+  "cleanup": {
+    "actions": {
+      "modify": "修改",
+      "replace": "取代",
+      "verify": "待查证",
+      "supplement": "补情境",
+      "merge": "合并",
+      "archive": "封存"
+    },
+    "bundleTitle": "整理「{domain}」：{count} 项",
+    "singleTitle": "{action}：{title}",
+    "item": "- {action}：{titles}——{evidence}",
+    "origin": "{agent} 整理的清理提案",
+    "originSystem": "清理提案",
+    "confirmTitle": "仍然有效：{title}",
+    "confirmBody": "重新确认后没有发现过时、矛盾或重复，外部资料也没有不同说法（{evidence}）。接受后把最后确认日期改成今天。",
+    "confirmBodyNoExternal": "重新比对同领域的笔记，没有发现过时、矛盾或重复（没有查到外部资料）。接受后把最后确认日期改成今天。"
+  },
+  "review": {
+    "period": "{month} 月第 {week} 周",
+    "title": "每周回顾 · {period}",
+    "origin": "{agent} 统整的每周回顾",
+    "originSystem": "每周回顾",
+    "tag": "时期回顾",
+    "sections": {
+      "actions": "行动回顾",
+      "records": "这期的记录",
+      "research": "研究员调研",
+      "experts": "专家回顾",
+      "due": "到期要重新确认的笔记",
+      "stale": "超过 14 天没决定的提案",
+      "audit": "记忆稽核",
+      "attached": "另附的提案"
+    },
+    "completed": "完成 {count} 件",
+    "overdue": "逾期 {count} 件",
+    "procrastinated": "拖延：{items}",
+    "time": "时间花在：{items}",
+    "minutes": "{key} {hours} 小时",
+    "researchItem": "{domain}｜{question}：{summary}",
+    "researchUnavailable": "{domain}｜{question}（没有可用的查询工具，题目先列着）",
+    "researchNothing": "{domain}｜{question}：没有新发现",
+    "expertItem": "{agent}（{domain}）：{text}",
+    "expertItemNoName": "{domain}：{text}",
+    "dueItem": "{note}（{date} 到期）",
+    "staleItem": "{title}（等了 {days} 天）",
+    "auditItem": "{memory}：「{text}」和 {note} 重叠",
+    "auditMemory": {
+      "work_notes": "工作笔记",
+      "context": "目前脉络",
+      "activity": "活动记录"
+    },
+    "attached": "清理提案 {cleanup} 則、排程调整 {schedule} 則、记忆稽核 {audit} 則，在工作台另外决定。",
+    "schedule": {
+      "title": "改时间：{task}（{from} → {to}）",
+      "body": "已经逾期 {days} 天，建议改到比较空的一天。"
+    },
+    "audit": {
+      "workNotesTitle": "整理 {agent} 的工作笔记：{count} 行和笔记重叠",
+      "contextTitle": "整理目前脉络：{count} 项和笔记重叠",
+      "line": "- 「{text}」已经写在 {note}"
+    },
+    "settings": {
+      "title": "调研与回顾",
+      "description": "研究员调研、专家回顾领域、秘书回顾行动，由指挥官统整成一张回顾提案。冲突或错误会立刻提案，不等汇整。",
+      "frequency": "频率",
+      "weekday": "汇整日",
+      "lastRun": "上次执行：{time}",
+      "never": "还没执行过",
+      "runNow": "现在执行一次",
+      "running": "执行中…",
+      "saved": "已储存",
+      "loadError": "读不到设定",
+      "saveError": "没办法储存",
+      "frequencies": {
+        "daily": "每天",
+        "weekly": "每周",
+        "biweekly": "每两周",
+        "monthly": "每月",
+        "off": "关闭"
+      },
+      "weekdays": {
+        "0": "星期日",
+        "1": "星期一",
+        "2": "星期二",
+        "3": "星期三",
+        "4": "星期四",
+        "5": "星期五",
+        "6": "星期六"
+      }
     }
   }
 }

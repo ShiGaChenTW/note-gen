@@ -37,6 +37,8 @@ export interface SummaryDraft {
   content: string
   /** 已有同一對話的摘要時，它的路徑（會更新那一份）。 */
   existingPath: string | null
+  /** Fork（almanac ALMNC-54.20）：對話的識別（有 syncId 用 syncId），存檔後當成對話結論資料源的 id。 */
+  conversation?: string
 }
 
 export async function generateSummary(conversationId: number, texts: SummaryTexts, now = new Date()): Promise<SummaryDraft> {
@@ -58,6 +60,7 @@ export async function generateSummary(conversationId: number, texts: SummaryText
     path: existing?.path ?? summaryPath(now, data.subject),
     content: renderSummary(data, { conversation: key, date: now, related }, texts.headings),
     existingPath: existing?.path ?? null,
+    conversation: key,
   }
 }
 
@@ -66,6 +69,12 @@ export async function saveSummary(draft: SummaryDraft): Promise<void> {
   const path = draft.path.trim().replace(/^\/+/, '')
   if (path !== draft.existingPath && (await readNote(path)) !== null) throw new Error(`EXISTS:${path}`)
   await writeNote(path, draft.content)
+  // Fork（almanac ALMNC-54.20）：對話結論存好後在 V3 建成系統產生的資料源、自動交給指揮官（行動版、classic 不做）。
+  // 附帶動作：失敗不影響存檔。
+  if (draft.conversation) {
+    const summary = { conversation: draft.conversation, content: draft.content, path }
+    void import('@/lib/workbench/actions').then(({ registerConversationConclusion }) => registerConversationConclusion(summary)).catch(() => undefined)
+  }
 }
 
 type Phase = 'idle' | 'loading' | 'ready' | 'saving' | 'error'

@@ -88,6 +88,8 @@ interface Events {
   'unified-record-open': {
     type?: 'auto' | 'text' | 'recording' | 'scan' | 'image' | 'link' | 'file' | 'todo' | 'prompt-draft'
     prefillText?: string
+    /** Fork（almanac ALMNC-54.8）：source＝從側欄「新增資料源」打開，存進 V3 資料源表。 */
+    target?: 'source'
   } | undefined;
   'latest-commit-info': {
     sha: string;
@@ -218,6 +220,8 @@ interface Events {
   'editor-agent-diff-clear': void;
   'mobile-editor-toggle-outline': void;
   'editor-search-trigger': void;
+  // Fork（almanac）：V3 筆記工具列的「版本歷史」按鈕，打開使用中編輯器狀態列上同一個版本歷史面板。
+  'editor-open-version-history': void;
   'editor-can-undo-redo': { resolve: (can: { undo: boolean; redo: boolean }) => void };
   'editor-prepare-deactivate': { resolve: (canDeactivate: boolean) => void };
   'editor-undo-redo-changed': { undo: boolean; redo: boolean };

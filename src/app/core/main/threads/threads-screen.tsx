@@ -9,6 +9,7 @@ import { useTranslations } from 'next-intl'
 import { Check, ChevronDown, FolderInput, Hash, MessageSquarePlus, MessagesSquare, Pin, Search } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import { V3_BUTTON_SHAPE } from '@/components/v3/button-shape'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
@@ -26,6 +27,9 @@ import { Count } from '@/components/v3/count'
 import { EmptyState } from '@/components/v3/empty-state'
 import { SectionLabel } from '@/components/v3/section-label'
 import { PageHeader, PageSurface } from '../page-ui'
+import { PendingProposalsNote, ThreadTagPrefix } from './thread-status'
+import { usePendingCounts } from '@/lib/decide/use-decisions'
+import { tagOf, type ThreadTag } from '@/lib/threads/tags'
 
 function relativeTime(ms: number, now: number, t: (key: string, values?: Record<string, number>) => string): string {
   const minutes = Math.max(0, Math.round((now - ms) / 60000))
@@ -36,8 +40,12 @@ function relativeTime(ms: number, now: number, t: (key: string, values?: Record<
   return t('time.days', { count: Math.round(hours / 24) })
 }
 
-function ThreadRow({ thread, project, projects, current, now, onOpen, onMove }: {
+function ThreadRow({ thread, tag, pending, project, projects, current, now, onOpen, onMove }: {
   thread: ThreadConversation
+  /** Fork（almanac ALMNC-54.4）：名稱前的標籤。 */
+  tag: ThreadTag
+  /** Fork（almanac ALMNC-54.5）：還有幾則提案待決定。 */
+  pending: number
   project: string
   projects: string[]
   current: boolean
@@ -48,22 +56,23 @@ function ThreadRow({ thread, project, projects, current, now, onOpen, onMove }: 
   const t = useTranslations('threads')
   return (
     <div
-      className={cn('group/row relative flex items-center rounded-md hover:bg-hover', current && 'bg-active')}
+      className={cn('group/row relative flex items-center rounded-(--r-kbd) hover:bg-hover', current && 'bg-active')}
       data-thread-id={thread.id}
     >
       <button
         type="button"
         onClick={onOpen}
         aria-current={current ? 'true' : undefined}
-        className="grid min-w-0 flex-1 grid-cols-[1fr_auto] gap-x-2 rounded-md px-2.5 py-2 text-left outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring"
+        className="grid min-w-0 flex-1 grid-cols-[1fr_auto] gap-x-2 rounded-(--r-kbd) px-2.5 py-2 text-left outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring"
       >
         <span className="flex min-w-0 items-center gap-1.5 text-ui-compact font-medium text-ink">
           {thread.isPinned && <Pin aria-label={t('pinned')} className="size-3 shrink-0 text-muted-ink" />}
-          <span className="truncate">{thread.title || t('untitled')}</span>
+          <span className="truncate"><ThreadTagPrefix tag={tag} />{thread.title || t('untitled')}</span>
         </span>
         <span className="text-xs text-muted-ink tabular-nums">{relativeTime(thread.updatedAt, now, t)}</span>
         <span className="col-span-2 truncate text-ui-compact text-muted-ink">
           {project ? `${project} · ` : ''}<span className="text-xs tabular-nums">{t('messageCount', { count: thread.messageCount })}</span>
+          {pending > 0 && <> · <PendingProposalsNote count={pending} className="text-ink tabular-nums" /></>}
         </span>
       </button>
       <DropdownMenu>
@@ -102,6 +111,8 @@ function ThreadList() {
   const currentId = useChatStore(state => state.currentConversationId)
   const switchConversation = useChatStore(state => state.switchConversation)
   const projectMap = useThreadsStore(state => state.projectMap)
+  const tagMap = useThreadsStore(state => state.tagMap)
+  const pendingCounts = usePendingCounts()
   const mode = useThreadsStore(state => state.mode)
   const query = useThreadsStore(state => state.query)
   const setQuery = useThreadsStore(state => state.setQuery)
@@ -154,7 +165,7 @@ function ThreadList() {
                   type="button"
                   onClick={() => toggle(key)}
                   aria-expanded={!closed}
-                  className="flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-left text-muted-ink outline-none hover:bg-hover focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring"
+                  className="flex w-full items-center gap-1.5 rounded-(--r-kbd) px-2 py-1 text-left text-muted-ink outline-none hover:bg-hover focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring"
                 >
                   <ChevronDown aria-hidden className={cn('size-3 motion-safe:transition-transform', closed && '-rotate-90')} />
                   {key ? <Hash aria-hidden className="size-3" /> : null}
@@ -167,6 +178,8 @@ function ThreadList() {
                 <ThreadRow
                   key={thread.id}
                   thread={thread}
+                  tag={tagOf(tagMap, thread)}
+                  pending={pendingCounts.get(thread.id) ?? 0}
                   project={mode === 'recent' ? projectOf(projectMap, thread) : ''}
                   projects={projects}
                   current={thread.id === currentId}
@@ -268,7 +281,7 @@ export function ThreadsScreen() {
         subtitle={t('subtitle')}
         onBack={hide}
         actions={(
-          <Button size="sm" className="gap-2 rounded-(--r) bg-invert text-invert-ink hover:bg-invert/85" disabled={loading} onClick={() => void startNewConversation()}>
+          <Button className={cn(V3_BUTTON_SHAPE, 'gap-2 px-3')} disabled={loading} onClick={() => void startNewConversation()}>
             <MessageSquarePlus aria-hidden className="size-4" />{t('newThread')}
           </Button>
         )}

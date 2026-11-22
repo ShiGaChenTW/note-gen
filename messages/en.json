@@ -1,27 +1,29 @@
 {
   "agents": {
-    "title": "Agents",
-    "description": "Choose which tools each agent can use. Note proposals go to the review queue.",
-    "loading": "Loading agents…",
-    "empty": "No agents yet.",
-    "add": "Add agent",
+    "title": "Partners",
+    "description": "Choose which tools each partner can use. Note proposals go to the Workbench.",
+    "loading": "Loading partners…",
+    "empty": "No partners yet.",
+    "add": "Add partner",
     "edit": "Edit",
     "name": "Name",
     "role": "Role",
+    "domain": "Domain",
+    "domainPlaceholder": "e.g. Industrial engineering",
     "allowedTools": "Allowed tools",
     "enabled": "Enabled",
     "disabled": "Disabled",
     "save": "Save",
     "saving": "Saving…",
     "cancel": "Cancel",
-    "loadError": "Could not load agent settings.",
-    "saveError": "Could not save agent settings.",
+    "loadError": "Could not load partner settings.",
+    "saveError": "Could not save partner settings.",
     "roles": {
-      "organizer": "Organizer",
-      "scheduler": "Scheduler",
+      "commander": "Commander",
+      "expert": "Expert",
+      "secretary": "Secretary",
       "researcher": "Researcher",
-      "reviewer": "Reviewer",
-      "custom": "Custom"
+      "expertOf": "{domain} expert"
     },
     "tools": {
       "note_list_files": "List notes",
@@ -29,6 +31,56 @@
       "calendar_read_day": "Read calendar events for one day",
       "note_create_file": "Propose a new note",
       "note_update_file": "Propose changes to a note"
+    },
+    "roleTaken": "Only one agent can have this role, and it is already taken.",
+    "domainRequired": "Experts need a domain.",
+    "memory": {
+      "title": "Agent memory",
+      "description": "Each role's own memory, the shared working memory and your preferences. Stored inside the app, not in the vault.",
+      "agent": "Role",
+      "soul": "soul.md (personality)",
+      "soulHint": "Only you can edit this.",
+      "rules": "rules.md (working rules)",
+      "rulesHint": "Agents send you a proposal when they want to change it.",
+      "workNotes": "Work notes",
+      "workNotesHint": "How the agent likes to work, learned from experience. No domain content.",
+      "template": "This is a template. It becomes the real content once you save it.",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved.",
+      "saveError": "Could not save.",
+      "loadError": "Could not load agent memory.",
+      "context": "Current context",
+      "contextHint": "Kept by the commander; you can edit it too. Names and links only.",
+      "projects": "Active projects (up to 10, one per line: name | link)",
+      "weeklyFocus": "This week's focus (up to 5, one per line: name | link)",
+      "people": "People who come up often (one per line)",
+      "tooManyProjects": "Up to 10 active projects.",
+      "tooManyFocus": "Up to 5 focus items this week.",
+      "tooManyPeople": "Up to 20 people.",
+      "titleRequired": "Every line needs a name.",
+      "titleTooLong": "Names can be up to 80 characters.",
+      "activity": "Activity log",
+      "activityHint": "Written by the system. Entries can only be added, never edited. Entries older than 90 days are archived.",
+      "activityEmpty": "No activity yet.",
+      "correctsEntry": "corrects #{id}",
+      "sourceConversation": "conversation {ref}",
+      "sourceProposal": "proposal {ref}",
+      "scott": "Scott",
+      "preferences": "Scott's preferences",
+      "preferencesHint": "Read by every agent; only you can edit them. For example reply language or summary length.",
+      "actions": {
+        "instructed": "instructed",
+        "drafted": "drafted",
+        "proposed": "proposed",
+        "accepted": "accepted",
+        "rejected": "declined",
+        "created": "created",
+        "updated": "updated",
+        "linked": "linked",
+        "reported": "reported",
+        "corrected": "corrected"
+      }
     }
   },
   "agentDiffNavigation": {
@@ -3892,6 +3944,14 @@
         "title": "Global shortcuts",
         "desc": "These shortcuts are registered by the system and can work when NoteGen is not focused."
       },
+      "workbenchKeys": {
+        "title": "Workbench single-key shortcuts",
+        "desc": "While the Workbench is open and you are not typing, one letter runs an action.",
+        "singleKeys": {
+          "title": "N adds a source, T starts a conversation",
+          "desc": "Only works while the Workbench is open. When off, use the sidebar buttons."
+        }
+      },
       "editorShortcuts": {
         "title": "Editor shortcuts",
         "desc": "These shortcuts only work while the Markdown editor is focused.",
@@ -4287,6 +4347,47 @@
           "unsupported": "Not a web article"
         }
       }
+    },
+    "rss": {
+      "title": "RSS subscriptions",
+      "desc": "Paste an RSS or Atom URL (a site's home page works too; the feed is found automatically). While the app is open it checks every 6 hours and once at startup; new posts become sources waiting for your decision. The first fetch only takes the newest 10 posts.",
+      "urlLabel": "Feed URL",
+      "urlPlaceholder": "https://example.com/feed.xml",
+      "nameLabel": "Name",
+      "namePlaceholder": "Name (optional; defaults to the feed title)",
+      "subscribe": "Subscribe",
+      "subscribing": "Subscribing…",
+      "refreshNow": "Update now",
+      "refreshing": "Updating…",
+      "loading": "Loading subscriptions…",
+      "loadError": "Could not load subscriptions.",
+      "empty": "No subscriptions yet.",
+      "renameLabel": "Name of “{name}”",
+      "pause": "Pause",
+      "resume": "Resume",
+      "delete": "Delete",
+      "paused": "Paused",
+      "never": "Not fetched yet",
+      "lastFetched": "Updated {time}, {count, plural, one {# new post} other {# new posts}}",
+      "lastError": "Last error ({time}): {message}",
+      "subscribed": "Subscribed to “{name}”; {count, plural, one {# post} other {# posts}} added",
+      "refreshed": "Updated; {count, plural, one {# new post} other {# new posts}}",
+      "refreshedWithErrors": "Updated; {count, plural, one {# new post} other {# new posts}}, {failed, plural, one {# subscription} other {# subscriptions}} failed",
+      "deleted": "Deleted “{name}” (sources already added are kept)",
+      "duplicate": "Already subscribed to “{name}”",
+      "errors": {
+        "http": "Server responded {detail}",
+        "not_feed": "This URL is not an RSS or Atom feed",
+        "timeout": "Connection timed out",
+        "network": "Could not connect: {detail}",
+        "invalid_url": "Invalid URL",
+        "unknown": "Fetch failed: {detail}"
+      },
+      "undo": "Undo",
+      "deleteError": "Could not delete “{name}”. Try again.",
+      "pauseError": "Could not pause “{name}”. Try again.",
+      "resumeError": "Could not resume “{name}”. Try again.",
+      "restoreError": "Could not restore “{name}”. Subscribe to it again."
     }
   },
   "bases": {
@@ -4827,19 +4928,20 @@
         "summary": "Conversation summary",
         "more": "More chat actions",
         "sendToBackground": "Run in background",
-        "backgroundRequiresDelegate": "Switch to Delegate to run your draft in the background.",
+        "backgroundRequiresDelegate": "Switch to Process to send the draft to the background.",
         "scrollToEnd": "Scroll to end of conversation",
         "usagePercent": "{percent}%",
         "mode": {
           "label": "Chat mode",
-          "shortcut": "Press Tab to switch between Ask and Delegate",
+          "shortcut": "Press Tab to switch between Ask and Process",
           "ask": "Ask",
-          "delegate": "Delegate",
+          "delegate": "Process",
           "readOnlyHint": "Answers only, no file edits",
           "ask-before-edit": "Ask before editing",
           "auto-edit": "Edit automatically",
           "askPlaceholder": "Ask anything about this note",
-          "delegatePlaceholder": "Give me a task, such as moving to-dos to the top"
+          "delegatePlaceholder": "Ask for something, such as: meeting with A tomorrow at 10:00",
+          "processHint": "Changes become proposals; tasks and appointments you ask for are added directly"
         },
         "empty": {
           "ask": {
@@ -4861,8 +4963,8 @@
             }
           },
           "delegate": {
-            "title": "Give me a task",
-            "description": "I’ll show my steps and follow your chosen file permissions.",
+            "title": "Hand it to the commander",
+            "description": "{name}: note changes become proposals for you to accept; tasks and appointments you ask for are added directly.",
             "prompts": {
               "first": {
                 "label": "Organize the key points",
@@ -4903,6 +5005,28 @@
           "showDiff": "View changes",
           "hideDiff": "Hide changes",
           "fileList": "View files"
+        },
+        "commander": {
+          "origin": "{agent} (chat)"
+        },
+        "router": {
+          "ask": "Who should take this?",
+          "askUnavailable": "The local model isn't running. Who should take this?",
+          "routes": {
+            "schedule": "{name} (schedule)",
+            "process": "{name} (process)",
+            "query": "{name} (query)",
+            "preference": "Save as a preference"
+          },
+          "suggested": "suggested",
+          "pickExpert": "Which expert should answer?",
+          "preferenceConfirm": "Save as your preference: “{line}”?",
+          "savePreference": "Save",
+          "notPreference": "Hand to {name}",
+          "cancel": "Cancel",
+          "saved": "Saved to your preferences",
+          "alreadySaved": "Already in your preferences",
+          "saveFailed": "Couldn't save the preference"
         }
       },
       "condensing": "Condensing context...",
@@ -6915,6 +7039,40 @@
     "description": "Click to select a recording tool and quickly create records"
   },
   "editor": {
+    "bottomToolbar": {
+      "label": "Formatting toolbar",
+      "more": "More formatting"
+    },
+    "noteToolbar": {
+      "label": "Note toolbar",
+      "back": "Back",
+      "forward": "Forward",
+      "find": "Find in note",
+      "tags": "Tags",
+      "noTags": "No tags yet",
+      "addTag": "Add a tag, press Enter",
+      "removeTag": "Remove {tag}",
+      "tagsReadOnly": "These tags use complex YAML. Edit them in the property card source.",
+      "pin": "Pin to top",
+      "unpin": "Unpin",
+      "favorite": "Favorite",
+      "unfavorite": "Remove from favorites",
+      "info": "Note info",
+      "infoFileName": "File name",
+      "infoFolder": "Folder",
+      "infoCreated": "Created",
+      "infoModified": "Modified",
+      "infoLength": "Length",
+      "command": "Command palette",
+      "more": "More",
+      "sendToCommander": "Send to commander",
+      "sentToCommander": "Sent to the commander",
+      "sentNewVersion": "The note changed; sent the new version to the commander",
+      "alreadySent": "Already sent, and the note hasn't changed",
+      "emptyNote": "This note is empty, so nothing was sent",
+      "sendFailed": "Couldn't send to the commander",
+      "saveBeforeSendFailed": "Couldn't save the latest changes, so nothing was sent"
+    },
     "statusBar": {
       "documentActions": {
         "copy": "Copy",
@@ -7298,6 +7456,13 @@
       "confirm": "Confirm",
       "committed": "Created a new prompt version",
       "commitFailed": "Failed to create the version"
+    },
+    "docTitle": {
+      "label": "Title",
+      "placeholder": "Untitled",
+      "renameFailed": "Could not rename to this title",
+      "fileExists": "A file with this name already exists",
+      "busy": "This file is busy, try again shortly"
     }
   },
   "editorWindow": {
@@ -7585,9 +7750,9 @@
     },
     "needs": {
       "title": "Needs you",
-      "review": "Drafts",
+      "review": "Proposals",
       "reviewAction": "Review",
-      "drafts": "{count} drafts to review",
+      "drafts": "{count} proposals to review",
       "unfinished": "Unfinished",
       "resume": "Continue",
       "signal": "Nudge",
@@ -7852,6 +8017,7 @@
     "showProcessed": "Show processed",
     "trash": "Trash",
     "backToInbox": "Back to Inbox",
+    "backToRecords": "Back to records",
     "backToWorkspace": "Back to workspace",
     "selectAll": "Select all",
     "selected": "{count} selected",
@@ -8123,9 +8289,9 @@
     }
   },
   "collect": {
-    "title": "Collect",
-    "subtitle": "Drop anything in one box, split it into proposals, take them one by one",
-    "inputLabel": "Content to collect",
+    "title": "Sources",
+    "subtitle": "Add a source, then review its proposals one at a time.",
+    "inputLabel": "Content to add",
     "placeholder": "Paste a link or some text, or drop in a screenshot or file. A one-line to-do works too.",
     "detect": {
       "empty": "Type is detected automatically",
@@ -8142,7 +8308,7 @@
         "hint": "→ saved as a note, actions pulled out"
       }
     },
-    "send": "Collect",
+    "send": "Add source",
     "pickFile": "Image or file",
     "try": "Try:",
     "sample": {
@@ -8196,15 +8362,15 @@
     "acceptedMany": "Accepted {count} proposals",
     "undoFailed": "The file changed, so it can't be undone",
     "failed": "Something went wrong, please try again",
-    "fileTooLarge": "{name} is over 8 MB and was not collected",
-    "remove": "Remove this capture",
-    "empty": "Nothing collected yet. Try pasting some text, a link, or an image.",
-    "emptyFilter": "Nothing in this state.",
-    "records": "Inbox records",
-    "recordsHint": "Unprocessed records in the Inbox can be split into proposals.",
-    "recordsEmpty": "No unprocessed records in the Inbox",
+    "fileTooLarge": "{name} is over 8 MB and was not added.",
+    "remove": "Remove this source",
+    "empty": "No sources yet. Try pasting text, a link, or an image.",
+    "emptyFilter": "No sources with this status.",
+    "records": "Unsorted records",
+    "recordsHint": "Unsorted records in the Inbox folder can be split into proposals.",
+    "recordsEmpty": "No unsorted records",
     "split": "Split",
-    "queued": "Queued",
+    "queued": "Added to Sources",
     "writeHint": "New notes, tasks and slots are written only when you accept them; discarded proposals leave no file behind."
   },
   "threads": {
@@ -8242,11 +8408,11 @@
     "cards": {
       "proposal": "Proposal",
       "accept": "Accept",
-      "reject": "Reject",
-      "alsoInInbox": "Also waiting in Inbox",
-      "proposalWait": "Waiting",
+      "reject": "Discard",
+      "alsoInInbox": "Also in the Workbench",
+      "proposalWait": "Needs a decision",
       "proposalOk": "Accepted",
-      "proposalNo": "Rejected",
+      "proposalNo": "Discarded",
       "kickoff": "Kickoff card",
       "placeholder": "Sample",
       "kickoffProposed": "Ready to start",
@@ -8263,8 +8429,33 @@
         "wait": "Queued",
         "run": "Running",
         "done": "Done"
-      }
-    }
+      },
+      "discuss": "Discuss again",
+      "proposalTalk": "Discussing again",
+      "proposalReplaced": "Replaced",
+      "directAdded": "Added: {what}",
+      "undo": "Undo",
+      "directDone": "Added",
+      "directUndone": "Undone",
+      "directStale": "File changed since, not undone"
+    },
+    "tag": {
+      "query": "Query",
+      "process": "Process",
+      "schedule": "Schedule",
+      "label": "Talk to",
+      "hint": {
+        "query": "With an expert, read-only, changes nothing",
+        "process": "The commander takes part; changes go through proposals",
+        "schedule": "With the secretary; tasks and events you give take effect directly"
+      },
+      "handoff": "Hand to commander",
+      "handoffHint": "The tag becomes Process and this conversation continues",
+      "transferAsk": "Secretary: this sounds like a notes or knowledge question. Hand it to the commander?",
+      "transfer": "Hand to commander",
+      "keep": "No thanks"
+    },
+    "pending": "{count, plural, one {# proposal} other {# proposals}} still to decide"
   },
   "anywhere": {
     "palette": {
@@ -8291,9 +8482,13 @@
         "title": "Open Home",
         "keywords": "home,today"
       },
+      "collect": {
+        "title": "Open sources",
+        "keywords": "source,sources,add source"
+      },
       "inbox": {
-        "title": "Open Inbox",
-        "keywords": "inbox,capture,triage"
+        "title": "Open old records",
+        "keywords": "old records,unprocessed records"
       },
       "searchSidebar": {
         "title": "Focus sidebar search",
@@ -8343,11 +8538,11 @@
     }
   },
   "decide": {
-    "title": "Decide",
-    "subtitle": "{count, plural, one {# item} other {# items}} for you to decide on. Accept or dismiss each one.",
-    "count": "{count} waiting for you",
-    "needsLabel": "Decide",
-    "listLabel": "Items waiting for you",
+    "title": "Workbench",
+    "subtitle": "{count, plural, one {# item} other {# items}}. Accept or discard each proposal.",
+    "count": "Workbench · {count, plural, one {# item} other {# items}}",
+    "needsLabel": "Needs a decision",
+    "listLabel": "Workbench items",
     "empty": "All caught up.",
     "proposalTag": "Proposal",
     "kind": {
@@ -8362,8 +8557,8 @@
       "folder": "New folder"
     },
     "source": {
-      "collect": "Collect",
-      "draft": "Agent draft"
+      "collect": "Sources",
+      "draft": "Agent proposal"
     },
     "from": "From {origin}",
     "writesTo": "If accepted, writes to: ",
@@ -8375,17 +8570,33 @@
     "diff": {
       "hidden": "{count} more lines not shown"
     },
-    "merged": "{count} other source(s) proposed the same thing; accepting or declining handles them together.",
+    "merged": "{count, plural, one {# other source proposed} other {# other sources proposed}} the same thing. Accepting or discarding handles them together.",
     "accept": "Accept",
-    "reject": "Decline",
+    "reject": "Discard",
     "accepted": "Accepted \"{title}\"",
-    "rejected": "Declined \"{title}\"",
+    "rejected": "Discarded “{title}”",
     "undo": "Undo",
     "undoFailed": "Can't undo, the file was changed since",
     "failed": "Something went wrong, please try again",
-    "conflict": "The file changed after the draft was made. Review it in the task center.",
+    "conflict": "The file changed after the proposal was made. Review it in the task center.",
     "openReview": "Open task center",
-    "viewAll": "{count} waiting for you, view all"
+    "viewAll": "View all {count, plural, one {# Workbench item} other {# Workbench items}}",
+    "stale": "{count, plural, one {# proposal has} other {# proposals have}} waited over 14 days; they go into the weekly review and never disappear on their own",
+    "discuss": {
+      "button": "Discuss again",
+      "label": "Note for discussing again",
+      "placeholder": "What should the commander change? e.g. a shorter title, move it to next week",
+      "send": "Send and return to the conversation",
+      "cancel": "Cancel",
+      "hint": "⌘↩ to send",
+      "message": "Discuss again \"{title}\": {note}",
+      "done": "Back in the conversation: \"{title}\"",
+      "revised": "I’ve revised “{title}” and submitted it for approval.",
+      "fromConversation": "From conversation: {title}",
+      "conversation": "this conversation",
+      "sending": "Sending…",
+      "failed": "Not sent. Your note is still here, so you can try again."
+    }
   },
   "jobs": {
     "new": "New job card",
@@ -8396,7 +8607,7 @@
     "title": "Job title",
     "step": "Step {number}",
     "stepTitle": "Step title",
-    "agent": "Agent",
+    "agent": "Partner",
     "instructions": "Instructions",
     "criterion": "Acceptance criterion",
     "removeStep": "Remove step {number}",
@@ -8404,12 +8615,12 @@
     "addStep": "Add step",
     "close": "Close",
     "saveProposal": "Save proposal",
-    "loadingAgents": "Loading agents…",
-    "noAgents": "Enable an agent in Settings → General → Agents to create a job card.",
-    "agentsFailed": "Could not load agents.",
+    "loadingAgents": "Loading partners…",
+    "noAgents": "Enable a partner in Settings → General → Partners to create a job card.",
+    "agentsFailed": "Could not load partners.",
     "modelRequired": "Configure an AI model to draft steps, or add steps manually.",
     "generateFailed": "Could not draft valid steps. Try again or add steps manually.",
-    "invalidPlan": "Give every step a title, agent, instructions and acceptance criterion.",
+    "invalidPlan": "Give every step a title, partner, instructions and acceptance criterion.",
     "invalidDependencies": "Check the prerequisites for circular or missing dependencies.",
     "saveFailed": "Could not save the job card.",
     "card": "Job card",
@@ -8425,7 +8636,7 @@
     "reviewDrafts": "Review drafts",
     "start": "Start work",
     "parallel": "Up to {count} steps at once",
-    "agentDisabled": "This agent is disabled or unavailable. Enable it before rerunning the step.",
+    "agentDisabled": "This partner is disabled or unavailable. Enable it before rerunning the step.",
     "interrupted": "The previous run was interrupted. Rerun it or cancel the step.",
     "status": {
       "waiting": "Waiting for a slot",
@@ -8467,7 +8678,8 @@
       "noAccess": "Calendar access is off, so events will not show here.",
       "proposal": "Proposal · Scheduler",
       "accept": "Accept",
-      "reject": "Dismiss"
+      "reject": "Discard",
+      "namedAction": "{action} “{title}”"
     },
     "journal": {
       "label": "Journal",
@@ -8489,14 +8701,14 @@
       "emptyDay": "No tasks due this day."
     },
     "decide": {
-      "label": "Waiting for you",
+      "label": "Workbench",
       "empty": "All items have been handled.",
       "all": "All"
     },
     "captures": {
-      "label": "Collected today",
+      "label": "Sources added today",
       "all": "All",
-      "empty": "Nothing collected today.",
+      "empty": "No sources added today.",
       "reading": "Reading",
       "kind": {
         "text": "Text",
@@ -8510,22 +8722,26 @@
       "tabHint": "Press Tab to switch to Ask",
       "note": "Note",
       "ask": "Ask",
-      "notePlaceholder": "Jot something down, or press Tab to switch to Ask",
-      "noteOnlyPlaceholder": "Jot something down",
+      "notePlaceholder": "Add a source, or press Tab to switch to Ask",
+      "noteOnlyPlaceholder": "Add a source",
       "askPlaceholder": "Ask a question, e.g. \"how should I use this afternoon?\"",
-      "notePlaceholderToday": "Capture a note (goes to today, not {date})",
+      "notePlaceholderToday": "Add a source for today (viewing {date})",
       "toToday": "Goes to today",
-      "submitNote": "Collect",
+      "submitNote": "Add source",
       "submitAsk": "Ask",
       "detect": {
         "task": "Task",
         "link": "Link",
         "text": "Note"
       },
-      "captured": "Collected. Splitting into proposals",
+      "captured": "Source added. Splitting into proposals.",
       "noModel": "No model configured yet. Pick one in settings first."
     },
-    "titleDay": "{date}"
+    "titleDay": "{date}",
+    "workbench": {
+      "line": "Workbench · {count, number}",
+      "open": "Open the workbench, {count, number} waiting for you"
+    }
   },
   "week": {
     "title": "Plan",
@@ -8567,28 +8783,35 @@
     "count": "{count} items",
     "nav": {
       "today": "Today",
-      "decide": "Decide",
-      "collect": "Collect",
+      "decide": "Workbench",
+      "collect": "Sources",
       "threads": "Threads",
-      "knowledge": "Knowledge",
+      "knowledge": "Organize",
       "plan": "Plan"
     },
     "agents": {
-      "title": "Agents",
+      "title": "Partners",
       "running": "{count} running",
-      "add": "Add agent",
-      "addFirst": "Add your first agent"
+      "add": "Add partner",
+      "addFirst": "Add your first partner"
     },
     "vault": "MyVault",
+    "collapseSection": "Collapse {title}",
+    "expandSection": "Expand {title}",
+    "noteList": {
+      "label": "Notes in {folder}",
+      "empty": "No notes in this folder yet",
+      "close": "Close note list"
+    },
     "rules": {
       "label": "Rule",
-      "text": "Agents can only propose; every write goes through Decide."
+      "text": "Partners can only propose changes. Review them in the Workbench before they are written."
     },
     "tabs": {
-      "collectGroup": "Collect pages",
-      "collect": "Collect",
-      "knowledgeGroup": "Knowledge pages",
-      "inbox": "Inbox",
+      "collectGroup": "Source pages",
+      "collect": "Sources",
+      "knowledgeGroup": "Organize pages",
+      "inbox": "Unsorted",
       "timeline": "Notes timeline",
       "canvases": "Canvas",
       "noteTags": "Tags",
@@ -8596,13 +8819,13 @@
       "outline": "Outline"
     },
     "knowledge": {
-      "title": "Knowledge",
-      "subtitle": "Timeline, canvases and tags; the notes tree is in MyVault on the left"
+      "title": "Organize",
+      "subtitle": "Timeline, canvases and tags; the notes tree is in {vault} on the left"
     }
   },
   "organize": {
     "title": "Auto-organize",
-    "description": "After 60 minutes of inactivity, suggest up to five changes for review in Decide.",
+    "description": "After 60 minutes of inactivity, suggest up to five changes for review in the Workbench.",
     "merge": "Merge {detail} into {path}",
     "tag": "Add #{detail} to {path}",
     "link": "Link {path} to {detail}",
@@ -8720,6 +8943,456 @@
       "label": "Private",
       "mark": "Mark as private",
       "unmark": "Unmark private"
+    }
+  },
+  "commander": {
+    "origin": "Source analysed by {agent}: {source}",
+    "unconverted": "(Could not convert to text; the original file is kept: {origin})",
+    "unconvertedReason": "(Could not convert to text: {reason} The original file is kept: {origin})",
+    "fileReason": {
+      "scannedPdf": "This PDF has no extractable text (it may be a scan). Run OCR first or save the pages as images.",
+      "encrypted": "The file is encrypted or password-protected, so its content cannot be read.",
+      "malformed": "The file is damaged or missing required parts, so no text could be extracted.",
+      "resourceLimit": "The file is too complex and exceeds the safe parsing limit.",
+      "fileTooLarge": "The file is larger than 100 MB and was not parsed.",
+      "readFailed": "The file could not be read (it may have been moved or deleted).",
+      "parseFailed": "The file could not be parsed.",
+      "unsupported": "This file type is not supported yet.",
+      "noText": "The file contains no readable text."
+    },
+    "domainProposal": {
+      "title": "Create the domain \"{domain}\" with a new expert, {name}",
+      "summary": "{count} knowledge notes have no domain yet, all about \"{topic}\""
+    }
+  },
+  "workbench": {
+    "title": "Workbench",
+    "subtitle": "{count} waiting for you",
+    "subtitleSources": "{done} / {total} organized",
+    "tabs": {
+      "label": "Workbench tabs",
+      "review": "Review",
+      "sources": "Sources"
+    },
+    "filter": {
+      "label": "Filter by label",
+      "all": "All"
+    },
+    "labels": {
+      "schedule": "Schedule",
+      "note": "Notes",
+      "knowledge": "Knowledge",
+      "source": "Sources",
+      "review": "Review"
+    },
+    "verbs": {
+      "add": "Add",
+      "supplement": "Supplement",
+      "modify": "Modify",
+      "merge": "Merge",
+      "replace": "Replace",
+      "verify": "Verify",
+      "archive": "Archive",
+      "reschedule": "Reschedule",
+      "judge": "Judge",
+      "confirm": "Confirm",
+      "organize": "Organize"
+    },
+    "groups": {
+      "reply": "Waiting for your reply",
+      "late": "Overdue",
+      "proposal": "Proposals",
+      "hand": "Organize by hand",
+      "task": "Other tasks"
+    },
+    "actions": {
+      "accept": "Accept",
+      "discuss": "Discuss again",
+      "drop": "Drop",
+      "answer": "Reply",
+      "pick": "Pick one",
+      "desk": "Lay out on the desk",
+      "schedule": "Schedule",
+      "done": "Done",
+      "stillValid": "Still valid",
+      "toCommander": "Hand to {name}",
+      "process": "Process as suggested",
+      "selfProcess": "Process myself",
+      "reject": "Don't use",
+      "handle": "Process",
+      "retry": "Retry",
+      "delete": "Delete",
+      "migrate": "Start",
+      "resume": "Continue",
+      "pause": "Pause",
+      "packDone": "Done organizing"
+    },
+    "listLabel": "Things waiting for you",
+    "more": "+{count} more",
+    "onDesk": "On desk",
+    "by": "Suggested by {name}",
+    "age": {
+      "now": "just now",
+      "hour": "{count}h",
+      "day": "{count}d"
+    },
+    "overdue": "Overdue {age}",
+    "confirmSince": "Last confirmed {date}",
+    "reconfirmRequest": "Please re-check whether this note still holds: {path}",
+    "writesTo": "Writes to: {dest}",
+    "empty": "All done",
+    "emptyFiltered": "All done in “{label}”",
+    "emptyHint": "New things will show up here.",
+    "keys": {
+      "label": "Keyboard",
+      "select": "Select",
+      "expand": "Expand",
+      "accept": "Accept",
+      "putAside": "Put aside",
+      "undo": "Undo"
+    },
+    "putAside": {
+      "button": "Put aside",
+      "entry": "Put-aside items",
+      "count": "{count} put aside",
+      "noReminder": "No reminder",
+      "tomorrow": "Tomorrow",
+      "nextWeek": "Next Monday",
+      "pickDate": "Reminder date",
+      "set": "Put aside",
+      "remindOn": "Remind {date}",
+      "noDate": "No reminder date",
+      "takeBack": "Bring back",
+      "title": "Put aside",
+      "empty": "Nothing put aside.",
+      "back": "Back to review"
+    },
+    "schedule": {
+      "time": "Time",
+      "confirm": "Schedule today",
+      "cancel": "Cancel"
+    },
+    "toast": {
+      "accepted": "Accepted “{title}”",
+      "dropped": "Dropped “{title}”",
+      "done": "Completed “{title}”",
+      "scheduled": "Scheduled “{title}” today at {time}",
+      "asided": "Put aside “{title}”",
+      "asidedUntil": "Put aside “{title}” until {date}",
+      "takenBack": "Brought back “{title}”",
+      "processed": "Handed “{title}” to {name}; results go to Review",
+      "rejected": "Not using “{title}”",
+      "stillValid": "Confirmed “{title}” is still valid",
+      "toCommander": "Asked {name} to re-check “{title}”",
+      "undone": "Undone",
+      "cannotUndo": "This step can't be undone",
+      "nothing": "Nothing to undo",
+      "failed": "Something went wrong, please try again",
+      "undo": "Undo",
+      "retried": "Captured “{title}” again",
+      "retryFailed": "Still couldn't capture “{title}”",
+      "deleted": "Deleted “{title}”"
+    },
+    "sources": {
+      "filterLabel": "Filter by status",
+      "filters": {
+        "all": "All",
+        "wait": "Awaiting you",
+        "todo": "Not organized",
+        "done": "Organized",
+        "no": "Not used"
+      },
+      "status": {
+        "wait": "Awaiting you",
+        "todo": "Not organized",
+        "ing": "Organizing",
+        "edited": "Edited",
+        "done": "Organized",
+        "no": "Not used"
+      },
+      "kind": {
+        "web": "Web",
+        "text": "Text",
+        "shot": "Screenshot",
+        "img": "Image",
+        "file": "File",
+        "audio": "Audio",
+        "todo": "To-do",
+        "prompt": "Material",
+        "email": "Email",
+        "rss": "RSS",
+        "meeting": "Meeting"
+      },
+      "listLabel": "Sources",
+      "selectAll": "Select all",
+      "selectAllLabel": "Select everything in this list",
+      "pickRow": "Select “{title}”",
+      "organised": "{done} / {total} organized",
+      "outputs": "{count} outputs",
+      "noOutputs": "No outputs",
+      "editedSub": "v{version} not sent",
+      "picked": "{count} selected",
+      "handTo": "Hand to {name}",
+      "toDesk": "Lay out on the desk",
+      "clear": "Clear",
+      "days": {
+        "today": "Today",
+        "yesterday": "Yesterday",
+        "week": "This week",
+        "earlier": "Earlier"
+      },
+      "empty": "No matching sources",
+      "emptyAll": "No sources yet. Use “Add source” (N) in the sidebar.",
+      "loadFailed": "Couldn't load sources. The list may be incomplete.",
+      "loadRetry": "Retry",
+      "pickOne": "Pick a source to read",
+      "back": "Back to list",
+      "judgement": "First judgement",
+      "judgementHint": "Local model · judges only, never writes",
+      "noJudgement": "No first judgement yet; you can decide directly.",
+      "process": "Process as suggested",
+      "reject": "Don't use",
+      "restore": "Back to awaiting you",
+      "archived": "Archived (rejected over 30 days)",
+      "reorganise": "Organize again",
+      "desk": "Lay out on the desk",
+      "edit": "Edit",
+      "send": "Send to {name}",
+      "sendUpdate": "Send update to {name}",
+      "analysing": "{name} is analyzing; results go to Review",
+      "queued": "Queued for {name}",
+      "locked": "The original is locked. Editing saves a new version; {name} only looks at what changed.",
+      "outputsTitle": "Outputs",
+      "version": "v{version}",
+      "toast": {
+        "handed": "Handed {count} to {name}; results go to Review",
+        "handedRe": "Handed {count} to {name} ({re} organized again); results go to Review",
+        "sent": "Sent “{title}” to {name}",
+        "saved": "Saved",
+        "savedVersion": "Saved as v{version}; send it to {name} to update the outputs",
+        "noChange": "No changes",
+        "rejected": "Not using “{title}”",
+        "restored": "“{title}” is awaiting you again",
+        "handFailed": "Couldn't hand to {name}. Your selection is back; please try again."
+      },
+      "editor": {
+        "editing": "Editing",
+        "newVersion": "new version v{version}",
+        "back": "Back",
+        "cancel": "Cancel",
+        "save": "Save",
+        "titlePlaceholder": "Title",
+        "bodyPlaceholder": "Start writing…",
+        "words": "{count} characters",
+        "keepOld": "The current v{version} is kept after saving",
+        "applyOnSave": "Changes apply when you save",
+        "unsaved": "Unsaved changes",
+        "notSaved": "Not saved yet",
+        "confirmLeave": "Discard unsaved changes?",
+        "toolbar": "Formatting",
+        "tools": {
+          "heading": "Heading",
+          "bold": "Bold",
+          "italic": "Italic",
+          "bullet": "List",
+          "numbered": "Numbered",
+          "task": "Checkbox",
+          "quote": "Quote",
+          "link": "Link",
+          "rule": "Divider"
+        }
+      },
+      "handle": "Process",
+      "putAside": "Put aside",
+      "retry": "Retry",
+      "delete": "Delete",
+      "captureFailed": "Capture failed",
+      "captureFailedHint": "Couldn't read this page. Retry, or delete this source."
+    },
+    "desk": {
+      "title": "Desk",
+      "heading": "{first} +{count}",
+      "back": "Workbench",
+      "save": "Save as note",
+      "materials": "Materials · {count}",
+      "draft": "Working draft",
+      "help": "Help",
+      "draftTitle": "Title",
+      "draftBody": "Combine and rewrite here…",
+      "saved": "Saved as note “{path}”",
+      "handTag": "handwritten",
+      "fallbackName": "Desk note",
+      "helpStarting": "Starting a processing conversation…",
+      "helpHint": "Processing conversation with {name} and the domain expert",
+      "helpFailed": "Couldn't start the processing conversation; try again from Threads",
+      "empty": "No materials",
+      "notesOnly": "Only notes support structural actions",
+      "ops": {
+        "label": "Structural actions",
+        "move": "Move",
+        "movePlaceholder": "Folder, e.g. knowledge/engineering",
+        "tag": "Add tag",
+        "tagPlaceholder": "Tag",
+        "link": "Link to…",
+        "assignDomain": "Assign domain",
+        "merge": "Merge notes",
+        "mergeLater": "Merging notes comes later",
+        "apply": "Apply",
+        "noDomains": "No domains yet"
+      },
+      "done": {
+        "move": "Moved to {value}",
+        "tag": "Tagged #{value}",
+        "link": "Linked to “{value}”",
+        "assignDomain": "Assigned to “{value}”"
+      }
+    },
+    "add": {
+      "title": "Add source",
+      "subtitle": "Type anything; it's classified automatically",
+      "saved": "Added to sources; {name} will organize it",
+      "savedLink": "Added to sources; waiting for your decision"
+    },
+    "quick": {
+      "label": "Add",
+      "newDoc": "New document",
+      "newDocShort": "Doc",
+      "addSource": "Add source",
+      "addSourceShort": "Source",
+      "newThread": "New conversation",
+      "newThreadShort": "Chat"
+    },
+    "legacy": {
+      "title": "Old notes: {count, number}",
+      "summary": "Imported at launch · handed to {name} in batches",
+      "progress": "{done, number} / {total, number} processed",
+      "running": "Processing",
+      "pausing": "Pausing after this note",
+      "paused": "Paused",
+      "by": "System",
+      "hint": "Handed to the commander {size, number} at a time; notes it can’t decide come back one pack at a time under “Organize by hand”.",
+      "packSummary": "{name} couldn’t decide these; organize them yourself",
+      "toast": {
+        "started": "Handing old notes to {name} in batches; progress shows on the card",
+        "pausing": "Pausing after this note",
+        "finished": "Processed {count, number} notes this run; {packs, number} packs need your hands",
+        "allFailed": "Nothing in this batch went through, so it paused. Try Continue later",
+        "allUndecided": "{name} couldn’t decide anything in this batch, so it paused. Check the model settings",
+        "packDone": "Finished the pack starting with “{title}”"
+      }
+    },
+    "import": {
+      "email": "Email",
+      "emailAdded": "Imported {count, plural, one {# email} other {# emails}}; waiting for your decision",
+      "emailEmpty": "No emails found in the file (.eml and .mbox are supported)",
+      "nothingNew": "Everything was already imported",
+      "skipped": "{count} already imported, skipped.",
+      "truncated": "{total} emails in total; only the newest {limit} were imported.",
+      "failed": "Import failed",
+      "dropUnsupported": "You can drop .eml, .mbox, .vtt or .srt files here",
+      "subscribeRss": "Subscribe to RSS",
+      "rssSubscribed": "Subscribed to “{name}”; {count, plural, one {# post} other {# posts}} added and waiting for your decision",
+      "meeting": "Meeting transcript",
+      "meetingAdded": "Imported {count, plural, one {# meeting} other {# meetings}}; waiting for your decision",
+      "meetingEmpty": "No transcript found in the file (.vtt, .srt, .txt and .docx are supported)",
+      "meetingFailed": "{count, plural, one {# file} other {# files}} could not be read: {names}.",
+      "busy": {
+        "email": "Importing email…",
+        "meeting": "Importing meeting transcripts…",
+        "rss": "Subscribing to RSS…"
+      }
+    }
+  },
+  "cleanup": {
+    "actions": {
+      "modify": "Modify",
+      "replace": "Replace",
+      "verify": "Needs verification",
+      "supplement": "Add context",
+      "merge": "Merge",
+      "archive": "Archive"
+    },
+    "bundleTitle": "Tidy up “{domain}”: {count} items",
+    "singleTitle": "{action}: {title}",
+    "item": "- {action}: {titles} — {evidence}",
+    "origin": "Cleanup proposal from {agent}",
+    "originSystem": "Cleanup proposal",
+    "confirmTitle": "Still valid: {title}",
+    "confirmBody": "Re-checked: nothing outdated, contradictory or duplicated, and external sources agree ({evidence}). Accepting sets the last-confirmed date to today.",
+    "confirmBodyNoExternal": "Re-compared with the notes in this domain: nothing outdated, contradictory or duplicated (no external sources found). Accepting sets the last-confirmed date to today."
+  },
+  "review": {
+    "period": "Week {week} of {month}/{year}",
+    "title": "Weekly review · {period}",
+    "origin": "Weekly review compiled by {agent}",
+    "originSystem": "Weekly review",
+    "tag": "period-review",
+    "sections": {
+      "actions": "Actions",
+      "records": "Records this period",
+      "research": "Research",
+      "experts": "Expert reviews",
+      "due": "Notes due for re-confirmation",
+      "stale": "Proposals undecided for over 14 days",
+      "audit": "Memory audit",
+      "attached": "Attached proposals"
+    },
+    "completed": "{count} completed",
+    "overdue": "{count} overdue",
+    "procrastinated": "Slipping: {items}",
+    "time": "Time spent on: {items}",
+    "minutes": "{key} {hours} h",
+    "researchItem": "{domain} | {question}: {summary}",
+    "researchUnavailable": "{domain} | {question} (no lookup tool available; question listed for later)",
+    "researchNothing": "{domain} | {question}: nothing new",
+    "expertItem": "{agent} ({domain}): {text}",
+    "expertItemNoName": "{domain}: {text}",
+    "dueItem": "{note} (due {date})",
+    "staleItem": "{title} (waiting {days} days)",
+    "auditItem": "{memory}: “{text}” overlaps {note}",
+    "auditMemory": {
+      "work_notes": "Work notes",
+      "context": "Current context",
+      "activity": "Activity log"
+    },
+    "attached": "{cleanup} cleanup, {schedule} schedule and {audit} memory-audit proposals are decided separately on the workbench.",
+    "schedule": {
+      "title": "Reschedule: {task} ({from} → {to})",
+      "body": "Overdue for {days} days; suggest moving it to a lighter day."
+    },
+    "audit": {
+      "workNotesTitle": "Tidy {agent}'s work notes: {count} lines overlap notes",
+      "contextTitle": "Tidy current context: {count} items overlap notes",
+      "line": "- “{text}” is already in {note}"
+    },
+    "settings": {
+      "title": "Research and reviews",
+      "description": "The researcher researches, experts review their domains and the secretary reviews actions; the commander compiles one review proposal. Conflicts and errors are proposed immediately, not held for the bundle.",
+      "frequency": "Frequency",
+      "weekday": "Compile on",
+      "lastRun": "Last run: {time}",
+      "never": "Not run yet",
+      "runNow": "Run once now",
+      "running": "Running…",
+      "saved": "Saved",
+      "loadError": "Couldn't load settings",
+      "saveError": "Couldn't save",
+      "frequencies": {
+        "daily": "Daily",
+        "weekly": "Weekly",
+        "biweekly": "Every two weeks",
+        "monthly": "Monthly",
+        "off": "Off"
+      },
+      "weekdays": {
+        "0": "Sunday",
+        "1": "Monday",
+        "2": "Tuesday",
+        "3": "Wednesday",
+        "4": "Thursday",
+        "5": "Friday",
+        "6": "Saturday"
+      }
     }
   }
 }

@@ -59,3 +59,43 @@ describe('mergeItems', () => {
     expect(merged).toEqual([{ id: 'b', createdAt: 9, v: 'disk' }, { id: 'a', createdAt: 5, v: 'mem' }])
   })
 })
+
+// Fork（almanac ALMNC-54.5）：提案記錄來自哪段對話，重開後還在。
+describe('proposal source conversation', () => {
+  it('keeps the revision’s write operations and workbench label through save and load', () => {
+    const proposal = {
+      ...base, id: 'p1', kind: 'note' as const, title: '改筆記', status: 'wait' as const,
+      previousProposalId: 'collect:c0:p1',
+      edits: [{ path: 'a.md', baseContent: '舊', content: '修訂', summary: '改筆記' }],
+      card: { label: 'knowledge' as const, verb: 'modify' as const },
+    }
+    const saved = serializeItems([item({ proposals: [proposal] })])
+    expect(parseItems(saved, NOW)[0].proposals[0]).toMatchObject(proposal)
+  })
+
+  it('keeps conversationId and previousProposalId through save and load', () => {
+    const saved = serializeItems([item({ proposals: [{ ...base, id: 'p1', kind: 'task', title: '甲', status: 'wait', conversationId: 12, previousProposalId: 'collect:c0:p1' }] })])
+    expect(saved[0].proposals[0]).toMatchObject({ conversationId: 12, previousProposalId: 'collect:c0:p1' })
+    expect(parseItems(saved, NOW)[0].proposals[0]).toMatchObject({ conversationId: 12, previousProposalId: 'collect:c0:p1' })
+  })
+  it('drops only malformed link fields, not the proposal', () => {
+    const raw = [{ ...item(), proposals: [{ ...base, id: 'p1', kind: 'task', title: '甲', status: 'wait', conversationId: 'x', previousProposalId: 3 }] }]
+    const [proposal] = parseItems(raw, NOW)[0].proposals
+    expect(proposal.id).toBe('p1')
+    expect(proposal).not.toHaveProperty('conversationId')
+    expect(proposal).not.toHaveProperty('previousProposalId')
+  })
+})
+
+// Fork（almanac ALMNC-54.7）：右側欄指揮官的檔案變更提案，重開後還能接受。
+describe('file change proposals', () => {
+  const change = { toolName: 'note_update_file', args: { filePath: 'a.md', content: 'new' }, kind: 'update' as const, path: 'a.md', content: 'new', baseContent: 'old', summary: '修改 a.md（1 → 1 行）' }
+  it('keeps the change through save and load', () => {
+    const saved = serializeItems([item({ proposals: [{ ...base, id: 'p1', kind: 'note', title: change.summary, status: 'wait', conversationId: 7, change }] })])
+    expect(parseItems(saved, NOW)[0].proposals[0]).toMatchObject({ conversationId: 7, change })
+  })
+  it('drops a proposal whose change cannot be read', () => {
+    const raw = [{ ...item(), proposals: [{ ...base, id: 'p1', kind: 'note', title: 'x', status: 'wait', change: { kind: 'update' } }, { ...base, id: 'p2', kind: 'task', title: '乙', status: 'wait' }] }]
+    expect(parseItems(raw, NOW)[0].proposals.map(proposal => proposal.id)).toEqual(['p2'])
+  })
+})
