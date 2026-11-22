@@ -16,6 +16,7 @@ import type { Mark } from '@/db/marks'
 import { prepareActiveEditorPathMutationDurably } from '@/lib/editor-deactivation'
 import emitter from '@/lib/emitter'
 import { useUiV3 } from '@/lib/fork-ui'
+import { PLAIN_ROW, recordRowTone } from './row-tone'
 import { addTagToRecords, convertRecordsToNotes, notifyRecordSaved, restoreRecords, setRecordsProcessed, setRecordsUnprocessed, trashRecords } from '@/lib/inbox/actions'
 import { formatListTime } from '@/lib/time-format'
 import { cn } from '@/lib/utils'
@@ -63,8 +64,7 @@ function useRecordSavedToast() {
   }, [t])
 }
 
-/** 清單列共用的 hover 與鍵盤焦點。卡片底上用 accent：自訂深色主題裡 --muted 等於 --card。 */
-const ROW = 'transition-colors duration-100 hover:bg-accent/70'
+/** 清單列的鍵盤焦點；底色見 row-tone.ts。 */
 const ROW_BUTTON = 'cursor-pointer rounded-sm outline-none focus-visible:ring-1 focus-visible:ring-ring/65'
 
 function noteTitle(path: string) {
@@ -103,7 +103,7 @@ function RecordRow({ record, selected, focused, processed, locale, onToggle, onF
   const { title, preview } = getMarkListItemContent(record)
   const text = title || preview || record.url
   return (
-    <div className={cn('group relative flex items-center gap-2 border-b px-3 text-sm', ROW, selected && 'bg-accent/40', focused && 'bg-hover hover:bg-active')}>
+    <div className={cn('group relative flex items-center gap-2 border-b px-3 text-sm', recordRowTone(selected, focused))}>
       {/* 目前展開的那筆：左側色條，不只靠底色 */}
       {focused && <span className="absolute inset-y-1.5 left-0 w-0.5 rounded-full bg-ink" aria-hidden />}
       <Checkbox checked={selected} onCheckedChange={onToggle} aria-label={text} />
@@ -363,7 +363,7 @@ export function InboxScreen() {
                 {folderNotes.length === 0 ? (
                   <InboxEmptyState className="px-3 py-4" icon={FolderInput} text={t('folderEmpty')} />
                 ) : folderNotes.map(note => (
-                  <div key={note.path} className={cn('group flex items-center gap-2 border-b px-3 text-sm', ROW)}>
+                  <div key={note.path} className={cn('group flex items-center gap-2 border-b px-3 text-sm', PLAIN_ROW)}>
                     {/* 對齊記錄列：勾選框那一欄留空，再放檔案圖示 */}
                     <span className="size-4 shrink-0" aria-hidden />
                     <button type="button" className={cn('flex min-w-0 flex-1 items-center gap-2 py-2 text-left', ROW_BUTTON)} onClick={() => void openNote(note.path)} title={t('open')}>
