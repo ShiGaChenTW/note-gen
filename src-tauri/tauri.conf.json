@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "NoteGen (Scott)",
+  "productName": "Almanac Notes",
   "version": "0.39.2",
   "identifier": "tw.scottchen.NoteGen",
   "build": {
