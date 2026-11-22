@@ -8498,7 +8498,7 @@
     "count": "{count} items",
     "nav": {
       "today": "Today",
-      "decide": "Decide",
+      "decide": "Workbench",
       "collect": "Collect",
       "threads": "Threads",
       "knowledge": "Knowledge",
@@ -8513,7 +8513,7 @@
     "vault": "MyVault",
     "rules": {
       "label": "Rule",
-      "text": "Agents can only propose; every write goes through Decide."
+      "text": "Agents can only propose; every write goes through the Workbench."
     },
     "tabs": {
       "collectGroup": "Collect pages",
@@ -8555,6 +8555,281 @@
     "domainProposal": {
       "title": "Create the domain \"{domain}\" with a new expert, {name}",
       "summary": "{count} knowledge notes have no domain yet, all about \"{topic}\""
+    }
+  },
+  "workbench": {
+    "title": "Workbench",
+    "subtitle": "{count} waiting for you",
+    "subtitleSources": "{done} / {total} organized",
+    "tabs": {
+      "label": "Workbench tabs",
+      "review": "Review",
+      "sources": "Sources"
+    },
+    "filter": {
+      "label": "Filter by label",
+      "all": "All"
+    },
+    "labels": {
+      "schedule": "Schedule",
+      "note": "Notes",
+      "knowledge": "Knowledge",
+      "source": "Sources",
+      "review": "Review"
+    },
+    "verbs": {
+      "add": "Add",
+      "supplement": "Supplement",
+      "modify": "Modify",
+      "merge": "Merge",
+      "replace": "Replace",
+      "verify": "Verify",
+      "archive": "Archive",
+      "reschedule": "Reschedule",
+      "judge": "Judge",
+      "confirm": "Confirm",
+      "organize": "Organize"
+    },
+    "groups": {
+      "reply": "Waiting for your reply",
+      "late": "Overdue",
+      "proposal": "Proposals",
+      "hand": "Organize by hand",
+      "task": "Other tasks"
+    },
+    "actions": {
+      "accept": "Accept",
+      "discuss": "Discuss again",
+      "drop": "Drop",
+      "answer": "Reply",
+      "pick": "Pick one",
+      "desk": "Lay out on the desk",
+      "schedule": "Schedule",
+      "done": "Done",
+      "stillValid": "Still valid",
+      "toCommander": "Hand to {name}",
+      "process": "Process as suggested",
+      "selfProcess": "Process myself",
+      "reject": "Don't use"
+    },
+    "listLabel": "Things waiting for you",
+    "more": "+{count} more",
+    "onDesk": "On desk",
+    "by": "Suggested by {name}",
+    "age": {
+      "now": "just now",
+      "hour": "{count}h",
+      "day": "{count}d"
+    },
+    "overdue": "Overdue {age}",
+    "confirmSince": "Last confirmed {date}",
+    "reconfirmRequest": "Please re-check whether this note still holds: {path}",
+    "writesTo": "Writes to: {dest}",
+    "empty": "All done",
+    "emptyFiltered": "All done in “{label}”",
+    "emptyHint": "New things will show up here.",
+    "keys": {
+      "label": "Keyboard",
+      "select": "Select",
+      "expand": "Expand",
+      "accept": "Accept",
+      "putAside": "Put aside",
+      "undo": "Undo"
+    },
+    "putAside": {
+      "button": "Put aside",
+      "entry": "Put-aside items",
+      "count": "{count} put aside",
+      "noReminder": "No reminder",
+      "tomorrow": "Tomorrow",
+      "nextWeek": "Next Monday",
+      "pickDate": "Reminder date",
+      "set": "Put aside",
+      "remindOn": "Remind {date}",
+      "noDate": "No reminder date",
+      "takeBack": "Bring back",
+      "title": "Put aside",
+      "empty": "Nothing put aside.",
+      "back": "Back to review"
+    },
+    "schedule": {
+      "time": "Time",
+      "confirm": "Schedule today",
+      "cancel": "Cancel"
+    },
+    "toast": {
+      "accepted": "Accepted “{title}”",
+      "dropped": "Dropped “{title}”",
+      "done": "Completed “{title}”",
+      "scheduled": "Scheduled “{title}” today at {time}",
+      "asided": "Put aside “{title}”",
+      "asidedUntil": "Put aside “{title}” until {date}",
+      "takenBack": "Brought back “{title}”",
+      "processed": "Handed “{title}” to {name}; results go to Review",
+      "rejected": "Not using “{title}”",
+      "stillValid": "Confirmed “{title}” is still valid",
+      "toCommander": "Asked {name} to re-check “{title}”",
+      "undone": "Undone",
+      "cannotUndo": "This step can't be undone",
+      "nothing": "Nothing to undo",
+      "failed": "Something went wrong, please try again",
+      "undo": "Undo"
+    },
+    "sources": {
+      "filterLabel": "Filter by status",
+      "filters": {
+        "all": "All",
+        "wait": "Awaiting you",
+        "todo": "Not organized",
+        "done": "Organized",
+        "no": "Not used"
+      },
+      "status": {
+        "wait": "Awaiting you",
+        "todo": "Not organized",
+        "ing": "Organizing",
+        "edited": "Edited",
+        "done": "Organized",
+        "no": "Not used"
+      },
+      "kind": {
+        "web": "Web",
+        "text": "Text",
+        "shot": "Screenshot",
+        "img": "Image",
+        "file": "File",
+        "audio": "Audio",
+        "todo": "To-do",
+        "prompt": "Material"
+      },
+      "listLabel": "Sources",
+      "selectAll": "Select all",
+      "selectAllLabel": "Select everything in this list",
+      "pickRow": "Select “{title}”",
+      "organised": "{done} / {total} organized",
+      "outputs": "{count} outputs",
+      "noOutputs": "No outputs",
+      "editedSub": "v{version} not sent",
+      "picked": "{count} selected",
+      "handTo": "Hand to {name}",
+      "toDesk": "Lay out on the desk",
+      "clear": "Clear",
+      "days": {
+        "today": "Today",
+        "yesterday": "Yesterday",
+        "week": "This week",
+        "earlier": "Earlier"
+      },
+      "empty": "No matching sources",
+      "emptyAll": "No sources yet. Use “Add source” (N) in the sidebar.",
+      "pickOne": "Pick a source to read",
+      "back": "Back to list",
+      "judgement": "First judgement",
+      "judgementHint": "Local model · judges only, never writes",
+      "noJudgement": "No first judgement yet; you can decide directly.",
+      "process": "Process as suggested",
+      "reject": "Don't use",
+      "restore": "Back to awaiting you",
+      "reorganise": "Organize again",
+      "desk": "Lay out on the desk",
+      "edit": "Edit",
+      "send": "Send to {name}",
+      "sendUpdate": "Send update to {name}",
+      "analysing": "{name} is analyzing; results go to Review",
+      "queued": "Queued for {name}",
+      "locked": "The original is locked. Editing saves a new version; {name} only looks at what changed.",
+      "outputsTitle": "Outputs",
+      "version": "v{version}",
+      "toast": {
+        "handed": "Handed {count} to {name}; results go to Review",
+        "handedRe": "Handed {count} to {name} ({re} organized again); results go to Review",
+        "sent": "Sent “{title}” to {name}",
+        "saved": "Saved",
+        "savedVersion": "Saved as v{version}; send it to {name} to update the outputs",
+        "noChange": "No changes",
+        "rejected": "Not using “{title}”",
+        "restored": "“{title}” is awaiting you again"
+      },
+      "editor": {
+        "editing": "Editing",
+        "newVersion": "new version v{version}",
+        "back": "Back",
+        "cancel": "Cancel",
+        "save": "Save",
+        "titlePlaceholder": "Title",
+        "bodyPlaceholder": "Start writing…",
+        "words": "{count} characters",
+        "keepOld": "The current v{version} is kept after saving",
+        "applyOnSave": "Changes apply when you save",
+        "unsaved": "Unsaved changes",
+        "notSaved": "Not saved yet",
+        "confirmLeave": "Discard unsaved changes?",
+        "toolbar": "Formatting",
+        "tools": {
+          "heading": "Heading",
+          "bold": "Bold",
+          "italic": "Italic",
+          "bullet": "List",
+          "numbered": "Numbered",
+          "task": "Checkbox",
+          "quote": "Quote",
+          "link": "Link",
+          "rule": "Divider"
+        }
+      }
+    },
+    "desk": {
+      "title": "Desk",
+      "heading": "{first} +{count}",
+      "back": "Workbench",
+      "save": "Save as note",
+      "materials": "Materials · {count}",
+      "draft": "Working draft",
+      "help": "Help",
+      "draftTitle": "Title",
+      "draftBody": "Combine and rewrite here…",
+      "saved": "Saved as note “{path}”",
+      "handTag": "handwritten",
+      "fallbackName": "Desk note",
+      "helpStarting": "Starting a processing conversation…",
+      "helpHint": "Processing conversation with {name} and the domain expert",
+      "helpFailed": "Couldn't start the processing conversation; try again from Threads",
+      "empty": "No materials",
+      "notesOnly": "Only notes support structural actions",
+      "ops": {
+        "label": "Structural actions",
+        "move": "Move",
+        "movePlaceholder": "Folder, e.g. knowledge/engineering",
+        "tag": "Add tag",
+        "tagPlaceholder": "Tag",
+        "link": "Link to…",
+        "assignDomain": "Assign domain",
+        "merge": "Merge notes",
+        "mergeLater": "Merging notes comes later",
+        "apply": "Apply",
+        "noDomains": "No domains yet"
+      },
+      "done": {
+        "move": "Moved to {value}",
+        "tag": "Tagged #{value}",
+        "link": "Linked to “{value}”",
+        "assignDomain": "Assigned to “{value}”"
+      }
+    },
+    "add": {
+      "title": "Add source",
+      "subtitle": "Type anything; it's classified automatically",
+      "saved": "Added to sources; {name} will organize it",
+      "savedLink": "Added to sources; waiting for your decision"
+    },
+    "quick": {
+      "label": "Add",
+      "addSource": "Add source",
+      "addSourceShort": "Source",
+      "newThread": "New conversation",
+      "newThreadShort": "Chat",
+      "tbd": "TBD",
+      "tbdTip": "Function to be decided"
     }
   }
 }

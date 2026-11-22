@@ -45,6 +45,8 @@ interface CollectState {
   addProposals: (id: string, origin: string, proposals: Proposal[], options?: { conversationId?: number }) => void
   accept: (itemId: string, proposalId: string) => Promise<AcceptResult>
   reject: (itemId: string, proposalId: string) => void
+  /** Fork（almanac ALMNC-54.8）：工作台「復原」放棄——把放棄的提案改回等你決定。 */
+  restore: (itemId: string, proposalId: string) => void
   edit: (itemId: string, proposalId: string, patch: Partial<Pick<Proposal, 'title' | 'due' | 'time'>>) => void
   undo: (itemId: string, proposalId: string) => Promise<boolean>
   remove: (itemId: string) => void
@@ -133,6 +135,13 @@ const useCollectStore = create<CollectState>((set, get) => ({
   },
 
   reject: (itemId, proposalId) => set(state => ({ items: patchProposal(state.items, itemId, proposalId, { status: 'no' }) })),
+
+  restore: (itemId, proposalId) => set(state => ({
+    items: state.items.map(item => item.id !== itemId ? item : {
+      ...item,
+      proposals: item.proposals.map(proposal => proposal.id === proposalId && proposal.status === 'no' ? { ...proposal, status: 'wait' as const } : proposal),
+    }),
+  })),
 
   edit: (itemId, proposalId, patch) => set(state => ({ items: patchProposal(state.items, itemId, proposalId, patch) })),
 

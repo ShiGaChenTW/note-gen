@@ -101,6 +101,24 @@ it('maps the visible Plan entry to the week overlay and removes the V3 navigatio
   expect(host.querySelector('nav')?.textContent).not.toContain('Decide')
 })
 
+// Fork（almanac ALMNC-54.8）：側欄搜尋下方三個只有圖示的按鈕，主導覽沒有「收集」。
+it('shows the three icon-only quick buttons under search and no 收集 in the nav', async () => {
+  await render(React.createElement(LeftSidebar))
+  const nav = host.querySelector('[data-sidebar-v3] nav')!
+  expect([...nav.querySelectorAll('button')].map(button => button.textContent?.replace(/\d+$/, ''))).toEqual(['今天', '工作台', '對話', '知識', '計畫'])
+  const quick = host.querySelector('[data-testid="sidebar-quick"]')!
+  const buttons = [...quick.querySelectorAll('button')]
+  expect(buttons.map(button => button.getAttribute('aria-label'))).toEqual(['新增資料源', '新增對話', '待定'])
+  expect(buttons.map(button => button.getAttribute('aria-keyshortcuts'))).toEqual(['N', 'T', null])
+  expect(buttons[2].disabled).toBe(true)
+  expect([...quick.querySelectorAll('[role="tooltip"]')].map(tip => tip.textContent)).toEqual(['新增資料源　N', '新增對話　T', '功能待定'])
+  const opened = vi.fn()
+  emitter.on('unified-record-open', opened)
+  await act(async () => buttons[0].click())
+  expect(opened).toHaveBeenCalledWith({ target: 'source' })
+  emitter.off('unified-record-open', opened)
+})
+
 it('switches to Ask with Tab and lets the next Tab and Shift+Tab leave the input', async () => {
   await render(React.createElement(TodayComposer))
   const input = host.querySelector('input')!

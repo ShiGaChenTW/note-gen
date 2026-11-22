@@ -60,6 +60,8 @@ describe('狀態流轉（AC1）', () => {
     ['analyzing', 'analyzed'],
     ['analyzing', 'rejected'],
     ['analyzing', 'pending_analysis'],
+    // Fork（almanac ALMNC-54.8）：不採用 → 改回等你決定（v14）
+    ['rejected', 'awaiting_decision'],
   ]
   const forbidden: [SourceStatus, SourceStatus][] = [
     ['awaiting_decision', 'analyzing'],
@@ -75,6 +77,13 @@ describe('狀態流轉（AC1）', () => {
 
   it.each(allowed)('允許 %s → %s', (from, to) => expect(canTransition(from, to)).toBe(true))
   it.each(forbidden)('不允許 %s → %s', (from, to) => expect(canTransition(from, to)).toBe(false))
+
+  it('只有還沒送出的不採用能改回等你決定（ALMNC-54.8）', () => {
+    const rejected = transitionSource(make('external'), 'rejected', T0 + 1)
+    expect(transitionSource(rejected, 'awaiting_decision', T0 + 2).status).toBe('awaiting_decision')
+    const analysedAway = make('external', { status: 'rejected', lockedAt: T0 })
+    expect(() => transitionSource(analysedAway, 'awaiting_decision', T0 + 2)).toThrow()
+  })
 
   it('走完整條外部擷取流程', () => {
     let source = make('external')

@@ -88,6 +88,8 @@ interface Events {
   'unified-record-open': {
     type?: 'auto' | 'text' | 'recording' | 'scan' | 'image' | 'link' | 'file' | 'todo' | 'prompt-draft'
     prefillText?: string
+    /** Fork（almanac ALMNC-54.8）：source＝從側欄「新增資料源」打開，存進 V3 資料源表。 */
+    target?: 'source'
   } | undefined;
   'latest-commit-info': {
     sha: string;

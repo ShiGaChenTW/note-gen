@@ -8563,7 +8563,7 @@
     "count": "{count} 件",
     "nav": {
       "today": "今天",
-      "decide": "等你定",
+      "decide": "工作台",
       "collect": "收集",
       "threads": "對話",
       "knowledge": "知識",
@@ -8578,7 +8578,7 @@
     "vault": "我的筆記",
     "rules": {
       "label": "規則",
-      "text": "代理人只能提案；寫入一律經過等你定。"
+      "text": "代理人只能提案；寫入一律經過工作台。"
     },
     "tabs": {
       "collectGroup": "收集頁面",
@@ -8620,6 +8620,281 @@
     "domainProposal": {
       "title": "成立領域「{domain}」，新增專家 {name}",
       "summary": "{count} 則知識筆記還沒有領域，主題都是「{topic}」"
+    }
+  },
+  "workbench": {
+    "title": "工作台",
+    "subtitle": "{count} 件等你處理",
+    "subtitleSources": "{done} / {total} 已整理",
+    "tabs": {
+      "label": "工作台分頁",
+      "review": "審核",
+      "sources": "資料源"
+    },
+    "filter": {
+      "label": "依標籤篩選",
+      "all": "全部"
+    },
+    "labels": {
+      "schedule": "日程",
+      "note": "筆記",
+      "knowledge": "知識",
+      "source": "資料源",
+      "review": "回顧"
+    },
+    "verbs": {
+      "add": "新增",
+      "supplement": "補充",
+      "modify": "修改",
+      "merge": "合併",
+      "replace": "取代",
+      "verify": "待查證",
+      "archive": "封存",
+      "reschedule": "改時間",
+      "judge": "判斷",
+      "confirm": "確認",
+      "organize": "整理"
+    },
+    "groups": {
+      "reply": "等你回話",
+      "late": "逾期",
+      "proposal": "提案",
+      "hand": "要你親手整理",
+      "task": "其他任務"
+    },
+    "actions": {
+      "accept": "接受",
+      "discuss": "再次討論",
+      "drop": "放棄",
+      "answer": "回答",
+      "pick": "選一個",
+      "desk": "攤到檯面",
+      "schedule": "排時間",
+      "done": "完成",
+      "stillValid": "仍然有效",
+      "toCommander": "交給 {name}",
+      "process": "照建議處理",
+      "selfProcess": "自己處理",
+      "reject": "不採用"
+    },
+    "listLabel": "等你處理的事",
+    "more": "等 {count} 則",
+    "onDesk": "檯面上",
+    "by": "{name} 建議",
+    "age": {
+      "now": "剛剛",
+      "hour": "{count} 小時",
+      "day": "{count} 天"
+    },
+    "overdue": "逾期 {age}",
+    "confirmSince": "上次確認是 {date}",
+    "reconfirmRequest": "請重新確認這則筆記是否仍然成立：{path}",
+    "writesTo": "接受後寫入：{dest}",
+    "empty": "都處理完了",
+    "emptyFiltered": "「{label}」都處理完了",
+    "emptyHint": "新的事進來時，會出現在這裡。",
+    "keys": {
+      "label": "鍵盤操作",
+      "select": "選擇",
+      "expand": "展開",
+      "accept": "接受",
+      "putAside": "先放著",
+      "undo": "復原"
+    },
+    "putAside": {
+      "button": "先放著",
+      "entry": "先放著的事",
+      "count": "先放著 {count} 件",
+      "noReminder": "不設提醒",
+      "tomorrow": "明天",
+      "nextWeek": "下週一",
+      "pickDate": "提醒日期",
+      "set": "放著",
+      "remindOn": "{date} 提醒",
+      "noDate": "沒有提醒日期",
+      "takeBack": "拿回來",
+      "title": "先放著",
+      "empty": "沒有先放著的事。",
+      "back": "回到審核"
+    },
+    "schedule": {
+      "time": "時間",
+      "confirm": "排進今天",
+      "cancel": "取消"
+    },
+    "toast": {
+      "accepted": "已接受「{title}」",
+      "dropped": "已放棄「{title}」",
+      "done": "已完成「{title}」",
+      "scheduled": "已排進今天 {time}「{title}」",
+      "asided": "已先放著「{title}」",
+      "asidedUntil": "已先放著「{title}」，{date} 提醒",
+      "takenBack": "已拿回「{title}」",
+      "processed": "已交給 {name}「{title}」，產出會送到審核",
+      "rejected": "已不採用「{title}」",
+      "stillValid": "已確認「{title}」仍然有效",
+      "toCommander": "已交給 {name} 重新確認「{title}」",
+      "undone": "已復原",
+      "cannotUndo": "這一步無法復原",
+      "nothing": "沒有可以復原的動作",
+      "failed": "處理失敗，請再試一次",
+      "undo": "復原"
+    },
+    "sources": {
+      "filterLabel": "依狀態篩選",
+      "filters": {
+        "all": "全部",
+        "wait": "等你決定",
+        "todo": "未整理",
+        "done": "已整理",
+        "no": "不採用"
+      },
+      "status": {
+        "wait": "等你決定",
+        "todo": "未整理",
+        "ing": "整理中",
+        "edited": "已修改",
+        "done": "已整理",
+        "no": "不採用"
+      },
+      "kind": {
+        "web": "網頁",
+        "text": "文字",
+        "shot": "截圖",
+        "img": "插圖",
+        "file": "檔案",
+        "audio": "錄音",
+        "todo": "待辦",
+        "prompt": "素材"
+      },
+      "listLabel": "資料源清單",
+      "selectAll": "全選",
+      "selectAllLabel": "全選目前清單",
+      "pickRow": "勾選「{title}」",
+      "organised": "{done} / {total} 已整理",
+      "outputs": "{count} 則產出",
+      "noOutputs": "沒有產出",
+      "editedSub": "v{version} 未送出",
+      "picked": "已選 {count} 則",
+      "handTo": "交給 {name} 整理",
+      "toDesk": "攤到檯面",
+      "clear": "取消",
+      "days": {
+        "today": "今天",
+        "yesterday": "昨天",
+        "week": "本週",
+        "earlier": "更早"
+      },
+      "empty": "沒有符合的資料源",
+      "emptyAll": "還沒有資料源。按側欄的「新增資料源」（N）加進來。",
+      "pickOne": "選一則資料源來看",
+      "back": "回到清單",
+      "judgement": "初步判斷",
+      "judgementHint": "本機模型 · 只判斷，不撰寫",
+      "noJudgement": "還沒有初步判斷，可以直接決定要不要處理。",
+      "process": "照建議處理",
+      "reject": "不採用",
+      "restore": "改回等你決定",
+      "reorganise": "重新整理",
+      "desk": "攤到檯面",
+      "edit": "編輯",
+      "send": "送給 {name} 分析",
+      "sendUpdate": "送給 {name} 更新",
+      "analysing": "{name} 正在分析，完成後產出會送到審核",
+      "queued": "排隊等 {name} 分析",
+      "locked": "原文已鎖定。按「編輯」會另存新版本，{name} 只看改了哪裡。",
+      "outputsTitle": "產出",
+      "version": "v{version}",
+      "toast": {
+        "handed": "已交給 {name} 整理 {count} 則，產出會送到審核",
+        "handedRe": "已交給 {name} 整理 {count} 則（其中 {re} 則重新整理），產出會送到審核",
+        "sent": "已送給 {name}「{title}」",
+        "saved": "已儲存",
+        "savedVersion": "已存成 v{version}，送給 {name} 才會更新產出",
+        "noChange": "沒有修改",
+        "rejected": "已不採用「{title}」",
+        "restored": "已改回等你決定「{title}」"
+      },
+      "editor": {
+        "editing": "正在編輯",
+        "newVersion": "新版本 v{version}",
+        "back": "返回",
+        "cancel": "取消",
+        "save": "儲存",
+        "titlePlaceholder": "標題",
+        "bodyPlaceholder": "開始寫…",
+        "words": "{count} 字",
+        "keepOld": "儲存後原本的 v{version} 會保留",
+        "applyOnSave": "儲存後才會套用",
+        "unsaved": "有未儲存的修改",
+        "notSaved": "尚未儲存",
+        "confirmLeave": "還有沒儲存的修改，要放棄嗎？",
+        "toolbar": "格式",
+        "tools": {
+          "heading": "標題",
+          "bold": "粗體",
+          "italic": "斜體",
+          "bullet": "清單",
+          "numbered": "編號",
+          "task": "勾選",
+          "quote": "引用",
+          "link": "連結",
+          "rule": "分隔線"
+        }
+      }
+    },
+    "desk": {
+      "title": "檯面",
+      "heading": "{first} 等 {count} 則",
+      "back": "工作台",
+      "save": "存成筆記",
+      "materials": "素材 · {count} 則",
+      "draft": "工作稿",
+      "help": "協助",
+      "draftTitle": "標題",
+      "draftBody": "在這裡匯整、改寫…",
+      "saved": "已存成筆記「{path}」",
+      "handTag": "親手寫的",
+      "fallbackName": "檯面筆記",
+      "helpStarting": "正在開處理對話…",
+      "helpHint": "處理對話：{name} 和負責的專家都在",
+      "helpFailed": "沒辦法開處理對話，請到對話頁再試一次",
+      "empty": "沒有素材",
+      "notesOnly": "只有筆記能做結構操作",
+      "ops": {
+        "label": "結構操作",
+        "move": "搬移",
+        "movePlaceholder": "資料夾，例如 知識/工業工程",
+        "tag": "加標籤",
+        "tagPlaceholder": "標籤",
+        "link": "連結到…",
+        "assignDomain": "歸入領域",
+        "merge": "合併筆記",
+        "mergeLater": "合併筆記之後開放",
+        "apply": "套用",
+        "noDomains": "還沒有領域"
+      },
+      "done": {
+        "move": "已搬到 {value}",
+        "tag": "已加上標籤 #{value}",
+        "link": "已連結到「{value}」",
+        "assignDomain": "已歸入領域「{value}」"
+      }
+    },
+    "add": {
+      "title": "新增資料源",
+      "subtitle": "輸入內容，自動分類",
+      "saved": "已加進資料源，交給 {name} 整理",
+      "savedLink": "已加進資料源，等你決定要不要處理"
+    },
+    "quick": {
+      "label": "新增",
+      "addSource": "新增資料源",
+      "addSourceShort": "資料源",
+      "newThread": "新增對話",
+      "newThreadShort": "對話",
+      "tbd": "待定",
+      "tbdTip": "功能待定"
     }
   }
 }
