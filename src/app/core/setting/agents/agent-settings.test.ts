@@ -18,6 +18,9 @@ vi.mock('@/db/agents', () => ({
   listAgentSettings: list, createAgentSettings: create, updateAgentSettings: update, ensureDefaultRoster: seed,
 }))
 
+// Fork（almanac ALMNC-54.3）：Agent 設定區有自己的測試（agent-memory-settings.test.ts），這裡只要不碰資料庫。
+vi.mock('./agent-memory-settings', () => ({ AgentMemorySettings: () => null }))
+
 vi.mock('next-intl', async importOriginal => {
   const intl = await importOriginal<typeof import('next-intl')>()
   return {

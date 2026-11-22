@@ -16,6 +16,7 @@ import {
 } from '@/lib/agents/settings'
 import { Button } from '@/components/ui/button'
 import { SettingSection } from '../components/setting-base'
+import { AgentMemorySettings } from './agent-memory-settings'
 
 const field = 'w-full rounded-md border border-line bg-bg px-3 py-2 text-ink'
 
@@ -91,107 +92,111 @@ function AgentSettingsPanel() {
   }
 
   return (
-    <SettingSection title={t('title')} desc={t('description')}>
-      <div className="space-y-3 text-sm text-ink">
-        {error && <p role="alert">{t(error)}</p>}
-        {agents === null && !error && <p role="status">{t('loading')}</p>}
-        {agents?.length === 0 && <p className="text-muted-foreground">{t('empty')}</p>}
-        {!!agents?.length && (
-          <ul className="divide-y divide-line rounded-md border border-line bg-panel">
-            {agents.map(agent => (
-              <li key={agent.id} className="flex items-center justify-between gap-3 px-3 py-2">
-                <div className="min-w-0">
-                  <div className="break-words font-medium">{agent.name}</div>
-                  <p className="text-xs text-muted-foreground">
-                    {agentRoleLabel(agent, tRoles)} · {t(agent.enabled ? 'enabled' : 'disabled')}
-                  </p>
-                </div>
-                <Button type="button" size="sm" variant="outline" disabled={saving} onClick={() => edit(agent)}>
-                  {t('edit')}<span className="sr-only"> {agent.name}</span>
-                </Button>
-              </li>
-            ))}
-          </ul>
-        )}
-        {!editor && agents !== null && (
-          <Button type="button" variant="outline" disabled={saving} onClick={() => edit()}>{t('add')}</Button>
-        )}
-        {editor && (
-          <form onSubmit={save} className="rounded-md border border-line bg-panel p-3">
-            <fieldset disabled={saving} className="space-y-3">
-              <label className="block space-y-1">
-                <span>{t('name')}</span>
-                <input
-                  className={field}
-                  required
-                  maxLength={80}
-                  value={editor.values.name}
-                  onChange={event => setEditor({ ...editor, values: { ...editor.values, name: event.target.value } })}
-                />
-              </label>
-              <label className="block space-y-1">
-                <span>{t('role')}</span>
-                <select
-                  className={field}
-                  value={editor.values.role}
-                  onChange={event => {
-                    const role = event.target.value
-                    if (!isAgentRole(role)) return
-                    setEditor({
-                      ...editor,
-                      values: { ...editor.values, role, allowedTools: editor.id ? editor.values.allowedTools : [...ROLE_TOOLS[role]] },
-                    })
-                  }}
-                >
-                  {availableRoles(agents ?? [], editor.id).map(role => <option key={role} value={role}>{tRoles(role)}</option>)}
-                </select>
-              </label>
-              {editor.values.role === 'expert' && (
+    <>
+      <SettingSection title={t('title')} desc={t('description')}>
+        <div className="space-y-3 text-sm text-ink">
+          {error && <p role="alert">{t(error)}</p>}
+          {agents === null && !error && <p role="status">{t('loading')}</p>}
+          {agents?.length === 0 && <p className="text-muted-foreground">{t('empty')}</p>}
+          {!!agents?.length && (
+            <ul className="divide-y divide-line rounded-md border border-line bg-panel">
+              {agents.map(agent => (
+                <li key={agent.id} className="flex items-center justify-between gap-3 px-3 py-2">
+                  <div className="min-w-0">
+                    <div className="break-words font-medium">{agent.name}</div>
+                    <p className="text-xs text-muted-foreground">
+                      {agentRoleLabel(agent, tRoles)} · {t(agent.enabled ? 'enabled' : 'disabled')}
+                    </p>
+                  </div>
+                  <Button type="button" size="sm" variant="outline" disabled={saving} onClick={() => edit(agent)}>
+                    {t('edit')}<span className="sr-only"> {agent.name}</span>
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {!editor && agents !== null && (
+            <Button type="button" variant="outline" disabled={saving} onClick={() => edit()}>{t('add')}</Button>
+          )}
+          {editor && (
+            <form onSubmit={save} className="rounded-md border border-line bg-panel p-3">
+              <fieldset disabled={saving} className="space-y-3">
                 <label className="block space-y-1">
-                  <span>{t('domain')}</span>
+                  <span>{t('name')}</span>
                   <input
                     className={field}
+                    required
                     maxLength={80}
-                    placeholder={t('domainPlaceholder')}
-                    value={editor.values.domain ?? ''}
-                    onChange={event => setEditor({ ...editor, values: { ...editor.values, domain: event.target.value } })}
+                    value={editor.values.name}
+                    onChange={event => setEditor({ ...editor, values: { ...editor.values, name: event.target.value } })}
                   />
                 </label>
-              )}
-              <fieldset className="space-y-1">
-                <legend className="mb-1 font-medium">{t('allowedTools')}</legend>
-                {AGENT_TOOL_NAMES.map(tool => (
-                  <label key={tool} className="flex items-center gap-2">
+                <label className="block space-y-1">
+                  <span>{t('role')}</span>
+                  <select
+                    className={field}
+                    value={editor.values.role}
+                    onChange={event => {
+                      const role = event.target.value
+                      if (!isAgentRole(role)) return
+                      setEditor({
+                        ...editor,
+                        values: { ...editor.values, role, allowedTools: editor.id ? editor.values.allowedTools : [...ROLE_TOOLS[role]] },
+                      })
+                    }}
+                  >
+                    {availableRoles(agents ?? [], editor.id).map(role => <option key={role} value={role}>{tRoles(role)}</option>)}
+                  </select>
+                </label>
+                {editor.values.role === 'expert' && (
+                  <label className="block space-y-1">
+                    <span>{t('domain')}</span>
                     <input
-                      type="checkbox"
-                      checked={editor.values.allowedTools.includes(tool)}
-                      onChange={event => {
-                        const allowedTools = event.target.checked
-                          ? [...editor.values.allowedTools, tool]
-                          : editor.values.allowedTools.filter(name => name !== tool)
-                        setEditor({ ...editor, values: { ...editor.values, allowedTools } })
-                      }}
+                      className={field}
+                      maxLength={80}
+                      placeholder={t('domainPlaceholder')}
+                      value={editor.values.domain ?? ''}
+                      onChange={event => setEditor({ ...editor, values: { ...editor.values, domain: event.target.value } })}
                     />
-                    {t(`tools.${tool}`)}
                   </label>
-                ))}
+                )}
+                <fieldset className="space-y-1">
+                  <legend className="mb-1 font-medium">{t('allowedTools')}</legend>
+                  {AGENT_TOOL_NAMES.map(tool => (
+                    <label key={tool} className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={editor.values.allowedTools.includes(tool)}
+                        onChange={event => {
+                          const allowedTools = event.target.checked
+                            ? [...editor.values.allowedTools, tool]
+                            : editor.values.allowedTools.filter(name => name !== tool)
+                          setEditor({ ...editor, values: { ...editor.values, allowedTools } })
+                        }}
+                      />
+                      {t(`tools.${tool}`)}
+                    </label>
+                  ))}
+                </fieldset>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={editor.values.enabled}
+                    onChange={event => setEditor({ ...editor, values: { ...editor.values, enabled: event.target.checked } })}
+                  />
+                  {t('enabled')}
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  <Button type="submit" disabled={!editor.values.name.trim()}>{t(saving ? 'saving' : 'save')}</Button>
+                  <Button type="button" variant="outline" onClick={() => { setEditor(null); setError(null) }}>{t('cancel')}</Button>
+                </div>
               </fieldset>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={editor.values.enabled}
-                  onChange={event => setEditor({ ...editor, values: { ...editor.values, enabled: event.target.checked } })}
-                />
-                {t('enabled')}
-              </label>
-              <div className="flex flex-wrap gap-2">
-                <Button type="submit" disabled={!editor.values.name.trim()}>{t(saving ? 'saving' : 'save')}</Button>
-                <Button type="button" variant="outline" onClick={() => { setEditor(null); setError(null) }}>{t('cancel')}</Button>
-              </div>
-            </fieldset>
-          </form>
-        )}
-      </div>
-    </SettingSection>
+            </form>
+          )}
+        </div>
+      </SettingSection>
+      {/* Fork（almanac ALMNC-54.3）：Agent 設定區接在代理人名單下面。 */}
+      {!!agents?.length && <AgentMemorySettings agents={agents} />}
+    </>
   )
 }
