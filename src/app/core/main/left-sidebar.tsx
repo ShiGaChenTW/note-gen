@@ -173,7 +173,16 @@ function useTopHeight(containerRef: React.RefObject<HTMLDivElement | null>, topR
   return { height, onPointerDown, onKeyDown, reset }
 }
 
+/**
+ * Fork（almanac ALMNC-20）：v3 換成 v5 側欄（方案 B）；classic 完全不變。
+ * Fork（almanac ALMNC-56.7，P07）：在元件開頭就分支，V3 不再先跑一遍 classic 的 hooks（等你定計數、外掛分頁、月曆分隔條…）。
+ */
 export function LeftSidebar() {
+  const isV3 = useUiV3()
+  return isV3 ? <SidebarV3 /> : <ClassicLeftSidebar />
+}
+
+function ClassicLeftSidebar() {
   const { leftSidebarTab, setLeftSidebarTab } = useSidebarStore()
   const outlinePlacement = useSettingStore(state => state.outlinePlacement)
   const settingsReady = useSettingsHydrationStore(state => state.status === 'ready')
@@ -235,9 +244,6 @@ export function LeftSidebar() {
   const renderTab = (tab: LauncherTab) => (
     <LauncherButton key={tab.id} icon={tab.icon} title={tab.title} active={tab.id === leftSidebarTab} secondary={pageVisible} onClick={() => void setLeftSidebarTab(tab.id)} />
   )
-
-  // Fork（almanac ALMNC-20）：v3 換成 v5 側欄（方案 B）；classic 完全不變。
-  if (isV3) return <SidebarV3 />
 
   return (
     <div ref={containerRef} className="flex h-full w-full flex-col border-r border-line-soft bg-panel" data-left-sidebar>

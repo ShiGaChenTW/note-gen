@@ -36,7 +36,7 @@ export function FrontmatterCreateButton({ editor, path }: { editor: Editor; path
   }
 
   return (
-    <div className="mb-1 flex items-center gap-0.5 text-muted-foreground" data-testid="frontmatter-create">
+    <div className="mb-1 flex items-center gap-0.5 px-2 text-muted-foreground" data-testid="frontmatter-create">
       <Button type="button" variant="ghost" size="sm" className="h-7 gap-1 px-2 text-xs" onClick={() => create(fallback)}>
         <FilePlus2 className="size-3.5" />{t('createTemplate')}
       </Button>

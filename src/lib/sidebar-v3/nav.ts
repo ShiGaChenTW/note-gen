@@ -2,7 +2,8 @@
 // 六個導覽項、各項右側的數字、哪個導覽項該亮、代理人區的列與執行中人數，以及舊入口歸到哪一項。
 import type { AgentRole } from '@/lib/agents/settings'
 
-export const NAV_KEYS = ['today', 'decide', 'collect', 'threads', 'knowledge', 'plan'] as const
+// Fork（almanac ALMNC-54.8）：「收集」不再是主導覽，併進工作台的「資料源」分頁（Q36）；decide 這一項顯示為「工作台」。
+export const NAV_KEYS = ['today', 'decide', 'threads', 'knowledge', 'plan'] as const
 export type NavKey = typeof NAV_KEYS[number]
 
 /** 舊側欄（classic）所有可點的入口。 */
@@ -12,13 +13,13 @@ export const LEGACY_ENTRIES = [
 ] as const
 export type LegacyEntry = typeof LEGACY_ENTRIES[number]
 
-/** 舊入口在新側欄的歸屬：整合成六個導覽項，檔案樹留在下半部 MyVault。 */
+/** 舊入口在新側欄的歸屬：整合成五個導覽項，檔案樹留在下半部 MyVault。收集與 Inbox 歸到工作台（資料源分頁）。 */
 export const ENTRY_HOME: Record<LegacyEntry, NavKey> = {
   overview: 'today',
   today: 'today',
   decide: 'decide',
-  collect: 'collect',
-  inbox: 'collect',
+  collect: 'decide',
+  inbox: 'decide',
   threads: 'threads',
   notes: 'knowledge',
   timeline: 'knowledge',
@@ -48,8 +49,7 @@ export interface NavVisibility {
 /** 目前開著的全頁覆蓋層屬於哪個導覽項；都沒開（在工作區看筆記）就是 null。 */
 export function activeNavKey(visibility: NavVisibility): NavKey | null {
   if (visibility.home) return 'today'
-  if (visibility.decide) return 'decide'
-  if (visibility.collect || visibility.inbox) return 'collect'
+  if (visibility.decide || visibility.collect || visibility.inbox) return 'decide'
   if (visibility.threads) return 'threads'
   if (visibility.knowledge || visibility.promptLibrary) return 'knowledge'
   if (visibility.week) return 'plan'
@@ -64,10 +64,8 @@ export interface NavRow {
 }
 
 export interface NavInput {
-  /** 等你定的待決數。 */
+  /** 工作台審核分頁的件數（先放著的不算）。 */
   decideCount: number
-  /** 收集的未整理數（Inbox 的記錄與資料夾筆記）。 */
-  collectPending: number
   visibility: NavVisibility
 }
 
@@ -75,7 +73,6 @@ export function buildNav(input: NavInput): NavRow[] {
   const active = activeNavKey(input.visibility)
   const counts: Partial<Record<NavKey, number>> = {
     decide: input.decideCount,
-    collect: input.collectPending,
   }
   return NAV_KEYS.map(key => ({
     key,
@@ -88,6 +85,8 @@ export interface AgentSource {
   id: string
   name: string
   role: AgentRole
+  /** 專家負責的領域，顯示成「領域＋專家」。 */
+  domain?: string
   enabled: boolean
 }
 

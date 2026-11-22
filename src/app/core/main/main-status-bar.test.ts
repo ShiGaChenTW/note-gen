@@ -110,9 +110,11 @@ it('hides editor controls only while the Today page is loaded and visible in v3'
   act(() => useHomeStore.setState({ loaded: true }))
   expect(host.textContent).not.toContain('copy editor text')
   expect(host.textContent).not.toContain('editor stats')
-  for (const label of ['workspace', 'sync', 'model and writing assistant', 'date', 'today', 'global plugins']) {
+  for (const label of ['workspace', 'sync', 'model and writing assistant', 'date', 'global plugins']) {
     expect(host.textContent).toContain(label)
   }
+  // Fork（almanac ALMNC-56.7，P05）：V3 的狀態列不放「需處理」。
+  expect(host.textContent).not.toContain('today')
 
   act(() => useHomeStore.setState({ visible: false }))
   expect(host.textContent).toContain('copy editor text')
@@ -123,6 +125,7 @@ it('hides editor controls only while the Today page is loaded and visible in v3'
     useHomeStore.setState({ visible: true })
   })
   expect(host.textContent).toContain('copy editor text')
+  expect(host.textContent).toContain('today')
 })
 
 it.each([

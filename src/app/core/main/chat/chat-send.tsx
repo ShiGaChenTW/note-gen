@@ -19,6 +19,16 @@ import { isRequestAbortError } from "@/lib/agent/runtime"
 import { agentDebugLog, previewText } from "@/lib/agent/debug-log"
 import { notifyPendingAgentApproval } from "@/lib/agent/approval-notification"
 import { getToolByName } from "@/lib/agent/tools"
+import type { AgentPermissionMode } from "@/lib/agent/types"
+import { createDefaultSidebarDeps, prepareSidebarCommanderRun } from '@/lib/commander/sidebar-session' // Fork（almanac ALMNC-54.7）
+import useThreadsStore from '@/stores/threads'
+// Fork（almanac ALMNC-54.11）：路由器三層（規則、本機模型、問 Scott）。
+import { chooseRoute, planSidebarRoute, routeNote, savePreferenceLine, shouldRouteSidebarMessage, type SidebarRoutePlan } from '@/lib/router/sidebar'
+import type { RosterEntry, RouteDecision } from '@/lib/router/router'
+import { threadKey } from '@/lib/threads/projects'
+import useRouterStore, { type RouterAnswer } from '@/stores/router'
+import { toast } from '@/hooks/use-toast'
+import { useChatV3 } from './chat-v3'
 import { getSessionApprovalScope, matchesSessionApproval } from "@/lib/agent/session-approval"
 import { ImageAttachment } from "./image-attachments"
 import { cn } from "@/lib/utils"
@@ -60,6 +70,9 @@ import {
   type AgentRequestSnapshot,
 } from './agent-session-context'
 import { useChatAgentSession } from './use-chat-agent-session'
+
+/** Fork（almanac ALMNC-54.11）：路由器決定照一般流程送出的那種計畫。 */
+type RunPlan = Extract<SidebarRoutePlan, { kind: 'run' }>
 
 function resolveRecordedApprovalEvent(event: AgentTraceEvent, records: ConfirmationRecord[]): AgentTraceEvent {
   if (event.type !== 'approval' || event.approvalDecision) return event
@@ -180,6 +193,7 @@ export const ChatSend = forwardRef<ChatSendHandle, ChatSendProps>(({
   roundStyle = false,
 }, ref) => {
   const { primaryModel, agentPermissionMode } = useSettingStore()
+  const v3 = useChatV3() // Fork（almanac ALMNC-54.7）
   const { currentTagId } = useTagStore()
   const {
     insert,
@@ -194,6 +208,8 @@ export const ChatSend = forwardRef<ChatSendHandle, ChatSendProps>(({
   const steeringImageAnalysisAbortControllerRef = useRef<AbortController | null>(null)
   const manualStopRequestedRef = useRef(false)
   const repeatedScriptApprovalRef = useRef<{ signature: string; count: number }>({ signature: '', count: 0 })
+  // Fork（almanac ALMNC-54.11）：路由器替這次送出決定的去處（標籤、只讀、以哪位專家回答），handleAgentMode 取用一次。
+  const routedRunRef = useRef<RunPlan | null>(null)
   const contextOverflowRetryRef = useRef(0)
   const t = useTranslations()
   const isMobile = useIsMobile()
@@ -461,6 +477,108 @@ export const ChatSend = forwardRef<ChatSendHandle, ChatSendProps>(({
     })
   }
 
+  // Fork（almanac ALMNC-54.7）：右側欄指揮官的一次執行（工作指示、記憶、工具替換、提案卡、直接修改的確認卡）。
+  async function prepareCommanderRun(placeholder: Chat, requestText: string, readOnly: boolean, routed: RunPlan | null = null) {
+    const { chats } = useChatStore.getState()
+    const scottMessages = [requestText, ...chats.filter(chat => chat.role === 'user' && chat.id !== placeholder.id).map(chat => chat.content ?? '').reverse()]
+      .filter(text => text.trim())
+      .slice(0, 6)
+    const conversation = useChatStore.getState().conversations.find(entry => entry.id === placeholder.conversationId)
+    // Fork（almanac ALMNC-54.11）：路由器選的標籤（新對話先記成草稿）要先補進對照表，免得下面標成處理時蓋掉。
+    if (routed) await useThreadsStore.getState().claimDraftTag(useChatStore.getState().conversations, placeholder.conversationId ?? null).catch(() => undefined)
+    // 「處理」才標成處理（指揮官會透過提案改資料）；「問」不動 Scott 選的標籤。路由器交給秘書的日程對話維持日程。
+    if (conversation && !readOnly && routed?.tag !== 'schedule') void useThreadsStore.getState().markCommanderThread(conversation).catch(error => console.debug('[commander] thread tag skipped:', error))
+    const deps = await createDefaultSidebarDeps({
+      roleLabel: (key, values) => t(`agents.roles.${key}` as Parameters<typeof t>[0], values),
+      originLabel: agent => t('record.chat.v3.commander.origin', { agent }),
+    })
+    return prepareSidebarCommanderRun({
+      conversationId: placeholder.conversationId ?? undefined,
+      chatId: placeholder.id,
+      scottMessages,
+      readOnly,
+      ...(routed?.answerAs ? { answerAs: routed.answerAs } : {}),
+      ...(routed ? { routeNote: routeNote(routed) } : {}),
+    }, deps)
+  }
+
+  // Fork（almanac ALMNC-54.11）：送出前先問路由器（只限新對話、沒有標籤、「處理」模式）。
+  // 回傳 true 表示這次先不送（在等 Scott 選去處或確認偏好），字留在輸入框。
+  async function routeBeforeSend(text: string, streaming: boolean): Promise<boolean> {
+    const chatState = useChatStore.getState()
+    if (chatState.isTemporaryConversation) return false
+    const conversation = chatState.conversations.find(entry => entry.id === chatState.currentConversationId)
+    const threads = useThreadsStore.getState()
+    await threads.loadProjects().catch(() => undefined)
+    const explicitTag = conversation ? useThreadsStore.getState().tagMap[threadKey(conversation)] ?? null : threads.draftTag?.tag ?? null
+    const hasMessages = (conversation?.messageCount ?? 0) > 0 || chatState.chats.some(chat => chat.role === 'user')
+    if (!shouldRouteSidebarMessage({ v3, readOnlyMode: agentPermissionMode === 'read-only', streaming, hasMessages, explicitTag, text, forced: false })) return false
+    try {
+      const { defaultRouter, loadRouterRoster } = await import('@/lib/router/default')
+      const [router, roster] = await Promise.all([defaultRouter(), loadRouterRoster()])
+      const decision = await router.route(text, { roster })
+      return dispatchRoutePlan(planSidebarRoute(decision, roster), text, roster)
+    } catch (error) {
+      // 路由器本身壞掉：照原本的方式交給指揮官，不擋送出。
+      console.error('[router] routing failed, sending to the commander:', error)
+      return false
+    }
+  }
+
+  /** 照計畫做：run 就記下去處、繼續送；其他的打開「問 Scott」。 */
+  function dispatchRoutePlan(plan: SidebarRoutePlan, text: string, roster: RosterEntry[], resend = false): boolean {
+    if (plan.kind === 'run') {
+      // 這次送出照計畫繼續；Scott 在「問 Scott」選完才決定的，重新送一次（handleSubmit 會套用計畫）。
+      if (!resend) {
+        applyRunPlan(plan)
+        return false
+      }
+      void handleSubmit(text, plan)
+      return true
+    }
+    useRouterStore.getState().ask(plan, answer => void onRouterAnswer(answer, plan, text, roster))
+    return true
+  }
+
+  function applyRunPlan(plan: RunPlan) {
+    routedRunRef.current = plan
+    const chatState = useChatStore.getState()
+    const conversation = chatState.conversations.find(entry => entry.id === chatState.currentConversationId)
+    const threads = useThreadsStore.getState()
+    if (conversation) void threads.setTag(conversation, plan.tag).catch(() => undefined)
+    else threads.setDraftTag(plan.tag)
+  }
+
+  async function onRouterAnswer(answer: RouterAnswer, plan: Exclude<SidebarRoutePlan, { kind: 'run' }>, text: string, roster: RosterEntry[]) {
+    if (answer.kind === 'cancel') return
+    const decision: RouteDecision = plan.decision
+    if (answer.kind === 'route') {
+      void import('@/lib/router/default').then(({ recordRouterChoice }) => recordRouterChoice({
+        text: decision.text, chosen: answer.route, suggestion: decision.suggestion, confidence: decision.confidence, reason: decision.reason, at: Date.now(),
+      }))
+      dispatchRoutePlan(chooseRoute(decision, answer.route, roster), text, roster, true)
+      return
+    }
+    if (answer.kind === 'expert') {
+      dispatchRoutePlan(chooseRoute(decision, 'query', roster, answer.agentId), text, roster, true)
+      return
+    }
+    if (answer.kind === 'notPreference') {
+      dispatchRoutePlan(chooseRoute(decision, 'process', roster), text, roster, true)
+      return
+    }
+    if (plan.kind !== 'confirmPreference') return
+    try {
+      const { scottPreferenceStore } = await import('@/lib/router/default')
+      const saved = await savePreferenceLine(plan.line, await scottPreferenceStore())
+      toast({ title: saved ? t('record.chat.v3.router.saved') : t('record.chat.v3.router.alreadySaved'), description: plan.line })
+      onSent?.()
+    } catch (error) {
+      console.error('[router] preference not saved:', error)
+      toast({ title: t('record.chat.v3.router.saveFailed'), variant: 'destructive' })
+    }
+  }
+
   async function handleAgentMode(
     request: AgentRequestSnapshot,
     userMessage: Chat,
@@ -569,6 +687,22 @@ export const ChatSend = forwardRef<ChatSendHandle, ChatSendProps>(({
       })
     }
 
+    // Fork（almanac ALMNC-54.7）：新介面右側欄的 AI 就是指揮官。「處理」模式下寫檔工具換成提案，
+    // 只有 Scott 親口交代的任務和行程由秘書直接寫；準備失敗就退回只讀，絕不退回會直接改檔的工具。
+    // 「問」模式也以指揮官身分回答，但不換工具、維持只讀。
+    // Fork（almanac ALMNC-54.11）：路由器把查詢交給專家時這次只讀回答；日程、處理照「處理」模式（秘書的直接修改在指揮官的工具裡）。
+    const routed = routedRunRef.current
+    routedRunRef.current = null
+    const routedReadOnly = Boolean(routed?.readOnly)
+    const commanderMode = v3 && agentPermissionMode !== 'read-only' && !routedReadOnly
+    const commanderRun = v3
+      ? await prepareCommanderRun(placeholderMessage, request.requestText, !commanderMode, routed).catch(error => {
+          console.error('[commander] sidebar run unavailable, answering read-only:', error)
+          return null
+        })
+      : null
+    const runPermissionMode: AgentPermissionMode = commanderMode ? (commanderRun ? 'auto-edit' : 'read-only') : routedReadOnly ? 'read-only' : agentPermissionMode
+
     // 每次都创建新的 AgentHandler，使用当前的 placeholderMessage
     const agentWorkspacePath = useSettingStore.getState().workspacePath
     const workspaceFingerprint = await fingerprintWorkspaceIdentity(getSkillWorkspaceIdentity(await getWorkspacePath()))
@@ -586,7 +720,9 @@ export const ChatSend = forwardRef<ChatSendHandle, ChatSendProps>(({
       useMemories: !useChatStore.getState().isTemporaryConversation,
       activeFilePath: activeArticle.activeFilePath,
       activeCanvasId: activeCanvasId || undefined,
-      permissionMode: agentPermissionMode,
+      permissionMode: runPermissionMode,
+      rolePrompt: commanderRun?.rolePrompt,
+      transformTools: commanderMode ? commanderRun?.transformTools : undefined,
       requestConfirmation: (toolName, params, context) => requestConfirmation(toolName, params, context, { chatId: placeholderMessage.id, conversationId: placeholderMessage.conversationId, workspacePath: agentWorkspacePath }),
       requestUserQuestion: (questions, signal) => requestUserQuestion(questions, signal, placeholderMessage.conversationId),
       requestUserInteraction: (uiRequest, context) => requestChatUiInteraction(uiRequest, context, {
@@ -1145,6 +1281,8 @@ ${hasValidRange ? `**仅在用户明确要求修改/改写/补充/插入时才�
       console.error('Agent execution error:', error)
     } finally {
       agentSession.setActiveRunner(null)
+      // Fork（almanac ALMNC-54.7）：這次想改的檔案送進工作台，訊息下面掛提案卡。
+      await commanderRun?.finish().catch(error => console.error('[commander] proposals not submitted:', error))
     }
   }
 
@@ -1251,11 +1389,14 @@ ${hasValidRange ? `**仅在用户明确要求修改/改写/补充/插入时才�
   })
 
   // 对话（Agent 模式）
-  async function handleSubmit(overrideText?: string) {
+  async function handleSubmit(overrideText?: string, routedPlan?: RunPlan) {
     if (preparingAttachments) return
     const request = createRequestSnapshot(overrideText)
     if (!request.inputValue.trim() && request.images.length === 0 && request.fileAttachments.length === 0) return
     const wasStreaming = agentSession.isStreaming
+    // Fork（almanac ALMNC-54.11）：新對話先問路由器；Scott 在「問 Scott」選過的（routedPlan）就直接送。
+    if (routedPlan) applyRunPlan(routedPlan)
+    else if (v3 && await routeBeforeSend(request.inputValue, wasStreaming)) return
     const waitingState = useChatStore.getState().agentState
     const isReplacingPendingApproval = Boolean(waitingState.pendingConfirmation || waitingState.pendingQuestion || waitingState.pendingUiInteraction)
     if (!wasStreaming) {

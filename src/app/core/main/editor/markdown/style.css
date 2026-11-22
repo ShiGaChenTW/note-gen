@@ -285,6 +285,11 @@
   padding: 0;
 }
 
+/* Fork（almanac ALMNC-54.16）：V3 標題欄位下方的內文從 12px 起，不再空一大段（左右對齊寫在元件的 class）。 */
+.tiptap-editor [data-doc-title] ~ * .ProseMirror {
+  padding-top: 12px;
+}
+
 .record-detail-markdown-editor .ProseMirror,
 .record-detail-markdown-editor .ProseMirror a {
   overflow-wrap: anywhere;
@@ -1682,6 +1687,11 @@
   color: hsl(var(--foreground));
 }
 
+/* Fork（almanac ALMNC-56.2 V10）：V3 的 tippy 浮層用選單陰影 token；classic 維持上面的寫死值。 */
+:where([data-ui="v3"]) .tippy-content {
+  box-shadow: var(--sh-menu);
+}
+
 .tippy-arrow {
   position: absolute;
   width: 16px;
@@ -2213,4 +2223,163 @@
 .tiptap-editor .agent-diff-navigation-bar [data-slot="button"]:hover {
   color: inherit;
   background: hsl(var(--background) / 0.2);
+}
+
+/* Fork（almanac ALMNC-54.17）：V3 底部浮動格式列開著時，內文底部多留空間，最後幾行能捲到列的上方、不被蓋住。 */
+.editor-scroll-container[data-bottom-format-toolbar] .tiptap-editor .ProseMirror,
+.editor-scroll-container[data-bottom-format-toolbar] .ProseMirror {
+  padding-bottom: 96px;
+}
+
+/* Fork（almanac ALMNC-56.2 A03）：瀏覽器自己捲動（scrollIntoView、焦點移動）時也把底部 64 px 讓給格式列；
+   ProseMirror 打字時的捲動由 bottom-format-toolbar.tsx 設的 scrollMargin 負責。 */
+.editor-scroll-container[data-bottom-format-toolbar] {
+  scroll-padding-bottom: 64px;
+}
+
+/* ========================
+   Fork（almanac ALMNC-56.5，RPT-2026-009 V01、V02）：V3 編輯器回到單色規範（src/app/fork-theme.css 開頭）。
+   唯一彩色 --brand-accent 只給連結、已勾選任務、引言色條（caret 由 fork-theme.css 處理）；
+   程式碼上色與 GitHub 提示框改用 ink、muted-ink、danger、success-ink，這些 token 深淺色各有一組值。
+   全部用 :where([data-ui="v3"]) 包住、放在檔案最後：特異度不變、classic 完全不受影響。
+   ======================== */
+
+/* V01：連結 */
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror a,
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror a.notegen-wikilink,
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror .notegen-embed-body a.notegen-wikilink {
+  color: var(--brand-accent);
+}
+
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror a.notegen-wikilink,
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror .notegen-embed-body a.notegen-wikilink {
+  text-decoration-color: color-mix(in srgb, var(--brand-accent) 50%, transparent);
+}
+
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror a.notegen-wikilink:hover {
+  background-color: color-mix(in srgb, var(--brand-accent) 10%, transparent);
+}
+
+/* V01：已勾選任務（勾選框填 brand，勾號用 brand 上的字色） */
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror ul[data-type="taskList"] li > label input[type="checkbox"]:checked,
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror ul[data-type="taskList"] li[data-checked="true"] > label > span {
+  background-color: var(--brand-accent) !important;
+  border-color: var(--brand-accent) !important;
+}
+
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror ul[data-type="taskList"] li > label input[type="checkbox"]:checked::before,
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror ul[data-type="taskList"] li > label > span::before {
+  border-color: var(--brand-accent-ink);
+}
+
+/* V01：引言色條（一般引言；GitHub 提示框另外處理，見下方） */
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror blockquote {
+  border-left-color: var(--brand-accent);
+}
+
+/* V02：程式碼上色。語法色都指向會隨深淺色切換的 token，深色模式不會再出現看不見的字串色。 */
+:where([data-ui="v3"]) .tiptap-editor {
+  --syntax-comment: var(--muted-ink);
+  --syntax-keyword: var(--muted-ink);
+  --syntax-attribute: var(--muted-ink);
+  --syntax-string: var(--ink);
+  --syntax-value: var(--ink);
+  --syntax-name: var(--ink);
+  --syntax-title: var(--ink);
+  /* success-ink 在淺色程式碼底上不到 4.5:1；往 ink 混兩成，深淺色都更清楚 */
+  --syntax-addition: color-mix(in srgb, var(--success-ink) 80%, var(--ink));
+  --syntax-deletion: var(--danger);
+}
+
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror pre code .hljs-comment,
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror pre code .hljs-quote {
+  color: var(--syntax-comment);
+  font-style: italic;
+}
+
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror pre code .hljs-keyword,
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror pre code .hljs-selector-tag {
+  color: var(--syntax-keyword);
+}
+
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror pre code .hljs-attribute {
+  color: var(--syntax-attribute);
+}
+
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror pre code .hljs-string,
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror pre code .hljs-symbol,
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror pre code .hljs-bullet {
+  color: var(--syntax-string);
+}
+
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror pre code .hljs-number,
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror pre code .hljs-built_in,
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror pre code .hljs-literal,
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror pre code .hljs-type,
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror pre code .hljs-params,
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror pre code .hljs-meta,
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror pre code .hljs-link {
+  color: var(--syntax-value);
+}
+
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror pre code .hljs-variable,
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror pre code .hljs-template-variable,
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror pre code .hljs-tag,
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror pre code .hljs-name,
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror pre code .hljs-selector-id,
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror pre code .hljs-selector-class,
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror pre code .hljs-regexp {
+  color: var(--syntax-name);
+}
+
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror pre code .hljs-title,
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror pre code .hljs-section {
+  color: var(--syntax-title);
+  font-weight: 600;
+}
+
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror pre code .hljs-addition {
+  color: var(--syntax-addition);
+}
+
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror pre code .hljs-deletion {
+  color: var(--syntax-deletion);
+}
+
+/* V02：GitHub 提示框只用灰階；Warning、Caution 用 danger。
+   直接設屬性（不改 --github-alert-*），才蓋得過 .dark 底下各類型的變數。 */
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror blockquote.markdown-alert {
+  border-left-color: var(--line);
+}
+
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror blockquote.markdown-alert .markdown-alert-title {
+  color: var(--muted-ink);
+}
+
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror blockquote.markdown-alert:is(.markdown-alert-warning, .markdown-alert-caution) {
+  border-left-color: var(--danger);
+}
+
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror blockquote.markdown-alert:is(.markdown-alert-warning, .markdown-alert-caution) .markdown-alert-title {
+  color: var(--danger);
+}
+
+/* V02：AI 修改預覽的「新增」綠色改用 success-ink（深淺色各有值）。
+   這兩條要蓋過 .dark 底下寫死的 #86efac，用 :is() 讓 [data-ui] 計入特異度。 */
+:is([data-ui="v3"]) .tiptap-editor .ProseMirror .agent-diff-preview-inserted {
+  background: color-mix(in srgb, var(--success-ink) 18%, transparent);
+  color: var(--syntax-addition);
+}
+
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror .agent-diff-preview-table-row > td,
+:where([data-ui="v3"]) .tiptap-editor .ProseMirror .agent-diff-preview-table-row > th {
+  background: color-mix(in srgb, var(--success-ink) 18%, transparent);
+}
+
+:is([data-ui="v3"]) .tiptap-editor .ProseMirror .agent-diff-attribute ins {
+  color: var(--syntax-addition);
+}
+
+:where([data-ui="v3"]) .tiptap-editor .agent-diff-map-inserted {
+  background: var(--success-ink);
 }

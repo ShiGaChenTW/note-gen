@@ -6,13 +6,16 @@ import { askCollectModel } from '@/lib/collect/ai'
 import { loadItems, mergeItems, saveItems } from '@/lib/collect/persist'
 import { splitInput } from '@/lib/collect/split'
 import { acceptProposal, undoAccepted, type AcceptResult } from '@/lib/collect/write'
+import { linkAcceptedOutputs } from '@/lib/commander/consolidate'
 import type { CollectInput, Proposal, SplitSource } from '@/lib/collect/types'
 import { setRecordsProcessed } from '@/lib/inbox/actions'
+import { replacedProposalKeys } from '@/lib/proposals/trail'
 import { useUiModeStore } from '@/lib/fork-ui'
 import useDailySettingsStore from './daily-settings'
 import useHomeStore from './home'
 import useInboxStore from './inbox'
 import usePromptLibraryStore from './prompt-library'
+import useProposalTrailStore from './proposals'
 
 export type ProposalStatus = 'wait' | 'ok' | 'no'
 
@@ -37,12 +40,16 @@ interface CollectState {
   items: CaptureItem[]
   /** 從 store.json 讀回保存的項目（只做一次；讀回前不寫檔，免得把還沒讀到的內容蓋掉）。 */
   hydrate: () => Promise<void>
+  persist: () => Promise<void>
   show: () => void
   hide: () => void
   submit: (input: CollectInput, options?: { recordId?: number }) => Promise<void>
-  addProposals: (id: string, origin: string, proposals: Proposal[]) => void
+  /** Fork（almanac ALMNC-54.5）：conversationId＝這批提案來自哪段對話（沒有自帶的才補上）。 */
+  addProposals: (id: string, origin: string, proposals: Proposal[], options?: { conversationId?: number, recordId?: number }) => void
   accept: (itemId: string, proposalId: string) => Promise<AcceptResult>
   reject: (itemId: string, proposalId: string) => void
+  /** Fork（almanac ALMNC-54.8）：工作台「復原」放棄——把放棄的提案改回等你決定。 */
+  restore: (itemId: string, proposalId: string) => void
   edit: (itemId: string, proposalId: string, patch: Partial<Pick<Proposal, 'title' | 'due' | 'time'>>) => void
   undo: (itemId: string, proposalId: string) => Promise<boolean>
   remove: (itemId: string) => void
@@ -51,6 +58,7 @@ interface CollectState {
 let itemCounter = 0
 let hydration: Promise<void> | undefined
 let persistReady = false
+let pendingSave = Promise.resolve()
 let persistTimer: ReturnType<typeof setTimeout> | undefined
 
 function patchProposal(items: CaptureItem[], itemId: string, proposalId: string, patch: Partial<CaptureProposal>): CaptureItem[] {
@@ -58,6 +66,12 @@ function patchProposal(items: CaptureItem[], itemId: string, proposalId: string,
     ...item,
     proposals: item.proposals.map(proposal => proposal.id === proposalId ? { ...proposal, ...patch } : proposal),
   })
+}
+
+function decisionBlocked(items: CaptureItem[], itemId: string, proposalId: string): boolean {
+  const key = `collect:${itemId}:${proposalId}`
+  const entry = useProposalTrailStore.getState().trail[key]
+  return Boolean(entry?.discussion || entry?.supersededBy || replacedProposalKeys(items).has(key))
 }
 
 const useCollectStore = create<CollectState>((set, get) => ({
@@ -82,6 +96,14 @@ const useCollectStore = create<CollectState>((set, get) => ({
       console.debug('[collect] restore skipped:', error)
     }),
 
+  persist: () => {
+    if (!persistReady) return Promise.reject(new Error('Collect store is not loaded'))
+    clearTimeout(persistTimer)
+    const saved = pendingSave.then(() => saveItems(get().items))
+    pendingSave = saved.catch(() => undefined)
+    return saved
+  },
+
   submit: async (input, options) => {
     itemCounter += 1
     const id = `capture-${Date.now().toString(36)}-${itemCounter}`
@@ -94,7 +116,7 @@ const useCollectStore = create<CollectState>((set, get) => ({
     }))
   },
 
-  addProposals: (id, origin, proposals) => set(state => {
+  addProposals: (id, origin, proposals, options) => set(state => {
     if (!proposals.length || state.items.some(item => item.id === id)) return state
     return { items: [{
       id,
@@ -102,26 +124,58 @@ const useCollectStore = create<CollectState>((set, get) => ({
       createdAt: Date.now(),
       state: 'ready',
       source: 'ai',
-      proposals: proposals.map(proposal => ({ ...proposal, status: 'wait' })),
+      ...(options?.recordId !== undefined ? { recordId: options.recordId } : {}),
+      proposals: proposals.map(proposal => ({
+        ...proposal,
+        ...(proposal.conversationId === undefined && options?.conversationId !== undefined ? { conversationId: options.conversationId } : {}),
+        status: 'wait',
+      })),
     }, ...state.items] }
   }),
 
   accept: async (itemId, proposalId) => {
     const item = get().items.find(entry => entry.id === itemId)
     const proposal = item?.proposals.find(entry => entry.id === proposalId)
-    if (!item || !proposal || proposal.status !== 'wait') throw new Error('proposal not found')
+    if (!item || !proposal || proposal.status !== 'wait' || decisionBlocked(get().items, itemId, proposalId)) throw new Error('proposal not found')
     await useDailySettingsStore.getState().initSettings()
+    if (decisionBlocked(get().items, itemId, proposalId)) throw new Error('proposal is being revised or replaced')
     const result = await acceptProposal(proposal, { noteFolder: useDailySettingsStore.getState().inboxFolder })
     set(state => ({ items: patchProposal(state.items, itemId, proposalId, { status: 'ok', result }) }))
-    const updated = get().items.find(entry => entry.id === itemId)
-    if (updated?.recordId !== undefined && updated.proposals.every(entry => entry.status !== 'wait')) {
-      const note = updated.proposals.find(entry => entry.status === 'ok' && entry.kind === 'note')
-      await setRecordsProcessed([updated.recordId], note?.result?.path ?? null).catch(error => console.error('[collect] mark record processed failed:', error))
+    // Fork（almanac ALMNC-54.6）：指揮官的提案接受、寫入之後才建立「資料源 → 產出」連結；筆記 frontmatter 的 sources 已同時寫好，
+    // 連結表寫失敗也查得到來源（lib/v3-model/links.ts sourcesOfNote 取聯集），所以只記錯、不擋接受。
+    if (proposal.sourceIds?.length) {
+      await linkAcceptedOutputs(proposal, result).catch(error => console.error('[collect] source output link failed:', error))
+    }
+    // Fork（almanac ALMNC-54.12）：新筆記寫入後，負責的專家在背景比對同領域的類似筆記（發現時機 1）；不擋接受。
+    if (proposal.kind === 'note' && !proposal.slot && !proposal.change && !proposal.edits?.length && !proposal.review && result.path) {
+      void import('@/lib/cleanup/runtime').then(module => module.checkAfterWrite(result.path, 'written')).catch(() => undefined)
+    }
+    if (item.recordId !== undefined) {
+      const items = get().items
+      const replaced = replacedProposalKeys(items)
+      const { trail } = useProposalTrailStore.getState()
+      const proposals = items.filter(entry => entry.recordId === item.recordId)
+        .flatMap(entry => entry.proposals.filter(p => {
+          const key = `collect:${entry.id}:${p.id}`
+          return !replaced.has(key) && !trail[key]?.supersededBy
+        }))
+      if (proposals.every(entry => entry.status !== 'wait')) {
+        const note = proposals.find(entry => entry.status === 'ok' && entry.kind === 'note')
+        await setRecordsProcessed([item.recordId], note?.result?.path ?? null).catch(error => console.error('[collect] mark record processed failed:', error))
+      }
     }
     return result
   },
 
-  reject: (itemId, proposalId) => set(state => ({ items: patchProposal(state.items, itemId, proposalId, { status: 'no' }) })),
+  reject: (itemId, proposalId) => set(state => decisionBlocked(state.items, itemId, proposalId)
+    ? state : { items: patchProposal(state.items, itemId, proposalId, { status: 'no' }) }),
+
+  restore: (itemId, proposalId) => set(state => ({
+    items: state.items.map(item => item.id !== itemId ? item : {
+      ...item,
+      proposals: item.proposals.map(proposal => proposal.id === proposalId && proposal.status === 'no' ? { ...proposal, status: 'wait' as const } : proposal),
+    }),
+  })),
 
   edit: (itemId, proposalId, patch) => set(state => ({ items: patchProposal(state.items, itemId, proposalId, patch) })),
 
@@ -141,7 +195,7 @@ useCollectStore.subscribe((state, previous) => {
   if (!persistReady || state.items === previous.items) return
   clearTimeout(persistTimer)
   persistTimer = setTimeout(() => {
-    saveItems(useCollectStore.getState().items).catch(error => console.error('[collect] save failed:', error))
+    useCollectStore.getState().persist().catch(error => console.error('[collect] save failed:', error))
   }, 300)
 })
 

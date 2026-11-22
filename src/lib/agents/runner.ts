@@ -1,4 +1,5 @@
 import { getAgentSettings, recordAgentToolRefusal } from '@/db/agents'
+import { loadAgentMemoryPrompt } from '@/db/agent-memory'
 import { AgentRuntime } from '@/lib/agent/runtime'
 import type { AgentTool } from '@/lib/agent/types'
 import { buildBackgroundTools, type DraftSink } from '@/lib/agent-tasks/draft-tools'
@@ -7,15 +8,8 @@ import type { TaskRunner } from '@/lib/agent-tasks/task-center'
 import type { AgentRunnerKind } from '@/lib/agent-tasks/types'
 import { loadCalendarEvents } from '@/lib/calendar/calendar'
 import { authorizeAgentTool } from './permissions'
-import { isAgentToolName, type AgentRole, type AgentToolName } from './settings'
-
-const ROLE_INSTRUCTIONS: Record<AgentRole, string> = {
-  organizer: 'Organize supplied captures into notes and tasks. Preserve source material and identify duplicates.',
-  scheduler: 'Propose time blocks after checking relevant tasks and the calendar. Report missing calendar access or conflicts.',
-  researcher: 'Summarize supplied sources and notes. Cite evidence and identify unknowns.',
-  reviewer: 'Summarize progress, blockers, and possible next steps from the supplied period.',
-  custom: 'Follow the assigned task.',
-}
+import { ROLE_INSTRUCTIONS } from './instructions'
+import { isAgentToolName, type AgentSettings, type AgentToolName } from './settings'
 
 const PROPOSAL_TOOLS = new Set<string>(['note_create_file', 'note_update_file'])
 
@@ -78,12 +72,25 @@ function buildAgentTools(tools: AgentTool[], allowedTools: AgentToolName[], sink
   })
 }
 
+// Fork（almanac ALMNC-54.3）：讀這個 agent 的 soul、rules、工作筆記，加上 Scott 的偏好和目前脈絡標題。
+// 讀不到記憶時照常執行（只少了記憶），不讓設定區的問題擋住工作。
+async function memoryPrompt(agent: AgentSettings): Promise<string> {
+  try {
+    return await loadAgentMemoryPrompt(agent)
+  } catch (error) {
+    console.warn('[agents] memory unavailable', error)
+    return ''
+  }
+}
+
 /** Each persisted agent gets a runner that reloads its settings on every execution. */
 export function createAgentRunner(kind: AgentRunnerKind): TaskRunner {
   const agentId = kind.slice('agent:'.length)
   return async (task, { signal, setTokens, draftSink }) => {
     const agent = await getAgentSettings(agentId)
     if (!agent?.enabled) throw new Error('AGENT_DISABLED')
+    signal.throwIfAborted()
+    const memory = await memoryPrompt(agent)
     signal.throwIfAborted()
 
     const runtime = new AgentRuntime()
@@ -97,6 +104,7 @@ export function createAgentRunner(kind: AgentRunnerKind): TaskRunner {
           role: 'system',
           content: [
             ROLE_INSTRUCTIONS[agent.role],
+            memory,
             'You are working in the background. Note tools only stage proposals for user review. Use Markdown paths and report missing facts.',
             buildResumeNote(task.drafts),
           ].filter(Boolean).join('\n\n'),
