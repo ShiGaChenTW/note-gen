@@ -12,6 +12,9 @@
 // 只有 config＋events.sleep.enter.download、dest 是 /sleep.bmp。
 //
 // 已由文件／原始碼確認：上面列的格式與行為。
+// 已由實機確認（ALMNC-44／58，X4 Pro、CrossPoint 2.0.6）：/sleep.bmp 用 8-bit 灰階 BMP（256 色盤，480×800 約 385 KB）。
+//   2-bit 灰階太粗；24-bit（約 1.15 MB）超過 MAX_EVENT_DOWNLOAD_BYTES，外掛那次休眠的下載全部失敗。
+//   sleep/bmp.ts 編碼時檢查大小，達到上限就丟錯。
 // 還要 ALMNC-44 實機確認（標 ALMNC-44 的常數）：
 //   - 區網明文 http 能不能下載、token 放網址參數或 Bearer 標頭哪個可行（外掛兩個都帶，伺服器兩個都收）
 //   - 一次休眠能不能兩個外掛各下載一個檔（今日簡報外掛預設不裝）
