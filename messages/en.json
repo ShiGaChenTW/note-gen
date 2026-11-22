@@ -4729,19 +4729,20 @@
         "summary": "Conversation summary",
         "more": "More chat actions",
         "sendToBackground": "Run in background",
-        "backgroundRequiresDelegate": "Switch to Delegate to run your draft in the background.",
+        "backgroundRequiresDelegate": "Switch to Process to send the draft to the background.",
         "scrollToEnd": "Scroll to end of conversation",
         "usagePercent": "{percent}%",
         "mode": {
           "label": "Chat mode",
-          "shortcut": "Press Tab to switch between Ask and Delegate",
+          "shortcut": "Press Tab to switch between Ask and Process",
           "ask": "Ask",
-          "delegate": "Delegate",
+          "delegate": "Process",
           "readOnlyHint": "Answers only, no file edits",
           "ask-before-edit": "Ask before editing",
           "auto-edit": "Edit automatically",
           "askPlaceholder": "Ask anything about this note",
-          "delegatePlaceholder": "Give me a task, such as moving to-dos to the top"
+          "delegatePlaceholder": "Ask for something, such as: meeting with A tomorrow at 10:00",
+          "processHint": "Changes become proposals; tasks and appointments you ask for are added directly"
         },
         "empty": {
           "ask": {
@@ -4763,8 +4764,8 @@
             }
           },
           "delegate": {
-            "title": "Give me a task",
-            "description": "I’ll show my steps and follow your chosen file permissions.",
+            "title": "Hand it to the commander",
+            "description": "{name}: note changes become proposals for you to accept; tasks and appointments you ask for are added directly.",
             "prompts": {
               "first": {
                 "label": "Organize the key points",
@@ -4805,6 +4806,9 @@
           "showDiff": "View changes",
           "hideDiff": "Hide changes",
           "fileList": "View files"
+        },
+        "commander": {
+          "origin": "{agent} (chat)"
         }
       },
       "condensing": "Condensing context...",
@@ -8167,7 +8171,12 @@
         "done": "Done"
       },
       "discuss": "Discuss again",
-      "proposalTalk": "Discussing again"
+      "proposalTalk": "Discussing again",
+      "directAdded": "Added: {what}",
+      "undo": "Undo",
+      "directDone": "Added",
+      "directUndone": "Undone",
+      "directStale": "File changed since, not undone"
     },
     "tag": {
       "query": "Query",

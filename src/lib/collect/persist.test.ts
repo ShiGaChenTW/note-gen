@@ -75,3 +75,16 @@ describe('proposal source conversation', () => {
     expect(proposal).not.toHaveProperty('previousProposalId')
   })
 })
+
+// Fork（almanac ALMNC-54.7）：右側欄指揮官的檔案變更提案，重開後還能接受。
+describe('file change proposals', () => {
+  const change = { toolName: 'note_update_file', args: { filePath: 'a.md', content: 'new' }, kind: 'update' as const, path: 'a.md', content: 'new', baseContent: 'old', summary: '修改 a.md（1 → 1 行）' }
+  it('keeps the change through save and load', () => {
+    const saved = serializeItems([item({ proposals: [{ ...base, id: 'p1', kind: 'note', title: change.summary, status: 'wait', conversationId: 7, change }] })])
+    expect(parseItems(saved, NOW)[0].proposals[0]).toMatchObject({ conversationId: 7, change })
+  })
+  it('drops a proposal whose change cannot be read', () => {
+    const raw = [{ ...item(), proposals: [{ ...base, id: 'p1', kind: 'note', title: 'x', status: 'wait', change: { kind: 'update' } }, { ...base, id: 'p2', kind: 'task', title: '乙', status: 'wait' }] }]
+    expect(parseItems(raw, NOW)[0].proposals.map(proposal => proposal.id)).toEqual(['p2'])
+  })
+})

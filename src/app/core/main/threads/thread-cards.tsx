@@ -5,10 +5,10 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
-import { Check, CalendarClock, FileText, ListTodo, LoaderCircle } from 'lucide-react'
+import { Check, CalendarClock, FileText, ListTodo, LoaderCircle, Undo2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useUiV3 } from '@/lib/fork-ui'
-import { resolveThreadCard, type CardAction, type KickoffCardView, type ProposalCardView, type ThreadCard } from '@/lib/threads/cards'
+import { resolveThreadCard, type CardAction, type DirectEditCardView, type KickoffCardView, type ProposalCardView, type ThreadCard } from '@/lib/threads/cards'
 import { cn } from '@/lib/utils'
 import { discussProposal } from '@/lib/proposals/actions'
 import useChatStore from '@/stores/chat'
@@ -122,6 +122,37 @@ function KickoffCard({ view, onAction }: { view: KickoffCardView, onAction: (act
   )
 }
 
+// Fork（almanac ALMNC-54.7）：秘書照 Scott 親口交代直接改了任務或行程——一行確認，附「復原」。實線框（已生效，不是提案）。
+function DirectEditCard({ view, onAction }: { view: DirectEditCardView, onAction: (action: CardAction) => void }) {
+  const t = useTranslations('threads.cards')
+  const [busy, setBusy] = useState(false)
+  return (
+    <div data-slot="thread-card" data-card="direct-edit" className="flex items-center gap-2 rounded-md border border-line-soft bg-bg px-3 py-2 text-sm">
+      <Check aria-hidden className="size-3.5 shrink-0 text-muted-ink" />
+      <span className={cn('min-w-0 flex-1 truncate text-ink', view.statusKey !== 'directDone' && 'text-muted-ink line-through')}>
+        {t('directAdded', { what: view.what })}
+      </span>
+      {view.agent && <span className="shrink-0 text-ui-compact text-muted-ink">{view.agent}</span>}
+      {view.actions.includes('undo') ? (
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-7 shrink-0"
+          disabled={busy}
+          onClick={() => {
+            setBusy(true)
+            onAction('undo')
+          }}
+        >
+          <Undo2 aria-hidden data-icon="inline-start" />{t('undo')}
+        </Button>
+      ) : (
+        <span className="shrink-0 text-ui-compact text-muted-ink">{t(view.statusKey)}</span>
+      )}
+    </div>
+  )
+}
+
 /** 掛在每則訊息下面：這則訊息沒有卡片、或不是新介面時什麼都不畫。 */
 export function ThreadMessageCards({ chatId }: { chatId: number }) {
   const isV3 = useUiV3()
@@ -149,6 +180,7 @@ export function ThreadMessageCards({ chatId }: { chatId: number }) {
           }
         }
         if (view.type === 'kickoff-result' && view.placeholder) return null
+        if (view.type === 'direct-edit') return <DirectEditCard key={card.id} view={view} onAction={onAction} />
         return view.type === 'proposal'
           ? <ProposalCard key={card.id} view={view} onAction={onAction} onDiscuss={onDiscuss} />
           : <KickoffCard key={card.id} view={view} onAction={onAction} />

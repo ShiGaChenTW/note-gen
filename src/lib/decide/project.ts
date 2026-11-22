@@ -156,6 +156,8 @@ export function journalInsertPreview(snapshot: JournalSnapshot, proposal: Propos
 
 /** 同一件事的比對鍵：種類、標題、日期、時間（標題不分大小寫與前後空白）。 */
 export function sameThingKey(proposal: Proposal): string {
+  // Fork（almanac ALMNC-54.7）：檔案變更以「哪個檔案、怎麼改、改成什麼」為準。
+  if (proposal.change) return JSON.stringify(['change', proposal.change.kind, proposal.change.path, proposal.change.targetPath ?? '', proposal.change.content ?? ''])
   if (proposal.slot) return JSON.stringify(['scheduler', proposal.slot.path, proposal.slot.line, proposal.due, proposal.time])
   return [proposal.kind, proposal.title.trim().replace(/\s+/g, ' ').toLowerCase(), proposal.due, proposal.time].join('|')
 }
@@ -189,7 +191,14 @@ function projectCollect(items: CollectItemLike[], journal: JournalSnapshot | nul
       if (same) { same.duplicates.push(ref); continue }
 
       let preview: DecidePreview
-      if (slot && journal) {
+      const change = proposal.change
+      if (change) {
+        // Fork（almanac ALMNC-54.7）：右側欄指揮官的檔案變更，預覽同背景任務的草稿。
+        preview = {
+          type: 'file', path: change.path, targetPath: change.targetPath,
+          diff: change.kind === 'create' || change.kind === 'update' ? previewDiff(change.baseContent ?? '', change.content ?? '') : null,
+        }
+      } else if (slot && journal) {
         const after = scheduleSlot(journal.before, slot, proposal.due, proposal.time)
         preview = { type: 'file', path: slot.path, diff: after === null ? null : previewDiff(journal.before, after) }
       } else if (proposal.kind === 'note') {
@@ -202,10 +211,10 @@ function projectCollect(items: CollectItemLike[], journal: JournalSnapshot | nul
       const entry: DecideItem = {
         key: `collect:${item.id}:${proposal.id}`,
         source: 'collect',
-        kind: proposal.kind,
-        title: proposal.title,
+        kind: change ? change.kind : proposal.kind,
+        title: change ? change.path : proposal.title,
         origin: itemOrigin(item),
-        summary: '',
+        summary: change ? change.summary : '',
         when: whenOf(proposal),
         at: item.createdAt,
         preview,

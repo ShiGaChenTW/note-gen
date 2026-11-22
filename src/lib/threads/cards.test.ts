@@ -74,3 +74,14 @@ describe('threads/cards', () => {
     expect(parseThreadCard({ type: 'proposal', id: 'x', kind: 'note', title: 't', status: 'talk' })).toMatchObject({ status: 'talk' })
   })
 })
+
+// Fork（almanac ALMNC-54.7）：秘書直接修改後的一行確認，只在剛寫入時能復原。
+describe('direct edit confirmation card', () => {
+  it('offers undo only while the change is in place', () => {
+    const card = { type: 'direct-edit' as const, id: 'd1', what: '11/20 10:00 會議', agent: 'Leo · 秘書', status: 'done' as const }
+    expect(resolveThreadCard(card)).toEqual({ type: 'direct-edit', id: 'd1', what: '11/20 10:00 會議', agent: 'Leo · 秘書', statusKey: 'directDone', actions: ['undo'] })
+    expect(resolveThreadCard({ ...card, status: 'undone' })).toMatchObject({ statusKey: 'directUndone', actions: [] })
+    expect(resolveThreadCard({ ...card, status: 'stale' })).toMatchObject({ statusKey: 'directStale', actions: [] })
+    expect(applyCardAction(card, 'undo')).toBe(card)
+  })
+})
