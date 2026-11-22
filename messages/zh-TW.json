@@ -9290,6 +9290,7 @@
       "failed": "匯入失敗",
       "dropUnsupported": "可以拖進 .eml、.mbox、.vtt、.srt 檔",
       "subscribeRss": "訂閱 RSS",
+      "readLater": "稍後讀",
       "rssSubscribed": "已訂閱「{name}」，收進 {count} 篇，等你決定要不要處理",
       "meeting": "會議逐字稿",
       "meetingAdded": "已匯入 {count} 場會議，等你決定要不要處理",

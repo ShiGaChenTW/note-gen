@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 // Fork（almanac ALMNC-56 重跑稽核）：新增資料源對話框——匯入 Email、會議逐字稿、訂閱 RSS 時顯示「處理中」並 disable 按鈕，
 // 結束後焦點回到按下的按鈕；V3 的類型列用下拉選單（不用原生 select）、停止錄音鈕用 danger 色；classic 維持原樣。
+// ALMNC-46 AC #6：貼連結時的「稍後讀」把連結加進稍後讀清單（不建資料源），重複網址提示已在清單。
 import { act, createElement as h } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { NextIntlClientProvider } from 'next-intl'
@@ -53,6 +54,10 @@ vi.mock('@/stores/tag', () => {
 
 const { UnifiedRecordButton, UnifiedRecordDialog } = await import('./unified-record-dialog')
 const { default: emitter } = await import('@/lib/emitter')
+const { toast } = await import('@/hooks/use-toast')
+const { addNewSource } = await import('@/lib/workbench/actions')
+const { configureEinkStorage } = await import('@/lib/eink/storage')
+const { default: useReadLaterStore, addToReadLater, configureReadLaterExtractor, resetReadLaterStoreForTest } = await import('@/stores/read-later')
 
 let container: HTMLDivElement
 let root: Root
@@ -129,5 +134,75 @@ describe('錄音中的停止鈕', () => {
     expect(stop().className).not.toContain('text-red-500')
     act(() => useUiModeStore.setState({ mode: 'classic' }))
     expect(stop().className).toContain('text-red-500')
+  })
+})
+
+describe('新增資料源貼連結：稍後讀（ALMNC-46 AC #6）', () => {
+  const readLater = messages.workbench.import.readLater
+  const dialog = () => document.body.querySelector('[role="dialog"]')
+  const openSource = async (prefillText: string) => {
+    act(() => emitter.emit('unified-record-open', { target: 'source', prefillText }))
+    await flush(60)
+  }
+
+  beforeEach(() => {
+    const data = new Map<string, unknown>()
+    configureEinkStorage({ get: async key => structuredClone(data.get(key)), set: async (key, value) => { data.set(key, structuredClone(value)) }, save: async () => {} })
+    configureReadLaterExtractor(async url => ({ ok: true, title: url, content: '正文', images: [] }))
+    resetReadLaterStoreForTest()
+    vi.mocked(toast).mockClear()
+    vi.mocked(addNewSource).mockClear()
+  })
+  afterEach(() => {
+    configureEinkStorage(null)
+    configureReadLaterExtractor(null)
+  })
+
+  it('貼的是連結時顯示「稍後讀」', async () => {
+    render(h(UnifiedRecordDialog))
+    await openSource('https://example.com/post')
+    expect(button(readLater)).toBeDefined()
+    expect(button(messages.workbench.import.subscribeRss)).toBeDefined()
+  })
+
+  it('按「稍後讀」把連結加進稍後讀清單、提示已加入並關閉對話框，不建資料源', async () => {
+    render(h(UnifiedRecordDialog))
+    await openSource('  https://example.com/post\n')
+    await act(async () => button(readLater)!.click())
+    await flush()
+    expect(useReadLaterStore.getState().items.map(item => item.url)).toEqual(['https://example.com/post'])
+    expect(toast).toHaveBeenCalledWith({ title: messages.settings.eink.readLater.added })
+    expect(addNewSource).not.toHaveBeenCalled()
+    expect(dialog()).toBeNull()
+  })
+
+  it('網址已在清單：提示已在清單、不重複加入，對話框留著', async () => {
+    expect(await addToReadLater('https://example.com/post')).toBe('added')
+    render(h(UnifiedRecordDialog))
+    await openSource('https://example.com/post?utm_source=feed')
+    await act(async () => button(readLater)!.click())
+    await flush()
+    expect(useReadLaterStore.getState().items).toHaveLength(1)
+    expect(toast).toHaveBeenCalledWith({ title: messages.settings.eink.readLater.duplicate })
+    expect(addNewSource).not.toHaveBeenCalled()
+    expect(dialog()).not.toBeNull()
+  })
+
+  it('貼的不是連結時不顯示「稍後讀」', async () => {
+    render(h(UnifiedRecordDialog))
+    await openSource('今天想到的一段話')
+    expect(dialog()).not.toBeNull()
+    expect(button(readLater)).toBeUndefined()
+  })
+
+  it('classic 與記錄模式都不顯示「稍後讀」', async () => {
+    render(h(UnifiedRecordDialog))
+    act(() => emitter.emit('unified-record-open', { prefillText: 'https://example.com/post' }))
+    await flush(60)
+    expect(button(readLater)).toBeUndefined()
+    act(() => useUiModeStore.setState({ mode: 'classic' }))
+    await openSource('https://example.com/post')
+    expect(button(messages.workbench.import.subscribeRss)).toBeDefined()
+    expect(button(readLater)).toBeUndefined()
   })
 })

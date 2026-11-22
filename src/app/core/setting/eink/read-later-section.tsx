@@ -1,7 +1,7 @@
 'use client'
 
 // Fork（almanac ALMNC-46）：稍後讀清單的管理（設定 > 電子紙底下）。可以看、移除、把已送電子紙的放回待送、重新擷取。
-// 「加入連結」只是清單管理用的最小入口；Q17（文章平常怎麼放進清單）還沒定案，定案的入口呼叫 addToReadLater(url)。
+// 「加入連結」是清單管理用的最小入口；平常的入口是 V3 新增資料源貼連結時的「稍後讀」（Q17 定案），一樣呼叫 addToReadLater(url)。
 import { useEffect, useState, type FormEvent } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { Link2, LoaderCircle, RefreshCw, RotateCcw, Trash2 } from 'lucide-react'

@@ -123,8 +123,8 @@ export function resetReadLaterStoreForTest(): void {
 
 /**
  * 把一個連結加進稍後讀清單，並在背景擷取正文。回傳 added／duplicate（同一網址不重複）／invalid。
- * Q17（文章怎麼放進清單）還沒定案：目前唯一的入口是清單管理頁的「加入連結」；
- * 之後定案的入口（資料源、分享選單、瀏覽器擴充…）都呼叫這個函式即可。
+ * 入口：清單管理頁的「加入連結」，以及 V3 新增資料源對話框貼連結時的「稍後讀」（Q17 定案，ALMNC-46 AC #6）。
+ * 之後新增的入口（分享選單、瀏覽器擴充…）都呼叫這個函式即可。
  */
 export async function addToReadLater(url: string): Promise<AddResult['result']> {
   return useReadLaterStore.getState().add(url)
