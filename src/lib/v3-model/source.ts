@@ -110,6 +110,43 @@ export function createSource(input: NewSourceInput, now: number): Source {
   }
 }
 
+// Fork（almanac ALMNC-54.14）：舊筆記（R3）。上線時整批「標成」資料源：一則舊筆記一列，內容只存 vault 相對路徑（參照），
+// 不複製全文（上千則筆記不必在 SQLite 裡再存一份；分析時才讀檔）。來源類型是「自己寫的」（Scott 自己寫的舊筆記），
+// 但不照 R2 自動分析：R3 規定合成一張卡、按一次才分批處理，所以一開始停在「等你決定」——那張批次卡就是 Scott 的決定。
+// id 由路徑決定，重跑標記不會重複（insert … on conflict do nothing）。
+
+/** 舊筆記資料源的形式。指揮官的一般佇列會跳過它，只由舊筆記批次（lib/migration/legacy.ts）處理。 */
+export const LEGACY_NOTE_KIND = 'legacy_note'
+
+export function legacySourceId(path: string): string {
+  return `src_legacy:${path}`
+}
+
+export function isLegacyNote(source: Pick<Source, 'kind'>): boolean {
+  return source.kind === LEGACY_NOTE_KIND
+}
+
+/** 建立一則舊筆記資料源：等你決定、未鎖定；collectedAt 用檔案修改時間（取不到就是現在）。 */
+export function createLegacyNoteSource(input: { path: string, mtime?: number }, now: number): Source {
+  return {
+    id: legacySourceId(input.path),
+    sourceType: 'self',
+    kind: LEGACY_NOTE_KIND,
+    content: input.path,
+    origin: input.path,
+    collectedAt: input.mtime && input.mtime > 0 ? input.mtime : now,
+    collector: 'system',
+    status: 'awaiting_decision',
+    statusChangedAt: now,
+    version: 1,
+    previousId: undefined,
+    lockedAt: undefined,
+    archivedAt: undefined,
+    createdAt: now,
+    updatedAt: now,
+  }
+}
+
 export function transitionSource(source: Source, to: SourceStatus, now: number): Source {
   if (source.archivedAt !== undefined) throw new Error('已封存的資料源不能再改狀態')
   if (!canTransition(source.status, to)) throw new Error(`資料源狀態不能從 ${source.status} 改成 ${to}`)

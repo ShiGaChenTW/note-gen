@@ -2,7 +2,8 @@
 // 清單由投影自然更新；能復原的回傳 undo（給審核分頁的 Z）。需要 Tauri 的模組一律動態載入，測試時可以 mock。
 import { acceptDecision, rejectDecision } from '@/lib/decide/actions'
 import type { DecideItem } from '@/lib/decide/project'
-import { latestVersions, type Source } from '@/lib/v3-model/source'
+import { LEGACY_NOTE_KIND, latestVersions, type Source } from '@/lib/v3-model/source'
+import { legacyProgress, type LegacyRunSummary } from '@/lib/migration/legacy'
 import useCollectStore from '@/stores/collect'
 import useWorkbenchStore from '@/stores/workbench'
 import type { WorkbenchCard, TaskLike } from './cards'
@@ -26,17 +27,68 @@ export async function kickCommander(): Promise<void> {
 export async function refreshSources(): Promise<void> {
   try {
     const db = await import('@/db/v3-sources')
-    const [all, counts] = await Promise.all([db.listSources({ limit: 500 }), db.countOutputsBySource()])
+    // Fork（almanac ALMNC-54.14）：舊筆記不進資料源清單（另外合成批次卡），見 refreshLegacy。
+    const [all, counts] = await Promise.all([db.listSources({ limit: 500, excludeKind: LEGACY_NOTE_KIND }), db.countOutputsBySource()])
     useWorkbenchStore.getState().setSources(latestVersions(all), counts)
   } catch (error) {
     console.debug('[workbench] sources unavailable:', error)
   }
+  await refreshLegacy()
   // Fork（almanac ALMNC-54.10）：初步判斷另外讀；讀不到卡片照樣出現（AC#4）。
   try {
     const { listSourceJudgements } = await import('@/db/v3-source-judgements')
     useWorkbenchStore.getState().setJudgements(await listSourceJudgements())
   } catch (error) {
     console.debug('[workbench] judgements unavailable:', error)
+  }
+}
+
+/** Fork（almanac ALMNC-54.14）：重讀舊筆記批次的現況（已標記幾則、處理了幾則、還沒整理好的包、是不是正在跑）。 */
+export async function refreshLegacy(): Promise<void> {
+  try {
+    const [db, packsDb, runtime] = await Promise.all([import('@/db/v3-sources'), import('@/db/v3-legacy-packs'), import('@/lib/migration/runtime')])
+    const [legacy, packs] = await Promise.all([db.listLegacyNoteSources(), packsDb.listOpenLegacyPacks()])
+    const { total, processed } = legacyProgress(legacy)
+    useWorkbenchStore.getState().setLegacy({
+      markedIds: new Set(legacy.map(source => source.id)),
+      total,
+      processed,
+      firstMarkedAt: legacy.length ? Math.min(...legacy.map(source => source.createdAt)) : undefined,
+      packs,
+      ...runtime.legacyRunning(),
+    })
+  } catch (error) {
+    console.debug('[workbench] legacy notes unavailable:', error)
+  }
+}
+
+/** Fork（almanac ALMNC-54.14）：批次卡「開始處理／繼續處理」——標記還沒標的舊筆記，再分批交給指揮官；跑的時候每批做完就重讀。 */
+export async function startLegacy(unmarked: ReadonlyArray<{ path: string, mtime?: number }>): Promise<LegacyRunSummary> {
+  const runtime = await import('@/lib/migration/runtime')
+  const stop = runtime.onLegacyProgress(() => void refreshLegacy())
+  try {
+    return await runtime.startLegacyMigration(unmarked)
+  } finally {
+    stop()
+    await refreshSources()
+  }
+}
+
+/** Fork（almanac ALMNC-54.14）：批次卡「暫停」：這一則做完就停。 */
+export async function pauseLegacy(): Promise<void> {
+  const runtime = await import('@/lib/migration/runtime')
+  runtime.pauseLegacyMigration()
+  await refreshLegacy()
+}
+
+/** Fork（almanac ALMNC-54.14）：那一包「整理好了」：記下已整理（不刪、不動筆記檔），下一包才會出現；可以復原。 */
+export async function resolveLegacyPack(packId: string): Promise<Undo> {
+  const packsDb = await import('@/db/v3-legacy-packs')
+  await packsDb.setLegacyPackResolved(packId, true)
+  await refreshLegacy()
+  return async () => {
+    await packsDb.setLegacyPackResolved(packId, false)
+    await refreshLegacy()
   }
 }
 

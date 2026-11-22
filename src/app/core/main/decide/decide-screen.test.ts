@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import messages from '../../../../../messages/zh-TW.json'
 import { useUiModeStore } from '@/lib/fork-ui'
 import { createSource, type Source } from '@/lib/v3-model/source'
+import type { IndexedNote } from '@/lib/vault-index/index-note'
 
 const mocks = vi.hoisted(() => ({
   discussProposal: vi.fn(async () => 7),
@@ -19,6 +20,9 @@ const mocks = vi.hoisted(() => ({
   saveSourceEdit: vi.fn(async () => ({ rowId: 'src:d2', version: 2, versioned: true })),
   startProcessConversation: vi.fn(async () => 42),
   processSource: vi.fn(async () => {}),
+  startLegacy: vi.fn(async () => ({ reason: 'paused', done: 0, undecided: 0, failed: 0, packs: 0 })),
+  pauseLegacy: vi.fn(async () => {}),
+  resolveLegacyPack: vi.fn(async () => undefined),
   startNewConversation: vi.fn(async () => {}),
   toast: Object.assign(vi.fn(), { error: vi.fn(), success: vi.fn() }),
 }))
@@ -61,6 +65,9 @@ vi.mock('@/lib/workbench/actions', async importOriginal => ({
   saveSourceEdit: mocks.saveSourceEdit,
   startProcessConversation: mocks.startProcessConversation,
   processSource: mocks.processSource,
+  startLegacy: mocks.startLegacy,
+  pauseLegacy: mocks.pauseLegacy,
+  resolveLegacyPack: mocks.resolveLegacyPack,
 }))
 vi.mock('../jobs/job-result', () => ({ JobReviewPreview: () => null }))
 
@@ -71,6 +78,8 @@ const useDecideStore = (await import('@/stores/decide')).default
 const useInboxStore = (await import('@/stores/inbox')).default
 const useThreadsStore = (await import('@/stores/threads')).default
 const useWorkbenchStore = (await import('@/stores/workbench')).default
+const useVaultIndexStore = (await import('@/stores/vault-index')).default
+const { EMPTY_LEGACY } = await import('@/stores/workbench')
 const { DecideScreen } = await import('./decide-screen')
 
 let container: HTMLDivElement
@@ -129,7 +138,9 @@ beforeEach(async () => {
     sources: [source('w', 'awaiting_decision', '白板照片\n第三站 → SMED'), source('d', 'analyzed', '七大浪費\n過量生產、等待')],
     outputCounts: new Map([['d', 2]]), desk: { open: false, materials: [] },
     hydrateAside: vi.fn(async () => {}),
+    legacy: EMPTY_LEGACY,
   })
+  useVaultIndexStore.setState({ notes: new Map(), revision: 0 })
   useDecideStore.setState({ visible: true, selected: null })
   container = document.createElement('div')
   document.body.append(container)
@@ -346,5 +357,84 @@ describe('routing and global keys', () => {
     expect(opened).toHaveBeenCalledTimes(1)
     input.remove()
     emitter.off('unified-record-open', opened)
+  })
+})
+
+// Fork（almanac ALMNC-54.14）：舊筆記批次卡（R3）與判斷不出來的那一包。
+describe('舊筆記（R3）', () => {
+  const indexed = (path: string, frontmatter: Record<string, unknown> | null = null): [string, IndexedNote] =>
+    [path, { path, mtime: NOW - 10 * DAY, frontmatter, tasks: [], links: [], aliases: [], tags: [], headings: [], blockIds: [] }]
+
+  function withLegacy(patch: Partial<typeof EMPTY_LEGACY>, paths: string[] = []) {
+    act(() => {
+      useVaultIndexStore.setState(state => ({ notes: new Map(paths.map(path => indexed(path))), revision: state.revision + 1 }))
+      useWorkbenchStore.setState({ legacy: { ...EMPTY_LEGACY, ...patch } })
+    })
+  }
+
+  it('AC#1: old notes (marked + not yet marked, minus V3 and daily notes) are one card 「舊筆記 N 則」 in 要你親手整理', async () => {
+    act(() => useVaultIndexStore.setState(state => ({
+      notes: new Map([indexed('a.md'), indexed('b.md'), indexed('k.md', { type: 'knowledge' }), indexed('20 Journal/21 Daily/20261120.md')]),
+      revision: state.revision + 1,
+    })))
+    act(() => useWorkbenchStore.setState({ legacy: { ...EMPTY_LEGACY, markedIds: new Set(['src_legacy:x.md']), total: 1, firstMarkedAt: NOW - 5 * DAY } }))
+    const legacyCard = card('舊筆記 3 則')
+    expect(legacyCard.dataset.group).toBe('hand')
+    expect(legacyCard.querySelector('[data-testid="card-kind"]')!.textContent).toBe('資料源整理')
+    expect(legacyCard.textContent).toContain('上線時轉入 · 分批交給 Mia')
+    expect($$('[data-testid="review-group"]').map(el => el.textContent)).toEqual(['提案4', '要你親手整理1'])
+    expect($('[data-testid="workbench-tabs"] [role="tab"]')!.textContent).toBe('審核5')
+  })
+
+  it('AC#2: one press hands the notes over (unmarked ones get marked first); progress 已處理 M / N; 暫停 while running', async () => {
+    withLegacy({}, ['a.md', 'b.md', 'c.md'])
+    act(() => (card('舊筆記 3 則').firstElementChild as HTMLElement).click())
+    expect([...card('舊筆記 3 則').querySelectorAll('[data-action]')].map(b => b.textContent)).toEqual(['開始處理A', '先放著S'])
+    act(() => button('開始處理A')!.click())
+    await wait(0)
+    expect(mocks.startLegacy).toHaveBeenCalledWith([
+      { path: 'a.md', mtime: NOW - 10 * DAY }, { path: 'b.md', mtime: NOW - 10 * DAY }, { path: 'c.md', mtime: NOW - 10 * DAY },
+    ])
+
+    withLegacy({ markedIds: new Set(['src_legacy:a.md', 'src_legacy:b.md', 'src_legacy:c.md']), total: 3, processed: 1, running: true }, ['a.md', 'b.md', 'c.md'])
+    const running = card('舊筆記 3 則')
+    expect(running.textContent).toContain('已處理 1 / 3 · 處理中')
+    expect(running.querySelector('[data-testid="legacy-progress"]')!.textContent).toContain('已處理 1 / 3')
+    act(() => button('暫停', running)!.click())
+    await wait(0)
+    expect(mocks.pauseLegacy).toHaveBeenCalled()
+
+    withLegacy({ markedIds: new Set(['src_legacy:a.md', 'src_legacy:b.md', 'src_legacy:c.md']), total: 3, processed: 1 }, ['a.md', 'b.md', 'c.md'])
+    expect(card('舊筆記 3 則').textContent).toContain('已處理 1 / 3 · 已暫停')
+    expect(button('繼續處理A', card('舊筆記 3 則'))).toBeDefined()
+
+    withLegacy({ markedIds: new Set(['src_legacy:a.md', 'src_legacy:b.md', 'src_legacy:c.md']), total: 3, processed: 3 }, ['a.md', 'b.md', 'c.md'])
+    expect(titles()).not.toContain('舊筆記 3 則')
+  })
+
+  it('AC#2: undecided notes come back one pack at a time (等 N 則); 整理好了 resolves it', async () => {
+    withLegacy({ packs: [
+      { id: 'b1', createdAt: NOW - DAY, items: [{ sourceId: 's1', path: '30 Notes/週報 0312.md' }, { sourceId: 's2', path: 'x.md' }] },
+      { id: 'b2', createdAt: NOW, items: [{ sourceId: 's3', path: 'y.md' }] },
+    ] })
+    expect(titles()).toContain('週報 0312等 1 則')
+    expect(titles()).not.toContain('y')
+    const pack = card('週報 0312等 1 則')
+    expect(pack.textContent).toContain('Mia 判斷不出來，要你親手整理')
+    act(() => (pack.firstElementChild as HTMLElement).click())
+    expect([...pack.querySelectorAll('[data-action]')].map(b => b.textContent)).toEqual(['攤到檯面T', '整理好了C', '先放著S'])
+    act(() => button('整理好了C', pack)!.click())
+    await wait(260)
+    expect(mocks.resolveLegacyPack).toHaveBeenCalledWith('b1')
+  })
+
+  it('putting the current pack aside shows the next one (still one at a time)', () => {
+    withLegacy({ packs: [
+      { id: 'b1', createdAt: NOW - DAY, items: [{ sourceId: 's1', path: 'p.md' }] },
+      { id: 'b2', createdAt: NOW, items: [{ sourceId: 's3', path: 'q.md' }] },
+    ] })
+    act(() => useWorkbenchStore.getState().putAside({ key: 'legacy-pack:b1', title: 'p' }))
+    expect(titles()).toContain('q')
+    expect(titles()).not.toContain('p')
   })
 })

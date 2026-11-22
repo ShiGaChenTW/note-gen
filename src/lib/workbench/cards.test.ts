@@ -4,7 +4,7 @@ import type { DecideItem } from '@/lib/decide/project'
 import type { TaskRef } from '@/lib/vault-index/index-core'
 import {
   ACTIONS_BY_KIND, actionLabelKey, sourceCardActions, CARD_LABELS, CARD_VERBS, actionForKey, ageParts, buildReviewCards, filterCards, groupCards, labelCounts, nextCursor,
-  proposalLabel, proposalVerb,
+  proposalLabel, proposalVerb, LEGACY_BATCH_KEY, legacyCardActions, PACK_ACTIONS,
 } from './cards'
 
 const DAY = 86_400_000
@@ -183,5 +183,40 @@ describe('proposal card hints', () => {
     expect(proposalLabel(proposal('r1', NOW, { card: { label: 'review', verb: 'add' } }), NOW)).toBe('review')
     // 超過 14 天沒決定的一律列進回顧。
     expect(proposalLabel(proposal('c3', NOW - 15 * DAY, { card: { label: 'note', verb: 'verify' } }), NOW)).toBe('review')
+  })
+})
+
+// Fork（almanac ALMNC-54.14）：舊筆記合成一張批次卡（R3，v14：要你親手整理・資料源・整理・系統）；判斷不出來的那一包。
+describe('legacy batch and pack cards', () => {
+  const batch = { title: '舊筆記 1,240 則', summary: '上線時轉入 · 分批交給 Mia', total: 1240, processed: 0, running: false, by: '系統', at: NOW - 5 * DAY }
+
+  it('AC#1: one card for all old notes in 要你親手整理, labelled 資料源 / 整理, counted once', () => {
+    const cards = buildReviewCards({ now: NOW, proposals: [proposal('p', NOW - DAY)], legacy: batch })
+    const card = cards.find(entry => entry.key === LEGACY_BATCH_KEY)!
+    expect(card).toMatchObject({ kind: 'legacy', group: 'hand', label: 'source', verb: 'organize', title: '舊筆記 1,240 則', by: '系統', actions: ['migrate'] })
+    expect(cards.filter(entry => entry.kind === 'legacy')).toHaveLength(1)
+    expect(labelCounts(cards)).toMatchObject({ all: 2, source: 1 })
+    expect(actionForKey(card, 'a')).toBe('migrate')
+  })
+
+  it('AC#2: running → 暫停; part done → 繼續處理; all done → card disappears', () => {
+    expect(legacyCardActions({ running: true, processed: 3 })).toEqual(['pause'])
+    expect(legacyCardActions({ running: false, processed: 3 })).toEqual(['resume'])
+    const [running] = buildReviewCards({ now: NOW, proposals: [], legacy: { ...batch, processed: 40, running: true } })
+    expect(running!.legacy).toMatchObject({ processed: 40, total: 1240 })
+    expect(running!.actions).toEqual(['pause'])
+    expect(buildReviewCards({ now: NOW, proposals: [], legacy: { ...batch, processed: 1240 } })).toEqual([])
+  })
+
+  it('AC#2: an undecided pack is one hand card with 攤到檯面 / 整理好了 and 等 N 則', () => {
+    const [card] = buildReviewCards({
+      now: NOW,
+      proposals: [],
+      hand: [{ key: 'legacy-pack:b1', label: 'source', title: '週報 0312', more: 2, summary: 'Mia 判斷不出來', at: NOW, notePaths: ['a/週報 0312.md', 'b.md', 'c.md'], packId: 'b1' }],
+    })
+    expect(card).toMatchObject({ kind: 'hand', group: 'hand', label: 'source', verb: 'organize', more: 2, packId: 'b1', actions: PACK_ACTIONS })
+    expect(PACK_ACTIONS).toEqual(['desk', 'packDone'])
+    expect(actionForKey(card!, 't')).toBe('desk')
+    expect(actionForKey(card!, 'c')).toBe('packDone')
   })
 })

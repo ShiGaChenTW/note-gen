@@ -74,6 +74,20 @@ function CardBody({ card }: { card: WorkbenchCard }) {
       </section>
     )
   }
+  // Fork（almanac ALMNC-54.14）：舊筆記批次卡：進度條＋「已處理 M / N」，說明判斷不出來的會一包一包回到這裡。
+  if (card.kind === 'legacy' && card.legacy) {
+    const { processed, total } = card.legacy
+    const percent = total > 0 ? Math.round((processed / total) * 100) : 0
+    return (
+      <div className="text-ui-compact text-muted-ink" data-testid="legacy-progress">
+        <div className="h-1 overflow-hidden rounded-full bg-hover" role="progressbar" aria-valuemin={0} aria-valuemax={total} aria-valuenow={processed}>
+          <div className="h-full bg-ink/60" style={{ width: `${percent}%` }} />
+        </div>
+        <p className="mt-2 tabular-nums">{t('legacy.progress', { done: processed, total })}</p>
+        <p className="mt-1">{t('legacy.hint', { size: card.legacy.batchSize ?? 20 })}</p>
+      </div>
+    )
+  }
   if (card.kind === 'confirm') return <p className="text-ui-compact text-muted-ink">{t('confirmSince', { date: card.summary })}</p>
   if (card.notePaths?.length) {
     return (

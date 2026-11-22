@@ -8475,7 +8475,11 @@
       "captured": "收进来了，正在拆分成提案",
       "noModel": "还没设置模型，请先到设置里选一个。"
     },
-    "titleDay": "{date}"
+    "titleDay": "{date}",
+    "workbench": {
+      "line": "工作台 · {count, number} 件",
+      "open": "打开工作台，{count, number} 件等你处理"
+    }
   },
   "week": {
     "title": "计划",
@@ -8632,7 +8636,11 @@
       "reject": "不采用",
       "handle": "处理",
       "retry": "重试",
-      "delete": "删除"
+      "delete": "删除",
+      "migrate": "开始处理",
+      "resume": "继续处理",
+      "pause": "暂停",
+      "packDone": "整理好了"
     },
     "listLabel": "等你处理的事",
     "more": "等 {count} 则",
@@ -8861,6 +8869,25 @@
       "newThreadShort": "对话",
       "tbd": "待定",
       "tbdTip": "功能待定"
+    },
+    "legacy": {
+      "title": "旧笔记 {count, number} 则",
+      "summary": "上线时转入 · 分批交给 {name}",
+      "progress": "已处理 {done, number} / {total, number}",
+      "running": "处理中",
+      "pausing": "这则做完就暂停",
+      "paused": "已暂停",
+      "by": "系统",
+      "hint": "每批 {size, number} 则交给指挥官；判断不出来的会一包一包回到「要你亲手整理」。",
+      "packSummary": "{name} 判断不出来，要你亲手整理",
+      "toast": {
+        "started": "已开始分批交给 {name}，进度会显示在卡片上",
+        "pausing": "这则做完就暂停",
+        "finished": "这轮处理了 {count, number} 则，{packs, number} 包要你亲手整理",
+        "allFailed": "这批都没处理成功，先暂停；稍后再按「继续处理」",
+        "allUndecided": "这批 {name} 都判断不出来，先暂停；请检查模型设置",
+        "packDone": "已整理好「{title}」那一包"
+      }
     }
   },
   "cleanup": {

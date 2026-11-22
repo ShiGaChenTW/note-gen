@@ -30,6 +30,8 @@ import { useDateFormats } from '@/lib/date-format'
 import { dateFromDayKey } from '@/lib/today-v3/date-strip'
 import { DateStrip } from './date-strip'
 import { useTodayV3Data } from './use-today-v3-data'
+import { WorkbenchLine } from './workbench-line'
+import { useWorkbenchCount } from '@/lib/workbench/use-workbench'
 
 function Journal({ layout, dateLabel, viewingToday, exists, onOpen }: { layout: TodayV3Layout, dateLabel: string, viewingToday: boolean, exists: boolean, onOpen: () => void }) {
   const t = useTranslations('todayV3.journal')
@@ -174,6 +176,8 @@ export function TodayV3Screen() {
   const decisions = useDecisions()
   const decide = useDecideActions()
   const decisionByKey = (key: string) => decisions.find(item => item.key === key)
+  // Fork（almanac ALMNC-54.14）：「工作台 · N 件」，和側欄同一個數字。
+  const workbenchCount = useWorkbenchCount()
   const clock = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
 
   const openJournal = () => {
@@ -189,13 +193,16 @@ export function TodayV3Screen() {
       <PageHeader
         title={viewingToday ? t('title') : t('titleDay', { date: monthDay })}
         subtitle={
-          <span className="tabular-nums" data-testid="today-v3-summary">
-            {[
-              !viewingToday && t('viewing'),
-              t('dateLabel', { date: dates.full(day), week: dates.week(day) }),
-              due > 0 && t('summaryDue', { count: due }),
-              overdue > 0 && t('summaryOverdue', { count: overdue }),
-            ].filter(Boolean).join(' · ')}
+          <span className="flex flex-wrap items-baseline gap-x-3">
+            <span className="tabular-nums" data-testid="today-v3-summary">
+              {[
+                !viewingToday && t('viewing'),
+                t('dateLabel', { date: dates.full(day), week: dates.week(day) }),
+                due > 0 && t('summaryDue', { count: due }),
+                overdue > 0 && t('summaryOverdue', { count: overdue }),
+              ].filter(Boolean).join(' · ')}
+            </span>
+            <WorkbenchLine count={workbenchCount} />
           </span>
         }
         onBack={hide}
