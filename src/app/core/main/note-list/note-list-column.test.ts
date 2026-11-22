@@ -7,11 +7,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import zhTW from '../../../../../messages/zh-TW.json'
 import { useUiModeStore } from '@/lib/fork-ui'
 import { crossedBelow, NOTE_LIST_COLLAPSE_PX, useNoteListStore } from '@/lib/note-list/note-list'
+import { MobileModeProvider } from '@/hooks/use-mobile'
+import { linkExclusiveOverlays } from '@/lib/fork-overlays/exclusive'
+import useDecideStore from '@/stores/decide'
+import useWorkbenchStore from '@/stores/workbench'
 import useVaultIndexStore from '@/stores/vault-index'
 import type { IndexedNote } from '@/lib/vault-index/index-note'
 
 await vi.hoisted(async () => {
   vi.stubGlobal('React', (await import('react')).default)
+  vi.stubGlobal('matchMedia', () => ({ matches: false, addEventListener: () => {}, removeEventListener: () => {} }))
 })
 
 vi.mock('@/stores/article', async () => {
@@ -75,6 +80,8 @@ afterEach(() => {
   act(() => root.unmount())
   container.remove()
   act(() => useNoteListStore.getState().hide())
+  useDecideStore.getState().hide()
+  useWorkbenchStore.getState().closeDesk()
 })
 
 const list = () => container.querySelector<HTMLElement>('[data-note-list]')
@@ -184,5 +191,45 @@ describe('P03: virtualised list with incremental updates', () => {
     expect(titles()).toEqual(['a', 'c', 'b'])
     act(() => useVaultIndexStore.getState().remove(['c.md']))
     expect(titles()).toEqual(['a', 'b'])
+  })
+})
+
+
+describe('ALMNC-54.22 note selection', () => {
+  beforeEach(() => act(() => useVaultIndexStore.getState().replaceAll(new Map(
+    ['a.md', 'b.md', 'c.md'].map((path, index) => [path, { path, mtime: index } as IndexedNote]),
+  ))))
+  afterEach(() => act(() => useVaultIndexStore.getState().reset('')))
+
+  it('spreads checked notes together into the workbench desk', () => {
+    const unlink = linkExclusiveOverlays([useNoteListStore, useDecideStore])
+    try {
+      const select = container.querySelector<HTMLButtonElement>('[data-testid="note-list-select"]')!
+      act(() => select.click())
+      const spread = container.querySelector<HTMLButtonElement>('[data-testid="note-list-spread"]')!
+      expect(spread.disabled).toBe(true)
+      for (const name of ['a', 'c']) {
+        act(() => container.querySelector<HTMLInputElement>(`input[type="checkbox"][aria-label="${name}"]`)!.click())
+      }
+      expect(spread.disabled).toBe(false)
+      act(() => spread.click())
+      expect(useDecideStore.getState().visible).toBe(true)
+      expect(useNoteListStore.getState().visible).toBe(false)
+      expect(useWorkbenchStore.getState().desk).toMatchObject({
+        open: true,
+        materials: [{ kind: 'note', path: 'c.md' }, { kind: 'note', path: 'a.md' }],
+      })
+    } finally { unlink() }
+  })
+
+  it('keeps the selection control out of classic and mobile layouts', () => {
+    act(() => useUiModeStore.setState({ mode: 'classic' }))
+    expect(list()).toBeNull()
+    act(() => useUiModeStore.setState({ mode: 'v3' }))
+    act(() => root.render(h(NextIntlClientProvider, {
+      locale: 'zh-TW', messages: zhTW, timeZone: 'Asia/Taipei',
+      children: h(MobileModeProvider, { mobile: true, children: h(NoteListColumn) }),
+    })))
+    expect(container.querySelector('[data-testid="note-list-select"]')).toBeNull()
   })
 })

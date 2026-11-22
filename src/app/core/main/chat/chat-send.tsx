@@ -39,7 +39,8 @@ import type { AgentApprovalDecision, AgentSteeringPayload } from "@/lib/agent/ty
 import { serializeChatAttachments, type RuntimeChatAttachment } from '@/lib/chat-attachments'
 import { retainCompletedAgentTraceEvents } from '@/lib/agent/trace-retention'
 import { noteGenModelDisplayName } from '@/components/notegen-model-label'
-import { getAISettingsByModelId } from '@/lib/ai/utils'
+import { createOpenAIClient, getAISettings, getAISettingsByModelId, withFastAiRequestOptions } from '@/lib/ai/utils'
+import { readDeskContext } from '@/lib/workbench/desk-context'
 import { applyChatReasoningOverride } from '@/lib/ai/chat-reasoning'
 import type { AiConfig } from '@/app/core/setting/config'
 import type { ResolvedPromptModelSuggestion } from '@/lib/prompt-library/chat-model-suggestion'
@@ -480,8 +481,9 @@ export const ChatSend = forwardRef<ChatSendHandle, ChatSendProps>(({
   }
 
   // Fork（almanac ALMNC-54.7）：右側欄指揮官的一次執行（工作指示、記憶、工具替換、提案卡、直接修改的確認卡）。
-  async function prepareCommanderRun(placeholder: Chat, requestText: string, readOnly: boolean, routed: RunPlan | null = null) {
+  async function prepareCommanderRun(placeholder: Chat, requestText: string, readOnly: boolean, routed: RunPlan | null, aiConfig?: AiConfig) {
     const { chats } = useChatStore.getState()
+    const deskContext = isMobile ? undefined : readDeskContext(chats.filter(chat => chat.conversationId === placeholder.conversationId))
     const scottMessages = [requestText, ...chats.filter(chat => chat.role === 'user' && chat.id !== placeholder.id).map(chat => chat.content ?? '').reverse()]
       .filter(text => text.trim())
       .slice(0, 6)
@@ -504,6 +506,23 @@ export const ChatSend = forwardRef<ChatSendHandle, ChatSendProps>(({
       readOnly,
       ...(routed?.answerAs ? { answerAs: routed.answerAs } : {}),
       ...(routed ? { routeNote: routeNote(routed) } : {}),
+      ...(deskContext ? {
+        deskContext,
+        expertToolTitle: t('workbench.desk.consultExpert'),
+        askExpert: async (system, question, signal) => {
+          const config = aiConfig ?? await getAISettings()
+          if (!config?.model) throw new Error('AI service not configured')
+          const client = await createOpenAIClient(config)
+          const completion = await client.chat.completions.create(withFastAiRequestOptions({
+            model: config.model,
+            stream: false,
+            messages: [{ role: 'system', content: system }, { role: 'user', content: question }],
+          }, config), { signal })
+          const answer = completion.choices[0]?.message?.content?.trim()
+          if (!answer) throw new Error('The desk expert returned no assessment')
+          return answer
+        },
+      } : {}),
     }, deps)
   }
 
@@ -720,7 +739,7 @@ export const ChatSend = forwardRef<ChatSendHandle, ChatSendProps>(({
     const routedReadOnly = Boolean(routed?.readOnly)
     const commanderMode = v3 && agentPermissionMode !== 'read-only' && !routedReadOnly
     const commanderRun = v3
-      ? await prepareCommanderRun(placeholderMessage, request.requestText, !commanderMode, routed).catch(error => {
+      ? await prepareCommanderRun(placeholderMessage, request.requestText, !commanderMode, routed, modelSnapshot.config).catch(error => {
           console.error('[commander] sidebar run unavailable, answering read-only:', error)
           return null
         })
@@ -746,7 +765,7 @@ export const ChatSend = forwardRef<ChatSendHandle, ChatSendProps>(({
       activeCanvasId: activeCanvasId || undefined,
       permissionMode: runPermissionMode,
       rolePrompt: commanderRun?.rolePrompt,
-      transformTools: commanderMode ? commanderRun?.transformTools : undefined,
+      transformTools: commanderRun?.transformTools,
       requestConfirmation: (toolName, params, context) => requestConfirmation(toolName, params, context, { chatId: placeholderMessage.id, conversationId: placeholderMessage.conversationId, workspacePath: agentWorkspacePath }),
       requestUserQuestion: (questions, signal) => requestUserQuestion(questions, signal, placeholderMessage.conversationId),
       requestUserInteraction: (uiRequest, context) => requestChatUiInteraction(uiRequest, context, {

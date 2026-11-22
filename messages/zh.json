@@ -8800,6 +8800,9 @@
     "collapseSection": "收起{title}",
     "expandSection": "展开{title}",
     "noteList": {
+      "select": "勾选",
+      "selected": "已选 {count} 则",
+      "spread": "摊到台面",
       "label": "「{folder}」的笔记列表",
       "empty": "这个文件夹还没有笔记",
       "close": "关闭笔记列表"
@@ -8816,12 +8819,48 @@
       "timeline": "笔记时间轴",
       "canvases": "画布",
       "noteTags": "标签",
+      "domains": "领域",
       "prompts": "提示词",
       "outline": "大纲"
     },
     "knowledge": {
       "title": "整理",
-      "subtitle": "时间轴、画布与标签，笔记文件树在左侧的「{vault}」"
+      "subtitle": "领域、时间轴、画布与标签，笔记文件树在左侧的「{vault}」"
+    },
+    "domains": {
+      "label": "领域",
+      "all": "全部领域",
+      "indexing": "正在建立笔记索引…",
+      "loading": "正在读取领域…",
+      "loadError": "读取领域失败",
+      "empty": "还没有领域。同一主题累积 3 则以上知识笔记后，指挥官会在工作台提议成立领域。",
+      "count": "{count} 则知识笔记",
+      "updated": "最后更新 {date}",
+      "missing": "找不到这个领域，可能已被删除。",
+      "overview": "总览",
+      "coreConcepts": "核心概念",
+      "keyConclusions": "重点结论",
+      "openQuestions": "矛盾与未解问题",
+      "notes": "知识笔记",
+      "related": "相关领域",
+      "parent": "上层",
+      "children": "下层",
+      "siblings": "同层",
+      "emptyOverview": "还没有总览。",
+      "emptyCoreConcepts": "还没有核心概念。领域的专家整理后，会写在这里。",
+      "emptyKeyConclusions": "还没有重点结论。领域的专家整理后，会写在这里，每点附出处笔记。",
+      "emptyOpenQuestions": "目前没有矛盾或未解问题。整理时发现说法不同的笔记，会列在这里。",
+      "emptyNotes": "这个领域还没有知识笔记。",
+      "emptyRelated": "没有相关领域。",
+      "openNote": "打开笔记「{title}」",
+      "missingNote": "找不到笔记「{target}」",
+      "status": {
+        "valid": "有效",
+        "disputed": "待查证",
+        "superseded": "已被取代",
+        "archived": "封存"
+      },
+      "confirmed": "最后确认 {date}"
     }
   },
   "organize": {
@@ -9228,8 +9267,14 @@
       "handTag": "亲手写的",
       "fallbackName": "台面笔记",
       "helpStarting": "正在开处理对话…",
-      "helpHint": "处理对话：{name} 和负责的专家都在",
-      "helpFailed": "没办法开处理对话，请到对话页再试一次",
+      "consultExpert": "向领域专家请教",
+      "materialsUnavailable": "部分素材无法读取。",
+      "helpHint": "处理对话 · {name}",
+      "helpFailed": "无法打开处理对话。",
+      "mergeConfirm": "合并这 {count} 则笔记？工作稿会存成一则新笔记，并保留所有来源。原笔记将归档并标记合并去向。",
+      "mergeReason": "在台面合并",
+      "merged": "已合并成“{path}”",
+      "mergeFailed": "无法合并笔记。请重新摊开素材并确认原笔记仍可读取。",
       "empty": "没有素材",
       "notesOnly": "只有笔记能做结构操作",
       "ops": {
@@ -9241,7 +9286,6 @@
         "link": "连结到…",
         "assignDomain": "归入领域",
         "merge": "合并笔记",
-        "mergeLater": "合并笔记之后开放",
         "apply": "套用",
         "noDomains": "还没有领域"
       },

@@ -5,6 +5,7 @@ import { createTranslator } from 'next-intl'
 import messages from '../../../messages/zh-TW.json'
 import { agentToolRegistry } from '@/lib/agent/tool-registry'
 import { ROLE_INSTRUCTIONS } from '@/lib/agents/instructions'
+import { buildDeskContext, readDeskContext } from '@/lib/workbench/desk-context'
 import type { Proposal } from '@/lib/collect/types'
 import { commanderDisplayName, prepareSidebarCommanderRun, type SidebarRunDeps } from './sidebar-session'
 import { SIDEBAR_ASK_RULES, SIDEBAR_COMMANDER_RULES } from './sidebar'
@@ -147,5 +148,38 @@ describe('sidebar commander changes', () => {
     expect(deps.writeSchedule).not.toHaveBeenCalled()
     const [proposal] = await run.finish() as Proposal[]
     expect(proposal).toMatchObject({ kind: 'task', title: '安排休假', conversationId: 7, drafter: { role: 'secretary', agentId: 's-1' } })
+  })
+})
+
+
+describe('ALMNC-54.22 desk consultation', () => {
+  it('restores multiple materials and consults only enabled experts for their frontmatter domains', async () => {
+    const expert = { id: 'e-1', name: 'Alex', role: 'expert' as const, domain: '工業工程', enabled: true }
+    const disabled = { id: 'e-2', name: 'Kim', role: 'expert' as const, domain: '寫作', enabled: false }
+    const roster = [...ROSTER, expert, disabled]
+    const seed = buildDeskContext([
+      { id: 'a', kind: 'note', path: 'a.md', title: 'A', noteRaw: '---\ndomains: [ie, 寫作]\nsources: [s1]\n---\n產線', text: '產線' },
+      { id: 'b', kind: 'note', path: 'b.md', title: 'B', noteRaw: '---\ndomains: 工業工程\n---\n瓶頸', text: '瓶頸' },
+      { id: 'c', kind: 'source', sourceId: 's2', title: 'C', text: '現場觀察' },
+    ], [{ id: 'ie', name: '工業工程' } as Parameters<typeof buildDeskContext>[1][number]], roster)
+    expect(seed.expertIds).toEqual(['e-1'])
+    expect(seed.materials[0].noteSourceIds).toEqual(['s1'])
+    expect(seed.materials[2].sourceId).toBe('s2')
+    const deskContext = readDeskContext([{ type: 'desk_context', content: JSON.stringify(seed) }])
+    expect(deskContext?.materials).toHaveLength(3)
+    const { deps } = fakeDeps({ roster: async () => roster, memoryPrompt: async agent => `Memory for ${agent.name}` })
+    const askExpert = vi.fn(async () => '第三站需要更多數據')
+    const run = await prepareSidebarCommanderRun({ chatId: 3, scottMessages: ['請專家判斷'], deskContext, askExpert }, deps)
+    expect(run.displayName).toBe('Mia · 指揮官')
+    expect(run.rolePrompt).toContain('產線')
+    expect(run.rolePrompt).toContain('瓶頸')
+    expect(run.rolePrompt).toContain('現場觀察')
+    const consult = tool(run, 'desk_consult_expert')
+    expect(consult.risk).toBe('read')
+    expect(await consult.execute({ expertId: 'e-2', question: '看這些筆記' }, context)).toMatchObject({ ok: false })
+    expect(askExpert).not.toHaveBeenCalled()
+    expect(await consult.execute({ expertId: 'e-1', question: '看這些筆記' }, context)).toMatchObject({ ok: true, message: 'Alex (工業工程): 第三站需要更多數據' })
+    expect(askExpert).toHaveBeenCalledWith(expect.stringContaining('Memory for Alex'), '看這些筆記', undefined)
+    expect(askExpert).toHaveBeenCalledWith(expect.stringContaining('現場觀察'), '看這些筆記', undefined)
   })
 })

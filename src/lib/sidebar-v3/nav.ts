@@ -32,7 +32,8 @@ export const ENTRY_HOME: Record<LegacyEntry, NavKey> = {
 
 export const COLLECT_TABS = ['collect', 'inbox'] as const
 export type CollectTab = typeof COLLECT_TABS[number]
-export const KNOWLEDGE_TABS = ['timeline', 'canvases', 'noteTags', 'prompts'] as const
+// Fork（almanac ALMNC-54.23）：加上「領域」分頁（第三層知識的領域頁）。
+export const KNOWLEDGE_TABS = ['timeline', 'canvases', 'noteTags', 'domains', 'prompts'] as const
 export type KnowledgeTab = typeof KNOWLEDGE_TABS[number]
 
 export interface NavVisibility {

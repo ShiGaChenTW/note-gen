@@ -51,7 +51,7 @@ function normalizePath(path: string): string {
  * 依序改寫多篇筆記；全部成功才算成功，否則還原已寫的檔案並丟出錯誤。
  * 回傳實際有改動的檔案（內容相同的會跳過）。
  */
-export async function rewriteNotes(rewrites: NoteRewrite[]): Promise<RewrittenNote[]> {
+export async function rewriteNotes(rewrites: NoteRewrite[], options?: { requireExisting?: boolean }): Promise<RewrittenNote[]> {
   const activePath = normalizePath(useArticleStore.getState().activeFilePath)
   // 目前開著的那篇最後寫，讓編輯器的更新緊接在磁碟寫入之後
   const ordered = rewrites
@@ -68,7 +68,10 @@ export async function rewriteNotes(rewrites: NoteRewrite[]): Promise<RewrittenNo
         const article = useArticleStore.getState()
         const isActive = normalizePath(article.activeFilePath) === item.path
         const latest = isActive ? article.currentArticle : await readNote(item.path)
-        if (latest === null) return true // 檔案不在了，當作不用改
+        if (options?.requireExisting && (latest === null || (isActive && await readNote(item.path) !== latest))) {
+          throw new NoteRewriteConflictError(item.path)
+        }
+        if (latest === null) return true
         const next = item.rewrite(latest)
         if (next === null || next === latest) return true
 

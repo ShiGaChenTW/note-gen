@@ -8865,6 +8865,9 @@
     "collapseSection": "收合{title}",
     "expandSection": "展開{title}",
     "noteList": {
+      "select": "勾選",
+      "selected": "已選 {count} 則",
+      "spread": "攤到檯面",
       "label": "「{folder}」的筆記清單",
       "empty": "這個資料夾還沒有筆記",
       "close": "關閉筆記清單"
@@ -8881,12 +8884,48 @@
       "timeline": "筆記時間軸",
       "canvases": "畫布",
       "noteTags": "標籤",
+      "domains": "領域",
       "prompts": "提示詞",
       "outline": "大綱"
     },
     "knowledge": {
       "title": "整理",
-      "subtitle": "時間軸、畫布與標籤，筆記檔案樹在左側的「{vault}」"
+      "subtitle": "領域、時間軸、畫布與標籤，筆記檔案樹在左側的「{vault}」"
+    },
+    "domains": {
+      "label": "領域",
+      "all": "全部領域",
+      "indexing": "正在建立筆記索引…",
+      "loading": "正在讀取領域…",
+      "loadError": "讀取領域失敗",
+      "empty": "還沒有領域。同一主題累積 3 則以上知識筆記後，指揮官會在工作台提議成立領域。",
+      "count": "{count} 則知識筆記",
+      "updated": "最後更新 {date}",
+      "missing": "找不到這個領域，可能已被刪除。",
+      "overview": "總覽",
+      "coreConcepts": "核心概念",
+      "keyConclusions": "重點結論",
+      "openQuestions": "矛盾與未解問題",
+      "notes": "知識筆記",
+      "related": "相關領域",
+      "parent": "上層",
+      "children": "下層",
+      "siblings": "同層",
+      "emptyOverview": "還沒有總覽。",
+      "emptyCoreConcepts": "還沒有核心概念。領域的專家整理後，會寫在這裡。",
+      "emptyKeyConclusions": "還沒有重點結論。領域的專家整理後，會寫在這裡，每點附出處筆記。",
+      "emptyOpenQuestions": "目前沒有矛盾或未解問題。整理時發現說法不同的筆記，會列在這裡。",
+      "emptyNotes": "這個領域還沒有知識筆記。",
+      "emptyRelated": "沒有相關領域。",
+      "openNote": "打開筆記「{title}」",
+      "missingNote": "找不到筆記「{target}」",
+      "status": {
+        "valid": "有效",
+        "disputed": "待查證",
+        "superseded": "已被取代",
+        "archived": "封存"
+      },
+      "confirmed": "最後確認 {date}"
     }
   },
   "organize": {
@@ -9293,8 +9332,14 @@
       "handTag": "親手寫的",
       "fallbackName": "檯面筆記",
       "helpStarting": "正在開處理對話…",
-      "helpHint": "處理對話：{name} 和負責的專家都在",
-      "helpFailed": "沒辦法開處理對話，請到對話頁再試一次",
+      "consultExpert": "向領域專家請教",
+      "materialsUnavailable": "有些素材無法讀取。",
+      "helpHint": "處理對話 · {name}",
+      "helpFailed": "無法開啟處理對話。",
+      "mergeConfirm": "合併這 {count} 則筆記？工作稿會存成一則新筆記，並保留所有來源。原筆記將封存並標記合併去向。",
+      "mergeReason": "在檯面合併",
+      "merged": "已合併成「{path}」",
+      "mergeFailed": "無法合併筆記。請重新攤開素材並確認原筆記仍可讀取。",
       "empty": "沒有素材",
       "notesOnly": "只有筆記能做結構操作",
       "ops": {
@@ -9306,7 +9351,6 @@
         "link": "連結到…",
         "assignDomain": "歸入領域",
         "merge": "合併筆記",
-        "mergeLater": "合併筆記之後開放",
         "apply": "套用",
         "noDomains": "還沒有領域"
       },
