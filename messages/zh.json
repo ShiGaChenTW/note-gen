@@ -3944,6 +3944,14 @@
         "title": "全局快捷键",
         "desc": "这些快捷键由系统注册，NoteGen 不在前台时也可能触发。"
       },
+      "workbenchKeys": {
+        "title": "工作台单键",
+        "desc": "工作台开着、没在打字时，按一个字母就能做事。",
+        "singleKeys": {
+          "title": "N 新增资料源、T 新增对话",
+          "desc": "只在工作台画面开着时有效。关掉后请用侧栏的按钮。"
+        }
+      },
       "editorShortcuts": {
         "title": "编辑器快捷键",
         "desc": "这些快捷键只在 Markdown 编辑器聚焦时生效。",
@@ -8487,7 +8495,8 @@
       "noAccess": "日历还没开放访问，行程不会出现在这里。",
       "proposal": "提案 · 排程员",
       "accept": "收下",
-      "reject": "不要"
+      "reject": "不要",
+      "namedAction": "{action}「{title}」"
     },
     "journal": {
       "label": "日志",

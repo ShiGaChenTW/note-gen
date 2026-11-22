@@ -79,6 +79,7 @@ const useInboxStore = (await import('@/stores/inbox')).default
 const useThreadsStore = (await import('@/stores/threads')).default
 const useWorkbenchStore = (await import('@/stores/workbench')).default
 const useVaultIndexStore = (await import('@/stores/vault-index')).default
+const useSettingStore = (await import('@/stores/setting')).default
 const { EMPTY_LEGACY } = await import('@/stores/workbench')
 const { DecideScreen } = await import('./decide-screen')
 
@@ -100,6 +101,7 @@ function render() {
 const $ = <T extends Element = HTMLElement>(selector: string) => container.querySelector<T & HTMLElement>(selector)
 const $$ = (selector: string) => [...container.querySelectorAll<HTMLElement>(selector)]
 const button = (label: string, scope: ParentNode = container) => [...scope.querySelectorAll('button')].find(b => b.textContent?.trim() === label)
+const toggleOf = (title: string) => card(title).querySelector<HTMLButtonElement>('[data-card-toggle]')!
 const titles = () => $$('[data-testid="review-card"] [data-testid="card-title"]').map(el => el.textContent)
 const card = (title: string) => $$('[data-testid="review-card"]').find(el => el.querySelector('[data-testid="card-title"]')?.textContent === title)!
 const press = (key: string) => act(() => { window.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true })) })
@@ -147,6 +149,7 @@ beforeEach(async () => {
     legacy: EMPTY_LEGACY,
   })
   useVaultIndexStore.setState({ notes: new Map(), revision: 0 })
+  useSettingStore.setState({ workbenchSingleKeys: true })
   useDecideStore.setState({ visible: true, selected: null })
   container = document.createElement('div')
   document.body.append(container)
@@ -237,9 +240,9 @@ describe('審核 tab', () => {
   })
 
   it('keyboard: ↓ moves the selection, S puts the current card aside without a date, Z brings it back', async () => {
-    expect(card('提案 a').getAttribute('aria-selected')).toBe('true')
+    expect(toggleOf('提案 a').getAttribute('aria-current')).toBe('true')
     press('ArrowDown')
-    expect(card('提案 b').getAttribute('aria-selected')).toBe('true')
+    expect(toggleOf('提案 b').getAttribute('aria-current')).toBe('true')
     press('s')
     expect(titles()).not.toContain('提案 b')
     expect(useWorkbenchStore.getState().aside['collect:new:b'].until).toBeUndefined()
@@ -294,6 +297,46 @@ describe('審核 tab', () => {
       expect(pressOn(page, 'Enter').defaultPrevented).toBe(true)
       expect(useWorkbenchStore.getState().expanded).toBe('collect:new:t')
       pressOn(page, ' ')
+      expect(useWorkbenchStore.getState().expanded).toBeNull()
+    })
+  })
+
+  // Fork（almanac ALMNC-56.4，A04）：不用 listbox／option；卡片是 listitem，收合列是真正的按鈕，焦點跟著 J／K。
+  describe('ALMNC-56.4 A04: screen readers follow J / K', () => {
+    it('cards are list items with a real toggle button (aria-expanded); card actions are not inside it', () => {
+      expect(container.querySelector('[role="listbox"], [role="option"]')).toBeNull()
+      expect(card('提案 a').getAttribute('role')).toBe('listitem')
+      expect(card('提案 a').parentElement!.getAttribute('role')).toBe('list')
+      const toggle = toggleOf('提案 a')
+      expect(toggle.tagName).toBe('BUTTON')
+      expect(toggle.getAttribute('aria-expanded')).toBe('false')
+      expect(toggle.textContent).toContain('提案 a')
+      // roving tabindex：Tab 進清單時落在目前那張
+      expect(toggle.tabIndex).toBe(0)
+      expect(toggleOf('提案 b').tabIndex).toBe(-1)
+      act(() => toggle.click())
+      expect(toggleOf('提案 a').getAttribute('aria-expanded')).toBe('true')
+      const panelButtons = [...card('提案 a').querySelectorAll('[data-testid="card-panel"] button')]
+      expect(panelButtons.length).toBeGreaterThan(0)
+      for (const panelButton of panelButtons) expect(panelButton.closest('[data-card-toggle]')).toBeNull()
+    })
+
+    it('AC#2: J / K move focus to the current card, so a screen reader announces it', () => {
+      const page = $('[role="region"]')!
+      page.focus()
+      pressOn(page, 'j')
+      expect(document.activeElement).toBe(toggleOf('提案 b'))
+      expect(toggleOf('提案 b').tabIndex).toBe(0)
+      expect(toggleOf('提案 a').tabIndex).toBe(-1)
+      pressOn(document.activeElement!, 'j')
+      expect(document.activeElement).toBe(toggleOf('確認第三站換模時間'))
+      pressOn(document.activeElement!, 'ArrowUp')
+      expect(document.activeElement).toBe(toggleOf('提案 b'))
+      // 焦點在卡片上時 Enter／空白鍵照舊展開、收合目前那張
+      expect(pressOn(document.activeElement!, 'Enter').defaultPrevented).toBe(true)
+      expect(useWorkbenchStore.getState().expanded).toBe('collect:new:b')
+      expect(toggleOf('提案 b').getAttribute('aria-expanded')).toBe('true')
+      pressOn(document.activeElement!, ' ')
       expect(useWorkbenchStore.getState().expanded).toBeNull()
     })
   })
@@ -375,19 +418,41 @@ describe('資料源 tab', () => {
   })
 
   it('ALMNC-56.1 AC#3: with focus on a clicked row, J / Space keep working; Space on its checkbox goes to the checkbox', () => {
-    const row = $('[data-row="src:d"]')!
+    const row = $<HTMLButtonElement>('[data-row="src:d"] [data-workbench-item]')!
     act(() => row.click())
+    expect(useWorkbenchStore.getState().selectedRow).toBe('src:d')
     row.focus()
     expect(pressOn(row, 'j').defaultPrevented).toBe(true)
     const next = useWorkbenchStore.getState().selectedRow
     expect(next).not.toBe('src:d')
-    const nextRow = $(`[data-row="${next}"]`)!
-    nextRow.focus()
+    const nextRow = document.activeElement!
+    expect(nextRow.closest('[data-row]')!.getAttribute('data-row')).toBe(next)
     expect(pressOn(nextRow, ' ').defaultPrevented).toBe(true)
     expect(useWorkbenchStore.getState().picked.has(next!)).toBe(true)
     const checkbox = $<HTMLButtonElement>('[data-row="src:d"] [role="checkbox"]')!
     checkbox.focus()
     expect(pressOn(checkbox, ' ').defaultPrevented).toBe(false)
+  })
+
+  it('ALMNC-56.4 A04: rows are list items (checkbox button + select button); J moves focus to the selected row', () => {
+    expect(container.querySelector('[data-testid="sources-tab"] [role="listbox"], [data-testid="sources-tab"] [role="option"]')).toBeNull()
+    const first = $$('[data-testid="source-row"]')[0]
+    expect(first.getAttribute('role')).toBe('listitem')
+    expect(first.parentElement!.closest('[role="list"]')).not.toBeNull()
+    const select = first.querySelector<HTMLButtonElement>('[data-workbench-item]')!
+    expect(select.tagName).toBe('BUTTON')
+    expect(select.tabIndex).toBe(0)
+    // 勾選框是自己的按鈕，不在「選這則」的按鈕裡
+    expect(select.querySelector('button, [role="checkbox"]')).toBeNull()
+    expect(first.querySelector('[role="checkbox"]')).not.toBeNull()
+    press('j')
+    const selected = useWorkbenchStore.getState().selectedRow
+    expect(document.activeElement!.closest('[data-row]')!.getAttribute('data-row')).toBe(selected)
+    expect(document.activeElement!.getAttribute('aria-current')).toBe('true')
+    press('j')
+    const next = useWorkbenchStore.getState().selectedRow
+    expect(next).not.toBe(selected)
+    expect(document.activeElement!.closest('[data-row]')!.getAttribute('data-row')).toBe(next)
   })
 
   it('A on an awaiting source runs 照建議處理', async () => {
@@ -428,6 +493,49 @@ describe('routing and global keys', () => {
     act(() => { input.dispatchEvent(new KeyboardEvent('keydown', { key: 'n', bubbles: true })) })
     expect(opened).toHaveBeenCalledTimes(1)
     input.remove()
+    emitter.off('unified-record-open', opened)
+  })
+
+  // Fork（almanac ALMNC-56.4，A02）
+  it('A02: N / T only work while the workbench screen is open', async () => {
+    const opened = vi.fn()
+    emitter.on('unified-record-open', opened)
+    act(() => useDecideStore.getState().hide())
+    press('n')
+    press('t')
+    await wait(0)
+    expect(opened).not.toHaveBeenCalled()
+    expect(mocks.startNewConversation).not.toHaveBeenCalled()
+    emitter.off('unified-record-open', opened)
+  })
+
+  it('A02: N / T can be turned off in settings', async () => {
+    const opened = vi.fn()
+    emitter.on('unified-record-open', opened)
+    act(() => useSettingStore.setState({ workbenchSingleKeys: false }))
+    press('n')
+    press('t')
+    await wait(0)
+    expect(opened).not.toHaveBeenCalled()
+    expect(mocks.startNewConversation).not.toHaveBeenCalled()
+    act(() => useSettingStore.setState({ workbenchSingleKeys: true }))
+    press('n')
+    expect(opened).toHaveBeenCalledTimes(1)
+    emitter.off('unified-record-open', opened)
+  })
+
+  it('A02: letters typed in an open menu stay with the menu (type-ahead)', () => {
+    const opened = vi.fn()
+    emitter.on('unified-record-open', opened)
+    const menu = document.createElement('div')
+    menu.setAttribute('role', 'menu')
+    menu.innerHTML = '<div role="menuitem" tabindex="-1">New</div>'
+    document.body.append(menu)
+    const item = menu.querySelector<HTMLElement>('[role="menuitem"]')!
+    item.focus()
+    expect(pressOn(item, 'n').defaultPrevented).toBe(false)
+    expect(opened).not.toHaveBeenCalled()
+    menu.remove()
     emitter.off('unified-record-open', opened)
   })
 })

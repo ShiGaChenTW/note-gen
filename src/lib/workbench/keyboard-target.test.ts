@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 // Fork（almanac ALMNC-56.1，A01）：哪些按鍵該讓給焦點所在的元件。
 import { afterEach, describe, expect, it } from 'vitest'
-import { keyBelongsToTarget } from './keyboard-target'
+import { globalShortcutFor, keyBelongsToTarget } from './keyboard-target'
 
 function mount(html: string): HTMLElement {
   const host = document.createElement('div')
@@ -55,17 +55,35 @@ describe('keyBelongsToTarget', () => {
 
   it('treats items of the workbench lists as the list: single keys stay with the workbench', () => {
     const host = mount(`
-      <div role="listbox" data-workbench-list>
-        <div role="option" id="row" tabindex="-1"><span id="title">title</span><button role="checkbox" id="pick"></button></div>
-      </div>
-      <div role="list"><div role="listitem"><button data-workbench-item id="toggle">card</button><button id="action">Accept</button></div></div>`)
+      <div role="list">
+        <div role="listitem" id="row"><button role="checkbox" id="pick"></button><button data-workbench-item id="select"><span id="title">title</span></button></div>
+        <div role="listitem"><button data-workbench-item id="toggle">card</button><button id="action">Accept</button></div>
+      </div>`)
     for (const key of ['Enter', ' ', 'ArrowDown', 'j', 'k', 'z']) {
       expect(keyBelongsToTarget(host.querySelector('#row'), key)).toBe(false)
+      expect(keyBelongsToTarget(host.querySelector('#select'), key)).toBe(false)
       expect(keyBelongsToTarget(host.querySelector('#title'), key)).toBe(false)
       expect(keyBelongsToTarget(host.querySelector('#toggle'), key)).toBe(false)
     }
     // 清單項目裡另外的按鈕（勾選框、卡片動作）仍是自己的按鈕
     expect(keyBelongsToTarget(host.querySelector('#pick'), ' ')).toBe(true)
     expect(keyBelongsToTarget(host.querySelector('#action'), 'Enter')).toBe(true)
+  })
+})
+
+describe('globalShortcutFor (ALMNC-56.4 A02)', () => {
+  const on = { enabled: true, workbenchOpen: true, deskOpen: false }
+
+  it('maps N and T only while the workbench is open', () => {
+    expect(globalShortcutFor('n', on)).toBe('addSource')
+    expect(globalShortcutFor('T', on)).toBe('newConversation')
+    expect(globalShortcutFor('j', on)).toBeNull()
+    expect(globalShortcutFor('n', { ...on, workbenchOpen: false })).toBeNull()
+    expect(globalShortcutFor('t', { ...on, workbenchOpen: false })).toBeNull()
+  })
+
+  it('does nothing when turned off in settings or on the desk', () => {
+    expect(globalShortcutFor('n', { ...on, enabled: false })).toBeNull()
+    expect(globalShortcutFor('t', { ...on, deskOpen: true })).toBeNull()
   })
 })

@@ -113,27 +113,30 @@ export function ReviewTab({ data, actions, commanderName }: {
             <span className="text-ui-compact text-muted-ink">{t('emptyHint')}</span>
           </div>
         ) : (
-          <div role="listbox" aria-label={t('listLabel')} className="mx-auto w-full max-w-[880px] px-5" data-testid="review-list" data-workbench-list>
+          // Fork（almanac ALMNC-56.4，A04）：一般清單（每組一個 list），卡片收合列是真正的按鈕；見 review-card.tsx。
+          <div role="group" aria-label={t('listLabel')} className="mx-auto w-full max-w-[880px] px-5" data-testid="review-list">
             {groupCards(visible).map(({ group, cards }) => (
               <section key={group} aria-label={t(`groups.${group}`)}>
                 <h3 className="flex items-baseline gap-2 px-3 pt-5 pb-2 text-xs font-semibold text-faint first:pt-1.5" data-testid="review-group">
                   {t(`groups.${group}`)}<span className="font-medium tabular-nums">{cards.length}</span>
                 </h3>
-                {cards.map(card => (
-                  <ReviewCard
-                    key={card.key}
-                    card={card}
-                    now={data.now}
-                    current={card.key === currentKey}
-                    expanded={card.key === expanded}
-                    leaving={leaving.includes(card.key)}
-                    onDesk={card.key === deskCard}
-                    commanderName={commanderName}
-                    onToggle={() => toggle(card)}
-                    onAction={(action, payload) => void actions.run(card, action, payload)}
-                    onPutAside={until => actions.putAside(card, until)}
-                  />
-                ))}
+                <div role="list">
+                  {cards.map(card => (
+                    <ReviewCard
+                      key={card.key}
+                      card={card}
+                      now={data.now}
+                      current={card.key === currentKey}
+                      expanded={card.key === expanded}
+                      leaving={leaving.includes(card.key)}
+                      onDesk={card.key === deskCard}
+                      commanderName={commanderName}
+                      onToggle={() => toggle(card)}
+                      onAction={(action, payload) => void actions.run(card, action, payload)}
+                      onPutAside={until => actions.putAside(card, until)}
+                    />
+                  ))}
+                </div>
               </section>
             ))}
           </div>

@@ -156,10 +156,11 @@ export function ReviewCard({ card, now, current, expanded, leaving, onDesk, comm
     onAction(action)
   }
 
+  // Fork（almanac ALMNC-56.4，A04）：不用 listbox／option（option 裡的按鈕會被讀屏攤平）。每張卡是一個 listitem，
+  // 收合列是真正的按鈕（aria-expanded），展開後的動作按鈕在它旁邊；j／k 移動時焦點跟著游標（roving tabindex），讀屏會念出目前那一張。
   return (
     <div
-      role="option"
-      aria-selected={current}
+      role="listitem"
       data-expanded={expanded || undefined}
       data-testid="review-card"
       data-card={card.key}
@@ -170,10 +171,16 @@ export function ReviewCard({ card, now, current, expanded, leaving, onDesk, comm
         leaving && 'translate-x-3 opacity-0',
       )}
     >
-      <div
+      <button
+        type="button"
+        data-workbench-item
+        data-card-toggle
+        tabIndex={current ? 0 : -1}
+        aria-expanded={expanded}
+        aria-current={current ? 'true' : undefined}
         onClick={onToggle}
         className={cn(
-          'grid cursor-default grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3.5 rounded-xl px-3 py-2.5',
+          'grid w-full cursor-default grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3.5 rounded-xl px-3 py-2.5 text-left outline-none focus-visible:ring-1 focus-visible:ring-ink/60',
           !expanded && 'hover:bg-hover',
           !expanded && (current || onDesk) && 'bg-active',
           expanded && 'px-4 pt-4 pb-1.5',
@@ -197,7 +204,7 @@ export function ReviewCard({ card, now, current, expanded, leaving, onDesk, comm
           {card.by && <span className="text-xs text-muted-ink">{card.by}</span>}
           <Age card={card} now={now} />
         </span>
-      </div>
+      </button>
       {expanded && (
         <div className="px-4 pb-4 pl-[18px]" data-testid="card-panel">
           <CardBody card={card} />

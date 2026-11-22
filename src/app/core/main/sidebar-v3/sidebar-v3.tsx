@@ -223,11 +223,13 @@ function VaultSection() {
  */
 function QuickActions() {
   const t = useTranslations('workbench.quick')
+  // Fork（almanac ALMNC-56.4，A02）：設定關掉工作台單鍵時，不再標 N／T。
+  const keys = useSettingStore(state => state.workbenchSingleKeys !== false)
   // Fork（almanac ALMNC-54.16、54.18）：依序為新增文件、新增資料源、新增對話（54.18 拿掉第四顆「待確定」）。
   const items: Array<{ key: string, icon: ComponentType<{ className?: string }>, label: string, short: string, shortcut?: string, onClick: () => void }> = [
     { key: 'doc', icon: FilePen, label: t('newDoc'), short: t('newDocShort'), onClick: () => void openNewDocument() },
-    { key: 'source', icon: ArrowDownToLine, label: t('addSource'), short: t('addSourceShort'), shortcut: 'N', onClick: openAddSource },
-    { key: 'thread', icon: MessageSquarePlus, label: t('newThread'), short: t('newThreadShort'), shortcut: 'T', onClick: () => void openNewConversation() },
+    { key: 'source', icon: ArrowDownToLine, label: t('addSource'), short: t('addSourceShort'), shortcut: keys ? 'N' : undefined, onClick: openAddSource },
+    { key: 'thread', icon: MessageSquarePlus, label: t('newThread'), short: t('newThreadShort'), shortcut: keys ? 'T' : undefined, onClick: () => void openNewConversation() },
   ]
   return (
     <div role="group" aria-label={t('label')} className="mx-0.5 grid shrink-0 grid-cols-3 gap-1" data-testid="sidebar-quick">

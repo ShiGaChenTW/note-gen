@@ -22,7 +22,7 @@ export function materialOf(row: SourceListRow): DeskMaterial {
   return { id: row.id, kind: row.origin, title: row.title, text: row.content, ...(row.sourceId ? { sourceId: row.sourceId } : {}) }
 }
 
-function Checkbox({ state, label, onClick }: { state: 'all' | 'some' | 'none' | boolean, label: string, onClick: () => void }) {
+function Checkbox({ state, label, onClick, className }: { state: 'all' | 'some' | 'none' | boolean, label: string, onClick: () => void, className?: string }) {
   const checked = state === true || state === 'all'
   const mixed = state === 'some'
   return (
@@ -32,7 +32,7 @@ function Checkbox({ state, label, onClick }: { state: 'all' | 'some' | 'none' | 
       aria-checked={mixed ? 'mixed' : checked}
       aria-label={label}
       onClick={event => { event.stopPropagation(); onClick() }}
-      className="grid h-[22px] w-[30px] shrink-0 cursor-pointer place-items-center rounded-md outline-none focus-visible:ring-1 focus-visible:ring-ink/60"
+      className={cn('grid h-[22px] w-[30px] shrink-0 cursor-pointer place-items-center rounded-md outline-none focus-visible:ring-1 focus-visible:ring-ink/60', className)}
     >
       <span className={cn(
         'grid size-[15px] place-items-center rounded-[4px] border-[1.5px] border-ink/30 transition-colors duration-100',
@@ -56,33 +56,43 @@ function StatusTag({ status }: { status: SourceListRow['status'] }) {
   )
 }
 
-function Row({ row, selected, picked, onSelect, onPick }: { row: SourceListRow, selected: boolean, picked: boolean, onSelect: () => void, onPick: () => void }) {
+/**
+ * 資料源清單的一列。Fork（almanac ALMNC-56.4，A04）：不用 listbox／option（option 裡的勾選框會被讀屏攤平）——
+ * 每列是 listitem：勾選框一顆按鈕、其餘內容一顆「選這則」的按鈕（aria-current）。j／k 移動時焦點跟到選中那列（roving tabindex）。
+ */
+function Row({ row, selected, focusable, picked, onSelect, onPick }: { row: SourceListRow, selected: boolean, focusable: boolean, picked: boolean, onSelect: () => void, onPick: () => void }) {
   const t = useTranslations('workbench.sources')
   const done = row.status === 'done'
   const sub = done ? (row.outputs ? t('outputs', { count: row.outputs }) : t('noOutputs')) : row.status === 'edited' ? t('editedSub', { version: row.version }) : ''
   return (
     <div
-      role="option"
-      aria-selected={selected}
-      tabIndex={-1}
+      role="listitem"
       data-row={row.id}
       data-testid="source-row"
       onClick={onSelect}
-      className={cn('grid w-full cursor-default grid-cols-[auto_auto_minmax(0,1fr)_auto] items-start gap-x-1 rounded-[10px] py-2.5 pr-2.5 text-left hover:bg-hover', selected && 'bg-active')}
+      className={cn('grid w-full cursor-default grid-cols-[auto_minmax(0,1fr)] items-start gap-x-1 rounded-[10px] hover:bg-hover', selected && 'bg-active')}
     >
-      <Checkbox state={picked} label={t('pickRow', { title: row.title })} onClick={onPick} />
-      <span className="self-stretch border-r border-line pt-0.5 pr-2 pl-1 text-[11.5px] leading-normal font-[650] tracking-[0.04em] whitespace-nowrap text-muted-ink">{t(`kind.${row.kind}`)}</span>
-      <span className="min-w-0 pl-2">
-        <span className={cn('flex items-center gap-1.5 truncate text-[13.5px] text-ink', done ? 'font-medium text-muted-ink' : 'font-semibold')}>
-          {done && <Check className="size-3.5 shrink-0 text-brand" aria-hidden data-testid="row-done" />}
-          <span className="truncate">{row.title}</span>
+      <Checkbox state={picked} label={t('pickRow', { title: row.title })} onClick={onPick} className="mt-2.5" />
+      <button
+        type="button"
+        data-workbench-item
+        tabIndex={focusable ? 0 : -1}
+        aria-current={selected ? 'true' : undefined}
+        className="grid w-full min-w-0 cursor-default grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-1 rounded-[10px] py-2.5 pr-2.5 text-left outline-none focus-visible:ring-1 focus-visible:ring-ink/60"
+      >
+        <span className="self-stretch border-r border-line pt-0.5 pr-2 pl-1 text-[11.5px] leading-normal font-[650] tracking-[0.04em] whitespace-nowrap text-muted-ink">{t(`kind.${row.kind}`)}</span>
+        <span className="min-w-0 pl-2">
+          <span className={cn('flex items-center gap-1.5 truncate text-[13.5px] text-ink', done ? 'font-medium text-muted-ink' : 'font-semibold')}>
+            {done && <Check className="size-3.5 shrink-0 text-brand" aria-hidden data-testid="row-done" />}
+            <span className="truncate">{row.title}</span>
+          </span>
+          {row.excerpt && <span className="mt-0.5 line-clamp-2 text-[12.5px] leading-normal text-muted-ink">{row.excerpt}</span>}
         </span>
-        {row.excerpt && <span className="mt-0.5 line-clamp-2 text-[12.5px] leading-normal text-muted-ink">{row.excerpt}</span>}
-      </span>
-      <span className="mt-0.5 flex flex-col items-end gap-0.5 pl-2.5">
-        <StatusTag status={row.status} />
-        {sub && <span className="text-[11.5px] whitespace-nowrap text-faint" data-testid="row-sub">{sub}</span>}
-      </span>
+        <span className="mt-0.5 flex flex-col items-end gap-0.5 pl-2.5">
+          <StatusTag status={row.status} />
+          {sub && <span className="text-[11.5px] whitespace-nowrap text-faint" data-testid="row-sub">{sub}</span>}
+        </span>
+      </button>
     </div>
   )
 }
@@ -213,6 +223,8 @@ export function SourcesTab({ rows, commanderName, onDesk }: { rows: SourceListRo
   const summary = organisedSummary(rows)
   const ids = visible.map(row => row.id)
   const current = rows.find(row => row.id === selected) ?? null
+  // Tab 進清單時落在選中那列；沒選時落在第一列。
+  const focusId = visible.some(row => row.id === selected) ? selected : visible[0]?.id ?? null
   const pickedRows = rows.filter(row => picked.has(row.id))
   const now = Date.now()
 
@@ -247,7 +259,7 @@ export function SourcesTab({ rows, commanderName, onDesk }: { rows: SourceListRo
           <span className="flex-1" />
           <span className="tabular-nums" data-testid="organised-summary">{t('organised', summary)}</span>
         </div>
-        <div role="listbox" aria-label={t('listLabel')} aria-multiselectable="true" data-workbench-list>
+        <div role="list" aria-label={t('listLabel')}>
           {visible.length === 0 && <p className="px-2.5 pt-3.5 text-xs font-semibold text-faint">{rows.length ? t('empty') : t('emptyAll')}</p>}
           {visible.map(row => {
             const bucket = dayBucket(row.at, now)
@@ -256,7 +268,7 @@ export function SourcesTab({ rows, commanderName, onDesk }: { rows: SourceListRo
             return (
               <div key={row.id}>
                 {heading && <div className="px-2.5 pt-3.5 pb-1.5 text-xs font-semibold text-faint">{t(`days.${bucket}`)}</div>}
-                <Row row={row} selected={row.id === selected} picked={picked.has(row.id)} onSelect={() => selectRow(row.id)} onPick={() => setPicked(togglePick(picked, row.id))} />
+                <Row row={row} selected={row.id === selected} focusable={row.id === focusId} picked={picked.has(row.id)} onSelect={() => selectRow(row.id)} onPick={() => setPicked(togglePick(picked, row.id))} />
               </div>
             )
           })}

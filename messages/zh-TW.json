@@ -4009,6 +4009,14 @@
         "title": "全域快捷鍵",
         "desc": "這些快捷鍵由系統註冊，NoteGen 不在前台時也可能觸發。"
       },
+      "workbenchKeys": {
+        "title": "工作台單鍵",
+        "desc": "工作台開著、沒在打字時，按一個字母就能做事。",
+        "singleKeys": {
+          "title": "N 新增資料源、T 新增對話",
+          "desc": "只在工作台畫面開著時有效。關掉後請用側欄的按鈕。"
+        }
+      },
       "editorShortcuts": {
         "title": "編輯器快捷鍵",
         "desc": "這些快捷鍵只在 Markdown 編輯器聚焦時生效。",
@@ -8552,7 +8560,8 @@
       "noAccess": "行事曆還沒開放存取，行程不會出現在這裡。",
       "proposal": "提案 · 排程員",
       "accept": "收下",
-      "reject": "不要"
+      "reject": "不要",
+      "namedAction": "{action}「{title}」"
     },
     "journal": {
       "label": "每日筆記",

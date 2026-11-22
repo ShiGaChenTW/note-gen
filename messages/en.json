@@ -3944,6 +3944,14 @@
         "title": "Global shortcuts",
         "desc": "These shortcuts are registered by the system and can work when NoteGen is not focused."
       },
+      "workbenchKeys": {
+        "title": "Workbench single-key shortcuts",
+        "desc": "While the Workbench is open and you are not typing, one letter runs an action.",
+        "singleKeys": {
+          "title": "N adds a source, T starts a conversation",
+          "desc": "Only works while the Workbench is open. When off, use the sidebar buttons."
+        }
+      },
       "editorShortcuts": {
         "title": "Editor shortcuts",
         "desc": "These shortcuts only work while the Markdown editor is focused.",
@@ -8487,7 +8495,8 @@
       "noAccess": "Calendar access is off, so events will not show here.",
       "proposal": "Proposal · Scheduler",
       "accept": "Accept",
-      "reject": "Dismiss"
+      "reject": "Dismiss",
+      "namedAction": "{action} “{title}”"
     },
     "journal": {
       "label": "Journal",

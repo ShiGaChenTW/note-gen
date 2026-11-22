@@ -5,7 +5,7 @@
 // 清單都是從來源現況投影（lib/workbench），這一頁不存待決狀態；先放著、復原堆疊、勾選等畫面狀態在 stores/workbench。
 // 鍵盤（v14）：審核 ↑↓／J K 選擇、↵ 展開、A 主要動作、D 再次討論、X 放棄、C 完成、T 攤到檯面、S 先放著、Z 復原；
 // 資料源 J K 選擇、空白鍵勾選、E 編輯、A 照建議處理、X 不採用、Z 復原；編輯器 ⌘S 存、Esc 取消；檯面 Esc 回工作台。
-// 全域（V3、沒在打字）：N 新增資料源、T 新增對話。只在新介面（v3）出現。
+// 單鍵（V3、工作台開著、沒在打字；設定可關，ALMNC-56.4）：N 新增資料源、T 新增對話。只在新介面（v3）出現。
 import { useEffect, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { Clock } from 'lucide-react'
@@ -14,7 +14,7 @@ import { useUiV3 } from '@/lib/fork-ui'
 import { refreshJournal } from '@/lib/decide/actions'
 import { isEditableKeyboardTarget } from '@/lib/is-editable-keyboard-target'
 import { actionForKey } from '@/lib/workbench/cards'
-import { keyBelongsToTarget } from '@/lib/workbench/keyboard-target'
+import { globalShortcutFor, keyBelongsToTarget } from '@/lib/workbench/keyboard-target'
 import { refreshSources } from '@/lib/workbench/actions'
 import { openAddSource, openNewConversation, openWorkbench } from '@/lib/workbench/open'
 import { filterRows, togglePick, waitingCount, type SourceListRow } from '@/lib/workbench/sources-tab'
@@ -24,6 +24,7 @@ import useCollectStore from '@/stores/collect'
 import useDecideStore from '@/stores/decide'
 import useInboxStore from '@/stores/inbox'
 import useProposalTrailStore from '@/stores/proposals'
+import useSettingStore from '@/stores/setting'
 import useWorkbenchStore, { type WorkbenchTab } from '@/stores/workbench'
 import { PageSurface } from '../page-ui'
 import { Desk } from './desk'
@@ -37,6 +38,16 @@ function anyDialogOpen(): boolean {
 
 function plainKey(event: KeyboardEvent): boolean {
   return !event.metaKey && !event.ctrlKey && !event.altKey && !event.isComposing && !event.defaultPrevented
+}
+
+/**
+ * Fork（almanac ALMNC-56.4，A04）：j／k 移動後把焦點放到那一項（卡片收合列、資料源那列的按鈕），讀屏才會念出目前那一項；
+ * 捲到看得見的位置。
+ */
+function focusItem(selector: string) {
+  const item = document.querySelector<HTMLElement>(selector)
+  item?.querySelector<HTMLElement>('[data-workbench-item]')?.focus({ preventScroll: true })
+  item?.scrollIntoView?.({ block: 'nearest' })
 }
 
 function Tabs({ review, sources }: { review: number, sources: number }) {
@@ -91,7 +102,7 @@ function useWorkbenchKeys(data: ReviewData, rows: SourceListRow[], actions: Retu
           const next = visible[index]!
           store.setCursor(next.key)
           if (store.expanded) store.setExpanded(next.key)
-          document.querySelector(`[data-card="${CSS.escape(next.key)}"]`)?.scrollIntoView?.({ block: 'nearest' })
+          focusItem(`[data-card="${CSS.escape(next.key)}"]`)
         }
         if (key === 'arrowdown' || key === 'j') { event.preventDefault(); move(1); return }
         if (key === 'arrowup' || key === 'k') { event.preventDefault(); move(-1); return }
@@ -127,7 +138,7 @@ function useWorkbenchKeys(data: ReviewData, rows: SourceListRow[], actions: Retu
         const delta = key === 'arrowdown' || key === 'j' ? 1 : -1
         const next = list[Math.max(0, Math.min(list.length - 1, index < 0 ? 0 : index + delta))]!
         store.selectRow(next.id)
-        document.querySelector(`[data-row="${CSS.escape(next.id)}"]`)?.scrollIntoView?.({ block: 'nearest' })
+        focusItem(`[data-row="${CSS.escape(next.id)}"]`)
         return
       }
       if (key === 'z') { event.preventDefault(); void actions.undo(); return }
@@ -214,20 +225,25 @@ function WorkbenchPage() {
   )
 }
 
-/** 全域單鍵：N 新增資料源、T 新增對話（v14）。打字中、有對話框、檯面上都不攔。 */
-function useGlobalShortcuts(enabled: boolean) {
+/**
+ * 單鍵：N 新增資料源、T 新增對話（v14）。打字中、有對話框、檯面上都不攔。
+ * Fork（almanac ALMNC-56.4，A02）：只在工作台畫面開著時生效，設定裡可以關掉；焦點在選單上時字母留給選單跳項目。
+ */
+function useGlobalShortcuts(isV3: boolean, workbenchOpen: boolean) {
+  const enabled = useSettingStore(state => state.workbenchSingleKeys !== false)
   useEffect(() => {
-    if (!enabled) return
+    if (!isV3 || !enabled || !workbenchOpen) return
     function onKeyDown(event: KeyboardEvent) {
-      if (!plainKey(event) || event.shiftKey || event.repeat || isEditableKeyboardTarget(event.target) || anyDialogOpen()) return
-      if (useWorkbenchStore.getState().desk.open && useDecideStore.getState().visible) return
-      const key = event.key.toLowerCase()
-      if (key === 'n') { event.preventDefault(); openAddSource() }
-      else if (key === 't') { event.preventDefault(); void openNewConversation() }
+      if (!plainKey(event) || event.shiftKey || event.repeat || isEditableKeyboardTarget(event.target) || keyBelongsToTarget(event.target, event.key) || anyDialogOpen()) return
+      const shortcut = globalShortcutFor(event.key, { enabled, workbenchOpen: useDecideStore.getState().visible, deskOpen: useWorkbenchStore.getState().desk.open })
+      if (!shortcut) return
+      event.preventDefault()
+      if (shortcut === 'addSource') openAddSource()
+      else void openNewConversation()
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [enabled])
+  }, [isV3, enabled, workbenchOpen])
 }
 
 /** 一直掛著：讀回保存的收集提案、先放著、今日日誌；舊的收集／Inbox 入口在新介面一律轉到工作台的資料源分頁。 */
@@ -240,7 +256,7 @@ export function DecideScreen() {
   const items = useCollectStore(state => state.items)
   const waiting = useMemo(() => items.reduce((n, item) => n + item.proposals.filter(p => p.status === 'wait').length, 0), [items])
 
-  useGlobalShortcuts(isV3)
+  useGlobalShortcuts(isV3, visible)
   useEffect(() => {
     if (!isV3) return
     void hydrate()

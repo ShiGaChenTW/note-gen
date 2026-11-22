@@ -13,6 +13,8 @@ import { SectionLabel } from '@/components/v3/section-label'
 export const HOUR_PX = 44
 /** 事件文字左邊留給小時標籤的寬度。 */
 const GUTTER_PX = 44
+/** 時段提案框最矮的高度：標籤、標題、24px 高的收下／不要按鈕。 */
+export const PROPOSAL_MIN_PX = 74
 
 function pad(n: number): string {
   return String(n).padStart(2, '0')
@@ -54,8 +56,8 @@ function ProposalBlock({ proposal, startHour, busy, onAccept, onReject }: {
 }) {
   const t = useTranslations('todayV3.timeline')
   const top = ((proposal.startMin - startHour * 60) / 60) * HOUR_PX + 1
-  // 30 分鐘只有 22px，放不下標籤、標題與收下／不要：至少留三行加按鈕的高度
-  const height = Math.max(((proposal.endMin - proposal.startMin) / 60) * HOUR_PX - 3, 66)
+  // 30 分鐘只有 22px，放不下標籤、標題與收下／不要：至少留三行加按鈕的高度（按鈕 24px，ALMNC-56.4）
+  const height = Math.max(((proposal.endMin - proposal.startMin) / 60) * HOUR_PX - 3, PROPOSAL_MIN_PX)
   return (
     <div
       className="absolute z-[1] flex flex-col overflow-hidden rounded-md border border-dashed border-line bg-bg px-2 py-[5px] text-ui-compact leading-4"
@@ -65,9 +67,10 @@ function ProposalBlock({ proposal, startHour, busy, onAccept, onReject }: {
     >
       <span className="text-xs text-muted-ink">{t('proposal')}</span>
       <span className="font-medium text-ink">{proposal.title} <span className="font-mono text-ui-numeric text-muted-ink">{proposal.time}–{proposal.end}</span></span>
-      <span className="mt-auto flex gap-1 pt-1">
-        <button type="button" disabled={busy} onClick={onAccept} className="cursor-pointer rounded-(--r) bg-invert px-1.5 font-medium text-invert-ink outline-none hover:bg-invert/85 focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50">{t('accept')}</button>
-        <button type="button" disabled={busy} onClick={onReject} className="cursor-pointer rounded-(--r) px-1.5 text-muted-ink outline-none hover:bg-hover hover:text-ink focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50">{t('reject')}</button>
+      {/* Fork（almanac ALMNC-56.4，A05）：按鈕至少 24px 高、間距 8px（WCAG 2.5.8）；讀屏名稱帶上提案標題，好幾個提案時分得出來。 */}
+      <span className="mt-auto flex gap-2 pt-1">
+        <button type="button" disabled={busy} onClick={onAccept} aria-label={t('namedAction', { action: t('accept'), title: proposal.title })} className="min-h-6 cursor-pointer rounded-(--r) bg-invert px-2 font-medium text-invert-ink outline-none hover:bg-invert/85 focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50">{t('accept')}</button>
+        <button type="button" disabled={busy} onClick={onReject} aria-label={t('namedAction', { action: t('reject'), title: proposal.title })} className="min-h-6 cursor-pointer rounded-(--r) px-2 text-muted-ink outline-none hover:bg-hover hover:text-ink focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50">{t('reject')}</button>
       </span>
     </div>
   )
