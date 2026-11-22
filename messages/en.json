@@ -8799,6 +8799,9 @@
     "collapseSection": "Collapse {title}",
     "expandSection": "Expand {title}",
     "noteList": {
+      "select": "Select",
+      "selected": "{count} selected",
+      "spread": "Spread to desk",
       "label": "Notes in {folder}",
       "empty": "No notes in this folder yet",
       "close": "Close note list"
@@ -9259,8 +9262,14 @@
       "handTag": "handwritten",
       "fallbackName": "Desk note",
       "helpStarting": "Starting a processing conversation…",
-      "helpHint": "Processing conversation with {name} and the domain expert",
-      "helpFailed": "Couldn't start the processing conversation; try again from Threads",
+      "consultExpert": "Consult a domain expert",
+      "materialsUnavailable": "Some materials could not be read.",
+      "helpHint": "Processing conversation · {name}",
+      "helpFailed": "Could not open the processing conversation.",
+      "mergeConfirm": "Merge these {count} notes? The working draft will become a new note with all sources. The originals will be archived and marked with the merge destination.",
+      "mergeReason": "Merged on the desk",
+      "merged": "Merged into “{path}”",
+      "mergeFailed": "Could not merge the notes. Reopen the materials and check that the originals are still available.",
       "empty": "No materials",
       "notesOnly": "Only notes support structural actions",
       "ops": {
@@ -9272,7 +9281,6 @@
         "link": "Link to…",
         "assignDomain": "Assign domain",
         "merge": "Merge notes",
-        "mergeLater": "Merging notes comes later",
         "apply": "Apply",
         "noDomains": "No domains yet"
       },

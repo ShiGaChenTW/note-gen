@@ -62,6 +62,25 @@ describe('rewriteNotes', () => {
     expect(emitted.at(-1)).toEqual(['external-content-update', 'A [[new]] 未存檔的新字\n'])
   })
 
+  it('rolls back earlier writes when a required merge original has disappeared', async () => {
+    await expect(rewriteNotes([
+      { path: 'a.md', rewrite: replaceOld },
+      { path: 'missing.md', rewrite: replaceOld },
+    ], { requireExisting: true })).rejects.toBeInstanceOf(NoteRewriteConflictError)
+    expect(files.get('a.md')).toBe('A [[old]]\n')
+    expect(files.has('missing.md')).toBe(false)
+    expect(emitted).toEqual([])
+  })
+
+  it('preserves newer disk bytes when the active merge original changed externally', async () => {
+    article.activeFilePath = 'a.md'
+    article.currentArticle = 'Old editor snapshot'
+    await expect(rewriteNotes([{ path: 'a.md', rewrite: () => 'Merged' }], { requireExisting: true }))
+      .rejects.toBeInstanceOf(NoteRewriteConflictError)
+    expect(files.get('a.md')).toBe('A [[old]]\n')
+    expect(emitted).toEqual([])
+  })
+
   it('編輯器有排隊中的存檔時整批還原', async () => {
     article.activeFilePath = 'b.md'
     article.currentArticle = 'B [[old]]\n'

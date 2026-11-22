@@ -3,9 +3,9 @@
  * 工作區可能是自訂路徑或預設的 AppData/article，自架同步啟用時改走它的原子寫入。
  */
 
-import { exists, mkdir, readTextFile, writeTextFile } from '@tauri-apps/plugin-fs'
+import { exists, mkdir, readTextFile, remove, writeTextFile } from '@tauri-apps/plugin-fs'
 import { getFilePathOptions, getWorkspacePath } from '@/lib/workspace'
-import { writeSelfHostedWorkspaceText } from '@/lib/self-hosted-sync/files'
+import { deleteSelfHostedWorkspacePath, writeSelfHostedWorkspaceText } from '@/lib/self-hosted-sync/files'
 import useArticleStore from '@/stores/article'
 
 export async function noteExists(relativePath: string): Promise<boolean> {
@@ -25,8 +25,9 @@ export async function readNote(relativePath: string): Promise<string | null> {
 }
 
 /** 寫入筆記；上層資料夾不存在時一併建立。 */
-export async function writeNote(relativePath: string, content: string): Promise<void> {
-  if (await writeSelfHostedWorkspaceText(relativePath, content)) return
+export async function writeNote(relativePath: string, content: string, options?: { createNew?: boolean }): Promise<void> {
+  // 新檔由檔案系統排他建立，避免同名舊檔被覆蓋。同步的工作區監看也會收到新檔事件。
+  if (!options?.createNew && await writeSelfHostedWorkspaceText(relativePath, content)) return
 
   const parent = relativePath.includes('/') ? relativePath.slice(0, relativePath.lastIndexOf('/')) : ''
   const workspace = await getWorkspacePath()
@@ -36,8 +37,16 @@ export async function writeNote(relativePath: string, content: string): Promise<
     else await mkdir(dir.path, { baseDir: dir.baseDir, recursive: true })
   }
   const file = await getFilePathOptions(relativePath)
-  if (workspace.isCustom) await writeTextFile(file.path, content)
-  else await writeTextFile(file.path, content, { baseDir: file.baseDir })
+  const createNew = options?.createNew
+  if (workspace.isCustom) await writeTextFile(file.path, content, createNew ? { createNew } : undefined)
+  else await writeTextFile(file.path, content, { baseDir: file.baseDir, createNew })
+}
+
+/** 刪除這次操作新建而需要還原的筆記。 */
+export async function removeNote(relativePath: string): Promise<void> {
+  if (await deleteSelfHostedWorkspacePath(relativePath, 'file')) return
+  const file = await getFilePathOptions(relativePath)
+  await remove(file.path, { baseDir: file.baseDir })
 }
 
 /** 讓新建的檔案出現在檔案樹並展開到它。 */
