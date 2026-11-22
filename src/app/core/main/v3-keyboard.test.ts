@@ -11,6 +11,7 @@ import emitter from '@/lib/emitter'
 import { useUiModeStore } from '@/lib/fork-ui'
 import { useWeekOverlay } from '@/lib/week/overlay'
 import useCollectStore from '@/stores/collect'
+import useDecideStore from '@/stores/decide'
 import useHomeStore from '@/stores/home'
 import useSettingStore from '@/stores/setting'
 import { useSidebarStore } from '@/stores/sidebar'
@@ -113,9 +114,10 @@ it('shows the three icon-only quick buttons under search and no 收集 in the na
   const buttons = [...quick.querySelectorAll('button')]
   expect(buttons.map(button => button.dataset.quick)).toEqual(['doc', 'source', 'thread'])
   expect(buttons.map(button => button.getAttribute('aria-label'))).toEqual(['新增文件', '新增資料源', '新增對話'])
-  expect(buttons.map(button => button.getAttribute('aria-keyshortcuts'))).toEqual([null, 'N', 'T'])
+  // ALMNC-56.4：工作台沒開時單鍵 N／T 不作用，就不標（見下一則測試）
+  expect(buttons.map(button => button.getAttribute('aria-keyshortcuts'))).toEqual([null, null, null])
   expect(buttons.map(button => button.disabled)).toEqual([false, false, false])
-  expect([...quick.querySelectorAll('[role="tooltip"]')].map(tip => tip.textContent)).toEqual(['新增文件', '新增資料源　N', '新增對話　T'])
+  expect([...quick.querySelectorAll('[role="tooltip"]')].map(tip => tip.textContent)).toEqual(['新增文件', '新增資料源', '新增對話'])
   expect(quick.textContent).not.toContain('待確定')
   // 手機版圖示下的小字（md 以上隱藏）
   expect(buttons.map(button => button.querySelector('span')?.textContent)).toEqual(['文件', '資料源', '對話'])
@@ -124,6 +126,31 @@ it('shows the three icon-only quick buttons under search and no 收集 in the na
   await act(async () => buttons[1].click())
   expect(opened).toHaveBeenCalledWith({ target: 'source' })
   emitter.off('unified-record-open', opened)
+})
+
+// Fork（almanac ALMNC-56.4，A02）：單鍵 N／T 只在工作台開著、設定沒關時有效，側欄也只在那時標快捷鍵。
+it('labels N / T on the quick buttons only while the workbench is open and the setting is on', async () => {
+  useSettingStore.setState({ workbenchSingleKeys: true })
+  await act(async () => useDecideStore.setState({ visible: false }))
+  await render(React.createElement(LeftSidebar))
+  const quick = () => host.querySelector('[data-testid="sidebar-quick"]')!
+  const shortcuts = () => [...quick().querySelectorAll('button')].map(button => button.getAttribute('aria-keyshortcuts'))
+  const tips = () => [...quick().querySelectorAll('[role="tooltip"]')].map(tip => tip.textContent)
+  expect(shortcuts()).toEqual([null, null, null])
+  expect(tips()).toEqual(['新增文件', '新增資料源', '新增對話'])
+
+  await act(async () => useDecideStore.setState({ visible: true }))
+  expect(shortcuts()).toEqual([null, 'N', 'T'])
+  expect(tips()).toEqual(['新增文件', '新增資料源　N', '新增對話　T'])
+
+  await act(async () => useSettingStore.setState({ workbenchSingleKeys: false }))
+  expect(shortcuts()).toEqual([null, null, null])
+  expect(tips()).toEqual(['新增文件', '新增資料源', '新增對話'])
+
+  await act(async () => {
+    useSettingStore.setState({ workbenchSingleKeys: true })
+    useDecideStore.setState({ visible: false })
+  })
 })
 
 // Fork（almanac ALMNC-56.2 A08、V03、A10）：「我的筆記」收合鈕和標題鈕讀起來不同名；底色在整列外層；新增代理人鈕 24 px。

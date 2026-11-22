@@ -223,8 +223,10 @@ function VaultSection() {
  */
 function QuickActions() {
   const t = useTranslations('workbench.quick')
-  // Fork（almanac ALMNC-56.4，A02）：設定關掉工作台單鍵時，不再標 N／T。
-  const keys = useSettingStore(state => state.workbenchSingleKeys !== false)
+  // Fork（almanac ALMNC-56.4，A02）：單鍵 N／T 只在工作台開著、設定沒關時有效；只在那時標快捷鍵。
+  const singleKeys = useSettingStore(state => state.workbenchSingleKeys !== false)
+  const workbenchOpen = useDecideStore(state => state.visible)
+  const keys = singleKeys && workbenchOpen
   // Fork（almanac ALMNC-54.16、54.18）：依序為新增文件、新增資料源、新增對話（54.18 拿掉第四顆「待確定」）。
   const items: Array<{ key: string, icon: ComponentType<{ className?: string }>, label: string, short: string, shortcut?: string, onClick: () => void }> = [
     { key: 'doc', icon: FilePen, label: t('newDoc'), short: t('newDocShort'), onClick: () => void openNewDocument() },
