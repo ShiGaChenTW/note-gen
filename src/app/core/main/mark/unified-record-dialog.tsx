@@ -24,6 +24,7 @@ import { useRecordCompletion } from './use-record-completion'
 import { useTranslations } from 'next-intl'
 import { v4 as uuid } from 'uuid'
 import { addNewSource } from '@/lib/workbench/actions'
+import { newSourceType } from '@/lib/workbench/judgement'
 import { openWorkbench } from '@/lib/workbench/open'
 import { useCommanderName } from '@/lib/workbench/use-workbench'
 
@@ -97,6 +98,8 @@ export function UnifiedRecordDialog() {
   const [selection, setSelection] = useState<UnifiedRecordSelection>('auto')
   const [text, setText] = useState('')
   const [sourceUrl, setSourceUrl] = useState('')
+  // Fork（almanac ALMNC-54.10）：貼上的字數；資料源模式下大部分是貼上的文字算外部擷取（等你決定＋初步判斷），自己打的算自己寫的（R2）。
+  const pastedCharsRef = useRef(0)
   const [expanded, setExpanded] = useState(false)
   const [modifierLabel, setModifierLabel] = useState('⌘')
   const [saving, setSaving] = useState(false)
@@ -160,6 +163,7 @@ export function UnifiedRecordDialog() {
 
   const resetAfterSave = () => {
     setText('')
+    pastedCharsRef.current = 0
     setSourceUrl('')
     setTodo({ title: '', description: '', priority: 'medium' })
     setExpanded(false)
@@ -183,8 +187,9 @@ export function UnifiedRecordDialog() {
       : type === 'todo'
         ? [todoDraft.title, todoDraft.description].filter(Boolean).join('\n\n')
         : value
-    const rowId = await addNewSource({ type, content, origin: type === 'prompt-draft' ? sourceUrl.trim() || undefined : undefined })
-    toast({ title: type === 'link' ? t('workbench.add.savedLink') : t('workbench.add.saved', { name: commanderName }) })
+    const rowId = await addNewSource({ type, content, origin: type === 'prompt-draft' ? sourceUrl.trim() || undefined : undefined, pastedChars: pastedCharsRef.current })
+    const external = newSourceType({ type, content, pastedChars: pastedCharsRef.current }) === 'external'
+    toast({ title: external ? t('workbench.add.savedLink') : t('workbench.add.saved', { name: commanderName }) })
     openWorkbench('sources', rowId)
   }
 
@@ -324,7 +329,11 @@ export function UnifiedRecordDialog() {
             maxRows={expanded ? 24 : 12}
             disabled={saving}
             placeholder={t('record.mark.unified.placeholder')}
-            onChange={event => setText(event.target.value)}
+            onChange={event => {
+              if (!event.target.value) pastedCharsRef.current = 0
+              setText(event.target.value)
+            }}
+            onPaste={event => { pastedCharsRef.current += Array.from(event.clipboardData.getData('text')).length }}
           />
           <div className="flex flex-wrap items-center gap-1">
             <Button type="button" variant="ghost" size="sm" disabled={saving} onClick={() => triggerMedia('image')}><ImagePlus />{t('record.mark.type.image')}</Button>

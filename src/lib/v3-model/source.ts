@@ -162,6 +162,14 @@ export function editSourceContent(source: Source, content: string, now: number, 
   }
 }
 
+/**
+ * Fork（almanac ALMNC-54.10）：擷取失敗的卡片可以「刪除」。只有還沒送出（等你決定、未鎖定）的外部擷取、而且沒有任何產出的才能刪；
+ * 其他資料源照原規則只封存、不刪除。
+ */
+export function canDeleteUnsent(source: Pick<Source, 'sourceType' | 'status' | 'lockedAt'>, outputCount = 0): boolean {
+  return source.sourceType === 'external' && source.status === 'awaiting_decision' && source.lockedAt === undefined && outputCount === 0
+}
+
 /** 不採用滿 30 天、還沒封存的資料源 id；呼叫端只設 archivedAt，絕不刪除。 */
 export function sourcesDueForArchive(
   sources: readonly Pick<Source, 'id' | 'status' | 'statusChangedAt' | 'archivedAt'>[],

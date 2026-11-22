@@ -178,6 +178,8 @@ export interface CommanderDeps {
   logActivity?: (entry: { sourceId: string, batchId?: string, status: SourceStatus, note: string }) => Promise<void>
   labels: CommanderLabels
   now?: () => Date
+  /** Fork（almanac ALMNC-54.10）：Scott 選了「照建議處理」時的初步判斷；沒有就回傳 undefined。失敗不影響分析。 */
+  sourceHint?: (sourceId: string) => Promise<string | undefined>
 }
 
 export interface AnalyzeOptions {

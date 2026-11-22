@@ -4809,6 +4809,25 @@
         },
         "commander": {
           "origin": "{agent}（对话）"
+        },
+        "router": {
+          "ask": "这句要交给谁？",
+          "askUnavailable": "本机模型没有开，先问你：这句要交给谁？",
+          "routes": {
+            "schedule": "{name}（日程）",
+            "process": "{name}（处理）",
+            "query": "{name}（查询）",
+            "preference": "存成偏好"
+          },
+          "suggested": "建议",
+          "pickExpert": "要问哪位专家？",
+          "preferenceConfirm": "存成你的偏好：「{line}」？",
+          "savePreference": "存起来",
+          "notPreference": "交给 {name} 处理",
+          "cancel": "取消",
+          "saved": "已存进你的偏好",
+          "alreadySaved": "偏好里已经有这一句",
+          "saveFailed": "偏好没有存成功"
         }
       },
       "condensing": "正在压缩上下文...",
@@ -8610,7 +8629,10 @@
       "toCommander": "交给 {name}",
       "process": "照建议处理",
       "selfProcess": "自己处理",
-      "reject": "不采用"
+      "reject": "不采用",
+      "handle": "处理",
+      "retry": "重试",
+      "delete": "删除"
     },
     "listLabel": "等你处理的事",
     "more": "等 {count} 则",
@@ -8673,7 +8695,10 @@
       "cannotUndo": "这一步无法复原",
       "nothing": "没有可以复原的动作",
       "failed": "处理失败，请再试一次",
-      "undo": "复原"
+      "undo": "复原",
+      "retried": "已重新抓取「{title}」",
+      "retryFailed": "还是抓不到「{title}」",
+      "deleted": "已删除「{title}」"
     },
     "sources": {
       "filterLabel": "依状态筛选",
@@ -8776,7 +8801,13 @@
           "link": "连结",
           "rule": "分隔线"
         }
-      }
+      },
+      "handle": "处理",
+      "putAside": "先放着",
+      "retry": "重试",
+      "delete": "删除",
+      "captureFailed": "抓取失败",
+      "captureFailedHint": "抓不到这个网页的内容。可以重试，或删除这则资料源。"
     },
     "desk": {
       "title": "台面",

@@ -9,7 +9,7 @@ import { toast } from 'sonner'
 import {
   SOURCE_FILTERS, dayBucket, filterCounts, filterRows, organisedSummary, pickState, toggleAll, togglePick, type SourceListRow,
 } from '@/lib/workbench/sources-tab'
-import { handToCommander, processSource, rejectSource, restoreSource, sendToCommander } from '@/lib/workbench/actions'
+import { deleteFailedSource, handToCommander, processSource, rejectSource, restoreSource, retryCapture, sendToCommander } from '@/lib/workbench/actions'
 import type { DeskMaterial } from '@/lib/workbench/desk'
 import { cn } from '@/lib/utils'
 import useWorkbenchStore from '@/stores/workbench'
@@ -111,9 +111,29 @@ function Detail({ row, commanderName, onDesk }: { row: SourceListRow, commanderN
   const sourceId = row.sourceId
   const editable = row.status !== 'ing'
   let actions: Array<{ key: string, label: string, primary?: boolean, kbd?: string, run: () => void }> = []
-  if (row.status === 'wait' && sourceId) {
+  if (row.status === 'wait' && sourceId && row.captureFailed) {
+    // Fork（almanac ALMNC-54.10）：擷取失敗 → 重試／刪除（v14）。
     actions = [
-      { key: 'process', label: t('process'), primary: true, kbd: 'A', run: () => void act(() => processSource(sourceId), toastT('processed', { title: row.title, name: commanderName })) },
+      { key: 'retry', label: t('retry'), primary: true, kbd: 'R', run: () => void act(async () => {
+        const judgement = await retryCapture(sourceId)
+        toast(judgement?.status === 'capture_failed' ? toastT('retryFailed', { title: row.title }) : toastT('retried', { title: row.title }))
+      }) },
+      { key: 'delete', label: t('delete'), run: () => void act(async () => { await deleteFailedSource(sourceId); selectRow(null) }, toastT('deleted', { title: row.title })) },
+    ]
+  } else if (row.status === 'wait' && sourceId) {
+    // Fork（almanac ALMNC-54.10）：照建議處理（帶初步判斷）／處理（不帶）都交給指揮官；先放著；不採用。沒有建議時只有「處理」。
+    const putAside = () => {
+      useWorkbenchStore.getState().putAside({ key: `source:${sourceId}`, title: row.title })
+      toast(toastT('asided', { title: row.title }))
+    }
+    actions = [
+      ...(row.suggestion
+        ? [
+            { key: 'process', label: t('process'), primary: true, kbd: 'A', run: () => void act(() => processSource(sourceId, { followSuggestion: true }), toastT('processed', { title: row.title, name: commanderName })) },
+            { key: 'handle', label: t('handle'), run: () => void act(() => processSource(sourceId), toastT('processed', { title: row.title, name: commanderName })) },
+          ]
+        : [{ key: 'process', label: t('handle'), primary: true, kbd: 'A', run: () => void act(() => processSource(sourceId), toastT('processed', { title: row.title, name: commanderName })) }]),
+      { key: 'putAside', label: t('putAside'), run: putAside },
       { key: 'reject', label: t('reject'), kbd: 'X', run: () => void act(() => rejectSource(sourceId), t('toast.rejected', { title: row.title })) },
     ]
   } else if (row.status === 'todo') {
@@ -156,7 +176,9 @@ function Detail({ row, commanderName, onDesk }: { row: SourceListRow, commanderN
         {inJudgement && (
           <section className="mt-4 rounded-xl border border-line px-4 py-3" data-testid="source-judgement">
             <div className="flex items-baseline gap-2 text-ui-compact"><b className="font-semibold text-ink">{t('judgement')}</b><span className="text-xs text-faint">{t('judgementHint')}</span></div>
-            <p className="mt-1.5 text-sm text-muted-ink">{t('noJudgement')}</p>
+            <p className="mt-1.5 text-sm text-muted-ink" data-testid="judgement-line">
+              {row.captureFailed ? t('captureFailedHint') : row.judgement ? <b className="font-medium text-ink">{row.judgement}</b> : t('noJudgement')}
+            </p>
             <div className="mt-3 flex flex-wrap gap-2">
               {actions.map(action => (
                 <button key={action.key} type="button" data-source-action={action.key} className={cn(BTN, action.primary && BTN_PRIMARY)} onClick={action.run}>{action.label}{action.kbd && <Kbd>{action.kbd}</Kbd>}</button>

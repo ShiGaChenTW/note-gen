@@ -1,6 +1,7 @@
 // Fork（almanac ALMNC-54.8）：資料源分頁——三個來處併成一條清單、狀態篩選、勾選、交給指揮官整理的步驟。
 import { describe, expect, it } from 'vitest'
 import { createSource, type Source } from '@/lib/v3-model/source'
+import type { SourceJudgement } from './judgement'
 import {
   bridgeInput, buildSourceRows, captureSourceId, dayBucket, filterCounts, filterRows, isUserCapture, organisedSummary, pickState,
   planHandToCommander, recordSourceId, sourceTitle, toggleAll, togglePick, waitingCount, type CaptureLike, type RecordLike,
@@ -120,5 +121,30 @@ describe('day buckets', () => {
     expect(dayBucket(NOW - 24 * H, NOW)).toBe('yesterday')
     expect(dayBucket(NOW - 4 * 24 * H, NOW)).toBe('week')
     expect(dayBucket(NOW - 30 * 24 * H, NOW)).toBe('earlier')
+  })
+})
+
+describe('ALMNC-54.10 初步判斷', () => {
+  const judgement = (sourceId: string, extra: Partial<SourceJudgement> = {}): SourceJudgement => ({ sourceId, status: 'ready', type: '研究報告', suggestion: '存成知識筆記', followSuggestion: false, createdAt: NOW, updatedAt: NOW, ...extra })
+
+  it('only rows waiting for a decision carry the judgement line; capture failures are flagged', () => {
+    const rows = buildSourceRows({
+      sources: [source('w', 'awaiting_decision'), source('t', 'awaiting_decision'), source('f', 'awaiting_decision'), source('n', 'awaiting_decision'), source('p', 'pending_analysis')],
+      judgements: new Map([
+        ['w', judgement('w')],
+        ['t', judgement('t', { suggestion: undefined })],
+        ['f', judgement('f', { status: 'capture_failed', type: undefined, suggestion: undefined })],
+        ['n', judgement('n', { status: 'unavailable', type: undefined, suggestion: undefined })],
+        ['p', judgement('p')],
+      ]),
+    })
+    const byId = Object.fromEntries(rows.map(row => [row.id, row]))
+    expect(byId['src:w']).toMatchObject({ judgement: '研究報告｜存成知識筆記', suggestion: '存成知識筆記' })
+    expect(byId['src:t']).toMatchObject({ judgement: '研究報告' })
+    expect(byId['src:t'].suggestion).toBeUndefined()
+    expect(byId['src:f']).toMatchObject({ captureFailed: true })
+    expect(byId['src:n'].judgement).toBeUndefined() // AC#4：沒有判斷，列照樣出現
+    expect(byId['src:n'].status).toBe('wait')
+    expect(byId['src:p'].judgement).toBeUndefined()
   })
 })

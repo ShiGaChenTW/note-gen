@@ -58,7 +58,16 @@ export function commanderDisplayName(roster: readonly SidebarRosterAgent[], role
 let batchCounter = 0
 
 export async function prepareSidebarCommanderRun(
-  input: { conversationId?: number, chatId: number, scottMessages: readonly string[], readOnly?: boolean },
+  input: {
+    conversationId?: number
+    chatId: number
+    scottMessages: readonly string[]
+    readOnly?: boolean
+    /** Fork（almanac ALMNC-54.11）：路由器把查詢交給某位專家時，以他的身分（工作指示、記憶、本名）只讀回答。 */
+    answerAs?: SidebarRosterAgent
+    /** Fork（almanac ALMNC-54.11）：路由器的決定，接在規則後面給模型參考（例如「這是交代秘書的日程」）。 */
+    routeNote?: string
+  },
   deps: SidebarRunDeps,
 ): Promise<SidebarCommanderRun> {
   const roster = await deps.roster().catch(error => {
@@ -67,19 +76,24 @@ export async function prepareSidebarCommanderRun(
   })
   const commander = roster.find(agent => agent.role === 'commander')
   const secretary = roster.find(agent => agent.role === 'secretary')
-  const displayName = commanderDisplayName(roster, deps.roleLabel)
+  // 專家只讀回答（ALMNC-54.11 查詢）；其他時候是指揮官。
+  const speaker = input.readOnly && input.answerAs ? input.answerAs : commander
+  const displayName = speaker && speaker !== commander ? agentDisplayName(speaker, deps.roleLabel) : commanderDisplayName(roster, deps.roleLabel)
   const secretaryName = secretary ? agentDisplayName(secretary, deps.roleLabel) : deps.roleLabel('secretary')
   let memory = ''
-  if (commander) {
+  if (speaker) {
     try {
-      memory = await deps.memoryPrompt(commander)
+      memory = await deps.memoryPrompt(speaker)
     } catch (error) {
       // 讀不到記憶照常執行（只少了記憶），同背景 agent（agents/runner.ts）。
       console.warn('[commander] memory unavailable', error)
     }
   }
   // 「問」模式也是指揮官在回答，只是規則換成只讀（工具由 runtime 的 read-only 篩掉，這裡不替換）。
-  const rolePrompt = buildCommanderSidebarPrompt({ instructions: ROLE_INSTRUCTIONS.commander, memory, displayName, readOnly: input.readOnly })
+  const rolePrompt = [
+    buildCommanderSidebarPrompt({ instructions: ROLE_INSTRUCTIONS[speaker?.role ?? 'commander'], memory, displayName, readOnly: input.readOnly }),
+    input.routeNote?.trim() ?? '',
+  ].filter(Boolean).join('\n\n')
 
   const collector = createChangeCollector()
   const secretaryProposals: Proposal[] = []

@@ -87,6 +87,21 @@ beforeEach(() => {
 })
 
 describe('analyzeSource', () => {
+  it('ALMNC-54.10 照建議處理：初步判斷當成提示交給指揮官；讀不到提示照常分析', async () => {
+    const sources = memorySources([src('s1', { sourceType: 'external', content: '會議紀錄…' }), src('s2', { content: '隨手記' })])
+    sources.rows.set('s1', submitSource(sources.rows.get('s1')!, T0))
+    const ask = fakeModel({ fragments: [{ kind: 'task', title: '寄報價單' }] })
+    const { deps: d } = deps(sources, ask)
+    d.sourceHint = async id => {
+      if (id === 's2') throw new Error('db locked')
+      return '會議紀錄｜存成紀錄筆記＋拆出任務'
+    }
+    await analyzeSource('s1', d)
+    expect(ask.calls[0]).toContain('Scott 看過初步判斷「會議紀錄｜存成紀錄筆記＋拆出任務」，選了照建議處理')
+    expect((await analyzeSource('s2', d)).status).toBe('analyzed')
+    expect(ask.calls.filter(prompt => prompt.includes('--- 資料源 ---')).at(-1)).not.toContain('初步判斷')
+  })
+
   it('happy path：自己寫的文字 → 分析中 → 提案送工作台 → 已分析', async () => {
     const sources = memorySources([src('s1', { content: '明天要寄報價單' })])
     const { deps: d, batches, activity } = deps(sources, fakeModel({ fragments: [{ kind: 'task', title: '寄報價單', date: '2026-11-22' }] }))

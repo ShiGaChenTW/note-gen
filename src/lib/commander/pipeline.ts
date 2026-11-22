@@ -17,6 +17,14 @@ function sourceLabel(source: Source): string {
   return Array.from(label || source.origin || source.kind).slice(0, 48).join('')
 }
 
+async function hintOf(source: Source, deps: CommanderDeps): Promise<string | undefined> {
+  try {
+    return await deps.sourceHint?.(source.id)
+  } catch {
+    return undefined
+  }
+}
+
 async function previousText(source: Source, deps: CommanderDeps): Promise<string | undefined> {
   if (!source.previousId) return undefined
   try {
@@ -42,6 +50,7 @@ export async function analyzeSource(sourceId: string, deps: CommanderDeps, optio
           sourceKind: source.kind,
           origin: source.origin,
           previousText: await previousText(source, deps),
+          hint: await hintOf(source, deps),
         })
       : [fallbackFragment(deps.labels.unconverted({ origin: source.origin ?? source.kind }), source.origin)]
 

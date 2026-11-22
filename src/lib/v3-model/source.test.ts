@@ -1,6 +1,7 @@
 // Fork（almanac ALMNC-54.1）：資料源狀態、鎖定、改版、封存規則（AC1、AC2、AC6）。
 import { describe, expect, it } from 'vitest'
 import {
+  canDeleteUnsent,
   REJECTED_ARCHIVE_AFTER_MS,
   archiveSource,
   canTransition,
@@ -225,5 +226,16 @@ describe('資料庫列對應', () => {
     const row = { ...make('self'), origin: null, previousId: null, lockedAt: null, archivedAt: null } as unknown as SourceRow
     expect(() => sourceFromRow({ ...row, sourceType: 'web' })).toThrow()
     expect(() => sourceFromRow({ ...row, status: 'done' })).toThrow()
+  })
+})
+
+describe('ALMNC-54.10 擷取失敗的「刪除」', () => {
+  it('only unsent external sources without outputs can be deleted; everything else is archived, never deleted', () => {
+    const waiting = make('external')
+    expect(canDeleteUnsent(waiting)).toBe(true)
+    expect(canDeleteUnsent(waiting, 1)).toBe(false)
+    expect(canDeleteUnsent(submitSource(waiting, T0))).toBe(false)
+    expect(canDeleteUnsent(transitionSource(waiting, 'rejected', T0))).toBe(false)
+    expect(canDeleteUnsent(make('self'))).toBe(false)
   })
 })
