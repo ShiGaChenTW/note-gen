@@ -2,7 +2,7 @@
 // 每個寫入都要帶 actor，先過 src/lib/agent-memory/permissions.ts 的判斷。活動紀錄只有新增和封存，沒有修改或刪除的函式。
 import { getDb } from './index'
 import {
-  actorLabel, archiveCutoff, buildMemoryPrompt, decideActivityWrite, decideAgentMemoryWrite, decideContextWrite,
+  actorLabel, archiveCutoff, CONTEXT_MAX_PROJECTS, CONTEXT_MAX_FOCUS, CONTEXT_MAX_PEOPLE, buildMemoryPrompt, decideActivityWrite, decideAgentMemoryWrite, decideContextWrite,
   decidePreferencesWrite, defaultRules, defaultSoul, EMPTY_CONTEXT, isActivityAction, parseStoredItems,
   parseStoredPeople, selectActivityToArchive, validateActivityEntry, validateSharedContext,
   type ActivityEntry, type ActivityEntryInput, type MemoryActor, type MemoryKind, type MemoryWriteDecision,
@@ -102,6 +102,28 @@ export async function writeAgentMemory(
   return { status: 'saved' }
 }
 
+/** Append-only for agent-authored notes; retry when another window saved while we were reading. */
+export async function appendAgentWorkNotes(actor: MemoryActor, agent: MemoryAgent, notes: string[]): Promise<void> {
+  assertAllowed(decideAgentMemoryWrite(actor, { agentId: agent.id, kind: 'work_notes' }, '', ''))
+  const db = await memoryDb()
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const { workNotes } = await getAgentMemory(agent)
+    const current = new Set(workNotes.content.split(/\r?\n/).map(line => line.trim().replace(/^[-*] +/, '')))
+    const added = [...new Set(notes)].filter(note => !current.has(note)).map(note => `- ${note}`).join('\n')
+    if (!added) return
+    const content = [workNotes.content.trimEnd(), added].filter(Boolean).join('\n') + '\n'
+    assertLength(content)
+    const result = await db.execute(
+      `insert into agent_memory (agent_id, kind, content, updated_at, updated_by) values ($1, 'work_notes', $2, $3, $4)
+       on conflict(agent_id, kind) do update set content = excluded.content, updated_at = excluded.updated_at, updated_by = excluded.updated_by
+       where agent_memory.content = $5 and $6 is not null`,
+      [agent.id, content, Date.now(), actorLabel(actor), workNotes.content, workNotes.updatedAt],
+    )
+    if (result.rowsAffected) return
+  }
+  throw new Error('WORK_NOTES_CHANGED')
+}
+
 interface ContextRow { projects: string, weeklyFocus: string, people: string, updatedAt: number, updatedBy: string }
 
 export async function getSharedContext(): Promise<SavedSharedContext> {
@@ -135,6 +157,36 @@ export async function saveSharedContext(actor: MemoryActor, context: SharedConte
       JSON.stringify(result.context.people), now, actorLabel(actor),
     ],
   )
+}
+
+/** 只補入新的脈絡，不覆蓋 Scott 在設定頁寫的標題、連結或清單順序。 */
+export async function mergeSharedContext(actor: MemoryActor, additions: SharedContext): Promise<void> {
+  assertAllowed(decideContextWrite(actor))
+  const checked = validateSharedContext(additions)
+  if (!checked.ok) throw new Error(checked.error)
+  const db = await memoryDb()
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const current = await getSharedContext()
+    const append = (existing: SharedContext['projects'], next: SharedContext['projects'], max: number) => {
+      const byTitle = new Map(existing.map(item => [item.title, item]))
+      for (const item of next) if (!byTitle.has(item.title)) byTitle.set(item.title, item)
+      return [...byTitle.values()].slice(0, max)
+    }
+    const projects = append(current.projects, checked.context.projects, CONTEXT_MAX_PROJECTS)
+    const weeklyFocus = append(current.weeklyFocus, checked.context.weeklyFocus, CONTEXT_MAX_FOCUS)
+    const people = [...new Set([...current.people, ...checked.context.people])].slice(0, CONTEXT_MAX_PEOPLE)
+    if (JSON.stringify([projects, weeklyFocus, people]) === JSON.stringify([current.projects, current.weeklyFocus, current.people])) return
+    const result = await db.execute(
+      `insert into shared_context (id, projects, weekly_focus, people, updated_at, updated_by) values (1, $1, $2, $3, $4, $5)
+       on conflict(id) do update set projects = excluded.projects, weekly_focus = excluded.weekly_focus, people = excluded.people,
+       updated_at = excluded.updated_at, updated_by = excluded.updated_by
+       where shared_context.updated_at = $6 and shared_context.updated_by = $7`,
+      [JSON.stringify(projects), JSON.stringify(weeklyFocus), JSON.stringify(people),
+        Math.max(Date.now(), (current.updatedAt ?? 0) + 1), actorLabel(actor), current.updatedAt, current.updatedBy],
+    )
+    if (result.rowsAffected) return
+  }
+  throw new Error('SHARED_CONTEXT_CHANGED')
 }
 
 interface ActivityRow {

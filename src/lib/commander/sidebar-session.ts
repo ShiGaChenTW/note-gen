@@ -2,6 +2,8 @@
 // Scott 親口交代的任務和行程由秘書直接寫並貼一行確認與「復原」。
 // prepareSidebarCommanderRun 只靠注入的依賴（測試用假的）；createDefaultSidebarDeps 接到 App 裡既有的名單、記憶、
 // 今日日誌寫入、工作台（收集項目）、對話卡片與活動紀錄。
+import { rememberCompletedRoleWork } from '@/lib/agent-memory/runtime'
+import type { CompletedRoleWork } from '@/lib/agent-memory/completion'
 import type { AgentTool } from '@/lib/agent/types'
 import { ROLE_INSTRUCTIONS } from '@/lib/agents/instructions'
 import { agentDisplayName } from '@/lib/agents/display'
@@ -37,6 +39,7 @@ export interface SidebarRunDeps {
   roleLabel: RoleTranslator
   /** 工作台上這批提案的來源名稱，例如「Mia · 指揮官（對話）」。 */
   originLabel: (agent: string) => string
+  rememberWork?: (agent: SidebarRosterAgent, work: CompletedRoleWork) => Promise<void>
   now: () => Date
 }
 
@@ -47,6 +50,7 @@ export interface SidebarCommanderRun {
   transformTools: (tools: AgentTool[]) => AgentTool[]
   /** 執行結束後：把這次想改的檔案送進工作台、在訊息下面掛提案卡。回傳送出的提案。 */
   finish: () => Promise<Proposal[]>
+  remember: (completedAnswer: string) => Promise<void>
 }
 
 /** 名單裡的指揮官（沒有就用角色名稱）：「Mia · 指揮官」。 */
@@ -76,8 +80,8 @@ export async function prepareSidebarCommanderRun(
   })
   const commander = roster.find(agent => agent.role === 'commander')
   const secretary = roster.find(agent => agent.role === 'secretary')
-  // 專家只讀回答（ALMNC-54.11 查詢）；其他時候是指揮官。
-  const speaker = input.readOnly && input.answerAs ? input.answerAs : commander
+  // 專家以只讀方式答詢，秘書處理日程；沒有指定夥伴時由指揮官接手。
+  const speaker = input.answerAs?.role === 'expert' && !input.readOnly ? commander : input.answerAs ?? commander
   const displayName = speaker && speaker !== commander ? agentDisplayName(speaker, deps.roleLabel) : commanderDisplayName(roster, deps.roleLabel)
   const secretaryName = secretary ? agentDisplayName(secretary, deps.roleLabel) : deps.roleLabel('secretary')
   let memory = ''
@@ -91,7 +95,7 @@ export async function prepareSidebarCommanderRun(
   }
   // 「問」模式也是指揮官在回答，只是規則換成只讀（工具由 runtime 的 read-only 篩掉，這裡不替換）。
   const rolePrompt = [
-    buildCommanderSidebarPrompt({ instructions: ROLE_INSTRUCTIONS[speaker?.role ?? 'commander'], memory, displayName, readOnly: input.readOnly }),
+    buildCommanderSidebarPrompt({ instructions: ROLE_INSTRUCTIONS[speaker?.role ?? 'commander'], memory, displayName, readOnly: input.readOnly, role: speaker?.role }),
     input.routeNote?.trim() ?? '',
   ].filter(Boolean).join('\n\n')
 
@@ -138,6 +142,19 @@ export async function prepareSidebarCommanderRun(
     displayName,
     rolePrompt,
     transformTools,
+    remember: async completedAnswer => {
+      const rememberWork = deps.rememberWork
+      if (!completedAnswer.trim() || !speaker || !rememberWork || (input.conversationId ?? 0) <= 0) return
+      const work = {
+        request: input.scottMessages[0],
+        result: completedAnswer,
+        fromScott: true,
+        reference: `conversation:${input.conversationId}#${input.chatId}`,
+        conversationId: input.conversationId,
+      }
+      const participants = secretary && directCount > 0 && speaker !== secretary ? [speaker, secretary] : [speaker]
+      await Promise.all(participants.map(agent => rememberWork(agent, work)))
+    },
     finish: async () => {
       const proposals = [
         ...changesToProposals(collector.changes(), { conversationId: input.conversationId, agentId: commander?.id }),
@@ -211,6 +228,7 @@ export async function createDefaultSidebarDeps(labels: { roleLabel: RoleTranslat
     },
     roleLabel: labels.roleLabel,
     originLabel: labels.originLabel,
+    rememberWork: rememberCompletedRoleWork,
     now: () => new Date(),
   }
 }

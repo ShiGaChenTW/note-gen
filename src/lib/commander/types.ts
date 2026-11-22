@@ -1,3 +1,4 @@
+import type { CompletedRoleWork } from '@/lib/agent-memory/completion'
 // Fork（almanac ALMNC-54.6）：指揮官分析流程（C0）的資料型別。
 // 規格見 almanac/2026-11-19_proposal_role-data-model.md 第零節（C0 是唯一的匯集點）、第二節「指揮官的分析流程」。
 // 每一步都是注入依賴的函式；模型、OCR、抓網頁、轉逐字稿、資料庫都從外面給，測試用假的。
@@ -192,6 +193,7 @@ export interface CommanderDeps {
   submitProposals: (batch: ProposalBatch, options?: { durable: boolean, recordId?: number }) => Promise<void>
   /** 活動紀錄；失敗不影響分析。 */
   logActivity?: (entry: { sourceId: string, batchId?: string, status: SourceStatus, note: string }) => Promise<void>
+  rememberWork?: (agent: RosterAgent, work: CompletedRoleWork) => Promise<void>
   labels: CommanderLabels
   now?: () => Date
   /** Fork（almanac ALMNC-54.10）：Scott 選了「照建議處理」時的初步判斷；沒有就回傳 undefined。失敗不影響分析。 */

@@ -22,6 +22,19 @@ function memoryIo(files: Record<string, string>, extra: Partial<EditIo> = {}) {
 const agent = { id: 'exp_1', name: 'Alex', role: 'expert' as const, domain: '工業工程' }
 
 describe('applyEdits', () => {
+  it('applies a rules proposal only against its reviewed base', async () => {
+    const agent = { id: 'expert', name: 'Alex', role: 'expert' as const }
+    let rules = 'old rules'
+    const { io } = memoryIo({}, {
+      getRules: async () => rules,
+      setRules: async (_, content) => { rules = content },
+    })
+    const proposal = { memoryEdits: [{ target: 'rules' as const, agent, baseContent: 'old rules', content: 'new rules', summary: 'Rules' }] }
+    await expect(applyEdits(proposal, io)).resolves.toEqual(['memory:expert'])
+    expect(rules).toBe('new rules')
+    await expect(applyEdits(proposal, io)).rejects.toMatchObject({ conflict: true })
+  })
+
   it('writes notes, new notes, domains and memory together', async () => {
     const { io, store, domains, workNotes } = memoryIo({ 'a.md': 'A' })
     const targets = await applyEdits({

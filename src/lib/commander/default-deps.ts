@@ -7,9 +7,11 @@
 //   analyzeSource(id, deps, { conversationId })    // 從處理對話送來分析時
 import { createTranslator, type AbstractIntlMessages } from 'next-intl'
 import { askCollectModel } from '@/lib/collect/ai'
+import { rememberCompletedRoleWork } from '@/lib/agent-memory/runtime'
 import { ROLE_INSTRUCTIONS } from '@/lib/agents/instructions'
 import { agentDisplayName } from '@/lib/agents/display'
 import { DEFAULT_LOCALE, LANGUAGE_STORAGE_KEY, loadMessagesWithFallback, normalizeLocale } from '@/i18n/config'
+import { bytesToBase64 } from '@/lib/screenshot-editor'
 import { createAnalysisQueue } from './pipeline'
 import { createFileTextReader, type FileReasonKey } from './file-route'
 import { ConverterUnavailableError, type CommanderDeps, type CommanderLabels, type Converters, type RosterAgent } from './types'
@@ -43,7 +45,15 @@ export function createDefaultConverters(fileReason: FileReason = key => key): Co
     ocrImage: async ref => {
       const { recognizeImageWithFallback } = await import('@/lib/image-recognition')
       const isDataUrl = /^data:/i.test(ref)
-      const result = await recognizeImageWithFallback(isDataUrl ? { base64: ref } : { imagePath: ref })
+      const asset = /^(?:image|screenshot)\/[a-z0-9-]+\.(png|jpe?g|gif|webp|bmp)$/i.exec(ref)
+      let base64 = isDataUrl ? ref : undefined
+      if (asset) {
+        const { readFile, BaseDirectory } = await import('@tauri-apps/plugin-fs')
+        const bytes = await readFile(ref, { baseDir: BaseDirectory.AppData }).catch(() => undefined)
+        const format = /^jpe?g$/i.test(asset[1]) ? 'jpeg' : asset[1].toLowerCase()
+        if (bytes) base64 = `data:image/${format};base64,${bytesToBase64(bytes)}`
+      }
+      const result = await recognizeImageWithFallback({ base64, imagePath: isDataUrl ? undefined : ref })
       if (result.method === 'none') throw new ConverterUnavailableError('no vision model or OCR provider')
       return result.content
     },
@@ -97,6 +107,7 @@ export async function createDefaultCommanderDeps(): Promise<CommanderDeps> {
     converters: createDefaultConverters(fileReason),
     ask: prompt => askCollectModel(prompt, undefined, { silent: true }),
     roster,
+    rememberWork: rememberCompletedRoleWork,
     domains: domainsDb.listDomains,
     agentPrompt: async (agent, fallbackRole) => {
       const instructions = ROLE_INSTRUCTIONS[agent?.role ?? fallbackRole]

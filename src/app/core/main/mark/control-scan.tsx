@@ -1,4 +1,6 @@
 'use client'
+import { isRecordDialogAttachment } from '@/lib/workbench/auto-route'
+import { isMobileDevice } from '@/lib/check'
 
 import { TooltipButton } from "@/components/tooltip-button"
 import { useTranslations } from 'next-intl'
@@ -142,6 +144,7 @@ export function ControlScan() {
   const cropBoxRef = useRef<Element | null>(null)
   const openRef = useRef(open)
   const captureRequestIdRef = useRef(0)
+  const fromRecordDialogRef = useRef(false)
   const screenshotTaskRef = useRef<Promise<void>>(Promise.resolve())
   const screenshotGenerationsRef = useRef(new Set<string>())
   const { currentTagId, tags, fetchTags, initTags } = useTagStore()
@@ -297,11 +300,12 @@ export function ControlScan() {
     queueId: string,
     bytes: Uint8Array,
     filename: string,
+    fromRecordDialog: boolean,
   ) => {
     let nextMark = savedMark
 
     try {
-      if (enableImageRecognition) {
+      if (enableImageRecognition && !fromRecordDialog) {
         const result = await recognizeImageWithFallback({
           imagePath: `${SCREENSHOT_DIR}/${filename}`,
           base64: `data:image/png;base64,${bytesToBase64(bytes)}`,
@@ -395,8 +399,9 @@ export function ControlScan() {
 
       handleOpenChange(false)
 
+      const fromRecordDialog = fromRecordDialogRef.current
       const createdAt = Date.now()
-      const initialDesc = enableImageRecognition ? t('record.capture.screenshotRecognitionPending') : ''
+      const initialDesc = enableImageRecognition && !fromRecordDialog ? t('record.capture.screenshotRecognitionPending') : ''
       const result = await insertMark({
         tagId: selectedSaveTargetId,
         type: 'scan',
@@ -434,7 +439,12 @@ export function ControlScan() {
         tagId: selectedSaveTargetId,
         typeLabel: t('record.mark.type.screenshot'),
       })
-      void processSavedScreenshot(savedMark, queueId, bytes, filename)
+      if (fromRecordDialog) {
+        void import('@/lib/workbench/actions').then(({ registerRecordAttachment }) =>
+          registerRecordAttachment({ markId, type: 'scan', path: `${SCREENSHOT_DIR}/${filename}`, title: t('record.mark.type.screenshot'), collectedAt: createdAt }),
+        ).catch(error => console.warn('[workbench] attachment registration failed:', error))
+      }
+      void processSavedScreenshot(savedMark, queueId, bytes, filename, fromRecordDialog)
     } catch (error) {
       console.error('Screenshot record failed:', error)
       toast({
@@ -579,19 +589,20 @@ export function ControlScan() {
     return () => window.removeEventListener('keydown', handleKeyDown, true)
   }, [cropEnd, handleOpenChange, open, selectedImageSrc, visibleFiles])
 
-  const openScreenshotDialog = useCallback(() => {
+  const openScreenshotDialog = useCallback((fromRecordDialog = false) => {
     if (openRef.current) {
       return
     }
 
+    fromRecordDialogRef.current = fromRecordDialog
     setSelectedSaveTagId(selectedSaveTargetId)
     handleOpenChange(true)
     void cleanupTempScreenshots()
     void refreshScreenshotSources()
   }, [cleanupTempScreenshots, handleOpenChange, refreshScreenshotSources, selectedSaveTargetId])
 
-  const handleScan = useCallback(() => {
-    openScreenshotDialog()
+  const handleScan = useCallback((request: unknown) => {
+    openScreenshotDialog(isRecordDialogAttachment(request) && !isMobileDevice())
   }, [openScreenshotDialog])
 
   useEffect(() => {
@@ -625,7 +636,7 @@ export function ControlScan() {
 
   return (
     <div className="hidden md:block">
-      <TooltipButton icon={<ScanText />} tooltipText={t('record.capture.screenshotRecordTitle')} onClick={openScreenshotDialog} />
+      <TooltipButton icon={<ScanText />} tooltipText={t('record.capture.screenshotRecordTitle')} onClick={() => openScreenshotDialog()} />
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent
           className="max-w-none translate-x-0 translate-y-0 border-none bg-black p-4 text-white sm:max-w-none sm:rounded-none"

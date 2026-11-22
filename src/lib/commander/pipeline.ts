@@ -82,6 +82,23 @@ export async function analyzeSource(sourceId: string, deps: CommanderDeps, optio
       status,
       note: `${batch?.proposals.length ?? 0} proposals, ${rejected.length} rejected (${conversion.converter}/${conversion.status})${conversion.reason ? ` ${conversion.reason}` : ''}`,
     }).catch(error => console.warn('[commander] activity log failed:', error))
+    const rememberWork = deps.rememberWork
+    if (rememberWork) {
+      const reference = `source:${sourceId}`
+      const fromScott = source.sourceType === 'self' && conversion.status === 'text'
+      const updates = roster.flatMap(agent => {
+        if (!agent.enabled) return []
+        const authored = drafts.filter(item => item.agentId === agent.id && item.meta.writtenBy === 'ai')
+        if (!authored.length && agent !== commander) return []
+        return [rememberWork(agent, {
+          reference,
+          conversationId: options.conversationId,
+          ...(fromScott ? { request: conversion.text, fromScott } : {}),
+          result: JSON.stringify({ status, drafts: authored.map(({ kind, title }) => ({ kind, title })) }),
+        }).catch(error => console.warn('[commander] memory update failed:', error))]
+      })
+      await Promise.all(updates)
+    }
     return { status, sourceId, conversion, fragments, assignments, drafts, rejected, batch }
   } catch (error) {
     await deps.sources.setStatus(sourceId, 'pending_analysis').catch(() => undefined)

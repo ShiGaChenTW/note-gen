@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  asksAboutKnowledge, assignTag, canChangeTag, claimDraftTag, DEFAULT_THREAD_TAG, loadTagMap, sanitizeTagMap, saveTagMap,
+  asksAboutKnowledge, assignTag, canChangeTag, claimDraftTag, DEFAULT_THREAD_TAG, loadTagMap, sanitizeTagMap, saveTagMap, saveThreadRouteAgent, threadRouteAgent,
   tagAfterCommanderJoins, tagFromParticipants, tagOf, transferSuggestion, THREAD_TAGS_KEY,
 } from './tags'
 
@@ -42,6 +42,14 @@ describe('tag map', () => {
     expect(sanitizeTagMap({ a: 'query', b: 'bogus', c: 3 })).toEqual({ a: 'query' })
     expect(sanitizeTagMap(null)).toEqual({})
     expect(sanitizeTagMap(['query'])).toEqual({})
+  })
+  it('persists the selected partner for the same synced thread and tag only', async () => {
+    const values = new Map<string, unknown>()
+    const storage = { get: async (k: string) => values.get(k), set: async (k: string, v: unknown) => { values.set(k, v) }, save: async () => {} }
+    await saveThreadRouteAgent({ id: 1, syncId: 'same-thread' }, 'query', 'expert-id', storage)
+    expect(await threadRouteAgent({ id: 2, syncId: 'same-thread' }, 'query', storage)).toBe('expert-id')
+    expect(await threadRouteAgent({ id: 2, syncId: 'same-thread' }, 'process', storage)).toBeUndefined()
+    expect(await threadRouteAgent({ id: 1, syncId: 'different-thread' }, 'query', storage)).toBeUndefined()
   })
   it('loads and saves through store.json, tolerating failures', async () => {
     const values = new Map<string, unknown>()

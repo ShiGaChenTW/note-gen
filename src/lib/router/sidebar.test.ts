@@ -3,7 +3,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { RosterEntry, RouteDecision } from './router'
 import {
-  addRouterChoice, chooseRoute, MAX_ROUTER_CHOICES, planSidebarRoute, routeNote, savePreferenceLine, shouldRouteSidebarMessage, type RouterChoice,
+  addRouterChoice, chooseRoute, MAX_ROUTER_CHOICES, planSidebarRoute, routeNote, restoreSidebarRoute, savePreferenceLine, shouldRouteSidebarMessage, type RouterChoice,
 } from './sidebar'
 
 const roster: RosterEntry[] = [
@@ -26,9 +26,11 @@ describe('planSidebarRoute', () => {
     expect(planSidebarRoute(decision({ route: 'process', reason: 'multi_intent', layer: 'rule' }), roster)).toMatchObject({ kind: 'run', tag: 'process', readOnly: false })
   })
 
-  it('查詢 → 標成查詢、只讀，看得出領域就交給那位專家；看不出來問 Scott；沒有專家由指揮官只讀回答', () => {
+  it('查詢 → 標成查詢、只讀，看得出領域就交給那位專家；看不出來或沒有專家由指揮官只讀回答', () => {
     expect(planSidebarRoute(decision({ route: 'query', text: '工業工程的節拍時間怎麼算' }), roster)).toMatchObject({ kind: 'run', tag: 'query', readOnly: true, answerAs: { id: 'ie' } })
-    expect(planSidebarRoute(decision({ route: 'query', text: '上次會議決定了什麼' }), roster)).toMatchObject({ kind: 'askExpert', candidates: [{ id: 'ie' }, { id: 'de' }] })
+    const ambiguous = planSidebarRoute(decision({ route: 'query', text: '上次會議決定了什麼' }), roster)
+    expect(ambiguous).toMatchObject({ kind: 'run', readOnly: true })
+    expect(ambiguous).not.toHaveProperty('answerAs')
     const none = planSidebarRoute(decision({ route: 'query' }), roster.filter(agent => agent.role !== 'expert'))
     expect(none).toMatchObject({ kind: 'run', tag: 'query', readOnly: true })
     expect('answerAs' in none && none.answerAs).toBeFalsy()
@@ -51,6 +53,18 @@ describe('planSidebarRoute', () => {
     expect(chooseRoute(asked, 'query', roster)).toMatchObject({ kind: 'askExpert' })
     expect(chooseRoute(asked, 'query', roster, 'de')).toMatchObject({ kind: 'run', answerAs: { id: 'de' } })
     expect(chooseRoute(asked, 'preference', roster)).toMatchObject({ kind: 'confirmPreference' })
+  })
+})
+
+describe('restoreSidebarRoute', () => {
+  it('keeps the same expert on follow-ups after reopening the thread', () => {
+    expect(restoreSidebarRoute('query', 'ie', roster)).toMatchObject({ route: 'query', readOnly: true, answerAs: { id: 'ie' } })
+    expect(restoreSidebarRoute('query', 'off', roster)).not.toHaveProperty('answerAs')
+  })
+
+  it('keeps the secretary for schedule replies and honors an explicit commander handoff', () => {
+    expect(restoreSidebarRoute('schedule', 'sec', roster)).toMatchObject({ route: 'schedule', answerAs: { id: 'sec' } })
+    expect(restoreSidebarRoute('process', 'sec', roster)).toMatchObject({ route: 'process', answerAs: { id: 'cmd' } })
   })
 })
 

@@ -4,7 +4,7 @@
 //      偏好語氣（以後／每次都／不要再／喜歡／不喜歡／改成每）。直接決定，不用模型。
 //   2. 本機模型：嵌入模型（qwen3-embedding:0.6b）比對每類範例句，取每類前兩名相似度平均當分數；
 //      信心值＝四類分數做 softmax（溫度 0.02）後的最大值。
-//   3. 問 Scott：信心值低於門檻（0.7），或本機模型無法使用時。
+//   3. 預設交給指揮官：信心值低於 0.7 或本機模型無法使用。只有無法辨認的片段問 Scott。
 // 四條路線：日程 → 秘書、處理 → 指揮官、查詢 → 專家、偏好 → Agent 設定區（Scott 的偏好）。
 // 這裡全是純函式與注入的模型，接 App 的部分在 src/lib/router/sidebar.ts 與右側欄的送出流程。
 import type { AgentRole } from '@/lib/agents/settings'
@@ -46,12 +46,13 @@ export interface RouteTarget {
   name?: string
 }
 
-export type RouteLayer = 'rule' | 'model' | 'ask'
+export type RouteLayer = 'rule' | 'model' | 'fallback' | 'ask'
 
 export type RouteReason =
   | 'prefix' | 'tagged' | 'fixed_source' | 'multi_intent' | 'preference_marker' // 規則
+  | 'intent_marker'
   | 'model' // 模型信心值夠高
-  | 'low_confidence' | 'model_unavailable' | 'empty' // 問 Scott
+  | 'low_confidence' | 'model_unavailable' | 'fragment' | 'empty'
 
 export interface RouteDecision {
   /** 問 Scott 時是 null（suggestion 是模型最可能的那一類）。 */
@@ -83,7 +84,22 @@ export interface RouteContext {
 /** 一句多意圖的連接詞（交給指揮官拆）。照實測 rules_eval.py。 */
 export const MULTI_INTENT = /順便|然後再|另外再|，再/
 /** 偏好語氣詞。照實測 rules_eval.py。 */
-export const PREFERENCE_MARKERS = /以後|每次都|不要再|喜歡|不喜歡|改成每/
+export const PREFERENCE_MARKERS = /以[後后]|每次都|不要再|喜[歡欢]|改成每|[換换]回.{0,12}(?:介面|界面|模式)|\b(?:from now on|always (?:use|reply)|i prefer)\b/i
+
+// 用明確的動作或問句語氣分流。單獨的時間、待辦等名詞不足以判成日程。
+const SCHEDULE_REQUEST = /提醒我|(?:安排|新增|建立|取消|排[進进]).{0,12}(?:[會会][議议]|行程|提醒)|(?:今天|明天|[後后]天|[週周]五|下[週周]).{0,12}[開开][會会]|\b(?:remind me|schedule a meeting|add (?:an? )?event)\b/i
+const QUERY_REQUEST = /(?:是否|有沒有|有没有|什[麼么]|哪[些裡里]|為什麼|为什么|如何|怎麼|怎么)|(?:進度|进度|[連连][結结]|[鏈链]接)[？?。\s]*$|\b(?:what|why|where|which|whether|status|progress)\b/i
+const ACTION_REQUEST = /[幫帮]我|實作|实作|核[准準]|[繼继][續续]|全做|依照建[議议]|再.{0,3}一次|截[圖图]|安[裝装]|要移[動动]|整理|[處处]理|\b(?:help me|install|implement|approve|continue|run again|summarize|organize)\b/i
+const SHORT_REQUEST = /[把請请問问想要做改找看給给]|\b(?:add|put|show|tell|move|read|give|use|need|want|is|are|can|do)\b/i
+
+/** 無明確意圖且無命令或問句線索時，六個漢字內或三個詞內視為片段。 */
+function isFragment(text: string): boolean {
+  if (SHORT_REQUEST.test(text) || (/[？?]$/.test(text) && /[\p{L}\p{N}]/u.test(text))) return false
+  const chars = text.match(/[\p{L}\p{N}]/gu) ?? []
+  if (/\p{Script=Han}/u.test(text)) return chars.length <= 6
+  const words = text.match(/[\p{L}\p{N}]+/gu) ?? []
+  return words.length <= 3
+}
 
 /** 角色的固定稱呼（繁中、簡中、英文）。 */
 const ROLE_WORDS: ReadonlyArray<[RegExp, Route]> = [
@@ -150,6 +166,10 @@ export function routeByRules(rawText: string, context: RouteContext = {}): Route
   if (context.fixedSource) return ruleDecision('process', 'fixed_source', trimmed, context.roster)
   if (MULTI_INTENT.test(trimmed)) return ruleDecision('process', 'multi_intent', trimmed, context.roster)
   if (PREFERENCE_MARKERS.test(trimmed)) return ruleDecision('preference', 'preference_marker', trimmed, context.roster)
+  // 「是否已經實作」仍是查詢。「幫我安裝嗎」則是包成問句的指令。
+  if (QUERY_REQUEST.test(trimmed) && !/[幫帮]我|\bhelp me\b/i.test(trimmed)) return ruleDecision('query', 'intent_marker', trimmed, context.roster)
+  if (SCHEDULE_REQUEST.test(trimmed)) return ruleDecision('schedule', 'intent_marker', trimmed, context.roster)
+  if (ACTION_REQUEST.test(trimmed)) return ruleDecision('process', 'intent_marker', trimmed, context.roster)
   return null
 }
 
@@ -203,7 +223,7 @@ export interface EmbeddingModel {
 }
 
 export interface RouterOptions {
-  /** 沒有就只跑規則，其他都問 Scott。 */
+  /** 沒有模型則由規則分流，其餘可辨認的指令交給指揮官。 */
   model?: EmbeddingModel
   exemplars?: Exemplars
   threshold?: number
@@ -250,18 +270,21 @@ export function createRouter(options: RouterOptions = {}): Router {
       if (rule) return rule
       const text = rawText.trim()
       if (!text) return ask(text, 'empty')
+      if (isFragment(text)) return ask(text, 'fragment')
+      const fallback = (reason: 'low_confidence' | 'model_unavailable', extra: Partial<RouteDecision> = {}) =>
+        ruleDecision('process', reason, text, context.roster, { confidence: 0, layer: 'fallback', ...extra })
       const model = options.model
-      if (!model) return ask(text, 'model_unavailable')
+      if (!model) return fallback('model_unavailable')
       try {
-        if (!await model.available()) return ask(text, 'model_unavailable')
+        if (!await model.available()) return fallback('model_unavailable')
         const [byRoute, [vector]] = await Promise.all([vectorsOfExemplars(model), model.embed([text])])
         const scores = routeScores(vector, byRoute)
         const { route, confidence } = pickRoute(scores, temperature)
-        if (confidence < threshold) return ask(text, 'low_confidence', { confidence, suggestion: route, scores })
+        if (!Number.isFinite(confidence) || confidence < threshold) return fallback('low_confidence', { confidence, suggestion: route, scores })
         return { route, target: defaultTarget(route, context.roster), confidence, layer: 'model', reason: 'model', text, scores }
       } catch (error) {
-        console.warn('[router] local model unavailable, asking Scott:', error)
-        return ask(text, 'model_unavailable')
+        console.warn('[router] local model unavailable, sending to commander:', error)
+        return fallback('model_unavailable')
       }
     },
   }

@@ -76,6 +76,34 @@ export function externalAudioSource(memo: { markId: number, transcript: string, 
   }
 }
 
+export interface RecordDialogAttachmentRequest { fromRecordDialog?: boolean }
+
+/** 其他快捷鍵和工具列仍走原本的記錄流程。 */
+export function isRecordDialogAttachment(request: unknown): boolean {
+  return (request as RecordDialogAttachmentRequest | null | undefined)?.fromRecordDialog === true
+}
+
+export interface RecordAttachment {
+  markId: number
+  type: 'scan' | 'image' | 'file'
+  path: string
+  title: string
+  collectedAt?: number
+}
+
+/** 原檔和記錄共用一個 id，避免資料源與記錄在工作台重複顯示。 */
+export function recordAttachmentSource(attachment: RecordAttachment): NewSourceInput {
+  return {
+    id: recordSourceId(attachment.markId),
+    sourceType: 'external',
+    kind: attachment.type === 'scan' ? 'screenshot' : attachment.type === 'image' ? 'inserted_image' : 'file',
+    content: attachment.title,
+    origin: attachment.path,
+    collector: 'scott',
+    collectedAt: attachment.collectedAt,
+  }
+}
+
 /** 每日筆記條目：今天頁快速新增寫進每日筆記的一行；來處是那份每日筆記。同一份筆記同一刻只會有一則（id 含寫入時間）。 */
 export function dailyEntrySource(entry: { path: string, text: string, at: number }): AutoSourceInput | undefined {
   const content = entry.text.trim()

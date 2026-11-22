@@ -1,5 +1,6 @@
 import { getAgentSettings, recordAgentToolRefusal } from '@/db/agents'
 import { loadAgentMemoryPrompt } from '@/db/agent-memory'
+import { rememberCompletedRoleWork } from '@/lib/agent-memory/runtime'
 import { AgentRuntime } from '@/lib/agent/runtime'
 import type { AgentTool } from '@/lib/agent/types'
 import { buildBackgroundTools, type DraftSink } from '@/lib/agent-tasks/draft-tools'
@@ -134,6 +135,16 @@ export function createAgentRunner(kind: AgentRunnerKind): TaskRunner {
       })
       if (result.stopped && !signal.aborted) throw new Error('AGENT_RUN_STOPPED')
       if (!result.content.trim() && !draftSink.drafts().length && !signal.aborted) throw new Error('AGENT_NO_RESULT')
+      if (!result.stopped && !signal.aborted) {
+        await rememberCompletedRoleWork(agent, {
+          request: task.prompt,
+          result: result.content || draftSink.drafts().map(change => change.summary).join('\n'),
+          reference: `task:${task.id}`,
+          conversationId: task.conversationId,
+          // Background task prompts may come from a schedule or another agent.
+          signal,
+        })
+      }
       return { result: result.content }
     } finally {
       signal.removeEventListener('abort', stop)

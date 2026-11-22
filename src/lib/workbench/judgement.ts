@@ -105,7 +105,15 @@ export interface JudgeModel {
   readonly config?: { judgeModel: string }
 }
 
+export function attachmentKind(kind: string): 'image' | 'file' | undefined {
+  if (kind === 'screenshot' || kind === 'inserted_image') return 'image'
+  if (kind === 'file') return 'file'
+  return undefined
+}
+
 export interface JudgeDeps {
+  /** 附件先顯示可確認的類型，等使用者決定後才讀取原檔。 */
+  attachmentLabel?: string
   /** 沒有就當本機模型無法使用。 */
   model?: JudgeModel
   /** 抓網頁內文（連結用）；失敗就丟錯。 */
@@ -131,6 +139,9 @@ export async function judgeSource(source: Pick<Source, 'id' | 'kind' | 'content'
     }
     return judgement
   }
+
+  const attachment = attachmentKind(source.kind)
+  if (attachment) return finish({ ...base, status: 'ready', type: deps.attachmentLabel ?? attachment })
 
   let text = source.content
   if (source.kind === 'link') {

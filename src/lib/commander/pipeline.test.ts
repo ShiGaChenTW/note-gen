@@ -150,6 +150,19 @@ describe('analyzeSource', () => {
     expect(batches[0].conversationId).toBe(42)
   })
 
+  it('hands completed work to the commander and the partners who authored drafts', async () => {
+    const sources = memorySources([src('s1', { content: '新官網是本週重點' })])
+    const { deps: d } = deps(sources, fakeModel(MEETING))
+    const rememberWork = vi.fn(async () => { expect(sources.history.at(-1)).toEqual(['s1', 'analyzed']) })
+    d.rememberWork = rememberWork
+    await analyzeSource('s1', d)
+    for (const role of ['commander', 'secretary', 'expert']) {
+      expect(rememberWork).toHaveBeenCalledWith(expect.objectContaining({ role }), expect.objectContaining({
+        reference: 'source:s1', request: '新官網是本週重點', fromScott: true,
+      }))
+    }
+  })
+
   it('外部擷取的資料源（A5）還在等 Scott 決定：跳過，不轉文字、不呼叫模型、狀態不變', async () => {
     const external = src('e1', { sourceType: 'external', kind: 'image', content: '/tmp/shot.png' })
     const sources = memorySources([external])
