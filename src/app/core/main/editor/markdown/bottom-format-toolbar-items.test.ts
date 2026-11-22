@@ -1,7 +1,9 @@
 // almanac ALMNC-54.17：V3 底部格式列——項目、亮起狀態與快捷鍵顯示。
 import { describe, expect, it } from 'vitest'
 import { editorShortcutDefinitions } from '@/config/editor-shortcuts'
-import { BOTTOM_TOOLBAR_GROUPS, BOTTOM_TOOLBAR_MORE, activeToolbarItems, formatShortcutLabel } from './bottom-format-toolbar-items'
+import {
+  BOTTOM_TOOLBAR_GROUPS, BOTTOM_TOOLBAR_MORE, activeToolbarItems, bottomToolbarState, formatShortcutLabel, sameBottomToolbarState,
+} from './bottom-format-toolbar-items'
 
 describe('bottom toolbar items', () => {
   it('follows the reference layout and keeps less-used blocks in the more menu', () => {
@@ -36,6 +38,27 @@ describe('activeToolbarItems', () => {
     for (const id of ['table', 'image', 'attachment', 'horizontalRule', 'clearFormatting'] as const) {
       expect(active.has(id)).toBe(false)
     }
+  })
+})
+
+// ALMNC-56.2 P04：useEditorState 只在這份狀態變了才重繪格式列。
+describe('bottomToolbarState', () => {
+  it('lists lit items in definition order with the current colors', () => {
+    const on = new Set(['link', 'bold', 'highlight'])
+    const state = bottomToolbarState(name => on.has(name), mark => (mark === 'highlight' ? '#fde68a' : undefined))
+    expect(state).toEqual({ active: ['bold', 'highlight', 'link'], highlightColor: '#fde68a', textColor: '' })
+  })
+
+  it('treats equal content as unchanged and any lit, unlit or color change as changed', () => {
+    const base = { active: ['bold', 'link'] as const, highlightColor: '', textColor: '' }
+    const copy = () => ({ ...base, active: [...base.active] })
+    expect(sameBottomToolbarState(copy(), copy())).toBe(true)
+    expect(sameBottomToolbarState(copy(), { ...copy(), active: ['bold'] })).toBe(false)
+    expect(sameBottomToolbarState(copy(), { ...copy(), active: ['bold', 'italic'] })).toBe(false)
+    expect(sameBottomToolbarState(copy(), { ...copy(), textColor: '#b91c1c' })).toBe(false)
+    expect(sameBottomToolbarState(copy(), { ...copy(), highlightColor: '#fde68a' })).toBe(false)
+    expect(sameBottomToolbarState(null, copy())).toBe(false)
+    expect(sameBottomToolbarState(null, null)).toBe(true)
   })
 })
 

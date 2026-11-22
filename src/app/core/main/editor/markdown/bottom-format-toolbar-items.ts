@@ -68,6 +68,34 @@ export function activeToolbarItems(isActive: IsActive): Set<BottomToolbarItemId>
   return active
 }
 
+/**
+ * Fork（almanac ALMNC-56.2 P04）：格式列重繪只看這份狀態——亮起的項目（含「更多」裡的），以及顏色鈕底下色條要顯示的顏色。
+ * 打字時這份狀態通常不變，useEditorState 用 sameBottomToolbarState 比對，不變就不重繪整列。
+ */
+export interface BottomToolbarState {
+  /** 亮起的項目 id，依定義順序 */
+  active: BottomToolbarItemId[]
+  highlightColor: string
+  textColor: string
+}
+
+export function bottomToolbarState(isActive: IsActive, colorOf: (mark: 'highlight' | 'textColor') => unknown): BottomToolbarState {
+  const color = (mark: 'highlight' | 'textColor') => {
+    const value = colorOf(mark)
+    return typeof value === 'string' ? value : ''
+  }
+  return { active: [...activeToolbarItems(isActive)], highlightColor: color('highlight'), textColor: color('textColor') }
+}
+
+export function sameBottomToolbarState(a: BottomToolbarState | null, b: BottomToolbarState | null): boolean {
+  if (a === b) return true
+  if (!a || !b) return false
+  return a.highlightColor === b.highlightColor
+    && a.textColor === b.textColor
+    && a.active.length === b.active.length
+    && a.active.every((id, index) => id === b.active[index])
+}
+
 /** 快捷鍵顯示成 macOS 的符號（⌘⇧⌥⌃），其他平台用 Ctrl+／Shift+／Alt+。空字串代表沒有快捷鍵。 */
 export function formatShortcutLabel(shortcut: string, mac: boolean): string {
   if (!shortcut) return ''

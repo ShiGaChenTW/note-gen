@@ -2225,3 +2225,9 @@
 .editor-scroll-container[data-bottom-format-toolbar] .ProseMirror {
   padding-bottom: 96px;
 }
+
+/* Fork（almanac ALMNC-56.2 A03）：瀏覽器自己捲動（scrollIntoView、焦點移動）時也把底部 64 px 讓給格式列；
+   ProseMirror 打字時的捲動由 bottom-format-toolbar.tsx 設的 scrollMargin 負責。 */
+.editor-scroll-container[data-bottom-format-toolbar] {
+  scroll-padding-bottom: 64px;
+}

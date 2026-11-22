@@ -5,9 +5,13 @@
 // 指令都沿用既有的：格式與區塊用 TipTap 指令、顏色用 ColorMenu（同 bubble menu）、圖片走編輯器的 insertImageAtSelection、
 // 連結打開 bubble menu 的連結輸入、附件用斜線指令「檔案」同一套產生連結的方法。按鈕不搶編輯器焦點與選取範圍。
 // ALMNC-56.2：
+// - A03：列開著時給 ProseMirror scrollThreshold／scrollMargin（下方 64 px），打字、換行時游標行一進到列的範圍就捲到列的上方；
+//   style.css 另給捲動容器 scroll-padding-bottom。
+// - P04：亮起狀態用 useEditorState 加比對函式取得，打字時狀態不變就不重繪整列。
 // - A11：整列只佔一個 Tab 停靠點，左右鍵在列內移動（components/v3/toolbar，和右上筆記工具列同一套）。
-import { useEffect, useReducer, useRef, useState, type ComponentType, type MouseEvent, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ComponentType, type MouseEvent, type ReactNode } from 'react'
 import type { Editor } from '@tiptap/core'
+import { useEditorState } from '@tiptap/react'
 import {
   Bold, CheckSquare, Code, Code2, Eraser, Heading1, Heading2, Heading3, ImagePlus, Italic, Link2, List, ListOrdered,
   Minus, MoreVertical, Paperclip, Quote, Strikethrough, Table2, Underline,
@@ -25,7 +29,7 @@ import useEditorShortcutStore from '@/stores/editor-shortcut'
 import { ColorMenu } from './color-menu'
 import { createMarkdownLinksForFilePaths } from './slash-command/suggestion'
 import {
-  BOTTOM_TOOLBAR_GROUPS, BOTTOM_TOOLBAR_MORE, activeToolbarItems, formatShortcutLabel,
+  BOTTOM_TOOLBAR_GROUPS, BOTTOM_TOOLBAR_MORE, bottomToolbarState, formatShortcutLabel, sameBottomToolbarState,
   type BottomToolbarItem, type BottomToolbarItemId,
 } from './bottom-format-toolbar-items'
 
@@ -40,6 +44,15 @@ const ICONS: Partial<Record<BottomToolbarItemId, ComponentType<{ className?: str
 
 const BUTTON = 'grid size-7 shrink-0 cursor-pointer place-items-center rounded-full text-muted-ink outline-none transition-colors duration-100 hover:bg-hover hover:text-ink focus-visible:ring-1 focus-visible:ring-ink/60 disabled:cursor-not-allowed disabled:opacity-40 [&_svg]:size-4'
 
+/**
+ * 列顯示時給 ProseMirror 的捲動設定（A03）。列底距 16 px＋列高 36 px＝52 px，下方讓出 64 px：
+ * - scrollThreshold：游標行進到離底 64 px 內就捲動（預設 0，要碰到底才捲，列底下那段會被蓋住）。
+ * - scrollMargin：捲動後游標行停在離底 64 px 處，也就是列上方約 12 px。
+ * 其他三邊維持 ProseMirror 預設（threshold 0、margin 5 px）。
+ */
+export const BOTTOM_TOOLBAR_SCROLL_THRESHOLD = { top: 0, right: 0, bottom: 64, left: 0 }
+export const BOTTOM_TOOLBAR_SCROLL_MARGIN = { top: 5, right: 5, bottom: 64, left: 5 }
+
 /** 不讓按下按鈕時編輯器失焦、選取範圍消失（同 bubble menu 的做法）。 */
 const keepEditorFocus = (event: MouseEvent) => event.preventDefault()
 
@@ -51,15 +64,17 @@ function useIsMac() {
   return mac
 }
 
-/** 編輯器每次交易（打字、移動游標）都重畫，亮起狀態才會跟著變。 */
-function useEditorRevision(editor: Editor) {
-  const [, bump] = useReducer((value: number) => value + 1, 0)
+/** 列開著時把捲動設定交給編輯器，收起或換編輯器時還原（A03）。 */
+function useToolbarScrollMargin(editor: Editor) {
   useEffect(() => {
-    editor.on('transaction', bump)
-    editor.on('selectionUpdate', bump)
+    if (editor.isDestroyed) return
+    const { scrollThreshold, scrollMargin } = editor.options.editorProps ?? {}
+    editor.setOptions({
+      editorProps: { ...editor.options.editorProps, scrollThreshold: BOTTOM_TOOLBAR_SCROLL_THRESHOLD, scrollMargin: BOTTOM_TOOLBAR_SCROLL_MARGIN },
+    })
     return () => {
-      editor.off('transaction', bump)
-      editor.off('selectionUpdate', bump)
+      if (editor.isDestroyed) return
+      editor.setOptions({ editorProps: { ...editor.options.editorProps, scrollThreshold, scrollMargin } })
     }
   }, [editor])
 }
@@ -89,15 +104,23 @@ export function BottomFormatToolbar({ editor, onInsertImage, onOpenLink }: {
   onInsertImage: () => void
   onOpenLink: () => void
 }) {
-  useEditorRevision(editor)
+  useToolbarScrollMargin(editor)
   const rootRef = useRef<HTMLDivElement>(null)
   const roving = useRovingToolbar(rootRef)
+  const toolbarState = useEditorState({
+    editor,
+    selector: ({ editor: current }) => bottomToolbarState(
+      (name, attrs) => current.isActive(name, attrs),
+      mark => current.getAttributes(mark).color,
+    ),
+    equalityFn: sameBottomToolbarState,
+  })
+  const active = useMemo(() => new Set(toolbarState.active), [toolbarState])
   const t = useTranslations('settings.shortcuts.editorShortcuts.commands')
   const tEditor = useTranslations('editor')
   const tToolbar = useTranslations('editor.bottomToolbar')
   const shortcuts = useEditorShortcutStore(state => state.shortcuts)
   const mac = useIsMac()
-  const active = activeToolbarItems((name, attrs) => editor.isActive(name, attrs))
 
   const shortcutOf = (item: BottomToolbarItem) => {
     if (!item.shortcut) return ''
