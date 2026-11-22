@@ -5,6 +5,7 @@ import { useUiV3 } from "@/lib/fork-ui"
 import { useWorkspaceCovered } from "@/lib/fork-overlays/use-page-visibility"
 import { LeftSidebar } from "./left-sidebar"
 import { EditorLayout } from './editor/editor-layout'
+import { NoteListColumn } from './note-list/note-list-column'
 import { PluginRightSidebar } from '@/components/plugins/plugin-right-sidebar'
 import dynamic from 'next/dynamic'
 import { useSidebarStore } from "@/stores/sidebar"
@@ -288,7 +289,14 @@ function ResizableWrapper() {
         collapsedSize="0%"
       >
         <WorkspaceCoveredContext.Provider value={workspaceCovered}>
-          <EditorLayout />
+          {/* Fork（almanac ALMNC-54.17）：V3「我的筆記」三欄——筆記清單在編輯器左邊；沒開清單（與 classic）時只有編輯器。
+              外框兩種介面都套，切換介面時 EditorLayout 不會被重新掛載。 */}
+          <div className="flex h-full w-full min-h-0 min-w-0 flex-1">
+            <NoteListColumn />
+            <div className="flex h-full min-h-0 min-w-0 flex-1">
+              <EditorLayout />
+            </div>
+          </div>
         </WorkspaceCoveredContext.Provider>
       </ResizablePanel>
     )

@@ -285,6 +285,11 @@
   padding: 0;
 }
 
+/* Fork（almanac ALMNC-54.16）：V3 標題欄位下方的內文從 12px 起，不再空一大段（左右對齊寫在元件的 class）。 */
+.tiptap-editor [data-doc-title] ~ * .ProseMirror {
+  padding-top: 12px;
+}
+
 .record-detail-markdown-editor .ProseMirror,
 .record-detail-markdown-editor .ProseMirror a {
   overflow-wrap: anywhere;
@@ -2213,4 +2218,10 @@
 .tiptap-editor .agent-diff-navigation-bar [data-slot="button"]:hover {
   color: inherit;
   background: hsl(var(--background) / 0.2);
+}
+
+/* Fork（almanac ALMNC-54.17）：V3 底部浮動格式列開著時，內文底部多留空間，最後幾行能捲到列的上方、不被蓋住。 */
+.editor-scroll-container[data-bottom-format-toolbar] .tiptap-editor .ProseMirror,
+.editor-scroll-container[data-bottom-format-toolbar] .ProseMirror {
+  padding-bottom: 96px;
 }

@@ -18,6 +18,7 @@ import { Store } from '@tauri-apps/plugin-store'
 import { useShallow } from 'zustand/react/shallow'
 import useSettingStore, { useSettingsHydrationStore } from '@/stores/setting'
 import { useSidebarStore } from '@/stores/sidebar'
+import { useActiveNoteEditorStore } from '@/stores/active-note-editor'
 import {
   editorPathsReferToSameFile,
   getCurrentEditorWorkspaceRoot,
@@ -237,6 +238,19 @@ export function MdEditor({ tabContentsRef, filePath, isActive, disabled = false 
       return next
     })
   }, [filePath, workspacePath, outlinePlacement, settingsReady, sidebarOutlineOpen])
+
+  // Fork（almanac）：V3 編輯區右上角的筆記工具列在編輯器外面，使用中的這篇把編輯器實例與大綱開關登記給它
+  // （標籤、筆記資訊讀寫這個編輯器；大綱按鈕走跟狀態列「大綱」同一個 handleToggleOutline）。
+  const effectiveOutlineOpen = settingsReady && (outlinePlacement === 'sidebar' ? sidebarOutlineOpen : outlineOpen)
+  useEffect(() => {
+    if (!isActive || !filePath || !editorReady || !editorInstance) return
+    return useActiveNoteEditorStore.getState().register({
+      editor: editorInstance,
+      path: filePath,
+      outlineOpen: effectiveOutlineOpen,
+      toggleOutline: handleToggleOutline,
+    })
+  }, [editorInstance, editorReady, effectiveOutlineOpen, filePath, handleToggleOutline, isActive])
 
   const handleOutlineWidthChange = useCallback((width: number) => {
     setOutlineWidth(normalizeOutlineWidth(width))
@@ -524,7 +538,7 @@ export function MdEditor({ tabContentsRef, filePath, isActive, disabled = false 
         placeholder={tEditor('placeholder')}
         activeFilePath={filePath}
         onEditorReady={handleEditorReady}
-        outlineOpen={settingsReady && (outlinePlacement === 'sidebar' ? sidebarOutlineOpen : outlineOpen)}
+        outlineOpen={effectiveOutlineOpen}
         outlinePosition={outlinePosition}
         outlineWidth={outlineWidth}
         outlineInLayout

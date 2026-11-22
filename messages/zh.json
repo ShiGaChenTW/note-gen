@@ -6840,6 +6840,33 @@
     "description": "点击选择记录工具，快速创建记录"
   },
   "editor": {
+    "bottomToolbar": {
+      "label": "格式工具栏",
+      "more": "更多格式"
+    },
+    "noteToolbar": {
+      "label": "笔记工具栏",
+      "back": "返回",
+      "forward": "前进",
+      "find": "在笔记中查找",
+      "tags": "标签",
+      "noTags": "还没有标签",
+      "addTag": "添加标签，按 Enter",
+      "removeTag": "移除 {tag}",
+      "tagsReadOnly": "标签格式较复杂，请在属性卡片的源码中修改",
+      "pin": "置顶",
+      "unpin": "取消置顶",
+      "favorite": "收藏",
+      "unfavorite": "取消收藏",
+      "info": "笔记信息",
+      "infoFileName": "文件名",
+      "infoFolder": "文件夹",
+      "infoCreated": "创建时间",
+      "infoModified": "修改时间",
+      "infoLength": "字数",
+      "command": "命令面板",
+      "more": "更多"
+    },
     "statusBar": {
       "documentActions": {
         "copy": "复制",
@@ -8541,6 +8568,10 @@
       "addFirst": "新增第一位代理人"
     },
     "vault": "我的笔记",
+    "noteList": {
+      "label": "「{folder}」的笔记列表",
+      "empty": "这个文件夹还没有笔记"
+    },
     "rules": {
       "label": "规则",
       "text": "代理人只能提案；写入一律经过工作台。"

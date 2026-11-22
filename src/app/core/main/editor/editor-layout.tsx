@@ -43,6 +43,9 @@ import {
 import { Button } from '@/components/ui/button'
 import { MdEditor } from './markdown/md-editor-wrapper'
 import { TabBar, type TabInfo } from './tab-bar'
+import { useUiV3 } from '@/lib/fork-ui'
+import { EditorNoteToolbar } from './editor-note-toolbar'
+import { collapseToSingleDocument } from './single-document'
 import { BrowserPanel } from './browser-panel'
 import { ImageEditor } from './image/image-editor'
 import { EmptyState } from './empty-state'
@@ -231,6 +234,7 @@ interface EditorGroupPaneProps {
   onRestartPluginTab: (tabId: string) => void
   onToggleMaximize: (groupId: string) => void
   onCloseGroup: (groupId: string) => void
+  onNavigateHistory: (direction: 'back' | 'forward') => void
   renderActiveContent: (tab: TabInfo, active: boolean, groupId: string) => React.ReactNode
   renderEmpty: (mode: 'new-tab' | 'empty-group', enableShortcuts?: boolean) => React.ReactNode
 }
@@ -238,7 +242,7 @@ interface EditorGroupPaneProps {
 function EditorGroupPane({
   group, tabs, activeLayout, dragging, onActivateGroup, onNewTab, onNewBrowser, onCloseTab,
   onKeepTabs, onSplitTab, onMoveToNewWindow, onPinTab, onUnpinTab, onRestartPluginTab,
-  onToggleMaximize, onCloseGroup,
+  onToggleMaximize, onCloseGroup, onNavigateHistory,
   renderActiveContent, renderEmpty,
 }: EditorGroupPaneProps) {
   const tCanvas = useTranslations('canvas')
@@ -251,12 +255,20 @@ function EditorGroupPane({
     .filter((tab): tab is TabInfo => Boolean(tab))
   const activeTab = groupTabs.find(tab => tab.id === group.activeTabId)
   const isActiveGroup = activeLayout.activeGroupId === group.id
+  // Fork（almanac ALMNC-54.17）：V3 一次只開一篇，不顯示分頁列；編輯區右上角改放筆記工具列（返回／前進、筆記操作、復原／重做）。
+  const isV3 = useUiV3()
 
   return (
     <section
       className={cn('relative flex h-full w-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background', isActiveGroup && 'editor-group-active')}
     >
-      <TabBar
+      {isV3 ? <EditorNoteToolbar
+        activeTab={activeTab}
+        isActiveGroup={isActiveGroup}
+        canGoBack={Boolean(getEditorBackNavigationTarget(activeLayout))}
+        canGoForward={Boolean(getEditorForwardNavigationTarget(activeLayout))}
+        onNavigate={onNavigateHistory}
+      /> : <TabBar
         groupId={group.id}
         tabs={groupTabs}
         activeTabId={group.activeTabId}
@@ -287,7 +299,7 @@ function EditorGroupPane({
         onToggleMaximize={() => onToggleMaximize(group.id)}
         canCloseGroup={!groupTabs.some(tab => tab.pinned)}
         onCloseGroup={() => onCloseGroup(group.id)}
-      />
+      />}
       <div className="relative flex min-h-0 flex-1" onPointerDownCapture={() => onActivateGroup(group.id, group.activeTabId)}>
         {groupTabs.map(tab => (
           <div
@@ -1080,6 +1092,44 @@ export function EditorLayout() {
     }
   }, [openTabs, removeTab])
 
+  // Fork（almanac ALMNC-54.17）：V3 一次只開一篇。開新檔仍走原本「加一頁」的流程，這裡再把其他分頁收掉，
+  // 等於取代目前這篇；剛切到 V3 時留下的舊分頁、分割窗格也一併收成一個。被收掉的都是背景分頁——
+  // 切走時已經過 prepareActiveEditorDeactivation 存檔，保險起見再把它們還沒寫完的存檔推出去（存檔佇列與分頁無關，關分頁不會丟）。
+  const isV3 = useUiV3()
+  const singleDocumentActivationRef = useRef('')
+  useEffect(() => {
+    if (!isV3 || !layoutReady) return
+    const current = layoutRef.current
+    const { layout: next, removedTabIds } = collapseToSingleDocument(current, activeTabId)
+    if (next === current) return
+    // 先等 activeFilePath 跟留下的那頁一致再收：
+    // - 剛開檔、新分頁還沒加進來（activeFilePath 沒有對應分頁）→ 等開檔流程加完。
+    // - 直接 addTab 的記錄／畫布分頁不會改 activeFilePath，它還指著舊檔 → 先切到留下的那頁，
+    //   否則舊檔分頁一收，開檔流程會因為 activeFilePath 沒分頁而把它加回來，反把新分頁擠掉。
+    const keptGroup = next.groups[next.activeGroupId]
+    const keptTab = openTabs.find(tab => tab.id === keptGroup?.activeTabId)
+    if (keptTab) {
+      const keptPath = isBlankEditorTab(keptTab) || isRecordEditorTab(keptTab) || isCanvasEditorTab(keptTab) || isPluginEditorTab(keptTab) || isBrowserEditorTab(keptTab)
+        ? ''
+        : keptTab.path
+      if (activeFilePath !== keptPath) {
+        if (activeFilePath && !openTabs.some(tab => tab.path === activeFilePath)) return
+        // 同一個狀態只試一次，切換被擋下（路徑鎖定、換工作區中）時不會一直重試。
+        const attempt = `${keptTab.id}\n${activeFilePath}`
+        if (singleDocumentActivationRef.current === attempt) return
+        singleDocumentActivationRef.current = attempt
+        void activateTab(next.activeGroupId, keptTab, { deactivationAlreadyPrepared: true })
+        return
+      }
+    }
+    setLayout(next)
+    if (removedTabIds.length === 0) return
+    const removed = new Set(removedTabIds)
+    const paths = openTabs.filter(tab => removed.has(tab.id) && tab.path).map(tab => tab.path)
+    if (paths.length) void useArticleStore.getState().flushPendingArticleSavesForPaths(paths).catch(() => undefined)
+    removedTabIds.forEach(tabId => removeGlobalTabIfUnused(next, tabId))
+  }, [activateTab, activeFilePath, activeTabId, isBlankEditorTab, isBrowserEditorTab, isCanvasEditorTab, isPluginEditorTab, isRecordEditorTab, isV3, layout, layoutReady, openTabs, removeGlobalTabIfUnused, setLayout])
+
   const handleCloseTab = useCallback((groupId: string, tabId: string) => {
     const group = layoutRef.current.groups[groupId]
     if (!group) return
@@ -1777,6 +1827,15 @@ export function EditorLayout() {
     return () => window.removeEventListener('keydown', handleKeyDown, { capture: true })
   }, [handleActivateGroup, handleNavigateHistory, handleSplitTab])
 
+  // Fork（almanac）：V3 筆記工具列的返回／前進按鈕，與上面 ⌘[／⌘] 走同一套瀏覽歷史（到頭時不動）。
+  const handleNavigateToolbarHistory = useCallback((direction: 'back' | 'forward') => {
+    const target = direction === 'back'
+      ? getEditorBackNavigationTarget(layoutRef.current)
+      : getEditorForwardNavigationTarget(layoutRef.current)
+    if (!target) return
+    void handleNavigateHistory(direction)
+  }, [handleNavigateHistory])
+
   const renderContentPanel = useCallback((tab: TabInfo, active: boolean, groupId: string) => {
     if (isBrowserEditorTab(tab)) {
       const visible = layout.groups[groupId]?.activeTabId === tab.id
@@ -1910,6 +1969,7 @@ export function EditorLayout() {
           onRestartPluginTab={handleRestartPluginTab}
           onToggleMaximize={handleToggleMaximize}
           onCloseGroup={handleCloseGroup}
+          onNavigateHistory={handleNavigateToolbarHistory}
           renderActiveContent={renderContentPanel}
           renderEmpty={renderEmpty}
         />
@@ -1945,7 +2005,7 @@ export function EditorLayout() {
         })}
       </ResizablePanelGroup>
     )
-  }, [dragging, handleActivateGroup, handleCloseGroup, handleCloseTab, handleKeepTabs, handleMoveToNewWindow, handleNewTab, handleNewBrowser, handlePinTab, handleRestartPluginTab, handleSplitTab, handleToggleMaximize, handleUnpinTab, layout, openTabs, renderContentPanel, renderEmpty, setLayout])
+  }, [dragging, handleActivateGroup, handleCloseGroup, handleCloseTab, handleKeepTabs, handleMoveToNewWindow, handleNewTab, handleNewBrowser, handlePinTab, handleRestartPluginTab, handleSplitTab, handleToggleMaximize, handleUnpinTab, handleNavigateToolbarHistory, layout, openTabs, renderContentPanel, renderEmpty, setLayout])
 
   if (!layoutReady) return <div className="flex h-full items-center justify-center text-sm text-muted-foreground">{tGroups('loadingLayout')}</div>
   const spotlightTitle = activeOnboardingStep ? tOnboarding(`spotlight.${activeOnboardingStep}.title`) : ''

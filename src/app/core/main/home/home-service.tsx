@@ -13,6 +13,7 @@ import { hideAllOverlays, hideWhen, linkExclusiveOverlays, toggleWorkspace } fro
 import { isUiV3, useUiModeStore } from '@/lib/fork-ui'
 import { useWeekOverlay } from '@/lib/week/overlay'
 import { useKnowledgeOverlay } from '@/lib/sidebar-v3/knowledge'
+import { useNoteListStore } from '@/lib/note-list/note-list'
 import { KnowledgeScreen } from '../sidebar-v3/knowledge-screen'
 import { SlotService } from '../week/slot-service'
 import { ReviewService } from '../review/review-service'
@@ -44,7 +45,9 @@ export function HomeService() {
 
   // Fork（almanac 段1）：全頁覆蓋層一次只開一個；切回 classic 時關掉 V3 專屬頁。
   useEffect(() => {
-    const v3Only = [useCollectStore, useDecideStore, useThreadsStore, useWeekOverlay, useKnowledgeOverlay]
+    // Fork（almanac ALMNC-54.17）：「我的筆記」中間欄也加入互斥——開其他頁就收起，開清單就回到編輯器。
+    // 它不在 ALL_OVERLAYS 裡：從檔案樹開檔、⌘⇧H 都不會收掉清單。
+    const v3Only = [useCollectStore, useDecideStore, useThreadsStore, useWeekOverlay, useKnowledgeOverlay, useNoteListStore]
     const unlink = linkExclusiveOverlays([useHomeStore, useInboxStore, usePromptLibraryStore, ...v3Only])
     const unsubscribeMode = useUiModeStore.subscribe(state => hideWhen(() => state.mode !== 'v3', v3Only))
     return () => {
