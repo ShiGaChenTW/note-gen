@@ -6905,6 +6905,10 @@
     "description": "點選選擇記錄工具，快速建立記錄"
   },
   "editor": {
+    "bottomToolbar": {
+      "label": "格式工具列",
+      "more": "更多格式"
+    },
     "statusBar": {
       "documentActions": {
         "copy": "複製",

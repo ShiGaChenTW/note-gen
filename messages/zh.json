@@ -6840,6 +6840,10 @@
     "description": "点击选择记录工具，快速创建记录"
   },
   "editor": {
+    "bottomToolbar": {
+      "label": "格式工具栏",
+      "more": "更多格式"
+    },
     "statusBar": {
       "documentActions": {
         "copy": "复制",

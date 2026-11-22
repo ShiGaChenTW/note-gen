@@ -6840,6 +6840,10 @@
     "description": "Click to select a recording tool and quickly create records"
   },
   "editor": {
+    "bottomToolbar": {
+      "label": "Formatting toolbar",
+      "more": "More formatting"
+    },
     "statusBar": {
       "documentActions": {
         "copy": "Copy",

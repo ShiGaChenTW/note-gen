@@ -123,6 +123,8 @@ import { buildMobileSelectionContext, getMobileContextPrimaryActions, isMobileSe
 import { MobileEditorContextBar } from './mobile-editor-context-bar'
 import { MobileEditorMoreSheet } from './mobile-editor-more-sheet'
 import { MobileWritingToolbar } from './mobile-writing-toolbar'
+import { BottomFormatToolbar } from './bottom-format-toolbar'
+import { useUiV3 } from '@/lib/fork-ui'
 import { shouldRestorePendingQuote } from './quote-session'
 import {
   DEFAULT_EDITOR_CONTENT_WIDTH,
@@ -2614,6 +2616,9 @@ export function TipTapEditor({
     || hasUnparsedSourceChanges
   ) ? 'source' : documentViewMode
   const isSourceView = effectiveViewMode === 'source'
+  // Fork（almanac ALMNC-54.17）：V3 桌面版主編輯器（所見即所得、可編輯）底部的浮動格式列。
+  const isV3 = useUiV3()
+  const showBottomFormatToolbar = isV3 && !isMobile && applyLayoutPreferences && scrollable && isActive && editable && effectiveViewMode === 'visual'
   useEffect(() => {
     if (!developerMode || !developerPerformanceInfo) return
     editorRenderStartedAtRef.current = performance.now()
@@ -8078,6 +8083,8 @@ export function TipTapEditor({
             isMobile && "mobile-under-dock-scroll mobile-writing-editor-scroll",
             isMobile && activeFilePath && isRestoringMobileView && "opacity-0"
           )}
+          // Fork（almanac ALMNC-54.17）：底部格式列開著時，style.css 給內文加底部留白，最後幾行能捲到列的上方。
+          data-bottom-format-toolbar={showBottomFormatToolbar ? 'true' : undefined}
           onScroll={handleEditorScroll}
           onDragEnter={effectiveViewMode === 'visual' ? handleEditorDragOver : undefined}
           onDragOver={effectiveViewMode === 'visual' ? handleEditorDragOver : undefined}
@@ -8294,6 +8301,13 @@ export function TipTapEditor({
         ) : null}
         {isActive && effectiveViewMode === 'visual' ? (
           <TableScrollbar editor={editor} scrollContainerRef={scrollContainerRef} />
+        ) : null}
+        {showBottomFormatToolbar && editor ? (
+          <BottomFormatToolbar
+            editor={editor}
+            onInsertImage={() => void insertImageAtSelection()}
+            onOpenLink={() => setOpenLinkInputSignal(value => value + 1)}
+          />
         ) : null}
       </div>
 

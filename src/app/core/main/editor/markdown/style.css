@@ -2220,3 +2220,8 @@
   background: hsl(var(--background) / 0.2);
 }
 
+/* Fork（almanac ALMNC-54.17）：V3 底部浮動格式列開著時，內文底部多留空間，最後幾行能捲到列的上方、不被蓋住。 */
+.editor-scroll-container[data-bottom-format-toolbar] .tiptap-editor .ProseMirror,
+.editor-scroll-container[data-bottom-format-toolbar] .ProseMirror {
+  padding-bottom: 96px;
+}
