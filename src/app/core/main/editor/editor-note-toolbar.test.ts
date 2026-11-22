@@ -124,10 +124,50 @@ it('shows the four groups for a markdown note, in order, with shortcuts in the l
   expect(labels()).toEqual([
     '返回 (⌘[)', '前進 (⌘])',
     '在筆記中尋找 (⌘F)', '標籤', '置頂', '收藏',
-    '開啟大綱 (⇧⌘O)', '版本歷史', '筆記資訊', '命令面板 (⌘K)',
+    '開啟大綱 (⇧⌘O)', '版本歷史', '筆記資訊', '命令面板 (⌘K，編輯器外)',
     '復原 (⌘Z)', '重做 (⌘Shift+Z)',
   ])
   expect(host.querySelectorAll('[data-testid="editor-note-toolbar"] > span[aria-hidden]')).toHaveLength(3)
+})
+
+// ALMNC-56.2 A11：整列只有一個 Tab 停靠點，左右鍵在列內移動（跳過停用的「前進」）。
+it('is a single tab stop with arrow-key movement', async () => {
+  await render()
+  const toolbar = host.querySelector<HTMLElement>('[data-testid="editor-note-toolbar"]')!
+  expect(toolbar.getAttribute('role')).toBe('toolbar')
+  expect(toolbarButtons().filter(item => item.tabIndex === 0).map(item => item.getAttribute('aria-label'))).toEqual(['返回 (⌘[)'])
+  const press = async (key: string) => {
+    const target = document.activeElement as HTMLElement
+    await act(async () => { target.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true })) })
+  }
+  await act(async () => button('返回').focus())
+  await press('ArrowRight')
+  expect(document.activeElement).toBe(button('在筆記中尋找'))
+  expect(button('在筆記中尋找').tabIndex).toBe(0)
+  expect(button('返回').tabIndex).toBe(-1)
+  // 沒有編輯器時復原／重做是停用的，End 停在最後一顆可用的按鈕
+  await press('End')
+  expect(document.activeElement).toBe(button('命令面板'))
+  await press('ArrowRight')
+  expect(document.activeElement).toBe(button('返回'))
+})
+
+// ALMNC-56.2 A09：⌘K 在編輯器裡是插入連結，提示註明只在編輯器外有效；按鈕本身照樣打開命令面板。
+it('labels the command palette shortcut as outside the editor, also in the narrow more menu', async () => {
+  await render()
+  expect(button('命令面板').getAttribute('aria-label')).toBe('命令面板 (⌘K，編輯器外)')
+  observedWidth = 600
+  await act(async () => root.unmount())
+  root = createRoot(host)
+  await render()
+  const more = button('更多')
+  await act(async () => {
+    more.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerType: 'mouse' }))
+  })
+  const item = [...document.querySelectorAll('[role="menuitem"]')].find(entry => entry.textContent?.startsWith('命令面板'))
+  expect(item?.textContent).toBe('命令面板⌘K，編輯器外')
+  await act(async () => (item as HTMLElement).click())
+  expect(useAnywhereStore.getState().paletteOpen).toBe(true)
 })
 
 it('wires navigation, find, version history and the command palette to the existing mechanisms', async () => {
@@ -199,6 +239,8 @@ it('adds and removes tags in the existing frontmatter', async () => {
   await typeAndEnter(input, '#b')
   expect(editor.state.doc.firstChild?.attrs.raw).toBe('---\ntitle: A\ntags:\n  - a\n  - b\n---\n')
   expect(input.value).toBe('')
+  // A10：移除鈕的點擊範圍 20 px（size-5）
+  expect(document.querySelector<HTMLButtonElement>('button[aria-label="移除 a"]')!.className).toContain('size-5')
   await act(async () => document.querySelector<HTMLButtonElement>('button[aria-label="移除 a"]')!.click())
   expect(editor.state.doc.firstChild?.attrs.raw).toBe('---\ntitle: A\ntags:\n  - b\n---\n')
 })
@@ -231,7 +273,7 @@ it('shows file name, folder, times and length in the note info popover', async (
 
 it('keeps only navigation, the command palette and undo/redo for canvas tabs', async () => {
   await render({ activeTab: { id: 'c', path: 'canvas://1', name: 'Board', isFolder: false, kind: 'canvas', canvasId: '1' } })
-  expect(labels()).toEqual(['返回 (⌘[)', '前進 (⌘])', '命令面板 (⌘K)', '復原 (⌘Z)', '重做 (⌘Shift+Z)'])
+  expect(labels()).toEqual(['返回 (⌘[)', '前進 (⌘])', '命令面板 (⌘K，編輯器外)', '復原 (⌘Z)', '重做 (⌘Shift+Z)'])
 })
 
 it('hides the toolbar for record tabs and outside the active group', async () => {
@@ -250,6 +292,6 @@ it('collapses the third and fourth groups into a more menu on narrow editors', a
 it('hides only undo/redo when the undo/redo setting is off', async () => {
   useSettingStore.setState({ showEditorUndoRedo: false })
   await render()
-  expect(labels().at(-1)).toBe('命令面板 (⌘K)')
+  expect(labels().at(-1)).toBe('命令面板 (⌘K，編輯器外)')
   expect(labels()).toHaveLength(10)
 })

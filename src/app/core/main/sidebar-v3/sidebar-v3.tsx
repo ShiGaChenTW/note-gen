@@ -88,14 +88,16 @@ function SectionHeader({ section, collapsed, title, aside, actions, onTitleClick
   onTitleClick?: () => void
   titleActive?: boolean
 }) {
+  const t = useTranslations('sidebarV3')
   const toggle = useSidebarCollapse(state => state.toggle)
   if (onTitleClick) {
+    // ALMNC-56.2 A08：箭頭鈕的讀屏名稱是「收合／展開＋標題」，和開清單的標題鈕分得出來。
     return (
       <div className="group/section relative flex items-center">
         <button
           type="button"
           aria-expanded={!collapsed}
-          aria-label={title}
+          aria-label={t(collapsed ? 'expandSection' : 'collapseSection', { title })}
           onClick={() => void toggle(section)}
           className="grid size-6 shrink-0 cursor-pointer place-items-center rounded-md text-muted-ink outline-none hover:text-ink focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/60"
         >
@@ -157,7 +159,7 @@ function AgentSection() {
           ? <span className="ml-auto font-normal tracking-normal text-muted-ink">{t('agents.running', { count: running })}</span>
           : undefined}
         actions={!collapsed && (
-          <button type="button" title={t('agents.add')} aria-label={t('agents.add')} onClick={openAgentSettings} className="grid size-5 cursor-pointer place-items-center rounded text-faint outline-none hover:bg-hover hover:text-ink focus-visible:ring-1 focus-visible:ring-ink/60">
+          <button type="button" title={t('agents.add')} aria-label={t('agents.add')} onClick={openAgentSettings} className="grid size-6 cursor-pointer place-items-center rounded text-faint outline-none hover:bg-hover hover:text-ink focus-visible:ring-1 focus-visible:ring-ink/60">
             <Plus className="size-3.5" aria-hidden />
           </button>
         )}

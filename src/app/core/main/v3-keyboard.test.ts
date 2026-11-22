@@ -5,6 +5,8 @@ import { NextIntlClientProvider } from 'next-intl'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import zhTW from '../../../../messages/zh-TW.json'
 import { useAnywhereStore } from '@/lib/anywhere/store'
+import { useNoteListStore } from '@/lib/note-list/note-list'
+import { useSidebarCollapse } from '@/lib/sidebar-v3/collapse'
 import emitter from '@/lib/emitter'
 import { useUiModeStore } from '@/lib/fork-ui'
 import { useWeekOverlay } from '@/lib/week/overlay'
@@ -121,6 +123,25 @@ it('shows the four icon-only quick buttons under search and no 收集 in the nav
   await act(async () => buttons[1].click())
   expect(opened).toHaveBeenCalledWith({ target: 'source' })
   emitter.off('unified-record-open', opened)
+})
+
+// Fork（almanac ALMNC-56.2 A08、A10）：「我的筆記」收合鈕和標題鈕讀起來不同名；新增代理人鈕 24 px。
+it('names the 我的筆記 collapse toggle apart from its title', async () => {
+  useSidebarCollapse.setState({ vault: false, agents: false })
+  useNoteListStore.setState({ visible: true, folder: '' })
+  await render(React.createElement(LeftSidebar))
+  const vault = host.querySelector<HTMLElement>(`[data-sidebar-v3] section[aria-label="${zhTW.sidebarV3.vault}"]`)!
+  const toggle = vault.querySelector<HTMLButtonElement>('button[aria-expanded]')!
+  expect(toggle.getAttribute('aria-label')).toBe('收合我的筆記')
+  const title = vault.querySelector<HTMLButtonElement>('button[aria-current="page"]')!
+  expect(title.getAttribute('aria-label')).toBeNull()
+  expect(title.textContent).toBe('我的筆記')
+  // 掛載時會從 store.json 讀回收合狀態；之後再設定，代理人區才確定展開
+  await act(async () => useSidebarCollapse.setState({ vault: true, agents: false }))
+  expect(toggle.getAttribute('aria-label')).toBe('展開我的筆記')
+  const addAgent = host.querySelector<HTMLButtonElement>(`[data-sidebar-v3] button[title="${zhTW.sidebarV3.agents.add}"]`)!
+  expect(addAgent.className).toContain('size-6')
+  useNoteListStore.setState({ visible: false })
 })
 
 it('creates a new document from the first quick button', async () => {

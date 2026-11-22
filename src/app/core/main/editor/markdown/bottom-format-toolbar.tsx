@@ -4,7 +4,9 @@
 // 只在 V3、桌面、所見即所得模式、可編輯時由 tiptap-editor.tsx 掛上；classic 與手機（已有 mobile-writing-toolbar）不變。
 // 指令都沿用既有的：格式與區塊用 TipTap 指令、顏色用 ColorMenu（同 bubble menu）、圖片走編輯器的 insertImageAtSelection、
 // 連結打開 bubble menu 的連結輸入、附件用斜線指令「檔案」同一套產生連結的方法。按鈕不搶編輯器焦點與選取範圍。
-import { useEffect, useReducer, useState, type ComponentType, type MouseEvent, type ReactNode } from 'react'
+// ALMNC-56.2：
+// - A11：整列只佔一個 Tab 停靠點，左右鍵在列內移動（components/v3/toolbar，和右上筆記工具列同一套）。
+import { useEffect, useReducer, useRef, useState, type ComponentType, type MouseEvent, type ReactNode } from 'react'
 import type { Editor } from '@tiptap/core'
 import {
   Bold, CheckSquare, Code, Code2, Eraser, Heading1, Heading2, Heading3, ImagePlus, Italic, Link2, List, ListOrdered,
@@ -15,6 +17,7 @@ import { open } from '@tauri-apps/plugin-dialog'
 import { useTranslations } from 'next-intl'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuShortcut, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { useRovingToolbar } from '@/components/v3/toolbar'
 import { toast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
 import useArticleStore from '@/stores/article'
@@ -87,6 +90,8 @@ export function BottomFormatToolbar({ editor, onInsertImage, onOpenLink }: {
   onOpenLink: () => void
 }) {
   useEditorRevision(editor)
+  const rootRef = useRef<HTMLDivElement>(null)
+  const roving = useRovingToolbar(rootRef)
   const t = useTranslations('settings.shortcuts.editorShortcuts.commands')
   const tEditor = useTranslations('editor')
   const tToolbar = useTranslations('editor.bottomToolbar')
@@ -168,11 +173,14 @@ export function BottomFormatToolbar({ editor, onInsertImage, onOpenLink }: {
   return (
     <TooltipProvider delayDuration={300}>
       <div
+        ref={rootRef}
         role="toolbar"
         aria-label={tToolbar('label')}
+        aria-orientation="horizontal"
         data-editor-bubble-menu-owner={OWNER}
         data-testid="bottom-format-toolbar"
         onMouseDown={keepEditorFocus}
+        {...roving}
         className="pointer-events-auto absolute bottom-4 left-1/2 z-30 flex max-w-[calc(100%-1.5rem)] -translate-x-1/2 items-center gap-0.5 overflow-x-auto rounded-full border border-line bg-panel px-1.5 py-1 shadow-md [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {BOTTOM_TOOLBAR_GROUPS.map((group, index) => (

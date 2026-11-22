@@ -6865,6 +6865,7 @@
       "infoModified": "Modified",
       "infoLength": "Length",
       "command": "Command palette",
+      "outsideEditorShortcut": "{shortcut}, outside the editor",
       "more": "More"
     },
     "statusBar": {
@@ -8568,6 +8569,8 @@
       "addFirst": "Add your first agent"
     },
     "vault": "MyVault",
+    "collapseSection": "Collapse {title}",
+    "expandSection": "Expand {title}",
     "noteList": {
       "label": "Notes in {folder}",
       "empty": "No notes in this folder yet"

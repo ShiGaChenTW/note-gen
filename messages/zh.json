@@ -6865,6 +6865,7 @@
       "infoModified": "修改时间",
       "infoLength": "字数",
       "command": "命令面板",
+      "outsideEditorShortcut": "{shortcut}，编辑器外",
       "more": "更多"
     },
     "statusBar": {
@@ -8568,6 +8569,8 @@
       "addFirst": "新增第一位代理人"
     },
     "vault": "我的笔记",
+    "collapseSection": "收起{title}",
+    "expandSection": "展开{title}",
     "noteList": {
       "label": "「{folder}」的笔记列表",
       "empty": "这个文件夹还没有笔记"

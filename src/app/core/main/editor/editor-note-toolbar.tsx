@@ -7,6 +7,8 @@
 // - 版本歷史：送 editor-open-version-history，打開狀態列上同一個版本歷史面板。命令面板：同側欄「搜尋或下指令」。
 // - 標籤：讀寫 frontmatter 的 tags（寫法同屬性卡片，只改 tags 那一行）。置頂／收藏：stores/note-marks（每個工作區一份）。
 // 筆記專屬的按鈕只給 .md 筆記；編輯區窄於 720px 時第三、四組收進「⋯」。圖示刻意不用參考稿那套（箭頭、放大鏡、標籤、圖釘、星號⋯⋯）。
+// ALMNC-56.2：整列只佔一個 Tab 停靠點，左右鍵在列內移動（components/v3/toolbar，A11）。
+// 命令面板的 ⌘K 在編輯器裡是「插入連結」（anywhere-service 不攔截），提示註明「編輯器外」（A09）。
 import { useEffect, useMemo, useRef, useState, type ReactNode, type Ref } from 'react'
 import {
   ArrowLeft, ArrowRight, ArrowUpToLine, Ellipsis, FileText, Hash, Heart, History, ListTree, Redo2, SquareSlash,
@@ -24,6 +26,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { useRovingToolbar } from '@/components/v3/toolbar'
 import { useAnywhereStore } from '@/lib/anywhere/store'
 import { getEditorStatistics } from '@/lib/editor-statistics'
 import emitter from '@/lib/emitter'
@@ -129,6 +132,7 @@ export function EditorNoteToolbar({ activeTab, isActiveGroup, canGoBack, canGoFo
   const rootRef = useRef<HTMLDivElement>(null)
   const openInfoAfterMenuRef = useRef(false)
   const [infoOpen, setInfoOpen] = useState(false)
+  const roving = useRovingToolbar(rootRef)
 
   const scope = noteToolbarScope(activeTab, isActiveGroup)
   const isNote = scope === 'note'
@@ -161,7 +165,7 @@ export function EditorNoteToolbar({ activeTab, isActiveGroup, canGoBack, canGoFo
     outline: withShortcut(noteEditor?.outlineOpen ? tOutline('close') : tOutline('open'), formatShortcutLabel(outlineShortcut, mac)),
     history: tHistory('title'),
     info: t('info'),
-    command: withShortcut(t('command'), `${mod}K`),
+    command: withShortcut(t('command'), t('outsideEditorShortcut', { shortcut: `${mod}K` })),
     undo: `${tTab('undo')} (${mod}Z)`,
     redo: `${tTab('redo')} (${mod}Shift+Z)`,
   }
@@ -183,8 +187,10 @@ export function EditorNoteToolbar({ activeTab, isActiveGroup, canGoBack, canGoFo
           ref={rootRef}
           role="toolbar"
           aria-label={t('label')}
+          aria-orientation="horizontal"
           className="absolute top-2 right-3 z-20 flex items-center gap-0.5 rounded-md bg-background/80 text-muted-ink"
           data-testid="editor-note-toolbar"
+          {...roving}
         >
           <ToolbarButton label={labels.back} icon={<ArrowLeft />} disabled={!canGoBack} onClick={() => onNavigate('back')} />
           <ToolbarButton label={labels.forward} icon={<ArrowRight />} disabled={!canGoForward} onClick={() => onNavigate('forward')} />
@@ -228,7 +234,7 @@ export function EditorNoteToolbar({ activeTab, isActiveGroup, canGoBack, canGoFo
                     <DropdownMenuItem onSelect={() => { openInfoAfterMenuRef.current = true }}><FileText />{labels.info}</DropdownMenuItem>
                   </>
                 ) : null}
-                <DropdownMenuItem onSelect={openPalette}><SquareSlash />{t('command')}<DropdownMenuShortcut>{`${mod}K`}</DropdownMenuShortcut></DropdownMenuItem>
+                <DropdownMenuItem onSelect={openPalette}><SquareSlash />{t('command')}<DropdownMenuShortcut>{t('outsideEditorShortcut', { shortcut: `${mod}K` })}</DropdownMenuShortcut></DropdownMenuItem>
                 {showEditorUndoRedo ? (
                   <>
                     <DropdownMenuSeparator />
@@ -352,9 +358,9 @@ function TagsButton({ editor, label }: { editor: Editor | null, label: string })
                   <button
                     type="button"
                     aria-label={t('removeTag', { tag })}
-                    className="text-muted-ink hover:text-ink"
+                    className="-my-0.5 -mr-1 grid size-5 shrink-0 cursor-pointer place-items-center rounded text-muted-ink outline-none hover:text-ink focus-visible:ring-1 focus-visible:ring-ink/60"
                     onClick={() => { write(removeTagAt(tags, index)) }}
-                  ><X className="size-3" /></button>
+                  ><X className="size-3" aria-hidden /></button>
                 ) : null}
               </li>
             ))}

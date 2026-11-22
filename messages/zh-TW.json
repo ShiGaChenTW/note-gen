@@ -6930,6 +6930,7 @@
       "infoModified": "修改時間",
       "infoLength": "字數",
       "command": "命令面板",
+      "outsideEditorShortcut": "{shortcut}，編輯器外",
       "more": "更多"
     },
     "statusBar": {
@@ -8633,6 +8634,8 @@
       "addFirst": "新增第一位代理人"
     },
     "vault": "我的筆記",
+    "collapseSection": "收合{title}",
+    "expandSection": "展開{title}",
     "noteList": {
       "label": "「{folder}」的筆記清單",
       "empty": "這個資料夾還沒有筆記"
