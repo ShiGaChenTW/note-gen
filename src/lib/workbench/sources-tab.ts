@@ -98,7 +98,7 @@ export function captureSourceId(captureId: string): string {
 }
 
 const SOURCE_KIND: Record<string, SourceDisplayKind> = {
-  text: 'text', link: 'web', image: 'shot', file: 'file', transcript: 'audio', voice: 'audio', email: 'email', todo: 'todo', prompt: 'prompt',
+  text: 'text', link: 'web', image: 'shot', screenshot: 'shot', inserted_image: 'img', file: 'file', transcript: 'audio', voice: 'audio', email: 'email', todo: 'todo', prompt: 'prompt',
   rss: 'rss', meeting: 'meeting',
 }
 

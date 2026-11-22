@@ -22,6 +22,7 @@ describe('domainProposal', () => {
     expect(proposal.expert.soul).toContain('- 負責領域：投資')
     expect(proposal.expert.rules).toContain('## 領域：投資')
     expect(proposal.expert.rules).toContain('## 共用工作記憶')
+    expect(proposal.expert.rules).toContain('標明待查證')
   })
 
   it('只有 2 則不提', () => {

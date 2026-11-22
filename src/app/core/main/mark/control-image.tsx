@@ -1,3 +1,4 @@
+import { isRecordDialogAttachment } from '@/lib/workbench/auto-route'
 import { TooltipButton } from "@/components/tooltip-button"
 import { insertMark, Mark } from "@/db/marks"
 import { useTranslations } from 'next-intl'
@@ -143,8 +144,8 @@ export function ControlImage() {
   const isMobile = isMobileDevice()
   const completeRecord = useRecordCompletion()
 
-  const handleSelectImages = useCallback(() => {
-    selectImages()
+  const handleSelectImages = useCallback((request: unknown) => {
+    void selectImages(isRecordDialogAttachment(request))
   }, [])
 
   useEffect(() => {
@@ -154,7 +155,7 @@ export function ControlImage() {
     }
   }, [handleSelectImages])
 
-  async function selectImages() {
+  async function selectImages(fromRecordDialog = false) {
     try {
       if (isMobile) {
         fileInputRef.current?.removeAttribute('capture')
@@ -174,7 +175,7 @@ export function ControlImage() {
 
       const paths = Array.isArray(filePaths) ? filePaths : [filePaths]
       for (const path of paths) {
-        await upload(path)
+        await upload(path, fromRecordDialog)
       }
     } catch (error) {
       if (isPickerCancelError(error)) {
@@ -291,7 +292,7 @@ export function ControlImage() {
     }
   }
 
-  async function upload(path: string) {
+  async function upload(path: string, fromRecordDialog: boolean) {
     const queueId = uuid()
     const tagId = await getDefaultRecordSaveTagId()
     try {
@@ -308,7 +309,7 @@ export function ControlImage() {
       let desc = ''
       
       // Skip image recognition if disabled
-      if (!enableImageRecognition) {
+      if (fromRecordDialog || !enableImageRecognition) {
         setQueue(queueId, { progress: t('record.mark.progress.save') });
         content = ''
         desc = ''
@@ -354,6 +355,11 @@ export function ControlImage() {
       const result = await insertMark(mark)
       removeQueue(queueId)
       const markId = Number(result.lastInsertId || 0) || null
+      if (markId && fromRecordDialog) {
+        void import('@/lib/workbench/actions').then(({ registerRecordAttachment }) =>
+          registerRecordAttachment({ markId, type: 'image', path: `image/${filename}`, title: path.split(/[/\\]/).pop() || filename }),
+        ).catch(error => console.warn('[workbench] attachment registration failed:', error))
+      }
       await completeRecord({
         markId,
         tagId,
@@ -383,7 +389,7 @@ export function ControlImage() {
           className="hidden"
         />
       )}
-      <TooltipButton icon={<ImagePlus />} tooltipText={t('record.mark.type.image')} onClick={selectImages} />
+      <TooltipButton icon={<ImagePlus />} tooltipText={t('record.mark.type.image')} onClick={() => void selectImages()} />
     </>
   )
 }

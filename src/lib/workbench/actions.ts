@@ -2,7 +2,7 @@
 // 清單由投影自然更新；能復原的回傳 undo（給審核分頁的 Z）。需要 Tauri 的模組一律動態載入，測試時可以 mock。
 import { acceptDecision, rejectDecision } from '@/lib/decide/actions'
 import type { DecideItem } from '@/lib/decide/project'
-import { LEGACY_NOTE_KIND, latestVersions, type Source } from '@/lib/v3-model/source'
+import { LEGACY_NOTE_KIND, latestVersions, type NewSourceInput, type Source } from '@/lib/v3-model/source'
 import { legacyProgress, type LegacyRunSummary } from '@/lib/migration/legacy'
 import useCollectStore from '@/stores/collect'
 import useWorkbenchStore from '@/stores/workbench'
@@ -12,8 +12,8 @@ import { splitFrontmatter } from '@/lib/markdown/frontmatter-split'
 import { noteTitle, parseV3Note } from '@/lib/v3-model/note'
 import { buildDeskContext } from './desk-context'
 import { bridgeInput, planHandToCommander, type SourceListRow } from './sources-tab'
-import { ingestSource, judgeSource, newSourceType, type SourceJudgement } from './judgement'
-import { conversationConclusionSource, dailyEntrySource, externalAudioSource, noteSource, recordTextSource, researchFindingSource, routeAutoSource, routeVersionedSource, voiceMemoSource, type AutoRouteResult, type AutoSourceInput, type ResearchFindingLike, type VersionedRouteResult } from './auto-route'
+import { attachmentKind, ingestSource, judgeSource, newSourceType, type SourceJudgement } from './judgement'
+import { conversationConclusionSource, dailyEntrySource, externalAudioSource, recordAttachmentSource, noteSource, recordTextSource, researchFindingSource, routeAutoSource, routeVersionedSource, voiceMemoSource, type AutoRouteResult, type AutoSourceInput, type RecordAttachment, type ResearchFindingLike, type VersionedRouteResult } from './auto-route'
 
 export type Undo = (() => Promise<unknown>) | undefined
 
@@ -119,11 +119,22 @@ export async function resolveLegacyPack(packId: string): Promise<Undo> {
  * 本機模型（ollama）沒開、抓不到網頁都不會丟錯：沒有判斷、或標成擷取失敗。
  */
 export async function requestJudgement(source: Pick<Source, 'id' | 'kind' | 'content' | 'origin'>, options: { refresh?: boolean } = {}): Promise<SourceJudgement> {
-  const [judgements, { defaultLocalModel }] = await Promise.all([import('@/db/v3-source-judgements'), import('@/lib/local-model/default')])
-  const model = await defaultLocalModel().catch(() => undefined)
+  const judgements = await import('@/db/v3-source-judgements')
+  const attachmentKey = attachmentKind(source.kind)
   const previous = await judgements.getSourceJudgement(source.id).catch(() => undefined)
+  let attachmentLabel: string | undefined
+  if (attachmentKey) {
+    const [{ DEFAULT_LOCALE, LANGUAGE_STORAGE_KEY, loadMessagesWithFallback, normalizeLocale }, { createTranslator }] =
+      await Promise.all([import('@/i18n/config'), import('next-intl')])
+    const locale = typeof window === 'undefined' ? DEFAULT_LOCALE : normalizeLocale(window.localStorage?.getItem(LANGUAGE_STORAGE_KEY))
+    const t = createTranslator({ locale, messages: await loadMessagesWithFallback(locale), namespace: 'workbench.sources.attachmentJudgement' })
+    attachmentLabel = t(attachmentKey)
+  }
+  const model = attachmentKey ? undefined
+    : await import('@/lib/local-model/default').then(({ defaultLocalModel }) => defaultLocalModel()).catch(() => undefined)
   const result = await judgeSource(source, {
     model,
+    attachmentLabel,
     previous,
     fetchPage: async url => {
       const { capturePublicWebPage } = await import('@/lib/web-capture/service')
@@ -406,7 +417,15 @@ export function registerVoiceMemo(memo: { markId: number, transcript: string, au
  * 只在桌面版 V3；同一則記錄重複登錄會跳過。
  */
 export async function registerExternalAudio(memo: { markId: number, transcript: string, audioPath?: string }): Promise<void> {
-  const input = externalAudioSource(memo)
+  return registerExternalRecord(externalAudioSource(memo))
+}
+
+/** 對話框擷取的附件和選入音訊同走 R1。 */
+export function registerRecordAttachment(attachment: RecordAttachment): Promise<void> {
+  return registerExternalRecord(recordAttachmentSource(attachment))
+}
+
+async function registerExternalRecord(input: NewSourceInput | undefined): Promise<void> {
   if (!input) return
   const { isUiV3 } = await import('@/lib/fork-ui')
   if (!isUiV3()) return
@@ -415,10 +434,14 @@ export async function registerExternalAudio(memo: { markId: number, transcript: 
     const db = await import('@/db/v3-sources')
     const source = await db.addSourceIfAbsent(input)
     if (!source) return
+    if (attachmentKind(source.kind)) {
+      await requestJudgement(source, { refresh: false }).catch(error => console.warn('[judgement] failed:', error))
+    } else {
+      void requestJudgement(source).catch(error => console.warn('[judgement] failed:', error))
+    }
     await refreshSources()
-    void requestJudgement(source).catch(error => console.warn('[judgement] failed:', error))
   } catch (error) {
-    console.warn('[workbench] external audio failed:', error)
+    console.warn('[workbench] external record failed:', error)
   }
 }
 

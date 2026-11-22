@@ -117,40 +117,40 @@ function fakeEmbedding(vectors: Record<string, number[]>, available = true): Emb
 
 describe('三層合起來', () => {
   it('model layer: confident answers route automatically, with the target role', async () => {
-    const model = fakeEmbedding({ '明天三點開會': [1, 0.1, 0.1, 0.1] })
+    const model = fakeEmbedding({ '週五中午和 Alice 碰面': [1, 0.1, 0.1, 0.1] })
     const router = createRouter({ model, exemplars: EXEMPLARS })
-    const decision = await router.route('明天三點開會', { roster })
+    const decision = await router.route('週五中午和 Alice 碰面', { roster })
     expect(decision).toMatchObject({ route: 'schedule', layer: 'model', reason: 'model', target: { role: 'secretary', agentId: 'sec' } })
     expect(decision.confidence).toBeGreaterThan(0.99)
     expect(Object.keys(decision.scores!)).toEqual([...ROUTES])
   })
 
   it('AC#2: the four routes map to 秘書／指揮官／專家／Agent 設定區', async () => {
-    const model = fakeEmbedding({ a: [1, 0, 0, 0], b: [0, 1, 0, 0], c: [0, 0, 1, 0], d: [0, 0, 0, 1] })
+    const model = fakeEmbedding({ '週五中午和 Alice 碰面': [1, 0, 0, 0], '把這些零碎素材歸到一起': [0, 1, 0, 0], '工業工程中的節拍時間與週期時間差在哪裡': [0, 0, 1, 0], '摘要的格式統一為兩行': [0, 0, 0, 1] })
     const router = createRouter({ model, exemplars: EXEMPLARS })
-    const targets = await Promise.all(['a', 'b', 'c', 'd'].map(text => router.route(text, { roster })))
+    const targets = await Promise.all(['週五中午和 Alice 碰面', '把這些零碎素材歸到一起', '工業工程中的節拍時間與週期時間差在哪裡', '摘要的格式統一為兩行'].map(text => router.route(text, { roster })))
     expect(targets.map(d => [d.route, d.target?.role])).toEqual([['schedule', 'secretary'], ['process', 'commander'], ['query', 'expert'], ['preference', 'settings']])
   })
 
-  it('AC#3: below the threshold → ask Scott, keeping the best guess as a suggestion', async () => {
+  it('AC#3: routes below 0.7 to the commander with the measured confidence', async () => {
     // 兩類幾乎一樣近 → softmax 後約 0.5
-    const model = fakeEmbedding({ 模稜兩可: [1, 1, 0, 0] })
-    const decision = await createRouter({ model, exemplars: EXEMPLARS }).route('模稜兩可', { roster })
-    expect(decision).toMatchObject({ route: null, target: null, layer: 'ask', reason: 'low_confidence' })
+    const model = fakeEmbedding({ '把後面那段接到前面': [1, 1, 0, 0] })
+    const decision = await createRouter({ model, exemplars: EXEMPLARS }).route('把後面那段接到前面', { roster })
+    expect(decision).toMatchObject({ route: 'process', target: { agentId: 'cmd' }, layer: 'fallback', reason: 'low_confidence' })
     expect(decision.confidence).toBeLessThan(0.7)
     expect(['schedule', 'process']).toContain(decision.suggestion)
   })
 
-  it('AC#3: local model unavailable（沒開、壞掉、沒設定）→ ask Scott; rules still work', async () => {
+  it('AC#3: local model unavailable（沒開、壞掉、沒設定）→ commander; rules still work', async () => {
     const offline = createRouter({ model: fakeEmbedding({}, false), exemplars: EXEMPLARS })
-    expect(await offline.route('明天三點開會')).toMatchObject({ layer: 'ask', reason: 'model_unavailable', route: null })
+    expect(await offline.route('週五中午和 Alice 碰面')).toMatchObject({ layer: 'fallback', reason: 'model_unavailable', route: 'process' })
     expect(await offline.route('@秘書 明天三點開會', { roster })).toMatchObject({ layer: 'rule', route: 'schedule' })
 
     const broken: EmbeddingModel = { available: async () => true, embed: async () => { throw new Error('ECONNREFUSED') } }
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
-    expect(await createRouter({ model: broken }).route('明天三點開會')).toMatchObject({ layer: 'ask', reason: 'model_unavailable' })
+    expect(await createRouter({ model: broken }).route('週五中午和 Alice 碰面')).toMatchObject({ layer: 'fallback', reason: 'model_unavailable' })
     warn.mockRestore()
-    expect(await createRouter().route('明天三點開會')).toMatchObject({ layer: 'ask', reason: 'model_unavailable' })
+    expect(await createRouter().route('週五中午和 Alice 碰面')).toMatchObject({ layer: 'fallback', reason: 'model_unavailable' })
   })
 
   it('rules run before the model（多意圖不會被嵌入模型判成日程）', async () => {
@@ -160,17 +160,34 @@ describe('三層合起來', () => {
     expect(model.embed).not.toHaveBeenCalled()
   })
 
+  it.each(['第一批', 'A ; A', '啊。', '臺新銀行。', 'the first batch', '??'])('asks only for an unintelligible fragment (%s)', async text => {
+    const model = fakeEmbedding({})
+    expect(await createRouter({ model }).route(text)).toMatchObject({ layer: 'ask', reason: 'fragment', route: null })
+    expect(model.embed).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ['可以幫我安裝外掛嗎？', 'process'],
+    ['記憶庫待辦（試用）要移動', 'process'],
+    ['計畫頁面是否已經實作完？', 'query'],
+    ['Can you help me install this plugin?', 'process'],
+    ['请提醒我明天交报告', 'schedule'],
+    ['進度', 'query'],
+  ])('uses explicit intent markers for %s', async (text, route) => {
+    expect(await createRouter().route(text)).toMatchObject({ route, layer: 'rule' })
+  })
+
   it('embeds the exemplars once and reuses them', async () => {
-    const model = fakeEmbedding({ x: [1, 0, 0, 0], y: [0, 1, 0, 0] })
+    const model = fakeEmbedding({ '把第三份資料放進清單': [1, 0, 0, 0], '給下一階段留出兩個小時': [0, 1, 0, 0] })
     const router = createRouter({ model, exemplars: EXEMPLARS })
-    await router.route('x')
-    await router.route('y')
+    await router.route('把第三份資料放進清單')
+    await router.route('給下一階段留出兩個小時')
     expect(model.embed).toHaveBeenCalledTimes(3) // 範例句一次＋兩句
     expect(model.embed.mock.calls[0][0]).toHaveLength(8)
   })
 
-  it('ships the spike exemplars（每類 5 句）as the default data file', () => {
-    for (const route of ROUTES) expect(DEFAULT_EXEMPLARS[route]).toHaveLength(5)
+  it('adds action-oriented process exemplars', () => {
+    expect(DEFAULT_EXEMPLARS.process.some(text => text.includes('可以幫我') && text.endsWith('嗎？'))).toBe(true)
     expect(DEFAULT_EXEMPLARS.preference).toContain('以後摘要都寫短一點')
   })
 })

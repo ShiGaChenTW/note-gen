@@ -4,7 +4,7 @@
 import type { DomainEdit, MemoryEdit, NoteEdit, Proposal } from '@/lib/collect/types'
 
 type ContextShape = Extract<MemoryEdit, { target: 'context' }>['context']
-type WorkNotesAgent = Extract<MemoryEdit, { target: 'work_notes' }>['agent']
+type WorkNotesAgent = Extract<MemoryEdit, { target: 'work_notes' | 'rules' }>['agent']
 
 export interface EditIo {
   readNote: (path: string) => Promise<string | null>
@@ -15,6 +15,8 @@ export interface EditIo {
   setDomainOverview?: (domainId: string, overview: string) => Promise<void>
   getWorkNotes?: (agent: WorkNotesAgent) => Promise<string>
   setWorkNotes?: (agent: WorkNotesAgent, content: string) => Promise<void>
+  getRules?: (agent: WorkNotesAgent) => Promise<string>
+  setRules?: (agent: WorkNotesAgent, content: string) => Promise<void>
   getContext?: () => Promise<ContextShape>
   setContext?: (context: ContextShape) => Promise<void>
 }
@@ -69,14 +71,15 @@ async function planDomain(edit: DomainEdit, io: EditIo, conflicts: string[]): Pr
 }
 
 async function planMemory(edit: MemoryEdit, io: EditIo, conflicts: string[]): Promise<Step | undefined> {
-  if (edit.target === 'work_notes') {
-    if (!io.getWorkNotes || !io.setWorkNotes) throw new EditsNotApplied(false, [`memory:${edit.agent.id}`], 'memory writer unavailable')
-    const current = await io.getWorkNotes(edit.agent)
+  if (edit.target !== 'context') {
+    const get = edit.target === 'rules' ? io.getRules : io.getWorkNotes
+    const set = edit.target === 'rules' ? io.setRules : io.setWorkNotes
+    if (!get || !set) throw new EditsNotApplied(false, [`memory:${edit.agent.id}`], 'memory writer unavailable')
+    const current = await get(edit.agent)
     if (current !== edit.baseContent) {
       conflicts.push(`memory:${edit.agent.id}`)
       return undefined
     }
-    const set = io.setWorkNotes
     return { target: `memory:${edit.agent.id}`, write: () => set(edit.agent, edit.content), undo: () => set(edit.agent, current) }
   }
   if (!io.getContext || !io.setContext) throw new EditsNotApplied(false, ['memory:context'], 'memory writer unavailable')

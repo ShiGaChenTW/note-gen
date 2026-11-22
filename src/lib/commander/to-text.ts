@@ -27,6 +27,9 @@ export function looksLikeRef(value: string | undefined): boolean {
 
 /** 原檔參照：內容本身是參照就用內容，否則用來處。 */
 function refOf(source: Source): { ref?: string, caption: string } {
+  if (source.origin && ['screenshot', 'inserted_image', 'file'].includes(source.kind) && looksLikeRef(source.origin)) {
+    return { ref: source.origin.trim(), caption: source.content.trim() === source.origin.trim() ? '' : source.content.trim() }
+  }
   if (looksLikeRef(source.content)) return { ref: source.content.trim(), caption: '' }
   return { ref: looksLikeRef(source.origin) ? source.origin!.trim() : undefined, caption: source.content.trim() }
 }
@@ -94,6 +97,8 @@ export async function toText(source: Source, converters: Converters): Promise<Co
       if (!url) return cap(asText())
       return cap(await run(source, 'web', converters.fetchWeb, url, source.content.trim()))
     }
+    case 'screenshot':
+    case 'inserted_image':
     case 'image': {
       const { ref, caption } = refOf(source)
       return cap(await run(source, 'ocr', converters.ocrImage, ref, caption))

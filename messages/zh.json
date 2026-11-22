@@ -41,6 +41,7 @@
       "soul": "soul.md（个性）",
       "soulHint": "只有你能修改。",
       "rules": "rules.md（工作规则）",
+      "rulesProposal": "修改 {name} 的 rules.md",
       "rulesHint": "agent 想修改时会送提案给你。",
       "workNotes": "工作笔记",
       "workNotesHint": "agent 从经验学到的做事偏好，不记领域内容。",
@@ -9148,6 +9149,10 @@
         "edited": "已修改",
         "done": "已整理",
         "no": "不采用"
+      },
+      "attachmentJudgement": {
+        "image": "图片文字待识别",
+        "file": "文件内容待读取"
       },
       "kind": {
         "web": "网页",

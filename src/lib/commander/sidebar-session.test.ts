@@ -82,8 +82,21 @@ describe('ALMNC-54.11 routed runs', () => {
     expect(run.displayName).toBe('Alex · 工業工程專家')
     expect(deps.memoryPrompt).toHaveBeenCalledWith(expert)
     expect(run.rolePrompt).toContain(ROLE_INSTRUCTIONS.expert)
-    expect(run.rolePrompt).toContain(SIDEBAR_ASK_RULES)
+    expect(run.rolePrompt).toContain(SIDEBAR_ASK_RULES.replace('as the commander', 'as the expert'))
     expect(run.rolePrompt.endsWith('Router: query')).toBe(true)
+  })
+
+  it('uses secretary memory for schedule replies and learns only on completion', async () => {
+    const rememberWork = vi.fn(async () => {})
+    const { deps } = fakeDeps({ rememberWork })
+    const run = await prepareSidebarCommanderRun({ conversationId: 7, chatId: 70, scottMessages: ['提前提醒我'], answerAs: ROSTER[1] }, deps)
+    expect(deps.memoryPrompt).toHaveBeenCalledWith(ROSTER[1])
+    await run.finish()
+    expect(rememberWork).not.toHaveBeenCalled()
+    await run.remember('下次會提前提醒。')
+    expect(rememberWork).toHaveBeenCalledWith(ROSTER[1], expect.objectContaining({
+      reference: 'conversation:7#70', request: '提前提醒我', fromScott: true,
+    }))
   })
 
   it('answerAs is ignored outside read-only runs（只讀才由專家回答）', async () => {

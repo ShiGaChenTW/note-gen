@@ -3,7 +3,7 @@ import { createRequire } from 'node:module'
 import { afterAll, describe, expect, it, vi } from 'vitest'
 import { AGENT_MEMORY_SCHEMA } from './schema'
 import {
-  appendActivity, archiveOldActivity, getAgentMemory, getScottPreferences, getSharedContext, listActivity,
+  appendActivity, appendAgentWorkNotes, mergeSharedContext, archiveOldActivity, getAgentMemory, getScottPreferences, getSharedContext, listActivity,
   loadAgentMemoryPrompt, saveScottPreferences, saveSharedContext, writeAgentMemory,
 } from '@/db/agent-memory'
 import type { ActivityEntryInput } from './activity'
@@ -129,5 +129,31 @@ describe('ALMNC-54.3 Agent 設定區', () => {
   it('schema is idempotent', () => {
     sqlite.exec(AGENT_MEMORY_SCHEMA.join(';\n'))
     expect(sqlite.prepare("select count(*) as n from agent_memory").all({})).toEqual([{ n: 3 }])
+  })
+
+  it('atomically merges concurrent context updates without replacing Scott’s entry', async () => {
+    const actor = { agentId: 'mia', role: 'commander' } as const
+    await saveSharedContext('scott', { projects: [{ title: 'Keep', link: '[[Keep]]' }], weeklyFocus: [], people: [] })
+    await Promise.all([
+      mergeSharedContext(actor, { projects: [{ title: 'Keep', link: 'source:x' }, { title: 'One' }], weeklyFocus: [], people: [] }),
+      mergeSharedContext(actor, { projects: [{ title: 'Two' }], weeklyFocus: [], people: [] }),
+    ])
+    const { projects, updatedBy } = await getSharedContext()
+    expect(projects).toHaveLength(3)
+    expect(projects).toEqual(expect.arrayContaining([{ title: 'Keep', link: '[[Keep]]' }, { title: 'One' }, { title: 'Two' }]))
+    expect(updatedBy).toBe('agent:mia')
+  })
+
+  it('atomically appends distinct work notes with the partner’s identity', async () => {
+    const agent = { ...leo, id: 'notes-test' }
+    const actor = { agentId: agent.id, role: agent.role }
+    await writeAgentMemory('scott', agent, 'work_notes', '- Keep this')
+    await Promise.all([
+      appendAgentWorkNotes(actor, agent, ['One', 'Keep this']),
+      appendAgentWorkNotes(actor, agent, ['Two', 'One']),
+    ])
+    const { workNotes } = await getAgentMemory(agent)
+    expect(workNotes.content.trim().split('\n').sort()).toEqual(['- Keep this', '- One', '- Two'])
+    expect(workNotes.updatedBy).toBe('agent:notes-test')
   })
 })

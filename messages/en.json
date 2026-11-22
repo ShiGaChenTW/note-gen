@@ -41,6 +41,7 @@
       "soul": "soul.md (personality)",
       "soulHint": "Only you can edit this.",
       "rules": "rules.md (working rules)",
+      "rulesProposal": "Update {name}’s rules.md",
       "rulesHint": "Agents send you a proposal when they want to change it.",
       "workNotes": "Work notes",
       "workNotesHint": "How the agent likes to work, learned from experience. No domain content.",
@@ -9148,6 +9149,10 @@
         "edited": "Edited",
         "done": "Organized",
         "no": "Not used"
+      },
+      "attachmentJudgement": {
+        "image": "Text recognition pending",
+        "file": "File content pending review"
       },
       "kind": {
         "web": "Web",

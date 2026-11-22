@@ -201,8 +201,8 @@ export function UnifiedRecordDialog() {
   // 關閉視窗不清空草稿：媒體流程有自己的原生視窗，結束後重新打開仍可接著寫。
   const triggerMedia = (type: UnifiedMediaType) => {
     setOpen(false)
-    emitter.emit(`toolbar-shortcut-${type}` as never)
-    // 資料源模式：錄音、截圖、插圖、檔案仍走原本的原生流程（存成記錄），工作台的資料源分頁會把記錄一起列出。
+    emitter.emit(`toolbar-shortcut-${type}`, isV3 && type !== 'recording' ? { fromRecordDialog: true } : undefined)
+    // 資料源模式：媒體仍走原生存檔流程，存好後由各控制項登錄資料源。
     if (target === 'source') openWorkbench('sources')
   }
 

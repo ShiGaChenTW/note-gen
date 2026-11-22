@@ -3,7 +3,8 @@ import type { AgentTool } from '@/lib/agent/types'
 import type { AgentTask, AgentRunnerKind } from '@/lib/agent-tasks/types'
 import type { AgentSettings } from './settings'
 
-const { getSettings, recordRefusal, request, preview, execute, readNote, memoryPrompt } = vi.hoisted(() => ({
+const { getSettings, recordRefusal, request, preview, execute, readNote, memoryPrompt, rememberWork } = vi.hoisted(() => ({
+  rememberWork: vi.fn(async () => {}),
   memoryPrompt: vi.fn(async () => '## Your identity (soul.md)\n- 本名：Mia'),
   getSettings: vi.fn<(id: string) => Promise<AgentSettings | undefined>>(),
   recordRefusal: vi.fn(async () => {}),
@@ -20,6 +21,7 @@ const makeTool = (name: string, risk: AgentTool['risk']): AgentTool => ({
 })
 
 vi.mock('@/db/agents', () => ({ getAgentSettings: getSettings, recordAgentToolRefusal: recordRefusal }))
+vi.mock('@/lib/agent-memory/runtime', () => ({ rememberCompletedRoleWork: rememberWork }))
 vi.mock('@/db/agent-memory', () => ({ loadAgentMemoryPrompt: memoryPrompt }))
 vi.mock('@/lib/daily/note-io', () => ({ readNote }))
 vi.mock('@/lib/workspace', () => ({ getWorkspacePath: async () => ({ isCustom: true, path: '/test' }) }))
@@ -118,6 +120,7 @@ describe('P5 agent runners and permissions', () => {
     expect(request.mock.calls[0][0].tools).toEqual([{ type: 'function', function: { name: 'note_create_file' } }])
     // Fork（almanac ALMNC-54.3）：系統提示帶入這個 agent 的記憶。
     expect(memoryPrompt).toHaveBeenCalledWith(agent)
+    expect(rememberWork).toHaveBeenCalledWith(agent, expect.objectContaining({ reference: `task:${task.id}`, result: 'Draft ready.' }))
     // runtime 把傳入的 system 訊息轉成「App Context」，所以只檢查內容有帶到。
     expect(JSON.stringify(request.mock.calls[0][0].messages)).toContain('本名：Mia')
     const toolMessages = request.mock.calls[1][0].messages.filter((message: { role: string }) => message.role === 'tool')
