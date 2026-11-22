@@ -7767,6 +7767,7 @@
     "showProcessed": "顯示已整理",
     "trash": "垃圾桶",
     "backToInbox": "回到 Inbox",
+    "backToRecords": "返回記錄",
     "backToWorkspace": "回到工作區",
     "selectAll": "全選",
     "selected": "已選 {count} 筆",
@@ -8103,7 +8104,7 @@
     "fieldTime": "時間",
     "status": {
       "ok": "已接受",
-      "no": "已丟掉"
+      "no": "已放棄"
     },
     "open": "開啟",
     "undo": "復原",
@@ -8113,7 +8114,7 @@
     "failed": "操作失敗，請重試",
     "fileTooLarge": "{name} 超過 8 MB，沒有加入資料源",
     "remove": "移除這筆資料源",
-    "empty": "還沒收進東西。貼一段文字、連結或圖片試試。",
+    "empty": "還沒有資料源。貼一段文字、連結或圖片試試。",
     "emptyFilter": "這個狀態下沒有資料源。",
     "records": "未整理的舊記錄",
     "recordsHint": "還沒整理的舊記錄，可以拆成提案。",
@@ -8206,9 +8207,13 @@
         "title": "開啟首頁",
         "keywords": "home,今天,首頁"
       },
-      "inbox": {
+      "collect": {
         "title": "開啟資料源",
-        "keywords": "inbox,資料源,收集,待整理"
+        "keywords": "資料源,新增資料源"
+      },
+      "inbox": {
+        "title": "開啟舊記錄",
+        "keywords": "舊記錄,未整理"
       },
       "searchSidebar": {
         "title": "聚焦側欄搜尋",
@@ -8282,7 +8287,7 @@
     "accept": "接受",
     "reject": "放棄",
     "accepted": "已接受「{title}」",
-    "rejected": "已退回「{title}」",
+    "rejected": "已放棄「{title}」",
     "undo": "復原",
     "undoFailed": "無法復原，檔案已被改過",
     "failed": "處理失敗，請再試一次",
@@ -8413,11 +8418,11 @@
       "tabHint": "按 Tab 切換到「問」",
       "note": "記",
       "ask": "問",
-      "notePlaceholder": "記一筆，或按 Tab 切到「問」",
-      "noteOnlyPlaceholder": "記一筆",
+      "notePlaceholder": "新增資料源，或按 Tab 切到「問」",
+      "noteOnlyPlaceholder": "新增資料源",
       "askPlaceholder": "問問題，例如「下午的空檔怎麼排」",
-      "notePlaceholderToday": "記一筆（會記到今天，不是 {date}）",
-      "toToday": "記到今天",
+      "notePlaceholderToday": "新增至今天的資料源（目前查看 {date}）",
+      "toToday": "加到今天",
       "submitNote": "新增資料源",
       "submitAsk": "問",
       "detect": {

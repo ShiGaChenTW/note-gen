@@ -10,6 +10,7 @@ import { useUiModeStore } from '@/lib/fork-ui'
 import { useWeekOverlay } from '@/lib/week/overlay'
 import useCollectStore from '@/stores/collect'
 import useHomeStore from '@/stores/home'
+import useInboxStore from '@/stores/inbox'
 import useSettingStore from '@/stores/setting'
 import { useSidebarStore } from '@/stores/sidebar'
 import { usePluginUiStore } from '@/lib/plugins/ui-registry'
@@ -61,7 +62,7 @@ beforeEach(() => {
   useSidebarStore.setState({ rightSidebarVisible: false })
   usePluginUiStore.setState({ activeRightView: null })
   useAnywhereStore.setState({ chatOpen: false, paletteOpen: false })
-  useCollectStore.setState({ items: [] })
+  useCollectStore.setState({ items: [], visible: false })
   useHomeStore.getState().hide()
   useWeekOverlay.getState().hide()
   host = document.createElement('div')
@@ -89,6 +90,8 @@ function keyDown(target: HTMLElement, key: string, options: KeyboardEventInit = 
 it('maps the visible Plan entry to the week overlay and removes the V3 navigation in classic', async () => {
   await render(React.createElement(LeftSidebar))
   const nav = host.querySelector('[data-sidebar-v3] nav')!
+  expect(nav.textContent).toContain('資料源')
+  expect(nav.textContent).toContain('工作台')
   const plan = [...nav.querySelectorAll('button')].find(button => button.textContent === zhTW.sidebarV3.nav.plan)!
   await act(async () => plan.click())
   expect(useWeekOverlay.getState().visible).toBe(true)
@@ -145,7 +148,7 @@ it('localizes the visible copy and export actions in the editor status bar', asy
   expect([...host.querySelectorAll('button')].map(button => button.textContent)).toEqual(['複製', '匯出'])
 })
 
-it('opens the named command palette with ⌘K and returns focus on Escape', async () => {
+it('opens the command palette with ⌘K, restores focus and opens Sources by keyword', async () => {
   const scrollIntoView = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'scrollIntoView')
   Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', { configurable: true, value: () => {} })
   try {
@@ -162,6 +165,15 @@ it('opens the named command palette with ⌘K and returns focus on Escape', asyn
     await act(async () => keyDown(document.activeElement as HTMLElement, 'Escape'))
     expect(document.querySelector('[role="dialog"]')).toBeNull()
     await vi.waitFor(() => expect(document.activeElement).toBe(opener))
+
+    await act(async () => keyDown(opener, 'k', { metaKey: true, code: 'KeyK' }))
+    await typeIn(document.activeElement as HTMLInputElement, '新增資料源')
+    const command = [...document.querySelectorAll<HTMLElement>('[role="option"]')]
+      .find(option => option.textContent === '開啟資料源')
+    expect(command).toBeDefined()
+    await act(async () => command!.click())
+    expect(useCollectStore.getState().visible).toBe(true)
+    expect(useInboxStore.getState().visible).toBe(false)
   } finally {
     if (scrollIntoView) Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', scrollIntoView)
     else Reflect.deleteProperty(HTMLElement.prototype, 'scrollIntoView')
@@ -179,6 +191,8 @@ async function typeIn(input: HTMLInputElement, value: string) {
 it('submits a note with Enter after IME composition ends', async () => {
   await render(React.createElement(TodayComposer))
   const input = host.querySelector('input')!
+  expect(input.placeholder).toContain('新增資料源')
+  expect([...host.querySelectorAll('button')].some(button => button.textContent === '新增資料源')).toBe(true)
   await typeIn(input, '先閱讀提案')
 
   await act(async () => keyDown(input, 'Enter', { isComposing: true }))

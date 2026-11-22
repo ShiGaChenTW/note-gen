@@ -7702,6 +7702,7 @@
     "showProcessed": "显示已整理",
     "trash": "回收站",
     "backToInbox": "回到 Inbox",
+    "backToRecords": "返回记录",
     "backToWorkspace": "回到工作区",
     "selectAll": "全选",
     "selected": "已选 {count} 条",
@@ -8038,7 +8039,7 @@
     "fieldTime": "时间",
     "status": {
       "ok": "已接受",
-      "no": "已丢掉"
+      "no": "已放弃"
     },
     "open": "打开",
     "undo": "撤销",
@@ -8048,7 +8049,7 @@
     "failed": "操作失败，请重试",
     "fileTooLarge": "{name} 超过 8 MB，没有加入资料源",
     "remove": "移除这条资料源",
-    "empty": "还没有收进内容。试试粘贴一段文字、链接或图片。",
+    "empty": "还没有资料源。试试粘贴文字、链接或图片。",
     "emptyFilter": "这个状态下没有资料源。",
     "records": "未整理的旧记录",
     "recordsHint": "还没整理的旧记录，可以拆成提案。",
@@ -8141,9 +8142,13 @@
         "title": "打开首页",
         "keywords": "home,今天,首页"
       },
-      "inbox": {
+      "collect": {
         "title": "打开资料源",
-        "keywords": "inbox,资料源,收集,待整理"
+        "keywords": "资料源,新增资料源"
+      },
+      "inbox": {
+        "title": "打开旧记录",
+        "keywords": "旧记录,未整理"
       },
       "searchSidebar": {
         "title": "聚焦侧栏搜索",
@@ -8217,7 +8222,7 @@
     "accept": "接受",
     "reject": "放弃",
     "accepted": "已接受“{title}”",
-    "rejected": "已退回“{title}”",
+    "rejected": "已放弃“{title}”",
     "undo": "撤销",
     "undoFailed": "无法撤销，文件已被改过",
     "failed": "处理失败，请重试",
@@ -8348,11 +8353,11 @@
       "tabHint": "按 Tab 切换到「问」",
       "note": "记",
       "ask": "问",
-      "notePlaceholder": "记一笔，或按 Tab 切到“问”",
-      "noteOnlyPlaceholder": "记一笔",
+      "notePlaceholder": "新增资料源，或按 Tab 切到“问”",
+      "noteOnlyPlaceholder": "新增资料源",
       "askPlaceholder": "问问题，例如“下午的空档怎么排”",
-      "notePlaceholderToday": "记一笔（会记到今天，不是 {date}）",
-      "toToday": "记到今天",
+      "notePlaceholderToday": "新增至今天的资料源（当前查看 {date}）",
+      "toToday": "加到今天",
       "submitNote": "新增资料源",
       "submitAsk": "问",
       "detect": {
