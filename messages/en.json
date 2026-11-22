@@ -8269,6 +8269,7 @@
       },
       "discuss": "Discuss again",
       "proposalTalk": "Discussing again",
+      "proposalReplaced": "Replaced",
       "directAdded": "Added: {what}",
       "undo": "Undo",
       "directDone": "Added",
@@ -8411,6 +8412,7 @@
       "hint": "⌘↩ to send",
       "message": "Discuss again \"{title}\": {note}",
       "done": "Back in the conversation: \"{title}\"",
+      "revised": "I’ve revised “{title}” and submitted it for approval.",
       "fromConversation": "From conversation: {title}",
       "conversation": "this conversation"
     }

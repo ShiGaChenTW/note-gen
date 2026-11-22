@@ -11,7 +11,7 @@ import { scheduleSlot, slotEndLabel } from '@/lib/timeslots/model'
 import { ORGANIZE_TOOL } from '@/lib/organize/drafts'
 import type { Proposal, ProposalCardHint } from '@/lib/collect/types'
 import { threadKey } from '@/lib/threads/projects'
-import { statusOf, type ProposalDiscussion, type ProposalStatus, type ProposalTrail } from '@/lib/proposals/trail'
+import { replacedProposalKeys, statusOf, type ProposalDiscussion, type ProposalStatus, type ProposalTrail } from '@/lib/proposals/trail'
 
 export type DecideSource = 'collect' | 'draft' | 'job'
 export type DecideKind = 'job' | 'note' | 'task' | 'event' | 'create' | 'update' | 'delete' | 'move' | 'copy' | 'folder'
@@ -182,13 +182,14 @@ function whenOf(proposal: Proposal): string {
   return [m ? `${Number(m[1])}/${Number(m[2])}` : proposal.due, time].filter(Boolean).join(' ')
 }
 
-function projectCollect(items: CollectItemLike[], journal: JournalSnapshot | null, workspace?: string): DecideItem[] {
+function projectCollect(items: CollectItemLike[], journal: JournalSnapshot | null, workspace: string | undefined, trail: ProposalTrail, isReplaced: (key: string) => boolean): DecideItem[] {
   const out: DecideItem[] = []
   const seen = new Map<string, DecideItem>()
   for (const item of items) {
     if (item.state !== 'ready') continue
     for (const proposal of item.proposals) {
-      if (proposal.status !== 'wait') continue
+      const key = `collect:${item.id}:${proposal.id}`
+      if (proposal.status !== 'wait' || isReplaced(key)) continue
       const slot = proposal.slot
       if (slot && (!journal || proposal.due !== journal.today || slot.path !== journal.path
         || slot.workspace !== journal.workspace || slot.workspace !== workspace)) continue
@@ -196,7 +197,8 @@ function projectCollect(items: CollectItemLike[], journal: JournalSnapshot | nul
       // 去重一：同一件事已經在今日日誌裡（例如其他管道寫過了），不再問第二次。
       if (!slot && journal && proposal.kind !== 'note' && journal.before.split(/\r?\n/).includes(proposalTaskLine(proposal, journal.today))) continue
       // 去重二：兩個來源各提了同一件事，只列一次。
-      const same = seen.get(sameThingKey(proposal))
+      const identity = statusOf(trail, key) === 'discussing' ? key : sameThingKey(proposal)
+      const same = seen.get(identity)
       if (same) { same.duplicates.push(ref); continue }
 
       let preview: DecidePreview
@@ -222,7 +224,7 @@ function projectCollect(items: CollectItemLike[], journal: JournalSnapshot | nul
         preview = { type: 'journal', section: '', fileMissing: false, diff: { context: [], removed: [], added: [], hidden: 0 } }
       }
       const entry: DecideItem = {
-        key: `collect:${item.id}:${proposal.id}`,
+        key,
         source: 'collect',
         kind: change ? change.kind : proposal.kind,
         title: change ? change.path : proposal.title,
@@ -239,7 +241,7 @@ function projectCollect(items: CollectItemLike[], journal: JournalSnapshot | nul
         ...(proposal.card ? { card: proposal.card } : {}),
         ...(proposal.edits?.length ? { notePaths: Array.from(new Set(proposal.edits.map(item => item.path))) } : {}),
       }
-      seen.set(sameThingKey(proposal), entry)
+      seen.set(identity, entry)
       out.push(entry)
     }
   }
@@ -288,11 +290,12 @@ function projectDrafts(tasks: TaskLike[], workspace: string | undefined): Decide
 export function projectProposals(input: ProjectInput): DecideItem[] {
   const trail = input.trail ?? {}
   const byKey = new Map((input.conversations ?? []).map(conversation => [threadKey(conversation), conversation.id]))
-  const all = [...projectCollect(input.items, input.journal, input.workspace), ...projectDrafts(input.tasks, input.workspace), ...projectJobDecisions(input.jobs ?? [])]
-    .map(item => withTrail(item, trail, byKey))
-  const replaced = new Set(all.flatMap(item => item.previousProposalId ? [item.previousProposalId] : []))
+  const replaced = replacedProposalKeys(input.items)
+  const isReplaced = (key: string) => replaced.has(key) || Boolean(trail[key]?.supersededBy)
+  const all = [...projectCollect(input.items, input.journal, input.workspace, trail, isReplaced), ...projectDrafts(input.tasks, input.workspace), ...projectJobDecisions(input.jobs ?? [])]
   return all
-    .filter(item => !replaced.has(item.key) && !trail[item.key]?.supersededBy)
+    .filter(item => !isReplaced(item.key))
+    .map(item => withTrail(item, trail, byKey))
     .map((item, index) => ({ item, index }))
     .sort((x, y) => x.item.at - y.item.at || x.index - y.index)
     .map(entry => entry.item)
@@ -302,7 +305,7 @@ function withTrail(item: DecideItem, trail: ProposalTrail, byKey: Map<string, nu
   const entry = trail[item.key]
   const next: DecideItem = { ...item, status: statusOf(trail, item.key) }
   if (next.conversationId === undefined && item.conversationKey) next.conversationId = byKey.get(item.conversationKey)
-  if (next.conversationId === undefined && entry?.conversationId !== undefined) next.conversationId = entry.conversationId
+  if (entry?.conversationId !== undefined) next.conversationId = entry.conversationId
   if (next.conversationId === undefined) delete next.conversationId
   if (entry?.discussion) next.discussion = entry.discussion
   return next

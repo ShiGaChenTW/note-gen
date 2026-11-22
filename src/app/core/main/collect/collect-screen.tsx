@@ -14,11 +14,13 @@ import { extractSchedule } from '@/lib/collect/split'
 import type { CollectInput, ProposalKind } from '@/lib/collect/types'
 import { useUiV3 } from '@/lib/fork-ui'
 import { recordNoteContent } from '@/lib/inbox/record-to-note'
+import { replacedProposalKeys } from '@/lib/proposals/trail'
 import { classifyUnifiedRecordInput } from '@/lib/unified-record-input'
 import { cn } from '@/lib/utils'
 import useArticleStore from '@/stores/article'
 import useCollectStore, { type CaptureItem, type CaptureProposal } from '@/stores/collect'
 import useInboxStore, { selectUnprocessedRecords } from '@/stores/inbox'
+import useProposalTrailStore from '@/stores/proposals'
 import { getMarkListItemContent } from '../mark/mark-list-item-content'
 import { Count } from '@/components/v3/count'
 import { EmptyState } from '@/components/v3/empty-state'
@@ -229,7 +231,18 @@ export function CollectScreen() {
   const visible = useCollectStore(state => state.visible)
   const hide = useCollectStore(state => state.hide)
   const captures = useCollectStore(state => state.items)
-  const items = useMemo(() => captures.filter(item => !item.proposals.some(proposal => proposal.slot)), [captures])
+  const trail = useProposalTrailStore(state => visible && isV3 ? state.trail : undefined)
+  const items = useMemo(() => {
+    const replaced = replacedProposalKeys(captures)
+    return captures.filter(item => !item.proposals.some(proposal => proposal.slot)).map(item => ({
+      ...item,
+      proposals: item.proposals.filter(proposal => {
+        const key = `collect:${item.id}:${proposal.id}`
+        const entry = trail?.[key]
+        return !replaced.has(key) && !entry?.supersededBy && !entry?.discussion
+      }),
+    }))
+  }, [captures, trail])
   const submit = useCollectStore(state => state.submit)
   const records = useInboxStore(state => state.records)
   const processed = useInboxStore(state => state.processed)

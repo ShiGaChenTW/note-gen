@@ -53,6 +53,15 @@ export function supersede(trail: ProposalTrail, oldKey: string, newKey: string):
   return { ...trail, [oldKey]: { ...trail[oldKey], supersededBy: newKey } }
 }
 
+/** 從已保存的修訂版找舊提案，包含已接受或放棄的修訂版。 */
+export function replacedProposalKeys(items: readonly { proposals: readonly { previousProposalId?: string }[] }[]): Set<string> {
+  const keys = new Set<string>()
+  for (const item of items) {
+    for (const proposal of item.proposals) if (proposal.previousProposalId) keys.add(proposal.previousProposalId)
+  }
+  return keys
+}
+
 export function statusOf(trail: ProposalTrail | undefined, key: string): ProposalStatus {
   return trail?.[key]?.discussion ? 'discussing' : 'wait'
 }
@@ -66,12 +75,14 @@ export function sanitizeTrail(value: unknown): ProposalTrail {
     const entry = raw as Record<string, unknown>
     const next: ProposalTrailEntry = {}
     if (typeof entry.conversationId === 'number' && Number.isInteger(entry.conversationId)) next.conversationId = entry.conversationId
+    if (typeof entry.supersededBy === 'string' && entry.supersededBy) next.supersededBy = entry.supersededBy
     const discussion = entry.discussion as Record<string, unknown> | undefined
-    if (discussion && typeof discussion.note === 'string' && typeof discussion.at === 'number') {
+    // 舊版留下或重開時中斷的修訂可以重送；原說明已寫在對話裡。
+    if (discussion && typeof discussion.note === 'string' && typeof discussion.at === 'number'
+      && (!key.startsWith('collect:') || next.supersededBy)) {
       const note = normalizeDiscussionNote(discussion.note)
       if (note) next.discussion = { note, at: discussion.at }
     }
-    if (typeof entry.supersededBy === 'string' && entry.supersededBy) next.supersededBy = entry.supersededBy
     if (Object.keys(next).length) out[key] = next
   }
   return out

@@ -8,11 +8,13 @@ import { toast } from 'sonner'
 import { Check, CalendarClock, FileText, ListTodo, LoaderCircle, Undo2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useUiV3 } from '@/lib/fork-ui'
-import { resolveThreadCard, type CardAction, type DirectEditCardView, type KickoffCardView, type ProposalCardView, type ThreadCard } from '@/lib/threads/cards'
+import { resolveThreadCard, threadProposalKey, type CardAction, type DirectEditCardView, type KickoffCardView, type ProposalCardView, type ThreadCard } from '@/lib/threads/cards'
 import { cn } from '@/lib/utils'
 import { discussProposal } from '@/lib/proposals/actions'
 import useChatStore from '@/stores/chat'
 import useThreadsStore from '@/stores/threads'
+import useCollectStore from '@/stores/collect'
+import useProposalTrailStore from '@/stores/proposals'
 import { DiscussForm } from '../decide/discuss-form'
 
 const KIND_ICON = { note: FileText, task: ListTodo, event: CalendarClock } as const
@@ -159,21 +161,29 @@ export function ThreadMessageCards({ chatId }: { chatId: number }) {
   const t = useTranslations('decide')
   const cards = useThreadsStore(state => state.cards[chatId])
   const act = useThreadsStore(state => state.actOnCard)
+  const hasProposals = isV3 && cards?.some(card => card.type === 'proposal')
+  const trail = useProposalTrailStore(state => hasProposals ? state.trail : undefined)
+  const items = useCollectStore(state => hasProposals ? state.items : undefined)
   // 卡片掛在哪則訊息，就來自那則訊息所在的對話
   const conversationId = useChatStore(state => state.chats.find(chat => chat.id === chatId)?.conversationId ?? state.currentConversationId ?? undefined)
   if (!isV3 || !cards?.length) return null
   return (
     <div className="mt-2 flex flex-col gap-2" data-slot="thread-cards">
       {cards.map((card: ThreadCard) => {
-        const view = resolveThreadCard(card)
+        const key = card.type === 'proposal' ? threadProposalKey(card) : ''
+        const entry = trail?.[key]
+        const source = card.type === 'proposal' ? card.source : undefined
+        const proposal = source && items?.find(item => item.id === source.itemId)?.proposals.find(p => p.id === source.proposalId)
+        const view = resolveThreadCard(card.type === 'proposal' ? {
+          ...card, status: entry?.supersededBy ? 'replaced' : entry?.discussion ? 'talk' : proposal?.status ?? card.status,
+        } : card)
         const onAction = (action: CardAction) => void act(chatId, card.id, action)
-        // Fork（almanac ALMNC-54.5）：再次討論——連著收集提案時用工作台同一個 key，工作台那邊也會一起變成討論中。
         const onDiscuss = async (note: string) => {
           if (card.type !== 'proposal') return
-          const key = card.source ? `collect:${card.source.itemId}:${card.source.proposalId}` : `thread-card:${card.id}`
           try {
-            const id = await discussProposal({ key, conversationId }, note, text => t('discuss.message', { title: card.title, note: text }))
-            if (id !== null) await act(chatId, card.id, 'discuss')
+            await discussProposal({ key, conversationId }, note,
+              text => t('discuss.message', { title: card.title, note: text }),
+              title => t('discuss.revised', { title }))
           } catch (error) {
             console.error('[threads] discuss failed:', error)
             toast.error(t('failed'))

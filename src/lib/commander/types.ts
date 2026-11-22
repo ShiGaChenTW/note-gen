@@ -189,7 +189,7 @@ export interface CommanderDeps {
   /** 依領域找類似筆記；沒有就標成 unavailable。 */
   findSimilarNotes?: (domainId: string | undefined, fragment: Fragment) => Promise<SimilarNote[]>
   /** 把提案送到工作台。只放進「等 Scott 決定」，不寫筆記庫。 */
-  submitProposals: (batch: ProposalBatch) => Promise<void>
+  submitProposals: (batch: ProposalBatch, options?: { durable: boolean, recordId?: number }) => Promise<void>
   /** 活動紀錄；失敗不影響分析。 */
   logActivity?: (entry: { sourceId: string, batchId?: string, status: SourceStatus, note: string }) => Promise<void>
   labels: CommanderLabels

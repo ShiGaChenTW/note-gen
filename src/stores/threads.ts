@@ -1,7 +1,7 @@
 // Fork（almanac ALMNC-14）：對話頁的狀態。做法同收集頁、Inbox 頁：同一時間只開一個全頁覆蓋層。
 // 對話本身（列表、目前對話、訊息）仍在 useChatStore，這裡只管頁面開關、專案分組、搜尋，與訊息內嵌卡片。
 import { create } from 'zustand'
-import { applyCardAction, type CardAction, type DirectEditCardData, type ThreadCard } from '@/lib/threads/cards'
+import { applyCardAction, threadProposalKey, type CardAction, type DirectEditCardData, type ThreadCard } from '@/lib/threads/cards'
 import {
   assignProject, dropProject, loadProjectMap, renameProject, saveProjectMap, type ThreadGroupMode, type ThreadProjectMap,
 } from '@/lib/threads/projects'
@@ -14,6 +14,7 @@ import useCollectStore from './collect'
 import useHomeStore from './home'
 import useInboxStore from './inbox'
 import usePromptLibraryStore from './prompt-library'
+import useProposalTrailStore from './proposals'
 
 interface ThreadsState {
   visible: boolean
@@ -150,8 +151,10 @@ const useThreadsStore = create<ThreadsState>((set, get) => {
         return
       }
       // 提案卡連著收集頁的提案時，接受／放棄走收集頁的流程（會寫筆記檔或今日日誌）。
-      // 再次討論由畫面先呼叫 lib/proposals/actions 的 discussProposal（記說明、回到對話），這裡只改卡片狀態。
       if (card.type === 'proposal' && card.source) {
+        const key = threadProposalKey(card)
+        const trail = useProposalTrailStore.getState().trail[key]
+        if (trail?.discussion || trail?.supersededBy) return
         const collect = useCollectStore.getState()
         if (action === 'accept') await collect.accept(card.source.itemId, card.source.proposalId)
         if (action === 'reject') collect.reject(card.source.itemId, card.source.proposalId)

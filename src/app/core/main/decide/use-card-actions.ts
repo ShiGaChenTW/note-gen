@@ -131,7 +131,9 @@ export function useCardActions({ visible, commanderName }: { visible: readonly W
         const note = payload?.note ?? ''
         const key = card.decide?.key ?? card.key
         try {
-          const id = await discussProposal({ key, conversationId: card.conversationId }, note, text => decideT('discuss.message', { title, note: text }))
+          const id = await discussProposal({ key, conversationId: card.conversationId }, note,
+            text => decideT('discuss.message', { title, note: text }),
+            revised => decideT('discuss.revised', { title: revised }))
           if (id !== null) toast(decideT('discuss.done', { title }))
         } catch (error) {
           fail(error)

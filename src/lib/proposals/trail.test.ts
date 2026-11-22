@@ -19,6 +19,15 @@ describe('ALMNC-54.5 AC#2: 再次討論附說明', () => {
     expect(statusOf(undefined, 'x')).toBe('wait')
     expect(startDiscussion(next, 'x', { note: ' ', conversationId: 1, at: 1 })).toBe(next)
   })
+  it('reopens an interrupted or legacy discussion after restart and keeps its source conversation', () => {
+    const key = 'collect:c1:old'
+    const trail = startDiscussion({}, key, { note: '改', conversationId: 7, at: 2 })
+    expect(sanitizeTrail(trail)).toEqual({ [key]: { conversationId: 7 } })
+    expect(sanitizeTrail(supersede(trail, key, 'collect:c2:new'))[key]).toEqual({
+      conversationId: 7, discussion: { note: '改', at: 2 }, supersededBy: 'collect:c2:new',
+    })
+  })
+
   it('marks the old proposal superseded when the commander re-proposes', () => {
     const trail = supersede({ old: { conversationId: 3 } }, 'old', 'new')
     expect(trail.old).toEqual({ conversationId: 3, supersededBy: 'new' })

@@ -221,7 +221,7 @@ describe('審核 tab', () => {
     act(() => button('再次討論D')!.click())
     type(container.querySelector('textarea')!, '日期改到下週')
     await act(async () => button(messages.decide.discuss.send)!.click())
-    expect(mocks.discussProposal).toHaveBeenCalledWith({ key: 'collect:old:a', conversationId: 7 }, '日期改到下週', expect.any(Function))
+    expect(mocks.discussProposal).toHaveBeenCalledWith({ key: 'collect:old:a', conversationId: 7 }, '日期改到下週', expect.any(Function), expect.any(Function))
   })
 
   it('AC#4: any card can be put aside with a reminder date; shows 先放著 N 件 and can be taken back', () => {

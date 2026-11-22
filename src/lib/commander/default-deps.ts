@@ -114,11 +114,20 @@ export async function createDefaultCommanderDeps(): Promise<CommanderDeps> {
       const find = await defaultSimilarFinder()
       return (await find(domainId, { title: fragment.title, body: fragment.body })).map(({ path, title }) => ({ path, title }))
     },
-    submitProposals: async batch => {
+    submitProposals: async (batch, options) => {
       const { default: useCollectStore } = await import('@/stores/collect')
       // 先讀回保存的項目，之後的變動才會存檔。
-      await useCollectStore.getState().hydrate()
-      useCollectStore.getState().addProposals(batch.id, batch.origin, batch.proposals, { conversationId: batch.conversationId })
+      const collect = useCollectStore.getState()
+      await collect.hydrate()
+      collect.addProposals(batch.id, batch.origin, batch.proposals, { conversationId: batch.conversationId, recordId: options?.recordId })
+      if (options?.durable) {
+        try {
+          await collect.persist()
+        } catch (error) {
+          collect.remove(batch.id)
+          throw error
+        }
+      }
     },
     logActivity: async entry => {
       const commander = (await roster()).find(agent => agent.role === 'commander')

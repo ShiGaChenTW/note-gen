@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import messages from '../../../../../messages/zh-TW.json'
 import { useUiModeStore } from '@/lib/fork-ui'
 import useThreadsStore from '@/stores/threads'
+import useProposalTrailStore from '@/stores/proposals'
 
 const { storeSet } = vi.hoisted(() => ({ storeSet: vi.fn() }))
 
@@ -37,6 +38,7 @@ let root: Root
 beforeEach(() => {
   ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
   useUiModeStore.setState({ mode: 'v3' })
+  useProposalTrailStore.setState({ trail: {} })
   useThreadsStore.setState({ cards: {}, tagMap: {}, projectsLoaded: false })
   storeSet.mockClear()
   container = document.createElement('div')
@@ -73,6 +75,18 @@ describe('direct edit confirmation', () => {
     await act(async () => { Array.from(container.querySelectorAll('button')).find(element => element.textContent?.includes('復原'))!.click() })
     expect(container.textContent).toContain('檔案之後改過，沒有復原')
   })
+})
+
+it('shows a replaced proposal in its source conversation without decision buttons', () => {
+  useThreadsStore.getState().attachCard(5, {
+    type: 'proposal', id: 'old', kind: 'task', title: '寄報價', status: 'wait',
+    source: { itemId: 'c1', proposalId: 'p1' },
+  })
+  render()
+  expect(container.querySelectorAll('[data-card="proposal"] button')).toHaveLength(3)
+  act(() => useProposalTrailStore.setState({ trail: { 'collect:c1:p1': { supersededBy: 'collect:c2:p2' } } }))
+  expect(container.textContent).toContain('已被新版取代')
+  expect(container.querySelector('[data-card="proposal"] button')).toBeNull()
 })
 
 describe('commander threads', () => {

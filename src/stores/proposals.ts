@@ -9,12 +9,14 @@ interface ProposalTrailState {
   hydrate: () => Promise<void>
   /** 再次討論：記下說明與要回到的對話；說明是空的不動，回傳是否有記下。 */
   discuss: (key: string, conversationId: number, note: string) => boolean
+  clearDiscussion: (key: string) => void
   /** 指揮官修改後重新提案：舊提案標成被取代。 */
   supersede: (oldKey: string, newKey: string) => void
 }
 
 let hydration: Promise<void> | undefined
 let persistReady = false
+let pendingSave = Promise.resolve()
 
 const useProposalTrailStore = create<ProposalTrailState>((set, get) => ({
   trail: {},
@@ -34,12 +36,17 @@ const useProposalTrailStore = create<ProposalTrailState>((set, get) => ({
     set({ trail: next })
     return true
   },
+  clearDiscussion: key => set(state => {
+    const entry = state.trail[key]
+    if (!entry?.discussion || entry.supersededBy) return state
+    return { trail: { ...state.trail, [key]: { conversationId: entry.conversationId } } }
+  }),
   supersede: (oldKey, newKey) => set(state => ({ trail: supersede(state.trail, oldKey, newKey) })),
 }))
 
 useProposalTrailStore.subscribe((state, previous) => {
   if (!persistReady || state.trail === previous.trail) return
-  saveTrail(state.trail).catch(error => console.error('[proposals] save failed:', error))
+  pendingSave = pendingSave.then(() => saveTrail(state.trail)).catch(error => console.error('[proposals] save failed:', error))
 })
 
 export default useProposalTrailStore
