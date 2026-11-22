@@ -1,6 +1,7 @@
 // Fork（almanac ALMNC-54.6）：同一主題累積 3 則以上未歸屬的知識筆記時，指揮官提案成立新領域，同時提案新增一位負責的專家
 // （提議本名、領域，並起草 soul.md 與 rules.md）。規格見定案文件第一節 §3「領域」、第二節「擬人化」。
 // domainProposal 是純函式；acceptDomainProposal 在 Scott 接受後才建立領域、專家並把筆記歸入，所有寫入都由依賴注入。
+import { defaultInterval, formatInterval } from '@/lib/cleanup/interval'
 import { defaultRules, defaultSoul } from '@/lib/agent-memory/templates'
 import type { Domain } from '@/lib/v3-model/domain'
 import type { NoteType } from '@/lib/v3-model/note'
@@ -52,7 +53,8 @@ export function expertRules(domain: string): string {
     `- 只撰寫「${domain}」的知識筆記草稿；草稿交回指揮官統整成提案，不直接寫入筆記庫。`,
     '- 新筆記歸入領域前，先比對類似筆記，找出重複和衝突；只提出觀察，由指揮官提案。',
     '- 只根據筆記庫裡的資料回答，不查外部資料；待查證的可以引用但要標明有爭議，已被取代的預設不引用。',
-    '- 重新確認頻率：1 年（Scott 可以改）。',
+    // Fork（almanac ALMNC-54.12）：起草時依領域給預設（技術類 6 個月、一般知識 1 年）；lib/cleanup/interval.ts 讀這一行。
+    `- 重新確認頻率：${formatInterval(defaultInterval(domain))}（Scott 可以改）。`,
     '',
   ].join('\n')
 }

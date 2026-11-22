@@ -126,6 +126,10 @@ const useCollectStore = create<CollectState>((set, get) => ({
     if (proposal.sourceIds?.length) {
       await linkAcceptedOutputs(proposal, result).catch(error => console.error('[collect] source output link failed:', error))
     }
+    // Fork（almanac ALMNC-54.12）：新筆記寫入後，負責的專家在背景比對同領域的類似筆記（發現時機 1）；不擋接受。
+    if (proposal.kind === 'note' && !proposal.slot && !proposal.change && !proposal.edits?.length && !proposal.review && result.path) {
+      void import('@/lib/cleanup/runtime').then(module => module.checkAfterWrite(result.path, 'written')).catch(() => undefined)
+    }
     const updated = get().items.find(entry => entry.id === itemId)
     if (updated?.recordId !== undefined && updated.proposals.every(entry => entry.status !== 'wait')) {
       const note = updated.proposals.find(entry => entry.status === 'ok' && entry.kind === 'note')

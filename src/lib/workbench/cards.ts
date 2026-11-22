@@ -146,6 +146,8 @@ export interface ConfirmLike {
   title: string
   /** YYYY-MM-DD。 */
   lastConfirmed: string
+  /** Fork（almanac ALMNC-54.12）：依領域期限算出的到期日，YYYY-MM-DD。 */
+  dueDate?: string
   by?: string
 }
 
@@ -184,12 +186,15 @@ function baseName(path: string): string {
 /** 提案的標籤：日程（任務、時段）、知識（領域）、回顧（超過 14 天沒決定）、其他都是筆記。 */
 export function proposalLabel(item: DecideItem, now: number): CardLabel {
   if (now - item.at >= PROPOSAL_STALE_DAYS * DAY_MS) return 'review'
+  // Fork（almanac ALMNC-54.12）：清理提案（同領域打包＝知識）、確認、每週回顧由提案自己指定標籤。
+  if (item.card) return item.card.label
   if (item.kind === 'task' || item.kind === 'event') return 'schedule'
   return 'note'
 }
 
 /** 提案的動詞（十一個之一）。 */
 export function proposalVerb(item: DecideItem): CardVerb {
+  if (item.card) return item.card.verb
   if (item.organizeMerge) return 'merge'
   switch (item.kind) {
     case 'task':
@@ -205,9 +210,11 @@ export function proposalVerb(item: DecideItem): CardVerb {
 }
 
 function proposalCard(item: DecideItem, now: number): WorkbenchCard {
-  const fileLike = item.source === 'draft' || (item.preview.type === 'file' && item.kind !== 'task' && item.kind !== 'event')
+  // Fork（almanac ALMNC-54.12）：自己指定卡片的提案（清理、確認、回顧）標題就是標的物，第二行是第一則筆記的資料夾。
+  const fileLike = !item.card && (item.source === 'draft' || (item.preview.type === 'file' && item.kind !== 'task' && item.kind !== 'event'))
   const title = item.source === 'draft' ? item.summary || baseName(item.title) : fileLike ? baseName(item.title) : item.title
-  const path = item.when || (fileLike ? folderOf(item.preview.type === 'file' ? item.preview.path : item.title) : '')
+  const cardFolder = item.card && item.preview.type === 'file' ? folderOf(item.preview.path) : ''
+  const path = item.when || (fileLike ? folderOf(item.preview.type === 'file' ? item.preview.path : item.title) : cardFolder)
   return {
     key: item.key,
     kind: 'proposal',
@@ -215,13 +222,14 @@ function proposalCard(item: DecideItem, now: number): WorkbenchCard {
     label: proposalLabel(item, now),
     verb: proposalVerb(item),
     title,
-    more: item.duplicates.length || undefined,
+    more: (item.notePaths && item.notePaths.length > 1 ? item.notePaths.length - 1 : item.duplicates.length) || undefined,
     path: path || undefined,
     summary: item.source === 'draft' ? item.origin : item.summary || item.origin,
     at: item.at,
     actions: ACTIONS_BY_KIND.proposal,
     ...(item.conversationId !== undefined ? { conversationId: item.conversationId } : {}),
     decide: item,
+    ...(item.notePaths?.length ? { notePaths: item.notePaths } : {}),
   }
 }
 

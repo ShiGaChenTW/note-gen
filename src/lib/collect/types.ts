@@ -54,7 +54,50 @@ export interface Proposal {
    * 有這個欄位時 kind 一律是 note，接受時用原本的工具照 args 寫入（同背景任務的草稿審核），寫入前先比對衝突。
    */
   change?: FileChange
+  // Fork（almanac ALMNC-54.12）：清理提案與確認提案——一次改好幾則筆記（寫入前逐一比對提案當下的內容，全部沒被改過才寫）。
+  /** 筆記變更（修改、標狀態、補情境、合併、取代時新增的筆記）。有這個欄位時接受不另外新增筆記。 */
+  edits?: NoteEdit[]
+  /** 領域的變更（例如在總覽的「矛盾與未解問題」加一條）。 */
+  domainEdits?: DomainEdit[]
+  /** Fork（almanac ALMNC-54.13）：記憶稽核——刪掉工作筆記或目前脈絡裡和筆記重疊的內容（Scott 接受＝Scott 本人寫入）。 */
+  memoryEdits?: MemoryEdit[]
+  /** 工作台卡片的標籤與動詞（沒有就照種類推）。 */
+  card?: ProposalCardHint
+  /** 清理提案：這一則涵蓋哪些處理方式、屬於哪個領域、是不是立刻提出（衝突或錯誤）。 */
+  cleanup?: { domainId?: string, actions: CleanupActionName[], immediate: boolean }
+  /** Fork（almanac ALMNC-54.13）：每週回顧（時期回顧）提案：時期（例如「11 月第 3 週」）與時期鍵。 */
+  review?: { period: string, periodKey: string }
 }
+
+/** Fork（almanac ALMNC-54.12）：修改、取代、待查證、補情境、合併、封存。 */
+export type CleanupActionName = 'modify' | 'replace' | 'verify' | 'supplement' | 'merge' | 'archive'
+
+/** Fork（almanac ALMNC-54.12）：卡片標籤與動詞（值同 lib/workbench/cards.ts 的 CardLabel／CardVerb）。 */
+export interface ProposalCardHint {
+  label: 'schedule' | 'note' | 'knowledge' | 'source' | 'review'
+  verb: 'add' | 'supplement' | 'modify' | 'merge' | 'replace' | 'verify' | 'archive' | 'reschedule' | 'judge' | 'confirm' | 'organize'
+}
+
+/** Fork（almanac ALMNC-54.12）：一則筆記的完整新內容。baseContent 是提案當下的原文；null＝新增的筆記（當時不存在）。 */
+export interface NoteEdit {
+  path: string
+  baseContent: string | null
+  content: string
+  summary: string
+}
+
+/** Fork（almanac ALMNC-54.12）：領域總覽改寫；baseOverview 是提案當下的總覽。 */
+export interface DomainEdit {
+  domainId: string
+  baseOverview: string
+  overview: string
+  summary: string
+}
+
+/** Fork（almanac ALMNC-54.13）：記憶稽核的刪除。base 是提案當下的內容，被改過就不寫。 */
+export type MemoryEdit =
+  | { target: 'work_notes', agent: { id: string, name: string, role: 'commander' | 'expert' | 'secretary' | 'researcher', domain?: string }, baseContent: string, content: string, summary: string }
+  | { target: 'context', baseContext: { projects: Array<{ title: string, link?: string }>, weeklyFocus: Array<{ title: string, link?: string }>, people: string[] }, context: { projects: Array<{ title: string, link?: string }>, weeklyFocus: Array<{ title: string, link?: string }>, people: string[] }, summary: string }
 
 /** Fork（almanac ALMNC-54.7）：一筆還沒寫入的檔案變更。欄位同背景任務的草稿（agent-tasks/types.ts DraftChange）。 */
 export interface FileChange {
