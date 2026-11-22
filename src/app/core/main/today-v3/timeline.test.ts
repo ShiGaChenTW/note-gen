@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// Fork（almanac ALMNC-56.4，RPT-2026-009 A05）：時間軸提案的收下／不要按鈕夠大、間距夠，讀屏名稱帶上提案標題。
+// Fork（almanac ALMNC-56.4，RPT-2026-009 A05）：時間軸提案的接受／放棄按鈕夠大、間距夠，讀屏名稱帶上提案標題。
 import { act, createElement as h } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { NextIntlClientProvider } from 'next-intl'
@@ -51,10 +51,10 @@ it('A05: proposal buttons are at least 24px tall with an 8px gap, named after th
   for (const button of [...first, ...second]) expect(button.className).toContain('min-h-6')
   expect(first[0].parentElement!.className).toContain('gap-2')
   // 多個提案的按鈕讀屏名稱不再重複
-  expect(first.map(button => button.getAttribute('aria-label'))).toEqual(['收下「週會準備」', '不要「週會準備」'])
-  expect(second.map(button => button.getAttribute('aria-label'))).toEqual(['收下「回信給廠商」', '不要「回信給廠商」'])
+  expect(first.map(button => button.getAttribute('aria-label'))).toEqual(['接受「週會準備」', '放棄「週會準備」'])
+  expect(second.map(button => button.getAttribute('aria-label'))).toEqual(['接受「回信給廠商」', '放棄「回信給廠商」'])
   // 看得到的字照舊
-  expect(first.map(button => button.textContent)).toEqual(['收下', '不要'])
+  expect(first.map(button => button.textContent)).toEqual(['接受', '放棄'])
   act(() => first[0].click())
   act(() => second[1].click())
   expect(onAccept).toHaveBeenCalledWith('p1')

@@ -1,10 +1,10 @@
 {
   "agents": {
-    "title": "代理人",
-    "description": "設定每個代理人可用的工具。筆記提案會進入審核佇列。",
-    "loading": "正在載入代理人…",
-    "empty": "還沒有代理人。",
-    "add": "新增代理人",
+    "title": "夥伴",
+    "description": "設定每位夥伴可用的工具。筆記提案會進入工作台。",
+    "loading": "正在載入夥伴…",
+    "empty": "還沒有夥伴。",
+    "add": "新增夥伴",
     "edit": "編輯",
     "name": "本名",
     "role": "角色",
@@ -16,8 +16,8 @@
     "save": "儲存",
     "saving": "儲存中…",
     "cancel": "取消",
-    "loadError": "無法載入代理人設定。",
-    "saveError": "無法儲存代理人設定。",
+    "loadError": "無法載入夥伴設定。",
+    "saveError": "無法儲存夥伴設定。",
     "roles": {
       "commander": "指揮官",
       "expert": "專家",
@@ -4916,7 +4916,7 @@
           "file": "要改 {name}，可以嗎？",
           "files": "要改 {count} 個檔案，可以嗎？",
           "apply": "可以，套用",
-          "deny": "不要",
+          "deny": "放棄",
           "showDiff": "看改動",
           "hideDiff": "收起改動",
           "fileList": "看檔案清單"
@@ -7932,6 +7932,7 @@
     "showProcessed": "顯示已整理",
     "trash": "垃圾桶",
     "backToInbox": "回到 Inbox",
+    "backToRecords": "返回記錄",
     "backToWorkspace": "回到工作區",
     "selectAll": "全選",
     "selected": "已選 {count} 筆",
@@ -8203,9 +8204,9 @@
     }
   },
   "collect": {
-    "title": "收集",
-    "subtitle": "一個框收所有東西，拆成提案，逐條收下",
-    "inputLabel": "收集內容",
+    "title": "資料源",
+    "subtitle": "貼上任何東西，拆成提案，逐條接受",
+    "inputLabel": "要加入的內容",
     "placeholder": "貼上連結、一段文字，或拖入截圖、檔案。直接打一句待辦也可以。",
     "detect": {
       "empty": "會自動辨識類型",
@@ -8222,7 +8223,7 @@
         "hint": "→ 存成筆記，拆出行動"
       }
     },
-    "send": "收進來",
+    "send": "新增資料源",
     "pickFile": "圖片或檔案",
     "try": "試試：",
     "sample": {
@@ -8235,7 +8236,7 @@
     "filter": {
       "label": "依狀態篩選",
       "all": "全部",
-      "pending": "待收下",
+      "pending": "待決定",
       "done": "已處理"
     },
     "input": {
@@ -8258,34 +8259,34 @@
       "ai": "AI 拆分",
       "rules": "規則拆分（AI 沒有回應或尚未設定）"
     },
-    "accept": "收下",
+    "accept": "接受",
     "edit": "修改",
-    "reject": "不要",
+    "reject": "放棄",
     "editDone": "完成",
-    "acceptAll": "全部收下",
+    "acceptAll": "全部接受",
     "fieldTitle": "標題",
     "fieldDate": "日期",
     "fieldTime": "時間",
     "status": {
-      "ok": "已收下",
-      "no": "已丟掉"
+      "ok": "已接受",
+      "no": "已放棄"
     },
     "open": "開啟",
     "undo": "復原",
-    "accepted": "已收下：{title}",
-    "acceptedMany": "已收下 {count} 項提案",
+    "accepted": "已接受：{title}",
+    "acceptedMany": "已接受 {count} 項提案",
     "undoFailed": "檔案已被修改，無法復原",
     "failed": "操作失敗，請重試",
-    "fileTooLarge": "{name} 超過 8 MB，沒有收進來",
-    "remove": "移除這筆收集",
-    "empty": "還沒收進東西。貼一段文字、連結或圖片試試。",
-    "emptyFilter": "這個狀態下沒有收集。",
+    "fileTooLarge": "{name} 超過 8 MB，沒有加入資料源",
+    "remove": "移除這筆資料源",
+    "empty": "還沒有資料源。貼一段文字、連結或圖片試試。",
+    "emptyFilter": "這個狀態下沒有資料源。",
     "records": "未整理的記錄",
     "recordsHint": "Inbox 資料夾裡還沒整理的記錄，可以拆成提案。",
     "recordsEmpty": "沒有未整理的記錄",
     "split": "拆分",
-    "queued": "已在收集",
-    "writeHint": "新筆記、任務和時段都要你收下才會寫入；沒有收下的提案不會留下任何檔案。"
+    "queued": "已在資料源",
+    "writeHint": "新筆記、任務和時段都要你接受才會寫入；沒有接受的提案不會留下任何檔案。"
   },
   "threads": {
     "chatMovedHint": "對話正在中間的對話頁顯示",
@@ -8323,8 +8324,8 @@
       "proposal": "提案",
       "accept": "接受",
       "reject": "放棄",
-      "alsoInInbox": "也在等你定",
-      "proposalWait": "等你定",
+      "alsoInInbox": "也在工作台",
+      "proposalWait": "要決定",
       "proposalOk": "已接受",
       "proposalNo": "已放棄",
       "kickoff": "開工卡",
@@ -8396,9 +8397,13 @@
         "title": "開啟首頁",
         "keywords": "home,今天,首頁"
       },
+      "collect": {
+        "title": "開啟資料源",
+        "keywords": "資料源,新增資料源"
+      },
       "inbox": {
-        "title": "開啟收集箱",
-        "keywords": "inbox,收集,待整理"
+        "title": "開啟舊記錄",
+        "keywords": "舊記錄,未整理"
       },
       "searchSidebar": {
         "title": "聚焦側欄搜尋",
@@ -8436,11 +8441,11 @@
     }
   },
   "decide": {
-    "title": "等你定",
-    "subtitle": "{count} 件等你定，逐條收下或不要",
-    "count": "{count} 件等你定",
-    "needsLabel": "等你定",
-    "listLabel": "等你定的項目",
+    "title": "工作台",
+    "subtitle": "{count} 件，逐條接受或放棄",
+    "count": "工作台 · {count} 件",
+    "needsLabel": "要決定",
+    "listLabel": "工作台的項目",
     "empty": "都處理完了。",
     "proposalTag": "提案",
     "kind": {
@@ -8455,20 +8460,20 @@
       "folder": "新增資料夾"
     },
     "source": {
-      "collect": "收集",
+      "collect": "資料源",
       "draft": "夥伴提案"
     },
     "from": "來自 {origin}",
-    "writesTo": "收下後寫入：",
+    "writesTo": "接受後寫入：",
     "dest": {
       "note": "收件資料夾的新筆記",
       "journal": "今天那篇每日筆記的「{section}」",
-      "journalNew": "每日筆記的「{section}」（今天的每日筆記還沒建立，收下時會依範本建立）"
+      "journalNew": "每日筆記的「{section}」（今天的每日筆記還沒建立，接受時會依範本建立）"
     },
     "diff": {
       "hidden": "還有 {count} 行沒列出"
     },
-    "merged": "另有 {count} 個來源提了同一件事，收下或不要時一併處理。",
+    "merged": "另有 {count} 個來源提了同一件事，接受或放棄時一併處理。",
     "accept": "接受",
     "reject": "放棄",
     "accepted": "已接受「{title}」",
@@ -8478,7 +8483,7 @@
     "failed": "處理失敗，請再試一次",
     "conflict": "檔案在提案產生後被改過，請到任務中心逐條確認",
     "openReview": "到任務中心",
-    "viewAll": "等你定共 {count} 件，全部查看",
+    "viewAll": "工作台共 {count} 件，全部查看",
     "stale": "{count} 則提案超過 14 天沒決定，會列進每週回顧，不會自動消失",
     "discuss": {
       "button": "再次討論",
@@ -8505,7 +8510,7 @@
     "title": "開工卡標題",
     "step": "第 {number} 步",
     "stepTitle": "步驟名稱",
-    "agent": "代理人",
+    "agent": "夥伴",
     "instructions": "工作指示",
     "criterion": "驗收標準",
     "removeStep": "移除第 {number} 步",
@@ -8513,12 +8518,12 @@
     "addStep": "新增步驟",
     "close": "關閉",
     "saveProposal": "儲存提案",
-    "loadingAgents": "正在載入代理人…",
-    "noAgents": "請至「設定 → 一般 → 代理人」啟用至少一位代理人。",
-    "agentsFailed": "無法載入代理人。",
+    "loadingAgents": "正在載入夥伴…",
+    "noAgents": "請至「設定 → 一般 → 夥伴」啟用至少一位夥伴。",
+    "agentsFailed": "無法載入夥伴。",
     "modelRequired": "請先設定 AI 模型，或自行新增步驟。",
     "generateFailed": "無法產生有效的步驟。請重試或自行新增。",
-    "invalidPlan": "請為每個步驟填寫名稱、代理人、工作指示與驗收標準。",
+    "invalidPlan": "請為每個步驟填寫名稱、夥伴、工作指示與驗收標準。",
     "invalidDependencies": "請檢查是否有循環相依，或選到了不存在的前置步驟。",
     "saveFailed": "無法儲存開工卡。",
     "card": "開工卡",
@@ -8534,7 +8539,7 @@
     "reviewDrafts": "審核草稿",
     "start": "開工",
     "parallel": "最多同時執行 {count} 件",
-    "agentDisabled": "代理人已停用或無法使用。請啟用後再重跑。",
+    "agentDisabled": "夥伴已停用或無法使用。請啟用後再重跑。",
     "interrupted": "上次執行中斷。你可以重跑或取消這個步驟。",
     "status": {
       "waiting": "等待派工",
@@ -8575,8 +8580,8 @@
       "empty": "這天還沒有排定行程。",
       "noAccess": "行事曆還沒開放存取，行程不會出現在這裡。",
       "proposal": "提案 · 排程員",
-      "accept": "收下",
-      "reject": "不要",
+      "accept": "接受",
+      "reject": "放棄",
       "namedAction": "{action}「{title}」"
     },
     "journal": {
@@ -8599,14 +8604,14 @@
       "emptyDay": "這天沒有到期的任務。"
     },
     "decide": {
-      "label": "等你定",
+      "label": "工作台",
       "empty": "都處理完了。",
       "all": "全部"
     },
     "captures": {
-      "label": "今天收進來",
+      "label": "今天新增的資料源",
       "all": "全部",
-      "empty": "今天還沒收進東西。",
+      "empty": "今天還沒有新增資料源。",
       "reading": "正在辨識",
       "kind": {
         "text": "文字",
@@ -8620,19 +8625,19 @@
       "tabHint": "按 Tab 切換到「問」",
       "note": "記",
       "ask": "問",
-      "notePlaceholder": "記一筆，或按 Tab 切到「問」",
-      "noteOnlyPlaceholder": "記一筆",
+      "notePlaceholder": "新增資料源，或按 Tab 切到「問」",
+      "noteOnlyPlaceholder": "新增資料源",
       "askPlaceholder": "問問題，例如「下午的空檔怎麼排」",
-      "notePlaceholderToday": "記一筆（會記到今天，不是 {date}）",
-      "toToday": "記到今天",
-      "submitNote": "收進來",
+      "notePlaceholderToday": "新增至今天的資料源（目前查看 {date}）",
+      "toToday": "加到今天",
+      "submitNote": "新增資料源",
       "submitAsk": "問",
       "detect": {
         "task": "任務",
         "link": "連結",
         "text": "筆記"
       },
-      "captured": "收進來了，正在拆分成提案",
+      "captured": "已加入資料源，正在拆分成提案",
       "noModel": "還沒設定模型，請先到設定選一個。"
     },
     "titleDay": "{date}",
@@ -8682,16 +8687,16 @@
     "nav": {
       "today": "今天",
       "decide": "工作台",
-      "collect": "收集",
+      "collect": "資料源",
       "threads": "對話",
       "knowledge": "整理",
       "plan": "計畫"
     },
     "agents": {
-      "title": "代理人",
+      "title": "夥伴",
       "running": "{count} 執行中",
-      "add": "新增代理人",
-      "addFirst": "新增第一位代理人"
+      "add": "新增夥伴",
+      "addFirst": "新增第一位夥伴"
     },
     "vault": "我的筆記",
     "collapseSection": "收合{title}",
@@ -8703,11 +8708,11 @@
     },
     "rules": {
       "label": "規則",
-      "text": "代理人只能提案；寫入一律經過工作台。"
+      "text": "夥伴只能提案；寫入一律經過工作台。"
     },
     "tabs": {
-      "collectGroup": "收集頁面",
-      "collect": "收集",
+      "collectGroup": "資料源頁面",
+      "collect": "資料源",
       "knowledgeGroup": "整理頁面",
       "inbox": "未整理",
       "timeline": "筆記時間軸",
@@ -8723,7 +8728,7 @@
   },
   "organize": {
     "title": "自動整理",
-    "description": "閒置 60 分鐘後，最多提出五項變更，在「等你定」逐筆確認。",
+    "description": "閒置 60 分鐘後，最多提出五項變更，在「工作台」逐筆確認。",
     "merge": "將 {detail} 合併至 {path}",
     "tag": "為 {path} 補上標籤 #{detail}",
     "link": "從 {path} 連到 {detail}",

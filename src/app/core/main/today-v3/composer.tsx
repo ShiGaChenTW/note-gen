@@ -1,7 +1,7 @@
 'use client'
 
 // Fork（almanac ALMNC-16.2）：v5 底部「記／問」輸入列。Tab 從記切到問，下一次 Tab 繼續前進。
-//   記 → 走收集拆分（stores/collect → lib/collect/split），提案出現在右欄「等你定」，收進來的東西出現在「今天收進來」
+//   記 → 新增資料源，由 stores/collect 拆成提案並顯示在工作台。
 //   問 → 走隨處對話（打開 AnywhereChatPanel，送出沿用 'quick-prompt-send'，由右側欄的 ChatInput 帶上下文送出）
 import { Kbd } from '@/components/ui/kbd'
 import { KbdHint } from '@/components/v3/kbd-hint'

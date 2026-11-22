@@ -119,7 +119,9 @@ function RecordRow({ record, selected, focused, processed, locale, onToggle, onF
 
 export function InboxScreen() {
   const t = useTranslations('inbox')
+  const tTabs = useTranslations('sidebarV3.tabs')
   const isV3 = useUiV3()
+  const title = isV3 ? tTabs('inbox') : 'Inbox'
   const InboxEmptyState = isV3 ? EmptyState : ClassicEmptyState
   const visible = useInboxStore(state => state.visible)
   const hide = useInboxStore(state => state.hide)
@@ -251,9 +253,9 @@ export function InboxScreen() {
   )
 
   return (
-    <PageSurface label="Inbox">
+    <PageSurface label={title}>
       <PageHeader
-        title={trash ? t('trash') : 'Inbox'}
+        title={trash ? t('trash') : title}
         onBack={hide}
         tabs={<CollectTabs active="inbox" />}
         actions={(
@@ -261,7 +263,7 @@ export function InboxScreen() {
             {isV3 && processedToggle}
             <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground v3:rounded-(--r)" onClick={() => setTrash(!trash)}>
               {trash ? <Undo2 className="size-4" aria-hidden /> : <Trash2 className="size-4" aria-hidden />}
-              {trash ? t('backToInbox') : t('trash')}
+              {trash ? t(isV3 ? 'backToRecords' : 'backToInbox') : t('trash')}
             </Button>
           </>
         )}

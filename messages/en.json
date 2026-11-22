@@ -1,10 +1,10 @@
 {
   "agents": {
-    "title": "Agents",
-    "description": "Choose which tools each agent can use. Note proposals go to the review queue.",
-    "loading": "Loading agents…",
-    "empty": "No agents yet.",
-    "add": "Add agent",
+    "title": "Partners",
+    "description": "Choose which tools each partner can use. Note proposals go to the Workbench.",
+    "loading": "Loading partners…",
+    "empty": "No partners yet.",
+    "add": "Add partner",
     "edit": "Edit",
     "name": "Name",
     "role": "Role",
@@ -16,8 +16,8 @@
     "save": "Save",
     "saving": "Saving…",
     "cancel": "Cancel",
-    "loadError": "Could not load agent settings.",
-    "saveError": "Could not save agent settings.",
+    "loadError": "Could not load partner settings.",
+    "saveError": "Could not save partner settings.",
     "roles": {
       "commander": "Commander",
       "expert": "Expert",
@@ -7867,6 +7867,7 @@
     "showProcessed": "Show processed",
     "trash": "Trash",
     "backToInbox": "Back to Inbox",
+    "backToRecords": "Back to records",
     "backToWorkspace": "Back to workspace",
     "selectAll": "Select all",
     "selected": "{count} selected",
@@ -8138,9 +8139,9 @@
     }
   },
   "collect": {
-    "title": "Collect",
-    "subtitle": "Drop anything in one box, split it into proposals, take them one by one",
-    "inputLabel": "Content to collect",
+    "title": "Sources",
+    "subtitle": "Add a source, then review its proposals one at a time.",
+    "inputLabel": "Content to add",
     "placeholder": "Paste a link or some text, or drop in a screenshot or file. A one-line to-do works too.",
     "detect": {
       "empty": "Type is detected automatically",
@@ -8157,7 +8158,7 @@
         "hint": "→ saved as a note, actions pulled out"
       }
     },
-    "send": "Collect",
+    "send": "Add source",
     "pickFile": "Image or file",
     "try": "Try:",
     "sample": {
@@ -8211,15 +8212,15 @@
     "acceptedMany": "Accepted {count} proposals",
     "undoFailed": "The file changed, so it can't be undone",
     "failed": "Something went wrong, please try again",
-    "fileTooLarge": "{name} is over 8 MB and was not collected",
-    "remove": "Remove this capture",
-    "empty": "Nothing collected yet. Try pasting some text, a link, or an image.",
-    "emptyFilter": "Nothing in this state.",
+    "fileTooLarge": "{name} is over 8 MB and was not added.",
+    "remove": "Remove this source",
+    "empty": "No sources yet. Try pasting text, a link, or an image.",
+    "emptyFilter": "No sources with this status.",
     "records": "Unsorted records",
     "recordsHint": "Unsorted records in the Inbox folder can be split into proposals.",
     "recordsEmpty": "No unsorted records",
     "split": "Split",
-    "queued": "Queued",
+    "queued": "Added to Sources",
     "writeHint": "New notes, tasks and slots are written only when you accept them; discarded proposals leave no file behind."
   },
   "threads": {
@@ -8258,8 +8259,8 @@
       "proposal": "Proposal",
       "accept": "Accept",
       "reject": "Discard",
-      "alsoInInbox": "Also waiting in Inbox",
-      "proposalWait": "Waiting",
+      "alsoInInbox": "Also in the Workbench",
+      "proposalWait": "Needs a decision",
       "proposalOk": "Accepted",
       "proposalNo": "Discarded",
       "kickoff": "Kickoff card",
@@ -8331,9 +8332,13 @@
         "title": "Open Home",
         "keywords": "home,today"
       },
+      "collect": {
+        "title": "Open sources",
+        "keywords": "source,sources,add source"
+      },
       "inbox": {
-        "title": "Open Inbox",
-        "keywords": "inbox,capture,triage"
+        "title": "Open old records",
+        "keywords": "old records,unprocessed records"
       },
       "searchSidebar": {
         "title": "Focus sidebar search",
@@ -8371,11 +8376,11 @@
     }
   },
   "decide": {
-    "title": "Decide",
-    "subtitle": "{count, plural, one {# item} other {# items}} for you to decide on. Accept or dismiss each one.",
-    "count": "{count} waiting for you",
-    "needsLabel": "Decide",
-    "listLabel": "Items waiting for you",
+    "title": "Workbench",
+    "subtitle": "{count, plural, one {# item} other {# items}}. Accept or discard each proposal.",
+    "count": "Workbench · {count, plural, one {# item} other {# items}}",
+    "needsLabel": "Needs a decision",
+    "listLabel": "Workbench items",
     "empty": "All caught up.",
     "proposalTag": "Proposal",
     "kind": {
@@ -8390,7 +8395,7 @@
       "folder": "New folder"
     },
     "source": {
-      "collect": "Collect",
+      "collect": "Sources",
       "draft": "Agent proposal"
     },
     "from": "From {origin}",
@@ -8403,17 +8408,17 @@
     "diff": {
       "hidden": "{count} more lines not shown"
     },
-    "merged": "{count} other source(s) proposed the same thing; accepting or declining handles them together.",
+    "merged": "{count, plural, one {# other source proposed} other {# other sources proposed}} the same thing. Accepting or discarding handles them together.",
     "accept": "Accept",
     "reject": "Discard",
     "accepted": "Accepted \"{title}\"",
-    "rejected": "Discarded \"{title}\"",
+    "rejected": "Discarded “{title}”",
     "undo": "Undo",
     "undoFailed": "Can't undo, the file was changed since",
     "failed": "Something went wrong, please try again",
     "conflict": "The file changed after the proposal was made. Review it in the task center.",
     "openReview": "Open task center",
-    "viewAll": "{count} waiting for you, view all",
+    "viewAll": "View all {count, plural, one {# Workbench item} other {# Workbench items}}",
     "stale": "{count, plural, one {# proposal has} other {# proposals have}} waited over 14 days; they go into the weekly review and never disappear on their own",
     "discuss": {
       "button": "Discuss again",
@@ -8440,7 +8445,7 @@
     "title": "Job title",
     "step": "Step {number}",
     "stepTitle": "Step title",
-    "agent": "Agent",
+    "agent": "Partner",
     "instructions": "Instructions",
     "criterion": "Acceptance criterion",
     "removeStep": "Remove step {number}",
@@ -8448,12 +8453,12 @@
     "addStep": "Add step",
     "close": "Close",
     "saveProposal": "Save proposal",
-    "loadingAgents": "Loading agents…",
-    "noAgents": "Enable an agent in Settings → General → Agents to create a job card.",
-    "agentsFailed": "Could not load agents.",
+    "loadingAgents": "Loading partners…",
+    "noAgents": "Enable a partner in Settings → General → Partners to create a job card.",
+    "agentsFailed": "Could not load partners.",
     "modelRequired": "Configure an AI model to draft steps, or add steps manually.",
     "generateFailed": "Could not draft valid steps. Try again or add steps manually.",
-    "invalidPlan": "Give every step a title, agent, instructions and acceptance criterion.",
+    "invalidPlan": "Give every step a title, partner, instructions and acceptance criterion.",
     "invalidDependencies": "Check the prerequisites for circular or missing dependencies.",
     "saveFailed": "Could not save the job card.",
     "card": "Job card",
@@ -8469,7 +8474,7 @@
     "reviewDrafts": "Review drafts",
     "start": "Start work",
     "parallel": "Up to {count} steps at once",
-    "agentDisabled": "This agent is disabled or unavailable. Enable it before rerunning the step.",
+    "agentDisabled": "This partner is disabled or unavailable. Enable it before rerunning the step.",
     "interrupted": "The previous run was interrupted. Rerun it or cancel the step.",
     "status": {
       "waiting": "Waiting for a slot",
@@ -8511,7 +8516,7 @@
       "noAccess": "Calendar access is off, so events will not show here.",
       "proposal": "Proposal · Scheduler",
       "accept": "Accept",
-      "reject": "Dismiss",
+      "reject": "Discard",
       "namedAction": "{action} “{title}”"
     },
     "journal": {
@@ -8534,14 +8539,14 @@
       "emptyDay": "No tasks due this day."
     },
     "decide": {
-      "label": "Waiting for you",
+      "label": "Workbench",
       "empty": "All items have been handled.",
       "all": "All"
     },
     "captures": {
-      "label": "Collected today",
+      "label": "Sources added today",
       "all": "All",
-      "empty": "Nothing collected today.",
+      "empty": "No sources added today.",
       "reading": "Reading",
       "kind": {
         "text": "Text",
@@ -8555,19 +8560,19 @@
       "tabHint": "Press Tab to switch to Ask",
       "note": "Note",
       "ask": "Ask",
-      "notePlaceholder": "Jot something down, or press Tab to switch to Ask",
-      "noteOnlyPlaceholder": "Jot something down",
+      "notePlaceholder": "Add a source, or press Tab to switch to Ask",
+      "noteOnlyPlaceholder": "Add a source",
       "askPlaceholder": "Ask a question, e.g. \"how should I use this afternoon?\"",
-      "notePlaceholderToday": "Capture a note (goes to today, not {date})",
+      "notePlaceholderToday": "Add a source for today (viewing {date})",
       "toToday": "Goes to today",
-      "submitNote": "Collect",
+      "submitNote": "Add source",
       "submitAsk": "Ask",
       "detect": {
         "task": "Task",
         "link": "Link",
         "text": "Note"
       },
-      "captured": "Collected. Splitting into proposals",
+      "captured": "Source added. Splitting into proposals.",
       "noModel": "No model configured yet. Pick one in settings first."
     },
     "titleDay": "{date}",
@@ -8617,16 +8622,16 @@
     "nav": {
       "today": "Today",
       "decide": "Workbench",
-      "collect": "Collect",
+      "collect": "Sources",
       "threads": "Threads",
       "knowledge": "Organize",
       "plan": "Plan"
     },
     "agents": {
-      "title": "Agents",
+      "title": "Partners",
       "running": "{count} running",
-      "add": "Add agent",
-      "addFirst": "Add your first agent"
+      "add": "Add partner",
+      "addFirst": "Add your first partner"
     },
     "vault": "MyVault",
     "collapseSection": "Collapse {title}",
@@ -8638,11 +8643,11 @@
     },
     "rules": {
       "label": "Rule",
-      "text": "Agents can only propose; every write goes through the Workbench."
+      "text": "Partners can only propose changes. Review them in the Workbench before they are written."
     },
     "tabs": {
-      "collectGroup": "Collect pages",
-      "collect": "Collect",
+      "collectGroup": "Source pages",
+      "collect": "Sources",
       "knowledgeGroup": "Organize pages",
       "inbox": "Unsorted",
       "timeline": "Notes timeline",
@@ -8658,7 +8663,7 @@
   },
   "organize": {
     "title": "Auto-organize",
-    "description": "After 60 minutes of inactivity, suggest up to five changes for review in Decide.",
+    "description": "After 60 minutes of inactivity, suggest up to five changes for review in the Workbench.",
     "merge": "Merge {detail} into {path}",
     "tag": "Add #{detail} to {path}",
     "link": "Link {path} to {detail}",
