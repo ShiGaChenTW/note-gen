@@ -6,8 +6,10 @@
     "empty": "還沒有代理人。",
     "add": "新增代理人",
     "edit": "編輯",
-    "name": "名稱",
+    "name": "本名",
     "role": "角色",
+    "domain": "負責領域",
+    "domainPlaceholder": "例如：工業工程",
     "allowedTools": "允許使用的工具",
     "enabled": "啟用",
     "disabled": "停用",
@@ -17,11 +19,11 @@
     "loadError": "無法載入代理人設定。",
     "saveError": "無法儲存代理人設定。",
     "roles": {
-      "organizer": "整理員",
-      "scheduler": "排程員",
+      "commander": "指揮官",
+      "expert": "專家",
+      "secretary": "秘書",
       "researcher": "研究員",
-      "reviewer": "回顧員",
-      "custom": "自訂"
+      "expertOf": "{domain}專家"
     },
     "tools": {
       "note_list_files": "列出筆記",
@@ -29,7 +31,9 @@
       "calendar_read_day": "讀取單日行事曆",
       "note_create_file": "提案新增筆記",
       "note_update_file": "提案修改筆記"
-    }
+    },
+    "roleTaken": "這個角色只能有一位，已經有人擔任。",
+    "domainRequired": "專家要填負責領域。"
   },
   "agentDiffNavigation": {
     "label": "Agent 變更導覽",

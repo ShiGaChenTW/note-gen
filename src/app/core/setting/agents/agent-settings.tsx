@@ -2,13 +2,15 @@
 
 import { useEffect, useState, type FormEvent } from 'react'
 import { useTranslations } from 'next-intl'
-import { createAgentSettings, listAgentSettings, updateAgentSettings } from '@/db/agents'
+import { createAgentSettings, ensureDefaultRoster, listAgentSettings, updateAgentSettings } from '@/db/agents'
+import { agentRoleLabel } from '@/lib/agents/display'
 import { useUiV3 } from '@/lib/fork-ui'
 import {
-  AGENT_ROLES,
   AGENT_TOOL_NAMES,
   ROLE_TOOLS,
+  availableRoles,
   isAgentRole,
+  rosterError,
   type AgentSettings as SavedAgent,
   type AgentSettingsInput,
 } from '@/lib/agents/settings'
@@ -29,14 +31,17 @@ export function AgentSettings() {
 
 function AgentSettingsPanel() {
   const t = useTranslations('agents')
+  const tRoles = useTranslations('agents.roles')
   const [agents, setAgents] = useState<SavedAgent[] | null>(null)
   const [editor, setEditor] = useState<EditorState | null>(null)
-  const [error, setError] = useState<'loadError' | 'saveError' | null>(null)
+  const [error, setError] = useState<'loadError' | 'saveError' | 'roleTaken' | 'domainRequired' | null>(null)
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     let active = true
-    void listAgentSettings().then(agents => {
+    // Fork（almanac ALMNC-54.2）：第一次打開時先建立預設的指揮官、秘書、研究員。
+    void ensureDefaultRoster().catch(err => console.error('[agents] default roster failed', err))
+      .then(() => listAgentSettings()).then(agents => {
       if (active) setAgents(agents)
     }).catch(err => {
       console.error('[agents] settings load failed', err)
@@ -47,14 +52,23 @@ function AgentSettingsPanel() {
 
   function edit(agent?: SavedAgent) {
     setError(null)
-    setEditor(agent ? { id: agent.id, values: agent } : {
-      values: { name: '', role: 'custom', allowedTools: [], enabled: true },
-    })
+    if (agent) {
+      setEditor({ id: agent.id, values: agent })
+      return
+    }
+    // 新增時預設第一個還能選的角色（通常是專家）。
+    const role = availableRoles(agents ?? [])[0] ?? 'expert'
+    setEditor({ values: { name: '', role, domain: '', allowedTools: [...ROLE_TOOLS[role]], enabled: true } })
   }
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!editor || saving || !editor.values.name.trim()) return
+    const invalid = rosterError(agents ?? [], editor.values, editor.id)
+    if (invalid) {
+      setError(invalid === 'ROLE_TAKEN' ? 'roleTaken' : 'domainRequired')
+      return
+    }
     setSaving(true)
     setError(null)
     try {
@@ -89,7 +103,7 @@ function AgentSettingsPanel() {
                 <div className="min-w-0">
                   <div className="break-words font-medium">{agent.name}</div>
                   <p className="text-xs text-muted-foreground">
-                    {t(`roles.${agent.role}`)} · {t(agent.enabled ? 'enabled' : 'disabled')}
+                    {agentRoleLabel(agent, tRoles)} · {t(agent.enabled ? 'enabled' : 'disabled')}
                   </p>
                 </div>
                 <Button type="button" size="sm" variant="outline" disabled={saving} onClick={() => edit(agent)}>
@@ -129,9 +143,21 @@ function AgentSettingsPanel() {
                     })
                   }}
                 >
-                  {AGENT_ROLES.map(role => <option key={role} value={role}>{t(`roles.${role}`)}</option>)}
+                  {availableRoles(agents ?? [], editor.id).map(role => <option key={role} value={role}>{tRoles(role)}</option>)}
                 </select>
               </label>
+              {editor.values.role === 'expert' && (
+                <label className="block space-y-1">
+                  <span>{t('domain')}</span>
+                  <input
+                    className={field}
+                    maxLength={80}
+                    placeholder={t('domainPlaceholder')}
+                    value={editor.values.domain ?? ''}
+                    onChange={event => setEditor({ ...editor, values: { ...editor.values, domain: event.target.value } })}
+                  />
+                </label>
+              )}
               <fieldset className="space-y-1">
                 <legend className="mb-1 font-medium">{t('allowedTools')}</legend>
                 {AGENT_TOOL_NAMES.map(tool => (

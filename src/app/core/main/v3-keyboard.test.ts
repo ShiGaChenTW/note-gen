@@ -33,7 +33,7 @@ vi.mock('./editor/markdown/outline', () => ({ Outline: () => null }))
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }))
 vi.mock('./anywhere/chat-panel', () => ({ AnywhereChatPanel: () => null }))
 vi.mock('@/lib/collect/ai', () => ({ askCollectModel: async () => null }))
-vi.mock('@/db/agents', () => ({ listAgentSettings: async () => [] }))
+vi.mock('@/db/agents', () => ({ listAgentSettings: async () => [], ensureDefaultRoster: async () => false }))
 
 await vi.hoisted(async () => {
   vi.stubGlobal('React', (await import('react')).default)

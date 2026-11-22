@@ -88,7 +88,7 @@ async function* finalReply() {
 describe('P5 agent runners and permissions', () => {
   it('filters the model schema, audits unsolicited calls before preview, and stages the allowed draft for review', async () => {
     const agent: AgentSettings = {
-      id: 'organizer', name: 'Organizer', role: 'organizer', enabled: true,
+      id: 'commander', name: 'Mia', role: 'commander', enabled: true,
       allowedTools: ['note_create_file'], createdAt: 1, updatedAt: 1,
     }
     getSettings.mockResolvedValue(agent)
@@ -104,7 +104,7 @@ describe('P5 agent runners and permissions', () => {
     )).mockImplementationOnce(finalReply)
 
     const { center, persisted, notify, legacyRuntime } = fixtureCenter()
-    const kind: AgentRunnerKind = 'agent:organizer'
+    const kind: AgentRunnerKind = 'agent:commander'
     const task = await center.enqueue({ kind, prompt: 'Organize this capture' })
     await vi.waitFor(() => expect(center.get(task.id)?.status).toBe('queued'))
     expect(legacyRuntime).not.toHaveBeenCalled()
@@ -138,7 +138,7 @@ describe('P5 agent runners and permissions', () => {
     const record = vi.fn(async () => {})
     const context = { agentId: 'a', taskId: 't' }
     const agent: AgentSettings = {
-      id: 'a', name: 'A', role: 'custom', enabled: true,
+      id: 'a', name: 'A', role: 'expert', domain: 'Testing', enabled: true,
       allowedTools: ['note_read_file'], createdAt: 0, updatedAt: 0,
     }
     expect(await authorizeAgentTool('note_read_file', true, agent, context, record)).toBeUndefined()
