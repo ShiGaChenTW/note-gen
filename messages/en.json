@@ -8615,6 +8615,18 @@
   "commander": {
     "origin": "Source analysed by {agent}: {source}",
     "unconverted": "(Could not convert to text; the original file is kept: {origin})",
+    "unconvertedReason": "(Could not convert to text: {reason} The original file is kept: {origin})",
+    "fileReason": {
+      "scannedPdf": "This PDF has no extractable text (it may be a scan). Run OCR first or save the pages as images.",
+      "encrypted": "The file is encrypted or password-protected, so its content cannot be read.",
+      "malformed": "The file is damaged or missing required parts, so no text could be extracted.",
+      "resourceLimit": "The file is too complex and exceeds the safe parsing limit.",
+      "fileTooLarge": "The file is larger than 100 MB and was not parsed.",
+      "readFailed": "The file could not be read (it may have been moved or deleted).",
+      "parseFailed": "The file could not be parsed.",
+      "unsupported": "This file type is not supported yet.",
+      "noText": "The file contains no readable text."
+    },
     "domainProposal": {
       "title": "Create the domain \"{domain}\" with a new expert, {name}",
       "summary": "{count} knowledge notes have no domain yet, all about \"{topic}\""

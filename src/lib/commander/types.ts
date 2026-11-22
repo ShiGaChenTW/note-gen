@@ -27,13 +27,27 @@ export interface ConversionResult {
   status: ConversionStatus
   /** 失敗原因、截短說明等，給提案與紀錄看。 */
   note?: string
+  /** Fork（almanac ALMNC-54.19）：給 Scott 看的失敗原因（已依語系翻好）；有這個就不把原檔路徑送給模型，改成說明提案。 */
+  reason?: string
 }
 
-/** 轉換器沒設定時丟這個錯，toText 會標成 unavailable（不是 failed）。 */
+/** 轉換器沒設定時丟這個錯，toText 會標成 unavailable（不是 failed）。reason 是給 Scott 看的原因（選填）。 */
 export class ConverterUnavailableError extends Error {
-  constructor(message = 'converter unavailable') {
+  reason?: string
+  constructor(message = 'converter unavailable', reason?: string) {
     super(message)
     this.name = 'ConverterUnavailableError'
+    this.reason = reason
+  }
+}
+
+/** Fork（almanac ALMNC-54.19）：轉換器跑了但讀不出文字（掃描 PDF、加密檔…），帶著給 Scott 看的原因；toText 標成 failed。 */
+export class ConverterFailedError extends Error {
+  reason: string
+  constructor(message: string, reason: string) {
+    super(message)
+    this.name = 'ConverterFailedError'
+    this.reason = reason
   }
 }
 
@@ -48,7 +62,7 @@ export interface Converters {
   fetchWeb?: (url: string) => Promise<string>
   /** 錄音轉逐字稿（src/lib/audio.ts transcribeRecording）。 */
   transcribe?: (ref: string) => Promise<string>
-  /** 讀文字檔。 */
+  /** 讀檔案轉成文字：文字檔直接讀，PDF／Office 由 anydoc 解析（ALMNC-54.19，見 file-route.ts）。 */
   readFileText?: (ref: string) => Promise<string>
   /** Fork（almanac ALMNC-54.14）：讀筆記庫裡的筆記（vault 相對路徑），給舊筆記資料源用；檔案不在時丟錯。 */
   readVaultNote?: (path: string) => Promise<string>
@@ -152,8 +166,8 @@ export interface ProposalBatch {
 export interface CommanderLabels {
   /** 工作台上「來自…」顯示的來源名稱。 */
   origin: (input: { agent: string, source: string }) => string
-  /** 轉不出文字時放進片段內文的說明。 */
-  unconverted: (input: { origin: string }) => string
+  /** 轉不出文字時放進片段內文的說明；有 reason 時一併寫出原因（ALMNC-54.19）。 */
+  unconverted: (input: { origin: string, reason?: string }) => string
 }
 
 // ── 6. 整條流程 ──────────────────────────────────────────────

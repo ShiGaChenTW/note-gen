@@ -8680,6 +8680,18 @@
   "commander": {
     "origin": "{agent} 分析的資料源：{source}",
     "unconverted": "（沒辦法轉成文字，已保留原檔：{origin}）",
+    "unconvertedReason": "（沒辦法轉成文字：{reason}已保留原檔：{origin}）",
+    "fileReason": {
+      "scannedPdf": "這份 PDF 沒有可讀取的文字（可能是掃描檔），請先做 OCR 或改存成圖片。",
+      "encrypted": "檔案已加密或有密碼保護，讀不到內容。",
+      "malformed": "檔案損壞或缺少必要內容，讀不出文字。",
+      "resourceLimit": "檔案內容太複雜，超過安全解析的上限。",
+      "fileTooLarge": "檔案超過 100 MB，沒有解析。",
+      "readFailed": "讀不到這個檔案（可能已移動或刪除）。",
+      "parseFailed": "檔案解析失敗。",
+      "unsupported": "目前不支援這種檔案格式。",
+      "noText": "檔案裡沒有可讀取的文字。"
+    },
     "domainProposal": {
       "title": "成立領域「{domain}」，新增專家 {name}",
       "summary": "{count} 則知識筆記還沒有領域，主題都是「{topic}」"

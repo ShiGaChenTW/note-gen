@@ -62,7 +62,9 @@ async function run(
     return { text: caption ? `${caption}\n\n${converted}` : converted, converter, status: 'converted' }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
-    return keep(error instanceof ConverterUnavailableError ? 'unavailable' : 'failed', message)
+    const result = keep(error instanceof ConverterUnavailableError ? 'unavailable' : 'failed', message)
+    const reason = (error as { reason?: unknown } | null)?.reason
+    return typeof reason === 'string' && reason ? { ...result, reason } : result
   }
 }
 
@@ -72,7 +74,7 @@ async function run(
  * - link：抓網頁全文。
  * - image：辨識文字（VLM → OCR）。
  * - voice：轉逐字稿；內容已經是文字（例如錄音時已轉好）就直接用。
- * - file：讀文字檔。
+ * - file：文字檔直接讀；PDF／Office 由 anydoc 解析；讀不出來時帶著原因（ALMNC-54.19）。
  */
 export async function toText(source: Source, converters: Converters): Promise<ConversionResult> {
   const asText = (): ConversionResult => ({ text: source.content.trim(), converter: 'none', status: 'text' })

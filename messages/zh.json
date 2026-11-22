@@ -8615,6 +8615,18 @@
   "commander": {
     "origin": "{agent} 分析的数据源：{source}",
     "unconverted": "（无法转成文字，已保留原文件：{origin}）",
+    "unconvertedReason": "（没办法转成文字：{reason}已保留原文件：{origin}）",
+    "fileReason": {
+      "scannedPdf": "这份 PDF 没有可读取的文字（可能是扫描件），请先做 OCR 或改存成图片。",
+      "encrypted": "文件已加密或有密码保护，读不到内容。",
+      "malformed": "文件损坏或缺少必要内容，读不出文字。",
+      "resourceLimit": "文件内容太复杂，超过安全解析的上限。",
+      "fileTooLarge": "文件超过 100 MB，没有解析。",
+      "readFailed": "读不到这个文件（可能已移动或删除）。",
+      "parseFailed": "文件解析失败。",
+      "unsupported": "目前不支持这种文件格式。",
+      "noText": "文件里没有可读取的文字。"
+    },
     "domainProposal": {
       "title": "成立领域「{domain}」，新增专家 {name}",
       "summary": "{count} 则知识笔记还没有领域，主题都是「{topic}」"
