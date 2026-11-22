@@ -82,7 +82,7 @@ export function ThreadStatusBar({ trailing }: { trailing?: ReactNode }) {
       <div className="flex min-h-7 items-center gap-2">
         {hasMessages ? (
           <>
-            <span className="shrink-0 rounded-[4px] bg-hover px-1.5 leading-5 text-muted-ink" data-slot="thread-tag-label">{t(tag)}</span>
+            <span className="shrink-0 rounded-(--r-kbd) bg-hover px-1.5 leading-5 text-muted-ink" data-slot="thread-tag-label">{t(tag)}</span>
             <span className="min-w-0 flex-1 truncate text-muted-ink">{t(`hint.${tag}`)}</span>
             {tag !== 'process' && conversation && (
               <Button size="sm" variant="outline" className="h-7 shrink-0" title={t('handoffHint')} onClick={() => void commanderJoins(conversation)}>
@@ -107,7 +107,7 @@ export function ThreadStatusBar({ trailing }: { trailing?: ReactNode }) {
         {trailing}
       </div>
       {suggestion !== null && conversation && (
-        <div className="mt-1.5 flex items-center gap-2 rounded-md border border-dashed border-line px-2.5 py-1.5" data-slot="thread-transfer" role="status">
+        <div className="mt-1.5 flex items-center gap-2 rounded-(--r-kbd) border border-dashed border-line px-2.5 py-1.5" data-slot="thread-transfer" role="status">
           <span className="min-w-0 flex-1 text-ink">{t('transferAsk')}</span>
           <Button size="sm" className="h-7" onClick={() => void commanderJoins(conversation)}>{t('transfer')}</Button>
           <Button size="sm" variant="ghost" className="h-7 text-muted-ink" onClick={() => dismissTransfer(suggestion)}>{t('keep')}</Button>

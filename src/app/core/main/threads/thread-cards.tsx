@@ -26,10 +26,10 @@ function ProposalCard({ view, onAction, onDiscuss }: { view: ProposalCardView, o
     <div
       data-slot="thread-card"
       data-card="proposal"
-      className={cn('rounded-md border bg-bg p-3 text-sm', view.tone === 'pending' ? 'border-dashed border-line' : 'border-line-soft')}
+      className={cn('rounded-(--r-kbd) border bg-bg p-3 text-sm', view.tone === 'pending' ? 'border-dashed border-line' : 'border-line-soft')}
     >
       <div className="flex items-center gap-2">
-        <span className="rounded-sm bg-hover px-1.5 py-0.5 text-ui-compact text-muted-ink">{t('proposal')}</span>
+        <span className="rounded-(--r-kbd) bg-hover px-1.5 py-0.5 text-ui-compact text-muted-ink">{t('proposal')}</span>
         <Icon aria-hidden className="size-3.5 shrink-0 text-muted-ink" />
         <span className={cn('min-w-0 flex-1 truncate font-medium text-ink', view.tone === 'muted' && 'text-muted-ink line-through')}>{view.title}</span>
         {view.when && <span className="shrink-0 text-xs text-muted-ink tabular-nums">{view.when}</span>}
@@ -67,7 +67,7 @@ function ProposalCard({ view, onAction, onDiscuss }: { view: ProposalCardView, o
 function KickoffCard({ view, onAction }: { view: KickoffCardView, onAction: (action: CardAction) => void }) {
   const t = useTranslations('threads.cards')
   return (
-    <div data-slot="thread-card" data-card="kickoff-result" className="rounded-md border border-line bg-bg p-3 text-sm">
+    <div data-slot="thread-card" data-card="kickoff-result" className="rounded-(--r-kbd) border border-line bg-bg p-3 text-sm">
       <div className="flex items-center gap-2">
         <ListTodo aria-hidden className="size-3.5 shrink-0 text-muted-ink" />
         <span className="text-ui-compact text-muted-ink">{t('kickoff')}</span>
@@ -76,7 +76,7 @@ function KickoffCard({ view, onAction }: { view: KickoffCardView, onAction: (act
       <p className="mt-1 font-medium text-ink">{view.title}</p>
       <div className="mt-2 flex gap-[3px]" aria-hidden>
         {view.tasks.map(task => (
-          <i key={task.n} className={cn('h-[5px] flex-1 rounded-[2px] bg-active', view.showTaskStatus && task.status === 'run' && 'bg-faint', view.showTaskStatus && task.status === 'done' && 'bg-invert')} />
+          <i key={task.n} className={cn('h-[5px] flex-1 rounded-(--r-kbd) bg-active', view.showTaskStatus && task.status === 'run' && 'bg-faint', view.showTaskStatus && task.status === 'done' && 'bg-invert')} />
         ))}
       </div>
       <ol className="mt-2 flex flex-col gap-1">
@@ -101,7 +101,7 @@ function KickoffCard({ view, onAction }: { view: KickoffCardView, onAction: (act
         <ul className="mt-2 flex flex-col gap-1 border-t border-line-soft pt-2">
           {view.acceptance.map((item, index) => (
             <li key={index} className="flex items-center gap-2 text-ui-compact text-muted-ink">
-              <span className={cn('grid size-3.5 shrink-0 place-items-center rounded-[3px] border border-line', item.status === 'ok' && 'border-invert bg-invert text-invert-ink')}>
+              <span className={cn('grid size-3.5 shrink-0 place-items-center rounded-(--r-kbd) border border-line', item.status === 'ok' && 'border-invert bg-invert text-invert-ink')}>
                 {item.status === 'ok' && <Check aria-hidden className="size-2.5" />}
               </span>
               <span>{item.text}</span>
@@ -127,7 +127,7 @@ function DirectEditCard({ view, onAction }: { view: DirectEditCardView, onAction
   const t = useTranslations('threads.cards')
   const [busy, setBusy] = useState(false)
   return (
-    <div data-slot="thread-card" data-card="direct-edit" className="flex items-center gap-2 rounded-md border border-line-soft bg-bg px-3 py-2 text-sm">
+    <div data-slot="thread-card" data-card="direct-edit" className="flex items-center gap-2 rounded-(--r-kbd) border border-line-soft bg-bg px-3 py-2 text-sm">
       <Check aria-hidden className="size-3.5 shrink-0 text-muted-ink" />
       <span className={cn('min-w-0 flex-1 truncate text-ink', view.statusKey !== 'directDone' && 'text-muted-ink line-through')}>
         {t('directAdded', { what: view.what })}

@@ -337,13 +337,13 @@ function TagsButton({ editor, label }: { editor: Editor | null, label: string })
         {tags.length ? (
           <ul className="flex flex-wrap gap-1" aria-label={label}>
             {tags.map((tag, index) => (
-              <li key={`${index}:${tag}`} className="inline-flex max-w-full items-center gap-1 rounded bg-hover px-2 py-0.5 text-xs font-medium text-ink">
+              <li key={`${index}:${tag}`} className="inline-flex max-w-full items-center gap-1 rounded-(--r) bg-hover px-2 py-0.5 text-xs font-medium text-ink">
                 <span className="break-all">#{tag}</span>
                 {canEdit ? (
                   <button
                     type="button"
                     aria-label={t('removeTag', { tag })}
-                    className="-my-0.5 -mr-1 grid size-5 shrink-0 cursor-pointer place-items-center rounded text-muted-ink outline-none hover:text-ink focus-visible:ring-1 focus-visible:ring-ink/60"
+                    className="-my-0.5 -mr-1 grid size-5 shrink-0 cursor-pointer place-items-center rounded-(--r) text-muted-ink outline-none hover:text-ink focus-visible:ring-1 focus-visible:ring-ink/60"
                     onClick={() => { write(removeTagAt(tags, index)) }}
                   ><X className="size-3" aria-hidden /></button>
                 ) : null}

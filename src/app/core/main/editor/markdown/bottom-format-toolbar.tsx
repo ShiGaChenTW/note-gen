@@ -196,7 +196,7 @@ export function BottomFormatToolbar({ editor, onInsertImage, onOpenLink }: {
         data-testid="bottom-format-toolbar"
         onMouseDown={keepEditorFocus}
         {...roving}
-        className="pointer-events-auto absolute bottom-4 left-1/2 z-30 flex max-w-[calc(100%-1.5rem)] -translate-x-1/2 items-center gap-0.5 overflow-x-auto rounded-[10px] bg-panel p-1 shadow-float [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="pointer-events-auto absolute bottom-4 left-1/2 z-30 flex max-w-[calc(100%-1.5rem)] -translate-x-1/2 items-center gap-0.5 overflow-x-auto rounded-(--r-md) bg-panel p-1 shadow-float [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {BOTTOM_TOOLBAR_GROUPS.map((group, index) => (
           <div key={group[0].id} className="flex shrink-0 items-center gap-0.5">

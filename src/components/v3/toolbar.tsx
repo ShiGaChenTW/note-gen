@@ -3,11 +3,12 @@
 // Fork（almanac ALMNC-56.2 A11、V07）：V3 編輯區兩條工具列（右上筆記工具列、底部格式列）共用的圖示按鈕、分隔線與鍵盤操作。
 // - ToolbarIconButton：28 px 圓角方形，滑過 bg-hover、按下 bg-active；focus 用 1 px ink 外框（roving 時 tabindex=-1 也看得到，
 //   V3 全域 focus 規則會把 tabindex=-1 的外框拿掉）。
+// - 泡泡選單的顏色鈕在 classic 也會用到，所以 V3 的圓角（--r-kbd，ALMNC-56.6 V14）用 v3: 覆寫。
 // - useRovingToolbar：整列只留一個 Tab 停靠點，左右鍵在列內移動、Home／End 跳到頭尾，跳過停用的按鈕。
 import { useCallback, useLayoutEffect, useRef, type ComponentProps, type FocusEvent, type KeyboardEvent, type RefObject } from 'react'
 import { cn } from '@/lib/utils'
 
-export const TOOLBAR_ICON_BUTTON = 'relative grid size-7 shrink-0 cursor-pointer place-items-center rounded-md text-muted-ink outline-none transition-colors duration-100 enabled:hover:bg-hover enabled:hover:text-ink focus-visible:ring-1 focus-visible:ring-ink/60 disabled:cursor-not-allowed disabled:opacity-40 [&_svg]:size-4 [&_svg]:shrink-0'
+export const TOOLBAR_ICON_BUTTON = 'relative grid size-7 shrink-0 cursor-pointer place-items-center rounded-md v3:rounded-(--r-kbd) text-muted-ink outline-none transition-colors duration-100 enabled:hover:bg-hover enabled:hover:text-ink focus-visible:ring-1 focus-visible:ring-ink/60 disabled:cursor-not-allowed disabled:opacity-40 [&_svg]:size-4 [&_svg]:shrink-0'
 
 export const TOOLBAR_ICON_BUTTON_ACTIVE = 'bg-active text-ink'
 
