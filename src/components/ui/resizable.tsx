@@ -5,15 +5,36 @@ import * as ResizablePrimitive from "react-resizable-panels"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { useUiV3 } from "@/lib/fork-ui"
 
 const COLLAPSED_HANDLE_HIDE_DELAY = 1_000
 
+/** classic 介面的藥丸：維持原本的 width／height／margin 動畫（ALMNC-56 AC #3：classic 外觀不變）。 */
+function classicCollapsedPillClassName(expandDirection: "left" | "right" | undefined, hintVisible: boolean): string {
+  const position =
+    expandDirection === "right"
+      ? hintVisible
+        ? "ml-6"
+        : "-ml-4 group-hover/resize-handle:ml-6 group-focus-visible/resize-handle:ml-6"
+      : expandDirection === "left"
+        ? hintVisible
+          ? "-ml-6"
+          : "ml-4 group-hover/resize-handle:-ml-6 group-focus-visible/resize-handle:-ml-6"
+        : undefined
+  return cn(
+    "absolute top-1/2 left-1/2 z-10 h-10 w-3 -translate-x-1/2 -translate-y-1/2 scale-y-100 rounded-full border border-background bg-muted-foreground/60 shadow-md transition-[width,height,margin,transform,background-color,box-shadow] duration-200 group-hover/resize-handle:h-20 group-hover/resize-handle:w-7 group-hover/resize-handle:bg-muted-foreground/75 group-hover/resize-handle:shadow-lg group-focus-visible/resize-handle:h-20 group-focus-visible/resize-handle:w-7 group-focus-visible/resize-handle:bg-muted-foreground/75",
+    position
+  )
+}
+
 /**
  * 收起的面板旁那顆可以點開的把手（藥丸）。Fork（almanac ALMNC-56.7，RPT-2026-009 P08）：
- * 放大與左右滑出改用 transform（scale、translate）做動畫，不再動 width、height、margin，滑過時不會每幀重算版面。
+ * V3 的放大與左右滑出改用 transform（scale、translate）做動畫，不再動 width、height、margin，滑過時不會每幀重算版面。
  * 藥丸固定是放大後的 28×80 px，平常縮成 12×40 px（scale 0.43 × 0.5）；水平位置用 translate 推出去。
+ * classic 介面維持原本的樣子（ALMNC-56 AC #3）。
  */
-export function collapsedPillClassName(expandDirection: "left" | "right" | undefined, hintVisible: boolean): string {
+export function collapsedPillClassName(expandDirection: "left" | "right" | undefined, hintVisible: boolean, v3 = true): string {
+  if (!v3) return classicCollapsedPillClassName(expandDirection, hintVisible)
   const base =
     "absolute top-1/2 left-1/2 z-10 h-20 w-7 -translate-y-1/2 scale-x-[0.43] scale-y-50 rounded-full border border-background bg-muted-foreground/60 shadow-md transition-[translate,scale,background-color,box-shadow] duration-200 group-hover/resize-handle:scale-100 group-hover/resize-handle:bg-muted-foreground/75 group-hover/resize-handle:shadow-lg group-focus-visible/resize-handle:scale-100 group-focus-visible/resize-handle:bg-muted-foreground/75"
   // 原本的 ml-6／-ml-4（右）與 -ml-6／ml-4（左）改成同樣距離的 translate（class 要寫完整，Tailwind 才掃得到）。
@@ -73,6 +94,7 @@ function ResizableHandle({
   const hideTimerRef = React.useRef<number | null>(null)
   const [collapsedHintVisible, setCollapsedHintVisible] = React.useState(collapsed)
   const ExpandIcon = expandDirection === "left" ? ChevronLeft : ChevronRight
+  const isV3 = useUiV3()
 
   const clearHideTimer = React.useCallback(() => {
     if (hideTimerRef.current !== null) {
@@ -162,7 +184,7 @@ function ResizableHandle({
         >
           <div
             data-collapsed="true"
-            className={collapsedPillClassName(expandDirection, collapsedHintVisible)}
+            className={collapsedPillClassName(expandDirection, collapsedHintVisible, isV3)}
           >
             {expandDirection ? (
               <ExpandIcon

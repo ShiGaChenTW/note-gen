@@ -373,11 +373,19 @@ export async function submitAutoSource(input: AutoSourceInput): Promise<AutoRout
   return result
 }
 
-/** 這些登錄只在 V3、而且是附帶動作：失敗只記一筆，不影響原本的存檔。 */
+/** 行動版（手機 App 或 /mobile 路由）：不自動交給指揮官（ALMNC-56 AC #3）。 */
+async function isMobileContext(): Promise<boolean> {
+  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/mobile')) return true
+  const { isMobileDevice } = await import('@/lib/check')
+  return isMobileDevice()
+}
+
+/** 這些登錄只在桌面版 V3、而且是附帶動作：失敗只記一筆，不影響原本的存檔。 */
 async function autoRegister(input: AutoSourceInput | undefined): Promise<void> {
   if (!input) return
   const { isUiV3 } = await import('@/lib/fork-ui')
   if (!isUiV3()) return
+  if (await isMobileContext()) return
   try {
     await submitAutoSource(input)
   } catch (error) {

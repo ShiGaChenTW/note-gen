@@ -13,6 +13,7 @@ const fake = vi.hoisted(() => ({
   capture: vi.fn(async () => ({ status: 'success', title: '頁面', contentMarkdown: '內文', plainText: '' } as Record<string, unknown>)),
   seq: 0,
   v3: true,
+  mobile: false,
 }))
 
 vi.mock('@/db/v3-sources', () => ({
@@ -55,6 +56,7 @@ vi.mock('@/lib/local-model/default', () => ({
   defaultLocalModel: async () => ({ config: { judgeModel: 'qwen3.5:2b' }, available: fake.available, generate: fake.generate, embed: vi.fn() }),
 }))
 vi.mock('@/lib/web-capture/service', () => ({ capturePublicWebPage: fake.capture }))
+vi.mock('@/lib/check', () => ({ isMobileDevice: () => fake.mobile, checkIsTauri: () => false }))
 vi.mock('@/lib/fork-ui', async importOriginal => ({ ...(await importOriginal<typeof import('@/lib/fork-ui')>()), isUiV3: () => fake.v3 }))
 
 const actions = await import('./actions')
@@ -74,6 +76,7 @@ beforeEach(() => {
   fake.judgements.clear()
   fake.kick.mockClear()
   fake.v3 = true
+  fake.mobile = false
   fake.generate.mockClear()
   fake.available.mockResolvedValue(true)
   fake.capture.mockResolvedValue({ status: 'success', title: '頁面', contentMarkdown: '內文', plainText: '' })
@@ -233,6 +236,26 @@ describe('自己寫的資料源自動交給指揮官（ALMNC-54.10 AC#3，R2）'
     await actions.registerDailyEntry({ path: 'Daily/x.md', text: '條目' })
     expect(fake.rows.size).toBe(0)
     expect(fake.kick).not.toHaveBeenCalled()
+  })
+
+  it('行動版（手機 App）不登錄：手機錄的語音速記不交給指揮官（ALMNC-56 AC #3）', async () => {
+    fake.mobile = true
+    await actions.registerVoiceMemo({ markId: 10, transcript: '買牛奶' })
+    await actions.registerDailyEntry({ path: 'Daily/x.md', text: '條目' })
+    await actions.registerRecordText({ markId: 11, type: 'text', content: '自己打的', pastedChars: 0 })
+    expect(fake.rows.size).toBe(0)
+    expect(fake.kick).not.toHaveBeenCalled()
+  })
+
+  it('行動版路由（/mobile）也不登錄', async () => {
+    vi.stubGlobal('window', { location: { pathname: '/mobile/record' } })
+    try {
+      await actions.registerVoiceMemo({ markId: 12, transcript: '買牛奶' })
+      expect(fake.rows.size).toBe(0)
+      expect(fake.kick).not.toHaveBeenCalled()
+    } finally {
+      vi.unstubAllGlobals()
+    }
   })
 
   it('登錄失敗不丟錯（不影響原本的存檔）', async () => {

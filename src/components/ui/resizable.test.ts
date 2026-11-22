@@ -36,4 +36,14 @@ describe('collapsedPillClassName', () => {
     expect(Math.round(28 * 0.43)).toBe(12)
     expect(80 * 0.5).toBe(40)
   })
+
+  it('classic 介面維持原本的藥丸外觀（ALMNC-56 AC #3）', () => {
+    expect(collapsedPillClassName('right', false, false)).toBe(
+      'absolute top-1/2 left-1/2 z-10 h-10 w-3 -translate-x-1/2 -translate-y-1/2 scale-y-100 rounded-full border border-background bg-muted-foreground/60 shadow-md transition-[width,height,margin,transform,background-color,box-shadow] duration-200 group-hover/resize-handle:h-20 group-hover/resize-handle:w-7 group-hover/resize-handle:bg-muted-foreground/75 group-hover/resize-handle:shadow-lg group-focus-visible/resize-handle:h-20 group-focus-visible/resize-handle:w-7 group-focus-visible/resize-handle:bg-muted-foreground/75 -ml-4 group-hover/resize-handle:ml-6 group-focus-visible/resize-handle:ml-6',
+    )
+    expect(collapsedPillClassName('right', true, false)).toMatch(/ ml-6$/)
+    expect(collapsedPillClassName('left', true, false)).toMatch(/ -ml-6$/)
+    expect(collapsedPillClassName('left', false, false)).toMatch(/ ml-4 group-hover\/resize-handle:-ml-6 group-focus-visible\/resize-handle:-ml-6$/)
+    expect(collapsedPillClassName(undefined, false, false)).not.toMatch(/scale-x|translate-x-\[/)
+  })
 })
