@@ -20,6 +20,7 @@ import {
   subscribePluginCommands,
   type RegisteredPluginCommand,
 } from '@/lib/plugins/command-registry'
+import { useAnywhereStore } from '@/lib/anywhere/store'
 
 export function PluginCommandPalette() {
   const t = useTranslations('settings.plugins.commandPalette')
@@ -32,6 +33,8 @@ export function PluginCommandPalette() {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.isComposing || event.repeat) return
       if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key.toLowerCase() === 'p') {
+        // Fork（almanac ALMNC-54.18）：V3 主畫面的命令面板（含外掛指令）接手 ⌘⇧P；classic 與獨立編輯器視窗照舊。
+        if (useAnywhereStore.getState().paletteHosted) return
         event.preventDefault()
         setOpen((current) => !current)
       }

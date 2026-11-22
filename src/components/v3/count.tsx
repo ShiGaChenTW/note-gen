@@ -14,7 +14,7 @@ export function Count({ value, total, showZero, emphasis, max = 999, label }: {
 
   return (
     <span className={cn(
-      'inline-flex shrink-0 items-center rounded-[4px] px-1.5 font-mono text-ui-numeric leading-4 tabular-nums',
+      'inline-flex shrink-0 items-center rounded-(--r-kbd) px-1.5 font-mono text-ui-numeric leading-4 tabular-nums',
       zero ? 'text-faint' : 'bg-hover',
       emphasis && !zero ? 'font-semibold text-ink' : 'font-normal',
       !emphasis && !zero && 'text-muted-ink',

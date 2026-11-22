@@ -5,15 +5,21 @@
 // 清單都是從來源現況投影（lib/workbench），這一頁不存待決狀態；先放著、復原堆疊、勾選等畫面狀態在 stores/workbench。
 // 鍵盤（v14）：審核 ↑↓／J K 選擇、↵ 展開、A 主要動作、D 再次討論、X 放棄、C 完成、T 攤到檯面、S 先放著、Z 復原；
 // 資料源 J K 選擇、空白鍵勾選、E 編輯、A 照建議處理、X 不採用、Z 復原；編輯器 ⌘S 存、Esc 取消；檯面 Esc 回工作台。
-// 全域（V3、沒在打字）：N 新增資料源、T 新增對話。只在新介面（v3）出現。
+// 單鍵（V3、工作台開著、沒在打字；設定可關，ALMNC-56.4）：N 新增資料源、T 新增對話。只在新介面（v3）出現。
 import { useEffect, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { Clock } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { V3_BUTTON_SHAPE } from '@/components/v3/button-shape'
+import { Count } from '@/components/v3/count'
+import { Segmented } from '@/components/v3/segmented'
 import { useAgentTaskStore } from '@/lib/agent-tasks'
 import { useUiV3 } from '@/lib/fork-ui'
 import { refreshJournal } from '@/lib/decide/actions'
+import { useJournalPolling } from '@/lib/decide/journal-refresh'
 import { isEditableKeyboardTarget } from '@/lib/is-editable-keyboard-target'
 import { actionForKey } from '@/lib/workbench/cards'
+import { globalShortcutFor, keyBelongsToTarget } from '@/lib/workbench/keyboard-target'
 import { refreshSources } from '@/lib/workbench/actions'
 import { openAddSource, openNewConversation, openWorkbench } from '@/lib/workbench/open'
 import { filterRows, togglePick, waitingCount, type SourceListRow } from '@/lib/workbench/sources-tab'
@@ -23,8 +29,9 @@ import useCollectStore from '@/stores/collect'
 import useDecideStore from '@/stores/decide'
 import useInboxStore from '@/stores/inbox'
 import useProposalTrailStore from '@/stores/proposals'
+import useSettingStore from '@/stores/setting'
 import useWorkbenchStore, { type WorkbenchTab } from '@/stores/workbench'
-import { PageSurface } from '../page-ui'
+import { PageHeader, PageSurface } from '../page-ui'
 import { Desk } from './desk'
 import { currentOf, ReviewTab } from './review-tab'
 import { materialOf, SourcesTab } from './sources-tab'
@@ -38,43 +45,44 @@ function plainKey(event: KeyboardEvent): boolean {
   return !event.metaKey && !event.ctrlKey && !event.altKey && !event.isComposing && !event.defaultPrevented
 }
 
+/**
+ * Fork（almanac ALMNC-56.4，A04）：j／k 移動後把焦點放到那一項（卡片收合列、資料源那列的按鈕），讀屏才會念出目前那一項；
+ * 捲到看得見的位置。
+ */
+function focusItem(selector: string) {
+  const item = document.querySelector<HTMLElement>(selector)
+  item?.querySelector<HTMLElement>('[data-workbench-item]')?.focus({ preventScroll: true })
+  item?.scrollIntoView?.({ block: 'nearest' })
+}
+
+/** Fork（almanac ALMNC-56.6，V05）：審核｜資料源頁籤改用共用的 Segmented＋Count（和收集、知識頁同一套）。 */
 function Tabs({ review, sources }: { review: number, sources: number }) {
   const t = useTranslations('workbench.tabs')
   const tab = useWorkbenchStore(state => state.tab)
   const setTab = useWorkbenchStore(state => state.setTab)
   const items: Array<{ value: WorkbenchTab, count: number }> = [{ value: 'review', count: review }, { value: 'sources', count: sources }]
   return (
-    <div role="tablist" aria-label={t('label')} className="flex h-full gap-[22px]" data-testid="workbench-tabs">
-      {items.map(item => {
-        const selected = tab === item.value
-        return (
-          <button
-            key={item.value}
-            type="button"
-            role="tab"
-            aria-selected={selected}
-            data-tab={item.value}
-            onClick={() => setTab(item.value)}
-            className={cn(
-              'relative flex h-full cursor-pointer items-center gap-[7px] text-sm font-semibold text-muted-ink outline-none hover:text-ink focus-visible:ring-1 focus-visible:ring-ink/60',
-              'after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:rounded-sm after:bg-transparent',
-              selected && 'text-ink after:bg-ink',
-            )}
-          >
-            {t(item.value)}
-            <span className="rounded-full bg-hover px-1.5 text-xs leading-[18px] font-medium tabular-nums">{item.count}</span>
-          </button>
-        )
-      })}
+    <div data-testid="workbench-tabs">
+      <Segmented
+        kind="tabs"
+        className="[&>button]:text-ui-compact"
+        label={t('label')}
+        value={tab}
+        onChange={setTab}
+        items={items.map(item => ({ value: item.value, label: <>{t(item.value)}<Count value={item.count} /></> }))}
+      />
     </div>
   )
 }
 
-/** 審核與資料源分頁的單鍵操作（capture 階段先處理，攤到檯面的 T 不會被全域「新增對話」搶走）。 */
+/**
+ * 審核與資料源分頁的單鍵操作（capture 階段先處理，攤到檯面的 T 不會被全域「新增對話」搶走）。
+ * Fork（almanac ALMNC-56.1）：焦點在按鈕、連結、頁籤或選單上時，Enter、空白鍵、方向鍵讓給那個元件（見 keyBelongsToTarget）。
+ */
 function useWorkbenchKeys(data: ReviewData, rows: SourceListRow[], actions: ReturnType<typeof useCardActions>) {
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
-      if (!plainKey(event) || isEditableKeyboardTarget(event.target) || anyDialogOpen()) return
+      if (!plainKey(event) || isEditableKeyboardTarget(event.target) || keyBelongsToTarget(event.target, event.key) || anyDialogOpen()) return
       const store = useWorkbenchStore.getState()
       if (store.desk.open || store.editing) return
       const key = event.key.toLowerCase()
@@ -87,7 +95,7 @@ function useWorkbenchKeys(data: ReviewData, rows: SourceListRow[], actions: Retu
           const next = visible[index]!
           store.setCursor(next.key)
           if (store.expanded) store.setExpanded(next.key)
-          document.querySelector(`[data-card="${CSS.escape(next.key)}"]`)?.scrollIntoView?.({ block: 'nearest' })
+          focusItem(`[data-card="${CSS.escape(next.key)}"]`)
         }
         if (key === 'arrowdown' || key === 'j') { event.preventDefault(); move(1); return }
         if (key === 'arrowup' || key === 'k') { event.preventDefault(); move(-1); return }
@@ -123,7 +131,7 @@ function useWorkbenchKeys(data: ReviewData, rows: SourceListRow[], actions: Retu
         const delta = key === 'arrowdown' || key === 'j' ? 1 : -1
         const next = list[Math.max(0, Math.min(list.length - 1, index < 0 ? 0 : index + delta))]!
         store.selectRow(next.id)
-        document.querySelector(`[data-row="${CSS.escape(next.id)}"]`)?.scrollIntoView?.({ block: 'nearest' })
+        focusItem(`[data-row="${CSS.escape(next.id)}"]`)
         return
       }
       if (key === 'z') { event.preventDefault(); void actions.undo(); return }
@@ -182,25 +190,27 @@ function WorkbenchPage() {
     <PageSurface label={t('title')} onDismiss={dismiss}>
       {deskOpen ? <Desk commanderName={commanderName} /> : (
         <>
-          <header className="flex h-[52px] shrink-0 items-center border-b border-line-soft pr-6 pl-7" data-testid="workbench-header">
-            <h1 className="sr-only">{t('title')}</h1>
-            <Tabs review={data.visible.length} sources={waitingCount(rows)} />
-            <div className="ml-auto flex items-center gap-1.5">
-              {tab === 'review' && (
-                <button
-                  type="button"
+          {/* Fork（almanac ALMNC-56.6，V05）：共用的 PageHeader——標題看得見、高度和其他 V3 頁一致；動作用 Button。 */}
+          <div className="contents" data-testid="workbench-header">
+            <PageHeader
+              title={t('title')}
+              onBack={hide}
+              tabs={<Tabs review={data.visible.length} sources={waitingCount(rows)} />}
+              actions={tab === 'review' && (
+                <Button
+                  variant="ghost"
                   aria-label={t('putAside.entry')}
                   aria-pressed={showAside}
                   data-testid="aside-entry"
                   onClick={() => setShowAside(!showAside)}
-                  className={cn('flex h-[30px] cursor-pointer items-center gap-2 rounded-md px-2.5 text-ui-compact text-muted-ink outline-none hover:bg-hover hover:text-ink focus-visible:ring-1 focus-visible:ring-ink/60', showAside && 'bg-active text-ink')}
+                  className={cn(V3_BUTTON_SHAPE, 'gap-2 text-ui-compact font-normal text-muted-ink hover:bg-hover hover:text-ink', showAside && 'bg-active text-ink')}
                 >
                   <Clock className="size-4" aria-hidden />
                   <span>{t('putAside.count', { count: data.aside.length })}</span>
-                </button>
+                </Button>
               )}
-            </div>
-          </header>
+            />
+          </div>
           {tab === 'review'
             ? <ReviewTab data={data} actions={actions} commanderName={commanderName} />
             : <SourcesTab rows={rows} commanderName={commanderName} onDesk={onDesk} />}
@@ -210,20 +220,25 @@ function WorkbenchPage() {
   )
 }
 
-/** 全域單鍵：N 新增資料源、T 新增對話（v14）。打字中、有對話框、檯面上都不攔。 */
-function useGlobalShortcuts(enabled: boolean) {
+/**
+ * 單鍵：N 新增資料源、T 新增對話（v14）。打字中、有對話框、檯面上都不攔。
+ * Fork（almanac ALMNC-56.4，A02）：只在工作台畫面開著時生效，設定裡可以關掉；焦點在選單上時字母留給選單跳項目。
+ */
+function useGlobalShortcuts(isV3: boolean, workbenchOpen: boolean) {
+  const enabled = useSettingStore(state => state.workbenchSingleKeys !== false)
   useEffect(() => {
-    if (!enabled) return
+    if (!isV3 || !enabled || !workbenchOpen) return
     function onKeyDown(event: KeyboardEvent) {
-      if (!plainKey(event) || event.shiftKey || event.repeat || isEditableKeyboardTarget(event.target) || anyDialogOpen()) return
-      if (useWorkbenchStore.getState().desk.open && useDecideStore.getState().visible) return
-      const key = event.key.toLowerCase()
-      if (key === 'n') { event.preventDefault(); openAddSource() }
-      else if (key === 't') { event.preventDefault(); void openNewConversation() }
+      if (!plainKey(event) || event.shiftKey || event.repeat || isEditableKeyboardTarget(event.target) || keyBelongsToTarget(event.target, event.key) || anyDialogOpen()) return
+      const shortcut = globalShortcutFor(event.key, { enabled, workbenchOpen: useDecideStore.getState().visible, deskOpen: useWorkbenchStore.getState().desk.open })
+      if (!shortcut) return
+      event.preventDefault()
+      if (shortcut === 'addSource') openAddSource()
+      else void openNewConversation()
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [enabled])
+  }, [isV3, enabled, workbenchOpen])
 }
 
 /** 一直掛著：讀回保存的收集提案、先放著、今日日誌；舊的收集／Inbox 入口在新介面一律轉到工作台的資料源分頁。 */
@@ -236,7 +251,7 @@ export function DecideScreen() {
   const items = useCollectStore(state => state.items)
   const waiting = useMemo(() => items.reduce((n, item) => n + item.proposals.filter(p => p.status === 'wait').length, 0), [items])
 
-  useGlobalShortcuts(isV3)
+  useGlobalShortcuts(isV3, visible)
   useEffect(() => {
     if (!isV3) return
     void hydrate()
@@ -247,11 +262,8 @@ export function DecideScreen() {
   useEffect(() => {
     if (isV3) void refreshJournal()
   }, [isV3, visible, waiting])
-  useEffect(() => {
-    if (!isV3) return
-    const timer = setInterval(() => void refreshJournal(), 60_000)
-    return () => clearInterval(timer)
-  }, [isV3])
+  // Fork（almanac ALMNC-56.7，P06）：只在工作台開著、視窗沒隱藏時每分鐘讀一次日誌。
+  useJournalPolling(isV3 && visible, refreshJournal)
   // Fork（almanac ALMNC-54.8）：主選單沒有「收集」了；舊入口（命令面板、記錄存好的「查看」…）打開收集或 Inbox 時改開資料源分頁。
   useEffect(() => {
     if (!isV3) return

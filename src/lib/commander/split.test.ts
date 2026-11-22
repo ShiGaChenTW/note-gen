@@ -93,6 +93,16 @@ describe('splitAndClassify', () => {
     expect(prompt).toContain('transcript')
   })
 
+  it('ALMNC-57.3：會議逐字稿要抽出決議、待辦與負責人；其他形式沒有這段', () => {
+    const prompt = buildFragmentPrompt('Scott Chen：好，那就這樣決定。', { today: TODAY, sourceKind: 'meeting' })
+    expect(prompt).toContain('會議的逐字稿')
+    expect(prompt).toContain('決議')
+    expect(prompt).toContain('負責人')
+    // 提示要在資料源本文之前。
+    expect(prompt.indexOf('負責人')).toBeLessThan(prompt.indexOf('--- 資料源 ---'))
+    expect(buildFragmentPrompt('內容', { today: TODAY, sourceKind: 'email' })).not.toContain('會議的逐字稿')
+  })
+
   it('ALMNC-54.10：照建議處理的初步判斷放進提示', () => {
     expect(buildFragmentPrompt('內容', { today: TODAY, hint: '會議紀錄｜拆出任務' })).toContain('以這個建議為準')
     expect(buildFragmentPrompt('內容', { today: TODAY })).not.toContain('初步判斷')

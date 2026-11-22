@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { describeAnywhereContext, isAnywhereChatShortcut, isEditorTarget, isPaletteShortcut } from './context'
+import { describeAnywhereContext, isAnywhereChatShortcut, isCommandPaletteShortcut, isEditorTarget, isPaletteShortcut } from './context'
 
 const key = (init: Partial<KeyboardEvent>) => ({ metaKey: false, ctrlKey: false, shiftKey: false, altKey: false, key: '', code: '', isComposing: false, ...init })
 
@@ -18,6 +18,16 @@ describe('shortcuts', () => {
     expect(isPaletteShortcut(key({ metaKey: true, shiftKey: true, key: 'k', code: 'KeyK' }))).toBe(false)
     expect(isPaletteShortcut(key({ metaKey: true, key: 'k', code: 'KeyK', isComposing: true }))).toBe(false)
     expect(isPaletteShortcut(key({ key: 'k', code: 'KeyK' }))).toBe(false)
+  })
+
+  it('⌘⇧P / Ctrl+Shift+P opens the palette by physical key, but not without shift, with alt or during composition', () => {
+    expect(isCommandPaletteShortcut(key({ metaKey: true, shiftKey: true, key: 'P', code: 'KeyP' }))).toBe(true)
+    expect(isCommandPaletteShortcut(key({ ctrlKey: true, shiftKey: true, key: 'P', code: 'KeyP' }))).toBe(true)
+    expect(isCommandPaletteShortcut(key({ metaKey: true, shiftKey: true, key: 'ㄣ', code: 'KeyP' }))).toBe(true)
+    expect(isCommandPaletteShortcut(key({ metaKey: true, key: 'p', code: 'KeyP' }))).toBe(false)
+    expect(isCommandPaletteShortcut(key({ metaKey: true, shiftKey: true, altKey: true, key: 'p', code: 'KeyP' }))).toBe(false)
+    expect(isCommandPaletteShortcut(key({ metaKey: true, shiftKey: true, key: 'P', code: 'KeyP', isComposing: true }))).toBe(false)
+    expect(isCommandPaletteShortcut(key({ shiftKey: true, key: 'P', code: 'KeyP' }))).toBe(false)
   })
 
   it('⌘⇧A opens the chat panel and uses the physical key under an IME', () => {

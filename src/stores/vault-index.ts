@@ -16,12 +16,34 @@ export interface VaultScanStats {
   fromCache: boolean
 }
 
+/**
+ * Fork（almanac ALMNC-56.3 P03）：一次 upsert／remove 動到哪些筆記。
+ * 讓筆記清單只更新變動的那幾則，不必每次自動存檔都把整個 vault 重排。
+ */
+export interface VaultIndexChange {
+  /** 這次變動之後的 revision */
+  revision: number
+  upserted: string[]
+  removed: string[]
+}
+
+/** 只留最近幾次；清單落後超過這個數量就整份重建。 */
+const CHANGE_LOG_LIMIT = 16
+
+function appendChange(log: VaultIndexChange[], change: VaultIndexChange): VaultIndexChange[] {
+  const next = log.length >= CHANGE_LOG_LIMIT ? log.slice(log.length - CHANGE_LOG_LIMIT + 1) : log.slice()
+  next.push(change)
+  return next
+}
+
 interface VaultIndexState {
   status: VaultIndexStatus
   workspace: string
   notes: Map<string, IndexedNote>
   /** 每次內容變動加一，讓 selector 判斷要不要重算 */
   revision: number
+  /** 最近幾次逐筆變動；reset、replaceAll（整份換掉）時清空 */
+  changeLog: VaultIndexChange[]
   lastScan: VaultScanStats | null
   error: string | null
   /** 由索引服務設定；今日頁的「重新掃描」使用 */
@@ -41,6 +63,7 @@ const useVaultIndexStore = create<VaultIndexState>((set, get) => ({
   workspace: '',
   notes: new Map(),
   revision: 0,
+  changeLog: [],
   lastScan: null,
   error: null,
   rescan: null,
@@ -50,23 +73,28 @@ const useVaultIndexStore = create<VaultIndexState>((set, get) => ({
     workspace,
     notes: new Map(),
     revision: get().revision + 1,
+    changeLog: [],
     lastScan: null,
     error: null,
   }),
   setStatus: (status, error = null) => set({ status, error }),
-  replaceAll: (notes) => set({ notes, revision: get().revision + 1 }),
+  replaceAll: (notes) => set({ notes, revision: get().revision + 1, changeLog: [] }),
   upsert: (notes) => {
     if (notes.length === 0) return
-    const next = new Map(get().notes)
+    const state = get()
+    const next = new Map(state.notes)
     for (const note of notes) next.set(note.path, note)
-    set({ notes: next, revision: get().revision + 1 })
+    const revision = state.revision + 1
+    set({ notes: next, revision, changeLog: appendChange(state.changeLog, { revision, upserted: notes.map(note => note.path), removed: [] }) })
   },
   remove: (paths) => {
-    const current = get().notes
+    const state = get()
+    const current = state.notes
     if (!paths.some(path => current.has(path))) return
     const next = new Map(current)
     for (const path of paths) next.delete(path)
-    set({ notes: next, revision: get().revision + 1 })
+    const revision = state.revision + 1
+    set({ notes: next, revision, changeLog: appendChange(state.changeLog, { revision, upserted: [], removed: paths.filter(path => current.has(path)) }) })
   },
   setLastScan: (lastScan) => set({ lastScan }),
   setRescan: (rescan) => set({ rescan }),

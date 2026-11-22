@@ -8,7 +8,7 @@ export function EmptyState({ icon: Icon, text, action, className }: {
   className?: string
 }) {
   return (
-    <div className={cn('flex items-start justify-start gap-2 text-left text-ui-compact leading-5 text-muted-ink', className)}>
+    <div data-slot="empty-state" className={cn('flex items-start justify-start gap-2 text-left text-ui-compact leading-5 text-muted-ink', className)}>
       {Icon && <Icon className="mt-0.5 size-4 shrink-0 text-faint" aria-hidden />}
       <div className="flex min-w-0 flex-col items-start gap-1">
         <p>{text}</p>

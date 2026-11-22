@@ -10,6 +10,7 @@ import type { WorkbenchCard, TaskLike } from './cards'
 import { applyStructuralOp, handwrittenNote, noteFileName, type DeskMaterial, type NoteIo, type StructuralOp } from './desk'
 import { bridgeInput, planHandToCommander, type SourceListRow } from './sources-tab'
 import { ingestSource, judgeSource, newSourceType, type SourceJudgement } from './judgement'
+import { conversationConclusionSource, dailyEntrySource, externalAudioSource, noteSource, recordTextSource, researchFindingSource, routeAutoSource, routeVersionedSource, voiceMemoSource, type AutoRouteResult, type AutoSourceInput, type ResearchFindingLike, type VersionedRouteResult } from './auto-route'
 
 export type Undo = (() => Promise<unknown>) | undefined
 
@@ -23,15 +24,33 @@ export async function kickCommander(): Promise<void> {
   }
 }
 
-/** 重讀資料源表（只留每條版本鏈最新一版）與產出數；沒有 Tauri 時維持原樣。 */
+/** 是不是在桌面 App 裡（有 Tauri）；瀏覽器預覽讀不到資料庫是正常的，不算讀取失敗。 */
+async function inDesktopApp(): Promise<boolean> {
+  try {
+    return (await import('@tauri-apps/api/core')).isTauri()
+  } catch {
+    return false
+  }
+}
+
+/**
+ * 重讀資料源表（只留每條版本鏈最新一版）與產出數；沒有 Tauri 時維持原樣。
+ * Fork（almanac ALMNC-56.7，A06）：桌面 App 裡讀失敗時記下 sourcesError，資料源分頁顯示錯誤狀態與「重試」。
+ */
 export async function refreshSources(): Promise<void> {
   try {
     const db = await import('@/db/v3-sources')
     // Fork（almanac ALMNC-54.14）：舊筆記不進資料源清單（另外合成批次卡），見 refreshLegacy。
-    const [all, counts] = await Promise.all([db.listSources({ limit: 500, excludeKind: LEGACY_NOTE_KIND }), db.countOutputsBySource()])
+    // Fork（almanac ALMNC-54.1，AC#6）：封存的不採用資料源仍留在清單裡（「不採用」篩選），所以一起讀。
+    const [all, counts] = await Promise.all([db.listSources({ limit: 500, excludeKind: LEGACY_NOTE_KIND, includeArchived: true }), db.countOutputsBySource()])
     useWorkbenchStore.getState().setSources(latestVersions(all), counts)
   } catch (error) {
-    console.debug('[workbench] sources unavailable:', error)
+    if (await inDesktopApp()) {
+      console.error('[workbench] sources failed to load:', error)
+      useWorkbenchStore.getState().setSourcesError(true)
+    } else {
+      console.debug('[workbench] sources unavailable:', error)
+    }
   }
   await refreshLegacy()
   // Fork（almanac ALMNC-54.10）：初步判斷另外讀；讀不到卡片照樣出現（AC#4）。
@@ -96,7 +115,7 @@ export async function resolveLegacyPack(packId: string): Promise<Undo> {
  * Fork（almanac ALMNC-54.10）：替一則等你決定的資料源做初步判斷（R1），存進 source_judgements 後重讀清單。
  * 本機模型（ollama）沒開、抓不到網頁都不會丟錯：沒有判斷、或標成擷取失敗。
  */
-export async function requestJudgement(source: Pick<Source, 'id' | 'kind' | 'content' | 'origin'>): Promise<SourceJudgement> {
+export async function requestJudgement(source: Pick<Source, 'id' | 'kind' | 'content' | 'origin'>, options: { refresh?: boolean } = {}): Promise<SourceJudgement> {
   const [judgements, { defaultLocalModel }] = await Promise.all([import('@/db/v3-source-judgements'), import('@/lib/local-model/default')])
   const model = await defaultLocalModel().catch(() => undefined)
   const previous = await judgements.getSourceJudgement(source.id).catch(() => undefined)
@@ -111,7 +130,7 @@ export async function requestJudgement(source: Pick<Source, 'id' | 'kind' | 'con
     },
     save: judgements.saveSourceJudgement,
   })
-  await refreshSources()
+  if (options.refresh !== false) await refreshSources()
   return result
 }
 
@@ -338,6 +357,173 @@ export async function addNewSource(request: NewSourceRequest): Promise<string> {
   })
   await refreshSources()
   return `src:${source.id}`
+}
+
+/**
+ * Fork（almanac ALMNC-54.10，R2）：自己寫的、系統產生的資料源登錄後自動交給指揮官（不經過「等你決定」）。
+ * 已經登錄過同一個 id 就什麼都不做（不重複叫佇列）。
+ */
+export async function submitAutoSource(input: AutoSourceInput): Promise<AutoRouteResult> {
+  const db = await import('@/db/v3-sources')
+  const result = await routeAutoSource(input, {
+    addIfAbsent: ({ sourceType, ...rest }) => db.addSourceIfAbsent({ ...rest, sourceType }),
+    kick: kickCommander,
+  })
+  if (result.source) await refreshSources()
+  return result
+}
+
+/** 行動版（手機 App 或 /mobile 路由）：不自動交給指揮官（ALMNC-56 AC #3）。 */
+async function isMobileContext(): Promise<boolean> {
+  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/mobile')) return true
+  const { isMobileDevice } = await import('@/lib/check')
+  return isMobileDevice()
+}
+
+/** 這些登錄只在桌面版 V3、而且是附帶動作：失敗只記一筆，不影響原本的存檔。 */
+async function autoRegister(input: AutoSourceInput | undefined): Promise<void> {
+  if (!input) return
+  const { isUiV3 } = await import('@/lib/fork-ui')
+  if (!isUiV3()) return
+  if (await isMobileContext()) return
+  try {
+    await submitAutoSource(input)
+  } catch (error) {
+    console.warn('[workbench] auto source failed:', error)
+  }
+}
+
+/** 語音速記（現場錄音）轉好逐字稿後自動交給指揮官。從檔案選進來的音訊不走這裡，見 registerExternalAudio。 */
+export function registerVoiceMemo(memo: { markId: number, transcript: string, audioPath?: string }): Promise<void> {
+  return autoRegister(voiceMemoSource(memo))
+}
+
+/**
+ * Fork（almanac ALMNC-54.20）：從檔案選進來的音訊是外部資料源（R1）：存成等你決定、背景做初步判斷，不自動交給指揮官。
+ * 只在桌面版 V3；同一則記錄重複登錄會跳過。
+ */
+export async function registerExternalAudio(memo: { markId: number, transcript: string, audioPath?: string }): Promise<void> {
+  const input = externalAudioSource(memo)
+  if (!input) return
+  const { isUiV3 } = await import('@/lib/fork-ui')
+  if (!isUiV3()) return
+  if (await isMobileContext()) return
+  try {
+    const db = await import('@/db/v3-sources')
+    const source = await db.addSourceIfAbsent(input)
+    if (!source) return
+    await refreshSources()
+    void requestJudgement(source).catch(error => console.warn('[judgement] failed:', error))
+  } catch (error) {
+    console.warn('[workbench] external audio failed:', error)
+  }
+}
+
+/** 錄音轉好逐字稿後分流：現場錄音（live）是語音速記、自動交給指揮官；選檔（file）是外部資料源、走初步判斷。 */
+export function registerTranscribedAudio(memo: { from: 'live' | 'file', markId: number, transcript: string, audioPath?: string }): Promise<void> {
+  const { from, ...rest } = memo
+  return from === 'file' ? registerExternalAudio(rest) : registerVoiceMemo(rest)
+}
+
+/** 用固定 id 的資料源：內容沒變不重複建立，改了照版本規則接新版（見 routeVersionedSource）。 */
+export async function submitVersionedSource(input: AutoSourceInput): Promise<VersionedRouteResult> {
+  const db = await import('@/db/v3-sources')
+  const result = await routeVersionedSource(input, {
+    latest: id => db.getLatestVersion(id),
+    addIfAbsent: ({ sourceType, ...rest }) => db.addSourceIfAbsent({ ...rest, sourceType }),
+    edit: (id, content) => db.editSource(id, content),
+    kick: kickCommander,
+  })
+  if (result.source) await refreshSources()
+  return result
+}
+
+/**
+ * Fork（almanac ALMNC-54.20）：編輯器右上「送給指揮官」——把目前這篇筆記送成自己寫的資料源。這是 Scott 手動按的，
+ * 所以不擋行動版，失敗會丟出錯誤給按鈕顯示。回傳 added／versioned／unchanged／empty。
+ */
+export async function sendNoteToCommander(note: { path: string, content: string }): Promise<VersionedRouteResult['outcome']> {
+  const input = noteSource(note)
+  if (!input) return 'empty'
+  return (await submitVersionedSource(input)).outcome
+}
+
+/** Fork（almanac ALMNC-54.20）：對話結論（對話摘要存檔）自動交給指揮官；同一段對話重存，內容改了才接新版。 */
+export async function registerConversationConclusion(summary: { conversation: string, content: string, path?: string }): Promise<void> {
+  const input = conversationConclusionSource(summary)
+  if (!input) return
+  const { isUiV3 } = await import('@/lib/fork-ui')
+  if (!isUiV3()) return
+  if (await isMobileContext()) return
+  try {
+    await submitVersionedSource(input)
+  } catch (error) {
+    console.warn('[workbench] conversation conclusion failed:', error)
+  }
+}
+
+/** Fork（almanac ALMNC-54.20）：研究員（G1）查到的外部資料，一題一則系統產生的資料源，自動交給指揮官。 */
+export async function registerResearchFindings(findings: readonly ResearchFindingLike[], periodKey: string): Promise<void> {
+  for (const finding of findings) await autoRegister(researchFindingSource(finding, periodKey))
+}
+
+/** 今天頁快速新增寫進每日筆記的一行（每日筆記條目）自動交給指揮官。 */
+export function registerDailyEntry(entry: { path: string, text: string, at?: number }): Promise<void> {
+  return autoRegister(dailyEntrySource({ ...entry, at: entry.at ?? Date.now() }))
+}
+
+/** 「記錄」對話框（V3）存成記錄的隨手記／待辦／Prompt 素材：自己打的自動交給指揮官，貼上的不收（R1）。 */
+export function registerRecordText(record: Parameters<typeof recordTextSource>[0]): Promise<void> {
+  return autoRegister(recordTextSource(record))
+}
+
+/** Fork（almanac ALMNC-57）：匯入的一則資料源。id 由原始識別決定（src_email:<Message-ID>、src_rss:<guid>…），重複匯入會跳過。 */
+export interface ImportedSourceInput {
+  id: string
+  kind: 'email' | 'rss' | 'meeting'
+  content: string
+  origin?: string
+}
+
+export interface ImportedSourcesResult {
+  /** 這次新增的資料源（照傳進來的順序）。 */
+  added: Source[]
+  /** 已經匯入過、這次跳過的數量。 */
+  skipped: number
+}
+
+/**
+ * Fork（almanac ALMNC-57）：Email、RSS、會議逐字稿匯入的資料源都是外部擷取（R1）：存成等你決定，背景做初步判斷。
+ * 一次可能好幾百則，所以初步判斷一則一則排隊做（不同時叫本機模型好幾百次），全部判斷完再重讀一次清單。
+ * 傳進來的順序就是清單上的順序（第一則最上面）：收集時間依序差 1 毫秒。
+ */
+export async function addImportedSources(inputs: readonly ImportedSourceInput[], now = Date.now()): Promise<ImportedSourcesResult> {
+  const db = await import('@/db/v3-sources')
+  const added: Source[] = []
+  let skipped = 0
+  for (const [index, input] of inputs.entries()) {
+    const source = await db.addSourceIfAbsent({
+      id: input.id,
+      sourceType: 'external',
+      kind: input.kind,
+      content: input.content,
+      origin: input.origin,
+      collector: 'scott',
+      collectedAt: now - index,
+    }, now)
+    if (source) added.push(source)
+    else skipped++
+  }
+  await refreshSources()
+  if (added.length) {
+    void (async () => {
+      for (const source of added) {
+        await requestJudgement(source, { refresh: false }).catch(error => console.warn('[judgement] failed:', error))
+      }
+      await refreshSources()
+    })()
+  }
+  return { added, skipped }
 }
 
 // —— 檯面 ——

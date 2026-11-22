@@ -12,9 +12,18 @@ import { useUiV3 } from '@/lib/fork-ui'
 import { StatusBarItem } from '../status-bar-order'
 import { openTodayTab } from './today-tab'
 
+/**
+ * Fork（almanac ALMNC-56.7，RPT-2026-009 P05）：V3 的狀態列不放「需處理」這一項（2026-11-22 Scott 決定），
+ * 所以 V3 完全不掛這個元件、也不掃整個筆記庫算 Inbox 積壓；classic 照舊。
+ */
 export function TodayStatusItem() {
-  const t = useTranslations('today')
   const isV3 = useUiV3()
+  if (isV3) return null
+  return <ClassicTodayStatusItem />
+}
+
+function ClassicTodayStatusItem() {
+  const t = useTranslations('today')
   const notes = useVaultIndexStore(state => state.notes)
   const revision = useVaultIndexStore(state => state.revision)
   const status = useVaultIndexStore(state => state.status)
@@ -41,7 +50,6 @@ export function TodayStatusItem() {
   }, [notes, revision, inboxFolder, staleDays, day, records, processed])
 
   const hasReminder = status === 'ready' && count > 0
-  if (isV3 && !hasReminder) return null
 
   const label = hasReminder ? t('status.need', { count }) : t('status.open')
   return (

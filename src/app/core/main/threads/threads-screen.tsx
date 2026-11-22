@@ -9,6 +9,7 @@ import { useTranslations } from 'next-intl'
 import { Check, ChevronDown, FolderInput, Hash, MessageSquarePlus, MessagesSquare, Pin, Search } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import { V3_BUTTON_SHAPE } from '@/components/v3/button-shape'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
@@ -55,14 +56,14 @@ function ThreadRow({ thread, tag, pending, project, projects, current, now, onOp
   const t = useTranslations('threads')
   return (
     <div
-      className={cn('group/row relative flex items-center rounded-md hover:bg-hover', current && 'bg-active')}
+      className={cn('group/row relative flex items-center rounded-(--r-kbd) hover:bg-hover', current && 'bg-active')}
       data-thread-id={thread.id}
     >
       <button
         type="button"
         onClick={onOpen}
         aria-current={current ? 'true' : undefined}
-        className="grid min-w-0 flex-1 grid-cols-[1fr_auto] gap-x-2 rounded-md px-2.5 py-2 text-left outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring"
+        className="grid min-w-0 flex-1 grid-cols-[1fr_auto] gap-x-2 rounded-(--r-kbd) px-2.5 py-2 text-left outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring"
       >
         <span className="flex min-w-0 items-center gap-1.5 text-ui-compact font-medium text-ink">
           {thread.isPinned && <Pin aria-label={t('pinned')} className="size-3 shrink-0 text-muted-ink" />}
@@ -164,7 +165,7 @@ function ThreadList() {
                   type="button"
                   onClick={() => toggle(key)}
                   aria-expanded={!closed}
-                  className="flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-left text-muted-ink outline-none hover:bg-hover focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring"
+                  className="flex w-full items-center gap-1.5 rounded-(--r-kbd) px-2 py-1 text-left text-muted-ink outline-none hover:bg-hover focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring"
                 >
                   <ChevronDown aria-hidden className={cn('size-3 motion-safe:transition-transform', closed && '-rotate-90')} />
                   {key ? <Hash aria-hidden className="size-3" /> : null}
@@ -280,7 +281,7 @@ export function ThreadsScreen() {
         subtitle={t('subtitle')}
         onBack={hide}
         actions={(
-          <Button size="sm" className="gap-2 rounded-(--r) bg-invert text-invert-ink hover:bg-invert/85" disabled={loading} onClick={() => void startNewConversation()}>
+          <Button className={cn(V3_BUTTON_SHAPE, 'gap-2 px-3')} disabled={loading} onClick={() => void startNewConversation()}>
             <MessageSquarePlus aria-hidden className="size-4" />{t('newThread')}
           </Button>
         )}

@@ -45,6 +45,8 @@ export interface ReviewRunDeps {
   commanderName?: string
   /** 每次最多定期檢查幾則到期的筆記。 */
   periodicLimit?: number
+  /** Fork（almanac ALMNC-54.20）：研究員查到的外部資料建成系統產生的資料源、交給指揮官；沒給就不建。 */
+  registerFindings?: (findings: ResearchFinding[], periodKey: string) => Promise<void>
 }
 
 export interface ReviewRunSummary {
@@ -90,6 +92,9 @@ export async function runReview(deps: ReviewRunDeps): Promise<ReviewRunSummary> 
   const research = researcher
     ? await step('research', errors, async () => researchDomains(digests, { ask: deps.ask, prompt: await deps.agentPrompt(researcher), lookup: deps.lookup }), [])
     : []
+  if (deps.registerFindings && research.some(finding => finding.status === 'found')) {
+    await step('research sources', errors, () => deps.registerFindings!(research, period.key), undefined)
+  }
 
   // G2 專家回顧自己的領域；衝突照規則：衝突或錯誤立刻提案，其餘進佇列。
   const expertReviews: ExpertReview[] = []

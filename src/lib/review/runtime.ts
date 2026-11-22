@@ -162,6 +162,11 @@ export async function createDefaultReviewDeps(): Promise<ReviewRunDeps> {
     },
     check,
     submit: check.submit,
+    // Fork（almanac ALMNC-54.20）：研究員查到的外部資料建成系統產生的資料源、自動交給指揮官（只在桌面版 V3）。
+    registerFindings: async (findings, periodKey) => {
+      const { registerResearchFindings } = await import('@/lib/workbench/actions')
+      await registerResearchFindings(findings, periodKey)
+    },
     labels,
     commanderName: check.commanderName,
   }

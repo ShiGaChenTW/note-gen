@@ -4,7 +4,7 @@
 import type { ProposalKind } from '@/lib/collect/types'
 
 /** Fork（almanac ALMNC-54.5）：talk＝再次討論中（附了說明，等指揮官修改後重新提案）。 */
-export type CardStatus = 'wait' | 'ok' | 'no' | 'talk'
+export type CardStatus = 'wait' | 'ok' | 'no' | 'talk' | 'replaced'
 
 export interface ProposalCardData {
   type: 'proposal'
@@ -20,6 +20,10 @@ export interface ProposalCardData {
   status: CardStatus
   /** 對應收集頁的提案；有的話「接受」會走收集頁的寫入流程（筆記檔、今日日誌）。 */
   source?: { itemId: string; proposalId: string }
+}
+
+export function threadProposalKey(card: ProposalCardData): string {
+  return card.source ? `collect:${card.source.itemId}:${card.source.proposalId}` : `thread-card:${card.id}`
 }
 
 export type KickoffState = 'proposed' | 'running' | 'done' | 'cancelled'
@@ -68,7 +72,7 @@ export interface ProposalCardView {
   /** 日期與時間合成一句，沒有就空字串。 */
   when: string
   /** i18n key（threads.cards.*）。 */
-  statusKey: 'proposalWait' | 'proposalOk' | 'proposalNo' | 'proposalTalk'
+  statusKey: 'proposalWait' | 'proposalOk' | 'proposalNo' | 'proposalTalk' | 'proposalReplaced'
   tone: ProposalTone
   actions: CardAction[]
 }
@@ -189,7 +193,7 @@ export function resolveThreadCard(card: ThreadCard): ThreadCardView {
       title: card.title,
       detail: card.detail ?? '',
       when: formatWhen(card.due, card.time),
-      statusKey: card.status === 'ok' ? 'proposalOk' : card.status === 'no' ? 'proposalNo' : card.status === 'talk' ? 'proposalTalk' : 'proposalWait',
+      statusKey: card.status === 'ok' ? 'proposalOk' : card.status === 'no' ? 'proposalNo' : card.status === 'talk' ? 'proposalTalk' : card.status === 'replaced' ? 'proposalReplaced' : 'proposalWait',
       // 再次討論中仍是待決定：維持虛線框，只是沒有按鈕
       tone: card.status === 'wait' || card.status === 'talk' ? 'pending' : card.status === 'ok' ? 'done' : 'muted',
       // Fork（almanac ALMNC-54.5）：按鈕是接受／再次討論／放棄

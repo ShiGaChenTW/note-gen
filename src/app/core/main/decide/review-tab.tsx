@@ -4,11 +4,15 @@
 // 上方篩選：全部、日程、筆記、知識、資料源、回顧。就地展開決定，處理完收起、可以 Z 復原；先放著的入口在頁首右上角。
 import { useTranslations } from 'next-intl'
 import { Check } from 'lucide-react'
+import { Count } from '@/components/v3/count'
+import { EmptyState } from '@/components/v3/empty-state'
+import { SectionLabel } from '@/components/v3/section-label'
 import { CARD_LABELS, filterCards, groupCards, labelCounts, type LabelFilter, type WorkbenchCard } from '@/lib/workbench/cards'
 import type { ReviewData } from '@/lib/workbench/use-workbench'
 import { cn } from '@/lib/utils'
 import useWorkbenchStore from '@/stores/workbench'
-import { BTN, Kbd } from './review-card'
+import { Kbd } from '@/components/ui/kbd'
+import { BTN } from './review-card'
 import { ReviewCard } from './review-card'
 import type { useCardActions } from './use-card-actions'
 
@@ -31,7 +35,7 @@ export function FilterPills<Value extends string>({ items, value, onChange, labe
             data-filter={item.value}
             onClick={() => onChange(item.value)}
             className={cn(
-              'inline-flex h-7 flex-none cursor-pointer items-center gap-1.5 rounded-lg border border-line px-[11px] text-ui-compact text-muted-ink outline-none transition-colors duration-100 hover:border-ink/25 hover:text-ink focus-visible:ring-1 focus-visible:ring-ink/60',
+              'inline-flex h-7 flex-none cursor-pointer items-center gap-1.5 rounded-(--r) border border-line px-[11px] text-ui-compact text-muted-ink outline-none transition-colors duration-100 hover:border-ink/25 hover:text-ink focus-visible:ring-1 focus-visible:ring-ink/60',
               pressed && 'border-invert bg-invert font-semibold text-invert-ink hover:text-invert-ink',
             )}
           >
@@ -49,15 +53,15 @@ function AsideList({ data }: { data: ReviewData }) {
   const aside = useWorkbenchStore(state => state.aside)
   const takeBack = useWorkbenchStore(state => state.takeBack)
   return (
-    <div className="mx-auto w-full max-w-[880px] px-7 py-5" data-testid="aside-list">
-      <h2 className="mb-3 text-ui-compact font-semibold text-faint">{t('putAside.title')}</h2>
+    <div className="mx-auto w-full max-w-ui-reading px-7 py-5" data-testid="aside-list">
+      <SectionLabel as="h2" className="mb-3">{t('putAside.title')}</SectionLabel>
       {data.aside.length === 0 ? (
         <p className="text-ui-compact text-muted-ink">{t('putAside.empty')}</p>
       ) : (
         <ul className="flex flex-col gap-px">
           {data.aside.map(card => (
-            <li key={card.key} className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-3.5 rounded-xl px-3 py-2.5 hover:bg-hover" data-testid="aside-row">
-              <span className="border-r border-line pr-3 text-xs font-[650] tracking-[0.06em] text-muted-ink">{t(`labels.${card.label}`)}</span>
+            <li key={card.key} className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-3.5 rounded-(--r-md) px-3 py-2.5 hover:bg-hover" data-testid="aside-row">
+              <span className="border-r border-line pr-3 text-xs font-semibold text-muted-ink">{t(`labels.${card.label}`)}</span>
               <span className="truncate text-sm text-ink">{card.title}</span>
               <span className="text-xs text-faint tabular-nums">{aside[card.key]?.until ? t('putAside.remindOn', { date: aside[card.key]!.until! }) : t('putAside.noDate')}</span>
               <button type="button" className={BTN} onClick={() => takeBack(card.key)}>{t('putAside.takeBack')}</button>
@@ -103,37 +107,43 @@ export function ReviewTab({ data, actions, commanderName }: {
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
       <div className="min-h-0 flex-1 overflow-y-auto pb-12">
-        <div className="mx-auto w-full max-w-[880px] px-7 pt-5 pb-2.5">
+        <div className="mx-auto w-full max-w-ui-reading px-7 pt-5 pb-2.5">
           <FilterPills items={filters} value={filter} onChange={setFilter} label={t('filter.label')} testId="review-filters" />
         </div>
         {visible.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-2.5 px-5 py-24 text-center" data-testid="review-empty">
-            <span className="grid size-11 place-items-center rounded-full bg-hover text-brand"><Check className="size-5" aria-hidden /></span>
-            <b className="text-[15px] font-semibold text-ink">{filter === 'all' ? t('empty') : t('emptyFiltered', { label: t(`labels.${filter}`) })}</b>
-            <span className="text-ui-compact text-muted-ink">{t('emptyHint')}</span>
+          // Fork（almanac ALMNC-56.6，V12、V13）：共用的 V3 空狀態（靠左、13 px）；勾勾不再用唯一彩色。
+          <div className="mx-auto w-full max-w-ui-reading px-7 py-6" data-testid="review-empty">
+            <EmptyState
+              icon={Check}
+              text={<span className="font-medium text-ink">{filter === 'all' ? t('empty') : t('emptyFiltered', { label: t(`labels.${filter}`) })}</span>}
+              action={<span>{t('emptyHint')}</span>}
+            />
           </div>
         ) : (
-          <div role="listbox" aria-label={t('listLabel')} className="mx-auto w-full max-w-[880px] px-5" data-testid="review-list">
+          // Fork（almanac ALMNC-56.4，A04）：一般清單（每組一個 list），卡片收合列是真正的按鈕；見 review-card.tsx。
+          <div role="group" aria-label={t('listLabel')} className="mx-auto w-full max-w-ui-reading px-5" data-testid="review-list">
             {groupCards(visible).map(({ group, cards }) => (
               <section key={group} aria-label={t(`groups.${group}`)}>
-                <h3 className="flex items-baseline gap-2 px-3 pt-5 pb-2 text-xs font-semibold text-faint first:pt-1.5" data-testid="review-group">
-                  {t(`groups.${group}`)}<span className="font-medium tabular-nums">{cards.length}</span>
-                </h3>
-                {cards.map(card => (
-                  <ReviewCard
-                    key={card.key}
-                    card={card}
-                    now={data.now}
-                    current={card.key === currentKey}
-                    expanded={card.key === expanded}
-                    leaving={leaving.includes(card.key)}
-                    onDesk={card.key === deskCard}
-                    commanderName={commanderName}
-                    onToggle={() => toggle(card)}
-                    onAction={(action, payload) => void actions.run(card, action, payload)}
-                    onPutAside={until => actions.putAside(card, until)}
-                  />
-                ))}
+                <div className="px-3 pt-5 pb-2 first:pt-1.5" data-testid="review-group">
+                  <SectionLabel as="h3" trailing={<Count value={cards.length} />}>{t(`groups.${group}`)}</SectionLabel>
+                </div>
+                <div role="list">
+                  {cards.map(card => (
+                    <ReviewCard
+                      key={card.key}
+                      card={card}
+                      now={data.now}
+                      current={card.key === currentKey}
+                      expanded={card.key === expanded}
+                      leaving={leaving.includes(card.key)}
+                      onDesk={card.key === deskCard}
+                      commanderName={commanderName}
+                      onToggle={() => toggle(card)}
+                      onAction={(action, payload) => actions.run(card, action, payload)}
+                      onPutAside={until => actions.putAside(card, until)}
+                    />
+                  ))}
+                </div>
               </section>
             ))}
           </div>

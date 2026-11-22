@@ -11,11 +11,12 @@ import { ROLE_INSTRUCTIONS } from '@/lib/agents/instructions'
 import { agentDisplayName } from '@/lib/agents/display'
 import { DEFAULT_LOCALE, LANGUAGE_STORAGE_KEY, loadMessagesWithFallback, normalizeLocale } from '@/i18n/config'
 import { createAnalysisQueue } from './pipeline'
+import { createFileTextReader, type FileReasonKey } from './file-route'
 import { ConverterUnavailableError, type CommanderDeps, type CommanderLabels, type Converters, type RosterAgent } from './types'
 
-const TEXT_FILE = /\.(md|markdown|txt|csv|tsv|json|html?|xml|ya?ml|log)$/i
+type FileReason = (key: FileReasonKey) => string
 
-async function translators(): Promise<{ labels: CommanderLabels, role: (key: string, values?: Record<string, string>) => string }> {
+async function translators(): Promise<{ labels: CommanderLabels, role: (key: string, values?: Record<string, string>) => string, fileReason: FileReason }> {
   let locale = DEFAULT_LOCALE
   let messages: AbstractIntlMessages = {}
   try {
@@ -29,13 +30,15 @@ async function translators(): Promise<{ labels: CommanderLabels, role: (key: str
   return {
     labels: {
       origin: values => t('origin', values),
-      unconverted: values => t('unconverted', values),
+      unconverted: ({ origin, reason }) => (reason ? t('unconvertedReason', { origin, reason }) : t('unconverted', { origin })),
     },
     role: (key, values) => roles(key, values),
+    fileReason: key => t(`fileReason.${key}`),
   }
 }
 
-export function createDefaultConverters(): Converters {
+/** fileReason：讀不出檔案文字時的原因文字（依語系）；沒給就用原因鍵本身。 */
+export function createDefaultConverters(fileReason: FileReason = key => key): Converters {
   return {
     ocrImage: async ref => {
       const { recognizeImageWithFallback } = await import('@/lib/image-recognition')
@@ -60,11 +63,12 @@ export function createDefaultConverters(): Converters {
       const bytes = await readFile(ref)
       return fetchAudioTranscription(new Blob([bytes]))
     },
-    readFileText: async ref => {
-      if (!TEXT_FILE.test(ref)) throw new ConverterUnavailableError('no text converter for this file type')
-      const { readTextFile } = await import('@tauri-apps/plugin-fs')
-      return readTextFile(ref)
-    },
+    // Fork（almanac ALMNC-54.19）：文字檔直接讀，PDF／Office 交給 anydoc；分流與錯誤原因在 file-route.ts。
+    readFileText: createFileTextReader({
+      readText: async path => (await import('@tauri-apps/plugin-fs')).readTextFile(path),
+      parseDocument: async (path, name) => (await import('@/lib/document-parser')).parseLocalDocument(path, name),
+      reason: fileReason,
+    }),
     // Fork（almanac ALMNC-54.14）：舊筆記資料源（R3）只存 vault 相對路徑，這裡讀檔；只讀不寫。
     readVaultNote: async path => {
       const { readNote } = await import('@/lib/daily/note-io')
@@ -76,7 +80,7 @@ export function createDefaultConverters(): Converters {
 }
 
 export async function createDefaultCommanderDeps(): Promise<CommanderDeps> {
-  const [sourcesDb, domainsDb, agentsDb, memoryDb, { labels, role }] = await Promise.all([
+  const [sourcesDb, domainsDb, agentsDb, memoryDb, { labels, role, fileReason }] = await Promise.all([
     import('@/db/v3-sources'),
     import('@/db/v3-domains'),
     import('@/db/agents'),
@@ -90,7 +94,7 @@ export async function createDefaultCommanderDeps(): Promise<CommanderDeps> {
       setStatus: (id, to) => sourcesDb.setSourceStatus(id, to),
       list: options => sourcesDb.listSources(options),
     },
-    converters: createDefaultConverters(),
+    converters: createDefaultConverters(fileReason),
     ask: prompt => askCollectModel(prompt, undefined, { silent: true }),
     roster,
     domains: domainsDb.listDomains,
@@ -110,11 +114,20 @@ export async function createDefaultCommanderDeps(): Promise<CommanderDeps> {
       const find = await defaultSimilarFinder()
       return (await find(domainId, { title: fragment.title, body: fragment.body })).map(({ path, title }) => ({ path, title }))
     },
-    submitProposals: async batch => {
+    submitProposals: async (batch, options) => {
       const { default: useCollectStore } = await import('@/stores/collect')
       // 先讀回保存的項目，之後的變動才會存檔。
-      await useCollectStore.getState().hydrate()
-      useCollectStore.getState().addProposals(batch.id, batch.origin, batch.proposals, { conversationId: batch.conversationId })
+      const collect = useCollectStore.getState()
+      await collect.hydrate()
+      collect.addProposals(batch.id, batch.origin, batch.proposals, { conversationId: batch.conversationId, recordId: options?.recordId })
+      if (options?.durable) {
+        try {
+          await collect.persist()
+        } catch (error) {
+          collect.remove(batch.id)
+          throw error
+        }
+      }
     },
     logActivity: async entry => {
       const commander = (await roster()).find(agent => agent.role === 'commander')

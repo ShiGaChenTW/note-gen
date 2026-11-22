@@ -22,7 +22,7 @@ import type { IndexedNote } from '@/lib/vault-index/index-note'
 import { buildReviewCards, type DomainLike, type HandLike, type LegacyBatchLike, type WorkbenchCard } from './cards'
 import { computeDomainProposals, confirmNotesFromIndex, knowledgeNotesFromIndex } from './domain-cards'
 import { hiddenCards, isHidden, visibleCards } from './put-aside'
-import { buildSourceRows, sourceTitle, type SourceListRow } from './sources-tab'
+import { buildSourceRows, sourceDisplayKind, sourceTitle, type SourceListRow } from './sources-tab'
 import { judgementLine } from './judgement'
 
 const MINUTE = 60_000
@@ -178,7 +178,7 @@ export function useReviewData(): ReviewData {
         const judgement = judgements.get(source.id)
         const failed = judgement?.status === 'capture_failed'
         return {
-          id: source.id, title: sourceTitle(source), kindLabel: t(`sources.kind.${kindKey(source.kind)}`),
+          id: source.id, title: sourceTitle(source), kindLabel: t(`sources.kind.${sourceDisplayKind(source.kind)}`),
           judgement: failed ? t('sources.captureFailed') : judgementLine(judgement),
           ...(judgement?.status === 'ready' && judgement.suggestion ? { suggestion: judgement.suggestion } : {}),
           ...(failed ? { failed } : {}),
@@ -208,10 +208,6 @@ export function useWorkbenchCount(): number {
   return useReviewData().visible.length
 }
 
-function kindKey(kind: string): string {
-  return ({ link: 'web', image: 'shot', transcript: 'audio', voice: 'audio', email: 'text' } as Record<string, string>)[kind]
-    ?? (['text', 'file', 'todo', 'prompt'].includes(kind) ? kind : 'file')
-}
 
 export function useSourceRows(): SourceListRow[] {
   const sources = useWorkbenchStore(state => state.sources)

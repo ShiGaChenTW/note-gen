@@ -7,8 +7,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import messages from '../../../../../messages/zh-TW.json'
 import { useUiModeStore } from '@/lib/fork-ui'
 import useThreadsStore from '@/stores/threads'
+import useProposalTrailStore from '@/stores/proposals'
 
-const { storeSet } = vi.hoisted(() => ({ storeSet: vi.fn() }))
+const { storeSet, discuss } = vi.hoisted(() => ({ storeSet: vi.fn(), discuss: vi.fn() }))
 
 await vi.hoisted(async () => {
   vi.stubGlobal('React', (await import('react')).default)
@@ -28,6 +29,7 @@ vi.mock('@/stores/chat', async () => {
   const { create } = await import('zustand')
   return { default: create(() => ({ chats: [{ id: 5, conversationId: 3 }], conversations: [], currentConversationId: 3 })) }
 })
+vi.mock('@/lib/proposals/actions', async importOriginal => ({ ...(await importOriginal<typeof import('@/lib/proposals/actions')>()), discussProposal: discuss }))
 vi.mock('@/stores/setting', () => ({ default: () => ({ language: 'zh-TW' }) }))
 
 const { ThreadMessageCards } = await import('./thread-cards')
@@ -37,6 +39,7 @@ let root: Root
 beforeEach(() => {
   ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
   useUiModeStore.setState({ mode: 'v3' })
+  useProposalTrailStore.setState({ trail: {} })
   useThreadsStore.setState({ cards: {}, tagMap: {}, projectsLoaded: false })
   storeSet.mockClear()
   container = document.createElement('div')
@@ -75,10 +78,76 @@ describe('direct edit confirmation', () => {
   })
 })
 
+it('shows a replaced proposal in its source conversation without decision buttons', () => {
+  useThreadsStore.getState().attachCard(5, {
+    type: 'proposal', id: 'old', kind: 'task', title: '寄報價', status: 'wait',
+    source: { itemId: 'c1', proposalId: 'p1' },
+  })
+  render()
+  expect(container.querySelectorAll('[data-card="proposal"] button')).toHaveLength(3)
+  act(() => useProposalTrailStore.setState({ trail: { 'collect:c1:p1': { supersededBy: 'collect:c2:p2' } } }))
+  expect(container.textContent).toContain('已被新版取代')
+  expect(container.querySelector('[data-card="proposal"] button')).toBeNull()
+})
+
 describe('commander threads', () => {
   it('tags a conversation the sidebar commander takes part in as 處理', async () => {
     await useThreadsStore.getState().markCommanderThread({ id: 3, syncId: 'sync-3' })
     expect(useThreadsStore.getState().tagMap).toEqual({ 'sync-3': 'process' })
     expect(storeSet).toHaveBeenCalledWith('threadTags', { 'sync-3': 'process' })
+  })
+})
+
+describe('再次討論表單（ALMNC-56 重跑稽核）', () => {
+  function type(input: HTMLTextAreaElement, value: string) {
+    const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!.set!
+    act(() => {
+      setter.call(input, value)
+      input.dispatchEvent(new Event('input', { bubbles: true }))
+    })
+  }
+  async function flush() {
+    await act(async () => { for (let i = 0; i < 5; i++) await new Promise(resolve => setTimeout(resolve, 0)) })
+  }
+  function openForm() {
+    useThreadsStore.getState().attachCard(5, {
+      type: 'proposal', id: 'p', kind: 'task', title: '寄報價', status: 'wait',
+      source: { itemId: 'c1', proposalId: 'p1' },
+    })
+    render()
+    const trigger = [...container.querySelectorAll<HTMLButtonElement>('[data-card="proposal"] button')].find(button => button.textContent === '再次討論')!
+    act(() => trigger.click())
+    return { trigger, input: container.querySelector<HTMLTextAreaElement>('[data-slot="discuss-form"] textarea')! }
+  }
+
+  it('送出失敗：表單留著、文字還在、顯示錯誤', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    discuss.mockRejectedValueOnce(new Error('offline'))
+    const { input } = openForm()
+    type(input, '日期改到下週')
+    act(() => container.querySelector<HTMLFormElement>('[data-slot="discuss-form"]')!.requestSubmit())
+    await flush()
+    expect(discuss).toHaveBeenCalledTimes(1)
+    const form = container.querySelector('[data-slot="discuss-form"]')
+    expect(form).not.toBeNull()
+    expect(form!.querySelector('textarea')!.value).toBe('日期改到下週')
+    expect(form!.querySelector('[role="alert"]')!.textContent).toBe(messages.decide.discuss.failed)
+  })
+
+  it('送出成功才關表單', async () => {
+    discuss.mockResolvedValueOnce(7)
+    const { input } = openForm()
+    type(input, '標題改短')
+    act(() => container.querySelector<HTMLFormElement>('[data-slot="discuss-form"]')!.requestSubmit())
+    await flush()
+    expect(container.querySelector('[data-slot="discuss-form"]')).toBeNull()
+  })
+
+  it('按取消或 Esc：焦點回到「再次討論」按鈕，不掉到 body', async () => {
+    const { trigger, input } = openForm()
+    act(() => input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })))
+    await act(async () => { await new Promise(resolve => setTimeout(resolve, 40)) })
+    expect(container.querySelector('[data-slot="discuss-form"]')).toBeNull()
+    expect(document.activeElement).toBe(trigger)
   })
 })

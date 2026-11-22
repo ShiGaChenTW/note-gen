@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createSource, editSourceContent, submitSource, transitionSource, type Source, type SourceStatus } from '@/lib/v3-model/source'
 import type { Domain } from '@/lib/v3-model/domain'
 import { analyzeSource, createAnalysisQueue, requeueInterrupted, runAnalysisQueue } from './pipeline'
+import { createFileTextReader } from './file-route'
 import type { AskModel, CommanderDeps, Converters, ProposalBatch, RosterAgent } from './types'
 
 // 筆記庫與連結表：分析流程不應該碰到它們（寫入要等 Scott 接受）。
@@ -65,7 +66,7 @@ function deps(sources: ReturnType<typeof memorySources>, ask: AskModel, converte
     agentPrompt: async (_agent, role) => `[${role}]`,
     submitProposals: async batch => { batches.push(batch) },
     logActivity: async entry => { activity.push(entry) },
-    labels: { origin: ({ agent, source }) => `${agent}:${source}`, unconverted: ({ origin }) => `UNCONVERTED ${origin}` },
+    labels: { origin: ({ agent, source }) => `${agent}:${source}`, unconverted: ({ origin, reason }) => `UNCONVERTED ${origin}${reason ? ` BECAUSE ${reason}` : ''}` },
     now: () => new Date(T0),
   }
   return { deps: value, batches, activity }
@@ -100,6 +101,20 @@ describe('analyzeSource', () => {
     expect(ask.calls[0]).toContain('Scott 看過初步判斷「會議紀錄｜存成紀錄筆記＋拆出任務」，選了照建議處理')
     expect((await analyzeSource('s2', d)).status).toBe('analyzed')
     expect(ask.calls.filter(prompt => prompt.includes('--- 資料源 ---')).at(-1)).not.toContain('初步判斷')
+  })
+
+  it('ALMNC-57.3 會議逐字稿：Scott 選「處理」後，指揮官的提示要求抽出決議、待辦與負責人，待辦變成提案', async () => {
+    const content = '產品週會\n\n日期：2026-11-20\n與會者：Scott Chen、Amy Lin\n\nScott Chen：報價單誰寄？\n\nAmy Lin：我週五前寄。'
+    const sources = memorySources([src('m1', { sourceType: 'external', kind: 'meeting', content, origin: 'weekly.vtt' })])
+    sources.rows.set('m1', submitSource(sources.rows.get('m1')!, T0))
+    const ask = fakeModel({ fragments: [{ kind: 'task', title: 'Amy：週五前寄報價單', people: ['Amy Lin'], date: '2026-11-27' }] })
+    const { deps: d, batches } = deps(sources, ask)
+    expect((await analyzeSource('m1', d)).status).toBe('analyzed')
+    const prompt = ask.calls.find(call => call.includes('--- 資料源 ---'))!
+    expect(prompt).toContain('會議的逐字稿')
+    expect(prompt).toContain('負責人')
+    expect(prompt).toContain('Amy Lin：我週五前寄。')
+    expect(batches[0].proposals[0]).toMatchObject({ kind: 'task', sourceIds: ['m1'] })
   })
 
   it('happy path：自己寫的文字 → 分析中 → 提案送工作台 → 已分析', async () => {
@@ -258,6 +273,54 @@ describe('佇列', () => {
     expect(summary.failed).toEqual([{ sourceId: 'bad', error: 'boom' }])
     expect(sources.rows.get('ext')?.status).toBe('awaiting_decision')
     expect(sources.rows.get('bad')?.status).toBe('pending_analysis')
+  })
+
+  // Fork（almanac ALMNC-54.19）：PDF／Office 由 anydoc 解析；讀不出文字時寫明原因，佇列不會卡住。
+  it('PDF／docx 資料源：解析出的文字送給模型分析', async () => {
+    const sources = memorySources([src('pdf', { kind: 'file', content: '/docs/會議紀錄.pdf' })])
+    const parseDocument = vi.fn(async () => ({ markdown: '週五前寄報價單給 Amy' }))
+    const readFileText = createFileTextReader({ readText: vi.fn(), parseDocument, reason: key => key })
+    const ask = fakeModel({ fragments: [{ kind: 'task', title: '寄報價單' }] })
+    const { deps: d } = deps(sources, ask, { readFileText })
+    const result = await analyzeSource('pdf', d)
+    if (result.status !== 'analyzed') throw new Error(result.status)
+    expect(parseDocument).toHaveBeenCalledWith('/docs/會議紀錄.pdf', '會議紀錄.pdf')
+    expect(result.conversion).toMatchObject({ converter: 'file', status: 'converted' })
+    expect(ask.calls[0]).toContain('週五前寄報價單給 Amy')
+  })
+
+  it('掃描 PDF 讀不出文字：提案寫明原因、不把路徑送給模型，佇列繼續下一則', async () => {
+    const sources = memorySources([
+      src('scan', { kind: 'file', content: '/docs/scan.pdf', origin: 'scan.pdf' }, T0),
+      src('next', {}, T0 + 1),
+    ])
+    const readFileText = createFileTextReader({
+      readText: vi.fn(),
+      parseDocument: async () => { throw { code: 'SCANNED_PDF', message: 'no text layer' } },
+      reason: key => `<${key}>`,
+    })
+    const ask = fakeModel({ fragments: [{ kind: 'task', title: 'x' }] })
+    const { deps: d, batches, activity } = deps(sources, ask, { readFileText })
+    const summary = await runAnalysisQueue(d)
+    expect(summary).toEqual({ analyzed: ['scan', 'next'], rejected: [], failed: [] })
+    expect(sources.rows.get('scan')?.status).toBe('analyzed')
+    expect(sources.rows.get('next')?.status).toBe('analyzed')
+    const scanBatch = batches.find(batch => batch.id === 'commander:scan')!
+    expect(scanBatch.proposals).toHaveLength(1)
+    expect(scanBatch.proposals[0].body).toBe('UNCONVERTED scan.pdf BECAUSE <scannedPdf>')
+    expect(ask.calls.filter(prompt => prompt.includes('--- 資料源 ---'))).toHaveLength(1)
+    expect(ask.calls.some(prompt => prompt.includes('/docs/scan.pdf'))).toBe(false)
+    expect(activity).toContainEqual(expect.objectContaining({ sourceId: 'scan', note: expect.stringContaining('(file/failed) <scannedPdf>') }))
+  })
+
+  it('不支援的檔案格式：同樣寫明原因', async () => {
+    const sources = memorySources([src('zip', { kind: 'file', content: '/docs/a.zip' })])
+    const readFileText = createFileTextReader({ readText: vi.fn(), parseDocument: vi.fn(), reason: key => `<${key}>` })
+    const { deps: d, batches } = deps(sources, fakeModel('ignored'), { readFileText })
+    const result = await analyzeSource('zip', d)
+    if (result.status !== 'analyzed') throw new Error(result.status)
+    expect(result.conversion).toMatchObject({ status: 'unavailable', reason: '<unsupported>' })
+    expect(batches[0].proposals[0].body).toContain('BECAUSE <unsupported>')
   })
 
   it('上次中斷卡在分析中的退回待分析', async () => {

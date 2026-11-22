@@ -44,7 +44,13 @@ export async function analyzeSource(sourceId: string, deps: CommanderDeps, optio
   try {
     const now = deps.now?.() ?? new Date()
     const conversion = await toText(source, deps.converters)
-    const fragments: Fragment[] = conversion.text.trim()
+    const unconverted = (reason?: string) =>
+      [fallbackFragment(deps.labels.unconverted({ origin: source.origin ?? source.kind, reason }), source.origin)]
+    // Fork（almanac ALMNC-54.19）：轉換器回報了明確原因（掃描 PDF、加密檔、不支援的格式…）就直接寫成說明提案，
+    // 不把原檔路徑當內容送給模型；資料源照樣標成已分析，佇列繼續下一則。
+    const fragments: Fragment[] = conversion.reason
+      ? unconverted(conversion.reason)
+      : conversion.text.trim()
       ? await splitAndClassify(conversion.text, deps.ask, {
           today: now,
           sourceKind: source.kind,
@@ -52,7 +58,7 @@ export async function analyzeSource(sourceId: string, deps: CommanderDeps, optio
           previousText: await previousText(source, deps),
           hint: await hintOf(source, deps),
         })
-      : [fallbackFragment(deps.labels.unconverted({ origin: source.origin ?? source.kind }), source.origin)]
+      : unconverted()
 
     const [roster, domains] = await Promise.all([deps.roster(), deps.domains()])
     const assignments = assign(fragments, roster, domains)
@@ -74,7 +80,7 @@ export async function analyzeSource(sourceId: string, deps: CommanderDeps, optio
       sourceId,
       batchId: batch?.id,
       status,
-      note: `${batch?.proposals.length ?? 0} proposals, ${rejected.length} rejected (${conversion.converter}/${conversion.status})`,
+      note: `${batch?.proposals.length ?? 0} proposals, ${rejected.length} rejected (${conversion.converter}/${conversion.status})${conversion.reason ? ` ${conversion.reason}` : ''}`,
     }).catch(error => console.warn('[commander] activity log failed:', error))
     return { status, sourceId, conversion, fragments, assignments, drafts, rejected, batch }
   } catch (error) {

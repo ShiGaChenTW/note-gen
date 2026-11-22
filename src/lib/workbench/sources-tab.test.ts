@@ -4,7 +4,7 @@ import { createSource, type Source } from '@/lib/v3-model/source'
 import type { SourceJudgement } from './judgement'
 import {
   bridgeInput, buildSourceRows, captureSourceId, dayBucket, filterCounts, filterRows, isUserCapture, organisedSummary, pickState,
-  planHandToCommander, recordSourceId, sourceTitle, toggleAll, togglePick, waitingCount, type CaptureLike, type RecordLike,
+  planHandToCommander, recordSourceId, restorePicks, sourceDisplayKind, sourceTitle, toggleAll, togglePick, waitingCount, type CaptureLike, type RecordLike,
 } from './sources-tab'
 
 const NOW = new Date(2026, 10, 21, 10).getTime()
@@ -146,5 +146,36 @@ describe('ALMNC-54.10 初步判斷', () => {
     expect(byId['src:n'].judgement).toBeUndefined() // AC#4：沒有判斷，列照樣出現
     expect(byId['src:n'].status).toBe('wait')
     expect(byId['src:p'].judgement).toBeUndefined()
+  })
+})
+
+describe('sourceDisplayKind（ALMNC-57）', () => {
+  it('Email、RSS、會議有自己的類型字，看得出是從哪個入口進來的；不認得的當檔案', () => {
+    expect(sourceDisplayKind('email')).toBe('email')
+    expect(sourceDisplayKind('rss')).toBe('rss')
+    expect(sourceDisplayKind('meeting')).toBe('meeting')
+    expect(sourceDisplayKind('link')).toBe('web')
+    expect(sourceDisplayKind('legacy_note')).toBe('file')
+  })
+})
+
+// Fork（almanac ALMNC-56.7，A06）
+describe('restorePicks', () => {
+  it('puts back what was picked before handing over, keeping picks made since', () => {
+    expect([...restorePicks(new Set(), new Set(['a', 'b']))].sort()).toEqual(['a', 'b'])
+    expect([...restorePicks(new Set(['c']), new Set(['a']))].sort()).toEqual(['a', 'c'])
+    expect([...restorePicks(new Set(['a']), new Set(['a']))]).toEqual(['a'])
+  })
+})
+
+describe('封存的不採用資料源（ALMNC-54.1 AC#6）', () => {
+  it('封存的仍列在清單的「不採用」篩選裡，帶 archived 標記；沒封存的沒有標記', () => {
+    const base = createSource({ id: 'a', sourceType: 'external', kind: 'text', content: '舊的想法', collector: 'scott' }, 1000)
+    const archived: Source = { ...base, status: 'rejected', statusChangedAt: 1000, archivedAt: 5000 }
+    const fresh: Source = { ...base, id: 'b', content: '剛不採用', status: 'rejected', statusChangedAt: 4000 }
+    const rows = buildSourceRows({ sources: [archived, fresh] })
+    expect(filterRows(rows, 'no').map(row => row.sourceId).sort()).toEqual(['a', 'b'])
+    expect(rows.find(row => row.sourceId === 'a')).toMatchObject({ status: 'no', archived: true })
+    expect(rows.find(row => row.sourceId === 'b')?.archived).toBeUndefined()
   })
 })

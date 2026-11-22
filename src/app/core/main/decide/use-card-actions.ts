@@ -131,12 +131,16 @@ export function useCardActions({ visible, commanderName }: { visible: readonly W
         const note = payload?.note ?? ''
         const key = card.decide?.key ?? card.key
         try {
-          const id = await discussProposal({ key, conversationId: card.conversationId }, note, text => decideT('discuss.message', { title, note: text }))
+          const id = await discussProposal({ key, conversationId: card.conversationId }, note,
+            text => decideT('discuss.message', { title, note: text }),
+            revised => decideT('discuss.revised', { title: revised }))
           if (id !== null) toast(decideT('discuss.done', { title }))
+          return true
         } catch (error) {
+          // 再次討論表單看到 false 就留著、不清掉輸入的文字（ALMNC-56 重跑稽核）
           fail(error)
+          return false
         }
-        return
       }
       case 'done':
         if (!card.task) return

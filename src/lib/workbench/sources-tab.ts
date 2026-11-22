@@ -12,8 +12,11 @@ export type SourceRowStatus = 'wait' | 'todo' | 'ing' | 'edited' | 'done' | 'no'
 export const SOURCE_FILTERS = ['all', 'wait', 'todo', 'done', 'no'] as const
 export type SourceFilter = typeof SOURCE_FILTERS[number]
 
-/** 顯示用的內容形式（v14 的類型字：網頁、文字、截圖、插圖、檔案、錄音、待辦、素材）。 */
-export type SourceDisplayKind = 'web' | 'text' | 'shot' | 'img' | 'file' | 'audio' | 'todo' | 'prompt'
+/**
+ * 顯示用的內容形式（v14 的類型字：網頁、文字、截圖、插圖、檔案、錄音、待辦、素材）。
+ * Fork（almanac ALMNC-57）：加上 Email、RSS、會議，資料源分頁看得出是從哪個入口進來的。
+ */
+export type SourceDisplayKind = 'web' | 'text' | 'shot' | 'img' | 'file' | 'audio' | 'todo' | 'prompt' | 'email' | 'rss' | 'meeting'
 
 export type SourceRowOrigin = 'source' | 'record' | 'capture'
 
@@ -44,6 +47,8 @@ export interface SourceListRow {
   suggestion?: string
   /** 擷取失敗：重試／刪除。 */
   captureFailed?: boolean
+  /** Fork（almanac ALMNC-54.1）：不採用滿 30 天已封存（仍在清單、搜尋得到，只是不能再改回等你決定）。 */
+  archived?: boolean
 }
 
 // —— 輸入（結構型別） ——
@@ -93,7 +98,13 @@ export function captureSourceId(captureId: string): string {
 }
 
 const SOURCE_KIND: Record<string, SourceDisplayKind> = {
-  text: 'text', link: 'web', image: 'shot', file: 'file', transcript: 'audio', voice: 'audio', email: 'text', todo: 'todo', prompt: 'prompt',
+  text: 'text', link: 'web', image: 'shot', file: 'file', transcript: 'audio', voice: 'audio', email: 'email', todo: 'todo', prompt: 'prompt',
+  rss: 'rss', meeting: 'meeting',
+}
+
+/** V3 資料源的形式 → 顯示用的類型字（不認得的當檔案）。 */
+export function sourceDisplayKind(kind: string): SourceDisplayKind {
+  return SOURCE_KIND[kind] ?? 'file'
 }
 const RECORD_KIND: Record<RecordLike['type'], SourceDisplayKind> = {
   scan: 'shot', text: 'text', image: 'img', link: 'web', file: 'file', recording: 'audio', todo: 'todo', 'prompt-draft': 'prompt',
@@ -138,7 +149,7 @@ function sourceRow(source: Source, input: SourcesTabInput): SourceListRow {
   return {
     id: `src:${source.id}`,
     origin: 'source',
-    kind: SOURCE_KIND[source.kind] ?? 'file',
+    kind: sourceDisplayKind(source.kind),
     title,
     excerpt: excerptOf(readable, title),
     content: readable,
@@ -148,6 +159,7 @@ function sourceRow(source: Source, input: SourcesTabInput): SourceListRow {
     outputs: input.outputCounts?.get(source.id) ?? 0,
     version: source.version,
     sourceId: source.id,
+    ...(source.archivedAt !== undefined ? { archived: true } : {}),
     ...judgementFields(source, input.judgements?.get(source.id)),
   }
 }
@@ -261,6 +273,13 @@ export function togglePick(picked: ReadonlySet<string>, id: string): Set<string>
   if (next.has(id)) next.delete(id)
   else next.add(id)
   return next
+}
+
+/**
+ * Fork（almanac ALMNC-56.7，A06）：「交給指揮官」失敗時還原勾選——把送出前勾的加回去，送出後又勾的保留。
+ */
+export function restorePicks(current: ReadonlySet<string>, before: ReadonlySet<string>): Set<string> {
+  return new Set([...before, ...current])
 }
 
 /** 全選框的狀態：目前清單全勾、部分勾、沒勾。 */

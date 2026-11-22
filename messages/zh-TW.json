@@ -215,7 +215,7 @@
     "quit": "退出 NoteGen"
   },
   "today": {
-    "title": "今日",
+    "title": "今天",
     "summary": "今天到期 {today} 項，逾期 {overdue} 項",
     "greeting": {
       "morning": "早安",
@@ -246,7 +246,7 @@
     "mits": "三件 MIT · 完成 {done} / {total}",
     "done": "已完成",
     "agenda": {
-      "title": "今日進程",
+      "title": "今天的進程",
       "sources": "錨點時段 · 有時間的任務 · 行事曆",
       "empty": "今天還沒有時段或有時間的任務",
       "showPast": "已過 {count} 個時段 · 展開",
@@ -302,7 +302,7 @@
       "action": "開始復盤"
     },
     "status": {
-      "open": "今日",
+      "open": "今天",
       "need": "需處理 {count}",
       "aria": "需處理 {count} 項，開啟首頁"
     },
@@ -335,10 +335,10 @@
     "quickAdd": {
       "label": "快速新增任務",
       "placeholder": "買菜 @明天 9am !high #家",
-      "hint": "@日期、時間、!優先序、#標籤，按 Enter 寫入今日筆記",
+      "hint": "@日期、時間、!優先序、#標籤，按 Enter 寫入今天的每日筆記",
       "needTitle": "再輸入任務內容",
       "preview": "將新增",
-      "added": "已新增「{name}」到今日筆記",
+      "added": "已新增「{name}」到今天的每日筆記",
       "priority": {
         "highest": "最高",
         "high": "高",
@@ -1750,20 +1750,20 @@
       "title": "每日筆記",
       "desc": "設定每日筆記的位置、檔名格式與範本。NoteGen 會用與 Obsidian 相同的檔案，不會另外儲存資料。",
       "sections": {
-        "today": "今日筆記",
+        "today": "今天的每日筆記",
         "location": "位置與檔名",
         "templates": "範本",
         "reminders": "提醒"
       },
       "open": {
-        "button": "開啟今日筆記",
+        "button": "開啟今天的每日筆記",
         "preview": "今天的筆記：{path}",
-        "created": "已依範本建立今日筆記",
-        "opened": "已開啟今日筆記",
-        "error": "無法開啟今日筆記"
+        "created": "已依範本建立今天的每日筆記",
+        "opened": "已開啟今天的每日筆記",
+        "error": "無法開啟今天的每日筆記"
       },
       "openOnLaunch": {
-        "title": "啟動時開啟今日筆記",
+        "title": "啟動時開啟今天的每日筆記",
         "desc": "每次啟動 App 時開啟今天的筆記；還不存在就依範本建立。"
       },
       "dailyFolder": {
@@ -4009,6 +4009,14 @@
         "title": "全域快捷鍵",
         "desc": "這些快捷鍵由系統註冊，NoteGen 不在前台時也可能觸發。"
       },
+      "workbenchKeys": {
+        "title": "工作台單鍵",
+        "desc": "工作台開著、沒在打字時，按一個字母就能做事。",
+        "singleKeys": {
+          "title": "N 新增資料源、T 新增對話",
+          "desc": "只在工作台畫面開著時有效。關掉後請用側欄的按鈕。"
+        }
+      },
       "editorShortcuts": {
         "title": "編輯器快捷鍵",
         "desc": "這些快捷鍵只在 Markdown 編輯器聚焦時生效。",
@@ -4254,7 +4262,48 @@
     },
     "searchPlaceholder": "搜尋設定...",
     "noSearchResults": "找不到相關設定",
-    "title": "設定"
+    "title": "設定",
+    "rss": {
+      "title": "RSS 訂閱",
+      "desc": "貼上 RSS 或 Atom 網址（網站首頁也可以，會自動找 feed）。App 開著時每 6 小時抓一次、啟動時補抓一次，新文章存成資料源等你決定；第一次只收最新 10 篇。",
+      "urlLabel": "Feed 網址",
+      "urlPlaceholder": "https://example.com/feed.xml",
+      "nameLabel": "名稱",
+      "namePlaceholder": "名稱（可省略，預設用 feed 標題）",
+      "subscribe": "訂閱",
+      "subscribing": "訂閱中…",
+      "refreshNow": "立即更新",
+      "refreshing": "更新中…",
+      "loading": "正在載入訂閱…",
+      "loadError": "讀不到訂閱清單。",
+      "empty": "還沒有訂閱。",
+      "renameLabel": "「{name}」的名稱",
+      "pause": "暫停",
+      "resume": "繼續",
+      "delete": "刪除",
+      "paused": "已暫停",
+      "never": "還沒抓過",
+      "lastFetched": "上次更新 {time}，新增 {count} 篇",
+      "lastError": "上次錯誤（{time}）：{message}",
+      "subscribed": "已訂閱「{name}」，收進 {count} 篇",
+      "refreshed": "已更新，新增 {count} 篇",
+      "refreshedWithErrors": "已更新，新增 {count} 篇；{failed} 個訂閱抓取失敗",
+      "deleted": "已刪除「{name}」（收進來的資料源不會刪除）",
+      "duplicate": "已經訂閱過「{name}」",
+      "errors": {
+        "http": "伺服器回應 {detail}",
+        "not_feed": "這個網址不是 RSS 或 Atom feed",
+        "timeout": "連線逾時",
+        "network": "連不上：{detail}",
+        "invalid_url": "網址格式不對",
+        "unknown": "抓取失敗：{detail}"
+      },
+      "undo": "復原",
+      "deleteError": "沒有刪掉「{name}」，請再試一次",
+      "pauseError": "沒有暫停「{name}」，請再試一次",
+      "resumeError": "沒有繼續「{name}」，請再試一次",
+      "restoreError": "沒有復原「{name}」，請重新訂閱"
+    }
   },
   "bases": {
     "title": "Bases",
@@ -6905,6 +6954,40 @@
     "description": "點選選擇記錄工具，快速建立記錄"
   },
   "editor": {
+    "bottomToolbar": {
+      "label": "格式工具列",
+      "more": "更多格式"
+    },
+    "noteToolbar": {
+      "label": "筆記工具列",
+      "back": "返回",
+      "forward": "前進",
+      "find": "在筆記中尋找",
+      "tags": "標籤",
+      "noTags": "還沒有標籤",
+      "addTag": "新增標籤，按 Enter",
+      "removeTag": "移除 {tag}",
+      "tagsReadOnly": "標籤格式較複雜，請在屬性卡片的原始碼修改",
+      "pin": "置頂",
+      "unpin": "取消置頂",
+      "favorite": "收藏",
+      "unfavorite": "取消收藏",
+      "info": "筆記資訊",
+      "infoFileName": "檔名",
+      "infoFolder": "資料夾",
+      "infoCreated": "建立時間",
+      "infoModified": "修改時間",
+      "infoLength": "字數",
+      "command": "命令面板",
+      "more": "更多",
+      "sendToCommander": "送給指揮官",
+      "sentToCommander": "已送給指揮官",
+      "sentNewVersion": "內容有更新，已把新版本送給指揮官",
+      "alreadySent": "這篇已經送過了，內容沒有變",
+      "emptyNote": "這篇筆記是空的，沒有送出",
+      "sendFailed": "送給指揮官失敗",
+      "saveBeforeSendFailed": "還沒存進檔案的修改存不進去，所以沒有送出"
+    },
     "statusBar": {
       "documentActions": {
         "copy": "複製",
@@ -7288,6 +7371,13 @@
       "confirm": "確認",
       "committed": "已建立新的提示詞版本",
       "commitFailed": "建立版本失敗"
+    },
+    "docTitle": {
+      "label": "標題",
+      "placeholder": "未命名",
+      "renameFailed": "沒有改成這個標題",
+      "fileExists": "已有同名檔案，請換一個標題",
+      "busy": "這個檔案正在處理，請稍後再試"
     }
   },
   "editorWindow": {
@@ -7563,7 +7653,7 @@
     "moveUp": "上移",
     "moveDown": "下移",
     "showOnStartup": "啟動時顯示首頁",
-    "todayMoved": "今日頁已經移到首頁的「日程」卡片。",
+    "todayMoved": "「今天」頁已經移到首頁的「日程」卡片。",
     "empty": "所有卡片都關掉了。",
     "capture": {
       "label": "快速記錄",
@@ -7575,9 +7665,9 @@
     },
     "needs": {
       "title": "需要你處理",
-      "review": "待審草稿",
+      "review": "待決定的提案",
       "reviewAction": "審核",
-      "drafts": "{count} 項草稿待審",
+      "drafts": "{count} 項提案待決定",
       "unfinished": "沒做完",
       "resume": "繼續",
       "signal": "提醒",
@@ -8125,7 +8215,7 @@
       },
       "task": {
         "name": "待辦",
-        "hint": "→ 加到今日的每日筆記，有時間就排成時段"
+        "hint": "→ 加到今天的每日筆記，有時間就排成時段"
       },
       "text": {
         "name": "文字",
@@ -8161,7 +8251,7 @@
     },
     "to": {
       "inbox": "筆記 → 收件資料夾",
-      "today": "今日的每日筆記"
+      "today": "今天的每日筆記"
     },
     "reading": "辨識中",
     "source": {
@@ -8190,9 +8280,9 @@
     "remove": "移除這筆收集",
     "empty": "還沒收進東西。貼一段文字、連結或圖片試試。",
     "emptyFilter": "這個狀態下沒有收集。",
-    "records": "Inbox 的記錄",
-    "recordsHint": "Inbox 裡還沒整理的記錄，可以拆成提案。",
-    "recordsEmpty": "Inbox 沒有未整理的記錄",
+    "records": "未整理的記錄",
+    "recordsHint": "Inbox 資料夾裡還沒整理的記錄，可以拆成提案。",
+    "recordsEmpty": "沒有未整理的記錄",
     "split": "拆分",
     "queued": "已在收集",
     "writeHint": "新筆記、任務和時段都要你收下才會寫入；沒有收下的提案不會留下任何檔案。"
@@ -8256,6 +8346,7 @@
       },
       "discuss": "再次討論",
       "proposalTalk": "再次討論中",
+      "proposalReplaced": "已被新版取代",
       "directAdded": "已新增：{what}",
       "undo": "復原",
       "directDone": "已新增",
@@ -8365,7 +8456,7 @@
     },
     "source": {
       "collect": "收集",
-      "draft": "Agent 草稿"
+      "draft": "夥伴提案"
     },
     "from": "來自 {origin}",
     "writesTo": "收下後寫入：",
@@ -8385,7 +8476,7 @@
     "undo": "復原",
     "undoFailed": "無法復原，檔案已被改過",
     "failed": "處理失敗，請再試一次",
-    "conflict": "檔案在草稿產生後被改過，請到任務中心逐條確認",
+    "conflict": "檔案在提案產生後被改過，請到任務中心逐條確認",
     "openReview": "到任務中心",
     "viewAll": "等你定共 {count} 件，全部查看",
     "stale": "{count} 則提案超過 14 天沒決定，會列進每週回顧，不會自動消失",
@@ -8398,8 +8489,11 @@
       "hint": "⌘↩ 送出",
       "message": "再次討論「{title}」：{note}",
       "done": "已帶回對話：「{title}」",
+      "revised": "我已修訂「{title}」，請確認新版提案。",
       "fromConversation": "來自對話：{title}",
-      "conversation": "這段對話"
+      "conversation": "這段對話",
+      "sending": "送出中…",
+      "failed": "沒有送出，你寫的說明還在，可以再送一次。"
     }
   },
   "jobs": {
@@ -8482,7 +8576,8 @@
       "noAccess": "行事曆還沒開放存取，行程不會出現在這裡。",
       "proposal": "提案 · 排程員",
       "accept": "收下",
-      "reject": "不要"
+      "reject": "不要",
+      "namedAction": "{action}「{title}」"
     },
     "journal": {
       "label": "每日筆記",
@@ -8589,7 +8684,7 @@
       "decide": "工作台",
       "collect": "收集",
       "threads": "對話",
-      "knowledge": "知識",
+      "knowledge": "整理",
       "plan": "計畫"
     },
     "agents": {
@@ -8599,6 +8694,13 @@
       "addFirst": "新增第一位代理人"
     },
     "vault": "我的筆記",
+    "collapseSection": "收合{title}",
+    "expandSection": "展開{title}",
+    "noteList": {
+      "label": "「{folder}」的筆記清單",
+      "empty": "這個資料夾還沒有筆記",
+      "close": "關閉筆記清單"
+    },
     "rules": {
       "label": "規則",
       "text": "代理人只能提案；寫入一律經過工作台。"
@@ -8606,8 +8708,8 @@
     "tabs": {
       "collectGroup": "收集頁面",
       "collect": "收集",
-      "knowledgeGroup": "知識頁面",
-      "inbox": "Inbox",
+      "knowledgeGroup": "整理頁面",
+      "inbox": "未整理",
       "timeline": "筆記時間軸",
       "canvases": "畫布",
       "noteTags": "標籤",
@@ -8615,8 +8717,8 @@
       "outline": "大綱"
     },
     "knowledge": {
-      "title": "知識",
-      "subtitle": "時間軸、畫布與標籤，筆記檔案樹在左側的「我的筆記」"
+      "title": "整理",
+      "subtitle": "時間軸、畫布與標籤，筆記檔案樹在左側的「{vault}」"
     }
   },
   "organize": {
@@ -8640,6 +8742,18 @@
   "commander": {
     "origin": "{agent} 分析的資料源：{source}",
     "unconverted": "（沒辦法轉成文字，已保留原檔：{origin}）",
+    "unconvertedReason": "（沒辦法轉成文字：{reason}已保留原檔：{origin}）",
+    "fileReason": {
+      "scannedPdf": "這份 PDF 沒有可讀取的文字（可能是掃描檔），請先做 OCR 或改存成圖片。",
+      "encrypted": "檔案已加密或有密碼保護，讀不到內容。",
+      "malformed": "檔案損壞或缺少必要內容，讀不出文字。",
+      "resourceLimit": "檔案內容太複雜，超過安全解析的上限。",
+      "fileTooLarge": "檔案超過 100 MB，沒有解析。",
+      "readFailed": "讀不到這個檔案（可能已移動或刪除）。",
+      "parseFailed": "檔案解析失敗。",
+      "unsupported": "目前不支援這種檔案格式。",
+      "noText": "檔案裡沒有可讀取的文字。"
+    },
     "domainProposal": {
       "title": "成立領域「{domain}」，新增專家 {name}",
       "summary": "{count} 則知識筆記還沒有領域，主題都是「{topic}」"
@@ -8798,7 +8912,10 @@
         "file": "檔案",
         "audio": "錄音",
         "todo": "待辦",
-        "prompt": "素材"
+        "prompt": "素材",
+        "email": "Email",
+        "rss": "RSS",
+        "meeting": "會議"
       },
       "listLabel": "資料源清單",
       "selectAll": "全選",
@@ -8820,6 +8937,8 @@
       },
       "empty": "沒有符合的資料源",
       "emptyAll": "還沒有資料源。按側欄的「新增資料源」（N）加進來。",
+      "loadFailed": "讀不到資料源，清單可能不完整。",
+      "loadRetry": "重試",
       "pickOne": "選一則資料源來看",
       "back": "回到清單",
       "judgement": "初步判斷",
@@ -8828,6 +8947,7 @@
       "process": "照建議處理",
       "reject": "不採用",
       "restore": "改回等你決定",
+      "archived": "已封存（不採用滿 30 天）",
       "reorganise": "重新整理",
       "desk": "攤到檯面",
       "edit": "編輯",
@@ -8846,7 +8966,8 @@
         "savedVersion": "已存成 v{version}，送給 {name} 才會更新產出",
         "noChange": "沒有修改",
         "rejected": "已不採用「{title}」",
-        "restored": "已改回等你決定「{title}」"
+        "restored": "已改回等你決定「{title}」",
+        "handFailed": "沒能交給 {name}，勾選已還原，請再試一次"
       },
       "editor": {
         "editing": "正在編輯",
@@ -8928,12 +9049,12 @@
     },
     "quick": {
       "label": "新增",
+      "newDoc": "新增文件",
+      "newDocShort": "文件",
       "addSource": "新增資料源",
       "addSourceShort": "資料源",
       "newThread": "新增對話",
-      "newThreadShort": "對話",
-      "tbd": "待定",
-      "tbdTip": "功能待定"
+      "newThreadShort": "對話"
     },
     "legacy": {
       "title": "舊筆記 {count, number} 則",
@@ -8952,6 +9073,27 @@
         "allFailed": "這批都沒處理成功，先暫停；稍後再按「繼續處理」",
         "allUndecided": "這批 {name} 都判斷不出來，先暫停；請檢查模型設定",
         "packDone": "已整理好「{title}」那一包"
+      }
+    },
+    "import": {
+      "email": "Email",
+      "emailAdded": "已匯入 {count} 封信，等你決定要不要處理",
+      "emailEmpty": "檔案裡沒有認得出來的信（支援 .eml 與 .mbox）",
+      "nothingNew": "都匯入過了，沒有新增",
+      "skipped": "{count} 則之前匯入過，已略過。",
+      "truncated": "共 {total} 封，只收最新的 {limit} 封。",
+      "failed": "匯入失敗",
+      "dropUnsupported": "可以拖進 .eml、.mbox、.vtt、.srt 檔",
+      "subscribeRss": "訂閱 RSS",
+      "rssSubscribed": "已訂閱「{name}」，收進 {count} 篇，等你決定要不要處理",
+      "meeting": "會議逐字稿",
+      "meetingAdded": "已匯入 {count} 場會議，等你決定要不要處理",
+      "meetingEmpty": "檔案裡沒有讀得出來的逐字稿（支援 .vtt、.srt、.txt、.docx）",
+      "meetingFailed": "{count} 個檔案讀不出來：{names}。",
+      "busy": {
+        "email": "正在匯入 Email…",
+        "meeting": "正在匯入會議逐字稿…",
+        "rss": "正在訂閱 RSS…"
       }
     }
   },

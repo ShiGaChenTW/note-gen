@@ -104,6 +104,17 @@ describe('judgeSource', () => {
     expect(m.generate).not.toHaveBeenCalled()
   })
 
+  it('ALMNC-57: Email, RSS posts and meeting transcripts are judged from their stored text（no page fetch）', async () => {
+    for (const kind of ['email', 'rss', 'meeting']) {
+      const m = model('會議紀錄｜拆出任務')
+      const fetchPage = vi.fn(async () => 'page')
+      const result = await judgeSource(source({ kind, content: '週會\n\nScott Chen：好，那就這樣決定。', origin: 'https://x.example/a' }), { model: m, fetchPage, save: async () => undefined })
+      expect(result).toMatchObject({ status: 'ready', type: '會議紀錄' })
+      expect(m.generate).toHaveBeenCalledTimes(1)
+      expect(fetchPage).not.toHaveBeenCalled()
+    }
+  })
+
   it('a retry keeps the creation time and the 照建議處理 flag', async () => {
     const previous: SourceJudgement = { sourceId: 's1', status: 'capture_failed', followSuggestion: true, createdAt: NOW - 1000, updatedAt: NOW - 1000 }
     const result = await judgeSource(source(), { model: model('日誌'), previous, save: async () => undefined, now: () => NOW })

@@ -344,7 +344,7 @@ const useChatStore = create<ChatState>((set, get) => ({
   insert: async (chat) => {
     const { currentConversationId, isTemporaryConversation } = get()
 
-    if (isTemporaryConversation) {
+    if (isTemporaryConversation && chat.conversationId === undefined) {
       const data: Chat = {
         ...chat,
         id: nextTemporaryChatId--,
@@ -375,9 +375,9 @@ const useChatStore = create<ChatState>((set, get) => ({
         ...chat,
         conversationId
       }
-      const chats = get().chats
-      const newChats = [...chats, data]
-      set({ chats: newChats })
+      if (get().currentConversationId === conversationId && !get().isTemporaryConversation) {
+        set(state => ({ chats: [...state.chats, data] }))
+      }
 
       // 更新会话的消息数量和更新时间
       if (conversationId) {

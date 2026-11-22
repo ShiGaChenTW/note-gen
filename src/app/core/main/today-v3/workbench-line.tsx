@@ -15,7 +15,7 @@ export function WorkbenchLine({ count }: { count: number }) {
       data-testid="today-v3-workbench"
       onClick={() => openWorkbench('review')}
       aria-label={t('open', { count })}
-      className="cursor-pointer rounded-sm text-ink tabular-nums outline-none hover:underline focus-visible:ring-1 focus-visible:ring-ring/65"
+      className="cursor-pointer rounded-(--r-kbd) text-ink tabular-nums outline-none hover:underline focus-visible:ring-1 focus-visible:ring-ring/65"
     >
       {t('line', { count })}
     </button>

@@ -3,13 +3,13 @@
 // 不採用的資料源只會封存（archived_at），不刪除。唯一的例外是擷取失敗、還沒送出的外部擷取（deleteUnsentSource，ALMNC-54.10）。
 import { getDb } from './index'
 import {
-  archiveSource,
   canDeleteUnsent,
   createSource,
   editSourceContent,
   LEGACY_NOTE_KIND,
   sourceFromRow,
-  sourcesDueForArchive,
+  latestVersions,
+  searchSources,
   sourceToValues,
   transitionSource,
   type NewSourceInput,
@@ -18,6 +18,7 @@ import {
   type SourceRow,
   type SourceStatus,
 } from '@/lib/v3-model/source'
+import { sweepRejectedSources } from '@/lib/v3-model/archive-sweep'
 import { sourceOutputFromRow, type OutputTargetType, type SourceOutput, type SourceOutputRow } from '@/lib/v3-model/links'
 
 const SOURCE_COLUMNS = `id, source_type as sourceType, kind, content, origin, collected_at as collectedAt, collector,
@@ -104,6 +105,25 @@ export async function getSource(id: string): Promise<Source | undefined> {
   return rows[0] ? sourceFromRow(rows[0]) : undefined
 }
 
+/**
+ * Fork（almanac ALMNC-54.20）：從第一版的 id 往後找到版本鏈最新一版（沒有就回 undefined）。
+ * 「送給指揮官」、對話結論這類用固定 id 的資料源，內容改了再送時要接在最新一版後面。
+ */
+export async function getLatestVersion(rootId: string): Promise<Source | undefined> {
+  const first = await getSource(rootId)
+  if (!first) return undefined
+  let current: Source = first
+  const db = await getDb()
+  const seen = new Set([current.id])
+  for (;;) {
+    const rows: SourceRow[] = await db.select<SourceRow[]>(`select ${SOURCE_COLUMNS} from sources where previous_id = $1 order by version desc limit 1`, [current.id])
+    const next: Source | undefined = rows[0] ? sourceFromRow(rows[0]) : undefined
+    if (!next || seen.has(next.id)) return current
+    seen.add(next.id)
+    current = next
+  }
+}
+
 export async function listSources(options: { status?: SourceStatus; includeArchived?: boolean; limit?: number; excludeKind?: string } = {}): Promise<Source[]> {
   await initV3SourceDb()
   const db = await getDb()
@@ -165,6 +185,25 @@ export async function addSource(input: Omit<NewSourceInput, 'id'> & { id?: strin
   return source
 }
 
+/**
+ * Fork（almanac ALMNC-57）：匯入的資料源（Email、RSS、會議逐字稿）用由原始識別決定的 id（src_email:<Message-ID> 等），
+ * 已經有同一個 id 就跳過（on conflict do nothing），回傳 undefined；同一封信、同一篇文章再匯入不會重複。
+ */
+export async function addSourceIfAbsent(input: NewSourceInput, now = Date.now()): Promise<Source | undefined> {
+  await initV3SourceDb()
+  const source = createSource(input, now)
+  const db = await getDb()
+  const result = await db.execute(
+    `insert into sources
+       (id, source_type, kind, content, origin, collected_at, collector, status, status_changed_at,
+        version, previous_id, locked_at, archived_at, created_at, updated_at)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+     on conflict(id) do nothing`,
+    sourceToValues(source)
+  )
+  return Number(result.rowsAffected ?? 0) > 0 ? source : undefined
+}
+
 async function requireSource(id: string): Promise<Source> {
   const source = await getSource(id)
   if (!source) throw new Error(`找不到資料源：${id}`)
@@ -185,19 +224,24 @@ export async function editSource(id: string, content: string, now = Date.now()):
   return result
 }
 
-/** 封存不採用滿 30 天的資料源，回傳這次封存的 id。 */
+/** 封存不採用滿 30 天的資料源，回傳這次封存的 id。只設 archived_at，不刪除。 */
 export async function archiveDueRejectedSources(now = Date.now()): Promise<string[]> {
   await initV3SourceDb()
-  const db = await getDb()
-  const rows = await db.select<SourceRow[]>(
-    `select ${SOURCE_COLUMNS} from sources where status = 'rejected' and archived_at is null`
-  )
-  const candidates = rows.map(sourceFromRow)
-  const due = new Set(sourcesDueForArchive(candidates, now))
-  for (const source of candidates) {
-    if (due.has(source.id)) await updateSource(archiveSource(source, now))
-  }
-  return Array.from(due)
+  return sweepRejectedSources({
+    now: () => now,
+    listRejected: async () => {
+      const db = await getDb()
+      const rows = await db.select<SourceRow[]>(`select ${SOURCE_COLUMNS} from sources where status = 'rejected' and archived_at is null`)
+      return rows.map(sourceFromRow)
+    },
+    save: updateSource,
+  })
+}
+
+/** 搜尋資料源（含封存的不採用資料源）；每條版本鏈只留最新一版。 */
+export async function searchSourcesByText(query: string, limit = 200): Promise<Source[]> {
+  const found = searchSources(await listSources({ includeArchived: true, limit: 5000 }), query)
+  return latestVersions(found).slice(0, limit)
 }
 
 // ── 產出連結 ────────────────────────────────────────────────

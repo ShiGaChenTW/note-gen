@@ -1,10 +1,11 @@
 'use client'
 
 // Fork（almanac ALMNC-20）：v5 側欄，方案 B「導覽＋檔案樹」。left-sidebar.tsx 在 v3 時直接回傳這個元件。
-// 由上而下：品牌、搜尋（⌘K）、三個新增按鈕（ALMNC-54.8）、五個導覽、可收合的代理人區、可收合的 MyVault 檔案樹、規則。
+// 由上而下：品牌、搜尋（⌘K）、三個新增按鈕（ALMNC-54.8、54.16、54.18）、五個導覽、可收合的代理人區、可收合的 MyVault 檔案樹、規則。
 import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from 'react'
-import { ArrowDownToLine, CalendarCheck, CalendarDays, ChevronDown, ListChecks, Library, MessageSquarePlus, MessagesSquare, MoreHorizontal, Plus, Search, SquareDashed } from 'lucide-react'
+import { ArrowDownToLine, CalendarCheck, CalendarDays, ChevronDown, FilePen, ListChecks, Library, MessageSquarePlus, MessagesSquare, MoreHorizontal, Plus, Search } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { Kbd } from '@/components/ui/kbd'
 import { Count } from '@/components/v3/count'
 import { SectionLabel } from '@/components/v3/section-label'
 import { ensureDefaultRoster, listAgentSettings } from '@/db/agents'
@@ -13,11 +14,12 @@ import { useAgentTaskStore } from '@/lib/agent-tasks'
 import { useAnywhereStore } from '@/lib/anywhere/store'
 import { usePageVisibility } from '@/lib/fork-overlays/use-page-visibility'
 import { useKnowledgeOverlay } from '@/lib/sidebar-v3/knowledge'
+import { useNoteListStore } from '@/lib/note-list/note-list'
 import { useSidebarCollapse, type SidebarSection } from '@/lib/sidebar-v3/collapse'
 import { buildAgentRows, buildNav, runningAgentCount, type AgentRow, type NavKey } from '@/lib/sidebar-v3/nav'
 import type { AgentSettings } from '@/lib/agents/settings'
 import { useWeekOverlay } from '@/lib/week/overlay'
-import { openAddSource, openNewConversation } from '@/lib/workbench/open'
+import { openAddSource, openNewConversation, openNewDocument } from '@/lib/workbench/open'
 import { useWorkbenchCount } from '@/lib/workbench/use-workbench'
 import { cn } from '@/lib/utils'
 import useArticleStore from '@/stores/article'
@@ -29,6 +31,7 @@ import useThreadsStore from '@/stores/threads'
 import { FileSidebar } from '../file'
 import { FileActions } from '../file/file-actions'
 import { SIDEBAR_ROW, SIDEBAR_ROW_ACTIVE } from '../sidebar-row'
+import { useVaultName } from './use-vault-name'
 
 const ICONS: Record<NavKey, ComponentType<{ className?: string }>> = {
   today: CalendarCheck,
@@ -46,9 +49,10 @@ const OPEN: Record<NavKey, () => void> = {
   plan: () => useWeekOverlay.getState().show(),
 }
 
-const ROW = 'flex h-7 w-full items-center gap-2 px-2 text-left text-[13px] text-muted-ink'
+const ROW = 'flex h-7 w-full items-center gap-2 px-2 text-left text-ui-compact text-muted-ink'
 const VAULT_LABEL = 'flex h-6 w-full items-center gap-1.5 px-2 text-ui-compact text-muted-ink'
-const LABEL = 'flex h-6 w-full items-center gap-1.5 px-2 text-[11px] font-semibold tracking-[0.08em] text-faint'
+/** 「我的筆記」標題鈕：底色交給整列外層（V03），這裡只管字色與 focus 外框。 */
+const VAULT_TITLE = 'cursor-pointer rounded-(--r-kbd) outline-none transition-colors duration-100 ease-out hover:text-ink focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/60'
 
 function useAgentRows(): AgentRow[] {
   const [agents, setAgents] = useState<AgentSettings[]>([])
@@ -77,26 +81,60 @@ function openAgentSettings() {
 }
 
 /** 可收合的區塊標題；收合狀態存在 store.json。 */
-function SectionHeader({ section, collapsed, title, aside, actions }: {
+function SectionHeader({ section, collapsed, title, aside, actions, onTitleClick, titleActive }: {
   section: SidebarSection
   collapsed: boolean
   title: string
   aside?: ReactNode
   actions?: ReactNode
+  /** Fork（almanac ALMNC-54.17）：給了就把箭頭與標題拆開——箭頭收合，標題另有動作（我的筆記：開中間欄）。 */
+  onTitleClick?: () => void
+  titleActive?: boolean
 }) {
+  const t = useTranslations('sidebarV3')
   const toggle = useSidebarCollapse(state => state.toggle)
+  if (onTitleClick) {
+    // ALMNC-56.2 V03：滑過與選中的底色放在整列外層，右側動作區透明，整列一起變色、沒有缺口。
+    // A08：箭頭鈕的讀屏名稱是「收合／展開＋標題」，和開清單的標題鈕分得出來。
+    return (
+      <div className={cn('group/section relative flex items-center rounded-(--r-kbd) transition-colors duration-100 ease-out hover:bg-hover', titleActive && 'bg-active')}>
+        <button
+          type="button"
+          aria-expanded={!collapsed}
+          aria-label={t(collapsed ? 'expandSection' : 'collapseSection', { title })}
+          onClick={() => void toggle(section)}
+          className="grid size-6 shrink-0 cursor-pointer place-items-center rounded-(--r-kbd) text-muted-ink outline-none hover:text-ink focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/60"
+        >
+          <ChevronDown className={cn('size-3 shrink-0 transition-transform duration-100', collapsed && '-rotate-90')} aria-hidden />
+        </button>
+        <button
+          type="button"
+          onClick={onTitleClick}
+          aria-current={titleActive ? 'page' : undefined}
+          className={cn(VAULT_LABEL, VAULT_TITLE, 'min-w-0 flex-1 pl-0.5', titleActive && 'font-medium text-ink')}
+        >
+          <SectionLabel as="span" className="min-w-0 text-inherit"><span className="block truncate">{title}</span></SectionLabel>
+          {aside}
+        </button>
+        {actions && (
+          <div className="absolute inset-y-0 right-1 flex items-center pl-1 opacity-0 transition-opacity duration-100 group-hover/section:opacity-100 focus-within:opacity-100">
+            {actions}
+          </div>
+        )}
+      </div>
+    )
+  }
   return (
     <div className="group/section relative flex items-center">
       <button
         type="button"
         aria-expanded={!collapsed}
         onClick={() => void toggle(section)}
-        className={cn(section === 'vault' ? VAULT_LABEL : LABEL, 'min-w-0 flex-1 rounded-md outline-none hover:text-ink focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/60')}
+        className={cn(VAULT_LABEL, 'min-w-0 flex-1 rounded-(--r-kbd) outline-none hover:text-ink focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/60')}
       >
         <ChevronDown className={cn('size-3 shrink-0 transition-transform duration-100', collapsed && '-rotate-90')} aria-hidden />
-        {section === 'vault'
-          ? <SectionLabel as="span" className="min-w-0 text-inherit"><span className="block truncate">{title}</span></SectionLabel>
-          : <span className="truncate">{title}</span>}
+        {/* Fork（almanac ALMNC-56.6，V11）：所有區段標題（代理人、我的筆記）都用 SectionLabel。 */}
+        <SectionLabel as="span" className="min-w-0 text-inherit"><span className="block truncate">{title}</span></SectionLabel>
         {aside}
       </button>
       {actions && (
@@ -124,7 +162,7 @@ function AgentSection() {
           ? <span className="ml-auto font-normal tracking-normal text-muted-ink">{t('agents.running', { count: running })}</span>
           : undefined}
         actions={!collapsed && (
-          <button type="button" title={t('agents.add')} aria-label={t('agents.add')} onClick={openAgentSettings} className="grid size-5 cursor-pointer place-items-center rounded text-faint outline-none hover:bg-hover hover:text-ink focus-visible:ring-1 focus-visible:ring-ink/60">
+          <button type="button" title={t('agents.add')} aria-label={t('agents.add')} onClick={openAgentSettings} className="grid size-6 cursor-pointer place-items-center rounded-(--r) text-faint outline-none hover:bg-hover hover:text-ink focus-visible:ring-1 focus-visible:ring-ink/60">
             <Plus className="size-3.5" aria-hidden />
           </button>
         )}
@@ -136,7 +174,7 @@ function AgentSection() {
               <button type="button" onClick={openAgentSettings} className={cn(ROW, SIDEBAR_ROW, 'group/row')}>
                 <span aria-hidden className={cn('size-1.5 shrink-0 rounded-full bg-faint', row.running && 'bg-ink')} />
                 <span className={cn('min-w-0 truncate', !row.enabled && 'opacity-60')}>{row.name}</span>
-                <span className="ml-auto shrink-0 text-[11px] text-faint group-hover/row:hidden">{agentRoleLabel(row, tRoles)}</span>
+                <span className="ml-auto shrink-0 text-ui-numeric text-faint group-hover/row:hidden">{agentRoleLabel(row, tRoles)}</span>
                 <MoreHorizontal className="ml-auto hidden size-3.5 shrink-0 text-faint group-hover/row:inline-flex" aria-hidden />
               </button>
             </li>
@@ -154,11 +192,21 @@ function AgentSection() {
 }
 
 function VaultSection() {
-  const t = useTranslations('sidebarV3')
   const collapsed = useSidebarCollapse(state => state.vault)
+  // Fork（almanac ALMNC-54.17）：點「我的筆記」開中間欄，列出整個 vault 的筆記。
+  const rootListOpen = useNoteListStore(state => state.visible && state.folder === '')
+  // ALMNC-43.12：標題顯示筆記庫資料夾的實際名稱，取不到時用「我的筆記」。
+  const vaultName = useVaultName()
   return (
-    <section aria-label={t('vault')} className={cn('flex min-h-0 flex-col', collapsed ? 'shrink-0' : 'flex-1')}>
-      <SectionHeader section="vault" collapsed={collapsed} title={t('vault')} actions={!collapsed && <FileActions />} />
+    <section aria-label={vaultName} className={cn('flex min-h-0 flex-col', collapsed ? 'shrink-0' : 'flex-1')}>
+      <SectionHeader
+        section="vault"
+        collapsed={collapsed}
+        title={vaultName}
+        actions={!collapsed && <FileActions />}
+        onTitleClick={() => useNoteListStore.getState().show('')}
+        titleActive={rootListOpen}
+      />
       {!collapsed && (
         <div className="min-h-0 flex-1 overflow-hidden [&_#article-sidebar]:bg-transparent">
           <FileSidebar />
@@ -169,42 +217,42 @@ function VaultSection() {
 }
 
 /**
- * Fork（almanac ALMNC-54.8）：搜尋下方三個只有圖示的按鈕——新增資料源（N）、新增對話（T）、待定（ALMNC-54.15，還沒有功能）。
+ * Fork（almanac ALMNC-54.8、54.16、54.18）：搜尋下方三個只有圖示的按鈕——新增文件、新增資料源（N）、新增對話（T）。
  * 滑鼠停留顯示名稱與快捷鍵；窄螢幕（手機）在圖示下方加小字。
  */
 function QuickActions() {
   const t = useTranslations('workbench.quick')
-  const items: Array<{ key: string, icon: ComponentType<{ className?: string }>, label: string, short: string, shortcut?: string, onClick?: () => void }> = [
-    { key: 'source', icon: ArrowDownToLine, label: t('addSource'), short: t('addSourceShort'), shortcut: 'N', onClick: openAddSource },
-    { key: 'thread', icon: MessageSquarePlus, label: t('newThread'), short: t('newThreadShort'), shortcut: 'T', onClick: () => void openNewConversation() },
-    { key: 'tbd', icon: SquareDashed, label: t('tbdTip'), short: t('tbd') },
+  // Fork（almanac ALMNC-56.4，A02）：單鍵 N／T 只在工作台開著、設定沒關時有效；只在那時標快捷鍵。
+  const singleKeys = useSettingStore(state => state.workbenchSingleKeys !== false)
+  const workbenchOpen = useDecideStore(state => state.visible)
+  const keys = singleKeys && workbenchOpen
+  // Fork（almanac ALMNC-54.16、54.18）：依序為新增文件、新增資料源、新增對話（54.18 拿掉第四顆「待確定」）。
+  const items: Array<{ key: string, icon: ComponentType<{ className?: string }>, label: string, short: string, shortcut?: string, onClick: () => void }> = [
+    { key: 'doc', icon: FilePen, label: t('newDoc'), short: t('newDocShort'), onClick: () => void openNewDocument() },
+    { key: 'source', icon: ArrowDownToLine, label: t('addSource'), short: t('addSourceShort'), shortcut: keys ? 'N' : undefined, onClick: openAddSource },
+    { key: 'thread', icon: MessageSquarePlus, label: t('newThread'), short: t('newThreadShort'), shortcut: keys ? 'T' : undefined, onClick: () => void openNewConversation() },
   ]
   return (
     <div role="group" aria-label={t('label')} className="mx-0.5 grid shrink-0 grid-cols-3 gap-1" data-testid="sidebar-quick">
       {items.map(item => {
         const Icon = item.icon
-        const disabled = !item.onClick
         const tip = item.shortcut ? `${item.label}　${item.shortcut}` : item.label
         return (
           <span key={item.key} className="group/quick relative flex">
             <button
               type="button"
-              aria-label={disabled ? t('tbd') : item.label}
+              aria-label={item.label}
               aria-keyshortcuts={item.shortcut}
-              disabled={disabled}
               onClick={item.onClick}
               data-quick={item.key}
-              className={cn(
-                'flex min-h-[34px] w-full cursor-pointer flex-col items-center justify-center gap-0.5 rounded-md border border-line bg-bg py-1 text-muted-ink outline-none transition-colors duration-100 hover:border-ink/30 hover:text-ink focus-visible:ring-1 focus-visible:ring-ink/60',
-                disabled && 'cursor-not-allowed border-dashed bg-transparent text-faint hover:border-line hover:text-faint',
-              )}
+              className="flex min-h-[34px] w-full cursor-pointer flex-col items-center justify-center gap-0.5 rounded-(--r-kbd) border border-line bg-bg py-1 text-muted-ink outline-none transition-colors duration-100 hover:border-ink/30 hover:text-ink focus-visible:ring-1 focus-visible:ring-ink/60"
             >
               <Icon className="size-[17px] shrink-0" aria-hidden />
-              <span className="text-[11px] leading-3 md:hidden" aria-hidden>{item.short}</span>
+              <span className="text-ui-numeric leading-3 md:hidden" aria-hidden>{item.short}</span>
             </button>
             <span
               role="tooltip"
-              className="pointer-events-none absolute top-[calc(100%+6px)] left-1/2 z-30 -translate-x-1/2 rounded-md bg-invert px-2 py-1 text-xs whitespace-nowrap text-invert-ink opacity-0 transition-opacity delay-200 duration-100 group-hover/quick:opacity-100 group-focus-within/quick:opacity-100 max-md:hidden"
+              className="pointer-events-none absolute top-[calc(100%+6px)] left-1/2 z-30 -translate-x-1/2 rounded-(--r-kbd) bg-invert px-2 py-1 text-xs whitespace-nowrap text-invert-ink opacity-0 transition-opacity delay-200 duration-100 group-hover/quick:opacity-100 group-focus-within/quick:opacity-100 max-md:hidden"
             >
               {tip}
             </span>
@@ -232,17 +280,17 @@ export function SidebarV3() {
   return (
     <div className="flex h-full w-full flex-col gap-3 border-r border-line-soft bg-panel px-2 py-3" data-left-sidebar data-sidebar-v3>
       <div className="flex shrink-0 items-baseline gap-2 px-2 py-1">
-        <b className="text-sm font-[620] tracking-[-0.01em]">NoteGen</b>
+        <b className="text-sm font-semibold">NoteGen</b>
         <span className="text-ui-compact text-faint" aria-hidden>v3</span>
       </div>
       <button
         type="button"
         onClick={() => useAnywhereStore.getState().setPaletteOpen(true)}
-        className="mx-0.5 flex h-[30px] shrink-0 cursor-pointer items-center gap-2 rounded-md border border-line-soft bg-bg pr-1.5 pl-2 text-left text-ui-compact text-muted-ink outline-none hover:border-line focus-visible:ring-1 focus-visible:ring-ink/60"
+        className="mx-0.5 flex h-[30px] shrink-0 cursor-pointer items-center gap-2 rounded-(--r-kbd) border border-line-soft bg-bg pr-1.5 pl-2 text-left text-ui-compact text-muted-ink outline-none hover:border-line focus-visible:ring-1 focus-visible:ring-ink/60"
       >
         <Search className="size-4 shrink-0" aria-hidden />
         <span className="flex-1 truncate">{t('search')}</span>
-        <kbd className="inline-flex h-[18px] items-center rounded bg-sunken px-[5px] text-xs text-muted-ink">⌘K</kbd>
+        <Kbd>⌘K</Kbd>
       </button>
       <QuickActions />
       <nav aria-label={t('navLabel')} className="flex shrink-0 flex-col gap-px">
@@ -267,7 +315,7 @@ export function SidebarV3() {
       <div className="mx-2 h-px shrink-0 bg-line-soft" role="separator" />
       <VaultSection />
       <div className="mt-auto shrink-0 border-t border-line-soft px-2 pt-2.5 pb-0.5 text-xs leading-[18px] text-muted-ink">
-        <div className="pb-1 text-[11px] font-semibold tracking-[0.08em] text-faint">{t('rules.label')}</div>
+        <SectionLabel className="pb-1">{t('rules.label')}</SectionLabel>
         {t('rules.text')}
       </div>
     </div>

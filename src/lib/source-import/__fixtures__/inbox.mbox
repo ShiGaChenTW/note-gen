@@ -1,0 +1,35 @@
+From amy@example.com Thu Nov 19 09:30:00 2026
+Message-ID: <m1@example.com>
+Date: Thu, 19 Nov 2026 09:30:00 +0800
+From: Amy <amy@example.com>
+To: scott@example.com
+Subject: First
+
+First body.
+>From the archive: this line was escaped.
+
+From bob@example.com Fri Nov 20 10:00:00 2026
+Message-ID: <m2@example.com>
+Date: Fri, 20 Nov 2026 10:00:00 +0800
+From: Bob <bob@example.com>
+To: scott@example.com
+Subject: Second
+
+Second body.
+
+From amy@example.com Thu Nov 19 09:30:00 2026
+Message-ID: <m1@example.com>
+Date: Thu, 19 Nov 2026 09:30:00 +0800
+From: Amy <amy@example.com>
+To: scott@example.com
+Subject: First
+
+First body.
+
+From carol@example.com Wed Nov 18 08:00:00 2026
+Date: Wed, 18 Nov 2026 08:00:00 +0800
+From: Carol <carol@example.com>
+To: scott@example.com
+Subject: No id
+
+No message id here.

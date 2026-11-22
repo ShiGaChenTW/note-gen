@@ -72,6 +72,16 @@ describe('toText', () => {
     expect(result).toMatchObject({ converter: 'file', status: 'unavailable', text: '/docs/spec.pdf' })
   })
 
+  it('RSS 文章：摘要在前、抓文章全文在後；抓不到就用存下來的摘要', async () => {
+    const content = '標題\n\n連結：https://ie.example.com/posts/5s\n\n摘要'
+    const fetchWeb = vi.fn(async () => '全文')
+    const ok = await toText(source({ kind: 'rss', content, origin: 'https://ie.example.com/posts/5s' }), { fetchWeb })
+    expect(fetchWeb).toHaveBeenCalledWith('https://ie.example.com/posts/5s')
+    expect(ok).toMatchObject({ converter: 'web', status: 'converted', text: `${content}\n\n全文` })
+    const failed = await toText(source({ kind: 'rss', content, origin: 'https://ie.example.com/posts/5s' }), { fetchWeb: async () => { throw new Error('blocked') } })
+    expect(failed).toMatchObject({ converter: 'web', status: 'failed', text: content })
+  })
+
   it('太長的文字截短並註明', async () => {
     const result = await toText(source({ kind: 'text', content: '字'.repeat(MAX_ANALYSIS_TEXT + 10) }), {})
     expect(Array.from(result.text)).toHaveLength(MAX_ANALYSIS_TEXT)

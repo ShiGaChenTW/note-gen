@@ -157,6 +157,33 @@ describe('runReview', () => {
     expect(data.get('almanacReviewLastRun')).toBe(new Date(2026, 10, 22, 20).getTime())
   })
 
+  // ALMNC-54.20：研究員查到的外部資料交出去建成系統產生的資料源（同一期的 key 讓重跑不重複建立）。
+  it('hands the researcher findings to registerFindings with the period key', async () => {
+    const { deps } = setup()
+    const registerFindings = vi.fn(async () => undefined)
+    deps.registerFindings = registerFindings
+    const summary = await runReview(deps)
+    expect(summary.errors).toEqual([])
+    expect(registerFindings).toHaveBeenCalledTimes(1)
+    expect(registerFindings).toHaveBeenCalledWith([expect.objectContaining({ status: 'found', question: '節拍時間 最新標準', summary: '新標準依需求計算。' })], '2026-W47')
+  })
+
+  it('does not register anything when the researcher found nothing, and a registration failure does not stop the review', async () => {
+    const { deps, submitted } = setup()
+    const registerFindings = vi.fn(async () => { throw new Error('db down') })
+    deps.registerFindings = registerFindings
+    deps.lookup = async () => []
+    await runReview(deps)
+    expect(registerFindings).not.toHaveBeenCalled()
+
+    const again = setup()
+    again.deps.registerFindings = registerFindings
+    const summary = await runReview(again.deps)
+    expect(summary.errors).toEqual(['research sources: db down'])
+    expect(again.submitted.some(batch => batch.id === 'review:2026-W47')).toBe(true)
+    expect(submitted.length).toBeGreaterThan(0)
+  })
+
   it('skips roles that are disabled and keeps going when a step fails', async () => {
     const { deps, submitted, ask } = setup()
     deps.roster = async () => roster.map(agent => agent.role === 'researcher' || agent.role === 'secretary' ? { ...agent, enabled: false } : agent)

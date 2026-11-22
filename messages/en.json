@@ -3944,6 +3944,14 @@
         "title": "Global shortcuts",
         "desc": "These shortcuts are registered by the system and can work when NoteGen is not focused."
       },
+      "workbenchKeys": {
+        "title": "Workbench single-key shortcuts",
+        "desc": "While the Workbench is open and you are not typing, one letter runs an action.",
+        "singleKeys": {
+          "title": "N adds a source, T starts a conversation",
+          "desc": "Only works while the Workbench is open. When off, use the sidebar buttons."
+        }
+      },
       "editorShortcuts": {
         "title": "Editor shortcuts",
         "desc": "These shortcuts only work while the Markdown editor is focused.",
@@ -4189,7 +4197,48 @@
     },
     "searchPlaceholder": "Search settings...",
     "noSearchResults": "No matching settings found",
-    "title": "Settings"
+    "title": "Settings",
+    "rss": {
+      "title": "RSS subscriptions",
+      "desc": "Paste an RSS or Atom URL (a site's home page works too; the feed is found automatically). While the app is open it checks every 6 hours and once at startup; new posts become sources waiting for your decision. The first fetch only takes the newest 10 posts.",
+      "urlLabel": "Feed URL",
+      "urlPlaceholder": "https://example.com/feed.xml",
+      "nameLabel": "Name",
+      "namePlaceholder": "Name (optional; defaults to the feed title)",
+      "subscribe": "Subscribe",
+      "subscribing": "Subscribing…",
+      "refreshNow": "Update now",
+      "refreshing": "Updating…",
+      "loading": "Loading subscriptions…",
+      "loadError": "Could not load subscriptions.",
+      "empty": "No subscriptions yet.",
+      "renameLabel": "Name of “{name}”",
+      "pause": "Pause",
+      "resume": "Resume",
+      "delete": "Delete",
+      "paused": "Paused",
+      "never": "Not fetched yet",
+      "lastFetched": "Updated {time}, {count, plural, one {# new post} other {# new posts}}",
+      "lastError": "Last error ({time}): {message}",
+      "subscribed": "Subscribed to “{name}”; {count, plural, one {# post} other {# posts}} added",
+      "refreshed": "Updated; {count, plural, one {# new post} other {# new posts}}",
+      "refreshedWithErrors": "Updated; {count, plural, one {# new post} other {# new posts}}, {failed, plural, one {# subscription} other {# subscriptions}} failed",
+      "deleted": "Deleted “{name}” (sources already added are kept)",
+      "duplicate": "Already subscribed to “{name}”",
+      "errors": {
+        "http": "Server responded {detail}",
+        "not_feed": "This URL is not an RSS or Atom feed",
+        "timeout": "Connection timed out",
+        "network": "Could not connect: {detail}",
+        "invalid_url": "Invalid URL",
+        "unknown": "Fetch failed: {detail}"
+      },
+      "undo": "Undo",
+      "deleteError": "Could not delete “{name}”. Try again.",
+      "pauseError": "Could not pause “{name}”. Try again.",
+      "resumeError": "Could not resume “{name}”. Try again.",
+      "restoreError": "Could not restore “{name}”. Subscribe to it again."
+    }
   },
   "bases": {
     "title": "Bases",
@@ -6840,6 +6889,40 @@
     "description": "Click to select a recording tool and quickly create records"
   },
   "editor": {
+    "bottomToolbar": {
+      "label": "Formatting toolbar",
+      "more": "More formatting"
+    },
+    "noteToolbar": {
+      "label": "Note toolbar",
+      "back": "Back",
+      "forward": "Forward",
+      "find": "Find in note",
+      "tags": "Tags",
+      "noTags": "No tags yet",
+      "addTag": "Add a tag, press Enter",
+      "removeTag": "Remove {tag}",
+      "tagsReadOnly": "These tags use complex YAML. Edit them in the property card source.",
+      "pin": "Pin to top",
+      "unpin": "Unpin",
+      "favorite": "Favorite",
+      "unfavorite": "Remove from favorites",
+      "info": "Note info",
+      "infoFileName": "File name",
+      "infoFolder": "Folder",
+      "infoCreated": "Created",
+      "infoModified": "Modified",
+      "infoLength": "Length",
+      "command": "Command palette",
+      "more": "More",
+      "sendToCommander": "Send to commander",
+      "sentToCommander": "Sent to the commander",
+      "sentNewVersion": "The note changed; sent the new version to the commander",
+      "alreadySent": "Already sent, and the note hasn't changed",
+      "emptyNote": "This note is empty, so nothing was sent",
+      "sendFailed": "Couldn't send to the commander",
+      "saveBeforeSendFailed": "Couldn't save the latest changes, so nothing was sent"
+    },
     "statusBar": {
       "documentActions": {
         "copy": "Copy",
@@ -7223,6 +7306,13 @@
       "confirm": "Confirm",
       "committed": "Created a new prompt version",
       "commitFailed": "Failed to create the version"
+    },
+    "docTitle": {
+      "label": "Title",
+      "placeholder": "Untitled",
+      "renameFailed": "Could not rename to this title",
+      "fileExists": "A file with this name already exists",
+      "busy": "This file is busy, try again shortly"
     }
   },
   "editorWindow": {
@@ -7510,9 +7600,9 @@
     },
     "needs": {
       "title": "Needs you",
-      "review": "Drafts",
+      "review": "Proposals",
       "reviewAction": "Review",
-      "drafts": "{count} drafts to review",
+      "drafts": "{count} proposals to review",
       "unfinished": "Unfinished",
       "resume": "Continue",
       "signal": "Nudge",
@@ -8125,9 +8215,9 @@
     "remove": "Remove this capture",
     "empty": "Nothing collected yet. Try pasting some text, a link, or an image.",
     "emptyFilter": "Nothing in this state.",
-    "records": "Inbox records",
-    "recordsHint": "Unprocessed records in the Inbox can be split into proposals.",
-    "recordsEmpty": "No unprocessed records in the Inbox",
+    "records": "Unsorted records",
+    "recordsHint": "Unsorted records in the Inbox folder can be split into proposals.",
+    "recordsEmpty": "No unsorted records",
     "split": "Split",
     "queued": "Queued",
     "writeHint": "New notes, tasks and slots are written only when you accept them; discarded proposals leave no file behind."
@@ -8191,6 +8281,7 @@
       },
       "discuss": "Discuss again",
       "proposalTalk": "Discussing again",
+      "proposalReplaced": "Replaced",
       "directAdded": "Added: {what}",
       "undo": "Undo",
       "directDone": "Added",
@@ -8300,7 +8391,7 @@
     },
     "source": {
       "collect": "Collect",
-      "draft": "Agent draft"
+      "draft": "Agent proposal"
     },
     "from": "From {origin}",
     "writesTo": "If accepted, writes to: ",
@@ -8320,7 +8411,7 @@
     "undo": "Undo",
     "undoFailed": "Can't undo, the file was changed since",
     "failed": "Something went wrong, please try again",
-    "conflict": "The file changed after the draft was made. Review it in the task center.",
+    "conflict": "The file changed after the proposal was made. Review it in the task center.",
     "openReview": "Open task center",
     "viewAll": "{count} waiting for you, view all",
     "stale": "{count, plural, one {# proposal has} other {# proposals have}} waited over 14 days; they go into the weekly review and never disappear on their own",
@@ -8333,8 +8424,11 @@
       "hint": "⌘↩ to send",
       "message": "Discuss again \"{title}\": {note}",
       "done": "Back in the conversation: \"{title}\"",
+      "revised": "I’ve revised “{title}” and submitted it for approval.",
       "fromConversation": "From conversation: {title}",
-      "conversation": "this conversation"
+      "conversation": "this conversation",
+      "sending": "Sending…",
+      "failed": "Not sent. Your note is still here, so you can try again."
     }
   },
   "jobs": {
@@ -8417,7 +8511,8 @@
       "noAccess": "Calendar access is off, so events will not show here.",
       "proposal": "Proposal · Scheduler",
       "accept": "Accept",
-      "reject": "Dismiss"
+      "reject": "Dismiss",
+      "namedAction": "{action} “{title}”"
     },
     "journal": {
       "label": "Journal",
@@ -8524,7 +8619,7 @@
       "decide": "Workbench",
       "collect": "Collect",
       "threads": "Threads",
-      "knowledge": "Knowledge",
+      "knowledge": "Organize",
       "plan": "Plan"
     },
     "agents": {
@@ -8534,6 +8629,13 @@
       "addFirst": "Add your first agent"
     },
     "vault": "MyVault",
+    "collapseSection": "Collapse {title}",
+    "expandSection": "Expand {title}",
+    "noteList": {
+      "label": "Notes in {folder}",
+      "empty": "No notes in this folder yet",
+      "close": "Close note list"
+    },
     "rules": {
       "label": "Rule",
       "text": "Agents can only propose; every write goes through the Workbench."
@@ -8541,8 +8643,8 @@
     "tabs": {
       "collectGroup": "Collect pages",
       "collect": "Collect",
-      "knowledgeGroup": "Knowledge pages",
-      "inbox": "Inbox",
+      "knowledgeGroup": "Organize pages",
+      "inbox": "Unsorted",
       "timeline": "Notes timeline",
       "canvases": "Canvas",
       "noteTags": "Tags",
@@ -8550,8 +8652,8 @@
       "outline": "Outline"
     },
     "knowledge": {
-      "title": "Knowledge",
-      "subtitle": "Timeline, canvases and tags; the notes tree is in MyVault on the left"
+      "title": "Organize",
+      "subtitle": "Timeline, canvases and tags; the notes tree is in {vault} on the left"
     }
   },
   "organize": {
@@ -8575,6 +8677,18 @@
   "commander": {
     "origin": "Source analysed by {agent}: {source}",
     "unconverted": "(Could not convert to text; the original file is kept: {origin})",
+    "unconvertedReason": "(Could not convert to text: {reason} The original file is kept: {origin})",
+    "fileReason": {
+      "scannedPdf": "This PDF has no extractable text (it may be a scan). Run OCR first or save the pages as images.",
+      "encrypted": "The file is encrypted or password-protected, so its content cannot be read.",
+      "malformed": "The file is damaged or missing required parts, so no text could be extracted.",
+      "resourceLimit": "The file is too complex and exceeds the safe parsing limit.",
+      "fileTooLarge": "The file is larger than 100 MB and was not parsed.",
+      "readFailed": "The file could not be read (it may have been moved or deleted).",
+      "parseFailed": "The file could not be parsed.",
+      "unsupported": "This file type is not supported yet.",
+      "noText": "The file contains no readable text."
+    },
     "domainProposal": {
       "title": "Create the domain \"{domain}\" with a new expert, {name}",
       "summary": "{count} knowledge notes have no domain yet, all about \"{topic}\""
@@ -8733,7 +8847,10 @@
         "file": "File",
         "audio": "Audio",
         "todo": "To-do",
-        "prompt": "Material"
+        "prompt": "Material",
+        "email": "Email",
+        "rss": "RSS",
+        "meeting": "Meeting"
       },
       "listLabel": "Sources",
       "selectAll": "Select all",
@@ -8755,6 +8872,8 @@
       },
       "empty": "No matching sources",
       "emptyAll": "No sources yet. Use “Add source” (N) in the sidebar.",
+      "loadFailed": "Couldn't load sources. The list may be incomplete.",
+      "loadRetry": "Retry",
       "pickOne": "Pick a source to read",
       "back": "Back to list",
       "judgement": "First judgement",
@@ -8763,6 +8882,7 @@
       "process": "Process as suggested",
       "reject": "Don't use",
       "restore": "Back to awaiting you",
+      "archived": "Archived (rejected over 30 days)",
       "reorganise": "Organize again",
       "desk": "Lay out on the desk",
       "edit": "Edit",
@@ -8781,7 +8901,8 @@
         "savedVersion": "Saved as v{version}; send it to {name} to update the outputs",
         "noChange": "No changes",
         "rejected": "Not using “{title}”",
-        "restored": "“{title}” is awaiting you again"
+        "restored": "“{title}” is awaiting you again",
+        "handFailed": "Couldn't hand to {name}. Your selection is back; please try again."
       },
       "editor": {
         "editing": "Editing",
@@ -8863,12 +8984,12 @@
     },
     "quick": {
       "label": "Add",
+      "newDoc": "New document",
+      "newDocShort": "Doc",
       "addSource": "Add source",
       "addSourceShort": "Source",
       "newThread": "New conversation",
-      "newThreadShort": "Chat",
-      "tbd": "TBD",
-      "tbdTip": "Function to be decided"
+      "newThreadShort": "Chat"
     },
     "legacy": {
       "title": "Old notes: {count, number}",
@@ -8887,6 +9008,27 @@
         "allFailed": "Nothing in this batch went through, so it paused. Try Continue later",
         "allUndecided": "{name} couldn’t decide anything in this batch, so it paused. Check the model settings",
         "packDone": "Finished the pack starting with “{title}”"
+      }
+    },
+    "import": {
+      "email": "Email",
+      "emailAdded": "Imported {count, plural, one {# email} other {# emails}}; waiting for your decision",
+      "emailEmpty": "No emails found in the file (.eml and .mbox are supported)",
+      "nothingNew": "Everything was already imported",
+      "skipped": "{count} already imported, skipped.",
+      "truncated": "{total} emails in total; only the newest {limit} were imported.",
+      "failed": "Import failed",
+      "dropUnsupported": "You can drop .eml, .mbox, .vtt or .srt files here",
+      "subscribeRss": "Subscribe to RSS",
+      "rssSubscribed": "Subscribed to “{name}”; {count, plural, one {# post} other {# posts}} added and waiting for your decision",
+      "meeting": "Meeting transcript",
+      "meetingAdded": "Imported {count, plural, one {# meeting} other {# meetings}}; waiting for your decision",
+      "meetingEmpty": "No transcript found in the file (.vtt, .srt, .txt and .docx are supported)",
+      "meetingFailed": "{count, plural, one {# file} other {# files}} could not be read: {names}.",
+      "busy": {
+        "email": "Importing email…",
+        "meeting": "Importing meeting transcripts…",
+        "rss": "Subscribing to RSS…"
       }
     }
   },
