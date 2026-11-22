@@ -12,6 +12,7 @@ const fake = vi.hoisted(() => ({
   available: vi.fn(async () => true),
   capture: vi.fn(async () => ({ status: 'success', title: '頁面', contentMarkdown: '內文', plainText: '' } as Record<string, unknown>)),
   seq: 0,
+  v3: true,
 }))
 
 vi.mock('@/db/v3-sources', () => ({
@@ -54,6 +55,7 @@ vi.mock('@/lib/local-model/default', () => ({
   defaultLocalModel: async () => ({ config: { judgeModel: 'qwen3.5:2b' }, available: fake.available, generate: fake.generate, embed: vi.fn() }),
 }))
 vi.mock('@/lib/web-capture/service', () => ({ capturePublicWebPage: fake.capture }))
+vi.mock('@/lib/fork-ui', async importOriginal => ({ ...(await importOriginal<typeof import('@/lib/fork-ui')>()), isUiV3: () => fake.v3 }))
 
 const actions = await import('./actions')
 const { default: useWorkbenchStore } = await import('@/stores/workbench')
@@ -71,6 +73,7 @@ beforeEach(() => {
   fake.rows.clear()
   fake.judgements.clear()
   fake.kick.mockClear()
+  fake.v3 = true
   fake.generate.mockClear()
   fake.available.mockResolvedValue(true)
   fake.capture.mockResolvedValue({ status: 'success', title: '頁面', contentMarkdown: '內文', plainText: '' })
@@ -203,5 +206,38 @@ describe('等你［資料源］卡的動作（AC#2）', () => {
     useWorkbenchStore.getState().putAside(card)
     expect(visibleCards([card], useWorkbenchStore.getState().aside, Date.now())).toEqual([])
     expect(status(id)).toBe('awaiting_decision')
+  })
+})
+
+describe('自己寫的資料源自動交給指揮官（ALMNC-54.10 AC#3，R2）', () => {
+  it('語音速記：V3 轉好逐字稿 → 待分析＋叫指揮官一次；同一則再登錄不會重複', async () => {
+    await actions.registerVoiceMemo({ markId: 5, transcript: '提醒我明天買牛奶', audioPath: 'rec/5.wav' })
+    await actions.registerVoiceMemo({ markId: 5, transcript: '提醒我明天買牛奶', audioPath: 'rec/5.wav' })
+    expect(status('rec_5')).toBe('pending_analysis')
+    expect(fake.rows.size).toBe(1)
+    expect(fake.kick).toHaveBeenCalledTimes(1)
+    expect(useWorkbenchStore.getState().sources.some(source => source.id === 'rec_5')).toBe(true)
+  })
+
+  it('每日筆記條目與記錄對話框的隨手記：自己打的登錄、貼上的不登錄', async () => {
+    await actions.registerDailyEntry({ path: 'Daily/2026-11-22.md', text: '下週二開會', at: 7000 })
+    await actions.registerRecordText({ markId: 6, type: 'text', content: '自己打的一段想法', pastedChars: 0 })
+    await actions.registerRecordText({ markId: 7, type: 'text', content: '貼上的文章', pastedChars: 99 })
+    expect([...fake.rows.keys()].sort()).toEqual(['rec_6', 'src_daily:Daily/2026-11-22.md:7000'])
+    expect(fake.kick).toHaveBeenCalledTimes(2)
+  })
+
+  it('經典介面不登錄（V3 only）', async () => {
+    fake.v3 = false
+    await actions.registerVoiceMemo({ markId: 8, transcript: '買牛奶' })
+    await actions.registerDailyEntry({ path: 'Daily/x.md', text: '條目' })
+    expect(fake.rows.size).toBe(0)
+    expect(fake.kick).not.toHaveBeenCalled()
+  })
+
+  it('登錄失敗不丟錯（不影響原本的存檔）', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    fake.kick.mockRejectedValueOnce(new Error('queue down'))
+    await expect(actions.registerVoiceMemo({ markId: 9, transcript: '買牛奶' })).resolves.toBeUndefined()
   })
 })

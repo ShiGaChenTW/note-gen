@@ -167,3 +167,15 @@ describe('restorePicks', () => {
     expect([...restorePicks(new Set(['a']), new Set(['a']))]).toEqual(['a'])
   })
 })
+
+describe('封存的不採用資料源（ALMNC-54.1 AC#6）', () => {
+  it('封存的仍列在清單的「不採用」篩選裡，帶 archived 標記；沒封存的沒有標記', () => {
+    const base = createSource({ id: 'a', sourceType: 'external', kind: 'text', content: '舊的想法', collector: 'scott' }, 1000)
+    const archived: Source = { ...base, status: 'rejected', statusChangedAt: 1000, archivedAt: 5000 }
+    const fresh: Source = { ...base, id: 'b', content: '剛不採用', status: 'rejected', statusChangedAt: 4000 }
+    const rows = buildSourceRows({ sources: [archived, fresh] })
+    expect(filterRows(rows, 'no').map(row => row.sourceId).sort()).toEqual(['a', 'b'])
+    expect(rows.find(row => row.sourceId === 'a')).toMatchObject({ status: 'no', archived: true })
+    expect(rows.find(row => row.sourceId === 'b')?.archived).toBeUndefined()
+  })
+})

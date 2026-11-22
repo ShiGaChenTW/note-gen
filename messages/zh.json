@@ -8866,6 +8866,7 @@
       "process": "照建议处理",
       "reject": "不采用",
       "restore": "改回等你决定",
+      "archived": "已封存（不采用满 30 天）",
       "reorganise": "重新整理",
       "desk": "摊到台面",
       "edit": "编辑",

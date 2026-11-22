@@ -187,6 +187,11 @@ export function ControlRecording() {
         url: audioPath  // 保存音频文件路径
       })
       const markId = Number(result.lastInsertId || 0) || null
+
+      // Fork（almanac ALMNC-54.10，R2）：V3 的語音速記轉好逐字稿後自動交給指揮官；沒有逐字稿（辨識失敗）就不登錄。
+      if (markId && !noContent) {
+        void import('@/lib/workbench/actions').then(({ registerVoiceMemo }) => registerVoiceMemo({ markId, transcript: transcription, audioPath })).catch(() => undefined)
+      }
       
       // 移除队列
       removeQueue(queueId)

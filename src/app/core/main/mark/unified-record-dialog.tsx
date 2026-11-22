@@ -365,6 +365,11 @@ export function UnifiedRecordDialog() {
           content: JSON.stringify(todoDraft),
           url: '',
         })
+        const todoMarkId = Number(result.lastInsertId || 0)
+        if (todoMarkId) {
+          const todoContent = [todoDraft.title, todoDraft.description].filter(Boolean).join('\n\n')
+          void import('@/lib/workbench/actions').then(({ registerRecordText }) => registerRecordText({ markId: todoMarkId, type: 'todo', content: todoContent })).catch(() => undefined)
+        }
         await completeRecord({ markId: Number(result.lastInsertId || 0) || null, tagId: selectedTagId, typeLabel })
       } else {
         const result = await insertMark({
@@ -377,6 +382,13 @@ export function UnifiedRecordDialog() {
         if (resolvedType === 'text') {
           emitter.emit('onboarding-step-complete', { step: 'create-record' })
           emitter.emit('onboarding-record-prefill-changed', {})
+        }
+        // Fork（almanac ALMNC-54.10，R2）：V3 存成記錄的隨手記、Prompt 素材也一樣自己打的就自動交給指揮官（貼上的不收）。
+        const markId = Number(result.lastInsertId || 0)
+        if (markId && (resolvedType === 'text' || resolvedType === 'prompt-draft')) {
+          const origin = resolvedType === 'prompt-draft' ? sourceUrl.trim() : undefined
+          const pastedChars = pastedCharsRef.current
+          void import('@/lib/workbench/actions').then(({ registerRecordText }) => registerRecordText({ markId, type: resolvedType, content: value, origin, pastedChars })).catch(() => undefined)
         }
         await completeRecord({ markId: Number(result.lastInsertId || 0) || null, tagId: selectedTagId, typeLabel })
       }
