@@ -349,6 +349,7 @@ export default function RootLayout({
     let stopGitVersionAutoSnapshot: (() => void) | undefined
     let stopQuickRecord: (() => void) | undefined
     let stopWiki: (() => void) | undefined
+    let stopEinkPins: (() => void) | undefined
 
     void reportAppStart()
 
@@ -379,6 +380,10 @@ export default function RootLayout({
         const cleanupWiki = await initWikiRuntime()
         if (cancelled) { cleanupWiki(); return }
         stopWiki = cleanupWiki
+        // Fork（almanac ALMNC-45）：釘選資料跟著改名、移動、刪除走
+        const { initEinkPinSync } = await import('@/lib/eink/pin-sync')
+        if (cancelled) return
+        stopEinkPins = initEinkPinSync()
         stopManagedBackup = initManagedBackupRuntime()
         stopGitVersionAutoSnapshot = initGitVersionAutoSnapshotRuntime()
 
@@ -414,6 +419,7 @@ export default function RootLayout({
       stopGitVersionAutoSnapshot?.()
       stopQuickRecord?.()
       stopWiki?.()
+      stopEinkPins?.()
     }
   }, [])
 

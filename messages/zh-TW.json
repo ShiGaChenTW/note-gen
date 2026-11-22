@@ -4263,6 +4263,90 @@
     "searchPlaceholder": "搜尋設定...",
     "noSearchResults": "找不到相關設定",
     "title": "設定",
+    "eink": {
+      "title": "電子紙",
+      "desc": "把今日簡報與休眠畫面送到電子紙（Xteink X4 Pro＋CrossPoint）。這些設定只存在這台 Mac，不會跟著設定同步。",
+      "sections": {
+        "device": "電子紙",
+        "briefing": "今日簡報"
+      },
+      "enabled": {
+        "title": "啟用電子紙同步",
+        "desc": "關閉時不產生今日簡報與休眠畫面。"
+      },
+      "readerAddress": {
+        "title": "閱讀器位址",
+        "desc": "電子紙在區網的位址（File Transfer 模式時顯示），例如 192.168.1.20。",
+        "invalid": "位址格式不正確，例如 192.168.1.20 或 http://x4.local",
+        "placeholder": "192.168.1.20"
+      },
+      "lanServer": {
+        "title": "區網服務",
+        "desc": "讓電子紙闔上時向這台 Mac 下載休眠畫面與今日簡報。預設關閉。"
+      },
+      "token": {
+        "title": "Token",
+        "desc": "電子紙下載時要帶的密鑰，只存在這台 Mac。重新產生後，電子紙上的外掛要重新安裝。",
+        "show": "顯示 token",
+        "hide": "隱藏 token",
+        "regenerate": "重新產生",
+        "regenerated": "已產生新的 token"
+      },
+      "briefingSections": {
+        "title": "簡報章節",
+        "desc": "勾選要放進今日簡報的章節，順序固定。",
+        "schedule": "今天行程",
+        "pinned": "釘選資料",
+        "articles": "每日精選文章",
+        "review": "每日回顧卡",
+        "report": "知識報告",
+        "workbench": "工作台摘要"
+      },
+      "weatherCity": {
+        "title": "天氣地點",
+        "desc": "輸入城市名稱，休眠畫面與今日簡報用這裡的天氣預報。",
+        "placeholder": "臺北"
+      },
+      "pins": {
+        "title": "釘選資料",
+        "desc": "在檔案樹、編輯器分頁或 ⌘K 選「釘選到電子紙」加入，依這裡的順序放進今日簡報。",
+        "empty": "還沒有釘選資料。",
+        "pinnedAt": "釘選於 {date}",
+        "lastSentAt": "最後送出 {date}",
+        "neverSent": "還沒送出",
+        "moveUp": "上移",
+        "moveDown": "下移",
+        "remove": "移除"
+      },
+      "readLater": {
+        "title": "稍後讀清單",
+        "desc": "每日精選文章只從這裡取：每天 3 篇、最早存的先送。抓不到正文的文章標成「無法擷取」，不會送進今日簡報。",
+        "placeholder": "貼上文章連結",
+        "add": "加入",
+        "added": "已加入稍後讀清單，正在擷取正文",
+        "duplicate": "這篇已經在稍後讀清單裡",
+        "invalid": "不是有效的文章連結",
+        "empty": "稍後讀清單是空的。",
+        "addedAt": "存於 {date}",
+        "sentAt": "送出於 {date}",
+        "requeue": "放回待送",
+        "retry": "重新擷取",
+        "remove": "移除",
+        "status": {
+          "pending": "待送",
+          "extracting": "擷取中",
+          "sent": "已送電子紙",
+          "unextractable": "無法擷取"
+        },
+        "failure": {
+          "paywall": "付費牆或需要登入",
+          "summary-only": "只抓到摘要",
+          "unreachable": "連不上",
+          "blocked": "網站擋下讀取",
+          "unsupported": "不是網頁文章"
+        }
+      }
+    },
     "rss": {
       "title": "RSS 訂閱",
       "desc": "貼上 RSS 或 Atom 網址（網站首頁也可以，會自動找 feed）。App 開著時每 6 小時抓一次、啟動時補抓一次，新文章存成資料源等你決定；第一次只收最新 10 篇。",
@@ -8424,6 +8508,18 @@
       "settings": {
         "title": "開啟設定",
         "keywords": "settings,preferences,偏好,設定"
+      },
+      "einkPin": {
+        "title": "釘選到電子紙",
+        "keywords": "eink,pin,電子紙,釘選,今日簡報"
+      },
+      "einkUnpin": {
+        "title": "取消電子紙釘選",
+        "keywords": "eink,unpin,電子紙,取消釘選"
+      },
+      "readLater": {
+        "title": "開啟稍後讀清單",
+        "keywords": "read later,article,稍後讀,文章,電子紙"
       }
     },
     "chat": {
@@ -8743,6 +8839,17 @@
     "saveSnapshot": "另存整理前內容",
     "snapshotSaved": "已另存 {count} 個檔案（檔名加上「整理前」）",
     "snapshotFailed": "另存失敗"
+  },
+  "eink": {
+    "pin": "釘選到電子紙",
+    "unpin": "取消電子紙釘選",
+    "pinned": "已釘選到電子紙",
+    "unpinned": "已取消電子紙釘選",
+    "private": {
+      "label": "私人",
+      "mark": "標為私人",
+      "unmark": "取消私人"
+    }
   },
   "commander": {
     "origin": "{agent} 分析的資料源：{source}",
@@ -9090,6 +9197,7 @@
       "failed": "匯入失敗",
       "dropUnsupported": "可以拖進 .eml、.mbox、.vtt、.srt 檔",
       "subscribeRss": "訂閱 RSS",
+      "readLater": "稍後讀",
       "rssSubscribed": "已訂閱「{name}」，收進 {count} 篇，等你決定要不要處理",
       "meeting": "會議逐字稿",
       "meetingAdded": "已匯入 {count} 場會議，等你決定要不要處理",

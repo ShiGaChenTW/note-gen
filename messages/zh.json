@@ -4198,6 +4198,90 @@
     "searchPlaceholder": "搜索设置...",
     "noSearchResults": "没有找到相关设置",
     "title": "设置",
+    "eink": {
+      "title": "电子纸",
+      "desc": "把今日简报与休眠画面送到电子纸（Xteink X4 Pro＋CrossPoint）。这些设置只存在这台 Mac，不会随设置同步。",
+      "sections": {
+        "device": "电子纸",
+        "briefing": "今日简报"
+      },
+      "enabled": {
+        "title": "启用电子纸同步",
+        "desc": "关闭时不生成今日简报与休眠画面。"
+      },
+      "readerAddress": {
+        "title": "阅读器地址",
+        "desc": "电子纸在局域网的地址（File Transfer 模式时显示），例如 192.168.1.20。",
+        "invalid": "地址格式不正确，例如 192.168.1.20 或 http://x4.local",
+        "placeholder": "192.168.1.20"
+      },
+      "lanServer": {
+        "title": "局域网服务",
+        "desc": "让电子纸合上时向这台 Mac 下载休眠画面与今日简报。默认关闭。"
+      },
+      "token": {
+        "title": "Token",
+        "desc": "电子纸下载时要带的密钥，只存在这台 Mac。重新生成后，电子纸上的插件要重新安装。",
+        "show": "显示 token",
+        "hide": "隐藏 token",
+        "regenerate": "重新生成",
+        "regenerated": "已生成新的 token"
+      },
+      "briefingSections": {
+        "title": "简报章节",
+        "desc": "勾选要放进今日简报的章节，顺序固定。",
+        "schedule": "今天行程",
+        "pinned": "钉选资料",
+        "articles": "每日精选文章",
+        "review": "每日回顾卡",
+        "report": "知识报告",
+        "workbench": "工作台摘要"
+      },
+      "weatherCity": {
+        "title": "天气地点",
+        "desc": "输入城市名称，休眠画面与今日简报用这里的天气预报。",
+        "placeholder": "台北"
+      },
+      "pins": {
+        "title": "钉选资料",
+        "desc": "在文件树、编辑器标签页或 ⌘K 选「钉选到电子纸」加入，按这里的顺序放进今日简报。",
+        "empty": "还没有钉选资料。",
+        "pinnedAt": "钉选于 {date}",
+        "lastSentAt": "最后送出 {date}",
+        "neverSent": "还没送出",
+        "moveUp": "上移",
+        "moveDown": "下移",
+        "remove": "移除"
+      },
+      "readLater": {
+        "title": "稍后读清单",
+        "desc": "每日精选文章只从这里取：每天 3 篇、最早存的先送。抓不到正文的文章标成「无法抓取」，不会送进今日简报。",
+        "placeholder": "粘贴文章链接",
+        "add": "加入",
+        "added": "已加入稍后读清单，正在抓取正文",
+        "duplicate": "这篇已经在稍后读清单里",
+        "invalid": "不是有效的文章链接",
+        "empty": "稍后读清单是空的。",
+        "addedAt": "存于 {date}",
+        "sentAt": "送出于 {date}",
+        "requeue": "放回待送",
+        "retry": "重新抓取",
+        "remove": "移除",
+        "status": {
+          "pending": "待送",
+          "extracting": "抓取中",
+          "sent": "已送电子纸",
+          "unextractable": "无法抓取"
+        },
+        "failure": {
+          "paywall": "付费墙或需要登录",
+          "summary-only": "只抓到摘要",
+          "unreachable": "连不上",
+          "blocked": "网站拦下读取",
+          "unsupported": "不是网页文章"
+        }
+      }
+    },
     "rss": {
       "title": "RSS 订阅",
       "desc": "粘贴 RSS 或 Atom 网址（网站首页也可以，会自动找 feed）。App 开着时每 6 小时抓一次、启动时补抓一次，新文章存成资料源等你决定；第一次只收最新 10 篇。",
@@ -8359,6 +8443,18 @@
       "settings": {
         "title": "打开设置",
         "keywords": "settings,preferences,偏好,设置"
+      },
+      "einkPin": {
+        "title": "钉选到电子纸",
+        "keywords": "eink,pin,电子纸,钉选,今日简报"
+      },
+      "einkUnpin": {
+        "title": "取消电子纸钉选",
+        "keywords": "eink,unpin,电子纸,取消钉选"
+      },
+      "readLater": {
+        "title": "打开稍后读清单",
+        "keywords": "read later,article,稍后读,文章,电子纸"
       }
     },
     "chat": {
@@ -8678,6 +8774,17 @@
     "saveSnapshot": "另存整理前内容",
     "snapshotSaved": "已另存 {count} 个文件（文件名加上“整理前”）",
     "snapshotFailed": "另存失败"
+  },
+  "eink": {
+    "pin": "钉选到电子纸",
+    "unpin": "取消电子纸钉选",
+    "pinned": "已钉选到电子纸",
+    "unpinned": "已取消电子纸钉选",
+    "private": {
+      "label": "私人",
+      "mark": "标为私人",
+      "unmark": "取消私人"
+    }
   },
   "commander": {
     "origin": "{agent} 分析的数据源：{source}",
@@ -9025,6 +9132,7 @@
       "failed": "导入失败",
       "dropUnsupported": "可以拖进 .eml、.mbox、.vtt、.srt 文件",
       "subscribeRss": "订阅 RSS",
+      "readLater": "稍后读",
       "rssSubscribed": "已订阅「{name}」，收进 {count} 篇，等你决定要不要处理",
       "meeting": "会议逐字稿",
       "meetingAdded": "已导入 {count} 场会议，等你决定要不要处理",

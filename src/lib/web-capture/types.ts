@@ -42,4 +42,6 @@ export interface WebCaptureOptions {
   signal?: AbortSignal
   timeoutMs?: number
   maxBytes?: number
+  /** Fork（almanac ALMNC-46）：拿到 HTML 原文時呼叫（稍後讀清單用來判斷付費牆），不影響擷取結果。 */
+  onHtml?: (html: string) => void
 }

@@ -23,6 +23,7 @@ export type BuiltinSettingSection =
   | 'shortcuts'
   | 'imageMethod'
   | 'audio'
+  | 'eink'
 
 export type PluginSettingSection = `plugin:${string}`
 export type SettingSection = BuiltinSettingSection | PluginSettingSection
@@ -54,7 +55,15 @@ export const settingSections: SettingSection[] = [
   'backup',
   'imageHosting',
   'file',
+  'eink',
 ]
+
+// Fork（almanac ALMNC-45）：只在新介面（V3）出現的設定分頁；classic 下不列在選單、也不會停在這頁。
+export const v3OnlySettingSections: readonly BuiltinSettingSection[] = ['eink']
+
+export function isV3OnlySettingSection(section: string): boolean {
+  return (v3OnlySettingSections as readonly string[]).includes(section)
+}
 
 interface SettingsDialogState {
   open: boolean

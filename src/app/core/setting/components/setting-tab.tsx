@@ -19,6 +19,7 @@ import { usePluginStore } from '@/stores/plugins'
 import { usePluginLocalization } from '@/lib/plugins/localization'
 import { getInstalledPluginText, resolvePluginText } from '../plugins/plugin-display'
 import type { PluginSettingSection } from '@/stores/settings-dialog'
+import { useUiV3 } from '@/lib/fork-ui'
 
 function collectSearchTerms(value: unknown): string[] {
   if (typeof value === 'string') return [value]
@@ -37,12 +38,14 @@ export function SettingTab() {
   const { hasUpdate } = useUpdateStore()
   const [query, setQuery] = useState('')
   const [hasScrolledDown, setHasScrolledDown] = useState(false)
+  const v3 = useUiV3()
   
   // Add translations to the config
   const config = useMemo(() => {
     const settingMessages = messages.settings as Record<string, unknown> | undefined
 
-    const builtins = baseConfig.map(item => {
+    // Fork（almanac ALMNC-45）：V3 專屬的分頁（電子紙）在 classic 不列出
+    const builtins = baseConfig.filter(item => v3 || 'group' in item || !item.v3Only).map(item => {
       if ('group' in item) {
         return {
           ...item,
@@ -69,7 +72,7 @@ export function SettingTab() {
       }
     })
     return [...builtins, ...plugins]
-  }, [messages.settings, t, settingsPlugins, locale, localizationRevision])
+  }, [messages.settings, t, settingsPlugins, locale, localizationRevision, v3])
 
   const filteredConfig = useMemo(() => {
     const searchText = query.trim().toLocaleLowerCase()
