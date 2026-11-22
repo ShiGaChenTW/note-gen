@@ -14,6 +14,7 @@ import { useUiV3 } from '@/lib/fork-ui'
 import { refreshJournal } from '@/lib/decide/actions'
 import { isEditableKeyboardTarget } from '@/lib/is-editable-keyboard-target'
 import { actionForKey } from '@/lib/workbench/cards'
+import { keyBelongsToTarget } from '@/lib/workbench/keyboard-target'
 import { refreshSources } from '@/lib/workbench/actions'
 import { openAddSource, openNewConversation, openWorkbench } from '@/lib/workbench/open'
 import { filterRows, togglePick, waitingCount, type SourceListRow } from '@/lib/workbench/sources-tab'
@@ -70,11 +71,14 @@ function Tabs({ review, sources }: { review: number, sources: number }) {
   )
 }
 
-/** 審核與資料源分頁的單鍵操作（capture 階段先處理，攤到檯面的 T 不會被全域「新增對話」搶走）。 */
+/**
+ * 審核與資料源分頁的單鍵操作（capture 階段先處理，攤到檯面的 T 不會被全域「新增對話」搶走）。
+ * Fork（almanac ALMNC-56.1）：焦點在按鈕、連結、頁籤或選單上時，Enter、空白鍵、方向鍵讓給那個元件（見 keyBelongsToTarget）。
+ */
 function useWorkbenchKeys(data: ReviewData, rows: SourceListRow[], actions: ReturnType<typeof useCardActions>) {
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
-      if (!plainKey(event) || isEditableKeyboardTarget(event.target) || anyDialogOpen()) return
+      if (!plainKey(event) || isEditableKeyboardTarget(event.target) || keyBelongsToTarget(event.target, event.key) || anyDialogOpen()) return
       const store = useWorkbenchStore.getState()
       if (store.desk.open || store.editing) return
       const key = event.key.toLowerCase()

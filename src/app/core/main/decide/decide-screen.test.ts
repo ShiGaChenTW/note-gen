@@ -103,6 +103,12 @@ const button = (label: string, scope: ParentNode = container) => [...scope.query
 const titles = () => $$('[data-testid="review-card"] [data-testid="card-title"]').map(el => el.textContent)
 const card = (title: string) => $$('[data-testid="review-card"]').find(el => el.querySelector('[data-testid="card-title"]')?.textContent === title)!
 const press = (key: string) => act(() => { window.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true })) })
+/** 在某個元素上按鍵（可取消），回傳事件以檢查有沒有被工作台攔下（defaultPrevented）。 */
+function pressOn(target: EventTarget, key: string) {
+  const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true })
+  act(() => { target.dispatchEvent(event) })
+  return event
+}
 const wait = (ms: number) => act(async () => { await new Promise(resolve => setTimeout(resolve, ms)) })
 function type(el: HTMLInputElement | HTMLTextAreaElement, value: string) {
   act(() => {
@@ -242,6 +248,56 @@ describe('審核 tab', () => {
     expect(titles()).toContain('提案 b')
   })
 
+  // Fork（almanac ALMNC-56.1，A01）：焦點在按鈕或選單上時，工作台不攔 Enter、空白鍵與方向鍵。
+  describe('ALMNC-56.1 A01: keys on buttons and menus are not intercepted', () => {
+    it('AC#4: Enter / Space on a focused button reach the button instead of expanding a card', () => {
+      for (const target of [$('[data-testid="aside-entry"]')!, $('[data-tab="sources"]')!, $('[data-filter="schedule"]')!]) {
+        target.focus()
+        for (const key of ['Enter', ' ']) {
+          const event = pressOn(target, key)
+          expect(event.defaultPrevented).toBe(false)
+          expect(useWorkbenchStore.getState().expanded).toBeNull()
+        }
+      }
+      expect(useWorkbenchStore.getState().tab).toBe('review')
+    })
+
+    it('AC#1: Enter on an action button inside an expanded card does not collapse the card', () => {
+      act(() => (card('提案 a').firstElementChild as HTMLElement).click())
+      const discuss = button('再次討論D', card('提案 a'))!
+      discuss.focus()
+      expect(pressOn(discuss, 'Enter').defaultPrevented).toBe(false)
+      expect(useWorkbenchStore.getState().expanded).toBe('collect:old:a')
+    })
+
+    it('AC#2: arrows inside an open menu stay in the menu (the card cursor does not move)', () => {
+      const menu = document.createElement('div')
+      menu.setAttribute('role', 'menu')
+      menu.innerHTML = '<div role="menuitem" tabindex="-1">One</div><div role="menuitem" tabindex="-1">Two</div>'
+      document.body.append(menu)
+      const item = menu.querySelector<HTMLElement>('[role="menuitem"]')!
+      item.focus()
+      expect(pressOn(item, 'ArrowDown').defaultPrevented).toBe(false)
+      pressOn(item, 'j')
+      expect(useWorkbenchStore.getState().cursor).toBeNull()
+      expect(titles()[0]).toBe('提案 a')
+      menu.remove()
+    })
+
+    it('AC#3: with focus on the page itself, ↓ / J / Enter / Space keep working', () => {
+      const page = $('[role="region"]')!
+      page.focus()
+      expect(pressOn(page, 'ArrowDown').defaultPrevented).toBe(true)
+      expect(useWorkbenchStore.getState().cursor).toBe('collect:new:b')
+      pressOn(page, 'j')
+      expect(useWorkbenchStore.getState().cursor).toBe('collect:new:t')
+      expect(pressOn(page, 'Enter').defaultPrevented).toBe(true)
+      expect(useWorkbenchStore.getState().expanded).toBe('collect:new:t')
+      pressOn(page, ' ')
+      expect(useWorkbenchStore.getState().expanded).toBeNull()
+    })
+  })
+
   it('AC#5: 自己處理 opens the desk with 素材／工作稿／協助 and starts a 處理 conversation', async () => {
     act(() => (card('白板照片').firstElementChild as HTMLElement).click())
     act(() => button('自己處理', card('白板照片'))!.click())
@@ -316,6 +372,22 @@ describe('資料源 tab', () => {
     act(() => $<HTMLElement>('[data-row="src:d2"]')!.click())
     expect($('[data-row="src:d2"] [data-testid="row-sub"]')!.textContent).toBe('v2 未送出')
     expect(button('送給 Mia 更新')).toBeDefined()
+  })
+
+  it('ALMNC-56.1 AC#3: with focus on a clicked row, J / Space keep working; Space on its checkbox goes to the checkbox', () => {
+    const row = $('[data-row="src:d"]')!
+    act(() => row.click())
+    row.focus()
+    expect(pressOn(row, 'j').defaultPrevented).toBe(true)
+    const next = useWorkbenchStore.getState().selectedRow
+    expect(next).not.toBe('src:d')
+    const nextRow = $(`[data-row="${next}"]`)!
+    nextRow.focus()
+    expect(pressOn(nextRow, ' ').defaultPrevented).toBe(true)
+    expect(useWorkbenchStore.getState().picked.has(next!)).toBe(true)
+    const checkbox = $<HTMLButtonElement>('[data-row="src:d"] [role="checkbox"]')!
+    checkbox.focus()
+    expect(pressOn(checkbox, ' ').defaultPrevented).toBe(false)
   })
 
   it('A on an awaiting source runs 照建議處理', async () => {

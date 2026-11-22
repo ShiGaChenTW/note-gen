@@ -113,7 +113,7 @@ export function ReviewTab({ data, actions, commanderName }: {
             <span className="text-ui-compact text-muted-ink">{t('emptyHint')}</span>
           </div>
         ) : (
-          <div role="listbox" aria-label={t('listLabel')} className="mx-auto w-full max-w-[880px] px-5" data-testid="review-list">
+          <div role="listbox" aria-label={t('listLabel')} className="mx-auto w-full max-w-[880px] px-5" data-testid="review-list" data-workbench-list>
             {groupCards(visible).map(({ group, cards }) => (
               <section key={group} aria-label={t(`groups.${group}`)}>
                 <h3 className="flex items-baseline gap-2 px-3 pt-5 pb-2 text-xs font-semibold text-faint first:pt-1.5" data-testid="review-group">

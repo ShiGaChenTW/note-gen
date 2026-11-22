@@ -247,7 +247,7 @@ export function SourcesTab({ rows, commanderName, onDesk }: { rows: SourceListRo
           <span className="flex-1" />
           <span className="tabular-nums" data-testid="organised-summary">{t('organised', summary)}</span>
         </div>
-        <div role="listbox" aria-label={t('listLabel')} aria-multiselectable="true">
+        <div role="listbox" aria-label={t('listLabel')} aria-multiselectable="true" data-workbench-list>
           {visible.length === 0 && <p className="px-2.5 pt-3.5 text-xs font-semibold text-faint">{rows.length ? t('empty') : t('emptyAll')}</p>}
           {visible.map(row => {
             const bucket = dayBucket(row.at, now)
