@@ -80,7 +80,13 @@ export function useTodayActions({ now, tasks }: { now: Date, tasks: readonly Tas
     if (task) schedule(task, time)
   }, [tasks, schedule])
 
-  const addTask = useCallback((input: string) => runWrite('quick-add', () => quickAddTask(input, new Date()), record => (
+  const addTask = useCallback((input: string) => runWrite('quick-add', async () => {
+    const record = await quickAddTask(input, new Date())
+    // Fork（almanac ALMNC-54.10，R2）：V3 今天頁新增的每日筆記條目自動交給指揮官（有寫進每日筆記才算）。
+    const path = record.writes[0]?.path
+    if (path) void import('@/lib/workbench/actions').then(({ registerDailyEntry }) => registerDailyEntry({ path, text: input })).catch(() => undefined)
+    return record
+  }, record => (
     t('quickAdd.added', { name: record.task.title })
   )), [runWrite, t])
 

@@ -10,6 +10,7 @@ import type { WorkbenchCard, TaskLike } from './cards'
 import { applyStructuralOp, handwrittenNote, noteFileName, type DeskMaterial, type NoteIo, type StructuralOp } from './desk'
 import { bridgeInput, planHandToCommander, type SourceListRow } from './sources-tab'
 import { ingestSource, judgeSource, newSourceType, type SourceJudgement } from './judgement'
+import { dailyEntrySource, recordTextSource, routeAutoSource, voiceMemoSource, type AutoRouteResult, type AutoSourceInput } from './auto-route'
 
 export type Undo = (() => Promise<unknown>) | undefined
 
@@ -355,6 +356,47 @@ export async function addNewSource(request: NewSourceRequest): Promise<string> {
   })
   await refreshSources()
   return `src:${source.id}`
+}
+
+/**
+ * Fork（almanac ALMNC-54.10，R2）：自己寫的、系統產生的資料源登錄後自動交給指揮官（不經過「等你決定」）。
+ * 已經登錄過同一個 id 就什麼都不做（不重複叫佇列）。
+ */
+export async function submitAutoSource(input: AutoSourceInput): Promise<AutoRouteResult> {
+  const db = await import('@/db/v3-sources')
+  const result = await routeAutoSource(input, {
+    addIfAbsent: ({ sourceType, ...rest }) => db.addSourceIfAbsent({ ...rest, sourceType }),
+    kick: kickCommander,
+  })
+  if (result.source) await refreshSources()
+  return result
+}
+
+/** 這些登錄只在 V3、而且是附帶動作：失敗只記一筆，不影響原本的存檔。 */
+async function autoRegister(input: AutoSourceInput | undefined): Promise<void> {
+  if (!input) return
+  const { isUiV3 } = await import('@/lib/fork-ui')
+  if (!isUiV3()) return
+  try {
+    await submitAutoSource(input)
+  } catch (error) {
+    console.warn('[workbench] auto source failed:', error)
+  }
+}
+
+/** 語音速記存好後（錄音或選音訊檔轉出逐字稿）自動交給指揮官。 */
+export function registerVoiceMemo(memo: { markId: number, transcript: string, audioPath?: string }): Promise<void> {
+  return autoRegister(voiceMemoSource(memo))
+}
+
+/** 今天頁快速新增寫進每日筆記的一行（每日筆記條目）自動交給指揮官。 */
+export function registerDailyEntry(entry: { path: string, text: string, at?: number }): Promise<void> {
+  return autoRegister(dailyEntrySource({ ...entry, at: entry.at ?? Date.now() }))
+}
+
+/** 「記錄」對話框（V3）存成記錄的隨手記／待辦／Prompt 素材：自己打的自動交給指揮官，貼上的不收（R1）。 */
+export function registerRecordText(record: Parameters<typeof recordTextSource>[0]): Promise<void> {
+  return autoRegister(recordTextSource(record))
 }
 
 /** Fork（almanac ALMNC-57）：匯入的一則資料源。id 由原始識別決定（src_email:<Message-ID>、src_rss:<guid>…），重複匯入會跳過。 */
