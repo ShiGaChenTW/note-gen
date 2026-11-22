@@ -168,7 +168,7 @@
   "appLock": {
     "title": "啟動密碼鎖",
     "description": "密碼鎖僅保護應用程式介面，不會加密筆記檔案；請妥善保管密碼。",
-    "unlockDescription": "輸入密碼後開啟 NoteGen。",
+    "unlockDescription": "輸入密碼後開啟 Almanac Notes。",
     "loading": "正在讀取密碼鎖設定…",
     "password": "密碼",
     "currentPassword": "目前密碼",
@@ -199,7 +199,7 @@
     "rememberForDayDescription": "僅在此裝置有效，24 小時後需要重新驗證。"
   },
   "app": {
-    "title": "NoteGen",
+    "title": "Almanac Notes",
     "description": "先記錄，再整理。"
   },
   "tray": {
@@ -213,7 +213,7 @@
     "window": "視窗",
     "pinToggle": "置頂/取消置頂",
     "hideWindow": "隱藏至系統匣",
-    "quit": "退出 NoteGen"
+    "quit": "退出 Almanac Notes"
   },
   "today": {
     "title": "今天",
@@ -483,7 +483,7 @@
       "desc": "設定應用程式的基本選項，包括介面主題和語言。",
       "behavior": {
         "title": "應用程式行為",
-        "desc": "設定 NoteGen 的啟動方式和關閉視窗時的行為",
+        "desc": "設定 Almanac Notes 的啟動方式和關閉視窗時的行為",
         "close": {
           "title": "關閉視窗時",
           "desc": "選擇點選視窗關閉按鈕後執行的操作",
@@ -495,7 +495,7 @@
         },
         "autostart": {
           "title": "開機啟動",
-          "desc": "登入系統後自動啟動 NoteGen",
+          "desc": "登入系統後自動啟動 Almanac Notes",
           "error": "無法更新開機啟動設定"
         },
         "autostartMinimized": {
@@ -504,8 +504,8 @@
           "error": "無法更新自動啟動後隱藏設定"
         },
         "closePrompt": {
-          "title": "關閉 NoteGen？",
-          "desc": "你可以將 NoteGen 保留在系統匣，或完全結束應用程式。",
+          "title": "關閉 Almanac Notes？",
+          "desc": "你可以將 Almanac Notes 保留在系統匣，或完全結束應用程式。",
           "cancel": "取消",
           "minimize": "最小化到系統匣",
           "quit": "結束應用程式"
@@ -715,7 +715,7 @@
     },
     "webClipper": {
       "title": "瀏覽器剪藏",
-      "desc": "將 Chrome 或 Edge 中的網頁正文、選取內容和連結儲存到 NoteGen 記錄。",
+      "desc": "將 Chrome 或 Edge 中的網頁正文、選取內容和連結儲存到 Almanac Notes 記錄。",
       "serviceTitle": "本機服務",
       "serviceDesc": "剪藏服務僅監聽本機回環位址，偵測到擴充功能後會自動連線。",
       "localService": "瀏覽器剪藏服務",
@@ -732,7 +732,7 @@
       "serverErrorTitle": "剪藏服務啟動失敗",
       "serverErrorDescription": "連接埠可能已被佔用：{error}",
       "connectionsTitle": "已配對瀏覽器",
-      "connectionsDesc": "管理可以向本機 NoteGen 儲存內容的擴充功能安裝實例。",
+      "connectionsDesc": "管理可以向本機 Almanac Notes 儲存內容的擴充功能安裝實例。",
       "refresh": "重新整理",
       "pairedBrowsers": "連線清單",
       "pairedCount": "共 {count} 個連線",
@@ -744,7 +744,7 @@
       "revokeFailed": "撤銷授權失敗",
       "loadFailed": "讀取剪藏設定失敗",
       "updateFailed": "更新剪藏設定失敗",
-      "pairingTitle": "允許瀏覽器連線 NoteGen？",
+      "pairingTitle": "允許瀏覽器連線 Almanac Notes？",
       "pairingDescription": "確認後，該擴充功能可以讀取你的標籤清單並把網頁內容儲存為記錄。",
       "browser": "瀏覽器",
       "extensionVersion": "擴充功能版本",
@@ -759,7 +759,7 @@
     },
     "webSearch": {
       "title": "網路搜尋",
-      "desc": "設定 NoteGen 的三層網路搜尋方案，AI 會自行判斷何時需要搜尋。",
+      "desc": "設定 Almanac Notes 的三層網路搜尋方案，AI 會自行判斷何時需要搜尋。",
       "nativeEnabled": "啟用模型原生搜尋",
       "thirdPartyEnabled": "啟用第三方搜尋",
       "basicEnabled": "啟用免 Key 搜尋",
@@ -916,9 +916,9 @@
     },
     "mcp": {
       "title": "MCP",
-      "desc": "透過 Model Context Protocol 連線外部工具，或讓本機 AI 存取 NoteGen。",
+      "desc": "透過 Model Context Protocol 連線外部工具，或讓本機 AI 存取 Almanac Notes。",
       "externalTab": "外部 MCP 服務",
-      "accessTab": "存取 NoteGen",
+      "accessTab": "存取 Almanac Notes",
       "enableTitle": "啟用 MCP 功能",
       "enableDesc": "啟用後，AI 可以呼叫設定的 MCP 伺服器提供的工具。",
       "servers": "伺服器清單",
@@ -1007,7 +1007,7 @@
       "runtimeManualOnly": "目前平台暫不支援自動安裝此執行環境，請手動安裝後重新檢查。",
       "installRuntime": "安裝執行環境",
       "runtimeInstallTitle": "安裝執行環境",
-      "runtimeInstallDesc": "確認後，NoteGen 將執行以下安裝命令。",
+      "runtimeInstallDesc": "確認後，Almanac Notes 將執行以下安裝命令。",
       "runtimeInstallPreparing": "準備安裝",
       "runtimeInstallRunning": "安裝中",
       "runtimeInstallCompleted": "安裝完成",
@@ -1087,7 +1087,7 @@
       "userInvocable": "在斜槓選單顯示",
       "importHelp": "支援匯入 zip 格式的 Skill，zip 檔案需包含 SKILL.md 檔案。",
       "workspaceInstallHelp": "安裝到目前工作區的 skills 目錄，僅供目前工作區使用。",
-      "globalInstallHelp": "安裝到 NoteGen 的全域 Skills 目錄，可供所有工作區使用。",
+      "globalInstallHelp": "安裝到 Almanac Notes 的全域 Skills 目錄，可供所有工作區使用。",
       "metadata": "元資料",
       "content": "指令內容",
       "noSkills": "還沒有 Skills",
@@ -1146,7 +1146,7 @@
         "documentExpired": "預覽已過期，請重新產生"
       },
       "title": "外掛管理",
-      "desc": "探索、安裝、授權並設定 NoteGen 擴充功能。外掛程式碼目前僅在桌面端執行。",
+      "desc": "探索、安裝、授權並設定 Almanac Notes 擴充功能。外掛程式碼目前僅在桌面端執行。",
       "loading": "正在載入外掛程式...",
       "initializationFailed": "外掛程式初始化失敗",
       "required": "必要",
@@ -1304,7 +1304,7 @@
       "settings": {
         "title": "外掛程式設定",
         "contextChanged": "外掛程式或工作區已變更，請重新開啟外掛程式設定後再儲存。",
-        "desc": "這些值由 NoteGen 驗證並儲存。",
+        "desc": "這些值由 Almanac Notes 驗證並儲存。",
         "none": "此外掛程式沒有可設定項目。",
         "invalidNumber": "請輸入有效數字。",
         "relativePathOnly": "請使用不含 .. 的工作區相對路徑。",
@@ -1318,7 +1318,7 @@
       },
       "updates": {
         "summaryTitle": "有 {count} 個外掛程式可更新",
-        "summaryDesc": "外掛程式會以不可分割方式更新；支援回復時，NoteGen 會保留上一版本。",
+        "summaryDesc": "外掛程式會以不可分割方式更新；支援回復時，Almanac Notes 會保留上一版本。",
         "operationFailed": "外掛程式操作失敗",
         "available": "可更新",
         "current": "已是最新",
@@ -1420,7 +1420,7 @@
         "dailyFolderHelp": "允許在 {folder} 資料夾內建立和開啟筆記。保留日期子目錄；目錄不存在時由外掛建立。",
         "title": "確認 {name} 的權限",
         "contextChanged": "外掛程式或工作區已變更，請關閉此視窗並重新確認目前權限。",
-        "desc": "NoteGen 依工作區授予權限。必要權限不可取消，可選權限由你決定。",
+        "desc": "Almanac Notes 依工作區授予權限。必要權限不可取消，可選權限由你決定。",
         "togglePermission": "允許權限：{permission}",
         "pathLabel": "允許存取的相對路徑",
         "pathPlaceholder": "目前工作區內的資料夾或檔案",
@@ -1473,7 +1473,7 @@
         "noDevelopmentPlugins": "尚未載入開發外掛程式",
         "noDevelopmentPluginsDesc": "在上方輸入解包後的外掛目錄，開始本機開發。",
         "logsTitle": "外掛執行記錄",
-        "logsDesc": "日誌僅保留在記憶體中，可在此手動清除；重新啟動 NoteGen 也會清除記錄。",
+        "logsDesc": "日誌僅保留在記憶體中，可在此手動清除；重新啟動 Almanac Notes 也會清除記錄。",
         "logFilterLabel": "依外掛程式篩選日誌",
         "allLogs": "所有外掛程式",
         "logLevels": {
@@ -1749,7 +1749,7 @@
     },
     "daily": {
       "title": "每日筆記",
-      "desc": "設定每日筆記的位置、檔名格式與範本。NoteGen 會用與 Obsidian 相同的檔案，不會另外儲存資料。",
+      "desc": "設定每日筆記的位置、檔名格式與範本。Almanac Notes 會用與 Obsidian 相同的檔案，不會另外儲存資料。",
       "sections": {
         "today": "今天的每日筆記",
         "location": "位置與檔名",
@@ -1803,9 +1803,9 @@
         "title": "任務時間到時通知",
         "desc": "有 ⏰ 時間的任務到點時發 macOS 通知；App 關著時錯過的，下次開啟會補發（最多回補 24 小時）。",
         "test": "傳送測試通知",
-        "testTitle": "NoteGen 提醒測試",
+        "testTitle": "Almanac Notes 提醒測試",
         "testBody": "看到這則通知，就代表提醒可以正常運作。",
-        "denied": "沒有通知權限，請到「系統設定 → 通知」開啟 NoteGen",
+        "denied": "沒有通知權限，請到「系統設定 → 通知」開啟 Almanac Notes",
         "sent": "已傳送測試通知"
       },
       "promptFolder": {
@@ -2234,7 +2234,7 @@
       "resourcesTitle": "資源與支援",
       "resourcesDesc": "查看文件、版本記錄，或進入社群回饋問題。",
       "licenseText": "開源專案 · GitHub · GPL-3.0",
-      "version": "NoteGen v{version}",
+      "version": "Almanac Notes v{version}",
       "checkReleases": "查詢歷史版本",
       "language": "語言",
       "checkUpdate": "檢查更新",
@@ -2519,7 +2519,7 @@
           "protocol-conflict": "伺服器版本衝突",
           "symlink-ignored": "符號連結已忽略，不會參與同步"
         },
-        "personalDomainDependencyHint": "關閉標籤會暫停依賴標籤的記錄、關聯筆記、畫布與訊息，關閉對話會暫停訊息。重新啟用後會補齊遠端內容。附件傳輸涵蓋 NoteGen 管理的本機資源，外部檔案仍須另外備份。",
+        "personalDomainDependencyHint": "關閉標籤會暫停依賴標籤的記錄、關聯筆記、畫布與訊息，關閉對話會暫停訊息。重新啟用後會補齊遠端內容。附件傳輸涵蓋 Almanac Notes 管理的本機資源，外部檔案仍須另外備份。",
         "setupReview": "確認同步內容",
         "serverUrlHint": "填寫伺服器位址，例如 https://sync.example.com 或 http://192.168.1.10:3789。",
         "syncNeedsAttention": "部分變更尚未同步，請開啟同步狀態重試或處理衝突。",
@@ -2527,7 +2527,7 @@
         "continueSetup": "繼續設定",
         "authorized": "已授權",
         "automaticSyncTitle": "自動同步",
-        "automaticSyncDescription": "確認設定後，NoteGen 會在連線時自動同步變更，重新連線後補齊資料。離線時的修改會先儲存在本機，等待上傳。",
+        "automaticSyncDescription": "確認設定後，Almanac Notes 會在連線時自動同步變更，重新連線後補齊資料。離線時的修改會先儲存在本機，等待上傳。",
         "domainPaused": "因{dependency}同步關閉而暫停",
         "switchWorkspace": "切換工作區",
         "createWorkspaceSection": "新增工作區",
@@ -2577,7 +2577,7 @@
       "newToken": "建立 access token",
       "tokenPermissionGuide": "查看權限說明",
       "toggleTokenVisibility": "顯示或隱藏 Access Token",
-      "newTokenDesc": "建議使用 Fine-grained token。現有版本庫需要 Contents 讀寫權限；由 NoteGen 建立版本庫還需要 Administration 讀寫權限。",
+      "newTokenDesc": "建議使用 Fine-grained token。現有版本庫需要 Contents 讀寫權限；由 Almanac Notes 建立版本庫還需要 Administration 讀寫權限。",
       "giteeTokenDesc": "Gitee 個人存取權杖用於同步資料，需要有版本庫的讀寫權限，設定後將自動建立檔案版本庫（私有）和圖床版本庫。",
       "imageRepoSetting": "開啟圖床",
       "imageRepoSettingDesc": "你已經設定了圖床版本庫，開啟此項將使用圖床版本庫，否則將使用本機儲存。",
@@ -2655,7 +2655,7 @@
       "customImageRepo": "自訂圖床版本庫名稱",
       "customImageRepoDesc": "留空則使用預設版本庫名稱",
       "backupMethod": "同步方式",
-      "backupMethodDesc": "設為目前同步方式後，NoteGen 資料同步將使用此平台；備份與還原仍是獨立功能。",
+      "backupMethodDesc": "設為目前同步方式後，Almanac Notes 資料同步將使用此平台；備份與還原仍是獨立功能。",
       "createRepo": "建立",
       "creating": "建立中",
       "checkRepo": "檢查版本庫",
@@ -2725,7 +2725,7 @@
         "title": "雲端硬碟同步",
         "description": "透過 OneDrive、iCloud Drive 等雲端硬碟資料夾同步資料。",
         "androidDescription": "選擇系統檔案應用程式中的雲端硬碟資料夾。",
-        "dialogTitle": "選擇雲端硬碟中的 NoteGen 資料夾",
+        "dialogTitle": "選擇雲端硬碟中的 Almanac Notes 資料夾",
         "workspaceWarningTitle": "工作區尚未遷移",
         "workspaceWarningDescription": "目前工作區不在所選雲端硬碟資料夾中。你可以直接切換，或複製現有筆記後切換。",
         "switchWorkspace": "直接切換工作區",
@@ -2734,7 +2734,7 @@
         "migrateWorkspace": "複製筆記並切換工作區",
         "migrating": "正在遷移",
         "migrationConfirmTitle": "遷移工作區到雲端硬碟",
-        "migrationConfirm": "NoteGen 將把目前工作區完整複製到所選雲端硬碟資料夾，然後切換到新工作區。原工作區會保留為安全副本；雲端服務商可能讀取複製後的筆記內容。是否繼續？",
+        "migrationConfirm": "Almanac Notes 將把目前工作區完整複製到所選雲端硬碟資料夾，然後切換到新工作區。原工作區會保留為安全副本；雲端服務商可能讀取複製後的筆記內容。是否繼續？",
         "migrationSuccess": "工作區遷移完成",
         "migrationSuccessDescription": "已複製 {count} 個檔案，之後的 Markdown 變更將由雲端硬碟直接同步。",
         "migrationFailed": "工作區遷移失敗",
@@ -2753,13 +2753,13 @@
       },
       "oneDrive": {
         "title": "OneDrive",
-        "description": "登入 Microsoft 帳號，將 NoteGen 資料同步到 OneDrive。",
+        "description": "登入 Microsoft 帳號，將 Almanac Notes 資料同步到 OneDrive。",
         "clientId": "Microsoft 應用程式 Client ID",
         "clientIdPlaceholder": "請輸入 Client ID",
         "clientIdDescription": "測試版本需要填寫在 Microsoft Entra 註冊的應用程式 Client ID。正式版本將由 NoteGen 內建。",
         "folder": "同步位置",
         "folderValue": "OneDrive / Apps / NoteGen",
-        "folderDescription": "NoteGen 僅在自己的應用程式資料夾中儲存和同步資料。",
+        "folderDescription": "Almanac Notes 僅在自己的應用程式資料夾中儲存和同步資料。",
         "notConnected": "尚未連線 OneDrive",
         "connected": "已連線",
         "disconnected": "未連線",
@@ -2771,8 +2771,8 @@
         "connectFailed": "無法連線 OneDrive",
         "disconnectFailed": "無法中斷 OneDrive",
         "signInTitle": "完成 Microsoft 登入",
-        "signInDescription": "請在開啟的頁面輸入驗證碼 {code}，完成後返回 NoteGen。",
-        "signInDescriptionCopied": "驗證碼 {code} 已複製，請在開啟的頁面貼上，完成後返回 NoteGen。",
+        "signInDescription": "請在開啟的頁面輸入驗證碼 {code}，完成後返回 Almanac Notes。",
+        "signInDescriptionCopied": "驗證碼 {code} 已複製，請在開啟的頁面貼上，完成後返回 Almanac Notes。",
         "openSignIn": "開啟登入頁面",
         "workspace": "本機鏡像工作區",
         "workspaceDescription": "OneDrive 使用獨立的本機工作區儲存離線副本，並與雲端雙向同步。",
@@ -2790,7 +2790,7 @@
         "workspaceTransferFailed": "有 {count} 個檔案同步失敗，請重試。",
         "workspaceSetupFailed": "無法建立或切換 OneDrive 工作區",
         "statusDisconnectedTitle": "尚未連線 OneDrive",
-        "statusDisconnectedDescription": "點選連線後，NoteGen 會引導你完成 Microsoft 登入。",
+        "statusDisconnectedDescription": "點選連線後，Almanac Notes 會引導你完成 Microsoft 登入。",
         "statusRequestingCodeTitle": "正在取得登入驗證碼",
         "statusRequestingCodeDescription": "正在向 Microsoft 請求一次性登入驗證碼。",
         "statusCodeCopiedTitle": "登入驗證碼已複製",
@@ -2800,9 +2800,9 @@
         "statusOpeningBrowserTitle": "正在開啟瀏覽器",
         "statusOpeningBrowserDescription": "即將前往 Microsoft 登入頁面。",
         "statusWaitingAuthorizationTitle": "等待 Microsoft 授權",
-        "statusWaitingAuthorizationDescription": "請在瀏覽器完成登入，然後返回 NoteGen。",
+        "statusWaitingAuthorizationDescription": "請在瀏覽器完成登入，然後返回 Almanac Notes。",
         "statusConnectingTitle": "正在連線 OneDrive",
-        "statusConnectingDescription": "已返回 NoteGen，正在等待 Microsoft 確認並建立連線。",
+        "statusConnectingDescription": "已返回 Almanac Notes，正在等待 Microsoft 確認並建立連線。",
         "statusPreparingWorkspaceTitle": "正在準備 OneDrive 工作區",
         "statusPreparingWorkspaceDescription": "帳號已連線，正在建立、切換並同步本機鏡像工作區。",
         "statusPreparingRemoteWorkspaceDescription": "正在建立新的本機鏡像工作區，並下載 OneDrive 中已有的內容。",
@@ -2821,7 +2821,7 @@
         "migrateWorkspace": "複製筆記並切換工作區",
         "migrating": "正在遷移",
         "migrationConfirmTitle": "遷移工作區到 iCloud",
-        "migrationConfirm": "NoteGen 將把目前工作區完整複製到所選 iCloud 資料夾，然後切換到新工作區。原工作區會保留為安全副本；iCloud 可能讀取複製後的筆記內容。是否繼續？",
+        "migrationConfirm": "Almanac Notes 將把目前工作區完整複製到所選 iCloud 資料夾，然後切換到新工作區。原工作區會保留為安全副本；iCloud 可能讀取複製後的筆記內容。是否繼續？",
         "migrationSuccess": "工作區遷移完成",
         "migrationSuccessDescription": "已複製 {count} 個檔案，之後的 Markdown 變更將透過 iCloud 同步。",
         "migrationFailed": "工作區遷移失敗",
@@ -3224,7 +3224,7 @@
         "nativeBackupFileJournalPending": "仍有未完成的檔案寫入，復原已暫停。請關閉正在編輯的檔案後繼續復原。",
         "nativeBootstrapIncomplete": "仍有 {path} 個快照物件無法寫入本機，初始化尚未完成。失敗資訊已保留，後續會重試。",
         "nativeLocalSnapshotPending": "伺服器已接受本機修改，但本機副本尚未完整復原，正在等待重試；請保留現有備份。",
-        "nativeTagIdentityMissing": "此標籤缺少本機同步身分，已暫停相關項目。請重新啟動 NoteGen 完成本機資料初始化後重試。",
+        "nativeTagIdentityMissing": "此標籤缺少本機同步身分，已暫停相關項目。請重新啟動 Almanac Notes 完成本機資料初始化後重試。",
         "nativeStorageBudgetExceeded": "實例或帳號儲存預算已用盡。請聯絡管理員調整預算或清理保留資料後重試。"
       }
     },
@@ -3454,15 +3454,15 @@
     },
     "backup": {
       "title": "備份與還原",
-      "desc": "建立與還原 NoteGen 資料快照。",
+      "desc": "建立與還原 Almanac Notes 資料快照。",
       "howItWorks": {
         "title": "這是備份，不是多裝置同步",
-        "description": "NoteGen 會在你選擇的資料夾中產生獨立的 .ngbackup 快照，不會變更現有同步設定。"
+        "description": "Almanac Notes 會在你選擇的資料夾中產生獨立的 .ngbackup 快照，不會變更現有同步設定。"
       },
       "directory": {
         "title": "備份目錄",
-        "description": "請選擇專門用於存放 NoteGen 備份的資料夾，請勿選擇目前筆記工作區。",
-        "dialogTitle": "選擇 NoteGen 備份目錄",
+        "description": "請選擇專門用於存放 Almanac Notes 備份的資料夾，請勿選擇目前筆記工作區。",
+        "dialogTitle": "選擇 Almanac Notes 備份目錄",
         "empty": "尚未選擇備份目錄",
         "choose": "選擇資料夾",
         "open": "開啟",
@@ -3471,9 +3471,9 @@
       },
       "automation": {
         "title": "自動備份",
-        "description": "NoteGen 啟動後會檢查是否到期，並自動保留最近的快照。",
+        "description": "Almanac Notes 啟動後會檢查是否到期，並自動保留最近的快照。",
         "schedule": "頻率",
-        "scheduleDescription": "自動備份只在 NoteGen 執行時進行。",
+        "scheduleDescription": "自動備份只在 Almanac Notes 執行時進行。",
         "disabled": "關閉",
         "daily": "每天",
         "weekly": "每週",
@@ -3490,22 +3490,22 @@
       },
       "history": {
         "title": "備份記錄",
-        "description": "這裡只顯示所選目錄中的 NoteGen 備份，並會在讀取時驗證格式。",
+        "description": "這裡只顯示所選目錄中的 Almanac Notes 備份，並會在讀取時驗證格式。",
         "empty": "這個目錄中還沒有備份",
         "invalid": "備份檔案無效",
         "workspace": "含工作區"
       },
       "restore": {
         "import": "選擇其他備份",
-        "chooseTitle": "選擇 NoteGen 備份檔案",
+        "chooseTitle": "選擇 Almanac Notes 備份檔案",
         "action": "還原",
         "confirmTitle": "從這份備份還原？",
-        "confirmDescription": "NoteGen 會先把目前資料備份到所選目錄，再還原應用程式資料並重新啟動。備份中的工作區會還原到新的隔離目錄，不會覆寫目前的工作區檔案。",
+        "confirmDescription": "Almanac Notes 會先把目前資料備份到所選目錄，再還原應用程式資料並重新啟動。備份中的工作區會還原到新的隔離目錄，不會覆寫目前的工作區檔案。",
         "cancel": "取消",
         "confirm": "備份目前資料並還原",
         "restoring": "正在還原",
         "failedTitle": "還原失敗",
-        "failedDescription": "未能還原備份：{error}。NoteGen 將重新啟動並開啟資料庫。",
+        "failedDescription": "未能還原備份：{error}。Almanac Notes 將重新啟動並開啟資料庫。",
         "safetyBackupError": "無法建立還原前安全備份，還原已取消"
       },
       "createSuccess": "備份已建立",
@@ -3645,7 +3645,7 @@
       "exportButton": "匯出"
     },
     "localMcp": {
-      "title": "讓 AI 存取 NoteGen",
+      "title": "讓 AI 存取 Almanac Notes",
       "desc": "允許其他本機 AI 工具透過 MCP 存取目前工作區。",
       "serviceTitle": "NoteGen MCP Server",
       "running": "執行中",
@@ -3886,7 +3886,7 @@
       "checkConnection": "偵測連線",
       "model": "模型",
       "defaultModels": {
-        "title": "NoteGen",
+        "title": "Almanac Notes",
         "desc": "NoteGen 為使用者提供免費的 AI 模型服務，由矽基流動和 AIHubMix 提供支援，無需設定即可使用基礎功能。",
         "chatModel": {
           "name": "NoteGen AI",
@@ -3996,7 +3996,7 @@
     },
     "shortcuts": {
       "title": "快捷鍵",
-      "desc": "在這裡，你可以設定快捷鍵，幫助你更有效率地使用 NoteGen。",
+      "desc": "在這裡，你可以設定快捷鍵，幫助你更有效率地使用 Almanac Notes。",
       "resetDefaults": "重設",
       "clear": "清空",
       "noShortcut": "未設定",
@@ -4008,7 +4008,7 @@
       "conflictGlobal": "與全域快捷鍵「{name}」衝突",
       "globalShortcuts": {
         "title": "全域快捷鍵",
-        "desc": "這些快捷鍵由系統註冊，NoteGen 不在前台時也可能觸發。"
+        "desc": "這些快捷鍵由系統註冊，Almanac Notes 不在前台時也可能觸發。"
       },
       "workbenchKeys": {
         "title": "工作台單鍵",
@@ -4316,7 +4316,7 @@
           "fileTransfer": "電子紙：Home > File Transfer > Join a Network，連上和這台 Mac 同一個 Wi-Fi。",
           "address": "把電子紙畫面上顯示的 IP 填進上面的「閱讀器位址」，並打開「區網服務」。",
           "detect": "按「偵測閱讀器」（按下才會連線）。",
-          "install": "按「安裝」：寫入外掛（含伺服器網址與 token）、選用的中文字型，並在電子紙新增 NoteGen 的 OPDS 書目。",
+          "install": "按「安裝」：寫入外掛（含伺服器網址與 token）、選用的中文字型，並在電子紙新增 Almanac Notes 的 OPDS 書目。",
           "readerSettings": "電子紙：設定 > Connectivity > Plugins 選 Enabled、設定 > Display > Sleep Screen 選 Custom，然後重新開機一次。"
         },
         "detect": {
@@ -4528,12 +4528,12 @@
       "countdown": "{seconds} 秒"
     },
     "capture": {
-      "desktopScreenshotPermissionDenied": "請在 macOS 系統設定 → 隱私權與安全性 → 螢幕與系統音訊錄製（部分版本為螢幕錄製）中允許 NoteGen，再重新開啟應用程式。",
+      "desktopScreenshotPermissionDenied": "請在 macOS 系統設定 → 隱私權與安全性 → 螢幕與系統音訊錄製（部分版本為螢幕錄製）中允許 Almanac Notes，再重新開啟應用程式。",
       "desktopScreenshotUnsupportedSession": "目前桌面工作階段不支援直接框選截圖。Wayland 下請使用系統截圖後匯入圖片；X11 下可使用桌面截圖。",
       "desktopScreenshotCaptureFailed": "桌面截圖失敗，請檢查螢幕權限及顯示器連線後重試。",
       "desktopScreenshotSaveRetry": "截圖仍保留在本機，按下重試可繼續儲存。",
       "desktopScreenshotSavedTitle": "截圖已儲存",
-      "desktopScreenshotSavedBody": "已儲存到 NoteGen，可稍後在記錄中查看。",
+      "desktopScreenshotSavedBody": "已儲存到 Almanac Notes，可稍後在記錄中查看。",
       "saveTarget": "儲存到",
       "saveTargetPlaceholder": "選擇標籤",
       "saved": "記錄已儲存",
@@ -5368,7 +5368,7 @@
             "single": "單選",
             "multiple": "多選",
             "done": "完成選擇",
-            "notificationTitle": "NoteGen 等待你的回答",
+            "notificationTitle": "Almanac Notes 等待你的回答",
             "notificationBody": "Agent 有問題需要你補充資訊。"
           },
           "confirmation": {
@@ -5382,7 +5382,7 @@
             "cancelled": "已取消",
             "session": "本次對話允許",
             "notification": {
-              "title": "NoteGen 需要你的確認",
+              "title": "Almanac Notes 需要你的確認",
               "description": "Agent 正在等待你確認一項操作。"
             },
             "fallback": {
@@ -6463,12 +6463,12 @@
       },
       "onboarding": {
         "title": "新手引導",
-        "subtitle": "跟著這三步體驗 NoteGen 的核心工作流。",
+        "subtitle": "跟著這三步體驗 Almanac Notes 的核心工作流。",
         "start": "開始引導",
         "viewHint": "查看提示",
         "continue": "繼續下一步",
         "completed": "已完成",
-        "allDone": "新手任務已全部完成，你已經體驗了 NoteGen 的基礎工作流。",
+        "allDone": "新手任務已全部完成，你已經體驗了 Almanac Notes 的基礎工作流。",
         "stepLabel": "任務 ({current}/{total})",
         "stepCompletedLabel": "已完成任務 ({current}/{total})",
         "afterOrganizeDialog": {

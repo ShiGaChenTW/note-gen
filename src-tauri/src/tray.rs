@@ -61,7 +61,7 @@ pub fn create_tray(app: &AppHandle) -> tauri::Result<tauri::tray::TrayIcon> {
     let tray = TrayIconBuilder::with_id(TRAY_ID)
         .icon(icon)
         .menu(&menu)
-        .tooltip("NoteGen")
+        .tooltip("Almanac Notes")
         // Opening the tray menu must leave the current application in front.
         // The explicit menu item remains the way to reveal the main window.
         .show_menu_on_left_click(true)
@@ -208,7 +208,7 @@ fn default_tray_menu_labels() -> TrayMenuLabels {
         window: "Window".to_string(),
         pin_toggle: "Pin/Unpin".to_string(),
         hide_window: "Hide to Tray".to_string(),
-        quit: "Quit NoteGen".to_string(),
+        quit: "Quit Almanac Notes".to_string(),
     }
 }
 

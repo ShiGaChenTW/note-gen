@@ -30,7 +30,7 @@ async function openQuickRecordWindow() {
 
   const window = new WebviewWindow(QUICK_RECORD_WINDOW, {
     url: '/quick-record',
-    title: 'NoteGen',
+    title: 'Almanac Notes',
     width: 460,
     height: 460,
     minWidth: 320,

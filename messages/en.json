@@ -1,10 +1,10 @@
 {
   "agents": {
-    "title": "Partners",
-    "description": "Choose which tools each partner can use. Note proposals go to the Workbench.",
-    "loading": "Loading partners…",
-    "empty": "No partners yet.",
-    "add": "Add partner",
+    "title": "The Crew",
+    "description": "Choose which tools each crew member can use. Note proposals go to the Workbench.",
+    "loading": "Loading crew members…",
+    "empty": "No crew members yet.",
+    "add": "Add crew member",
     "edit": "Edit",
     "name": "Name",
     "role": "Role",
@@ -16,8 +16,8 @@
     "save": "Save",
     "saving": "Saving…",
     "cancel": "Cancel",
-    "loadError": "Could not load partner settings.",
-    "saveError": "Could not save partner settings.",
+    "loadError": "Could not load crew member settings.",
+    "saveError": "Could not save crew member settings.",
     "roles": {
       "commander": "Commander",
       "expert": "Expert",
@@ -168,7 +168,7 @@
   "appLock": {
     "title": "Startup password lock",
     "description": "The password lock protects the app interface only; it does not encrypt note files. Keep your password safe.",
-    "unlockDescription": "Enter your password to open NoteGen.",
+    "unlockDescription": "Enter your password to open Almanac Notes.",
     "loading": "Loading lock settings…",
     "password": "Password",
     "currentPassword": "Current password",
@@ -199,7 +199,7 @@
     "rememberForDayDescription": "Only on this device. Password verification resumes after 24 hours."
   },
   "app": {
-    "title": "NoteGen",
+    "title": "Almanac Notes",
     "description": "Capture first. Organize later."
   },
   "tray": {
@@ -213,7 +213,7 @@
     "window": "Window",
     "pinToggle": "Pin/Unpin",
     "hideWindow": "Hide to Tray",
-    "quit": "Quit NoteGen"
+    "quit": "Quit Almanac Notes"
   },
   "today": {
     "title": "Today",
@@ -483,7 +483,7 @@
       "desc": "Here, you can configure basic application settings, including interface theme, language and other options.",
       "behavior": {
         "title": "App Behavior",
-        "desc": "Choose how NoteGen starts and what happens when you close its window",
+        "desc": "Choose how Almanac Notes starts and what happens when you close its window",
         "close": {
           "title": "When closing the window",
           "desc": "Choose what the window close button should do",
@@ -495,17 +495,17 @@
         },
         "autostart": {
           "title": "Launch at startup",
-          "desc": "Start NoteGen automatically after you sign in",
+          "desc": "Start Almanac Notes automatically after you sign in",
           "error": "Could not update the startup setting"
         },
         "autostartMinimized": {
           "title": "Hide window after startup launch",
-          "desc": "Hide the window only when launched at system startup and keep NoteGen running in the tray",
+          "desc": "Hide the window only when launched at system startup and keep Almanac Notes running in the tray",
           "error": "Could not update the startup window setting"
         },
         "closePrompt": {
-          "title": "Close NoteGen?",
-          "desc": "You can keep NoteGen available in the system tray or quit the app completely.",
+          "title": "Close Almanac Notes?",
+          "desc": "You can keep Almanac Notes available in the system tray or quit the app completely.",
           "cancel": "Cancel",
           "minimize": "Minimize to tray",
           "quit": "Quit app"
@@ -715,7 +715,7 @@
     },
     "webClipper": {
       "title": "Web Clipper",
-      "desc": "Save page content, selections, and links from Chrome or Edge to NoteGen records.",
+      "desc": "Save page content, selections, and links from Chrome or Edge to Almanac Notes records.",
       "serviceTitle": "Local service",
       "serviceDesc": "The clipper listens only on this device and connects automatically when the extension is available.",
       "localService": "Browser clipper service",
@@ -732,7 +732,7 @@
       "serverErrorTitle": "Clipper service failed to start",
       "serverErrorDescription": "The port may already be in use: {error}",
       "connectionsTitle": "Paired browsers",
-      "connectionsDesc": "Manage extension installations that can save content to NoteGen on this device.",
+      "connectionsDesc": "Manage extension installations that can save content to Almanac Notes on this device.",
       "refresh": "Refresh",
       "pairedBrowsers": "Connections",
       "pairedCount": "{count} connections",
@@ -744,7 +744,7 @@
       "revokeFailed": "Failed to revoke access",
       "loadFailed": "Failed to load clipper settings",
       "updateFailed": "Failed to update clipper settings",
-      "pairingTitle": "Allow this browser to connect to NoteGen?",
+      "pairingTitle": "Allow this browser to connect to Almanac Notes?",
       "pairingDescription": "After approval, this extension can read your tag list and save web content as records.",
       "browser": "Browser",
       "extensionVersion": "Extension version",
@@ -759,7 +759,7 @@
     },
     "webSearch": {
       "title": "Web Search",
-      "desc": "Configure NoteGen's three-layer web search strategy. AI decides when a search is needed.",
+      "desc": "Configure Almanac Notes's three-layer web search strategy. AI decides when a search is needed.",
       "nativeEnabled": "Enable native model search",
       "thirdPartyEnabled": "Enable third-party search",
       "basicEnabled": "Enable no-key search",
@@ -916,9 +916,9 @@
     },
     "mcp": {
       "title": "MCP",
-      "desc": "Use Model Context Protocol to connect external tools or let local AI access NoteGen.",
+      "desc": "Use Model Context Protocol to connect external tools or let local AI access Almanac Notes.",
       "externalTab": "External MCP services",
-      "accessTab": "Access NoteGen",
+      "accessTab": "Access Almanac Notes",
       "enableTitle": "Enable MCP",
       "enableDesc": "When enabled, AI can call tools provided by configured MCP servers.",
       "servers": "Server List",
@@ -1007,7 +1007,7 @@
       "runtimeManualOnly": "Automatic install is not available for this runtime on the current platform. Please install it manually and run the check again.",
       "installRuntime": "Install Runtime",
       "runtimeInstallTitle": "Install runtime",
-      "runtimeInstallDesc": "NoteGen will run the following install command after confirmation.",
+      "runtimeInstallDesc": "Almanac Notes will run the following install command after confirmation.",
       "runtimeInstallPreparing": "Preparing install",
       "runtimeInstallRunning": "Installing",
       "runtimeInstallCompleted": "Install completed",
@@ -1087,7 +1087,7 @@
       "userInvocable": "Show in Slash Menu",
       "importHelp": "Support importing Skills in zip format. The zip file must contain a SKILL.md file.",
       "workspaceInstallHelp": "Installed in the current workspace's skills folder and available only in this workspace.",
-      "globalInstallHelp": "Installed in NoteGen's global Skills folder and available in every workspace.",
+      "globalInstallHelp": "Installed in Almanac Notes's global Skills folder and available in every workspace.",
       "metadata": "Metadata",
       "content": "Instructions",
       "noSkills": "No Skills yet",
@@ -1146,7 +1146,7 @@
         "documentExpired": "Preview expired. Generate it again."
       },
       "title": "Plugin Management",
-      "desc": "Discover, install, authorize, and configure extensions for NoteGen. Plugin code currently runs only on desktop.",
+      "desc": "Discover, install, authorize, and configure extensions for Almanac Notes. Plugin code currently runs only on desktop.",
       "loading": "Loading plugins...",
       "initializationFailed": "Plugins could not be initialized",
       "required": "Required",
@@ -1304,7 +1304,7 @@
       "settings": {
         "title": "Plugin settings",
         "contextChanged": "The plugin or workspace changed. Reopen its settings before saving.",
-        "desc": "These values are validated and stored by NoteGen.",
+        "desc": "These values are validated and stored by Almanac Notes.",
         "none": "This plugin has no configurable settings.",
         "invalidNumber": "Enter a valid number.",
         "relativePathOnly": "Use a relative workspace path without .. segments.",
@@ -1318,7 +1318,7 @@
       },
       "updates": {
         "summaryTitle": "{count} updates available",
-        "summaryDesc": "Updates are installed atomically. NoteGen keeps the previous version when rollback is available.",
+        "summaryDesc": "Updates are installed atomically. Almanac Notes keeps the previous version when rollback is available.",
         "operationFailed": "Plugin operation failed",
         "available": "Update available",
         "current": "Up to date",
@@ -1420,7 +1420,7 @@
         "dailyFolderHelp": "Allow creating and opening notes in {folder}. Date subfolders are preserved; the plugin creates the folder if needed.",
         "title": "Review permissions for {name}",
         "contextChanged": "The plugin or workspace changed. Close this dialog and review its current permissions again.",
-        "desc": "NoteGen grants permissions per workspace. Required permissions cannot be deselected; optional permissions remain your choice.",
+        "desc": "Almanac Notes grants permissions per workspace. Required permissions cannot be deselected; optional permissions remain your choice.",
         "togglePermission": "Allow permission: {permission}",
         "pathLabel": "Allowed relative path",
         "pathPlaceholder": "Folder or file inside this workspace",
@@ -1473,7 +1473,7 @@
         "noDevelopmentPlugins": "No development plugins loaded",
         "noDevelopmentPluginsDesc": "Enter an unpacked package path above to begin local development.",
         "logsTitle": "Plugin runtime logs",
-        "logsDesc": "Messages are kept in memory and can be cleared here; restarting NoteGen also removes them.",
+        "logsDesc": "Messages are kept in memory and can be cleared here; restarting Almanac Notes also removes them.",
         "logFilterLabel": "Filter logs by plugin",
         "allLogs": "All plugins",
         "logLevels": {
@@ -1749,7 +1749,7 @@
     },
     "daily": {
       "title": "Daily notes",
-      "desc": "Set where daily notes live, how they are named, and which templates they use. NoteGen uses the same files as Obsidian and stores no extra data.",
+      "desc": "Set where daily notes live, how they are named, and which templates they use. Almanac Notes uses the same files as Obsidian and stores no extra data.",
       "sections": {
         "today": "Today's note",
         "location": "Location and file name",
@@ -1803,9 +1803,9 @@
         "title": "Notify when a task is due",
         "desc": "Sends a macOS notification when a task’s ⏰ time comes. Reminders missed while the app was closed are sent the next time it opens (up to 24 hours back).",
         "test": "Send test notification",
-        "testTitle": "NoteGen reminder test",
+        "testTitle": "Almanac Notes reminder test",
         "testBody": "If you can see this, reminders are working.",
-        "denied": "Notifications are off. Turn them on for NoteGen in System Settings → Notifications",
+        "denied": "Notifications are off. Turn them on for Almanac Notes in System Settings → Notifications",
         "sent": "Test notification sent"
       },
       "promptFolder": {
@@ -1918,7 +1918,7 @@
       "resourcesTitle": "Resources and support",
       "resourcesDesc": "Open docs, release notes, or community channels for feedback.",
       "licenseText": "Open source · GitHub · GPL-3.0",
-      "version": "NoteGen v{version}",
+      "version": "Almanac Notes v{version}",
       "checkReleases": "Check Release History",
       "language": "Language",
       "checkUpdate": "Check for Updates",
@@ -2454,7 +2454,7 @@
           "protocol-conflict": "Server version conflict",
           "symlink-ignored": "Symbolic link ignored and excluded from sync"
         },
-        "personalDomainDependencyHint": "Disabling tags pauses dependent records, linked notes, canvases, and messages. Disabling conversations pauses messages. Re-enabling retrieves remote data. Attachment transfer covers NoteGen-managed resources; back up external files separately.",
+        "personalDomainDependencyHint": "Disabling tags pauses dependent records, linked notes, canvases, and messages. Disabling conversations pauses messages. Re-enabling retrieves remote data. Attachment transfer covers Almanac Notes-managed resources; back up external files separately.",
         "setupReview": "Review your data",
         "serverUrlHint": "Enter the server origin, for example https://sync.example.com or http://192.168.1.10:3789.",
         "syncNeedsAttention": "Some changes could not be synced. Open sync status to retry or handle conflicts.",
@@ -2462,7 +2462,7 @@
         "continueSetup": "Continue setup",
         "authorized": "Authorized",
         "automaticSyncTitle": "Automatic sync",
-        "automaticSyncDescription": "Once setup is confirmed, NoteGen syncs changes automatically while connected and catches up after reconnecting. Changes made offline stay on this device until uploaded.",
+        "automaticSyncDescription": "Once setup is confirmed, Almanac Notes syncs changes automatically while connected and catches up after reconnecting. Changes made offline stay on this device until uploaded.",
         "domainPaused": "Paused because {dependency} sync is off",
         "switchWorkspace": "Switch workspace",
         "createWorkspaceSection": "Create a workspace",
@@ -2512,7 +2512,7 @@
       "newToken": "Create Access Token",
       "tokenPermissionGuide": "View Permission Guide",
       "toggleTokenVisibility": "Show or hide Access Token",
-      "newTokenDesc": "Use a fine-grained token. Existing repositories need Contents read/write; repositories created by NoteGen also need Administration read/write.",
+      "newTokenDesc": "Use a fine-grained token. Existing repositories need Contents read/write; repositories created by Almanac Notes also need Administration read/write.",
       "giteeTokenDesc": "Gitee personal access token is used for data synchronization. It needs repository read and write permissions. After configuration, it will automatically create a file repository (private) and an image repository.",
       "imageRepoSetting": "Enable Image Hosting",
       "imageRepoSettingDesc": "You have already configured an image repository, you can choose to use the image repository or use local storage.",
@@ -2589,7 +2589,7 @@
       "customImageRepo": "Custom Image Repository Name",
       "customImageRepoDesc": "Leave empty to use default repository name",
       "backupMethod": "Sync Provider",
-      "backupMethodDesc": "After selecting it as the current provider, NoteGen data sync uses this platform. Backup & Restore remains independent.",
+      "backupMethodDesc": "After selecting it as the current provider, Almanac Notes data sync uses this platform. Backup & Restore remains independent.",
       "createRepo": "Create",
       "creating": "Creating",
       "checkRepo": "Check Repository",
@@ -2659,7 +2659,7 @@
         "title": "Cloud Drive",
         "description": "Sync data through a OneDrive, iCloud Drive, or similar cloud folder.",
         "androidDescription": "Choose a cloud-drive folder from the system file picker.",
-        "dialogTitle": "Choose a NoteGen folder in your cloud drive",
+        "dialogTitle": "Choose a Almanac Notes folder in your cloud drive",
         "workspaceWarningTitle": "Workspace not migrated",
         "workspaceWarningDescription": "The current workspace is outside the selected cloud folder. Switch directly or copy your existing notes before switching.",
         "switchWorkspace": "Switch workspace directly",
@@ -2668,7 +2668,7 @@
         "migrateWorkspace": "Copy notes and switch workspace",
         "migrating": "Migrating",
         "migrationConfirmTitle": "Move the workspace to the cloud drive",
-        "migrationConfirm": "NoteGen will copy the entire current workspace into the selected cloud folder and then switch to it. The original workspace remains as a safety copy; your cloud provider may read the copied note content. Continue?",
+        "migrationConfirm": "Almanac Notes will copy the entire current workspace into the selected cloud folder and then switch to it. The original workspace remains as a safety copy; your cloud provider may read the copied note content. Continue?",
         "migrationSuccess": "Workspace migration completed",
         "migrationSuccessDescription": "Copied {count} files. Future Markdown changes will sync directly through the cloud drive.",
         "migrationFailed": "Workspace migration failed",
@@ -2687,13 +2687,13 @@
       },
       "oneDrive": {
         "title": "OneDrive",
-        "description": "Sign in with Microsoft to sync NoteGen data through OneDrive.",
+        "description": "Sign in with Microsoft to sync Almanac Notes data through OneDrive.",
         "clientId": "Microsoft app Client ID",
         "clientIdPlaceholder": "Enter the Client ID",
         "clientIdDescription": "Test builds require the Client ID of an app registered in Microsoft Entra. Release builds will include the NoteGen app ID.",
         "folder": "Sync location",
         "folderValue": "OneDrive / Apps / NoteGen",
-        "folderDescription": "NoteGen stores and syncs data only in its own app folder.",
+        "folderDescription": "Almanac Notes stores and syncs data only in its own app folder.",
         "notConnected": "OneDrive is not connected",
         "connected": "Connected",
         "disconnected": "Not connected",
@@ -2705,8 +2705,8 @@
         "connectFailed": "Could not connect OneDrive",
         "disconnectFailed": "Could not disconnect OneDrive",
         "signInTitle": "Complete Microsoft sign-in",
-        "signInDescription": "Enter code {code} on the page that opened, then return to NoteGen.",
-        "signInDescriptionCopied": "Code {code} was copied. Paste it on the page that opened, then return to NoteGen.",
+        "signInDescription": "Enter code {code} on the page that opened, then return to Almanac Notes.",
+        "signInDescriptionCopied": "Code {code} was copied. Paste it on the page that opened, then return to Almanac Notes.",
         "openSignIn": "Open sign-in page",
         "workspace": "Local mirror workspace",
         "workspaceDescription": "OneDrive keeps an offline copy in a dedicated local workspace and syncs it with the cloud.",
@@ -2724,7 +2724,7 @@
         "workspaceTransferFailed": "{count} files failed to sync. Please try again.",
         "workspaceSetupFailed": "Could not create or switch to the OneDrive workspace",
         "statusDisconnectedTitle": "OneDrive is not connected",
-        "statusDisconnectedDescription": "Select Connect and NoteGen will guide you through Microsoft sign-in.",
+        "statusDisconnectedDescription": "Select Connect and Almanac Notes will guide you through Microsoft sign-in.",
         "statusRequestingCodeTitle": "Getting a sign-in code",
         "statusRequestingCodeDescription": "Requesting a one-time sign-in code from Microsoft.",
         "statusCodeCopiedTitle": "Sign-in code copied",
@@ -2734,9 +2734,9 @@
         "statusOpeningBrowserTitle": "Opening the browser",
         "statusOpeningBrowserDescription": "Taking you to the Microsoft sign-in page.",
         "statusWaitingAuthorizationTitle": "Waiting for Microsoft authorization",
-        "statusWaitingAuthorizationDescription": "Complete sign-in in the browser, then return to NoteGen.",
+        "statusWaitingAuthorizationDescription": "Complete sign-in in the browser, then return to Almanac Notes.",
         "statusConnectingTitle": "Connecting to OneDrive",
-        "statusConnectingDescription": "You are back in NoteGen. Waiting for Microsoft to confirm the connection.",
+        "statusConnectingDescription": "You are back in Almanac Notes. Waiting for Microsoft to confirm the connection.",
         "statusPreparingWorkspaceTitle": "Preparing the OneDrive workspace",
         "statusPreparingWorkspaceDescription": "The account is connected. Creating, switching, and syncing the local mirror workspace.",
         "statusPreparingRemoteWorkspaceDescription": "Creating a new local mirror workspace and downloading existing content from OneDrive.",
@@ -2755,7 +2755,7 @@
         "migrateWorkspace": "Copy notes and switch workspace",
         "migrating": "Migrating",
         "migrationConfirmTitle": "Move the workspace to iCloud",
-        "migrationConfirm": "NoteGen will copy the entire current workspace into the selected iCloud folder and then switch to it. The original workspace remains as a safety copy; iCloud may read the copied note content. Continue?",
+        "migrationConfirm": "Almanac Notes will copy the entire current workspace into the selected iCloud folder and then switch to it. The original workspace remains as a safety copy; iCloud may read the copied note content. Continue?",
         "migrationSuccess": "Workspace migration completed",
         "migrationSuccessDescription": "Copied {count} files. Future Markdown changes will sync through iCloud.",
         "migrationFailed": "Workspace migration failed",
@@ -3159,7 +3159,7 @@
         "nativeBackupFileJournalPending": "Some native file writes are still pending. Recovery paused; close active editors and continue recovery.",
         "nativeBootstrapIncomplete": "{path} snapshot objects could not be applied locally. Initialization remains incomplete and failed items will be retried.",
         "nativeLocalSnapshotPending": "The server accepted local changes, but the local copy still needs restoration. It will be retried; retain existing backups.",
-        "nativeTagIdentityMissing": "This tag has no local sync identity. Restart NoteGen to finish local data initialization, then retry.",
+        "nativeTagIdentityMissing": "This tag has no local sync identity. Restart Almanac Notes to finish local data initialization, then retry.",
         "nativeStorageBudgetExceeded": "The account or instance storage budget is exhausted. Ask the administrator to adjust it or clear retained data before retrying."
       }
     },
@@ -3412,15 +3412,15 @@
     },
     "backup": {
       "title": "Backup & Restore",
-      "desc": "Create and restore NoteGen data snapshots.",
+      "desc": "Create and restore Almanac Notes data snapshots.",
       "howItWorks": {
         "title": "This is backup, not multi-device sync",
-        "description": "NoteGen creates standalone .ngbackup snapshots in the folder you choose without changing your existing sync setup."
+        "description": "Almanac Notes creates standalone .ngbackup snapshots in the folder you choose without changing your existing sync setup."
       },
       "directory": {
         "title": "Backup folder",
-        "description": "Choose a dedicated folder for NoteGen backups. Do not select the current notes workspace.",
-        "dialogTitle": "Choose NoteGen backup folder",
+        "description": "Choose a dedicated folder for Almanac Notes backups. Do not select the current notes workspace.",
+        "dialogTitle": "Choose Almanac Notes backup folder",
         "empty": "No backup folder selected",
         "choose": "Choose folder",
         "open": "Open",
@@ -3429,9 +3429,9 @@
       },
       "automation": {
         "title": "Automatic backup",
-        "description": "NoteGen checks when it starts and keeps the latest snapshots automatically.",
+        "description": "Almanac Notes checks when it starts and keeps the latest snapshots automatically.",
         "schedule": "Frequency",
-        "scheduleDescription": "Automatic backups run only while NoteGen is open.",
+        "scheduleDescription": "Automatic backups run only while Almanac Notes is open.",
         "disabled": "Off",
         "daily": "Daily",
         "weekly": "Weekly",
@@ -3448,22 +3448,22 @@
       },
       "history": {
         "title": "Backup history",
-        "description": "Only NoteGen backups in the selected folder are shown and their format is validated when read.",
+        "description": "Only Almanac Notes backups in the selected folder are shown and their format is validated when read.",
         "empty": "No backups in this folder yet",
         "invalid": "Invalid backup file",
         "workspace": "Workspace included"
       },
       "restore": {
         "import": "Choose another backup",
-        "chooseTitle": "Choose a NoteGen backup",
+        "chooseTitle": "Choose a Almanac Notes backup",
         "action": "Restore",
         "confirmTitle": "Restore this backup?",
-        "confirmDescription": "NoteGen first backs up your current data to the selected folder, then restores app data and restarts. The archived workspace is restored to a separate recovery folder and never overwrites your current workspace files.",
+        "confirmDescription": "Almanac Notes first backs up your current data to the selected folder, then restores app data and restarts. The archived workspace is restored to a separate recovery folder and never overwrites your current workspace files.",
         "cancel": "Cancel",
         "confirm": "Back up current data and restore",
         "restoring": "Restoring",
         "failedTitle": "Restore failed",
-        "failedDescription": "Could not restore the backup: {error}. NoteGen will restart and reopen the database.",
+        "failedDescription": "Could not restore the backup: {error}. Almanac Notes will restart and reopen the database.",
         "safetyBackupError": "The pre-restore safety backup failed, so restore was cancelled"
       },
       "createSuccess": "Backup created",
@@ -3603,7 +3603,7 @@
       "exportButton": "Export"
     },
     "localMcp": {
-      "title": "Let AI access NoteGen",
+      "title": "Let AI access Almanac Notes",
       "desc": "Allow other local AI tools to access the current workspace through MCP.",
       "serviceTitle": "NoteGen MCP Server",
       "running": "Running",
@@ -3814,7 +3814,7 @@
       "voiceDesc": "Specify the voice type for audio models, such as 'alloy', 'echo', 'fable', etc.",
       "voicePlaceholder": "Enter voice type, e.g.: alloy",
       "defaultModels": {
-        "title": "NoteGen",
+        "title": "Almanac Notes",
         "desc": "NoteGen provides free AI model services supported by SiliconFlow and AIHubMix, enabling basic functionality without configuration.",
         "chatModel": {
           "name": "NoteGen AI",
@@ -3920,7 +3920,7 @@
         "statusNotRepo": "No local git history yet",
         "confirmTitle": "Enable version control?",
         "confirmDescNew": "This creates .git and a default .gitignore at the workspace root, tracking only .md, .canvas and .base. Nothing is uploaded anywhere.",
-        "confirmDescExisting": "This workspace already has a .git (e.g. created by another tool). Enabling will reuse it as-is — NoteGen won't recreate it or change its existing settings.",
+        "confirmDescExisting": "This workspace already has a .git (e.g. created by another tool). Enabling will reuse it as-is — Almanac Notes won't recreate it or change its existing settings.",
         "toastEnabled": "Version control enabled",
         "toastEnabledDesc": "A local git history was created for this workspace",
         "toastReused": "Reused the workspace's existing local git history",
@@ -3931,7 +3931,7 @@
     },
     "shortcuts": {
       "title": "Shortcuts",
-      "desc": "Here, you can configure shortcuts to help you use NoteGen more efficiently.",
+      "desc": "Here, you can configure shortcuts to help you use Almanac Notes more efficiently.",
       "resetDefaults": "Reset",
       "clear": "Clear",
       "noShortcut": "No Shortcut",
@@ -3943,7 +3943,7 @@
       "conflictGlobal": "Conflicts with global shortcut \"{name}\"",
       "globalShortcuts": {
         "title": "Global shortcuts",
-        "desc": "These shortcuts are registered by the system and can work when NoteGen is not focused."
+        "desc": "These shortcuts are registered by the system and can work when Almanac Notes is not focused."
       },
       "workbenchKeys": {
         "title": "Workbench single-key shortcuts",
@@ -4251,7 +4251,7 @@
           "fileTransfer": "On the reader: Home > File Transfer > Join a Network, on the same Wi-Fi as this Mac.",
           "address": "Enter the IP shown on the reader as the reader address above, and turn on the LAN service.",
           "detect": "Click Detect reader (it only connects when you click).",
-          "install": "Click Install: writes the plugin (with the server URL and token), the optional Chinese font, and adds the NoteGen OPDS catalog on the reader.",
+          "install": "Click Install: writes the plugin (with the server URL and token), the optional Chinese font, and adds the Almanac Notes OPDS catalog on the reader.",
           "readerSettings": "On the reader: Settings > Connectivity > Plugins: Enabled, Settings > Display > Sleep Screen: Custom, then restart once."
         },
         "detect": {
@@ -4463,12 +4463,12 @@
       "countdown": "{seconds}s"
     },
     "capture": {
-      "desktopScreenshotPermissionDenied": "Allow NoteGen in macOS System Settings → Privacy & Security → Screen & System Audio Recording (Screen Recording on some versions), then reopen the app.",
+      "desktopScreenshotPermissionDenied": "Allow Almanac Notes in macOS System Settings → Privacy & Security → Screen & System Audio Recording (Screen Recording on some versions), then reopen the app.",
       "desktopScreenshotUnsupportedSession": "Direct area capture is unavailable in this desktop session. On Wayland, use the system screenshot tool and import the image. Desktop capture is available on X11.",
       "desktopScreenshotCaptureFailed": "Desktop capture failed. Check screen permissions and connected displays, then try again.",
       "desktopScreenshotSaveRetry": "The screenshot is still stored locally. Click Retry to save it.",
       "desktopScreenshotSavedTitle": "Screenshot saved",
-      "desktopScreenshotSavedBody": "Saved to NoteGen. You can view it later in your records.",
+      "desktopScreenshotSavedBody": "Saved to Almanac Notes. You can view it later in your records.",
       "saveTarget": "Save to",
       "saveTargetPlaceholder": "Select tag",
       "saved": "Record saved",
@@ -5390,7 +5390,7 @@
             "single": "Single choice",
             "multiple": "Multiple choice",
             "done": "Done selecting",
-            "notificationTitle": "NoteGen is waiting for your answer",
+            "notificationTitle": "Almanac Notes is waiting for your answer",
             "notificationBody": "The Agent needs more information from you."
           },
           "confirmation": {
@@ -5404,7 +5404,7 @@
             "cancelled": "Cancelled",
             "session": "Allow for this session",
             "notification": {
-              "title": "NoteGen needs your approval",
+              "title": "Almanac Notes needs your approval",
               "description": "The Agent is waiting for you to approve an action."
             },
             "fallback": {
@@ -6398,12 +6398,12 @@
       },
       "onboarding": {
         "title": "Onboarding",
-        "subtitle": "Walk through these three tasks to learn the core NoteGen flow.",
+        "subtitle": "Walk through these three tasks to learn the core Almanac Notes flow.",
         "start": "Start",
         "viewHint": "Show hint",
         "continue": "Continue",
         "completed": "Done",
-        "allDone": "All getting-started tasks are complete. You've already tried the core NoteGen workflow.",
+        "allDone": "All getting-started tasks are complete. You've already tried the core Almanac Notes workflow.",
         "stepLabel": "Task ({current}/{total})",
         "stepCompletedLabel": "Completed Task ({current}/{total})",
         "afterOrganizeDialog": {
@@ -8608,7 +8608,7 @@
     "title": "Job title",
     "step": "Step {number}",
     "stepTitle": "Step title",
-    "agent": "Partner",
+    "agent": "Crew member",
     "instructions": "Instructions",
     "criterion": "Acceptance criterion",
     "removeStep": "Remove step {number}",
@@ -8616,12 +8616,12 @@
     "addStep": "Add step",
     "close": "Close",
     "saveProposal": "Save proposal",
-    "loadingAgents": "Loading partners…",
-    "noAgents": "Enable a partner in Settings → General → Partners to create a job card.",
-    "agentsFailed": "Could not load partners.",
+    "loadingAgents": "Loading crew members…",
+    "noAgents": "Enable a crew member in Settings → General → The Crew to create a job card.",
+    "agentsFailed": "Could not load crew members.",
     "modelRequired": "Configure an AI model to draft steps, or add steps manually.",
     "generateFailed": "Could not draft valid steps. Try again or add steps manually.",
-    "invalidPlan": "Give every step a title, partner, instructions and acceptance criterion.",
+    "invalidPlan": "Give every step a title, crew member, instructions and acceptance criterion.",
     "invalidDependencies": "Check the prerequisites for circular or missing dependencies.",
     "saveFailed": "Could not save the job card.",
     "card": "Job card",
@@ -8637,7 +8637,7 @@
     "reviewDrafts": "Review drafts",
     "start": "Start work",
     "parallel": "Up to {count} steps at once",
-    "agentDisabled": "This partner is disabled or unavailable. Enable it before rerunning the step.",
+    "agentDisabled": "This crew member is disabled or unavailable. Enable it before rerunning the step.",
     "interrupted": "The previous run was interrupted. Rerun it or cancel the step.",
     "status": {
       "waiting": "Waiting for a slot",
@@ -8791,10 +8791,10 @@
       "plan": "Plan"
     },
     "agents": {
-      "title": "Partners",
+      "title": "The Crew",
       "running": "{count} running",
-      "add": "Add partner",
-      "addFirst": "Add your first partner"
+      "add": "Add crew member",
+      "addFirst": "Add your first crew member"
     },
     "vault": "MyVault",
     "collapseSection": "Collapse {title}",
@@ -8809,7 +8809,7 @@
     },
     "rules": {
       "label": "Rule",
-      "text": "Partners can only propose changes. Review them in the Workbench before they are written."
+      "text": "The Crew can only propose changes. Review them in the Workbench before they are written."
     },
     "tabs": {
       "collectGroup": "Source pages",

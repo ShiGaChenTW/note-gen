@@ -78,7 +78,7 @@ export function AppLockGate({ children }: { children: ReactNode }) {
       {isTauri() && getCurrentWindow().label === 'main' && <CloseBehaviorGuard />}
       <Card className="my-auto w-full max-w-md overflow-hidden border-foreground/10 shadow-xl shadow-foreground/5">
         <CardHeader className="items-center gap-4 px-8 pt-10 text-center sm:px-10 sm:pt-12">
-          <Image src="/app-icon.png" alt="NoteGen" width={64} height={64}
+          <Image src="/app-icon.png" alt="Almanac Notes" width={64} height={64}
             className="size-16 rounded-2xl shadow-sm dark:invert" priority />
           <div className="flex flex-col items-center gap-2">
             <CardTitle className="text-2xl tracking-tight">{t('title')}</CardTitle>

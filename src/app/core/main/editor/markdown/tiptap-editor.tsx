@@ -3489,7 +3489,7 @@ export function TipTapEditor({
             if (message.type === 'presence.cleared') {
               setSelfHostedCollaborators(current => current.filter(item => item.deviceId !== deviceId))
             } else if (message.type === 'presence.updated') {
-              const label = typeof message.label === 'string' ? message.label : 'NoteGen'
+              const label = typeof message.label === 'string' ? message.label : 'Almanac Notes'
               const anchor = typeof message.anchor === 'number' ? message.anchor : 0
               const head = typeof message.head === 'number' ? message.head : anchor
               const coordinateSpace = message.coordinateSpace === 'markdown'
