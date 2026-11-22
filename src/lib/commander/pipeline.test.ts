@@ -103,6 +103,20 @@ describe('analyzeSource', () => {
     expect(ask.calls.filter(prompt => prompt.includes('--- 資料源 ---')).at(-1)).not.toContain('初步判斷')
   })
 
+  it('ALMNC-57.3 會議逐字稿：Scott 選「處理」後，指揮官的提示要求抽出決議、待辦與負責人，待辦變成提案', async () => {
+    const content = '產品週會\n\n日期：2026-11-20\n與會者：Scott Chen、Amy Lin\n\nScott Chen：報價單誰寄？\n\nAmy Lin：我週五前寄。'
+    const sources = memorySources([src('m1', { sourceType: 'external', kind: 'meeting', content, origin: 'weekly.vtt' })])
+    sources.rows.set('m1', submitSource(sources.rows.get('m1')!, T0))
+    const ask = fakeModel({ fragments: [{ kind: 'task', title: 'Amy：週五前寄報價單', people: ['Amy Lin'], date: '2026-11-27' }] })
+    const { deps: d, batches } = deps(sources, ask)
+    expect((await analyzeSource('m1', d)).status).toBe('analyzed')
+    const prompt = ask.calls.find(call => call.includes('--- 資料源 ---'))!
+    expect(prompt).toContain('會議的逐字稿')
+    expect(prompt).toContain('負責人')
+    expect(prompt).toContain('Amy Lin：我週五前寄。')
+    expect(batches[0].proposals[0]).toMatchObject({ kind: 'task', sourceIds: ['m1'] })
+  })
+
   it('happy path：自己寫的文字 → 分析中 → 提案送工作台 → 已分析', async () => {
     const sources = memorySources([src('s1', { content: '明天要寄報價單' })])
     const { deps: d, batches, activity } = deps(sources, fakeModel({ fragments: [{ kind: 'task', title: '寄報價單', date: '2026-11-22' }] }))

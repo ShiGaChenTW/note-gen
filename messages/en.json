@@ -8988,9 +8988,13 @@
       "skipped": "{count} already imported, skipped.",
       "truncated": "{total} emails in total; only the newest {limit} were imported.",
       "failed": "Import failed",
-      "dropUnsupported": "You can drop .eml or .mbox files here",
+      "dropUnsupported": "You can drop .eml, .mbox, .vtt or .srt files here",
       "subscribeRss": "Subscribe to RSS",
-      "rssSubscribed": "Subscribed to “{name}”; {count, plural, one {# post} other {# posts}} added and waiting for your decision"
+      "rssSubscribed": "Subscribed to “{name}”; {count, plural, one {# post} other {# posts}} added and waiting for your decision",
+      "meeting": "Meeting transcript",
+      "meetingAdded": "Imported {count, plural, one {# meeting} other {# meetings}}; waiting for your decision",
+      "meetingEmpty": "No transcript found in the file (.vtt, .srt, .txt and .docx are supported)",
+      "meetingFailed": "{count, plural, one {# file} other {# files}} could not be read: {names}."
     }
   },
   "cleanup": {

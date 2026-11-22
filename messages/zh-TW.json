@@ -9053,9 +9053,13 @@
       "skipped": "{count} 則之前匯入過，已略過。",
       "truncated": "共 {total} 封，只收最新的 {limit} 封。",
       "failed": "匯入失敗",
-      "dropUnsupported": "可以拖進 .eml、.mbox 檔",
+      "dropUnsupported": "可以拖進 .eml、.mbox、.vtt、.srt 檔",
       "subscribeRss": "訂閱 RSS",
-      "rssSubscribed": "已訂閱「{name}」，收進 {count} 篇，等你決定要不要處理"
+      "rssSubscribed": "已訂閱「{name}」，收進 {count} 篇，等你決定要不要處理",
+      "meeting": "會議逐字稿",
+      "meetingAdded": "已匯入 {count} 場會議，等你決定要不要處理",
+      "meetingEmpty": "檔案裡沒有讀得出來的逐字稿（支援 .vtt、.srt、.txt、.docx）",
+      "meetingFailed": "{count} 個檔案讀不出來：{names}。"
     }
   },
   "cleanup": {

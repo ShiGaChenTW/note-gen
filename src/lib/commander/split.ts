@@ -63,6 +63,15 @@ export function buildFragmentPrompt(text: string, context: SplitContext): string
     '只輸出 JSON，不要任何說明或程式碼框：',
     '{"fragments":[{"kind":"event|task|note|reject","noteType":"knowledge|record|project","title":"","body":"","date":"","time":"","people":[],"project":"","domainHint":"","tags":[],"reason":""}]}',
   ]
+  // Fork（almanac ALMNC-57.3）：會議逐字稿要抽出決議、待辦與負責人。
+  if (context.sourceKind === 'meeting') {
+    lines.push(
+      '這則資料源是一場會議的逐字稿（每段開頭是「講者：」）。不要逐句摘要，請抽出：',
+      '- 決議：會議裡決定的事，每一項拆成一個 note（noteType 用 record，date 填會議日期，people 填參與決定的人）。',
+      '- 待辦：要做的事，每一項拆成一個 task；title 用動詞開頭並寫出負責人（例如「Amy：週五前寄報價單給客戶」），people 填負責人，有期限才填 date；沒有說誰負責就在 title 寫「（未指定負責人）」。',
+      '- 寒暄、閒聊、重複的討論過程用 reject，或省略。',
+    )
+  }
   if (context.hint?.trim()) {
     lines.push(`Scott 看過初步判斷「${context.hint.trim()}」，選了照建議處理：拆片段時以這個建議為準，除非內容明顯不符。`)
   }

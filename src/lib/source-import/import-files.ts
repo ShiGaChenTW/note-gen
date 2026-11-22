@@ -1,6 +1,8 @@
 // Fork（almanac ALMNC-57）：資料入口的薄薄一層 I/O——選檔（plugin-dialog）、讀檔（plugin-fs）、寫進資料源表。
 // 解析都在純函式（email.ts／meeting.ts），這裡只負責把檔案讀進來、把結果交給 addImportedSources。
 import { emailSourceInputs, MBOX_LIMIT, parseEmailFiles } from './email'
+import { meetingSourceInput, parseMeetingFile, type MeetingTranscript } from './meeting'
+import { decodeTextFile } from './text'
 
 export interface ImportFile {
   name: string
@@ -23,7 +25,14 @@ export interface ImportSummary {
   dropped: number
   /** 第一則新增的清單列 id（src:<id>），給工作台選取。 */
   firstRowId?: string
+  /** 讀不出來的檔案（檔名與原因）。 */
+  failures?: Array<{ name: string, reason: string }>
 }
+
+/** 會議逐字稿可以匯入的副檔名。 */
+export const MEETING_EXTENSIONS = ['vtt', 'srt', 'txt', 'docx'] as const
+/** 可以拖進新增資料源對話框的副檔名（.txt／.docx 只從「會議逐字稿」選檔，避免和一般文字檔混淆）。 */
+export const DROP_EXTENSIONS = { email: ['eml', 'mbox'], meeting: ['vtt', 'srt'] } as const
 
 export function fileNameOf(path: string): string {
   return path.split(/[\\/]/).pop() || path
@@ -75,5 +84,42 @@ export async function importEmailFiles(files: readonly ImportFile[]): Promise<Im
     duplicates: batch.duplicates,
     dropped: batch.dropped,
     ...(result.added[0] ? { firstRowId: `src:${result.added[0].id}` } : {}),
+  }
+}
+
+/** 讀一個逐字稿檔：.docx 交給 document-parser（需要本機路徑），其他依 BOM／UTF-8／Big5 解碼。 */
+async function readMeeting(file: ImportFile): Promise<MeetingTranscript> {
+  const options = file.modifiedAt ? { fallbackDate: file.modifiedAt } : {}
+  if (extensionOf(file.name) === 'docx') {
+    if (!file.path) throw new Error('docx needs a local path')
+    const { parseLocalDocument } = await import('@/lib/document-parser')
+    return parseMeetingFile(file.name, (await parseLocalDocument(file.path, file.name)).markdown, { ...options, markdown: true })
+  }
+  return parseMeetingFile(file.name, decodeTextFile(file.bytes), options)
+}
+
+/** 會議逐字稿匯入（ALMNC-57.3）：一個檔案一場會議一則資料源；同一個檔案再匯入會跳過。 */
+export async function importMeetingFiles(files: readonly ImportFile[]): Promise<ImportSummary> {
+  const inputs: Array<ReturnType<typeof meetingSourceInput>> = []
+  const failures: Array<{ name: string, reason: string }> = []
+  for (const file of files) {
+    try {
+      const meeting = await readMeeting(file)
+      if (!meeting.paragraphs.length) failures.push({ name: file.name, reason: 'empty' })
+      else inputs.push(meetingSourceInput(meeting))
+    } catch (error) {
+      failures.push({ name: file.name, reason: error instanceof Error ? error.message : String(error) })
+    }
+  }
+  const { addImportedSources } = await import('@/lib/workbench/actions')
+  const result = inputs.length ? await addImportedSources(inputs) : { added: [], skipped: 0 }
+  return {
+    total: inputs.length,
+    added: result.added.length,
+    skipped: result.skipped,
+    duplicates: 0,
+    dropped: 0,
+    ...(result.added[0] ? { firstRowId: `src:${result.added[0].id}` } : {}),
+    ...(failures.length ? { failures } : {}),
   }
 }

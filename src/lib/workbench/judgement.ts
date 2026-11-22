@@ -94,9 +94,9 @@ export function judgementHint(judgement: Pick<SourceJudgement, 'status' | 'type'
 /** 能拿文字判斷的資料源：圖片、錄音、檔案要先轉文字，那是指揮官的事，初步判斷不做。 */
 export function isJudgeable(source: Pick<Source, 'kind' | 'content'>): boolean {
   if (/^data:/i.test(source.content.trim())) return false
-  // Fork（almanac ALMNC-57）：RSS 文章用存下來的標題與摘要判斷（不另外抓網頁）。
+  // Fork（almanac ALMNC-57）：RSS 文章用存下來的標題與摘要判斷（不另外抓網頁）；會議逐字稿本身就是文字。
   return source.kind === 'text' || source.kind === 'link' || source.kind === 'email' || source.kind === 'transcript' || source.kind === 'prompt'
-    || source.kind === 'rss'
+    || source.kind === 'rss' || source.kind === 'meeting'
 }
 
 export interface JudgeModel {
