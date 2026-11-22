@@ -5,6 +5,7 @@
 import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from 'react'
 import { ArrowDownToLine, CalendarCheck, CalendarDays, ChevronDown, FilePen, ListChecks, Library, MessageSquarePlus, MessagesSquare, MoreHorizontal, Plus, Search } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { Kbd } from '@/components/ui/kbd'
 import { Count } from '@/components/v3/count'
 import { SectionLabel } from '@/components/v3/section-label'
 import { ensureDefaultRoster, listAgentSettings } from '@/db/agents'
@@ -48,11 +49,10 @@ const OPEN: Record<NavKey, () => void> = {
   plan: () => useWeekOverlay.getState().show(),
 }
 
-const ROW = 'flex h-7 w-full items-center gap-2 px-2 text-left text-[13px] text-muted-ink'
+const ROW = 'flex h-7 w-full items-center gap-2 px-2 text-left text-ui-compact text-muted-ink'
 const VAULT_LABEL = 'flex h-6 w-full items-center gap-1.5 px-2 text-ui-compact text-muted-ink'
-const LABEL = 'flex h-6 w-full items-center gap-1.5 px-2 text-[11px] font-semibold tracking-[0.08em] text-faint'
 /** 「我的筆記」標題鈕：底色交給整列外層（V03），這裡只管字色與 focus 外框。 */
-const VAULT_TITLE = 'cursor-pointer rounded-md outline-none transition-colors duration-100 ease-out hover:text-ink focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/60'
+const VAULT_TITLE = 'cursor-pointer rounded-(--r-kbd) outline-none transition-colors duration-100 ease-out hover:text-ink focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/60'
 
 function useAgentRows(): AgentRow[] {
   const [agents, setAgents] = useState<AgentSettings[]>([])
@@ -97,13 +97,13 @@ function SectionHeader({ section, collapsed, title, aside, actions, onTitleClick
     // ALMNC-56.2 V03：滑過與選中的底色放在整列外層，右側動作區透明，整列一起變色、沒有缺口。
     // A08：箭頭鈕的讀屏名稱是「收合／展開＋標題」，和開清單的標題鈕分得出來。
     return (
-      <div className={cn('group/section relative flex items-center rounded-md transition-colors duration-100 ease-out hover:bg-hover', titleActive && 'bg-active')}>
+      <div className={cn('group/section relative flex items-center rounded-(--r-kbd) transition-colors duration-100 ease-out hover:bg-hover', titleActive && 'bg-active')}>
         <button
           type="button"
           aria-expanded={!collapsed}
           aria-label={t(collapsed ? 'expandSection' : 'collapseSection', { title })}
           onClick={() => void toggle(section)}
-          className="grid size-6 shrink-0 cursor-pointer place-items-center rounded-md text-muted-ink outline-none hover:text-ink focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/60"
+          className="grid size-6 shrink-0 cursor-pointer place-items-center rounded-(--r-kbd) text-muted-ink outline-none hover:text-ink focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/60"
         >
           <ChevronDown className={cn('size-3 shrink-0 transition-transform duration-100', collapsed && '-rotate-90')} aria-hidden />
         </button>
@@ -111,7 +111,7 @@ function SectionHeader({ section, collapsed, title, aside, actions, onTitleClick
           type="button"
           onClick={onTitleClick}
           aria-current={titleActive ? 'page' : undefined}
-          className={cn(VAULT_LABEL, VAULT_TITLE, 'min-w-0 flex-1 pl-0.5', titleActive && 'font-[560] text-ink')}
+          className={cn(VAULT_LABEL, VAULT_TITLE, 'min-w-0 flex-1 pl-0.5', titleActive && 'font-medium text-ink')}
         >
           <SectionLabel as="span" className="min-w-0 text-inherit"><span className="block truncate">{title}</span></SectionLabel>
           {aside}
@@ -130,12 +130,11 @@ function SectionHeader({ section, collapsed, title, aside, actions, onTitleClick
         type="button"
         aria-expanded={!collapsed}
         onClick={() => void toggle(section)}
-        className={cn(section === 'vault' ? VAULT_LABEL : LABEL, 'min-w-0 flex-1 rounded-md outline-none hover:text-ink focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/60')}
+        className={cn(VAULT_LABEL, 'min-w-0 flex-1 rounded-(--r-kbd) outline-none hover:text-ink focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/60')}
       >
         <ChevronDown className={cn('size-3 shrink-0 transition-transform duration-100', collapsed && '-rotate-90')} aria-hidden />
-        {section === 'vault'
-          ? <SectionLabel as="span" className="min-w-0 text-inherit"><span className="block truncate">{title}</span></SectionLabel>
-          : <span className="truncate">{title}</span>}
+        {/* Fork（almanac ALMNC-56.6，V11）：所有區段標題（代理人、我的筆記）都用 SectionLabel。 */}
+        <SectionLabel as="span" className="min-w-0 text-inherit"><span className="block truncate">{title}</span></SectionLabel>
         {aside}
       </button>
       {actions && (
@@ -163,7 +162,7 @@ function AgentSection() {
           ? <span className="ml-auto font-normal tracking-normal text-muted-ink">{t('agents.running', { count: running })}</span>
           : undefined}
         actions={!collapsed && (
-          <button type="button" title={t('agents.add')} aria-label={t('agents.add')} onClick={openAgentSettings} className="grid size-6 cursor-pointer place-items-center rounded text-faint outline-none hover:bg-hover hover:text-ink focus-visible:ring-1 focus-visible:ring-ink/60">
+          <button type="button" title={t('agents.add')} aria-label={t('agents.add')} onClick={openAgentSettings} className="grid size-6 cursor-pointer place-items-center rounded-(--r) text-faint outline-none hover:bg-hover hover:text-ink focus-visible:ring-1 focus-visible:ring-ink/60">
             <Plus className="size-3.5" aria-hidden />
           </button>
         )}
@@ -175,7 +174,7 @@ function AgentSection() {
               <button type="button" onClick={openAgentSettings} className={cn(ROW, SIDEBAR_ROW, 'group/row')}>
                 <span aria-hidden className={cn('size-1.5 shrink-0 rounded-full bg-faint', row.running && 'bg-ink')} />
                 <span className={cn('min-w-0 truncate', !row.enabled && 'opacity-60')}>{row.name}</span>
-                <span className="ml-auto shrink-0 text-[11px] text-faint group-hover/row:hidden">{agentRoleLabel(row, tRoles)}</span>
+                <span className="ml-auto shrink-0 text-ui-numeric text-faint group-hover/row:hidden">{agentRoleLabel(row, tRoles)}</span>
                 <MoreHorizontal className="ml-auto hidden size-3.5 shrink-0 text-faint group-hover/row:inline-flex" aria-hidden />
               </button>
             </li>
@@ -246,14 +245,14 @@ function QuickActions() {
               aria-keyshortcuts={item.shortcut}
               onClick={item.onClick}
               data-quick={item.key}
-              className="flex min-h-[34px] w-full cursor-pointer flex-col items-center justify-center gap-0.5 rounded-md border border-line bg-bg py-1 text-muted-ink outline-none transition-colors duration-100 hover:border-ink/30 hover:text-ink focus-visible:ring-1 focus-visible:ring-ink/60"
+              className="flex min-h-[34px] w-full cursor-pointer flex-col items-center justify-center gap-0.5 rounded-(--r-kbd) border border-line bg-bg py-1 text-muted-ink outline-none transition-colors duration-100 hover:border-ink/30 hover:text-ink focus-visible:ring-1 focus-visible:ring-ink/60"
             >
               <Icon className="size-[17px] shrink-0" aria-hidden />
-              <span className="text-[11px] leading-3 md:hidden" aria-hidden>{item.short}</span>
+              <span className="text-ui-numeric leading-3 md:hidden" aria-hidden>{item.short}</span>
             </button>
             <span
               role="tooltip"
-              className="pointer-events-none absolute top-[calc(100%+6px)] left-1/2 z-30 -translate-x-1/2 rounded-md bg-invert px-2 py-1 text-xs whitespace-nowrap text-invert-ink opacity-0 transition-opacity delay-200 duration-100 group-hover/quick:opacity-100 group-focus-within/quick:opacity-100 max-md:hidden"
+              className="pointer-events-none absolute top-[calc(100%+6px)] left-1/2 z-30 -translate-x-1/2 rounded-(--r-kbd) bg-invert px-2 py-1 text-xs whitespace-nowrap text-invert-ink opacity-0 transition-opacity delay-200 duration-100 group-hover/quick:opacity-100 group-focus-within/quick:opacity-100 max-md:hidden"
             >
               {tip}
             </span>
@@ -281,17 +280,17 @@ export function SidebarV3() {
   return (
     <div className="flex h-full w-full flex-col gap-3 border-r border-line-soft bg-panel px-2 py-3" data-left-sidebar data-sidebar-v3>
       <div className="flex shrink-0 items-baseline gap-2 px-2 py-1">
-        <b className="text-sm font-[620] tracking-[-0.01em]">NoteGen</b>
+        <b className="text-sm font-semibold">NoteGen</b>
         <span className="text-ui-compact text-faint" aria-hidden>v3</span>
       </div>
       <button
         type="button"
         onClick={() => useAnywhereStore.getState().setPaletteOpen(true)}
-        className="mx-0.5 flex h-[30px] shrink-0 cursor-pointer items-center gap-2 rounded-md border border-line-soft bg-bg pr-1.5 pl-2 text-left text-ui-compact text-muted-ink outline-none hover:border-line focus-visible:ring-1 focus-visible:ring-ink/60"
+        className="mx-0.5 flex h-[30px] shrink-0 cursor-pointer items-center gap-2 rounded-(--r-kbd) border border-line-soft bg-bg pr-1.5 pl-2 text-left text-ui-compact text-muted-ink outline-none hover:border-line focus-visible:ring-1 focus-visible:ring-ink/60"
       >
         <Search className="size-4 shrink-0" aria-hidden />
         <span className="flex-1 truncate">{t('search')}</span>
-        <kbd className="inline-flex h-[18px] items-center rounded bg-sunken px-[5px] text-xs text-muted-ink">⌘K</kbd>
+        <Kbd>⌘K</Kbd>
       </button>
       <QuickActions />
       <nav aria-label={t('navLabel')} className="flex shrink-0 flex-col gap-px">
@@ -316,7 +315,7 @@ export function SidebarV3() {
       <div className="mx-2 h-px shrink-0 bg-line-soft" role="separator" />
       <VaultSection />
       <div className="mt-auto shrink-0 border-t border-line-soft px-2 pt-2.5 pb-0.5 text-xs leading-[18px] text-muted-ink">
-        <div className="pb-1 text-[11px] font-semibold tracking-[0.08em] text-faint">{t('rules.label')}</div>
+        <SectionLabel className="pb-1">{t('rules.label')}</SectionLabel>
         {t('rules.text')}
       </div>
     </div>

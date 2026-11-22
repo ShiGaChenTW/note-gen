@@ -132,6 +132,12 @@ describe('P03: virtualised list with incremental updates', () => {
 
   afterEach(() => act(() => useVaultIndexStore.getState().reset('')))
 
+  it('V12: an empty folder shows the shared V3 empty state', () => {
+    act(() => useVaultIndexStore.getState().replaceAll(new Map()))
+    const empty = container.querySelector('[data-note-list] [data-slot="empty-state"]')
+    expect(empty?.textContent).toBe(zhTW.sidebarV3.noteList.empty)
+  })
+
   it('renders only the rows near the viewport, not the whole vault', () => {
     const notes = new Map(Array.from({ length: 400 }, (_, index) => [`n${index}.md`, note(`n${index}.md`, 1000 + index)] as const))
     act(() => useVaultIndexStore.getState().replaceAll(notes))

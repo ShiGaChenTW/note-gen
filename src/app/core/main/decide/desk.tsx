@@ -12,7 +12,11 @@ import { runDeskOp, saveDeskNote, startProcessConversation } from '@/lib/workben
 import { deskHeading, initialDraft, STRUCTURAL_OPS, type DeskMaterial, type StructuralOp } from '@/lib/workbench/desk'
 import { cn } from '@/lib/utils'
 import useWorkbenchStore from '@/stores/workbench'
-import { BTN, BTN_PRIMARY, Kbd } from './review-card'
+import { Button } from '@/components/ui/button'
+import { V3_BUTTON_SHAPE } from '@/components/v3/button-shape'
+import { SectionLabel } from '@/components/v3/section-label'
+import { PageHeader } from '../page-ui'
+import { BTN, ButtonKbd } from './review-card'
 
 type OpKind = typeof STRUCTURAL_OPS[number]
 
@@ -52,30 +56,30 @@ function MaterialOps({ material, materials, domains, onDone }: {
       <div className="flex flex-wrap gap-1">
         {STRUCTURAL_OPS.map(kind => (
           <button key={kind} type="button" data-desk-op={kind} aria-pressed={op === kind} onClick={() => { setOp(op === kind ? null : kind); setValue('') }}
-            className={cn('h-6 cursor-pointer rounded-md px-1.5 text-xs text-muted-ink hover:bg-hover hover:text-ink', op === kind && 'bg-active text-ink')}>
+            className={cn('h-6 cursor-pointer rounded-(--r-kbd) px-1.5 text-xs text-muted-ink hover:bg-hover hover:text-ink', op === kind && 'bg-active text-ink')}>
             {t(`ops.${kind}`)}
           </button>
         ))}
         <span title={t('ops.mergeLater')}>
-          <button type="button" disabled data-desk-op="merge" className="h-6 cursor-not-allowed rounded-md px-1.5 text-xs text-faint">{t('ops.merge')}</button>
+          <button type="button" disabled data-desk-op="merge" className="h-6 cursor-not-allowed rounded-(--r-kbd) px-1.5 text-xs text-faint">{t('ops.merge')}</button>
         </span>
       </div>
       {op && (
         <form className="mt-1.5 flex items-center gap-1.5" onSubmit={event => { event.preventDefault(); void apply() }}>
           {op === 'link' ? (
-            <select value={value} onChange={event => setValue(event.target.value)} aria-label={t('ops.link')} className="h-7 min-w-0 flex-1 rounded-md border border-line bg-bg px-1.5 text-xs">
+            <select value={value} onChange={event => setValue(event.target.value)} aria-label={t('ops.link')} className="h-7 min-w-0 flex-1 rounded-(--r-kbd) border border-line bg-bg px-1.5 text-xs">
               <option value="" />
               {linkTargets.map(entry => <option key={entry.id} value={entry.path}>{entry.title}</option>)}
             </select>
           ) : op === 'assignDomain' ? (
-            <select value={value} onChange={event => setValue(event.target.value)} aria-label={t('ops.assignDomain')} className="h-7 min-w-0 flex-1 rounded-md border border-line bg-bg px-1.5 text-xs">
+            <select value={value} onChange={event => setValue(event.target.value)} aria-label={t('ops.assignDomain')} className="h-7 min-w-0 flex-1 rounded-(--r-kbd) border border-line bg-bg px-1.5 text-xs">
               <option value="">{domains.length ? '' : t('ops.noDomains')}</option>
               {domains.map(domain => <option key={domain.id} value={domain.id}>{domain.name}</option>)}
             </select>
           ) : (
             <input value={value} onChange={event => setValue(event.target.value)} autoFocus aria-label={t(`ops.${op}`)}
               placeholder={op === 'move' ? t('ops.movePlaceholder') : t('ops.tagPlaceholder')}
-              className="h-7 min-w-0 flex-1 rounded-md border border-line bg-bg px-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-ink/60" />
+              className="h-7 min-w-0 flex-1 rounded-(--r-kbd) border border-line bg-bg px-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-ink/60" />
           )}
           <button type="submit" disabled={!value.trim()} className={cn(BTN, 'h-7 px-2 text-xs')}>{t('ops.apply')}</button>
         </form>
@@ -122,7 +126,7 @@ function HelpColumn({ commanderName }: { commanderName: string }) {
 
   return (
     <div className="flex min-h-0 flex-col" data-testid="desk-help">
-      <h2 className="mb-1 px-5 pt-5 text-xs font-semibold text-faint">{t('help')}</h2>
+      <SectionLabel as="h2" className="mb-1 px-5 pt-5">{t('help')}</SectionLabel>
       <p className="px-5 pb-2 text-xs text-muted-ink">
         {failed ? t('helpFailed') : conversationId === undefined ? t('helpStarting') : t('helpHint', { name: commanderName })}
       </p>
@@ -183,21 +187,26 @@ export function Desk({ commanderName }: { commanderName: string }) {
 
   return (
     <section className="flex min-h-0 flex-1 flex-col bg-card" aria-label={t('title')} data-testid="desk">
-      <header className="flex h-14 shrink-0 items-center gap-4 border-b border-line-soft px-6">
-        <button type="button" onClick={closeDesk} className="flex h-[30px] cursor-pointer items-center gap-2 rounded-md px-2.5 text-ui-compact text-muted-ink hover:bg-hover hover:text-ink" data-testid="desk-back">
-          <ArrowLeft className="size-4" aria-hidden />{t('back')}<Kbd>Esc</Kbd>
-        </button>
-        <h1 className="min-w-0 truncate text-[15px] font-[650] text-ink">
-          {t('title')} <span className="font-medium text-muted-ink">· {heading.more ? t('heading', { first: heading.first, count: heading.more }) : heading.first}</span>
-        </h1>
-        <div className="ml-auto"><button type="button" className={cn(BTN, BTN_PRIMARY)} disabled={saving || !draft.body.trim()} onClick={() => void save()} data-testid="desk-save">{t('save')}</button></div>
-      </header>
+      {/* Fork（almanac ALMNC-56.6，V05）：檯面頁首也用共用的 PageHeader（標題 20px／600，和其他 V3 頁同高），動作用 Button。 */}
+      <PageHeader
+        title={t('title')}
+        subtitle={<span className="block truncate">{heading.more ? t('heading', { first: heading.first, count: heading.more }) : heading.first}</span>}
+        onBack={closeDesk}
+        actions={(
+          <>
+            <Button variant="ghost" onClick={closeDesk} data-testid="desk-back" className={cn(V3_BUTTON_SHAPE, 'gap-2 text-ui-compact font-normal text-muted-ink hover:bg-hover hover:text-ink')}>
+              <ArrowLeft className="size-4" aria-hidden />{t('back')}<ButtonKbd>Esc</ButtonKbd>
+            </Button>
+            <Button className={cn(V3_BUTTON_SHAPE, 'px-3')} disabled={saving || !draft.body.trim()} onClick={() => void save()} data-testid="desk-save">{t('save')}</Button>
+          </>
+        )}
+      />
       <div className="grid min-h-0 flex-1 grid-cols-1 overflow-y-auto lg:grid-cols-[1fr_1.25fr_1fr] lg:overflow-hidden">
         <div className="min-h-0 border-r border-line-soft px-5 py-5 lg:overflow-y-auto" data-testid="desk-materials">
-          <h2 className="mb-3 text-xs font-semibold text-faint">{t('materials', { count: materials.length })}</h2>
+          <SectionLabel as="h2" className="mb-3">{t('materials', { count: materials.length })}</SectionLabel>
           {materials.length === 0 && <p className="text-ui-compact text-muted-ink">{t('empty')}</p>}
           {materials.map(material => (
-            <div key={material.id} className="mb-3 rounded-lg border border-line-soft px-3 py-2.5" data-testid="desk-material">
+            <div key={material.id} className="mb-3 rounded-(--r) border border-line-soft px-3 py-2.5" data-testid="desk-material">
               <b className="block text-ui-compact font-semibold text-ink">{material.title}</b>
               <p className="mt-1 line-clamp-4 text-xs leading-5 whitespace-pre-wrap text-muted-ink">{material.text}</p>
               <MaterialOps material={material} materials={materials} domains={domains} onDone={(path, op, value) => onOpDone(material, path, op, value)} />
@@ -205,7 +214,7 @@ export function Desk({ commanderName }: { commanderName: string }) {
           ))}
         </div>
         <div className="flex min-h-0 flex-col border-r border-line-soft px-6 py-5 lg:overflow-y-auto" data-testid="desk-draft">
-          <h2 className="mb-3 text-xs font-semibold text-faint">{t('draft')}</h2>
+          <SectionLabel as="h2" className="mb-3">{t('draft')}</SectionLabel>
           <input value={draft.title} onChange={event => setDraft({ ...draft, title: event.target.value })} placeholder={t('draftTitle')} aria-label={t('draftTitle')}
             className="w-full bg-transparent text-lg font-semibold text-ink outline-none placeholder:text-faint" />
           <textarea value={draft.body} onChange={event => setDraft({ ...draft, body: event.target.value })} placeholder={t('draftBody')} aria-label={t('draft')}

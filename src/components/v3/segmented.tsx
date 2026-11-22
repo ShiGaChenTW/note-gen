@@ -74,13 +74,14 @@ export function Segmented<Value extends string>({
           <button
             key={item.value}
             type="button"
+            data-value={item.value}
             role={tabs ? 'tab' : undefined}
             aria-selected={tabs ? selected : undefined}
             aria-pressed={tabs ? undefined : selected}
             disabled={disabled || item.disabled}
             tabIndex={item === tabStop ? 0 : -1}
             className={cn(
-              'inline-flex min-w-0 cursor-pointer items-center justify-center gap-1.5 rounded-[4px] border border-transparent px-2 text-xs leading-none whitespace-nowrap outline-none transition-colors focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50',
+              'inline-flex min-w-0 cursor-pointer items-center justify-center gap-1.5 rounded-(--r-kbd) border border-transparent px-2 text-xs leading-none whitespace-nowrap outline-none transition-colors focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50',
               selected ? 'border-line bg-bg font-semibold text-ink' : 'text-muted-ink enabled:hover:text-ink',
             )}
             onClick={event => {

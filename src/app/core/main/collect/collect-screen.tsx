@@ -10,6 +10,8 @@ import { toast } from 'sonner'
 import { CalendarClock, Check, FileText, ImagePlus, Inbox as InboxIcon, Link2, ListTodo, Paperclip, Pencil, Type, X } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import { Kbd } from '@/components/ui/kbd'
+import { KBD_ON_BUTTON, V3_BUTTON_SHAPE } from '@/components/v3/button-shape'
 import { extractSchedule } from '@/lib/collect/split'
 import type { CollectInput, ProposalKind } from '@/lib/collect/types'
 import { useUiV3 } from '@/lib/fork-ui'
@@ -96,7 +98,7 @@ function ProposalCard({ item, proposal }: { item: CaptureItem, proposal: Capture
     await useArticleStore.getState().setActiveFilePath(proposal.result.path)
   }
 
-  const base = 'flex w-full flex-col gap-1 rounded-md border px-2.5 py-2 transition-colors duration-100 sm:w-[196px]'
+  const base = 'flex w-full flex-col gap-1 rounded-(--r-kbd) border px-2.5 py-2 transition-colors duration-100 sm:w-[196px]'
 
   if (proposal.status === 'ok') {
     return (
@@ -106,7 +108,7 @@ function ProposalCard({ item, proposal }: { item: CaptureItem, proposal: Capture
         <div className="flex items-center justify-between gap-1 text-ui-compact text-muted-foreground">
           <span className="flex min-w-0 items-center gap-1"><Check className="size-3 shrink-0" aria-hidden /><span className="truncate">{t('status.ok')}</span></span>
           <span className="flex shrink-0 gap-0.5">
-            <button type="button" onClick={() => void openTarget()} className="cursor-pointer rounded-(--r) px-1.5 py-0.5 text-brand outline-none hover:bg-hover focus-visible:ring-1 focus-visible:ring-ring/65">{t('open')}</button>
+            <button type="button" onClick={() => void openTarget()} className="cursor-pointer rounded-(--r) px-1.5 py-0.5 text-ink outline-none hover:bg-hover focus-visible:ring-1 focus-visible:ring-ring/65">{t('open')}</button>
             {proposal.result?.record && (
               <button type="button" onClick={() => void undo(item.id, proposal.id).then(ok => { if (!ok) toast.error(t('undoFailed')) })} className="cursor-pointer rounded-(--r) px-1.5 py-0.5 outline-none hover:bg-hover focus-visible:ring-1 focus-visible:ring-ring/65">{t('undo')}</button>
             )}
@@ -135,13 +137,13 @@ function ProposalCard({ item, proposal }: { item: CaptureItem, proposal: Capture
           value={proposal.title}
           onChange={event => edit(item.id, proposal.id, { title: event.target.value })}
           aria-label={t('fieldTitle')}
-          className="h-7 w-full rounded border border-line bg-bg px-1.5 text-ui-compact outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          className="h-7 w-full rounded-(--r) border border-line bg-bg px-1.5 text-ui-compact outline-none focus-visible:ring-1 focus-visible:ring-ring"
         />
         {proposal.kind !== 'note' && (
           <div className="flex flex-col gap-1">
-            <input type="date" value={proposal.due} onChange={event => edit(item.id, proposal.id, { due: event.target.value })} aria-label={t('fieldDate')} className="h-7 w-full rounded border border-line bg-bg px-1 text-ui-compact outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+            <input type="date" value={proposal.due} onChange={event => edit(item.id, proposal.id, { due: event.target.value })} aria-label={t('fieldDate')} className="h-7 w-full rounded-(--r) border border-line bg-bg px-1 text-ui-compact outline-none focus-visible:ring-1 focus-visible:ring-ring" />
             {proposal.kind === 'event' && (
-              <input type="time" value={proposal.time} onChange={event => edit(item.id, proposal.id, { time: event.target.value })} aria-label={t('fieldTime')} className="h-7 w-full rounded border border-line bg-bg px-1 text-ui-compact outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+              <input type="time" value={proposal.time} onChange={event => edit(item.id, proposal.id, { time: event.target.value })} aria-label={t('fieldTime')} className="h-7 w-full rounded-(--r) border border-line bg-bg px-1 text-ui-compact outline-none focus-visible:ring-1 focus-visible:ring-ring" />
             )}
           </div>
         )}
@@ -198,7 +200,7 @@ function Entry({ item }: { item: CaptureItem }) {
       </div>
       <div className="min-w-0">
         <div className="flex items-start gap-2">
-          <h3 className="min-w-0 flex-1 text-ui-emphasis leading-[22px] font-semibold tracking-[-0.006em] break-words">{itemTitle(item.input) || t('input.text')}</h3>
+          <h3 className="min-w-0 flex-1 text-ui-emphasis leading-[22px] font-semibold break-words">{itemTitle(item.input) || t('input.text')}</h3>
           <button type="button" onClick={() => remove(item.id)} aria-label={t('remove')} title={t('remove')} className="cursor-pointer rounded-(--r) p-1 text-muted-ink outline-none hover:bg-hover hover:text-ink focus-visible:ring-1 focus-visible:ring-ring/65"><X className="size-3.5" aria-hidden /></button>
         </div>
         {excerpt && excerpt !== itemTitle(item.input) && <p className="mt-0.5 line-clamp-2 whitespace-pre-line text-sm leading-[1.75] break-words text-muted-foreground">{excerpt}</p>}
@@ -324,7 +326,7 @@ export function CollectScreen() {
               onDragOver={event => { event.preventDefault(); setDragging(true) }}
               onDragLeave={() => setDragging(false)}
               onDrop={onDrop}
-              className={cn('rounded-lg border border-line bg-bg transition-[border-color,box-shadow] duration-100 focus-within:border-faint', dragging && 'shadow-[inset_0_0_0_3px_color-mix(in_srgb,var(--ink)_7%,transparent)]')}
+              className={cn('rounded-(--r) border border-line bg-bg transition-[border-color,box-shadow] duration-100 focus-within:border-faint', dragging && 'shadow-[inset_0_0_0_3px_color-mix(in_srgb,var(--ink)_7%,transparent)]')}
             >
               <textarea
                 ref={areaRef}
@@ -342,7 +344,7 @@ export function CollectScreen() {
                 rows={3}
                 className="block min-h-[76px] w-full resize-none border-0 bg-transparent px-4 pt-3.5 pb-1.5 text-ui-emphasis leading-[26px] outline-none placeholder:text-faint focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring"
               />
-              <div className={cn('mx-3 mb-3 flex min-h-9 items-center gap-2 rounded-md px-2.5 py-1.5 text-ui-compact', detected ? 'bg-hover' : 'border border-dashed border-line text-muted-ink')} aria-live="polite">
+              <div className={cn('mx-3 mb-3 flex min-h-9 items-center gap-2 rounded-(--r-kbd) px-2.5 py-1.5 text-ui-compact', detected ? 'bg-hover' : 'border border-dashed border-line text-muted-ink')} aria-live="polite">
                 {detected ? (
                   <><span className="flex items-center gap-1.5 font-medium">{(() => { const D = detected === 'link' ? Link2 : detected === 'task' ? ListTodo : Type; return <D className="size-3.5" aria-hidden /> })()}{t(`detect.${detected}.name`)}</span><span className="text-muted-foreground">{t(`detect.${detected}.hint`)}</span></>
                 ) : t('detect.empty')}
@@ -352,7 +354,7 @@ export function CollectScreen() {
                   <Button variant="ghost" size="sm" className="h-7 gap-1.5 rounded-(--r) px-2 text-muted-foreground" onClick={() => fileRef.current?.click()}><ImagePlus className="size-3.5" aria-hidden />{t('pickFile')}</Button>
                   <input ref={fileRef} type="file" multiple className="sr-only" tabIndex={-1} aria-hidden onChange={event => { void addFiles([...(event.target.files ?? [])]); event.target.value = '' }} />
                 </div>
-                <Button size="sm" className="h-8 gap-2 rounded-(--r) bg-invert px-3 text-invert-ink hover:bg-invert/85" onClick={send} disabled={!trimmed}>{t('send')}<kbd className="rounded bg-invert-ink/15 px-1 text-xs">⌘↵</kbd></Button>
+                <Button className={cn(V3_BUTTON_SHAPE, 'gap-2 px-3')} onClick={send} disabled={!trimmed}>{t('send')}<Kbd className={KBD_ON_BUTTON}>⌘↵</Kbd></Button>
               </div>
             </div>
 

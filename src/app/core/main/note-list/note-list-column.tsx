@@ -10,6 +10,7 @@ import { memo, useEffect, useMemo, useRef, useState } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { FileText, X } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
+import { EmptyState } from '@/components/v3/empty-state'
 import { useUiV3 } from '@/lib/fork-ui'
 import { crossedBelow, folderName, nextNoteList, relativeTimeLabel, useNoteListStore, type NoteListItem, type NoteListSnapshot } from '@/lib/note-list/note-list'
 import { noteMarksWorkspaceKey } from '@/lib/note-toolbar/note-marks'
@@ -101,16 +102,14 @@ function NoteList() {
           aria-keyshortcuts="Escape"
           onClick={() => useNoteListStore.getState().hide()}
           data-testid="note-list-close"
-          className="grid size-6 shrink-0 cursor-pointer place-items-center rounded text-faint outline-none hover:bg-hover hover:text-ink focus-visible:ring-1 focus-visible:ring-ink/60"
+          className="grid size-6 shrink-0 cursor-pointer place-items-center rounded-(--r) text-faint outline-none hover:bg-hover hover:text-ink focus-visible:ring-1 focus-visible:ring-ink/60"
         >
           <X className="size-4" aria-hidden />
         </button>
       </header>
       {items.length === 0 ? (
-        <div className="flex flex-1 flex-col items-center gap-2 px-4 py-8 text-center text-sm text-muted-ink">
-          <FileText className="size-5 opacity-60" aria-hidden />
-          <p>{t('noteList.empty')}</p>
-        </div>
+        // Fork（almanac ALMNC-56.6，V12）：共用的 V3 空狀態（靠左、13 px）。
+        <EmptyState icon={FileText} text={t('noteList.empty')} className="px-4 py-4" />
       ) : (
         <VirtualNoteRows items={items} activeFilePath={activeFilePath} now={now} locale={locale} vaultName={vaultName} />
       )}

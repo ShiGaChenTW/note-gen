@@ -9,6 +9,10 @@
 import { useEffect, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { Clock } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { V3_BUTTON_SHAPE } from '@/components/v3/button-shape'
+import { Count } from '@/components/v3/count'
+import { Segmented } from '@/components/v3/segmented'
 import { useAgentTaskStore } from '@/lib/agent-tasks'
 import { useUiV3 } from '@/lib/fork-ui'
 import { refreshJournal } from '@/lib/decide/actions'
@@ -27,7 +31,7 @@ import useInboxStore from '@/stores/inbox'
 import useProposalTrailStore from '@/stores/proposals'
 import useSettingStore from '@/stores/setting'
 import useWorkbenchStore, { type WorkbenchTab } from '@/stores/workbench'
-import { PageSurface } from '../page-ui'
+import { PageHeader, PageSurface } from '../page-ui'
 import { Desk } from './desk'
 import { currentOf, ReviewTab } from './review-tab'
 import { materialOf, SourcesTab } from './sources-tab'
@@ -51,34 +55,22 @@ function focusItem(selector: string) {
   item?.scrollIntoView?.({ block: 'nearest' })
 }
 
+/** Fork（almanac ALMNC-56.6，V05）：審核｜資料源頁籤改用共用的 Segmented＋Count（和收集、知識頁同一套）。 */
 function Tabs({ review, sources }: { review: number, sources: number }) {
   const t = useTranslations('workbench.tabs')
   const tab = useWorkbenchStore(state => state.tab)
   const setTab = useWorkbenchStore(state => state.setTab)
   const items: Array<{ value: WorkbenchTab, count: number }> = [{ value: 'review', count: review }, { value: 'sources', count: sources }]
   return (
-    <div role="tablist" aria-label={t('label')} className="flex h-full gap-[22px]" data-testid="workbench-tabs">
-      {items.map(item => {
-        const selected = tab === item.value
-        return (
-          <button
-            key={item.value}
-            type="button"
-            role="tab"
-            aria-selected={selected}
-            data-tab={item.value}
-            onClick={() => setTab(item.value)}
-            className={cn(
-              'relative flex h-full cursor-pointer items-center gap-[7px] text-sm font-semibold text-muted-ink outline-none hover:text-ink focus-visible:ring-1 focus-visible:ring-ink/60',
-              'after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:rounded-sm after:bg-transparent',
-              selected && 'text-ink after:bg-ink',
-            )}
-          >
-            {t(item.value)}
-            <span className="rounded-full bg-hover px-1.5 text-xs leading-[18px] font-medium tabular-nums">{item.count}</span>
-          </button>
-        )
-      })}
+    <div data-testid="workbench-tabs">
+      <Segmented
+        kind="tabs"
+        className="[&>button]:text-ui-compact"
+        label={t('label')}
+        value={tab}
+        onChange={setTab}
+        items={items.map(item => ({ value: item.value, label: <>{t(item.value)}<Count value={item.count} /></> }))}
+      />
     </div>
   )
 }
@@ -198,25 +190,27 @@ function WorkbenchPage() {
     <PageSurface label={t('title')} onDismiss={dismiss}>
       {deskOpen ? <Desk commanderName={commanderName} /> : (
         <>
-          <header className="flex h-[52px] shrink-0 items-center border-b border-line-soft pr-6 pl-7" data-testid="workbench-header">
-            <h1 className="sr-only">{t('title')}</h1>
-            <Tabs review={data.visible.length} sources={waitingCount(rows)} />
-            <div className="ml-auto flex items-center gap-1.5">
-              {tab === 'review' && (
-                <button
-                  type="button"
+          {/* Fork（almanac ALMNC-56.6，V05）：共用的 PageHeader——標題看得見、高度和其他 V3 頁一致；動作用 Button。 */}
+          <div className="contents" data-testid="workbench-header">
+            <PageHeader
+              title={t('title')}
+              onBack={hide}
+              tabs={<Tabs review={data.visible.length} sources={waitingCount(rows)} />}
+              actions={tab === 'review' && (
+                <Button
+                  variant="ghost"
                   aria-label={t('putAside.entry')}
                   aria-pressed={showAside}
                   data-testid="aside-entry"
                   onClick={() => setShowAside(!showAside)}
-                  className={cn('flex h-[30px] cursor-pointer items-center gap-2 rounded-md px-2.5 text-ui-compact text-muted-ink outline-none hover:bg-hover hover:text-ink focus-visible:ring-1 focus-visible:ring-ink/60', showAside && 'bg-active text-ink')}
+                  className={cn(V3_BUTTON_SHAPE, 'gap-2 text-ui-compact font-normal text-muted-ink hover:bg-hover hover:text-ink', showAside && 'bg-active text-ink')}
                 >
                   <Clock className="size-4" aria-hidden />
                   <span>{t('putAside.count', { count: data.aside.length })}</span>
-                </button>
+                </Button>
               )}
-            </div>
-          </header>
+            />
+          </div>
           {tab === 'review'
             ? <ReviewTab data={data} actions={actions} commanderName={commanderName} />
             : <SourcesTab rows={rows} commanderName={commanderName} onDesk={onDesk} />}

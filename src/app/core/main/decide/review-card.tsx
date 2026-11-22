@@ -8,18 +8,22 @@ import { Clock, MessagesSquare } from 'lucide-react'
 import { openConversation } from '@/lib/proposals/actions'
 import { ACTION_KEY, actionForKey, actionLabelKey, ageParts, type CardAction, type WorkbenchCard } from '@/lib/workbench/cards'
 import { reminderPresets } from '@/lib/workbench/put-aside'
+import { Kbd } from '@/components/ui/kbd'
+import { KBD_ON_BUTTON, V3_BUTTON_SHAPE } from '@/components/v3/button-shape'
 import { cn } from '@/lib/utils'
 import useChatStore from '@/stores/chat'
 import { JobReviewPreview } from '../jobs/job-result'
 import { DiffBlock, destinationText } from './decide-parts'
 import { DiscussForm } from './discuss-form'
 
-export const BTN = 'inline-flex h-[30px] cursor-pointer items-center gap-2 rounded-lg border border-line bg-bg px-3 text-ui-compact font-medium text-ink outline-none transition-colors duration-100 hover:bg-hover focus-visible:ring-1 focus-visible:ring-ink/60 disabled:cursor-not-allowed disabled:opacity-50'
-export const BTN_PRIMARY = 'border-invert bg-invert text-invert-ink hover:bg-invert/90'
-export const KBD = 'inline-flex h-[18px] items-center rounded border border-current/25 px-1 font-mono text-[11px] leading-none opacity-70'
+// Fork（almanac ALMNC-56.6，V06）：工作台的按鈕和對話、收集同一個高度與圓角（V3_BUTTON_SHAPE）；
+// 主要按鈕的顏色和 Button 的 default 一樣（V3 的 bg-primary 就是反白），不再手動加 bg-invert。
+export const BTN = `${V3_BUTTON_SHAPE} inline-flex cursor-pointer items-center gap-2 border border-line bg-bg px-3 text-ui-compact font-medium text-ink outline-none transition-colors duration-100 hover:bg-hover focus-visible:ring-1 focus-visible:ring-ink/60 disabled:cursor-not-allowed disabled:opacity-50`
+export const BTN_PRIMARY = 'border-transparent bg-primary text-primary-foreground hover:bg-primary/80'
 
-export function Kbd({ children }: { children: ReactNode }) {
-  return <kbd className={KBD}>{children}</kbd>
+/** 按鈕裡的鍵盤提示（V15）：共用的 components/ui/kbd.tsx，顏色跟著按鈕。 */
+export function ButtonKbd({ children }: { children: ReactNode }) {
+  return <Kbd className={KBD_ON_BUTTON}>{children}</Kbd>
 }
 
 function Age({ card, now }: { card: WorkbenchCard, now: number }) {
@@ -27,7 +31,7 @@ function Age({ card, now }: { card: WorkbenchCard, now: number }) {
   const { unit, value } = ageParts(card.at, now)
   const age = t(`age.${unit}`, { count: value })
   return (
-    <span className={cn('min-w-11 text-right font-mono text-[11.5px] text-faint tabular-nums', card.overdue && 'text-danger')}>
+    <span className={cn('min-w-11 text-right font-mono text-ui-numeric text-faint tabular-nums', card.overdue && 'text-danger')}>
       {card.overdue ? t('overdue', { age }) : age}
     </span>
   )
@@ -41,7 +45,7 @@ function ConversationLink({ id }: { id: number }) {
       type="button"
       data-testid="card-source-conversation"
       onClick={() => void openConversation(id)}
-      className="mt-3 flex max-w-full cursor-pointer items-center gap-1.5 rounded-md text-left text-ui-compact text-muted-ink outline-none hover:text-ink focus-visible:ring-1 focus-visible:ring-ring/65"
+      className="mt-3 flex max-w-full cursor-pointer items-center gap-1.5 rounded-(--r-kbd) text-left text-ui-compact text-muted-ink outline-none hover:text-ink focus-visible:ring-1 focus-visible:ring-ring/65"
     >
       <MessagesSquare aria-hidden className="size-3.5 shrink-0" />
       <span className="truncate">{t('discuss.fromConversation', { title: title || t('discuss.conversation') })}</span>
@@ -68,7 +72,7 @@ function CardBody({ card }: { card: WorkbenchCard }) {
   }
   if (card.kind === 'source') {
     return (
-      <section className="rounded-lg border border-line-soft px-3 py-2 text-ui-compact" data-testid="card-judgement">
+      <section className="rounded-(--r) border border-line-soft px-3 py-2 text-ui-compact" data-testid="card-judgement">
         <div className="flex items-baseline gap-2"><b className="font-semibold text-ink">{t('sources.judgement')}</b><span className="text-xs text-faint">{t('sources.judgementHint')}</span></div>
         <p className="mt-1 text-muted-ink">{t('sources.noJudgement')}</p>
       </section>
@@ -93,7 +97,7 @@ function CardBody({ card }: { card: WorkbenchCard }) {
     return (
       <div className="flex flex-wrap gap-1.5">
         {card.notePaths.map(path => (
-          <span key={path} title={path} className="rounded-md bg-hover px-2 py-0.5 text-xs text-muted-ink">{(path.split('/').pop() ?? path).replace(/\.md$/i, '')}</span>
+          <span key={path} title={path} className="rounded-(--r-kbd) bg-hover px-2 py-0.5 text-xs text-muted-ink">{(path.split('/').pop() ?? path).replace(/\.md$/i, '')}</span>
         ))}
       </div>
     )
@@ -112,7 +116,7 @@ function PutAsideChooser({ onPick, onCancel, now }: { onPick: (until?: string) =
       <button type="button" className={BTN} onClick={() => onPick(presets.nextWeek)}>{t('nextWeek')}</button>
       <label className="ml-1 flex items-center gap-1.5 text-muted-ink">
         <span>{t('pickDate')}</span>
-        <input type="date" value={date} min={presets.tomorrow} onChange={event => setDate(event.target.value)} className="h-[30px] rounded-lg border border-line bg-bg px-2 text-ink" />
+        <input type="date" value={date} min={presets.tomorrow} onChange={event => setDate(event.target.value)} className={cn(V3_BUTTON_SHAPE, 'border border-line bg-bg px-2 text-ink')} />
       </label>
       <button type="button" className={cn(BTN, BTN_PRIMARY)} disabled={!date} onClick={() => onPick(date)}>{t('set')}</button>
       <button type="button" className="ml-auto cursor-pointer text-muted-ink hover:text-ink" onClick={onCancel}>{t('back')}</button>
@@ -127,7 +131,7 @@ function ScheduleForm({ onSubmit, onCancel }: { onSubmit: (time: string) => void
     <form className="mt-3 flex items-center gap-1.5 text-ui-compact" data-testid="schedule-form" onSubmit={event => { event.preventDefault(); if (time) onSubmit(time) }}>
       <label className="flex items-center gap-1.5 text-muted-ink">
         <span>{t('time')}</span>
-        <input type="time" value={time} onChange={event => setTime(event.target.value)} className="h-[30px] rounded-lg border border-line bg-bg px-2 text-ink" />
+        <input type="time" value={time} onChange={event => setTime(event.target.value)} className={cn(V3_BUTTON_SHAPE, 'border border-line bg-bg px-2 text-ink')} />
       </label>
       <button type="submit" className={cn(BTN, BTN_PRIMARY)}>{t('confirm')}</button>
       <button type="button" className={BTN} onClick={onCancel}>{t('cancel')}</button>
@@ -166,7 +170,7 @@ export function ReviewCard({ card, now, current, expanded, leaving, onDesk, comm
       data-card={card.key}
       data-group={card.group}
       className={cn(
-        'relative rounded-xl transition-[background,box-shadow,margin,opacity,transform] duration-200 ease-out',
+        'relative rounded-(--r-md) transition-[background,box-shadow,margin,opacity,transform] duration-200 ease-out',
         expanded && 'my-2 -mx-1.5 bg-bg shadow-float',
         leaving && 'translate-x-3 opacity-0',
       )}
@@ -180,27 +184,27 @@ export function ReviewCard({ card, now, current, expanded, leaving, onDesk, comm
         aria-current={current ? 'true' : undefined}
         onClick={onToggle}
         className={cn(
-          'grid w-full cursor-default grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3.5 rounded-xl px-3 py-2.5 text-left outline-none focus-visible:ring-1 focus-visible:ring-ink/60',
+          'grid w-full cursor-default grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3.5 rounded-(--r-md) px-3 py-2.5 text-left outline-none focus-visible:ring-1 focus-visible:ring-ink/60',
           !expanded && 'hover:bg-hover',
           !expanded && (current || onDesk) && 'bg-active',
           expanded && 'px-4 pt-4 pb-1.5',
         )}
       >
         <span className="flex flex-col justify-center gap-px self-stretch border-r border-line pr-3 pl-1 whitespace-nowrap" data-testid="card-kind">
-          <b className={cn('text-xs font-[650] tracking-[0.06em] text-muted-ink', (current || expanded) && 'text-ink')}>{t(`labels.${card.label}`)}</b>
-          <i className="text-[11.5px] tracking-[0.02em] text-faint not-italic">{t(`verbs.${card.verb}`)}</i>
+          <b className={cn('text-xs font-semibold text-muted-ink', (current || expanded) && 'text-ink')}>{t(`labels.${card.label}`)}</b>
+          <i className="text-ui-numeric text-faint not-italic">{t(`verbs.${card.verb}`)}</i>
         </span>
         <span className="min-w-0">
-          <span className={cn('block truncate text-sm font-medium text-ink', (current || onDesk) && 'font-semibold', expanded && 'text-base font-semibold tracking-[-0.01em] whitespace-normal')} data-testid="card-title">
+          <span className={cn('block truncate text-sm font-medium text-ink', (current || onDesk) && 'font-semibold', expanded && 'text-base font-semibold whitespace-normal')} data-testid="card-title">
             {card.title}
             {card.more ? <span className="ml-1.5 font-normal text-muted-ink">{t('more', { count: card.more })}</span> : null}
           </span>
-          <span className="mt-px block truncate text-[12.5px] text-muted-ink" title={card.path}>
+          <span className="mt-px block truncate text-xs text-muted-ink" title={card.path}>
             {[card.path, card.kind === 'confirm' ? t('confirmSince', { date: card.summary }) : card.summary].filter(Boolean).join(' · ')}
           </span>
         </span>
         <span className="flex items-center gap-3">
-          {onDesk && <span className="rounded bg-hover px-1.5 text-[11px] text-ink" data-testid="card-on-desk">{t('onDesk')}</span>}
+          {onDesk && <span className="rounded-(--r) bg-hover px-1.5 text-ui-numeric text-ink" data-testid="card-on-desk">{t('onDesk')}</span>}
           {card.by && <span className="text-xs text-muted-ink">{card.by}</span>}
           <Age card={card} now={now} />
         </span>
@@ -212,7 +216,7 @@ export function ReviewCard({ card, now, current, expanded, leaving, onDesk, comm
           <div className="mt-4 flex flex-wrap items-center gap-2">
             {card.choices?.map((choice, index) => (
               <button key={choice} type="button" className={cn(BTN, index === 0 && BTN_PRIMARY)} onClick={() => onAction('pick', { note: choice })}>
-                {choice}<Kbd>{index + 1}</Kbd>
+                {choice}<ButtonKbd>{index + 1}</ButtonKbd>
               </button>
             ))}
             {card.actions.filter(action => action !== 'pick').map((action, index) => (
@@ -225,7 +229,7 @@ export function ReviewCard({ card, now, current, expanded, leaving, onDesk, comm
                 onClick={() => click(action)}
               >
                 {t(`actions.${actionLabelKey(card, action)}`, { name: commanderName })}
-                {ACTION_KEY[action] && actionForKey(card, ACTION_KEY[action]!) === action && <Kbd>{ACTION_KEY[action]}</Kbd>}
+                {ACTION_KEY[action] && actionForKey(card, ACTION_KEY[action]!) === action && <ButtonKbd>{ACTION_KEY[action]}</ButtonKbd>}
               </button>
             ))}
             <span className="flex-1" />
@@ -234,9 +238,9 @@ export function ReviewCard({ card, now, current, expanded, leaving, onDesk, comm
               data-action="putAside"
               aria-expanded={mode === 'aside'}
               onClick={() => setMode(value => value === 'aside' ? 'none' : 'aside')}
-              className="flex cursor-pointer items-center gap-1.5 rounded-md px-1.5 text-ui-compact text-muted-ink outline-none hover:text-ink focus-visible:ring-1 focus-visible:ring-ink/60"
+              className="flex cursor-pointer items-center gap-1.5 rounded-(--r-kbd) px-1.5 text-ui-compact text-muted-ink outline-none hover:text-ink focus-visible:ring-1 focus-visible:ring-ink/60"
             >
-              <Clock className="size-3.5" aria-hidden />{t('putAside.button')}<Kbd>S</Kbd>
+              <Clock className="size-3.5" aria-hidden />{t('putAside.button')}<ButtonKbd>S</ButtonKbd>
             </button>
           </div>
           {mode === 'discuss' && (

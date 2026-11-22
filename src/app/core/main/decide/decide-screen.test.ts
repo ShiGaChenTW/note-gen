@@ -173,6 +173,27 @@ describe('審核 tab', () => {
     expect($('[data-testid="review-keys"]')!.textContent).toContain('復原')
   })
 
+  // ALMNC-56.6 V05, V06, V15: header uses the shared PageHeader, Segmented, Count and Button.
+  it('V05: the header is the shared PageHeader with a visible title, Segmented tabs and a Button action', () => {
+    const header = $('[data-testid="workbench-header"] header')!
+    const title = header.querySelector('h1')!
+    expect(title.textContent).toBe('工作台')
+    expect(title.classList.contains('sr-only')).toBe(false)
+    const tablist = $('[data-testid="workbench-tabs"] [role="tablist"]')!
+    expect(tablist.getAttribute('aria-label')).toBe(messages.workbench.tabs.label)
+    expect($$('[data-testid="workbench-tabs"] [role="tab"]').map(tab => tab.getAttribute('aria-selected'))).toEqual(['true', 'false'])
+    expect($('[data-testid="aside-entry"]')!.dataset.slot).toBe('button')
+  })
+
+  it('V06 and V15: the primary card button shares the V3 button height and radius; key hints use the shared Kbd', () => {
+    act(() => (card('提案 a').firstElementChild as HTMLElement).click())
+    const primary = card('提案 a').querySelector<HTMLButtonElement>('[data-testid="card-panel"] button[data-action]')!
+    expect([...primary.classList]).toEqual(expect.arrayContaining(['h-8', 'rounded-(--r)', 'bg-primary']))
+    expect(primary.className).not.toContain('bg-invert')
+    expect(primary.querySelector('kbd')!.dataset.slot).toBe('kbd')
+    expect($$('[data-testid="review-keys"] kbd').every(key => key.dataset.slot === 'kbd')).toBe(true)
+  })
+
   it('AC#3: one list grouped 提案 (old first); 資料源 cards sit with proposals', () => {
     expect($$('[data-testid="review-group"]').map(el => el.textContent)).toEqual(['提案4'])
     expect(titles()).toEqual(['提案 a', '提案 b', '確認第三站換模時間', '白板照片'])
@@ -185,6 +206,8 @@ describe('審核 tab', () => {
     expect(titles()).toEqual(['確認第三站換模時間'])
     act(() => $<HTMLButtonElement>('[data-filter="knowledge"]')!.click())
     expect($('[data-testid="review-empty"]')!.textContent).toContain('「知識」都處理完了')
+    // ALMNC-56.6 V12：共用的 V3 空狀態
+    expect($('[data-testid="review-empty"] [data-slot="empty-state"]')).not.toBeNull()
   })
 
   it('AC#2: type is shown as designed text (label + verb), no icons', () => {
@@ -255,7 +278,7 @@ describe('審核 tab', () => {
   // Fork（almanac ALMNC-56.1，A01）：焦點在按鈕或選單上時，工作台不攔 Enter、空白鍵與方向鍵。
   describe('ALMNC-56.1 A01: keys on buttons and menus are not intercepted', () => {
     it('AC#4: Enter / Space on a focused button reach the button instead of expanding a card', () => {
-      for (const target of [$('[data-testid="aside-entry"]')!, $('[data-tab="sources"]')!, $('[data-filter="schedule"]')!]) {
+      for (const target of [$('[data-testid="aside-entry"]')!, $('[data-testid="workbench-tabs"] [data-value="sources"]')!, $('[data-filter="schedule"]')!]) {
         target.focus()
         for (const key of ['Enter', ' ']) {
           const event = pressOn(target, key)
@@ -363,7 +386,7 @@ describe('審核 tab', () => {
 describe('資料源 tab', () => {
   beforeEach(() => {
     useInboxStore.setState({ records: [{ id: 5, tagId: 1, type: 'text', content: '第三站換模可以試 SMED', desc: '', url: '', deleted: 0, createdAt: NOW - 2 * DAY }] })
-    act(() => $<HTMLButtonElement>('[data-tab="sources"]')!.click())
+    act(() => $<HTMLButtonElement>('[data-testid="workbench-tabs"] [data-value="sources"]')!.click())
   })
 
   it('has only a status filter (no input box or search), permanent checkboxes and 「N / M 已整理」', () => {
