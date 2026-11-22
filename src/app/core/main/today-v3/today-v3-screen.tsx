@@ -30,13 +30,15 @@ import { useDateFormats } from '@/lib/date-format'
 import { dateFromDayKey } from '@/lib/today-v3/date-strip'
 import { DateStrip } from './date-strip'
 import { useTodayV3Data } from './use-today-v3-data'
+import { WorkbenchLine } from './workbench-line'
+import { useWorkbenchCount } from '@/lib/workbench/use-workbench'
 
 function Journal({ layout, dateLabel, viewingToday, exists, onOpen }: { layout: TodayV3Layout, dateLabel: string, viewingToday: boolean, exists: boolean, onOpen: () => void }) {
   const t = useTranslations('todayV3.journal')
   const [focus, setFocus] = useState(false)
   const { heading, paragraphs } = layout.journal
   return (
-    <div className="flex max-w-[600px] flex-col gap-3.5" data-testid="today-v3-journal">
+    <div className="flex max-w-ui-reading flex-col gap-3.5" data-testid="today-v3-journal">
       <SectionLabel trailing={
         <Button variant="ghost" size="sm" className="rounded-(--r)" aria-pressed={focus} onClick={() => setFocus(value => !value)}>{focus ? t('focusOff') : t('focus')}</Button>
       }>
@@ -74,9 +76,9 @@ function TodoRow({ item, busy, onToggle }: { item: TodoItem, busy: boolean, onTo
         aria-label={t(item.done ? 'uncheck' : 'check', { title: item.title })}
         disabled={busy}
         onClick={() => onToggle(item)}
-        className="-mx-1.5 flex min-h-9 w-[calc(100%+12px)] cursor-pointer items-center gap-2.5 rounded-md px-1.5 text-left transition-colors duration-100 outline-none hover:bg-hover focus-visible:ring-1 focus-visible:ring-ring/65 disabled:opacity-60"
+        className="-mx-1.5 flex min-h-9 w-[calc(100%+12px)] cursor-pointer items-center gap-2.5 rounded-(--r-kbd) px-1.5 text-left transition-colors duration-100 outline-none hover:bg-hover focus-visible:ring-1 focus-visible:ring-ring/65 disabled:opacity-60"
       >
-        <span className={cn('grid size-[15px] shrink-0 place-items-center rounded-[4px] border-[1.5px] transition-colors duration-100', item.done ? 'border-brand bg-brand text-brand-ink' : 'border-faint')}>
+        <span className={cn('grid size-[15px] shrink-0 place-items-center rounded-(--r-kbd) border-[1.5px] transition-colors duration-100', item.done ? 'border-brand bg-brand text-brand-ink' : 'border-faint')}>
           {item.done && <Check className="size-2.5" strokeWidth={3} aria-hidden />}
         </span>
         <span className={cn('min-w-0 flex-1 truncate text-sm', item.done && 'text-muted-ink line-through')}>{item.title}</span>
@@ -90,7 +92,7 @@ function Todo({ layout, busy, viewingToday, shortDate, onToggle }: { layout: Tod
   const t = useTranslations('todayV3.todo')
   const { items, doneCount, total } = layout.todo
   return (
-    <div className="mt-7 max-w-[600px]" data-testid="today-v3-todo">
+    <div className="mt-7 max-w-ui-reading" data-testid="today-v3-todo">
       <SectionLabel as="h2" underline trailing={<Count value={doneCount} total={total} />}>
         {viewingToday ? t('label') : t('labelDay', { date: shortDate })}
       </SectionLabel>
@@ -117,7 +119,7 @@ function DecideRail({ layout }: { layout: TodayV3Layout }) {
           key={item.key}
           type="button"
           onClick={() => { show(); select(item.key) }}
-          className="-mx-1.5 block w-[calc(100%+12px)] cursor-pointer rounded-md px-1.5 py-2 text-left transition-colors duration-100 outline-none hover:bg-hover focus-visible:ring-1 focus-visible:ring-ring/65"
+          className="-mx-1.5 block w-[calc(100%+12px)] cursor-pointer rounded-(--r-kbd) px-1.5 py-2 text-left transition-colors duration-100 outline-none hover:bg-hover focus-visible:ring-1 focus-visible:ring-ring/65"
         >
           <div className="text-ui-compact leading-5 font-medium">{item.title}</div>
           <div className="text-ui-compact text-muted-ink">{[item.origin, item.kind === 'job' ? jobT('result') : decideT(`kind.${item.kind}`)].filter(Boolean).join(' · ')}</div>
@@ -147,7 +149,7 @@ function CaptureRail({ layout }: { layout: TodayV3Layout }) {
         <div key={item.key} className="flex items-baseline gap-2.5 py-1.5">
           <SectionLabel as="span" className="w-10 shrink-0">{t(`kind.${item.kind}`)}</SectionLabel>
           {item.loading
-            ? <span className="flex flex-1 flex-col gap-2" role="status" aria-label={t('reading')}><i className="block h-2 motion-safe:animate-pulse rounded bg-sunken" /><i className="block h-2 w-3/5 motion-safe:animate-pulse rounded bg-sunken" /></span>
+            ? <span className="flex flex-1 flex-col gap-2" role="status" aria-label={t('reading')}><i className="block h-2 motion-safe:animate-pulse rounded-(--r) bg-sunken" /><i className="block h-2 w-3/5 motion-safe:animate-pulse rounded-(--r) bg-sunken" /></span>
             : <span className="min-w-0 flex-1 truncate text-ui-compact leading-5" title={item.title}>{item.title}</span>}
         </div>
       ))}
@@ -174,6 +176,8 @@ export function TodayV3Screen() {
   const decisions = useDecisions()
   const decide = useDecideActions()
   const decisionByKey = (key: string) => decisions.find(item => item.key === key)
+  // Fork（almanac ALMNC-54.14）：「工作台 · N 件」，和側欄同一個數字。
+  const workbenchCount = useWorkbenchCount()
   const clock = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
 
   const openJournal = () => {
@@ -189,13 +193,16 @@ export function TodayV3Screen() {
       <PageHeader
         title={viewingToday ? t('title') : t('titleDay', { date: monthDay })}
         subtitle={
-          <span className="tabular-nums" data-testid="today-v3-summary">
-            {[
-              !viewingToday && t('viewing'),
-              t('dateLabel', { date: dates.full(day), week: dates.week(day) }),
-              due > 0 && t('summaryDue', { count: due }),
-              overdue > 0 && t('summaryOverdue', { count: overdue }),
-            ].filter(Boolean).join(' · ')}
+          <span className="flex flex-wrap items-baseline gap-x-3">
+            <span className="tabular-nums" data-testid="today-v3-summary">
+              {[
+                !viewingToday && t('viewing'),
+                t('dateLabel', { date: dates.full(day), week: dates.week(day) }),
+                due > 0 && t('summaryDue', { count: due }),
+                overdue > 0 && t('summaryOverdue', { count: overdue }),
+              ].filter(Boolean).join(' · ')}
+            </span>
+            <WorkbenchLine count={workbenchCount} />
           </span>
         }
         onBack={hide}
@@ -215,13 +222,17 @@ export function TodayV3Screen() {
             onReject={key => { const item = decisionByKey(key); if (item) void decide.reject(item) }}
           />
         </div>
-        <div className="min-w-0 overflow-y-auto border-l border-line-soft px-10 pt-8 pb-28" data-testid="today-v3-center">
-          <Journal layout={layout} dateLabel={viewingToday ? clock : shortDate} viewingToday={viewingToday} exists={journalExists} onOpen={openJournal} />
-          <Todo layout={layout} busy={busy} shortDate={shortDate} viewingToday={viewingToday} onToggle={item => toggleTask(item.task, !item.done)} />
-        </div>
-        <div className="flex min-w-0 flex-col gap-6 overflow-y-auto border-l border-line-soft px-6 pt-5 pb-24 @max-[1000px]:hidden" data-testid="today-v3-right">
-          <DecideRail layout={layout} />
-          <CaptureRail layout={layout} />
+        {/* Fork（almanac ALMNC-56.7，A12）：寬的時候中欄、右欄各自是格線的一欄（contents）；窄於 1000 px 時合成一欄一起捲動，
+            右欄（等你定、今天收進來）接在中欄下方，不再整欄隱藏。 */}
+        <div className="contents @max-[1000px]:block @max-[1000px]:min-w-0 @max-[1000px]:overflow-y-auto @max-[1000px]:border-l @max-[1000px]:border-line-soft @max-[1000px]:pb-28" data-testid="today-v3-main">
+          <div className="min-w-0 overflow-y-auto border-l border-line-soft px-10 pt-8 pb-28 @max-[1000px]:overflow-visible @max-[1000px]:border-l-0 @max-[1000px]:pb-8" data-testid="today-v3-center">
+            <Journal layout={layout} dateLabel={viewingToday ? clock : shortDate} viewingToday={viewingToday} exists={journalExists} onOpen={openJournal} />
+            <Todo layout={layout} busy={busy} shortDate={shortDate} viewingToday={viewingToday} onToggle={item => toggleTask(item.task, !item.done)} />
+          </div>
+          <div className="flex min-w-0 flex-col gap-6 overflow-y-auto border-l border-line-soft px-6 pt-5 pb-24 @max-[1000px]:overflow-visible @max-[1000px]:border-t @max-[1000px]:border-l-0 @max-[1000px]:px-10 @max-[1000px]:pt-7 @max-[1000px]:pb-0" data-testid="today-v3-right">
+            <DecideRail layout={layout} />
+            <CaptureRail layout={layout} />
+          </div>
         </div>
       </div>
       </div>

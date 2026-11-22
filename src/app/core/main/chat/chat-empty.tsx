@@ -24,6 +24,7 @@ import 'dayjs/locale/pt-br'
 import 'dayjs/locale/de'
 import useSettingStore from '@/stores/setting'
 import { useChatV3 } from './chat-v3'
+import { useCommanderName } from './commander-name'
 
 // 初始化 dayjs 插件
 dayjs.extend(relativeTime)
@@ -43,6 +44,7 @@ export default function ChatEmpty() {
   const v3 = useChatV3()
   const tV3 = useTranslations('record.chat.v3.empty')
   const readOnly = useSettingStore(state => state.agentPermissionMode === 'read-only')
+  const commanderName = useCommanderName() // Fork（almanac ALMNC-54.7）
   const t = useTranslations('record.chat.empty')
   const { language } = useSettingStore()
 
@@ -88,7 +90,7 @@ export default function ChatEmpty() {
       <EmptyState
         className="px-4 py-4"
         icon={isTemporaryConversation ? MessageSquareDashed : MessageCircle}
-        text={isTemporaryConversation ? tV3('temporaryHint') : tV3(`${mode}.description`)}
+        text={isTemporaryConversation ? tV3('temporaryHint') : tV3(`${mode}.description`, { name: commanderName })}
         action={
           <Button type="button" variant="outline" size="sm"
             onClick={() => handleQuickPrompt(tV3(`${mode}.prompts.first.insert`))}

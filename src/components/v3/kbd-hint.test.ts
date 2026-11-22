@@ -24,9 +24,11 @@ it('renders Tab as a keycap and exposes the localized tooltip on focus', () => {
   try {
     act(() => root.render(h(KbdHint, { description })))
     const key = container.querySelector('kbd')!
+    // ALMNC-56.6 V15：用共用的 components/ui/kbd.tsx（data-slot 被 TooltipTrigger 換掉，用它的 V3 類別辨認）
+    expect(key.classList.contains('v3:h-[18px]')).toBe(true)
     expect(key.textContent).toBe('Tab')
     expect([...key.classList]).toEqual(expect.arrayContaining([
-      'border-line', 'bg-transparent', 'text-[11px]', 'font-mono', 'text-muted-ink',
+      'border-line', 'v3:bg-transparent', 'v3:text-ui-numeric', 'v3:font-mono', 'text-muted-ink',
     ]))
     act(() => key.focus())
     const tooltip = document.getElementById(key.getAttribute('aria-describedby')!)

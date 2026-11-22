@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:base="https://blog.example.org/">
+  <title type="text">Example Blog</title>
+  <link href="https://blog.example.org/" rel="alternate"/>
+  <link href="https://blog.example.org/atom.xml" rel="self"/>
+  <id>urn:uuid:60a76c80-d399-11d9-b93C-0003939e0af6</id>
+  <updated>2026-11-21T10:00:00Z</updated>
+  <entry>
+    <title type="html">Queues &amp;lt;and&amp;gt; flow</title>
+    <link rel="replies" href="https://blog.example.org/2026/11/queues#comments"/>
+    <link rel="alternate" type="text/html" href="2026/11/queues"/>
+    <id>tag:blog.example.org,2026:queues</id>
+    <published>2026-11-21T09:00:00+08:00</published>
+    <updated>2026-11-21T10:00:00Z</updated>
+    <author><name>Amy Lin</name></author>
+    <summary type="html">&lt;p&gt;Little's law: L = λW.&lt;/p&gt;</summary>
+    <source><title>Other Blog</title><id>tag:other,2020:feed</id><link href="https://other.example.com/"/></source>
+  </entry>
+  <entry>
+    <title>Second entry</title>
+    <link href="https://blog.example.org/2026/11/second"/>
+    <id>tag:blog.example.org,2026:second</id>
+    <updated>2026-11-19T12:00:00Z</updated>
+    <content type="xhtml"><div xmlns="http://www.w3.org/1999/xhtml"><p>XHTML <em>content</em>.</p></div></content>
+  </entry>
+</feed>

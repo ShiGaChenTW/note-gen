@@ -1,0 +1,133 @@
+// Fork（almanac ALMNC-54.3）：活動紀錄的固定格式與檢查。
+// 活動紀錄只記「誰在什麼時候做了什麼」：時間、角色、動作、對象連結、來源（對話或提案），自由文字最多 60 字。
+// 沒有對象連結就拒絕寫入。記錯不能改也不能刪，只能新增一筆更正（corrected），指回原本那一筆。
+import { isAgentRole, type AgentRole } from '@/lib/agents/settings'
+
+export const ACTIVITY_ACTIONS = [
+  'instructed', // Scott 交代的事
+  'drafted',
+  'proposed',
+  'accepted',
+  'rejected',
+  'created',
+  'updated',
+  'linked',
+  'reported', // 例如非指揮官發現目前脈絡有誤時回報
+  'corrected', // 更正先前的紀錄，一定要有 correctsId
+] as const
+export type ActivityAction = typeof ACTIVITY_ACTIONS[number]
+
+export const ACTIVITY_SOURCE_KINDS = ['conversation', 'proposal'] as const
+export type ActivitySourceKind = typeof ACTIVITY_SOURCE_KINDS[number]
+
+export const ACTIVITY_NOTE_MAX = 60
+export const ACTIVITY_ARCHIVE_DAYS = 90
+const DAY_MS = 24 * 60 * 60 * 1000
+
+export type ActivityActorRole = AgentRole | 'scott'
+
+export interface ActivityEntryInput {
+  /** agent 的固定編號；Scott 交代的事寫 'scott'。 */
+  actorId: string
+  actorRole: ActivityActorRole
+  action: ActivityAction
+  /** 對象連結：[[筆記標題]]，或 note:／task:／source:／project:／proposal:／https: 這類連結。 */
+  targetLink: string
+  source: { kind: ActivitySourceKind, ref: string }
+  /** 自由文字，最多 60 字。 */
+  note?: string
+  /** 更正哪一筆紀錄。 */
+  correctsId?: number
+}
+
+export interface ActivityEntry extends Omit<ActivityEntryInput, 'note' | 'correctsId'> {
+  id: number
+  at: number
+  note: string
+  correctsId: number | null
+  archivedAt: number | null
+}
+
+export type ActivityValidationError =
+  | 'ACTOR_REQUIRED'
+  | 'ACTOR_ROLE_INVALID'
+  | 'ACTION_INVALID'
+  | 'TARGET_LINK_REQUIRED'
+  | 'TARGET_LINK_INVALID'
+  | 'SOURCE_REQUIRED'
+  | 'NOTE_TOO_LONG'
+  | 'CORRECTION_TARGET_REQUIRED'
+  | 'CORRECTION_ACTION_REQUIRED'
+  | 'UNKNOWN_FIELD'
+
+export interface NormalizedActivityEntry {
+  actorId: string
+  actorRole: ActivityActorRole
+  action: ActivityAction
+  targetLink: string
+  sourceKind: ActivitySourceKind
+  sourceRef: string
+  note: string
+  correctsId: number | null
+}
+
+const ALLOWED_FIELDS = new Set(['actorId', 'actorRole', 'action', 'targetLink', 'source', 'note', 'correctsId'])
+const WIKI_LINK = /^\[\[[^[\]\n]+\]\]$/
+const URI_LINK = /^[a-z][a-z0-9+.-]*:\S+$/i
+
+/** 用字元數（不是 UTF-16 長度）計算，中文、emoji 都算一個字。 */
+export function charCount(text: string): number {
+  return [...text].length
+}
+
+export function isTargetLink(value: string): boolean {
+  const link = value.trim()
+  return WIKI_LINK.test(link) || URI_LINK.test(link)
+}
+
+export function isActivityAction(value: unknown): value is ActivityAction {
+  return ACTIVITY_ACTIONS.some(action => action === value)
+}
+
+/** 檢查並整理一筆活動紀錄；時間由系統在寫入時填，不接受外部指定。 */
+export function validateActivityEntry(input: ActivityEntryInput):
+  { ok: true, entry: NormalizedActivityEntry } | { ok: false, error: ActivityValidationError } {
+  const fail = (error: ActivityValidationError) => ({ ok: false, error }) as const
+  if (Object.keys(input).some(key => !ALLOWED_FIELDS.has(key))) return fail('UNKNOWN_FIELD')
+  const actorId = typeof input.actorId === 'string' ? input.actorId.trim() : ''
+  if (!actorId) return fail('ACTOR_REQUIRED')
+  if (input.actorRole === 'scott' ? actorId !== 'scott' : !isAgentRole(input.actorRole) || actorId === 'scott') {
+    return fail('ACTOR_ROLE_INVALID')
+  }
+  if (!isActivityAction(input.action)) return fail('ACTION_INVALID')
+  const targetLink = typeof input.targetLink === 'string' ? input.targetLink.trim() : ''
+  if (!targetLink) return fail('TARGET_LINK_REQUIRED')
+  if (!isTargetLink(targetLink)) return fail('TARGET_LINK_INVALID')
+  const sourceRef = typeof input.source?.ref === 'string' ? input.source.ref.trim() : ''
+  if (!ACTIVITY_SOURCE_KINDS.includes(input.source?.kind) || !sourceRef) return fail('SOURCE_REQUIRED')
+  const note = (input.note ?? '').trim()
+  if (charCount(note) > ACTIVITY_NOTE_MAX) return fail('NOTE_TOO_LONG')
+  const correctsId = input.correctsId ?? null
+  if (input.action === 'corrected' && (correctsId === null || !Number.isInteger(correctsId) || correctsId <= 0)) {
+    return fail('CORRECTION_TARGET_REQUIRED')
+  }
+  if (input.action !== 'corrected' && correctsId !== null) return fail('CORRECTION_ACTION_REQUIRED')
+  return {
+    ok: true,
+    entry: { actorId, actorRole: input.actorRole, action: input.action, targetLink, sourceKind: input.source.kind, sourceRef, note, correctsId },
+  }
+}
+
+/** 封存的時間點：早於這個時間的紀錄要封存。 */
+export function archiveCutoff(now: number): number {
+  return now - ACTIVITY_ARCHIVE_DAYS * DAY_MS
+}
+
+/** 挑出超過 90 天、還沒封存的紀錄；只標記封存，不刪除。 */
+export function selectActivityToArchive(
+  rows: readonly Pick<ActivityEntry, 'id' | 'at' | 'archivedAt'>[],
+  now: number,
+): number[] {
+  const cutoff = archiveCutoff(now)
+  return rows.filter(row => row.archivedAt === null && row.at < cutoff).map(row => row.id)
+}

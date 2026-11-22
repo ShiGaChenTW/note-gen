@@ -58,3 +58,30 @@ describe('acceptProposal', () => {
   })
 
 })
+
+// Fork（almanac ALMNC-54.7）：檔案變更提案接受時才寫入（同背景任務的草稿審核）。
+describe('acceptProposal with a file change', () => {
+  it('applies the change only when accepted and reports the target path', async () => {
+    const change = { toolName: 'note_move_file', args: { filePath: 'a.md', targetFolderPath: 'b' }, kind: 'move' as const, path: 'a.md', targetPath: 'b/a.md', baseContent: 'x', summary: '搬移 a.md → b/a.md' }
+    const applied: unknown[] = []
+    const result = await acceptProposal({ ...base, id: 'c1', kind: 'note', title: change.summary, change }, { noteFolder: '10 Inbox', now, applyChange: async value => { applied.push(value) } })
+    expect(applied).toEqual([change])
+    expect(result).toEqual({ path: 'b/a.md' })
+  })
+
+  // Fork（almanac ALMNC-54.12）：V3 筆記寫入時記下最後確認日期；清理提案走 applyEdits，不另外新增筆記。
+  it('stamps lastConfirmed on V3 notes', async () => {
+    const result = await acceptProposal({ ...base, id: 'v1', kind: 'note', title: '節拍時間', noteType: 'knowledge', domains: ['ie'] }, { noteFolder: '10 Inbox', now })
+    expect(files.get(result.path)).toContain('lastConfirmed: 2026-11-18')
+  })
+
+  it('applies cleanup edits instead of creating a note', async () => {
+    files.clear()
+    const applyEdits = vi.fn(async () => ['k/a.md'])
+    const proposal = { ...base, id: 'c1', kind: 'note' as const, title: '待查證：A', edits: [{ path: 'k/a.md', baseContent: 'A', content: 'A2', summary: 'A' }] }
+    const result = await acceptProposal(proposal, { noteFolder: '10 Inbox', now, applyEdits })
+    expect(applyEdits).toHaveBeenCalledWith(proposal)
+    expect(result).toEqual({ path: 'k/a.md' })
+    expect([...files.keys()]).toEqual([])
+  })
+})

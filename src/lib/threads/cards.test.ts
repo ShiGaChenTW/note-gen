@@ -21,9 +21,10 @@ describe('threads/cards', () => {
     expect(formatWhen()).toBe('')
   })
 
-  it('提案卡：等待中可收下／不要，處理後沒有動作', () => {
+  it('提案卡：等待中可接受／再次討論／放棄，處理後沒有動作（ALMNC-54.5 AC#2）', () => {
     const view = resolveThreadCard(proposal)
-    expect(view).toMatchObject({ type: 'proposal', when: '11/20 14:30', statusKey: 'proposalWait', tone: 'pending', actions: ['accept', 'reject'] })
+    expect(view).toMatchObject({ type: 'proposal', when: '11/20 14:30', statusKey: 'proposalWait', tone: 'pending', actions: ['accept', 'discuss', 'reject'] })
+    expect(resolveThreadCard({ ...proposal, status: 'talk' })).toMatchObject({ statusKey: 'proposalTalk', tone: 'pending', actions: [] })
     expect(resolveThreadCard({ ...proposal, status: 'ok' })).toMatchObject({ statusKey: 'proposalOk', tone: 'done', actions: [] })
     expect(resolveThreadCard({ ...proposal, status: 'no' })).toMatchObject({ statusKey: 'proposalNo', tone: 'muted', actions: [] })
   })
@@ -63,5 +64,24 @@ describe('threads/cards', () => {
     const parsed = parseThreadCard({ type: 'kickoff-result', id: 'k', title: 'T', state: 'running', tasks: [{ text: 'a' }, { nope: 1 }], acceptance: [{ text: 'b', status: 'zzz' }] })
     expect(parsed).toMatchObject({ type: 'kickoff-result', tasks: [{ n: 1, text: 'a', status: 'wait' }], acceptance: [{ text: 'b', status: 'open' }] })
     expect(parseThreadCard({ type: 'kickoff-result', id: 'k', title: 'T', state: 'bad' })).toBeNull()
+  })
+
+  it('再次討論：等待中的提案卡變成討論中，之後不再接受動作（ALMNC-54.5 AC#2）', () => {
+    const talking = applyCardAction(proposal, 'discuss')
+    expect(talking).toMatchObject({ status: 'talk' })
+    expect(applyCardAction(talking, 'accept')).toBe(talking)
+    expect(applyCardAction(kickoff, 'discuss')).toBe(kickoff)
+    expect(parseThreadCard({ type: 'proposal', id: 'x', kind: 'note', title: 't', status: 'talk' })).toMatchObject({ status: 'talk' })
+  })
+})
+
+// Fork（almanac ALMNC-54.7）：秘書直接修改後的一行確認，只在剛寫入時能復原。
+describe('direct edit confirmation card', () => {
+  it('offers undo only while the change is in place', () => {
+    const card = { type: 'direct-edit' as const, id: 'd1', what: '11/20 10:00 會議', agent: 'Leo · 秘書', status: 'done' as const }
+    expect(resolveThreadCard(card)).toEqual({ type: 'direct-edit', id: 'd1', what: '11/20 10:00 會議', agent: 'Leo · 秘書', statusKey: 'directDone', actions: ['undo'] })
+    expect(resolveThreadCard({ ...card, status: 'undone' })).toMatchObject({ statusKey: 'directUndone', actions: [] })
+    expect(resolveThreadCard({ ...card, status: 'stale' })).toMatchObject({ statusKey: 'directStale', actions: [] })
+    expect(applyCardAction(card, 'undo')).toBe(card)
   })
 })

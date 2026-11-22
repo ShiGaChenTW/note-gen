@@ -16,6 +16,7 @@ interface AgentTaskRow {
   createdAt: number
   updatedAt: number
   finishedAt: number | null
+  conversationId: number | null
 }
 
 let initialized: Promise<void> | null = null
@@ -41,6 +42,12 @@ export function initAgentTaskDb(): Promise<void> {
         )
       `)
       await db.execute('create index if not exists idx_agent_tasks_status on agent_tasks(status, created_at)')
+      // Fork（almanac ALMNC-54.5）：任務來自哪段對話（提案的來源對話）。只加欄位，舊資料為 null。
+      try {
+        await db.execute('alter table agent_tasks add column conversation_id integer default null')
+      } catch {
+        // 欄位已存在
+      }
     })().catch(error => {
       initialized = null
       throw error
@@ -72,6 +79,7 @@ function fromRow(row: AgentTaskRow): AgentTask {
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     finishedAt: row.finishedAt ?? undefined,
+    ...(typeof row.conversationId === 'number' ? { conversationId: row.conversationId } : {}),
   }
 }
 
@@ -83,7 +91,8 @@ export async function listAgentTasks(limit = 100): Promise<AgentTask[]> {
        select id from agent_tasks where id not glob $1 order by created_at desc limit $2
      )
      select id, kind, title, prompt, status, drafts, result, error, tokens,
-            created_at as createdAt, updated_at as updatedAt, finished_at as finishedAt
+            created_at as createdAt, updated_at as updatedAt, finished_at as finishedAt,
+            conversation_id as conversationId
      from agent_tasks
      where id glob $1 or (kind = 'organize' and status = 'awaiting_review') or id in (select id from recent)
      order by created_at desc`,
@@ -97,8 +106,8 @@ export async function saveAgentTask(task: AgentTask): Promise<void> {
   const db = await getDb()
   await db.execute(
     `insert into agent_tasks
-       (id, kind, title, prompt, status, drafts, result, error, tokens, created_at, updated_at, finished_at)
-     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+       (id, kind, title, prompt, status, drafts, result, error, tokens, created_at, updated_at, finished_at, conversation_id)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
      on conflict(id) do update set
        title = excluded.title,
        status = excluded.status,
@@ -121,6 +130,7 @@ export async function saveAgentTask(task: AgentTask): Promise<void> {
       task.createdAt,
       task.updatedAt,
       task.finishedAt ?? null,
+      task.conversationId ?? null,
     ]
   )
 }

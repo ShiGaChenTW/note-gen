@@ -111,7 +111,7 @@ export class AgentTaskCenter {
     this.emit()
   }
 
-  async enqueue(input: { prompt: string; kind?: AgentTaskKind; title?: string; id?: string }): Promise<AgentTask> {
+  async enqueue(input: { prompt: string; kind?: AgentTaskKind; title?: string; id?: string; conversationId?: number }): Promise<AgentTask> {
     const now = this.deps.now()
     const task: AgentTask = {
       id: input.id ?? createTaskId(),
@@ -123,6 +123,7 @@ export class AgentTaskCenter {
       tokens: 0,
       createdAt: now,
       updatedAt: now,
+      ...(input.conversationId !== undefined ? { conversationId: input.conversationId } : {}),
     }
     await this.save(task, isJobTaskId(task.id))
     void this.pump()

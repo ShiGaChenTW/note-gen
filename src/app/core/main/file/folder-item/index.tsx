@@ -1,4 +1,6 @@
 import { PluginFileIcon } from '@/components/plugins/plugin-file-icon'
+import { isUiV3 } from '@/lib/fork-ui'
+import { useNoteListStore } from '@/lib/note-list/note-list'
 import { WikiFolderIcon } from '@/components/wiki/wiki-folder-icon'
 import { isWikiFolderPath } from '@/lib/wiki/path'
 import { ContextMenu, ContextMenuContent, ContextMenuSeparator, ContextMenuTrigger, ContextMenuSub, ContextMenuSubTrigger, ContextMenuSubContent } from "@/components/ui/enhanced-context-menu";
@@ -702,7 +704,11 @@ export function FolderItem({
     // 本地文件夹可以作为编辑器中的文件夹视图打开；远程文件夹只属于
     // 文件树选择状态。不要把不存在于本地的目录写入 activeFilePath，
     // 否则编辑器会把它当成普通路径并尝试读取本地元数据。
-    if (item.isLocale) {
+    if (item.isLocale && isUiV3()) {
+      // Fork（almanac ALMNC-54.17）：V3 點資料夾改開「我的筆記」中間欄（列出資料夾裡的筆記），
+      // 不再在編輯器開資料夾視圖——V3 一次只開一篇，開資料夾視圖會把正在看的筆記換掉。
+      useNoteListStore.getState().show(path)
+    } else if (item.isLocale) {
       await setActiveFilePath(
         path,
         true,

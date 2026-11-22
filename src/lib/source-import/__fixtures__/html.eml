@@ -1,0 +1,20 @@
+Message-ID: <html-002@example.com>
+Date: Wed, 18 Nov 2026 08:15:00 -0500
+From: Bob Lee <bob@example.com>
+To: scott@example.com
+Subject: Re: quote & delivery
+MIME-Version: 1.0
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<html><head><style>p{color:red}</style><title>ignore</title></head><body>
+<div dir=3D"ltr"><p>Hi&nbsp;Scott,</p><p>=E4=B8=89=E4=BB=B6=E4=BA=8B=EF=BC=
+=9A</p><ul><li>=E5=A0=B1=E5=83=B9=E5=96=AE&amp;=E5=90=88=E7=B4=84</li><li>=
+=E4=BA=A4=E6=9C=9F <b>12/5</b></li></ul>
+<p>Thanks,<br>Bob</p>
+<div class=3D"gmail_quote"><div dir=3D"ltr" class=3D"gmail_attr">On Tue, No=
+v 17, 2026 at 3:00 PM Scott Chen &lt;scott@example.com&gt; wrote:<br></div>
+<blockquote class=3D"gmail_quote" style=3D"margin:0px">=E8=88=8A=E4=BF=A1=
+=E5=85=A7=E5=AE=B9=E7=AC=AC=E4=B8=80=E8=A1=8C<br>=E8=88=8A=E4=BF=A1=E5=85=
+=A7=E5=AE=B9=E7=AC=AC=E4=BA=8C=E8=A1=8C</blockquote></div></div>
+<script>alert(1)</script></body></html>

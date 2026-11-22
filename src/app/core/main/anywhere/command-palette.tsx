@@ -9,7 +9,7 @@ import { useTranslations } from 'next-intl'
 import { useTheme } from 'next-themes'
 import { toast } from 'sonner'
 import {
-  FileText, Inbox, House, MessageSquarePlus, MessageCircleQuestion, Moon, PanelLeft, PanelRight, Search, Settings, TabletSmartphone, BookmarkPlus,
+  FileText, FolderInput, Inbox, House, MessageSquarePlus, MessageCircleQuestion, Moon, PanelLeft, PanelRight, Search, Settings, TabletSmartphone, BookmarkPlus,
 } from 'lucide-react'
 import {
   Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandShortcut,
@@ -24,6 +24,7 @@ import { useAnywhereStore } from '@/lib/anywhere/store'
 import useVaultIndexStore from '@/stores/vault-index'
 import useArticleStore from '@/stores/article'
 import useChatStore from '@/stores/chat'
+import useCollectStore from '@/stores/collect'
 import useHomeStore from '@/stores/home'
 import useInboxStore from '@/stores/inbox'
 import { useSidebarStore } from '@/stores/sidebar'
@@ -35,13 +36,14 @@ import { toggleEinkPin } from '@/components/fork/eink-pin'
 import { isRecordTabPath } from '../mark/mark-record-tab'
 import { isCanvasTabPath } from '../canvas/canvas-tab'
 
-type CoreCommandId = 'ask' | 'newChat' | 'home' | 'inbox' | 'searchSidebar' | 'leftSidebar' | 'rightSidebar' | 'theme' | 'settings'
+type CoreCommandId = 'ask' | 'newChat' | 'home' | 'collect' | 'inbox' | 'searchSidebar' | 'leftSidebar' | 'rightSidebar' | 'theme' | 'settings'
   | 'einkPin' | 'einkUnpin' | 'readLater'
 
 const CORE_COMMAND_ICONS: Record<CoreCommandId, typeof Search> = {
   ask: MessageCircleQuestion,
   newChat: MessageSquarePlus,
   home: House,
+  collect: FolderInput,
   inbox: Inbox,
   searchSidebar: Search,
   leftSidebar: PanelLeft,
@@ -53,7 +55,7 @@ const CORE_COMMAND_ICONS: Record<CoreCommandId, typeof Search> = {
   readLater: BookmarkPlus,
 }
 const CORE_COMMAND_SHORTCUT: Partial<Record<CoreCommandId, string>> = { ask: '⌘⇧A', home: '⌘⇧H' }
-const CORE_COMMAND_ORDER: CoreCommandId[] = ['ask', 'newChat', 'home', 'inbox', 'searchSidebar', 'leftSidebar', 'rightSidebar', 'theme', 'settings']
+const CORE_COMMAND_ORDER: CoreCommandId[] = ['ask', 'newChat', 'home', 'collect', 'inbox', 'searchSidebar', 'leftSidebar', 'rightSidebar', 'theme', 'settings']
 const CORE_PREFIX = 'core:'
 const PLUGIN_PREFIX = 'plugin:'
 const NOTE_PREFIX = 'note:'
@@ -124,6 +126,7 @@ export function AnywhereCommandPalette() {
         useAnywhereStore.getState().setChatOpen(true)
         break
       case 'home': useHomeStore.getState().show(); break
+      case 'collect': useCollectStore.getState().show(); break
       case 'inbox': useInboxStore.getState().show(); break
       case 'searchSidebar': await sidebar.requestSidebarSearchFocus(); break
       case 'leftSidebar': await sidebar.toggleLeftSidebar(); break

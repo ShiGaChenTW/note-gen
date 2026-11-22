@@ -1,0 +1,54 @@
+Message-ID: <multi-003@example.com.tw>
+Date: Mon, 16 Nov 2026 14:05:00 +0800
+From: =?big5?Q?=B3=AF=A7=D3=A9=FA?= <chen@example.com.tw>
+To: =?big5?Q?=A4=FD=B8g=B2z?= <wang@example.com.tw>
+Subject: =?big5?Q?=B2=C4=A4T=A9u=B3=F8=BB=F9?=
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==outer=="
+
+This is a multi-part message in MIME format.
+
+--==outer==
+Content-Type: multipart/related; boundary="==rel=="
+
+--==rel==
+Content-Type: multipart/alternative; boundary="==alt=="
+
+--==alt==
+Content-Type: text/plain; charset=big5
+Content-Transfer-Encoding: base64
+
+pP24Z7J6sXqmbqFHCgqq/qXzrE+yxKRUqXWqurP4u/mhQb3QuUyl2KFDCgqzr6fTqfo=
+
+--==alt==
+Content-Type: text/html; charset=big5
+Content-Transfer-Encoding: base64
+
+PHA+pP24Z7J6sXqmbqFHPC9wPjxwPqr+pfOsT7LEpFSpdaq6s/i7+aFBvdC5TKXYoUM8L3A+PHA+
+PGltZyBzcmM9ImNpZDpsb2dvMSI+PC9wPg==
+
+--==alt==--
+
+--==rel==
+Content-Type: image/png; name="logo.png"
+Content-Transfer-Encoding: base64
+Content-ID: <logo1>
+Content-Disposition: inline; filename="logo.png"
+
+iVBORw0KGgo=
+--==rel==--
+
+--==outer==
+Content-Type: application/pdf; name="quote.pdf"
+Content-Disposition: attachment; filename*=utf-8''%E5%A0%B1%E5%83%B9%E5%96%AE.pdf
+Content-Transfer-Encoding: base64
+
+JVBERi0xLjQK
+--==outer==
+Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document;
+ name="=?UTF-8?B?5ZCI57SE6I2J56i/LmRvY3g=?="
+Content-Disposition: attachment
+Content-Transfer-Encoding: base64
+
+UEsDBA==
+--==outer==--

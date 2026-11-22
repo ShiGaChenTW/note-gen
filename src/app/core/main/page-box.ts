@@ -29,6 +29,13 @@ export function measurePageBox(container: HTMLElement, group: HTMLElement, panel
   }
 }
 
+/** Fork（almanac ALMNC-56.3 P02）：ResizeObserver 每次回呼都量出新物件；數值沒變時呼叫端不更新 state，不觸發重繪。 */
+export function samePageBox(a: PageBox | null, b: PageBox | null) {
+  if (a === b) return true
+  if (!a || !b) return false
+  return Object.is(a.top, b.top) && Object.is(a.right, b.right) && Object.is(a.bottom, b.bottom) && Object.is(a.left, b.left) && a.radius === b.radius
+}
+
 export function pageBoxStyle(box: PageBox | null): CSSProperties {
   // 還沒量到之前：貼齊容器、留出狀態列（h-7）
   const value = box ?? { top: 0, right: 0, bottom: 28, left: 0, radius: '0px' }

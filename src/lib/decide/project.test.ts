@@ -1,6 +1,6 @@
 // almanac ALMNC-10：等你定的投影——來源狀態變了，清單就跟著變；不存獨立狀態。
 import { describe, expect, it } from 'vitest'
-import { journalInsertPreview, previewDiff, projectDecisions, sameThingKey, type CollectItemLike, type DraftLike, type JournalSnapshot, type TaskLike } from './project'
+import { journalInsertPreview, previewDiff, projectDecisions, projectProposals, sameThingKey, type CollectItemLike, type DraftLike, type JournalSnapshot, type TaskLike } from './project'
 
 const base = { body: '', due: '', time: '', tags: [] as string[] }
 const journal = (before: string): JournalSnapshot => ({ before, section: '捕捉軌', fileMissing: false, today: '2026-11-18' })
@@ -125,5 +125,72 @@ describe('journalInsertPreview', () => {
     const { line, diff } = journalInsertPreview(journal('# 今天\n\n一些字\n'), { ...base, id: 'x', kind: 'task', title: '甲' })
     expect(line).toBe('- [ ] 甲 📅 2026-11-18')
     expect(diff.added).toEqual([line])
+  })
+})
+
+// Fork（almanac ALMNC-54.5）：提案的來源對話、再次討論、取代與待決定。
+describe('ALMNC-54.5 projectProposals', () => {
+  const wait = (id: string, extra: Partial<CollectItemLike['proposals'][number]> = {}) =>
+    ({ ...base, id, kind: 'task' as const, title: `事 ${id}`, status: 'wait' as const, ...extra })
+
+  it('AC#1: every source carries its conversation (collect field, task, job threadKey, or the discussion trail)', () => {
+    const items = [item('c1', 1, [wait('p1', { conversationId: 4 }), wait('p2')])]
+    const tasks = [{ ...task('t1', 2, [draft('d1')]), conversationId: 5 }]
+    const jobs = [{
+      id: 'j1', threadKey: 'sync-6', title: '工作', createdAt: 3, status: 'running',
+      steps: [{ id: 's1', title: '步驟', criterion: '條件', status: 'review', result: '結果', finishedAt: 3 }],
+    }] as unknown as NonNullable<Parameters<typeof projectProposals>[0]['jobs']>
+    const out = projectProposals({
+      items, tasks, jobs, journal: null,
+      conversations: [{ id: 6, syncId: 'sync-6' }],
+      trail: { 'collect:c1:p2': { conversationId: 9 } },
+    })
+    expect(out.map(entry => [entry.key, entry.conversationId])).toEqual([
+      ['collect:c1:p1', 4], ['collect:c1:p2', 9], ['draft:t1:d1', 5], ['job:j1:s1', 6],
+    ])
+    expect(out.every(entry => entry.status === 'wait')).toBe(true)
+  })
+
+  it('AC#2: a discussing proposal leaves the workbench list but stays pending with its note', () => {
+    const items = [item('c1', 1, [wait('p1', { conversationId: 4 }), wait('p2')])]
+    const trail = { 'collect:c1:p1': { conversationId: 4, discussion: { note: '改短', at: 5 } } }
+    const pending = projectProposals({ items, tasks: [], journal: null, trail })
+    expect(pending.map(entry => [entry.key, entry.status])).toEqual([['collect:c1:p1', 'discussing'], ['collect:c1:p2', 'wait']])
+    expect(pending[0].discussion).toEqual({ note: '改短', at: 5 })
+    expect(projectDecisions({ items, tasks: [], journal: null, trail }).map(entry => entry.key)).toEqual(['collect:c1:p2'])
+  })
+
+  it('AC#2: the revised proposal supersedes the old one (previousProposalId or trail.supersededBy)', () => {
+    const items = [
+      item('old', 1, [wait('p1', { conversationId: 4 })]),
+      item('new', 2, [wait('p1', { conversationId: 4, previousProposalId: 'collect:old:p1', title: '改過的' })]),
+      item('x', 3, [wait('p9')]),
+    ]
+    const trail = { 'collect:old:p1': { conversationId: 4, discussion: { note: '改', at: 1 } }, 'collect:x:p9': { supersededBy: 'draft:t:d' } }
+    const out = projectProposals({ items, tasks: [], journal: null, trail })
+    expect(out.map(entry => entry.key)).toEqual(['collect:new:p1'])
+    expect(out[0].previousProposalId).toBe('collect:old:p1')
+  })
+
+  it('shows a body-only revision ahead of deduplication and keeps the original closed after acceptance', () => {
+    const items = [
+      item('old', 1, [wait('p1', { kind: 'note', title: '同樣的標題', body: '舊內容' })]),
+      item('new', 2, [wait('p2', { kind: 'note', title: '同樣的標題', body: '新內容', previousProposalId: 'collect:old:p1' })]),
+    ]
+    const input = { items, tasks: [], journal: null }
+    expect(projectDecisions(input).map(entry => entry.key)).toEqual(['collect:new:p2'])
+    items[1].proposals[0].status = 'ok'
+    expect(projectDecisions(input)).toEqual([])
+  })
+})
+
+// Fork（almanac ALMNC-54.7）：右側欄指揮官想改的既有檔案，在工作台顯示成檔案變更並帶來源對話。
+describe('file change proposals from the sidebar commander', () => {
+  it('projects the change with a file preview and the source conversation', () => {
+    const change = { toolName: 'note_update_file', args: {}, kind: 'update' as const, path: '領域/工業工程.md', content: 'a\nB\n', baseContent: 'a\nb\n', summary: '修改 領域/工業工程.md（2 → 2 行）' }
+    const items = [item('c1', 10, [{ ...base, id: 'p1', kind: 'note', title: change.summary, status: 'wait', conversationId: 9, change }])]
+    const [entry] = projectDecisions({ items, tasks: [], journal: journal('') })
+    expect(entry).toMatchObject({ kind: 'update', title: '領域/工業工程.md', summary: change.summary, conversationId: 9 })
+    expect(entry.preview).toEqual({ type: 'file', path: '領域/工業工程.md', targetPath: undefined, diff: { context: ['a'], removed: ['b'], added: ['B'], hidden: 0 } })
   })
 })
