@@ -8541,6 +8541,10 @@
       "addFirst": "Add your first agent"
     },
     "vault": "MyVault",
+    "noteList": {
+      "label": "Notes in {folder}",
+      "empty": "No notes in this folder yet"
+    },
     "rules": {
       "label": "Rule",
       "text": "Agents can only propose; every write goes through the Workbench."

@@ -13,6 +13,7 @@ import { useAgentTaskStore } from '@/lib/agent-tasks'
 import { useAnywhereStore } from '@/lib/anywhere/store'
 import { usePageVisibility } from '@/lib/fork-overlays/use-page-visibility'
 import { useKnowledgeOverlay } from '@/lib/sidebar-v3/knowledge'
+import { useNoteListStore } from '@/lib/note-list/note-list'
 import { useSidebarCollapse, type SidebarSection } from '@/lib/sidebar-v3/collapse'
 import { buildAgentRows, buildNav, runningAgentCount, type AgentRow, type NavKey } from '@/lib/sidebar-v3/nav'
 import type { AgentSettings } from '@/lib/agents/settings'
@@ -77,14 +78,46 @@ function openAgentSettings() {
 }
 
 /** 可收合的區塊標題；收合狀態存在 store.json。 */
-function SectionHeader({ section, collapsed, title, aside, actions }: {
+function SectionHeader({ section, collapsed, title, aside, actions, onTitleClick, titleActive }: {
   section: SidebarSection
   collapsed: boolean
   title: string
   aside?: ReactNode
   actions?: ReactNode
+  /** Fork（almanac ALMNC-54.17）：給了就把箭頭與標題拆開——箭頭收合，標題另有動作（我的筆記：開中間欄）。 */
+  onTitleClick?: () => void
+  titleActive?: boolean
 }) {
   const toggle = useSidebarCollapse(state => state.toggle)
+  if (onTitleClick) {
+    return (
+      <div className="group/section relative flex items-center">
+        <button
+          type="button"
+          aria-expanded={!collapsed}
+          aria-label={title}
+          onClick={() => void toggle(section)}
+          className="grid size-6 shrink-0 cursor-pointer place-items-center rounded-md text-muted-ink outline-none hover:text-ink focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink/60"
+        >
+          <ChevronDown className={cn('size-3 shrink-0 transition-transform duration-100', collapsed && '-rotate-90')} aria-hidden />
+        </button>
+        <button
+          type="button"
+          onClick={onTitleClick}
+          aria-current={titleActive ? 'page' : undefined}
+          className={cn(VAULT_LABEL, SIDEBAR_ROW, 'min-w-0 flex-1 pl-0.5', titleActive && SIDEBAR_ROW_ACTIVE)}
+        >
+          <SectionLabel as="span" className="min-w-0 text-inherit"><span className="block truncate">{title}</span></SectionLabel>
+          {aside}
+        </button>
+        {actions && (
+          <div className="absolute inset-y-0 right-1 flex items-center bg-panel pl-1 opacity-0 transition-opacity duration-100 group-hover/section:opacity-100 focus-within:opacity-100">
+            {actions}
+          </div>
+        )}
+      </div>
+    )
+  }
   return (
     <div className="group/section relative flex items-center">
       <button
@@ -156,9 +189,18 @@ function AgentSection() {
 function VaultSection() {
   const t = useTranslations('sidebarV3')
   const collapsed = useSidebarCollapse(state => state.vault)
+  // Fork（almanac ALMNC-54.17）：點「我的筆記」開中間欄，列出整個 vault 的筆記。
+  const rootListOpen = useNoteListStore(state => state.visible && state.folder === '')
   return (
     <section aria-label={t('vault')} className={cn('flex min-h-0 flex-col', collapsed ? 'shrink-0' : 'flex-1')}>
-      <SectionHeader section="vault" collapsed={collapsed} title={t('vault')} actions={!collapsed && <FileActions />} />
+      <SectionHeader
+        section="vault"
+        collapsed={collapsed}
+        title={t('vault')}
+        actions={!collapsed && <FileActions />}
+        onTitleClick={() => useNoteListStore.getState().show('')}
+        titleActive={rootListOpen}
+      />
       {!collapsed && (
         <div className="min-h-0 flex-1 overflow-hidden [&_#article-sidebar]:bg-transparent">
           <FileSidebar />
