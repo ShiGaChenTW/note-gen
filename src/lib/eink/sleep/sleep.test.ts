@@ -1,15 +1,16 @@
 // almanac ALMNC-49：休眠畫面。vitest 的 node 環境沒有 canvas，所以：
 //   排版（layout.ts）→ 快照＋規則檢查（AC #2–#5）
 //   BMP（bmp.ts）     → 用合成的像素驗檔頭、大小、位元排列
-//   繪圖（render.ts） → 用假的 2D context 驗呼叫（字型、maxWidth）與量化
-// AC #1（實機顯示、檔案大小符合實機結論）要等 ALMNC-44 在 X4 Pro 上確認。
-import { describe, expect, it } from 'vitest'
+//   繪圖（render.ts） → 用假的 2D context 驗呼叫（字型、maxWidth）與轉灰階
+// ALMNC-58：實機確認 8-bit 灰階（256 色盤，約 385 KB）可下載、細緻度同 24-bit；檔案必須小於外掛 1 MB 上限。
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { Briefing } from '@/lib/eink/briefing/types'
 import { SLEEP_TEXTS, UPDATED_AT, busyDay, emptyDay, normalDay, privateDay, unavailableDay } from './__fixtures__/days'
-import { bmpFileSize, decodeBmpLevels, encodeBmp, readBmpHeader } from './bmp'
+import { bmpFileSize, bmpRowBytes, decodeBmpGray, encodeBmp, readBmpHeader, SLEEP_BMP_MAX_BYTES } from './bmp'
+import { buildSleepBmp } from './index'
 import { briefingHint, duration, layoutSleepScreen, textWidth, truncate, wrap, type DrawOp, type SleepLayout } from './layout'
-import { SLEEP_BMP_BIT_DEPTH, SLEEP_HEIGHT, SLEEP_MAX_EVENTS, SLEEP_WIDTH } from './params'
-import { cssFont, drawSleepLayout, levelsToRgba, quantizeToLevels, type Context2D } from './render'
+import { SLEEP_BMP_BIT_DEPTH, SLEEP_BMP_PALETTE_SIZE, SLEEP_HEIGHT, SLEEP_MAX_EVENTS, SLEEP_WIDTH } from './params'
+import { cssFont, drawSleepLayout, grayToRgba, rgbaToGray, type Context2D } from './render'
 
 type TextOp = Extract<DrawOp, { op: 'text' }>
 
@@ -202,54 +203,98 @@ describe('字寬與斷行（AC #5：中文和時間不跑位）', () => {
   })
 })
 
-describe('BMP', () => {
+describe('BMP（ALMNC-58：8-bit 灰階）', () => {
   const W = SLEEP_WIDTH
   const H = SLEEP_HEIGHT
-  /** 合成的像素：四條直的灰階帶＋左上角一個黑點。 */
+  /** 合成的像素：0–255 的水平漸層＋左上角一個白點。 */
   function synthetic(): Uint8Array {
-    const levels = new Uint8Array(W * H)
-    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) levels[y * W + x] = Math.floor(x / (W / 4))
-    levels[0] = 3
-    return levels
+    const gray = new Uint8Array(W * H)
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) gray[y * W + x] = Math.floor((x * 256) / W)
+    gray[0] = 255
+    return gray
   }
 
-  it('預設 2-bit（ALMNC-44 驗證前的假設）', () => {
-    expect(SLEEP_BMP_BIT_DEPTH).toBe(2)
+  it('預設 8-bit、256 色調色盤', () => {
+    expect(SLEEP_BMP_BIT_DEPTH).toBe(8)
+    expect(SLEEP_BMP_PALETTE_SIZE).toBe(256)
   })
 
-  it('2-bit：檔頭、4 色調色盤、大小 96,070 bytes（約 94 KB）', () => {
-    const bytes = encodeBmp(synthetic(), W, H, 2)
-    expect(bytes.length).toBe(96_070)
-    expect(bmpFileSize(W, H, 2)).toBe(96_070)
-    expect(readBmpHeader(bytes)).toEqual({
-      signature: 'BM', fileSize: 96_070, dataOffset: 70, width: 480, height: 800, bitDepth: 2, compression: 0, colors: 4, palette: [0, 85, 170, 255],
+  it('檔頭：bpp 8、256 色、資料從 1,078 開始、大小 385,078 bytes（約 376 KB，小於 1 MB）', () => {
+    const bytes = encodeBmp(synthetic(), W, H)
+    expect(bytes.length).toBe(385_078)
+    expect(bmpFileSize(W, H)).toBe(385_078)
+    expect(bytes.length).toBeLessThan(SLEEP_BMP_MAX_BYTES)
+    expect(SLEEP_BMP_MAX_BYTES).toBe(1024 * 1024)
+    const header = readBmpHeader(bytes)
+    expect(header).toMatchObject({
+      signature: 'BM', fileSize: 385_078, dataOffset: 1078, width: 480, height: 800, bitDepth: 8, compression: 0, imageSize: 384_000, colors: 256,
     })
+    expect(header.palette).toEqual(Array.from({ length: 256 }, (_, v) => v))
   })
 
-  it('2-bit：由下往上存列、每 byte 4 個像素、高位在左', () => {
-    const levels = synthetic()
-    const bytes = encodeBmp(levels, W, H, 2)
-    // 第一列（畫面最上面）存在檔案最後一列；左上角像素是 3（白），接著三個 0（黑）
-    const lastRow = 70 + (H - 1) * 120
-    expect(bytes[lastRow]).toBe(0b11000000)
-    expect(bytes[70 + 119]).toBe(0b11111111)
-    expect(decodeBmpLevels(bytes)).toEqual(levels)
+  it('調色盤每格是 BGRA = v,v,v,0', () => {
+    const bytes = encodeBmp(synthetic(), W, H)
+    for (const v of [0, 1, 85, 128, 170, 254, 255]) expect([...bytes.subarray(54 + v * 4, 58 + v * 4)]).toEqual([v, v, v, 0])
   })
 
-  it('24-bit 備案：大小 1,152,054 bytes（超過 1 MB 下載上限，要用時得另外確認）', () => {
-    const levels = synthetic()
-    const bytes = encodeBmp(levels, W, H, 24)
-    expect(bytes.length).toBe(1_152_054)
-    expect(readBmpHeader(bytes)).toMatchObject({ bitDepth: 24, colors: 0, dataOffset: 54 })
-    expect(decodeBmpLevels(bytes)).toEqual(levels)
+  it('由下往上存列、每像素 1 byte（值就是灰階）', () => {
+    const gray = synthetic()
+    const bytes = encodeBmp(gray, W, H)
+    expect(bmpRowBytes(W)).toBe(480)
+    // 第一列（畫面最上面）存在檔案最後一列；左上角像素是 255（白），接著是漸層
+    const lastRow = 1078 + (H - 1) * 480
+    expect(bytes[lastRow]).toBe(255)
+    expect(bytes[lastRow + 1]).toBe(0)
+    expect(bytes[lastRow + 479]).toBe(255)
+    expect(decodeBmpGray(bytes)).toEqual(gray)
+  })
+
+  it('寬度不是 4 的倍數時每列補 0 到 4 bytes', () => {
+    const gray = Uint8Array.from([10, 20, 30, 40, 50, 60]) // 3×2
+    const bytes = encodeBmp(gray, 3, 2)
+    expect(bmpRowBytes(3)).toBe(4)
+    expect(bytes.length).toBe(1078 + 8)
+    expect([...bytes.subarray(1078)]).toEqual([40, 50, 60, 0, 10, 20, 30, 0])
+    expect(readBmpHeader(bytes).imageSize).toBe(8)
+    expect(decodeBmpGray(bytes)).toEqual(gray)
   })
 
   it('像素數不對就丟錯', () => {
     expect(() => encodeBmp(new Uint8Array(10), W, H)).toThrow()
   })
+
+  it('大小保護：達到 1 MB 外掛下載上限就丟錯，不產生外掛下載不了的檔', () => {
+    const w = 1400 // 1,078 + 1,400×800 = 1,121,078 bytes
+    expect(() => encodeBmp(new Uint8Array(w * H), w, H)).toThrow(/under 1048576/)
+  })
 })
 
-describe('繪圖與量化', () => {
+describe('buildSleepBmp：產生的休眠圖（假 canvas）', () => {
+  afterEach(() => { vi.unstubAllGlobals() })
+
+  it('480×800、8-bit、385,078 bytes（< 1 MB），反鋸齒的中間灰原樣寫進 BMP', async () => {
+    const W = SLEEP_WIDTH
+    const H = SLEEP_HEIGHT
+    // 假 canvas：每列一種灰（含不在 4 階上的中間灰），模擬反鋸齒後的像素
+    const pixels = new Uint8ClampedArray(W * H * 4)
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) pixels.set([y % 256, y % 256, y % 256, 255], (y * W + x) * 4)
+    const ctx = {
+      fillStyle: '', strokeStyle: '', lineWidth: 1, font: '', textAlign: 'left', textBaseline: 'alphabetic',
+      fillRect: () => {}, strokeRect: () => {}, fillText: () => {}, beginPath: () => {}, arc: () => {}, fill: () => {}, stroke: () => {},
+      getImageData: () => ({ data: pixels }),
+    }
+    vi.stubGlobal('OffscreenCanvas', class { width: number; height: number; constructor(w: number, h: number) { this.width = w; this.height = h } getContext() { return ctx } })
+    const bmp = await buildSleepBmp(normalDay(), { updatedAt: UPDATED_AT, texts: SLEEP_TEXTS, briefingPages: 24 })
+    expect(bmp.bytes.length).toBe(385_078)
+    expect(bmp.bytes.length).toBeLessThan(1024 * 1024)
+    expect(readBmpHeader(bmp.bytes)).toMatchObject({ width: 480, height: 800, bitDepth: 8, colors: 256 })
+    const decoded = decodeBmpGray(bmp.bytes)
+    expect(decoded).toEqual(bmp.gray)
+    expect([decoded[37 * W], decoded[200 * W], decoded[300 * W]]).toEqual([37, 200, 44])
+  })
+})
+
+describe('繪圖與轉灰階', () => {
   it('用排版指令畫到 2D context：文字帶 maxWidth、字型用系統字型堆疊', () => {
     const calls: string[] = []
     const ctx: Context2D = {
@@ -268,10 +313,11 @@ describe('繪圖與量化', () => {
     expect(cssFont({ family: 'mono', size: 15, weight: 600 })).toBe('600 15px "SF Mono", Menlo, "IBM Plex Mono", Consolas, monospace')
   })
 
-  it('量化到最近的一階；levelsToRgba 是反過來', () => {
+  it('轉灰階不量化：中間灰原樣保留（反鋸齒的字邊緣才平滑）；grayToRgba 是反過來', () => {
     const rgba = Uint8ClampedArray.from([0, 0, 0, 255, 60, 60, 60, 255, 100, 100, 100, 255, 180, 180, 180, 255, 230, 230, 230, 255, 255, 255, 255, 255])
-    const levels = quantizeToLevels(rgba)
-    expect([...levels]).toEqual([0, 1, 1, 2, 3, 3])
-    expect([...levelsToRgba(Uint8Array.from([0, 1, 2, 3]))].filter((_, i) => i % 4 === 0)).toEqual([0, 85, 170, 255])
+    expect([...rgbaToGray(rgba)]).toEqual([0, 60, 100, 180, 230, 255])
+    // 彩色用亮度：純紅、純綠、純藍
+    expect([...rgbaToGray(Uint8ClampedArray.from([255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255]))]).toEqual([76, 149, 28])
+    expect([...grayToRgba(Uint8Array.from([0, 37, 170, 255]))].filter((_, i) => i % 4 === 0)).toEqual([0, 37, 170, 255])
   })
 })

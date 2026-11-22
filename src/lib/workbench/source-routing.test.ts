@@ -98,6 +98,30 @@ beforeEach(() => {
 })
 
 describe('新增資料源（R1／R2）', () => {
+  it.each(['scan', 'image', 'file'] as const)('registers record-dialog %s as one external card with a judgement', async type => {
+    const attachment = { markId: 77, type, path: '/data/attachment.png', title: 'attachment.png', collectedAt: 1000 }
+    await actions.registerRecordAttachment(attachment)
+    await actions.registerRecordAttachment(attachment)
+    expect(fake.rows.size).toBe(1)
+    expect(fake.rows.get('rec_77')).toMatchObject({ sourceType: 'external', status: 'awaiting_decision', origin: attachment.path })
+    expect(useWorkbenchStore.getState().judgements.get('rec_77')).toMatchObject({ status: 'ready', type: expect.any(String) })
+    const { buildReviewCards } = await import('./cards')
+    const judgement = useWorkbenchStore.getState().judgements.get('rec_77')!
+    expect(buildReviewCards({
+      now: 1000, proposals: [], awaitingSources: [{ id: 'rec_77', title: attachment.title,
+        kindLabel: judgement.type!, judgement: judgement.type!, collectedAt: 1000 }],
+    })).toMatchObject([{ kind: 'source', verb: 'judge', summary: judgement.type, sourceId: 'rec_77' }])
+    expect(fake.kick).not.toHaveBeenCalled()
+    expect(fake.generate).not.toHaveBeenCalled()
+  })
+
+  it.each(['classic', 'mobile'])('skips attachment registration in %s', async mode => {
+    fake.v3 = mode !== 'classic'
+    fake.mobile = mode === 'mobile'
+    await actions.registerRecordAttachment({ markId: 77, type: 'scan', path: '/data/scan.png', title: 'scan.png' })
+    expect(fake.rows.size).toBe(0)
+  })
+
   it('AC#1: a link → 等你決定 with a one-line judgement in the store; the commander is not called', async () => {
     const rowId = await actions.addNewSource({ type: 'link', content: 'https://example.com/a' })
     await settle()

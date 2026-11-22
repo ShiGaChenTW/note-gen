@@ -168,7 +168,7 @@ export function sameThingKey(proposal: Proposal): string {
   // Fork（almanac ALMNC-54.12）：多則變更（清理、確認、稽核）以「改哪些東西、改成什麼」為準。
   if (proposal.edits?.length || proposal.domainEdits?.length || proposal.memoryEdits?.length) {
     return JSON.stringify(['edits', proposal.edits?.map(edit => [edit.path, edit.content]) ?? [], proposal.domainEdits?.map(edit => [edit.domainId, edit.overview]) ?? [],
-      proposal.memoryEdits?.map(edit => edit.target === 'work_notes' ? [edit.agent.id, edit.content] : ['context', JSON.stringify(edit.context)]) ?? []])
+      proposal.memoryEdits?.map(edit => edit.target === 'context' ? ['context', JSON.stringify(edit.context)] : [edit.target, edit.agent.id, edit.content]) ?? []])
   }
   return [proposal.kind, proposal.title.trim().replace(/\s+/g, ' ').toLowerCase(), proposal.due, proposal.time].join('|')
 }
@@ -206,7 +206,10 @@ function projectCollect(items: CollectItemLike[], journal: JournalSnapshot | nul
       let preview: DecidePreview
       const change = proposal.change
       const edit = proposal.edits?.[0]
-      if (edit) {
+      const rules = proposal.memoryEdits?.find(item => item.target === 'rules')
+      if (rules?.target === 'rules') {
+        preview = { type: 'file', path: `${rules.agent.name}/rules.md`, diff: previewDiff(rules.baseContent, rules.content) }
+      } else if (edit) {
         // Fork（almanac ALMNC-54.12）：清理提案預覽第一則筆記的修改前後。
         preview = { type: 'file', path: edit.path, diff: previewDiff(edit.baseContent ?? '', edit.content) }
       } else if (change) {

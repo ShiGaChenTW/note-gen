@@ -18,7 +18,10 @@ const mocks = vi.hoisted(() => ({
   rejectDecision: vi.fn(async () => {}),
   handToCommander: vi.fn(async (rows: unknown[]) => ({ count: rows.length, reorganise: 0 })),
   saveSourceEdit: vi.fn(async () => ({ rowId: 'src:d2', version: 2, versioned: true })),
-  startProcessConversation: vi.fn(async () => 42),
+  startProcessConversation: vi.fn(async () => ({
+    id: 42, experts: [{ id: 'e1', name: 'Alex', role: 'expert', domain: '工業工程', enabled: true }],
+  })),
+  mergeDeskNotes: vi.fn(async () => 'Inbox/Merged.md'),
   processSource: vi.fn(async () => {}),
   startLegacy: vi.fn(async () => ({ reason: 'paused', done: 0, undecided: 0, failed: 0, packs: 0 })),
   pauseLegacy: vi.fn(async () => {}),
@@ -64,6 +67,9 @@ vi.mock('@/lib/workbench/actions', async importOriginal => ({
   handToCommander: mocks.handToCommander,
   saveSourceEdit: mocks.saveSourceEdit,
   startProcessConversation: mocks.startProcessConversation,
+  mergeDeskNotes: mocks.mergeDeskNotes,
+  loadDeskMaterials: async (materials: import('@/lib/workbench/desk').DeskMaterial[]) => materials.map(material =>
+    material.path ? { ...material, noteRaw: material.text } : material),
   processSource: mocks.processSource,
   startLegacy: mocks.startLegacy,
   pauseLegacy: mocks.pauseLegacy,
@@ -395,6 +401,10 @@ describe('審核 tab', () => {
     expect($('[data-testid="desk-draft"] h2')!.textContent).toBe('工作稿')
     expect($('[data-testid="desk-help"] h2')!.textContent).toBe('協助')
     expect(mocks.startProcessConversation).toHaveBeenCalledTimes(1)
+    expect(mocks.startProcessConversation).toHaveBeenCalledWith(
+      [expect.objectContaining({ title: '白板照片', sourceId: 'w', text: expect.any(String) })], expect.any(String),
+    )
+    expect($('[data-testid="desk-help"]')!.textContent).toContain('Alex · 工業工程專家')
     expect(useWorkbenchStore.getState().desk.conversationId).toBe(42)
     expect([...$$('[data-desk-op]')].map(el => el.textContent)).toEqual([])
     expect($('[data-testid="desk-material"]')!.textContent).toContain(messages.workbench.desk.notesOnly)
@@ -402,6 +412,34 @@ describe('審核 tab', () => {
     expect($('[data-testid="desk"]')).toBeNull()
     expect(titles()).toContain('白板照片')
   })
+
+  it('ALMNC-54.22: confirms the merge before saving the edited working draft', async () => {
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValueOnce(false).mockReturnValueOnce(true)
+    try {
+      act(() => useWorkbenchStore.getState().openDesk([
+        { id: 'a', kind: 'note', path: 'a.md', title: 'A', text: '第一則' },
+        { id: 'b', kind: 'note', path: 'b.md', title: 'B', text: '第二則' },
+      ]))
+      await wait(0)
+      const draft = $<HTMLTextAreaElement>('[data-testid="desk-draft"] textarea')!
+      act(() => {
+        Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!.set!.call(draft, 'Scott 的新稿')
+        draft.dispatchEvent(new Event('input', { bubbles: true }))
+      })
+      const merge = $<HTMLButtonElement>('[data-desk-op="merge"]')!
+      expect(merge.disabled).toBe(false)
+      act(() => merge.click())
+      expect(mocks.mergeDeskNotes).not.toHaveBeenCalled()
+      await act(async () => merge.click())
+      expect(mocks.mergeDeskNotes).toHaveBeenCalledWith(
+        { title: 'A', body: 'Scott 的新稿' },
+        [expect.objectContaining({ path: 'a.md' }), expect.objectContaining({ path: 'b.md' })],
+        expect.objectContaining({ handTag: '親手寫的' }),
+      )
+      expect($('[data-testid="desk"]')).toBeNull()
+    } finally { confirm.mockRestore() }
+  })
+
 })
 
 // Fork（almanac ALMNC-54.21）：工作台補齊——日程列出所有未完成任務、等你回話、提案卡片可先改標題與位置。

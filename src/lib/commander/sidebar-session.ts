@@ -2,6 +2,8 @@
 // Scott 親口交代的任務和行程由秘書直接寫並貼一行確認與「復原」。
 // prepareSidebarCommanderRun 只靠注入的依賴（測試用假的）；createDefaultSidebarDeps 接到 App 裡既有的名單、記憶、
 // 今日日誌寫入、工作台（收集項目）、對話卡片與活動紀錄。
+import { rememberCompletedRoleWork } from '@/lib/agent-memory/runtime'
+import type { CompletedRoleWork } from '@/lib/agent-memory/completion'
 import type { AgentTool } from '@/lib/agent/types'
 import { ROLE_INSTRUCTIONS } from '@/lib/agents/instructions'
 import { agentDisplayName } from '@/lib/agents/display'
@@ -9,6 +11,7 @@ import type { AgentRole } from '@/lib/agents/settings'
 import type { Proposal } from '@/lib/collect/types'
 import type { AwaitingReply } from '@/lib/threads/awaiting'
 import type { DirectEditCardData, ProposalCardData } from '@/lib/threads/cards'
+import { deskMaterialPrompt, type DeskContext } from '@/lib/workbench/desk-context'
 import { describeDirectEdit, type DirectEdit } from './schedule-direct'
 import { buildCommanderSidebarPrompt, buildSidebarCommanderTools, changesToProposals, createChangeCollector } from './sidebar'
 
@@ -41,6 +44,7 @@ export interface SidebarRunDeps {
   roleLabel: RoleTranslator
   /** 工作台上這批提案的來源名稱，例如「Mia · 指揮官（對話）」。 */
   originLabel: (agent: string) => string
+  rememberWork?: (agent: SidebarRosterAgent, work: CompletedRoleWork) => Promise<void>
   now: () => Date
 }
 
@@ -51,6 +55,7 @@ export interface SidebarCommanderRun {
   transformTools: (tools: AgentTool[]) => AgentTool[]
   /** 執行結束後：把這次想改的檔案送進工作台、在訊息下面掛提案卡。回傳送出的提案。 */
   finish: () => Promise<Proposal[]>
+  remember: (completedAnswer: string) => Promise<void>
 }
 
 /** 名單裡的指揮官（沒有就用角色名稱）：「Mia · 指揮官」。 */
@@ -71,6 +76,9 @@ export async function prepareSidebarCommanderRun(
     answerAs?: SidebarRosterAgent
     /** Fork（almanac ALMNC-54.11）：路由器的決定，接在規則後面給模型參考（例如「這是交代秘書的日程」）。 */
     routeNote?: string
+    deskContext?: DeskContext
+    expertToolTitle?: string
+    askExpert?: (system: string, question: string, signal?: AbortSignal) => Promise<string>
   },
   deps: SidebarRunDeps,
 ): Promise<SidebarCommanderRun> {
@@ -80,8 +88,8 @@ export async function prepareSidebarCommanderRun(
   })
   const commander = roster.find(agent => agent.role === 'commander')
   const secretary = roster.find(agent => agent.role === 'secretary')
-  // 專家只讀回答（ALMNC-54.11 查詢）；其他時候是指揮官。
-  const speaker = input.readOnly && input.answerAs ? input.answerAs : commander
+  // 專家以只讀方式答詢，秘書處理日程；沒有指定夥伴時由指揮官接手。
+  const speaker = input.answerAs?.role === 'expert' && !input.readOnly ? commander : input.answerAs ?? commander
   const displayName = speaker && speaker !== commander ? agentDisplayName(speaker, deps.roleLabel) : commanderDisplayName(roster, deps.roleLabel)
   const secretaryName = secretary ? agentDisplayName(secretary, deps.roleLabel) : deps.roleLabel('secretary')
   let memory = ''
@@ -94,9 +102,46 @@ export async function prepareSidebarCommanderRun(
     }
   }
   // 「問」模式也是指揮官在回答，只是規則換成只讀（工具由 runtime 的 read-only 篩掉，這裡不替換）。
+  const materials = input.deskContext ? deskMaterialPrompt(input.deskContext) : ''
+  const experts = roster.filter(agent => agent.enabled && agent.role === 'expert' && input.deskContext?.expertIds.includes(agent.id))
+  const askExpert = input.askExpert
+  const expertTool: AgentTool | undefined = experts.length && askExpert ? {
+    name: 'desk_consult_expert',
+    title: input.expertToolTitle ?? 'Consult a desk domain expert',
+    description: `Ask for a read-only assessment of the desk materials. Available experts: ${experts.map(expert => `${expert.id} = ${expert.name} (${expert.domain})`).join(', ')}.`,
+    category: 'system',
+    risk: 'read',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        expertId: { type: 'string', enum: experts.map(expert => expert.id) },
+        question: { type: 'string' },
+      },
+      required: ['expertId', 'question'],
+      additionalProperties: false,
+    },
+    execute: async ({ expertId, question }, context) => {
+      const expert = experts.find(agent => agent.id === expertId)
+      if (!expert || typeof question !== 'string' || !question.trim()) {
+        return { ok: false, error: 'INVALID_EXPERT_REQUEST', message: 'Choose a desk expert and ask a specific question.' }
+      }
+      const expertMemory = await deps.memoryPrompt(expert).catch(() => '')
+      const system = [
+        ROLE_INSTRUCTIONS.expert,
+        `You are ${expert.name}, responsible for ${expert.domain}. Give a read-only opinion based on the supplied materials. State where evidence is missing.`,
+        expertMemory,
+        materials,
+      ].filter(Boolean).join('\n\n')
+      context?.signal?.throwIfAborted()
+      const answer = await askExpert(system, question, context?.signal)
+      return { ok: true, message: `${expert.name} (${expert.domain}): ${answer}` }
+    },
+  } : undefined
   const rolePrompt = [
-    buildCommanderSidebarPrompt({ instructions: ROLE_INSTRUCTIONS[speaker?.role ?? 'commander'], memory, displayName, readOnly: input.readOnly }),
+    buildCommanderSidebarPrompt({ instructions: ROLE_INSTRUCTIONS[speaker?.role ?? 'commander'], memory, displayName, readOnly: input.readOnly, role: speaker?.role }),
     input.routeNote?.trim() ?? '',
+    materials,
+    expertTool ? 'When Scott asks for a domain expert or the question needs domain judgment, consult the relevant expert with desk_consult_expert and attribute their assessment in your reply.' : '',
   ].filter(Boolean).join('\n\n')
 
   const collector = createChangeCollector()
@@ -154,7 +199,23 @@ export async function prepareSidebarCommanderRun(
   return {
     displayName,
     rolePrompt,
-    transformTools,
+    transformTools: tools => {
+      const selected = input.readOnly ? tools : transformTools(tools)
+      return expertTool ? [...selected, expertTool] : selected
+    },
+    remember: async completedAnswer => {
+      const rememberWork = deps.rememberWork
+      if (!completedAnswer.trim() || !speaker || !rememberWork || (input.conversationId ?? 0) <= 0) return
+      const work = {
+        request: input.scottMessages[0],
+        result: completedAnswer,
+        fromScott: true,
+        reference: `conversation:${input.conversationId}#${input.chatId}`,
+        conversationId: input.conversationId,
+      }
+      const participants = secretary && directCount > 0 && speaker !== secretary ? [speaker, secretary] : [speaker]
+      await Promise.all(participants.map(agent => rememberWork(agent, work)))
+    },
     finish: async () => {
       if (awaitedQuestion && conversationId !== undefined) {
         markAwaiting?.({ conversationId, chatId: input.chatId, question: awaitedQuestion, by: secretaryName, at: deps.now().getTime(), via: 'turn' })
@@ -234,6 +295,7 @@ export async function createDefaultSidebarDeps(labels: { roleLabel: RoleTranslat
     },
     roleLabel: labels.roleLabel,
     originLabel: labels.originLabel,
+    rememberWork: rememberCompletedRoleWork,
     now: () => new Date(),
   }
 }

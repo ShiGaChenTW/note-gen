@@ -141,6 +141,14 @@ function withLog(raw: string, words: NoteWords, today: string, text: string, pat
   return replaceBody(next, appendToSection(body, words.revisionLog, logLine(today, text)))
 }
 
+/** 保留原文，在修改紀錄與相關筆記標出合併後的位置。 */
+export function archiveMergedNote(raw: string, target: string, today: string, evidence: string, words = DEFAULT_NOTE_WORDS): string {
+  const { fields } = parseV3Note(raw)
+  return withLog(raw, words, today, words.log.merge({ evidence, other: wiki(target) }), {
+    status: 'archived', related: [...fields.related, wiki(target)],
+  })
+}
+
 function quote(text: string): string {
   return text.trim().split('\n').map(line => `> ${line}`).join('\n')
 }
@@ -258,8 +266,7 @@ function applyObservation(
     touch(working, keeper, next, base(keeper))
     for (const entry of otherParsed) {
       const current = read(working, notes, entry.path)!
-      const otherRelated = Array.from(new Set([...entry.parsed.fields.related, wiki(keeper)]))
-      touch(working, entry.path, withLog(current, words, today, words.log.merge({ evidence, other: wiki(keeper) }), { status: 'archived', related: otherRelated }), base(entry.path))
+      touch(working, entry.path, archiveMergedNote(current, keeper, today, evidence, words), base(entry.path))
     }
     return 'merge'
   }

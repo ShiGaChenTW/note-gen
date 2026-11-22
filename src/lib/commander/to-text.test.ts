@@ -9,6 +9,17 @@ function source(partial: Partial<Source> & Pick<Source, 'kind' | 'content'>): So
 }
 
 describe('toText', () => {
+  it.each([
+    ['screenshot', 'screenshot/saved.png'],
+    ['inserted_image', 'image/saved.png'],
+    ['file', '/tmp/saved.pdf'],
+  ])('opens the original path of a saved %s instead of its display title', async (kind, origin) => {
+    const convert = vi.fn(async () => 'Read from original')
+    const result = await toText(source({ kind, origin, content: 'original name.png' }), { ocrImage: convert, readFileText: convert })
+    expect(convert).toHaveBeenCalledWith(origin)
+    expect(result).toMatchObject({ status: 'converted', text: 'original name.png\n\nRead from original' })
+  })
+
   it('文字資料源不需要轉換，也不呼叫任何轉換器', async () => {
     const converters = { ocrImage: vi.fn(), fetchWeb: vi.fn(), transcribe: vi.fn(), readFileText: vi.fn() }
     const result = await toText(source({ kind: 'text', content: '  今天和 Amy 開會  ' }), converters)

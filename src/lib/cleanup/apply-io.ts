@@ -21,6 +21,8 @@ export async function defaultEditIo(): Promise<EditIo> {
     setDomainOverview: async (id, overview) => { await domains.updateDomain(id, { overview }) },
     getWorkNotes: async agent => (await memory.getAgentMemory(agent)).workNotes.content,
     setWorkNotes: async (agent, content) => { await memory.writeAgentMemory('scott', agent, 'work_notes', content) },
+    getRules: async agent => (await memory.getAgentMemory(agent)).rules.content,
+    setRules: async (agent, content) => { await memory.writeAgentMemory('scott', agent, 'rules', content) },
     getContext: async () => {
       const { projects, weeklyFocus, people } = await memory.getSharedContext()
       return { projects, weeklyFocus, people }

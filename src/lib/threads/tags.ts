@@ -167,3 +167,18 @@ export async function saveTagMap(map: ThreadTagMap, storage?: TagStorage): Promi
     return false
   }
 }
+
+/** 保存路由選定的夥伴 id，名稱與啟用狀態由名單重新取得。 */
+export async function threadRouteAgent(conversation: Pick<Conversation, 'id' | 'syncId'>, tag: ThreadTag, storage?: TagStorage): Promise<string | undefined> {
+  const store = storage ?? await defaultStorage()
+  const agentId = await store.get(`threadRouteAgent:${threadKey(conversation)}:${tag}`)
+  return typeof agentId === 'string' ? agentId : undefined
+}
+
+export async function saveThreadRouteAgent(conversation: Pick<Conversation, 'id' | 'syncId'>, tag: ThreadTag, id: string, storage?: TagStorage): Promise<void> {
+  const store = storage ?? await defaultStorage()
+  const key = `threadRouteAgent:${threadKey(conversation)}:${tag}`
+  if (await store.get(key) === id) return
+  await store.set(key, id)
+  await store.save()
+}

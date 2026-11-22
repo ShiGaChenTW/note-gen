@@ -5,6 +5,7 @@ import { createTranslator } from 'next-intl'
 import messages from '../../../messages/zh-TW.json'
 import { agentToolRegistry } from '@/lib/agent/tool-registry'
 import { ROLE_INSTRUCTIONS } from '@/lib/agents/instructions'
+import { buildDeskContext, readDeskContext } from '@/lib/workbench/desk-context'
 import type { Proposal } from '@/lib/collect/types'
 import { commanderDisplayName, prepareSidebarCommanderRun, type SidebarRunDeps } from './sidebar-session'
 import { SIDEBAR_ASK_RULES, SIDEBAR_COMMANDER_RULES } from './sidebar'
@@ -81,8 +82,21 @@ describe('ALMNC-54.11 routed runs', () => {
     expect(run.displayName).toBe('Alex · 工業工程專家')
     expect(deps.memoryPrompt).toHaveBeenCalledWith(expert)
     expect(run.rolePrompt).toContain(ROLE_INSTRUCTIONS.expert)
-    expect(run.rolePrompt).toContain(SIDEBAR_ASK_RULES)
+    expect(run.rolePrompt).toContain(SIDEBAR_ASK_RULES.replace('as the commander', 'as the expert'))
     expect(run.rolePrompt.endsWith('Router: query')).toBe(true)
+  })
+
+  it('uses secretary memory for schedule replies and learns only on completion', async () => {
+    const rememberWork = vi.fn(async () => {})
+    const { deps } = fakeDeps({ rememberWork })
+    const run = await prepareSidebarCommanderRun({ conversationId: 7, chatId: 70, scottMessages: ['提前提醒我'], answerAs: ROSTER[1] }, deps)
+    expect(deps.memoryPrompt).toHaveBeenCalledWith(ROSTER[1])
+    await run.finish()
+    expect(rememberWork).not.toHaveBeenCalled()
+    await run.remember('下次會提前提醒。')
+    expect(rememberWork).toHaveBeenCalledWith(ROSTER[1], expect.objectContaining({
+      reference: 'conversation:7#70', request: '提前提醒我', fromScott: true,
+    }))
   })
 
   it('answerAs is ignored outside read-only runs（只讀才由專家回答）', async () => {
@@ -186,5 +200,37 @@ describe('secretary waiting for Scott\'s reply', () => {
     const { deps } = awaitingDeps()
     const run = await prepareSidebarCommanderRun({ chatId: -1, scottMessages: [] }, deps)
     expect(run.transformTools(agentToolRegistry.listTools()).some(entry => entry.name === 'schedule_await_reply')).toBe(false)
+  })
+})
+
+describe('ALMNC-54.22 desk consultation', () => {
+  it('restores multiple materials and consults only enabled experts for their frontmatter domains', async () => {
+    const expert = { id: 'e-1', name: 'Alex', role: 'expert' as const, domain: '工業工程', enabled: true }
+    const disabled = { id: 'e-2', name: 'Kim', role: 'expert' as const, domain: '寫作', enabled: false }
+    const roster = [...ROSTER, expert, disabled]
+    const seed = buildDeskContext([
+      { id: 'a', kind: 'note', path: 'a.md', title: 'A', noteRaw: '---\ndomains: [ie, 寫作]\nsources: [s1]\n---\n產線', text: '產線' },
+      { id: 'b', kind: 'note', path: 'b.md', title: 'B', noteRaw: '---\ndomains: 工業工程\n---\n瓶頸', text: '瓶頸' },
+      { id: 'c', kind: 'source', sourceId: 's2', title: 'C', text: '現場觀察' },
+    ], [{ id: 'ie', name: '工業工程' } as Parameters<typeof buildDeskContext>[1][number]], roster)
+    expect(seed.expertIds).toEqual(['e-1'])
+    expect(seed.materials[0].noteSourceIds).toEqual(['s1'])
+    expect(seed.materials[2].sourceId).toBe('s2')
+    const deskContext = readDeskContext([{ type: 'desk_context', content: JSON.stringify(seed) }])
+    expect(deskContext?.materials).toHaveLength(3)
+    const { deps } = fakeDeps({ roster: async () => roster, memoryPrompt: async agent => `Memory for ${agent.name}` })
+    const askExpert = vi.fn(async () => '第三站需要更多數據')
+    const run = await prepareSidebarCommanderRun({ chatId: 3, scottMessages: ['請專家判斷'], deskContext, askExpert }, deps)
+    expect(run.displayName).toBe('Mia · 指揮官')
+    expect(run.rolePrompt).toContain('產線')
+    expect(run.rolePrompt).toContain('瓶頸')
+    expect(run.rolePrompt).toContain('現場觀察')
+    const consult = tool(run, 'desk_consult_expert')
+    expect(consult.risk).toBe('read')
+    expect(await consult.execute({ expertId: 'e-2', question: '看這些筆記' }, context)).toMatchObject({ ok: false })
+    expect(askExpert).not.toHaveBeenCalled()
+    expect(await consult.execute({ expertId: 'e-1', question: '看這些筆記' }, context)).toMatchObject({ ok: true, message: 'Alex (工業工程): 第三站需要更多數據' })
+    expect(askExpert).toHaveBeenCalledWith(expect.stringContaining('Memory for Alex'), '看這些筆記', undefined)
+    expect(askExpert).toHaveBeenCalledWith(expect.stringContaining('現場觀察'), '看這些筆記', undefined)
   })
 })

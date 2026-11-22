@@ -39,7 +39,7 @@ function normalize(path: string): string {
   return path.trim().replace(/\\/g, '/').replace(/^\.\//, '').replace(/^\/+|\/+$/g, '')
 }
 
-export async function commitNoteWrites(writes: CoordinatedWrite[]): Promise<CommittedWrite[]> {
+export async function commitNoteWrites(writes: CoordinatedWrite[], options?: { requireExisting?: boolean }): Promise<CommittedWrite[]> {
   if (writes.length === 0) return []
   const result = await rewriteNotes(writes.map(write => ({
     path: write.path,
@@ -49,7 +49,7 @@ export async function commitNoteWrites(writes: CoordinatedWrite[]): Promise<Comm
       if (rebased === null) throw new NoteWriteConflict(write.path)
       return rebased
     },
-  })))
+  })), options)
   // rewriteNotes 只回傳真的有改到的檔案，依呼叫順序整理回來
   const byPath = new Map(result.map(item => [normalize(item.path), item]))
   return writes.flatMap(write => {

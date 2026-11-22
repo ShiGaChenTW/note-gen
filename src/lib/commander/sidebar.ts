@@ -174,11 +174,12 @@ export const SIDEBAR_ASK_RULES = [
   'You are talking with Scott in the right sidebar as the commander, in Ask mode: answer only. Do not change, propose or schedule anything. If Scott wants something changed or scheduled, tell him to switch to Process (處理).',
 ].join('\n')
 
-export function buildCommanderSidebarPrompt(input: { instructions: string, memory: string, displayName: string, readOnly?: boolean }): string {
+export function buildCommanderSidebarPrompt(input: { instructions: string, memory: string, displayName: string, readOnly?: boolean, role?: string }): string {
+  const rules = input.readOnly ? SIDEBAR_ASK_RULES : SIDEBAR_COMMANDER_RULES
   return [
     input.instructions,
     `Your name in this app is "${input.displayName}".`,
     input.memory,
-    input.readOnly ? SIDEBAR_ASK_RULES : SIDEBAR_COMMANDER_RULES,
+    input.role ? rules.replace('as the commander', `as the ${input.role}`) : rules,
   ].filter(text => text.trim()).join('\n\n')
 }

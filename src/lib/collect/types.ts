@@ -98,7 +98,7 @@ export interface DomainEdit {
 
 /** Fork（almanac ALMNC-54.13）：記憶稽核的刪除。base 是提案當下的內容，被改過就不寫。 */
 export type MemoryEdit =
-  | { target: 'work_notes', agent: { id: string, name: string, role: 'commander' | 'expert' | 'secretary' | 'researcher', domain?: string }, baseContent: string, content: string, summary: string }
+  | { target: 'work_notes' | 'rules', agent: { id: string, name: string, role: 'commander' | 'expert' | 'secretary' | 'researcher', domain?: string }, baseContent: string, content: string, summary: string }
   | { target: 'context', baseContext: { projects: Array<{ title: string, link?: string }>, weeklyFocus: Array<{ title: string, link?: string }>, people: string[] }, context: { projects: Array<{ title: string, link?: string }>, weeklyFocus: Array<{ title: string, link?: string }>, people: string[] }, summary: string }
 
 /** Fork（almanac ALMNC-54.7）：一筆還沒寫入的檔案變更。欄位同背景任務的草稿（agent-tasks/types.ts DraftChange）。 */

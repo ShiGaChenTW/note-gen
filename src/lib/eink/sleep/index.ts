@@ -1,15 +1,14 @@
 // Fork（almanac ALMNC-49）：休眠畫面的對外入口。
-//   buildSleepBmp(briefing, input)  Briefing（ALMNC-47）→ 排版（layout.ts，純函式）→ canvas → 4 階灰 → BMP
+//   buildSleepBmp(briefing, input)  Briefing（ALMNC-47）→ 排版（layout.ts，純函式）→ canvas → 0–255 灰階 → 8-bit BMP（< 1 MB）
 //   buildTodaySleepBmp(date)        app 內：讀今天的簡報、順便算今日簡報頁數，產生 sleep.bmp
 // 區網下載（ALMNC-50）與立即推送（ALMNC-52）讀這裡的結果；這張票不做 UI 也不開服務。
 import type { Briefing } from '@/lib/eink/briefing/types'
 import { encodeBmp } from './bmp'
 import { layoutSleepScreen, type SleepInput, type SleepLayout } from './layout'
-import { SLEEP_BMP_BIT_DEPTH, type BmpBitDepth } from './params'
 import { rasterizeSleepLayout } from './render'
 
 export { layoutSleepScreen } from './layout'
-export { encodeBmp, readBmpHeader } from './bmp'
+export { encodeBmp, readBmpHeader, SLEEP_BMP_MAX_BYTES } from './bmp'
 export { SLEEP_BMP_BIT_DEPTH, SLEEP_HEIGHT, SLEEP_WIDTH } from './params'
 
 export const SLEEP_FILE_NAME = 'sleep.bmp'
@@ -17,13 +16,14 @@ export const SLEEP_FILE_NAME = 'sleep.bmp'
 export interface SleepBmp {
   bytes: Uint8Array
   layout: SleepLayout
-  levels: Uint8Array
+  /** 每像素 0–255 的灰階，由上往下、由左往右 */
+  gray: Uint8Array
 }
 
-export async function buildSleepBmp(briefing: Briefing, input: SleepInput, bitDepth: BmpBitDepth = SLEEP_BMP_BIT_DEPTH): Promise<SleepBmp> {
+export async function buildSleepBmp(briefing: Briefing, input: SleepInput): Promise<SleepBmp> {
   const layout = layoutSleepScreen(briefing, input)
-  const levels = await rasterizeSleepLayout(layout)
-  return { bytes: encodeBmp(levels, layout.width, layout.height, bitDepth), layout, levels }
+  const gray = await rasterizeSleepLayout(layout)
+  return { bytes: encodeBmp(gray, layout.width, layout.height), layout, gray }
 }
 
 /** app 內：產生 date 那天的休眠畫面（只讀，不把任何東西標成已送）。 */

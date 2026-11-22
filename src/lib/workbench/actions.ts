@@ -3,15 +3,18 @@
 import { acceptDecision, rejectDecision } from '@/lib/decide/actions'
 import type { DecideItem } from '@/lib/decide/project'
 import { acceptedFromDecide, logAcceptedProposal } from '@/lib/proposals/accepted-activity'
-import { LEGACY_NOTE_KIND, latestVersions, type Source } from '@/lib/v3-model/source'
+import { LEGACY_NOTE_KIND, latestVersions, type NewSourceInput, type Source } from '@/lib/v3-model/source'
 import { legacyProgress, type LegacyRunSummary } from '@/lib/migration/legacy'
 import useCollectStore from '@/stores/collect'
 import useWorkbenchStore from '@/stores/workbench'
 import type { WorkbenchCard, TaskLike } from './cards'
-import { applyStructuralOp, handwrittenNote, noteFileName, type DeskMaterial, type NoteIo, type StructuralOp } from './desk'
+import { applyStructuralOp, handwrittenNote, mergeDeskDraft, noteFileName, type DeskMaterial, type NoteIo, type StructuralOp } from './desk'
+import { splitFrontmatter } from '@/lib/markdown/frontmatter-split'
+import { noteTitle, parseV3Note } from '@/lib/v3-model/note'
+import { buildDeskContext } from './desk-context'
 import { bridgeInput, planHandToCommander, type SourceListRow } from './sources-tab'
-import { ingestSource, judgeSource, newSourceType, type SourceJudgement } from './judgement'
-import { conversationConclusionSource, dailyEntrySource, externalAudioSource, noteSource, recordTextSource, researchFindingSource, routeAutoSource, routeVersionedSource, voiceMemoSource, type AutoRouteResult, type AutoSourceInput, type ResearchFindingLike, type VersionedRouteResult } from './auto-route'
+import { attachmentKind, ingestSource, judgeSource, newSourceType, type SourceJudgement } from './judgement'
+import { conversationConclusionSource, dailyEntrySource, externalAudioSource, recordAttachmentSource, noteSource, recordTextSource, researchFindingSource, routeAutoSource, routeVersionedSource, voiceMemoSource, type AutoRouteResult, type AutoSourceInput, type RecordAttachment, type ResearchFindingLike, type VersionedRouteResult } from './auto-route'
 
 export type Undo = (() => Promise<unknown>) | undefined
 
@@ -117,11 +120,22 @@ export async function resolveLegacyPack(packId: string): Promise<Undo> {
  * 本機模型（ollama）沒開、抓不到網頁都不會丟錯：沒有判斷、或標成擷取失敗。
  */
 export async function requestJudgement(source: Pick<Source, 'id' | 'kind' | 'content' | 'origin'>, options: { refresh?: boolean } = {}): Promise<SourceJudgement> {
-  const [judgements, { defaultLocalModel }] = await Promise.all([import('@/db/v3-source-judgements'), import('@/lib/local-model/default')])
-  const model = await defaultLocalModel().catch(() => undefined)
+  const judgements = await import('@/db/v3-source-judgements')
+  const attachmentKey = attachmentKind(source.kind)
   const previous = await judgements.getSourceJudgement(source.id).catch(() => undefined)
+  let attachmentLabel: string | undefined
+  if (attachmentKey) {
+    const [{ DEFAULT_LOCALE, LANGUAGE_STORAGE_KEY, loadMessagesWithFallback, normalizeLocale }, { createTranslator }] =
+      await Promise.all([import('@/i18n/config'), import('next-intl')])
+    const locale = typeof window === 'undefined' ? DEFAULT_LOCALE : normalizeLocale(window.localStorage?.getItem(LANGUAGE_STORAGE_KEY))
+    const t = createTranslator({ locale, messages: await loadMessagesWithFallback(locale), namespace: 'workbench.sources.attachmentJudgement' })
+    attachmentLabel = t(attachmentKey)
+  }
+  const model = attachmentKey ? undefined
+    : await import('@/lib/local-model/default').then(({ defaultLocalModel }) => defaultLocalModel()).catch(() => undefined)
   const result = await judgeSource(source, {
     model,
+    attachmentLabel,
     previous,
     fetchPage: async url => {
       const { capturePublicWebPage } = await import('@/lib/web-capture/service')
@@ -407,7 +421,15 @@ export function registerVoiceMemo(memo: { markId: number, transcript: string, au
  * 只在桌面版 V3；同一則記錄重複登錄會跳過。
  */
 export async function registerExternalAudio(memo: { markId: number, transcript: string, audioPath?: string }): Promise<void> {
-  const input = externalAudioSource(memo)
+  return registerExternalRecord(externalAudioSource(memo))
+}
+
+/** 對話框擷取的附件和選入音訊同走 R1。 */
+export function registerRecordAttachment(attachment: RecordAttachment): Promise<void> {
+  return registerExternalRecord(recordAttachmentSource(attachment))
+}
+
+async function registerExternalRecord(input: NewSourceInput | undefined): Promise<void> {
   if (!input) return
   const { isUiV3 } = await import('@/lib/fork-ui')
   if (!isUiV3()) return
@@ -416,10 +438,14 @@ export async function registerExternalAudio(memo: { markId: number, transcript: 
     const db = await import('@/db/v3-sources')
     const source = await db.addSourceIfAbsent(input)
     if (!source) return
+    if (attachmentKind(source.kind)) {
+      await requestJudgement(source, { refresh: false }).catch(error => console.warn('[judgement] failed:', error))
+    } else {
+      void requestJudgement(source).catch(error => console.warn('[judgement] failed:', error))
+    }
     await refreshSources()
-    void requestJudgement(source).catch(error => console.warn('[judgement] failed:', error))
   } catch (error) {
-    console.warn('[workbench] external audio failed:', error)
+    console.warn('[workbench] external record failed:', error)
   }
 }
 
@@ -532,13 +558,49 @@ export async function addImportedSources(inputs: readonly ImportedSourceInput[],
 
 // —— 檯面 ——
 
-/** 開一段標成「處理」的對話（指揮官參與），給檯面的協助欄。 */
-export async function startProcessConversation(): Promise<number> {
-  const [{ default: useChatStore }, { default: useThreadsStore }] = await Promise.all([import('@/stores/chat'), import('@/stores/threads')])
-  const id = await useChatStore.getState().createConversation()
-  const created = useChatStore.getState().conversations.find(entry => entry.id === id) ?? { id, syncId: '' }
-  await useThreadsStore.getState().setTag(created, 'process')
-  return id
+/** 先把編輯器中尚未存下的內容結清，再讀取檯面的筆記素材。 */
+export async function loadDeskMaterials(materials: DeskMaterial[]): Promise<DeskMaterial[]> {
+  const paths = materials.flatMap(material => material.path ?? [])
+  if (!paths.length) return materials
+  const [{ readNote }, { prepareActiveEditorPathMutationDurably }, { default: article }] = await Promise.all([
+    import('@/lib/daily/note-io'), import('@/lib/editor-deactivation'), import('@/stores/article'),
+  ])
+  if (!await prepareActiveEditorPathMutationDurably(article.getState().activeFilePath, paths)) throw new Error('Pending edits could not be saved')
+  return Promise.all(materials.map(async material => {
+    if (!material.path) return material
+    const noteRaw = await readNote(material.path)
+    if (noteRaw === null) return { ...material, noteRaw: undefined }
+    const text = splitFrontmatter(noteRaw).body
+    let title = material.title
+    try { title = noteTitle(parseV3Note(noteRaw), material.path) || title } catch { /* Keep the list title. */ }
+    return { ...material, title, text, noteRaw }
+  }))
+}
+
+/** 保存素材快照與專家編號。協助欄接管 ChatDock 時再切換對話。 */
+export async function startProcessConversation(materials: readonly DeskMaterial[], fallbackTitle: string) {
+  const [conversations, { insertChat }, { default: tag }, { default: threads }, agents, domains] = await Promise.all([
+    import('@/db/conversations'), import('@/db/chats'), import('@/stores/tag'), import('@/stores/threads'),
+    import('@/db/agents'), import('@/db/v3-domains'),
+  ])
+  await agents.ensureDefaultRoster()
+  const [roster, domainList] = await Promise.all([agents.listAgentSettings(), domains.listDomains()])
+  const context = buildDeskContext(materials, domainList, roster)
+  const id = await conversations.createConversation(materials[0]?.title || fallbackTitle)
+  try {
+    const created = await conversations.getConversation(id)
+    if (!created) throw new Error('Conversation not found')
+    const message = await insertChat({
+      conversationId: id, tagId: tag.getState().currentTagId,
+      role: 'system', type: 'desk_context', inserted: false, content: JSON.stringify(context),
+    })
+    if (!message.lastInsertId) throw new Error('Desk context could not be saved')
+    await threads.getState().markCommanderThread(created)
+    return { id, experts: roster.filter(agent => context.expertIds.includes(agent.id)) }
+  } catch (error) {
+    await conversations.deleteConversation(id).catch(cleanupError => console.error('[workbench] cannot clean up conversation:', cleanupError))
+    throw error
+  }
 }
 
 export async function defaultNoteIo(): Promise<NoteIo> {
@@ -564,23 +626,72 @@ export async function runDeskOp(op: StructuralOp): Promise<{ path?: string, undo
   return applyStructuralOp(op, await defaultNoteIo())
 }
 
-/** 工作稿存成筆記（直接生效，標上「親手寫的」），存到收件資料夾；資料源連到這則筆記。回傳路徑。 */
-export async function saveDeskNote(draft: { title: string, body: string }, materials: readonly DeskMaterial[], handTag: string, fallbackName: string): Promise<string> {
-  const [{ writeNote, noteExists }, { default: useDailySettingsStore }, sources] = await Promise.all([
-    import('@/lib/daily/note-io'),
-    import('@/stores/daily-settings'),
-    import('@/db/v3-sources'),
+async function deskNotePath(title: string, fallbackName: string): Promise<string> {
+  const [{ noteExists }, { default: useDailySettingsStore }] = await Promise.all([
+    import('@/lib/daily/note-io'), import('@/stores/daily-settings'),
   ])
   await useDailySettingsStore.getState().initSettings()
   const folder = useDailySettingsStore.getState().inboxFolder.replace(/^\/+|\/+$/g, '')
-  const name = noteFileName(draft.title, fallbackName)
+  const name = noteFileName(title, fallbackName)
   let path = folder ? `${folder}/${name}` : name
   for (let n = 2; await noteExists(path); n++) path = path.replace(/( \d+)?\.md$/, ` ${n}.md`)
+  return path
+}
+
+/** 工作稿存成筆記（直接生效，標上「親手寫的」），存到收件資料夾；資料源連到這則筆記。 */
+export async function saveDeskNote(draft: { title: string, body: string }, materials: readonly DeskMaterial[], handTag: string, fallbackName: string): Promise<string> {
+  const [{ writeNote }, sources, path] = await Promise.all([
+    import('@/lib/daily/note-io'), import('@/db/v3-sources'), deskNotePath(draft.title, fallbackName),
+  ])
   await writeNote(path, handwrittenNote(draft, materials, handTag))
   for (const material of materials) {
     if (material.sourceId) await sources.addSourceOutput(material.sourceId, 'note', path).catch(() => undefined)
   }
   // Fork（almanac ALMNC-54.12）：親手寫的筆記存檔後也比對衝突（發現時機 2）；背景執行，不擋存檔。
   void import('@/lib/cleanup/runtime').then(module => module.checkAfterWrite(path, 'handwritten')).catch(() => undefined)
+  return path
+}
+
+
+/** 合併是 Scott 確認後的直接寫入；原件改寫經編輯器協調，遇到變更或失敗時復原。 */
+export async function mergeDeskNotes(
+  draft: { title: string, body: string },
+  materials: readonly DeskMaterial[],
+  options: { handTag: string, fallbackName: string, reason: string },
+): Promise<string> {
+  const [noteIo, sources, { toDateKey }, { commitNoteWrites }, { default: settings }] = await Promise.all([
+    import('@/lib/daily/note-io'), import('@/db/v3-sources'), import('@/lib/daily/format'),
+    import('@/lib/daily/coordinated-write'), import('@/stores/setting'),
+  ])
+  const workspace = settings.getState().workspacePath
+  const [path, ...outputs] = await Promise.all([
+    deskNotePath(draft.title, options.fallbackName),
+    ...materials.flatMap(material => material.path ? [sources.listOutputsToTarget('note', material.path)] : []),
+  ])
+  const plan = mergeDeskDraft(draft, materials, path, {
+    ...options, today: toDateKey(new Date()), sourceIds: outputs.flat().map(output => output.sourceId),
+  })
+  const checkWorkspace = () => {
+    if (settings.getState().workspacePath !== workspace) throw new Error('WORKSPACE_CHANGED')
+  }
+  checkWorkspace()
+  await noteIo.writeNote(path, plan.content, { createNew: true })
+  try {
+    checkWorkspace()
+    await commitNoteWrites(plan.writes, { requireExisting: true })
+  } catch (error) {
+    checkWorkspace()
+    if (await noteIo.readNote(path) === plan.content) {
+      await noteIo.removeNote(path).catch(cleanupError => console.error('[workbench] cannot roll back merged note:', cleanupError))
+    }
+    throw error
+  }
+
+  await Promise.allSettled([
+    ...plan.sources.map(id => sources.addSourceOutput(id, 'note', path)),
+    noteIo.revealInFileTree(path),
+  ]).then(results => {
+    for (const result of results) if (result.status === 'rejected') console.warn('[workbench] merge follow-up failed:', result.reason)
+  })
   return path
 }

@@ -60,7 +60,7 @@ function reviseFields(original: Proposal, patch: Record<string, unknown>): Propo
   if (original.memoryEdits && Array.isArray(patch.workNoteContents)) {
     const contents = patch.workNoteContents
     revised.memoryEdits = original.memoryEdits.map((edit, index) =>
-      edit.target === 'work_notes' && typeof contents[index] === 'string' ? { ...edit, content: contents[index] } : edit)
+      edit.target !== 'context' && typeof contents[index] === 'string' ? { ...edit, content: contents[index] } : edit)
   }
   return revised
 }

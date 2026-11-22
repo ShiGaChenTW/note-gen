@@ -41,6 +41,7 @@
       "soul": "soul.md (personality)",
       "soulHint": "Only you can edit this.",
       "rules": "rules.md (working rules)",
+      "rulesProposal": "Update {name}’s rules.md",
       "rulesHint": "Agents send you a proposal when they want to change it.",
       "workNotes": "Work notes",
       "workNotesHint": "How the agent likes to work, learned from experience. No domain content.",
@@ -8799,6 +8800,9 @@
     "collapseSection": "Collapse {title}",
     "expandSection": "Expand {title}",
     "noteList": {
+      "select": "Select",
+      "selected": "{count} selected",
+      "spread": "Spread to desk",
       "label": "Notes in {folder}",
       "empty": "No notes in this folder yet",
       "close": "Close note list"
@@ -8815,12 +8819,48 @@
       "timeline": "Notes timeline",
       "canvases": "Canvas",
       "noteTags": "Tags",
+      "domains": "Domains",
       "prompts": "Prompts",
       "outline": "Outline"
     },
     "knowledge": {
       "title": "Organize",
-      "subtitle": "Timeline, canvases and tags; the notes tree is in {vault} on the left"
+      "subtitle": "Domains, timeline, canvases and tags; the notes tree is in {vault} on the left"
+    },
+    "domains": {
+      "label": "Domains",
+      "all": "All domains",
+      "indexing": "Indexing notes…",
+      "loading": "Loading domains…",
+      "loadError": "Could not load domains",
+      "empty": "No domains yet. Once 3 or more knowledge notes pile up on one topic, the commander proposes a domain in the Workbench.",
+      "count": "{count, plural, one {# knowledge note} other {# knowledge notes}}",
+      "updated": "Updated {date}",
+      "missing": "This domain was not found. It may have been deleted.",
+      "overview": "Overview",
+      "coreConcepts": "Core concepts",
+      "keyConclusions": "Key conclusions",
+      "openQuestions": "Contradictions and open questions",
+      "notes": "Knowledge notes",
+      "related": "Related domains",
+      "parent": "Parent",
+      "children": "Sub-domains",
+      "siblings": "Same level",
+      "emptyOverview": "No overview yet.",
+      "emptyCoreConcepts": "No core concepts yet. They appear here once the domain's expert has organized them.",
+      "emptyKeyConclusions": "No key conclusions yet. They appear here once the domain's expert has organized them, each with its source note.",
+      "emptyOpenQuestions": "No contradictions or open questions. Notes found to disagree during organizing are listed here.",
+      "emptyNotes": "This domain has no knowledge notes yet.",
+      "emptyRelated": "No related domains.",
+      "openNote": "Open note \"{title}\"",
+      "missingNote": "Note \"{target}\" not found",
+      "status": {
+        "valid": "Valid",
+        "disputed": "Needs verification",
+        "superseded": "Superseded",
+        "archived": "Archived"
+      },
+      "confirmed": "Confirmed {date}"
     }
   },
   "organize": {
@@ -9110,6 +9150,10 @@
         "done": "Organized",
         "no": "Not used"
       },
+      "attachmentJudgement": {
+        "image": "Text recognition pending",
+        "file": "File content pending review"
+      },
       "kind": {
         "web": "Web",
         "text": "Text",
@@ -9223,8 +9267,14 @@
       "handTag": "handwritten",
       "fallbackName": "Desk note",
       "helpStarting": "Starting a processing conversation…",
-      "helpHint": "Processing conversation with {name} and the domain expert",
-      "helpFailed": "Couldn't start the processing conversation; try again from Threads",
+      "consultExpert": "Consult a domain expert",
+      "materialsUnavailable": "Some materials could not be read.",
+      "helpHint": "Processing conversation · {name}",
+      "helpFailed": "Could not open the processing conversation.",
+      "mergeConfirm": "Merge these {count} notes? The working draft will become a new note with all sources. The originals will be archived and marked with the merge destination.",
+      "mergeReason": "Merged on the desk",
+      "merged": "Merged into “{path}”",
+      "mergeFailed": "Could not merge the notes. Reopen the materials and check that the originals are still available.",
       "empty": "No materials",
       "notesOnly": "Only notes support structural actions",
       "ops": {
@@ -9236,7 +9286,6 @@
         "link": "Link to…",
         "assignDomain": "Assign domain",
         "merge": "Merge notes",
-        "mergeLater": "Merging notes comes later",
         "apply": "Apply",
         "noDomains": "No domains yet"
       },

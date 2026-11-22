@@ -1,4 +1,6 @@
 "use client"
+import { saveThreadRouteAgent, threadRouteAgent } from '@/lib/threads/tags'
+import { isMobileDevice } from '@/lib/check'
 import { ArrowUp, Send, Square } from "lucide-react"
 import useSettingStore from "@/stores/setting"
 import useChatStore from "@/stores/chat"
@@ -23,7 +25,7 @@ import type { AgentPermissionMode } from "@/lib/agent/types"
 import { createDefaultSidebarDeps, prepareSidebarCommanderRun } from '@/lib/commander/sidebar-session' // Fork（almanac ALMNC-54.7）
 import useThreadsStore from '@/stores/threads'
 // Fork（almanac ALMNC-54.11）：路由器三層（規則、本機模型、問 Scott）。
-import { chooseRoute, planSidebarRoute, routeNote, savePreferenceLine, shouldRouteSidebarMessage, type SidebarRoutePlan } from '@/lib/router/sidebar'
+import { chooseRoute, planSidebarRoute, routeNote, restoreSidebarRoute, savePreferenceLine, shouldRouteSidebarMessage, type SidebarRoutePlan } from '@/lib/router/sidebar'
 import type { RosterEntry, RouteDecision } from '@/lib/router/router'
 import { threadKey } from '@/lib/threads/projects'
 import useRouterStore, { type RouterAnswer } from '@/stores/router'
@@ -37,7 +39,8 @@ import type { AgentApprovalDecision, AgentSteeringPayload } from "@/lib/agent/ty
 import { serializeChatAttachments, type RuntimeChatAttachment } from '@/lib/chat-attachments'
 import { retainCompletedAgentTraceEvents } from '@/lib/agent/trace-retention'
 import { noteGenModelDisplayName } from '@/components/notegen-model-label'
-import { getAISettingsByModelId } from '@/lib/ai/utils'
+import { createOpenAIClient, getAISettings, getAISettingsByModelId, withFastAiRequestOptions } from '@/lib/ai/utils'
+import { readDeskContext } from '@/lib/workbench/desk-context'
 import { applyChatReasoningOverride } from '@/lib/ai/chat-reasoning'
 import type { AiConfig } from '@/app/core/setting/config'
 import type { ResolvedPromptModelSuggestion } from '@/lib/prompt-library/chat-model-suggestion'
@@ -478,8 +481,9 @@ export const ChatSend = forwardRef<ChatSendHandle, ChatSendProps>(({
   }
 
   // Fork（almanac ALMNC-54.7）：右側欄指揮官的一次執行（工作指示、記憶、工具替換、提案卡、直接修改的確認卡）。
-  async function prepareCommanderRun(placeholder: Chat, requestText: string, readOnly: boolean, routed: RunPlan | null = null) {
+  async function prepareCommanderRun(placeholder: Chat, requestText: string, readOnly: boolean, routed: RunPlan | null, aiConfig?: AiConfig) {
     const { chats } = useChatStore.getState()
+    const deskContext = isMobile ? undefined : readDeskContext(chats.filter(chat => chat.conversationId === placeholder.conversationId))
     const scottMessages = [requestText, ...chats.filter(chat => chat.role === 'user' && chat.id !== placeholder.id).map(chat => chat.content ?? '').reverse()]
       .filter(text => text.trim())
       .slice(0, 6)
@@ -487,6 +491,9 @@ export const ChatSend = forwardRef<ChatSendHandle, ChatSendProps>(({
     // Fork（almanac ALMNC-54.11）：路由器選的標籤（新對話先記成草稿）要先補進對照表，免得下面標成處理時蓋掉。
     if (routed) await useThreadsStore.getState().claimDraftTag(useChatStore.getState().conversations, placeholder.conversationId ?? null).catch(() => undefined)
     // 「處理」才標成處理（指揮官會透過提案改資料）；「問」不動 Scott 選的標籤。路由器交給秘書的日程對話維持日程。
+    if (conversation && routed?.answerAs) {
+      await saveThreadRouteAgent(conversation, routed.tag, routed.answerAs.id).catch(error => console.warn('[router] thread agent not saved:', error))
+    }
     if (conversation && !readOnly && routed?.tag !== 'schedule') void useThreadsStore.getState().markCommanderThread(conversation).catch(error => console.debug('[commander] thread tag skipped:', error))
     const deps = await createDefaultSidebarDeps({
       roleLabel: (key, values) => t(`agents.roles.${key}` as Parameters<typeof t>[0], values),
@@ -499,6 +506,23 @@ export const ChatSend = forwardRef<ChatSendHandle, ChatSendProps>(({
       readOnly,
       ...(routed?.answerAs ? { answerAs: routed.answerAs } : {}),
       ...(routed ? { routeNote: routeNote(routed) } : {}),
+      ...(deskContext ? {
+        deskContext,
+        expertToolTitle: t('workbench.desk.consultExpert'),
+        askExpert: async (system, question, signal) => {
+          const config = aiConfig ?? await getAISettings()
+          if (!config?.model) throw new Error('AI service not configured')
+          const client = await createOpenAIClient(config)
+          const completion = await client.chat.completions.create(withFastAiRequestOptions({
+            model: config.model,
+            stream: false,
+            messages: [{ role: 'system', content: system }, { role: 'user', content: question }],
+          }, config), { signal })
+          const answer = completion.choices[0]?.message?.content?.trim()
+          if (!answer) throw new Error('The desk expert returned no assessment')
+          return answer
+        },
+      } : {}),
     }, deps)
   }
 
@@ -506,7 +530,7 @@ export const ChatSend = forwardRef<ChatSendHandle, ChatSendProps>(({
   // 回傳 true 表示這次先不送（在等 Scott 選去處或確認偏好），字留在輸入框。
   async function routeBeforeSend(text: string, streaming: boolean): Promise<boolean> {
     const chatState = useChatStore.getState()
-    if (chatState.isTemporaryConversation) return false
+    if (chatState.isTemporaryConversation || isMobileDevice()) return false
     const conversation = chatState.conversations.find(entry => entry.id === chatState.currentConversationId)
     const threads = useThreadsStore.getState()
     await threads.loadProjects().catch(() => undefined)
@@ -691,12 +715,31 @@ export const ChatSend = forwardRef<ChatSendHandle, ChatSendProps>(({
     // 只有 Scott 親口交代的任務和行程由秘書直接寫；準備失敗就退回只讀，絕不退回會直接改檔的工具。
     // 「問」模式也以指揮官身分回答，但不換工具、維持只讀。
     // Fork（almanac ALMNC-54.11）：路由器把查詢交給專家時這次只讀回答；日程、處理照「處理」模式（秘書的直接修改在指揮官的工具裡）。
-    const routed = routedRunRef.current
+    let routed = routedRunRef.current
     routedRunRef.current = null
+    if (!routed && v3 && !isMobileDevice()) {
+      const chat = useChatStore.getState()
+      const conversation = chat.conversations.find(entry => entry.id === placeholderMessage.conversationId)
+      if (conversation && !chat.isTemporaryConversation) {
+        try {
+          const threads = useThreadsStore.getState()
+          await threads.loadProjects()
+          await threads.claimDraftTag(chat.conversations, conversation.id)
+          const tag = useThreadsStore.getState().tagMap[threadKey(conversation)]
+          if (tag) {
+            const { loadRouterRoster } = await import('@/lib/router/default')
+            const [agentId, roster] = await Promise.all([threadRouteAgent(conversation, tag), loadRouterRoster()])
+            routed = restoreSidebarRoute(tag, agentId, roster)
+          }
+        } catch (error) {
+          console.warn('[router] previous route unavailable:', error)
+        }
+      }
+    }
     const routedReadOnly = Boolean(routed?.readOnly)
     const commanderMode = v3 && agentPermissionMode !== 'read-only' && !routedReadOnly
     const commanderRun = v3
-      ? await prepareCommanderRun(placeholderMessage, request.requestText, !commanderMode, routed).catch(error => {
+      ? await prepareCommanderRun(placeholderMessage, request.requestText, !commanderMode, routed, modelSnapshot.config).catch(error => {
           console.error('[commander] sidebar run unavailable, answering read-only:', error)
           return null
         })
@@ -722,7 +765,7 @@ export const ChatSend = forwardRef<ChatSendHandle, ChatSendProps>(({
       activeCanvasId: activeCanvasId || undefined,
       permissionMode: runPermissionMode,
       rolePrompt: commanderRun?.rolePrompt,
-      transformTools: commanderMode ? commanderRun?.transformTools : undefined,
+      transformTools: commanderRun?.transformTools,
       requestConfirmation: (toolName, params, context) => requestConfirmation(toolName, params, context, { chatId: placeholderMessage.id, conversationId: placeholderMessage.conversationId, workspacePath: agentWorkspacePath }),
       requestUserQuestion: (questions, signal) => requestUserQuestion(questions, signal, placeholderMessage.conversationId),
       requestUserInteraction: (uiRequest, context) => requestChatUiInteraction(uiRequest, context, {
@@ -868,6 +911,7 @@ export const ChatSend = forwardRef<ChatSendHandle, ChatSendProps>(({
           startProactiveCompaction()
           const { scheduleConversationMemoryExtraction } = await import('@/lib/memory/auto-memory')
           scheduleConversationMemoryExtraction(placeholderMessage.conversationId)
+          void commanderRun?.remember(finalContent).catch(error => console.warn('[commander] memory update failed:', error))
         }
 
       },

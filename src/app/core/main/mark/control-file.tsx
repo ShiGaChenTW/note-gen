@@ -6,6 +6,8 @@ import useMarkStore from "@/stores/mark";
 import { insertMark } from "@/db/marks";
 import { useEffect, useCallback } from 'react'
 import emitter from '@/lib/emitter'
+import { isRecordDialogAttachment } from '@/lib/workbench/auto-route'
+import { isMobileDevice } from '@/lib/check'
 import { v4 as uuid } from 'uuid'
 import { toast } from '@/hooks/use-toast'
 import { useRecordCompletion } from './use-record-completion'
@@ -22,8 +24,8 @@ export function ControlFile() {
   const { addQueue, setQueue, removeQueue } = useMarkStore()
   const completeRecord = useRecordCompletion()
 
-  const handleSelectFile = useCallback(() => {
-    selectFile()
+  const handleSelectFile = useCallback((request: unknown) => {
+    void selectFile(isRecordDialogAttachment(request) && !isMobileDevice())
   }, [])
 
   useEffect(() => {
@@ -33,17 +35,17 @@ export function ControlFile() {
     }
   }, [handleSelectFile])
 
-  async function selectFile() {
+  async function selectFile(fromRecordDialog = false) {
     const filePath = await open({
       multiple: false,
       directory: false,
     });
     if (!filePath) return
 
-    await readFileByPath(filePath)
+    await readFileByPath(filePath, fromRecordDialog)
   }
 
-  async function saveFileRecord(path: string, desc: string, content: string, tagId: number) {
+  async function saveFileRecord(path: string, desc: string, content: string, tagId: number, fromRecordDialog: boolean) {
     const result = await insertMark({
       tagId,
       type: 'file',
@@ -52,6 +54,11 @@ export function ControlFile() {
       url: path
     })
     const markId = Number(result.lastInsertId || 0) || null
+    if (markId && fromRecordDialog) {
+      void import('@/lib/workbench/actions').then(({ registerRecordAttachment }) =>
+        registerRecordAttachment({ markId, type: 'file', path, title: desc }),
+      ).catch(error => console.warn('[workbench] attachment registration failed:', error))
+    }
     await completeRecord({
       markId,
       tagId,
@@ -59,10 +66,11 @@ export function ControlFile() {
     })
   }
 
-  async function readFileByPath(path: string) {
+  async function readFileByPath(path: string, fromRecordDialog: boolean) {
     const tagId = await getDefaultRecordSaveTagId()
     const fileName = getDocumentFileName(path)
     const desc = fileName
+    if (fromRecordDialog) return saveFileRecord(path, desc, '', tagId, true)
     let content = ''
     const queueId = uuid()
 
@@ -81,10 +89,10 @@ export function ControlFile() {
       removeQueue(queueId)
     }
 
-    await saveFileRecord(path, desc, content, tagId)
+    await saveFileRecord(path, desc, content, tagId, false)
   }
 
   return (
-    <TooltipButton icon={<FilePlus />} tooltipText={t('record.mark.type.file')} onClick={selectFile} />
+    <TooltipButton icon={<FilePlus />} tooltipText={t('record.mark.type.file')} onClick={() => void selectFile()} />
   )
 }

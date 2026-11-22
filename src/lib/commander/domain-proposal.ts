@@ -52,7 +52,7 @@ export function expertRules(domain: string): string {
     `## 領域：${domain}`,
     `- 只撰寫「${domain}」的知識筆記草稿；草稿交回指揮官統整成提案，不直接寫入筆記庫。`,
     '- 新筆記歸入領域前，先比對類似筆記，找出重複和衝突；只提出觀察，由指揮官提案。',
-    '- 只根據筆記庫裡的資料回答，不查外部資料；待查證的可以引用但要標明有爭議，已被取代的預設不引用。',
+    '- 只根據筆記庫裡的資料回答，不查外部資料；待查證的可以引用但要標明待查證，已被取代的預設不引用。',
     // Fork（almanac ALMNC-54.12）：起草時依領域給預設（技術類 6 個月、一般知識 1 年）；lib/cleanup/interval.ts 讀這一行。
     `- 重新確認頻率：${formatInterval(defaultInterval(domain))}（Scott 可以改）。`,
     '',
