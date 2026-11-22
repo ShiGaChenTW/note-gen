@@ -8776,6 +8776,34 @@
     "snapshotFailed": "Could not save the copy"
   },
   "eink": {
+    "briefing": {
+      "chapters": {
+        "schedule": "Today's schedule",
+        "weather": "Weather",
+        "pinned": "Pinned notes",
+        "articles": "Daily articles",
+        "review": "Daily review cards",
+        "report": "Knowledge report",
+        "workbench": "Workbench summary"
+      },
+      "notes": {
+        "calendarDenied": "Calendar access is not granted; only time blocks and timed tasks are listed.",
+        "calendarDeniedEmpty": "Calendar access is not granted, so today's schedule can't be read.",
+        "scheduleEmpty": "Nothing scheduled today.",
+        "scheduleError": "Couldn't read today's schedule.",
+        "weatherUnavailable": "Weather unavailable",
+        "weatherNoCity": "Weather unavailable (set a weather location in Settings > E-paper)",
+        "workbenchEmpty": "Nothing to decide or complete.",
+        "workbenchError": "Couldn't read the workbench summary."
+      },
+      "dayParts": {
+        "morning": "Morning",
+        "noon": "Afternoon",
+        "evening": "Evening",
+        "night": "Night"
+      },
+      "privateLabel": "Private"
+    },
     "pin": "Pin to e-paper",
     "unpin": "Unpin from e-paper",
     "pinned": "Pinned to e-paper",

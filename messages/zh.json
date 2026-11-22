@@ -8776,6 +8776,34 @@
     "snapshotFailed": "另存失败"
   },
   "eink": {
+    "briefing": {
+      "chapters": {
+        "schedule": "今天行程",
+        "weather": "天气",
+        "pinned": "钉选资料",
+        "articles": "每日精选文章",
+        "review": "每日回顾卡",
+        "report": "知识报告",
+        "workbench": "工作台摘要"
+      },
+      "notes": {
+        "calendarDenied": "日历没有授权，这里只列出时段与有时间的任务。",
+        "calendarDeniedEmpty": "日历没有授权，读不到今天的行程。",
+        "scheduleEmpty": "今天没有行程。",
+        "scheduleError": "今天的行程读取失败。",
+        "weatherUnavailable": "天气暂无资料",
+        "weatherNoCity": "天气暂无资料（请在设置 > 电子纸填天气地点）",
+        "workbenchEmpty": "没有要决定或要完成的事。",
+        "workbenchError": "工作台摘要读取失败。"
+      },
+      "dayParts": {
+        "morning": "早",
+        "noon": "午",
+        "evening": "晚",
+        "night": "夜"
+      },
+      "privateLabel": "私人行程"
+    },
     "pin": "钉选到电子纸",
     "unpin": "取消电子纸钉选",
     "pinned": "已钉选到电子纸",

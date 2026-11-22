@@ -2,7 +2,7 @@
 // 清單邏輯與狀態流轉在 src/lib/eink/read-later.ts（純函式、有單元測試）；擷取在 read-later-extract.ts。
 import { create } from 'zustand'
 import {
-  EINK_READ_LATER_KEY, addReadLater, extractPending, needsExtraction, normalizeReadLater, removeReadLater, requeueReadLater,
+  EINK_READ_LATER_KEY, addReadLater, extractPending, markReadLaterSent, needsExtraction, normalizeReadLater, removeReadLater, requeueReadLater,
   retryReadLater, type AddResult, type ExtractionOutcome, type ReadLaterItem,
 } from '@/lib/eink/read-later'
 import { persistEink, readEinkKeys } from '@/lib/eink/storage'
@@ -29,6 +29,8 @@ interface ReadLaterState {
   remove: (url: string) => Promise<void>
   requeue: (url: string) => Promise<void>
   retry: (url: string) => Promise<void>
+  /** Fork（almanac ALMNC-47）：真的送到電子紙後移到「已送電子紙」（只由今日簡報的 commitSent 呼叫）。 */
+  markSent: (urls: readonly string[], at: number) => Promise<void>
   /** 擷取所有待擷取的文章；已經在跑就不重複開（結束時會再檢查一次有沒有新加入的）。 */
   extract: () => Promise<void>
 }
@@ -85,6 +87,12 @@ const useReadLaterStore = create<ReadLaterState>((set, get) => {
       await ready()
       await save(retryReadLater(get().items, url))
       void get().extract()
+    },
+
+    markSent: async (urls, at) => {
+      await ready()
+      if (urls.length === 0) return
+      await save(markReadLaterSent(get().items, urls, at))
     },
 
     extract: async () => {
