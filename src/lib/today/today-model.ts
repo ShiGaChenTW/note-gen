@@ -97,6 +97,35 @@ export function groupTasks(tasks: readonly TaskRef[], now: Date, days = UPCOMING
   }
 }
 
+/** Fork（almanac ALMNC-54.21）：工作台「日程」要的全部未完成任務，分三組（各組照到期日、優先序排）。 */
+export interface PendingTaskGroups {
+  /** 到期日在今天以前。 */
+  overdue: TaskRef[]
+  /** 今天以後到期（不限 3 天）。 */
+  dated: TaskRef[]
+  /** 沒排日期。 */
+  undated: TaskRef[]
+}
+
+/**
+ * Fork（almanac ALMNC-54.21）：所有還沒做的任務（定案文件第四節：「工作台的日程包含所有還沒做的任務，逾期的排最前面」）。
+ * 今天頁只看今天和接下來 3 天（groupTasks），工作台看全部，兩邊會重複。
+ */
+export function pendingTaskGroups(tasks: readonly TaskRef[], now: Date): PendingTaskGroups {
+  const today = dateKey(now)
+  const groups: PendingTaskGroups = { overdue: [], dated: [], undated: [] }
+  for (const task of tasks) {
+    if (task.done) continue
+    if (!task.due) groups.undated.push(task)
+    else if (task.due < today) groups.overdue.push(task)
+    else groups.dated.push(task)
+  }
+  groups.overdue.sort(byDueThenPriority)
+  groups.dated.sort(byDueThenPriority)
+  groups.undated.sort(byDueThenPriority)
+  return groups
+}
+
 // ---------- 今日進程 ----------
 
 export interface CalendarEvent {

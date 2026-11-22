@@ -87,6 +87,9 @@ const useWorkbenchStore = (await import('@/stores/workbench')).default
 const useVaultIndexStore = (await import('@/stores/vault-index')).default
 const useSettingStore = (await import('@/stores/setting')).default
 const { EMPTY_LEGACY } = await import('@/stores/workbench')
+const useAwaitingRepliesStore = (await import('@/stores/awaiting-replies')).default
+const useDailySettingsStore = (await import('@/stores/daily-settings')).default
+const { dateKey } = await import('@/lib/today/today-model')
 const { refreshSources } = await import('@/lib/workbench/actions')
 const { DecideScreen } = await import('./decide-screen')
 
@@ -437,6 +440,74 @@ describe('審核 tab', () => {
     } finally { confirm.mockRestore() }
   })
 
+})
+
+// Fork（almanac ALMNC-54.21）：工作台補齊——日程列出所有未完成任務、等你回話、提案卡片可先改標題與位置。
+describe('ALMNC-54.21 工作台補齊', () => {
+  afterEach(() => { useAwaitingRepliesStore.setState({ map: {} }) })
+
+  const task = (line: number, title: string, due: string, done = false) =>
+    ({ line, title, due, time: '', done, raw: `- [${done ? 'x' : ' '}] ${title}`, recurrence: '', priority: 'mid' as const })
+
+  it('AC#1: 日程 lists every unfinished task — overdue first, then tasks due beyond 3 days, undated last', () => {
+    const tasks = [
+      task(1, '沒排日期的事', ''),
+      task(2, '十天後的事', dateKey(new Date(NOW + 10 * DAY))),
+      task(3, '逾期的事', dateKey(new Date(NOW - 2 * DAY))),
+      task(4, '做完的事', '', true),
+    ]
+    act(() => useVaultIndexStore.setState(state => ({
+      notes: new Map([['tasks.md', { path: 'tasks.md', mtime: NOW, frontmatter: null, tasks, links: [], aliases: [], tags: [], headings: [], blockIds: [] }]]),
+      revision: state.revision + 1,
+    })))
+    const taskTitles = titles().filter(title => title?.endsWith('的事'))
+    expect(taskTitles).toEqual(['逾期的事', '十天後的事', '沒排日期的事'])
+    expect(card('逾期的事').dataset.group).toBe('late')
+    expect(card('沒排日期的事').dataset.group).toBe('task')
+  })
+
+  it('AC#2: a question the secretary is waiting on shows under 等你回話 and disappears once Scott replies', async () => {
+    act(() => useAwaitingRepliesStore.setState({ map: { 7: { conversationId: 7, chatId: 70, question: '跟 A 開會要排哪一天？', by: 'Leo · 秘書', at: NOW - 60_000, via: 'turn' } } }))
+    expect($$('[data-testid="review-group"]').map(el => el.textContent)[0]).toBe('等你回話1')
+    const reply = card('跟 A 開會要排哪一天？')
+    expect(reply.dataset.group).toBe('reply')
+    expect(reply.textContent).toContain('在「11/19 會議紀錄整理」裡問你')
+    expect(reply.textContent).toContain('Leo · 秘書')
+    act(() => toggleOf('跟 A 開會要排哪一天？').click())
+    await act(async () => button('回答A', card('跟 A 開會要排哪一天？'))!.click())
+    expect(mocks.openConversation).toHaveBeenCalledWith(7)
+    // Scott 在那段對話回話
+    act(() => useChatStore.setState({ chats: [{ id: 71, conversationId: 7, role: 'user', type: 'chat', content: '週二', createdAt: Date.now() + 1, inserted: false }] } as never))
+    expect(titles()).not.toContain('跟 A 開會要排哪一天？')
+    expect(useAwaitingRepliesStore.getState().map).toEqual({})
+  })
+
+  it('AC#4: a 新增筆記 card lets Scott change the title and folder before accepting; the accepted proposal carries them', async () => {
+    act(() => useDailySettingsStore.setState({ inboxFolder: '00 Inbox', initSettings: vi.fn(async () => {}) }))
+    act(() => toggleOf('提案 a').click())
+    const title = card('提案 a').querySelector<HTMLInputElement>('[data-testid="new-note-title"]')!
+    const folder = card('提案 a').querySelector<HTMLInputElement>('[data-testid="new-note-folder"]')!
+    expect([title.value, folder.value]).toEqual(['提案 a', '00 Inbox'])
+    // 欄位裡打字不會觸發單鍵
+    expect(pressOn(title, 'a').defaultPrevented).toBe(false)
+    type(title, 'a/b')
+    expect(card('提案 a').querySelector('[role="alert"]')!.textContent).toBe(messages.workbench.newNote.invalid)
+    act(() => { title.dispatchEvent(new FocusEvent('focusout', { bubbles: true })) })
+    expect(useCollectStore.getState().items.find(item => item.id === 'old')!.proposals[0].title).toBe('提案 a')
+    type(title, '產線檢討會議紀錄')
+    type(folder, '/10 Projects/產線/')
+    act(() => { folder.dispatchEvent(new FocusEvent('focusout', { bubbles: true })) })
+    expect(useCollectStore.getState().items.find(item => item.id === 'old')!.proposals[0]).toMatchObject({ title: '產線檢討會議紀錄', folder: '10 Projects/產線' })
+    expect(titles()).toContain('產線檢討會議紀錄')
+    await act(async () => card('產線檢討會議紀錄').querySelector<HTMLButtonElement>('button[data-action="accept"]')!.click())
+    await wait(250)
+    expect(mocks.acceptDecision).toHaveBeenCalledWith(expect.objectContaining({ key: 'collect:old:a', title: '產線檢討會議紀錄' }))
+  })
+
+  it('AC#4: cards that are not new notes keep the plain 「接受後寫入」 line', () => {
+    act(() => toggleOf('確認第三站換模時間').click())
+    expect(card('確認第三站換模時間').querySelector('[data-testid="new-note-fields"]')).toBeNull()
+  })
 })
 
 describe('資料源 tab', () => {

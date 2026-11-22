@@ -66,9 +66,11 @@ export async function acceptProposal(proposal: Proposal, options: { noteFolder: 
 
   if (proposal.kind === 'note') {
     const name = captureFileName(proposal.title, now)
+    // Fork（almanac ALMNC-54.21）：卡片上改過存放位置就寫到那裡。
+    const folder = proposal.folder ?? options.noteFolder
     let path: string | null = null
     for (let attempt = 0; attempt < 50; attempt++) {
-      const candidate = capturePath(options.noteFolder, name, attempt)
+      const candidate = capturePath(folder, name, attempt)
       if (await noteExists(candidate)) continue
       path = candidate
       break

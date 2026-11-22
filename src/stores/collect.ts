@@ -10,6 +10,7 @@ import { linkAcceptedOutputs } from '@/lib/commander/consolidate'
 import type { CollectInput, Proposal, SplitSource } from '@/lib/collect/types'
 import { setRecordsProcessed } from '@/lib/inbox/actions'
 import { replacedProposalKeys } from '@/lib/proposals/trail'
+import { retargetNewNote, type NewNoteTarget } from '@/lib/workbench/new-note'
 import { useUiModeStore } from '@/lib/fork-ui'
 import useDailySettingsStore from './daily-settings'
 import useHomeStore from './home'
@@ -51,6 +52,8 @@ interface CollectState {
   /** Fork（almanac ALMNC-54.8）：工作台「復原」放棄——把放棄的提案改回等你決定。 */
   restore: (itemId: string, proposalId: string) => void
   edit: (itemId: string, proposalId: string, patch: Partial<Pick<Proposal, 'title' | 'due' | 'time'>>) => void
+  /** Fork（almanac ALMNC-54.21）：新增筆記的提案，接受前在工作台卡片上改標題與存放位置（lib/workbench/new-note.ts）。 */
+  retarget: (itemId: string, proposalId: string, edit: NewNoteTarget, inboxFolder: string) => void
   undo: (itemId: string, proposalId: string) => Promise<boolean>
   remove: (itemId: string) => void
 }
@@ -178,6 +181,12 @@ const useCollectStore = create<CollectState>((set, get) => ({
   })),
 
   edit: (itemId, proposalId, patch) => set(state => ({ items: patchProposal(state.items, itemId, proposalId, patch) })),
+  retarget: (itemId, proposalId, edit, inboxFolder) => set(state => {
+    const proposal = state.items.find(item => item.id === itemId)?.proposals.find(entry => entry.id === proposalId)
+    if (!proposal || proposal.status !== 'wait') return state
+    const next = retargetNewNote(proposal, edit, inboxFolder)
+    return next === proposal ? state : { items: patchProposal(state.items, itemId, proposalId, next) }
+  }),
 
   undo: async (itemId, proposalId) => {
     const proposal = get().items.find(entry => entry.id === itemId)?.proposals.find(entry => entry.id === proposalId)

@@ -9,9 +9,12 @@ import { listDomains } from '@/db/v3-domains'
 import { describeDomainProposal } from '@/lib/commander/domain-proposal'
 import type { RosterAgent } from '@/lib/commander/types'
 import { useDecisions } from '@/lib/decide/use-decisions'
-import { groupTasks } from '@/lib/today/today-model'
+import { pendingTaskGroups } from '@/lib/today/today-model'
 import type { Domain } from '@/lib/v3-model/domain'
 import type { ReconfirmInterval } from '@/lib/cleanup/interval'
+import { awaitingToReplies } from '@/lib/threads/awaiting'
+import useAwaitingRepliesStore from '@/stores/awaiting-replies'
+import useChatStore from '@/stores/chat'
 import useCollectStore from '@/stores/collect'
 import useInboxStore from '@/stores/inbox'
 import useVaultIndexStore, { selectAllTasks } from '@/stores/vault-index'
@@ -19,7 +22,7 @@ import useWorkbenchStore from '@/stores/workbench'
 import useDailySettingsStore from '@/stores/daily-settings'
 import { DEFAULT_LEGACY_BATCH_SIZE, legacyPackKey, packsToShow, unmarkedLegacyNotes } from '@/lib/migration/legacy'
 import type { IndexedNote } from '@/lib/vault-index/index-note'
-import { buildReviewCards, type DomainLike, type HandLike, type LegacyBatchLike, type WorkbenchCard } from './cards'
+import { buildReviewCards, type DomainLike, type HandLike, type LegacyBatchLike, type ReplyLike, type WorkbenchCard } from './cards'
 import { computeDomainProposals, confirmNotesFromIndex, knowledgeNotesFromIndex } from './domain-cards'
 import { hiddenCards, isHidden, visibleCards } from './put-aside'
 import { buildSourceRows, sourceDisplayKind, sourceTitle, type SourceListRow } from './sources-tab'
@@ -133,6 +136,21 @@ function useLegacyInputs(noteList: readonly IndexedNote[], now: number, commande
   }, [legacy, unmarked, aside, now, commander, t, roles])
 }
 
+/**
+ * Fork（almanac ALMNC-54.21）：「等你回話」——秘書在對話裡問你、還在等你回的問題（lib/threads/awaiting.ts）。
+ * 你在那段對話送出訊息後自動消失；刪掉的對話不列。
+ */
+function useReplies(): ReplyLike[] {
+  const t = useTranslations('workbench.reply')
+  const map = useAwaitingRepliesStore(state => state.map)
+  const conversations = useChatStore(state => state.conversations)
+  useEffect(() => { void useAwaitingRepliesStore.getState().hydrate() }, [])
+  return useMemo(() => awaitingToReplies(map, {
+    conversations,
+    summary: entry => t('summary', { title: conversations.find(conversation => conversation.id === entry.conversationId)?.title || t('untitled') }),
+  }), [map, conversations, t])
+}
+
 export interface ReviewData {
   /** 所有卡片（含先放著的），已排好序。 */
   all: WorkbenchCard[]
@@ -158,7 +176,8 @@ export function useReviewData(): ReviewData {
   const domains = useDomains()
   const commander = roster.find(agent => agent.role === 'commander' && agent.enabled)?.name
 
-  const tasks = useMemo(() => groupTasks(selectAllTasks({ notes, revision }), new Date(now)), [notes, revision, now])
+  // Fork（almanac ALMNC-54.21）：日程列出所有還沒做的任務（含沒排日期、3 天以後才到期的），逾期的排最前面。
+  const tasks = useMemo(() => pendingTaskGroups(selectAllTasks({ notes, revision }), new Date(now)), [notes, revision, now])
   const noteList = useMemo(() => Array.from(notes.values()), [notes, revision]) // eslint-disable-line react-hooks/exhaustive-deps
   const domainCards = useMemo<DomainLike[]>(() => computeDomainProposals(knowledgeNotesFromIndex(noteList), domains, roster, dismissed)
     .map(proposal => ({ id: proposal.id, ...describeDomainProposal(proposal, commanderT), notePaths: proposal.notePaths, by: commander, at: now })),
@@ -166,11 +185,13 @@ export function useReviewData(): ReviewData {
   const intervals = useReconfirmIntervals(domains, roster)
   const confirm = useMemo(() => confirmNotesFromIndex(noteList, now, intervals), [noteList, now, intervals])
   const legacyInputs = useLegacyInputs(noteList, now, commander)
+  const replies = useReplies()
 
   const all = useMemo(() => buildReviewCards({
     proposals,
+    replies,
     overdueTasks: tasks.overdue,
-    otherTasks: tasks.upcoming.flatMap(day => day.tasks),
+    otherTasks: [...tasks.dated, ...tasks.undated],
     awaitingSources: sources
       .filter(source => source.status === 'awaiting_decision' && source.archivedAt === undefined)
       .map(source => {
@@ -190,7 +211,7 @@ export function useReviewData(): ReviewData {
     hand: legacyInputs.hand,
     legacy: legacyInputs.legacy,
     now,
-  }), [proposals, tasks, sources, judgements, domainCards, confirm, legacyInputs, now, t])
+  }), [proposals, replies, tasks, sources, judgements, domainCards, confirm, legacyInputs, now, t])
 
   return useMemo(() => ({ all, visible: visibleCards(all, aside, now), aside: hiddenCards(all, aside, now), now }), [all, aside, now])
 }

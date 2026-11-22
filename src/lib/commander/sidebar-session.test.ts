@@ -151,6 +151,57 @@ describe('sidebar commander changes', () => {
   })
 })
 
+// Fork（almanac ALMNC-54.21 AC#2）：秘書在對話裡問 Scott 的問題記到工作台「等你回話」——明確標記，不從文字猜。
+describe('secretary waiting for Scott\'s reply', () => {
+  function awaitingDeps() {
+    const markAwaiting = vi.fn()
+    const clearAwaiting = vi.fn()
+    return { ...fakeDeps({ markAwaiting, clearAwaiting }), markAwaiting, clearAwaiting }
+  }
+
+  it('schedule_await_reply records the question when the turn ends, attributed to the secretary', async () => {
+    const { deps, markAwaiting } = awaitingDeps()
+    const run = await prepareSidebarCommanderRun({ conversationId: 7, chatId: 70, scottMessages: ['下週找時間跟 A 開會'] }, deps)
+    const result = await tool(run, 'schedule_await_reply').execute({ question: ' 跟 A 開會要排\n哪一天？ ' }, context)
+    expect(result.ok).toBe(true)
+    expect(markAwaiting).not.toHaveBeenCalled()
+    await run.finish()
+    expect(markAwaiting).toHaveBeenCalledWith({
+      conversationId: 7, chatId: 70, question: '跟 A 開會要排 哪一天？', by: 'Leo · 秘書', at: new Date(2026, 10, 19, 9).getTime(), via: 'turn',
+    })
+    expect(SIDEBAR_COMMANDER_RULES).toContain('schedule_await_reply')
+  })
+
+  it('records nothing when the secretary did not ask, and rejects an empty question', async () => {
+    const { deps, markAwaiting } = awaitingDeps()
+    const run = await prepareSidebarCommanderRun({ conversationId: 7, chatId: 70, scottMessages: [] }, deps)
+    expect((await tool(run, 'schedule_await_reply').execute({ question: '  ' }, context)).ok).toBe(false)
+    await run.finish()
+    expect(markAwaiting).not.toHaveBeenCalled()
+  })
+
+  it('an open ask_user_question waits on the workbench until it is answered', async () => {
+    const { deps, markAwaiting, clearAwaiting } = awaitingDeps()
+    const run = await prepareSidebarCommanderRun({ conversationId: 7, chatId: 70, scottMessages: [] }, deps)
+    let answer: (value: Array<{ question: string, selected: string[] }>) => void = () => {}
+    const pending = tool(run, 'ask_user_question').execute(
+      { questions: [{ question: '要排哪一天？', options: [{ label: '週二' }, { label: '週三' }] }] },
+      { ...context, requestUserQuestion: () => new Promise(resolve => { answer = resolve }) },
+    )
+    await vi.waitFor(() => expect(markAwaiting).toHaveBeenCalled())
+    expect(markAwaiting).toHaveBeenCalledWith(expect.objectContaining({ conversationId: 7, chatId: 70, question: '要排哪一天？', choices: ['週二', '週三'], by: 'Mia · 指揮官', via: 'live' }))
+    expect(clearAwaiting).not.toHaveBeenCalled()
+    answer([{ question: '要排哪一天？', selected: ['週二'] }])
+    expect((await pending).ok).toBe(true)
+    expect(clearAwaiting).toHaveBeenCalledWith(7, 'live')
+  })
+
+  it('does not offer schedule_await_reply without a saved conversation', async () => {
+    const { deps } = awaitingDeps()
+    const run = await prepareSidebarCommanderRun({ chatId: -1, scottMessages: [] }, deps)
+    expect(run.transformTools(agentToolRegistry.listTools()).some(entry => entry.name === 'schedule_await_reply')).toBe(false)
+  })
+})
 
 describe('ALMNC-54.22 desk consultation', () => {
   it('restores multiple materials and consults only enabled experts for their frontmatter domains', async () => {

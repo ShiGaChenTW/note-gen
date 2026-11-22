@@ -54,6 +54,7 @@ export function serializeItems(items: readonly ItemLike[]): PersistedItem[] {
       ...(proposal.slot ? { slot: proposal.slot } : {}),
       ...(proposal.conversationId !== undefined ? { conversationId: proposal.conversationId } : {}),
       ...(proposal.previousProposalId ? { previousProposalId: proposal.previousProposalId } : {}),
+      ...(proposal.folder !== undefined ? { folder: proposal.folder } : {}),
       ...commanderFields(proposal),
       ...(proposal.change ? { change: { ...proposal.change, args: { ...proposal.change.args } } } : {}),
       ...(proposal.edits ? { edits: proposal.edits } : {}),
@@ -140,7 +141,7 @@ function changeReadable(proposal: PersistedProposal): boolean {
 
 /** Fork（almanac ALMNC-54.5）：來源對話與取代關係型別不對時只丟那個欄位，提案本身留著。 */
 function cleanLinks(proposal: PersistedProposal): PersistedProposal {
-  const { conversationId, previousProposalId, change, ...others } = proposal
+  const { conversationId, previousProposalId, change, folder, ...others } = proposal
   const rest: Record<string, unknown> = { ...others }
   for (const key of COMMANDER_KEYS) delete rest[key]
   const parsedChange = fileChange(change)
@@ -150,6 +151,8 @@ function cleanLinks(proposal: PersistedProposal): PersistedProposal {
     ...rest,
     ...(typeof conversationId === 'number' && Number.isInteger(conversationId) ? { conversationId } : {}),
     ...(typeof previousProposalId === 'string' && previousProposalId ? { previousProposalId } : {}),
+    // Fork（almanac ALMNC-54.21）：卡片上改過的存放位置；往上跳（..）的不收。
+    ...(typeof folder === 'string' && !folder.split('/').includes('..') ? { folder } : {}),
     ...commanderFields(proposal),
   }
 }

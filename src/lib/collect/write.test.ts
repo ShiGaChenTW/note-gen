@@ -35,6 +35,15 @@ describe('acceptProposal', () => {
     expect(result.record).toBeUndefined()
   })
 
+  // Fork（almanac ALMNC-54.21 AC#4）：卡片上改過的標題與存放位置就是寫入的檔名與資料夾。
+  it('writes the note to the folder chosen on the card, with the edited title', async () => {
+    const result = await acceptProposal({ ...base, id: 'n9', kind: 'note', title: '產線檢討會議紀錄', folder: '10 Projects/產線' }, { noteFolder: '10 Inbox', now })
+    expect(result.path).toBe('10 Projects/產線/2026-11-18 0930 產線檢討會議紀錄.md')
+    expect(files.get(result.path)).toBe('# 產線檢討會議紀錄\n')
+    const root = await acceptProposal({ ...base, id: 'n10', kind: 'note', title: '放最上層', folder: '' }, { noteFolder: '10 Inbox', now })
+    expect(root.path).toBe('2026-11-18 0930 放最上層.md')
+  })
+
   it('does not overwrite an existing note with the same name', async () => {
     files.set('10 Inbox/2026-11-18 0930 定價想法.md', '舊內容')
     const result = await acceptProposal({ ...base, id: 'n2', kind: 'note', title: '定價想法' }, { noteFolder: '10 Inbox', now })

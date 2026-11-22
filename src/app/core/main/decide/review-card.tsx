@@ -15,6 +15,7 @@ import useChatStore from '@/stores/chat'
 import { JobReviewPreview } from '../jobs/job-result'
 import { DiffBlock, destinationText } from './decide-parts'
 import { DiscussForm } from './discuss-form'
+import { NewNoteFields } from './new-note-fields'
 
 // Fork（almanac ALMNC-56.6，V06）：工作台的按鈕和對話、收集同一個高度與圓角（V3_BUTTON_SHAPE）；
 // 主要按鈕的顏色和 Button 的 default 一樣（V3 的 bg-primary 就是反白），不再手動加 bg-invert。
@@ -28,6 +29,8 @@ export function ButtonKbd({ children }: { children: ReactNode }) {
 
 function Age({ card, now }: { card: WorkbenchCard, now: number }) {
   const t = useTranslations('workbench')
+  // Fork（almanac ALMNC-54.21）：沒排日期的任務沒有「等多久」可算，只留欄寬。
+  if (card.undated) return <span className="min-w-11" aria-hidden />
   const { unit, value } = ageParts(card.at, now)
   const age = t(`age.${unit}`, { count: value })
   return (
@@ -63,7 +66,10 @@ function CardBody({ card }: { card: WorkbenchCard }) {
       <div className="text-ui-compact leading-6 text-muted-ink">
         {item.preview.type === 'job'
           ? <JobReviewPreview criterion={item.preview.criterion} result={item.preview.result} />
-          : <p>{t('writesTo', { dest: destinationText(decideT, item.preview) })}</p>}
+          : item.ref.source === 'collect' && (item.preview.type === 'newNote' || item.kind === 'create')
+            // Fork（almanac ALMNC-54.21）：新增筆記可以先改標題和存放位置再接受。
+            ? <NewNoteFields itemId={item.ref.itemId} proposalId={item.ref.proposalId} fallback={<p>{t('writesTo', { dest: destinationText(decideT, item.preview) })}</p>} />
+            : <p>{t('writesTo', { dest: destinationText(decideT, item.preview) })}</p>}
         {item.organizeMerge && <p className="mt-2 text-ink">{organizeT('mergeEffect', item.organizeMerge)}</p>}
         {item.preview.diff && <DiffBlock diff={item.preview.diff} className="mt-2" />}
         {item.duplicates.length > 0 && <p className="mt-2 text-xs">{decideT('merged', { count: item.duplicates.length })}</p>}

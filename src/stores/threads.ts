@@ -156,7 +156,15 @@ const useThreadsStore = create<ThreadsState>((set, get) => {
         const trail = useProposalTrailStore.getState().trail[key]
         if (trail?.discussion || trail?.supersededBy) return
         const collect = useCollectStore.getState()
-        if (action === 'accept') await collect.accept(card.source.itemId, card.source.proposalId)
+        if (action === 'accept') {
+          const proposal = collect.items.find(item => item.id === card.source!.itemId)?.proposals.find(entry => entry.id === card.source!.proposalId)
+          const result = await collect.accept(card.source.itemId, card.source.proposalId)
+          // Fork（almanac ALMNC-54.21）：接受後記一筆活動紀錄（誰提的、改了什麼、來源對話）。
+          if (proposal) {
+            const { acceptedFromProposal, logAcceptedProposal } = await import('@/lib/proposals/accepted-activity')
+            await logAcceptedProposal(acceptedFromProposal(key, proposal, result.path))
+          }
+        }
         if (action === 'reject') collect.reject(card.source.itemId, card.source.proposalId)
       }
       const next = applyCardAction(card, action)

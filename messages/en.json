@@ -9351,6 +9351,17 @@
         "meeting": "Importing meeting transcripts…",
         "rss": "Subscribing to RSS…"
       }
+    },
+    "reply": {
+      "summary": "Asked you in “{title}”",
+      "untitled": "a conversation"
+    },
+    "newNote": {
+      "title": "Title",
+      "folder": "Folder",
+      "root": "Vault root",
+      "invalid": "The title can’t be empty or contain slashes, and the folder can’t contain “..”",
+      "hint": "Edit before accepting; the note is written here when you accept"
     }
   },
   "cleanup": {

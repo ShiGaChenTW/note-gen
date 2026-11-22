@@ -11,6 +11,7 @@ import {
   insertLinesInSection,
   needAttentionCount,
   openTaskLines,
+  pendingTaskGroups,
   staleInboxNotes,
 } from './today-model'
 
@@ -53,6 +54,26 @@ describe('groupTasks', () => {
 
   it('counts overdue, due today and stale inbox for the status bar', () => {
     expect(needAttentionCount(groups, 3)).toBe(2 + 1 + 3)
+  })
+})
+
+// Fork（almanac ALMNC-54.21）：工作台「日程」看全部，不只 3 天內。
+describe('pendingTaskGroups (ALMNC-54.21 AC#1)', () => {
+  const groups = pendingTaskGroups(tasks, NOW)
+
+  it('keeps overdue tasks first, oldest first', () => {
+    expect(groups.overdue.map(t => t.title)).toEqual(['寄報價單', '整理 token'])
+  })
+
+  it('lists every unfinished dated task from today on, including the ones due after 3 days', () => {
+    expect(groups.dated.map(t => t.title)).toEqual(['今天寄信', '明天開會', '後天交件', '大後天'])
+  })
+
+  it('lists undated tasks and leaves finished tasks out', () => {
+    expect(groups.undated.map(t => t.title)).toEqual(['沒有日期'])
+    const all = [...groups.overdue, ...groups.dated, ...groups.undated].map(t => t.title)
+    expect(all).not.toContain('今天做完')
+    expect(all).not.toContain('昨天做完')
   })
 })
 

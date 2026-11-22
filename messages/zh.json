@@ -9351,6 +9351,17 @@
         "meeting": "正在导入会议逐字稿…",
         "rss": "正在订阅 RSS…"
       }
+    },
+    "reply": {
+      "summary": "在「{title}」里问你",
+      "untitled": "对话"
+    },
+    "newNote": {
+      "title": "标题",
+      "folder": "存放位置",
+      "root": "笔记库最上层",
+      "invalid": "标题不能空白或含斜线，存放位置不能含「..」",
+      "hint": "接受前可以先改；接受时照这里写入"
     }
   },
   "cleanup": {

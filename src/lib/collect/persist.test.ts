@@ -78,6 +78,22 @@ describe('proposal source conversation', () => {
     expect(saved[0].proposals[0]).toMatchObject({ conversationId: 12, previousProposalId: 'collect:c0:p1' })
     expect(parseItems(saved, NOW)[0].proposals[0]).toMatchObject({ conversationId: 12, previousProposalId: 'collect:c0:p1' })
   })
+  // Fork（almanac ALMNC-54.21 AC#4）：卡片上改過的存放位置（含最上層 ''）存檔後還在；往上跳的不收。
+  it('keeps the folder chosen on the card through save and load', () => {
+    const saved = serializeItems([item({ proposals: [
+      { ...base, id: 'p1', kind: 'note', title: '甲', status: 'wait', folder: '10 Projects/產線' },
+      { ...base, id: 'p2', kind: 'note', title: '乙', status: 'wait', folder: '' },
+      { ...base, id: 'p3', kind: 'note', title: '丙', status: 'wait' },
+    ] })])
+    const [p1, p2, p3] = parseItems(saved, NOW)[0].proposals
+    expect(p1.folder).toBe('10 Projects/產線')
+    expect(p2.folder).toBe('')
+    expect('folder' in p3).toBe(false)
+    const [bad] = parseItems([{ ...item(), proposals: [{ ...base, id: 'p4', kind: 'note', title: '丁', status: 'wait', folder: '../外面' }] }], NOW)[0].proposals
+    expect(bad).toMatchObject({ id: 'p4', title: '丁' })
+    expect('folder' in bad).toBe(false)
+  })
+
   it('drops only malformed link fields, not the proposal', () => {
     const raw = [{ ...item(), proposals: [{ ...base, id: 'p1', kind: 'task', title: '甲', status: 'wait', conversationId: 'x', previousProposalId: 3 }] }]
     const [proposal] = parseItems(raw, NOW)[0].proposals

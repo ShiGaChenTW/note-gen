@@ -34,6 +34,8 @@ export interface Proposal {
   slot?: SlotTarget
   /** Fork（almanac ALMNC-54.5）：產生這則提案的對話 id；收集頁直接拆出來的沒有。 */
   conversationId?: number
+  /** Fork（almanac ALMNC-54.21）：新增筆記要存的資料夾（Scott 在工作台卡片上改的）；沒有就是收件資料夾，'' 是筆記庫最上層。 */
+  folder?: string
   /** Fork（almanac ALMNC-54.5）：指揮官依「再次討論」修改後重新提出時，被取代的那則提案（工作台項目 key）。 */
   previousProposalId?: string
   // Fork（almanac ALMNC-54.6）：指揮官分析資料源產生的提案才有下面這些欄位。

@@ -64,6 +64,8 @@ export interface DecideItem {
   card?: ProposalCardHint
   /** Fork（almanac ALMNC-54.12）：清理提案涵蓋的筆記（多則時卡片顯示「等 N 則」）。 */
   notePaths?: string[]
+  /** Fork（almanac ALMNC-54.21）：誰提的（收集提案的撰寫者）；接受時記進活動紀錄。 */
+  drafter?: Proposal['drafter']
 }
 
 export type DecideRef =
@@ -242,6 +244,7 @@ function projectCollect(items: CollectItemLike[], journal: JournalSnapshot | nul
         ...(proposal.conversationId !== undefined ? { conversationId: proposal.conversationId } : {}),
         ...(proposal.previousProposalId ? { previousProposalId: proposal.previousProposalId } : {}),
         ...(proposal.card ? { card: proposal.card } : {}),
+        ...(proposal.drafter ? { drafter: proposal.drafter } : {}),
         ...(proposal.edits?.length ? { notePaths: Array.from(new Set(proposal.edits.map(item => item.path))) } : {}),
       }
       seen.set(identity, entry)
