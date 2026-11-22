@@ -8,6 +8,7 @@ import { CreateJobButton } from '../jobs/create-job'
 import { EmptyState } from '@/components/v3/empty-state'
 import useChatStore from "@/stores/chat"
 import useThreadsStore from '@/stores/threads'
+import { ThreadTagPrefix, useCurrentThreadTag } from '../threads/thread-status' // Fork（almanac ALMNC-54.4）
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -87,6 +88,8 @@ export function ChatHeader() {
 
   // 当前会话标题（如果有消息的话）
   const currentConversation = conversations.find(c => c.id === currentConversationId)
+  // Fork（almanac ALMNC-54.4）：v3 的對話名稱前面加標籤，寫成「查詢｜名稱」。
+  const currentTag = useCurrentThreadTag()
   const dropdownTitle = currentConversation && currentConversation.messageCount > 0
     ? currentConversation.title
     : v3 && !inThreads ? tV3('newChat') : tEmpty('conversationHistory')
@@ -109,6 +112,7 @@ export function ChatHeader() {
                 title={v3 ? tEmpty('conversationHistory') : undefined}
               >
                 <span className={cn("text-sm font-medium truncate max-w-30", v3 && "min-w-0 max-w-full text-ui-compact")}>
+                  {v3 && !isTemporaryConversation && currentConversation && currentConversation.messageCount > 0 && <ThreadTagPrefix tag={currentTag} />}
                   {v3 && isTemporaryConversation ? tV3('temporaryChat') : dropdownTitle}
                 </span>
                 {!v3 && <span className="text-xs text-muted-foreground">

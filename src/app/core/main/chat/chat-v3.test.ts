@@ -38,6 +38,11 @@ vi.mock('./agent-context-tray', () => ({ AgentContextTray: () => null }))
 vi.mock('./agent-change-list', () => ({ AgentChangeList: () => null }))
 vi.mock('@/components/chat-ui/chat-ui-messages', () => ({ ChatUiMessages: () => null }))
 vi.mock('@/lib/agent/debug-log', () => ({ agentDebugLog: () => {} }))
+// Fork（almanac ALMNC-54.7）：右側欄 AI 的名字來自 Agent 設定的名單。
+vi.mock('@/db/agents', () => ({
+  ensureDefaultRoster: async () => false,
+  listAgentSettings: async () => [{ id: 'c-1', name: 'Mia', role: 'commander', enabled: true }, { id: 's-1', name: 'Leo', role: 'secretary', enabled: true }],
+}))
 
 const { default: useChatStore } = await import('@/stores/chat')
 const { default: useSettingStore } = await import('@/stores/setting')
@@ -45,6 +50,7 @@ const { default: ChatEmpty } = await import('./chat-empty')
 const { AgentRunTimeline } = await import('./agent-run-timeline')
 const { PendingAgentReview } = await import('./pending-agent-review')
 const { ChatModeSwitch } = await import('./agent-permission-mode')
+const { CommanderSpeaker } = await import('./commander-name')
 
 const user: Chat = { id: 11, createdAt: 20, role: 'user', type: 'chat', inserted: false, content: '整理日誌', conversationId: 1 }
 const assistant: Chat = { id: 12, createdAt: 21, role: 'system', type: 'chat', inserted: false, conversationId: 1 }
@@ -115,12 +121,22 @@ describe('v3 chat', () => {
     const onChange = vi.fn()
     render(h(ChatModeSwitch, { readOnly: true, onChange, disabled: false }))
     expect(container.querySelector('[aria-pressed=true]')?.textContent).toBe('問')
-    click('交辦')
+    click('處理')
     expect(onChange).toHaveBeenCalledWith(false)
     render(h(ChatModeSwitch, { readOnly: false, onChange, disabled: true }))
-    expect(container.querySelector('[aria-pressed=true]')?.textContent).toBe('交辦')
+    expect(container.querySelector('[aria-pressed=true]')?.textContent).toBe('處理')
     click('問')
     expect(onChange).toHaveBeenCalledTimes(1)
+  })
+
+  // Fork（almanac ALMNC-54.7）
+  it('introduces the right sidebar AI as the commander by name', async () => {
+    render(h(ChatEmpty))
+    await act(async () => { await new Promise(resolve => setTimeout(resolve, 0)) })
+    expect(container.textContent).toContain('Mia · 指揮官：改動筆記會先變成提案')
+    render(h(CommanderSpeaker))
+    await act(async () => { await new Promise(resolve => setTimeout(resolve, 0)) })
+    expect(container.querySelector('[data-slot=commander-speaker]')?.textContent).toBe('Mia · 指揮官')
   })
 
   it('inserts a localized draft in either mode and includes the temporary-chat hint', () => {

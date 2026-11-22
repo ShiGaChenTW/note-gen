@@ -149,6 +149,9 @@ describe('v3 threads page', () => {
     expect(buttons).toHaveLength(1)
     expect(buttons[0].closest('header')?.querySelector('h1')?.textContent).toBe(messages.threads.title)
     expect(buttons[0].disabled).toBe(false)
+    // ALMNC-56.6 V06: primary button = Button default style + shared V3 height/radius, no manual bg-invert
+    expect([...buttons[0].classList]).toEqual(expect.arrayContaining(['h-8', 'rounded-(--r)', 'bg-primary']))
+    expect(buttons[0].className).not.toContain('bg-invert')
     act(() => buttons[0].click())
     expect(startNewConversation).toHaveBeenCalledOnce()
   })

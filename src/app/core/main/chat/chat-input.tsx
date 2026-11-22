@@ -1859,7 +1859,8 @@ ${previewLines.join('\n')}
       {v3 && <div className="flex min-h-8 w-full min-w-0 flex-wrap items-center gap-0.5 pt-1 text-xs text-muted-ink">
         {readOnly
           ? <span className="px-1.5 text-ui-compact">{t('record.chat.v3.mode.readOnlyHint')}</span>
-          : <AgentPermissionModeSelect compact />}
+          // Fork（almanac ALMNC-54.7）：「處理」由指揮官執行，改動都變成提案（Scott 交代的任務和行程直接加上），不再選修改權限。
+          : <span className="truncate px-1.5 text-ui-compact" data-slot="commander-hint">{t('record.chat.v3.mode.processHint')}</span>}
         <ChatToolsPopover backgroundActions={isMobile ? undefined : <BackgroundTaskControls text={text} onSent={() => setText('')} inMenu readOnly={readOnly} />} />
         {modelSuggestion}
         <div className="ml-auto shrink-0">{contextUsage}</div>

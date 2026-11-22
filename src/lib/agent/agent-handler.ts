@@ -25,6 +25,9 @@ export interface AgentHandlerConfig {
   workspaceId?: string
   useMemories?: boolean
   systemPromptOverride?: string
+  /** Fork（almanac ALMNC-54.7）：右側欄指揮官的工作指示與記憶、替換後的工具（寫檔工具改成提案）。 */
+  rolePrompt?: string
+  transformTools?: import('./types').AgentRuntimeInput['transformTools']
   onThought?: (thought: string) => void
   onAction?: (action: string, params: Record<string, any>) => void
   onObservation?: (observation: string) => void
@@ -144,6 +147,8 @@ export class AgentHandler {
         workspaceId: this.config.workspaceId,
         useMemories: this.config.useMemories,
         systemPromptOverride: this.config.systemPromptOverride,
+        rolePrompt: this.config.rolePrompt,
+        transformTools: this.config.transformTools,
       }, {
         onStatus: (status) => {
           stateAdapter.setState({

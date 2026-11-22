@@ -15,6 +15,7 @@ import { TimelineSidebar } from '../timeline/timeline-sidebar'
 import { PageHeader, PageSurface } from '../page-ui'
 import { KnowledgeTabs } from './section-tabs'
 import { useKnowledgeTabs } from './use-knowledge-tabs'
+import { useVaultName } from './use-vault-name'
 
 function OutlineTab() {
   const t = useTranslations()
@@ -32,12 +33,13 @@ function KnowledgePage() {
   const tabs = useKnowledgeTabs()
   const tab = resolveKnowledgeTab(useKnowledgeOverlay(state => state.tab), tabs)
   const hide = useKnowledgeOverlay(state => state.hide)
+  const vaultName = useVaultName()
   const isPlugin = tabs.find(item => item.id === tab)?.kind === 'plugin'
   return (
     <PageSurface label={t('knowledge.title')} onDismiss={hide} className="bg-bg text-ink">
       <PageHeader
         title={t('knowledge.title')}
-        subtitle={t('knowledge.subtitle')}
+        subtitle={t('knowledge.subtitle', { vault: vaultName })}
         onBack={hide}
         tabs={<KnowledgeTabs active={tab} />}
       />

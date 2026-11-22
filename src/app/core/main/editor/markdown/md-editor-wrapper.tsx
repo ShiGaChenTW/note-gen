@@ -1,7 +1,7 @@
 'use client'
 
 import useArticleStore from '@/stores/article'
-import { useEffect, useState, useCallback, useRef, RefObject } from 'react'
+import { memo, useEffect, useState, useCallback, useRef, RefObject } from 'react'
 import { TipTapEditor } from './tiptap-editor'
 import { Outline } from './outline'
 import { PromptVersionBanner } from './prompt-version-banner'
@@ -18,6 +18,7 @@ import { Store } from '@tauri-apps/plugin-store'
 import { useShallow } from 'zustand/react/shallow'
 import useSettingStore, { useSettingsHydrationStore } from '@/stores/setting'
 import { useSidebarStore } from '@/stores/sidebar'
+import { useActiveNoteEditorStore } from '@/stores/active-note-editor'
 import {
   editorPathsReferToSameFile,
   getCurrentEditorWorkspaceRoot,
@@ -25,6 +26,7 @@ import {
   workspaceRootsReferToSameLocation,
 } from '@/lib/editor-deactivation'
 import { writeSelfHostedWorkspaceText } from '@/lib/self-hosted-sync/files'
+import { DocTitleField, focusEditorBodyStart } from './doc-title-field'
 
 interface MdEditorProps {
   tabContentsRef: RefObject<Record<string, string>>
@@ -33,7 +35,8 @@ interface MdEditorProps {
   disabled?: boolean
 }
 
-export function MdEditor({ tabContentsRef, filePath, isActive, disabled = false }: MdEditorProps) {
+// Fork（almanac ALMNC-56.3 P01）：memo——父層重繪（拖曳、版面狀態）時，props 沒變就不重繪編輯器。
+export const MdEditor = memo(function MdEditor({ tabContentsRef, filePath, isActive, disabled = false }: MdEditorProps) {
   const {
     saveCurrentArticle,
     isPulling,
@@ -237,6 +240,19 @@ export function MdEditor({ tabContentsRef, filePath, isActive, disabled = false 
     })
   }, [filePath, workspacePath, outlinePlacement, settingsReady, sidebarOutlineOpen])
 
+  // Fork（almanac）：V3 編輯區右上角的筆記工具列在編輯器外面，使用中的這篇把編輯器實例與大綱開關登記給它
+  // （標籤、筆記資訊讀寫這個編輯器；大綱按鈕走跟狀態列「大綱」同一個 handleToggleOutline）。
+  const effectiveOutlineOpen = settingsReady && (outlinePlacement === 'sidebar' ? sidebarOutlineOpen : outlineOpen)
+  useEffect(() => {
+    if (!isActive || !filePath || !editorReady || !editorInstance) return
+    return useActiveNoteEditorStore.getState().register({
+      editor: editorInstance,
+      path: filePath,
+      outlineOpen: effectiveOutlineOpen,
+      toggleOutline: handleToggleOutline,
+    })
+  }, [editorInstance, editorReady, effectiveOutlineOpen, filePath, handleToggleOutline, isActive])
+
   const handleOutlineWidthChange = useCallback((width: number) => {
     setOutlineWidth(normalizeOutlineWidth(width))
   }, [])
@@ -387,6 +403,18 @@ export function MdEditor({ tabContentsRef, filePath, isActive, disabled = false 
     setEditorReady(false)
   }, [filePath])
 
+  // Fork（almanac ALMNC-54.16）：標題欄位按 Enter／下方向鍵時把游標移到內文開頭。
+  // 改名會讓編輯器換一個實例，換好之前先記著，等新的編輯器好了再移。
+  const editorInstanceRef = useRef<any>(null)
+  const pendingBodyFocusRef = useRef(false)
+  useEffect(() => {
+    editorInstanceRef.current = editorInstance
+    if (pendingBodyFocusRef.current && focusEditorBodyStart(editorInstance)) pendingBodyFocusRef.current = false
+  }, [editorInstance])
+  const focusBody = useCallback(() => {
+    pendingBodyFocusRef.current = !focusEditorBodyStart(editorInstanceRef.current)
+  }, [])
+
   // Auto-create untitled.md file
   async function createUntitledFile(content: string) {
     try {
@@ -506,11 +534,12 @@ export function MdEditor({ tabContentsRef, filePath, isActive, disabled = false 
       <div className="relative min-h-0 flex-1">
       <TipTapEditor
         initialContent={initialContent ?? ''}
+        header={filePath ? <DocTitleField path={filePath} onFocusBody={focusBody} disabled={disabled || isThisEditorPulling} /> : undefined}
         onChange={handleContentChange}
         placeholder={tEditor('placeholder')}
         activeFilePath={filePath}
         onEditorReady={handleEditorReady}
-        outlineOpen={settingsReady && (outlinePlacement === 'sidebar' ? sidebarOutlineOpen : outlineOpen)}
+        outlineOpen={effectiveOutlineOpen}
         outlinePosition={outlinePosition}
         outlineWidth={outlineWidth}
         outlineInLayout
@@ -535,6 +564,6 @@ export function MdEditor({ tabContentsRef, filePath, isActive, disabled = false 
       {showOutline && outlinePosition === 'right' ? renderOutline() : null}
     </div>
   )
-}
+})
 
 export default MdEditor

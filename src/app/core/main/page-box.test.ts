@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 // almanac ALMNC-24：v3 全頁畫面只蓋中間面板，左右側欄固定露出。
 import { describe, expect, it } from 'vitest'
-import { measurePageBox } from './page-box'
+import { measurePageBox, samePageBox } from './page-box'
 
 function el(rect: { left: number, right: number, top?: number, bottom?: number }, init?: (node: HTMLElement) => void) {
   const node = document.createElement('div')
@@ -40,5 +40,17 @@ describe('measurePageBox', () => {
   it('v3 falls back to the right edge when the center panel is collapsed', () => {
     const { container, group, panels } = layout(241)
     expect(measurePageBox(container, group, panels, true).right).toBe(0)
+  })
+})
+
+// almanac ALMNC-56.3 P02：ResizeObserver 量到一樣的尺寸時不更新 state。
+describe('samePageBox', () => {
+  const box = { top: 8, right: 0, bottom: 28, left: 241, radius: '8px' }
+  it('treats equal measurements as unchanged and any changed field as changed', () => {
+    expect(samePageBox(box, { ...box })).toBe(true)
+    expect(samePageBox(null, null)).toBe(true)
+    expect(samePageBox(null, box)).toBe(false)
+    expect(samePageBox(box, { ...box, left: 242 })).toBe(false)
+    expect(samePageBox(box, { ...box, radius: '0px' })).toBe(false)
   })
 })

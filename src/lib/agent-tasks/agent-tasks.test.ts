@@ -283,6 +283,16 @@ describe('任務中心', () => {
     expect(notified).toEqual([`awaiting_review:${created.id}`])
   })
 
+  // Fork（almanac ALMNC-54.5 AC#1）：從對話派出的任務記住那段對話，它的草稿（提案）就知道來自哪裡。
+  it('記住派出任務的對話，存檔時一起保存', async () => {
+    const { center, persisted } = setup(async () => done())
+    const created = await center.enqueue({ prompt: '整理會議紀錄', conversationId: 42 })
+    expect(created.conversationId).toBe(42)
+    expect(persisted[0].conversationId).toBe(42)
+    const plain = await center.enqueue({ prompt: 'b' })
+    expect(plain).not.toHaveProperty('conversationId')
+  })
+
   it('取消執行中的任務：沒有草稿就是已取消', async () => {
     const { center, runtimes } = setup(async (_input, _callbacks, stop) => { await stop; return { ...done(''), stopped: true } })
     const created = await center.enqueue({ prompt: 'a' })

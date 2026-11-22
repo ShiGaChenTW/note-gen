@@ -3,7 +3,8 @@
 // 元件（threads/thread-cards.tsx）只負責把 resolveThreadCard 的結果畫出來，不在元件裡做判斷。
 import type { ProposalKind } from '@/lib/collect/types'
 
-export type CardStatus = 'wait' | 'ok' | 'no'
+/** Fork（almanac ALMNC-54.5）：talk＝再次討論中（附了說明，等指揮官修改後重新提案）。 */
+export type CardStatus = 'wait' | 'ok' | 'no' | 'talk' | 'replaced'
 
 export interface ProposalCardData {
   type: 'proposal'
@@ -17,8 +18,12 @@ export interface ProposalCardData {
   /** HH:mm */
   time?: string
   status: CardStatus
-  /** 對應收集頁的提案；有的話「收下」會走收集頁的寫入流程（筆記檔、今日日誌）。 */
+  /** 對應收集頁的提案；有的話「接受」會走收集頁的寫入流程（筆記檔、今日日誌）。 */
   source?: { itemId: string; proposalId: string }
+}
+
+export function threadProposalKey(card: ProposalCardData): string {
+  return card.source ? `collect:${card.source.itemId}:${card.source.proposalId}` : `thread-card:${card.id}`
 }
 
 export type KickoffState = 'proposed' | 'running' | 'done' | 'cancelled'
@@ -39,9 +44,22 @@ export interface KickoffResultCardData {
   placeholder?: boolean
 }
 
-export type ThreadCard = ProposalCardData | KickoffResultCardData
+/**
+ * Fork（almanac ALMNC-54.7）：秘書照 Scott 親口交代直接改了任務或行程後的一行確認，附「復原」。
+ * what 是「11/20 10:00 會議」；畫面套「已新增：{what}」。agent 是「Leo · 秘書」這類顯示名稱（可空）。
+ */
+export interface DirectEditCardData {
+  type: 'direct-edit'
+  id: string
+  what: string
+  agent?: string
+  /** done＝已寫入；undone＝已復原；stale＝檔案之後被改過，沒有復原。 */
+  status: 'done' | 'undone' | 'stale'
+}
 
-export type CardAction = 'accept' | 'reject' | 'start' | 'hold' | 'reopen'
+export type ThreadCard = ProposalCardData | KickoffResultCardData | DirectEditCardData
+
+export type CardAction = 'accept' | 'reject' | 'discuss' | 'start' | 'hold' | 'reopen' | 'undo'
 
 export type ProposalTone = 'pending' | 'done' | 'muted'
 
@@ -54,7 +72,7 @@ export interface ProposalCardView {
   /** 日期與時間合成一句，沒有就空字串。 */
   when: string
   /** i18n key（threads.cards.*）。 */
-  statusKey: 'proposalWait' | 'proposalOk' | 'proposalNo'
+  statusKey: 'proposalWait' | 'proposalOk' | 'proposalNo' | 'proposalTalk' | 'proposalReplaced'
   tone: ProposalTone
   actions: CardAction[]
 }
@@ -76,10 +94,19 @@ export interface KickoffCardView {
   actions: CardAction[]
 }
 
-export type ThreadCardView = ProposalCardView | KickoffCardView
+export interface DirectEditCardView {
+  type: 'direct-edit'
+  id: string
+  what: string
+  agent: string
+  statusKey: 'directDone' | 'directUndone' | 'directStale'
+  actions: CardAction[]
+}
+
+export type ThreadCardView = ProposalCardView | KickoffCardView | DirectEditCardView
 
 const PROPOSAL_KINDS = new Set<ProposalKind>(['note', 'task', 'event'])
-const STATUSES = new Set<CardStatus>(['wait', 'ok', 'no'])
+const STATUSES = new Set<CardStatus>(['wait', 'ok', 'no', 'talk'])
 const KICKOFF_STATES = new Set<KickoffState>(['proposed', 'running', 'done', 'cancelled'])
 const TASK_STATUSES = new Set<KickoffTaskStatus>(['wait', 'run', 'done'])
 const ACCEPT_STATUSES = new Set<KickoffAcceptStatus>(['open', 'ok', 'look'])
@@ -148,6 +175,16 @@ export function parseThreadCard(raw: unknown): ThreadCard | null {
 
 /** 卡片 → 畫面要的所有判斷（狀態文字、可用的動作、進度）。 */
 export function resolveThreadCard(card: ThreadCard): ThreadCardView {
+  if (card.type === 'direct-edit') {
+    return {
+      type: 'direct-edit',
+      id: card.id,
+      what: card.what,
+      agent: card.agent ?? '',
+      statusKey: card.status === 'undone' ? 'directUndone' : card.status === 'stale' ? 'directStale' : 'directDone',
+      actions: card.status === 'done' ? ['undo'] : [],
+    }
+  }
   if (card.type === 'proposal') {
     return {
       type: 'proposal',
@@ -156,9 +193,11 @@ export function resolveThreadCard(card: ThreadCard): ThreadCardView {
       title: card.title,
       detail: card.detail ?? '',
       when: formatWhen(card.due, card.time),
-      statusKey: card.status === 'ok' ? 'proposalOk' : card.status === 'no' ? 'proposalNo' : 'proposalWait',
-      tone: card.status === 'wait' ? 'pending' : card.status === 'ok' ? 'done' : 'muted',
-      actions: card.status === 'wait' ? ['accept', 'reject'] : [],
+      statusKey: card.status === 'ok' ? 'proposalOk' : card.status === 'no' ? 'proposalNo' : card.status === 'talk' ? 'proposalTalk' : card.status === 'replaced' ? 'proposalReplaced' : 'proposalWait',
+      // 再次討論中仍是待決定：維持虛線框，只是沒有按鈕
+      tone: card.status === 'wait' || card.status === 'talk' ? 'pending' : card.status === 'ok' ? 'done' : 'muted',
+      // Fork（almanac ALMNC-54.5）：按鈕是接受／再次討論／放棄
+      actions: card.status === 'wait' ? ['accept', 'discuss', 'reject'] : [],
     }
   }
   const done = card.tasks.filter(task => task.status === 'done').length
@@ -181,10 +220,13 @@ export function resolveThreadCard(card: ThreadCard): ThreadCardView {
 
 /** 對卡片套用動作後的新卡片；開工卡的 start／hold／reopen 只改狀態（真正派活是 P6）。動作不適用就原樣回傳。 */
 export function applyCardAction(card: ThreadCard, action: CardAction): ThreadCard {
+  // 直接修改的復原要看檔案寫回成不成功，由 store 決定 undone 或 stale，這裡不改。
+  if (card.type === 'direct-edit') return card
   if (card.type === 'proposal') {
     if (card.status !== 'wait') return card
     if (action === 'accept') return { ...card, status: 'ok' }
     if (action === 'reject') return { ...card, status: 'no' }
+    if (action === 'discuss') return { ...card, status: 'talk' }
     return card
   }
   if (card.state === 'proposed' && action === 'start') return { ...card, state: 'running' }
