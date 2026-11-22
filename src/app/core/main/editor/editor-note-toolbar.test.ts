@@ -124,7 +124,7 @@ it('shows the four groups for a markdown note, in order, with shortcuts in the l
   expect(labels()).toEqual([
     '返回 (⌘[)', '前進 (⌘])',
     '在筆記中尋找 (⌘F)', '標籤', '置頂', '收藏',
-    '開啟大綱 (⇧⌘O)', '版本歷史', '筆記資訊', '命令面板 (⌘K，編輯器外)',
+    '開啟大綱 (⇧⌘O)', '版本歷史', '筆記資訊', '命令面板 (⌘⇧P)',
     '復原 (⌘Z)', '重做 (⌘Shift+Z)',
   ])
   expect(host.querySelectorAll('[data-testid="editor-note-toolbar"] > span[aria-hidden]')).toHaveLength(3)
@@ -157,10 +157,10 @@ it('is a single tab stop with arrow-key movement, shared buttons and no panel ba
   expect(document.activeElement).toBe(button('返回'))
 })
 
-// ALMNC-56.2 A09：⌘K 在編輯器裡是插入連結，提示註明只在編輯器外有效；按鈕本身照樣打開命令面板。
-it('labels the command palette shortcut as outside the editor, also in the narrow more menu', async () => {
+// ALMNC-54.18（取代 56.2 A09）：⌘K 在編輯器裡是插入連結，提示只寫編輯器內外都能用的 ⌘⇧P；按鈕本身照樣打開命令面板。
+it('labels the command palette shortcut as ⌘⇧P only, also in the narrow more menu', async () => {
   await render()
-  expect(button('命令面板').getAttribute('aria-label')).toBe('命令面板 (⌘K，編輯器外)')
+  expect(button('命令面板').getAttribute('aria-label')).toBe('命令面板 (⌘⇧P)')
   observedWidth = 600
   await act(async () => root.unmount())
   root = createRoot(host)
@@ -170,7 +170,7 @@ it('labels the command palette shortcut as outside the editor, also in the narro
     more.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerType: 'mouse' }))
   })
   const item = [...document.querySelectorAll('[role="menuitem"]')].find(entry => entry.textContent?.startsWith('命令面板'))
-  expect(item?.textContent).toBe('命令面板⌘K，編輯器外')
+  expect(item?.textContent).toBe('命令面板⌘⇧P')
   await act(async () => (item as HTMLElement).click())
   expect(useAnywhereStore.getState().paletteOpen).toBe(true)
 })
@@ -278,7 +278,7 @@ it('shows file name, folder, times and length in the note info popover', async (
 
 it('keeps only navigation, the command palette and undo/redo for canvas tabs', async () => {
   await render({ activeTab: { id: 'c', path: 'canvas://1', name: 'Board', isFolder: false, kind: 'canvas', canvasId: '1' } })
-  expect(labels()).toEqual(['返回 (⌘[)', '前進 (⌘])', '命令面板 (⌘K，編輯器外)', '復原 (⌘Z)', '重做 (⌘Shift+Z)'])
+  expect(labels()).toEqual(['返回 (⌘[)', '前進 (⌘])', '命令面板 (⌘⇧P)', '復原 (⌘Z)', '重做 (⌘Shift+Z)'])
 })
 
 it('hides the toolbar for record tabs and outside the active group', async () => {
@@ -297,6 +297,6 @@ it('collapses the third and fourth groups into a more menu on narrow editors', a
 it('hides only undo/redo when the undo/redo setting is off', async () => {
   useSettingStore.setState({ showEditorUndoRedo: false })
   await render()
-  expect(labels().at(-1)).toBe('命令面板 (⌘K，編輯器外)')
+  expect(labels().at(-1)).toBe('命令面板 (⌘⇧P)')
   expect(labels()).toHaveLength(10)
 })

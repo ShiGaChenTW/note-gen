@@ -34,6 +34,15 @@ export function isPaletteShortcut(event: Pick<KeyboardEvent, 'metaKey' | 'ctrlKe
   return event.code === 'KeyK' || event.key.toLowerCase() === 'k'
 }
 
+/**
+ * Fork（almanac ALMNC-54.18）：⌘⇧P / Ctrl+Shift+P 開面板，焦點在編輯器裡也攔（⌘K 在編輯器裡是插入連結）。
+ * 用實體鍵位，注音等輸入法下 key 不是 p 也認得。
+ */
+export function isCommandPaletteShortcut(event: Pick<KeyboardEvent, 'metaKey' | 'ctrlKey' | 'shiftKey' | 'altKey' | 'key' | 'code' | 'isComposing'>): boolean {
+  if (event.isComposing || event.altKey || !event.shiftKey || !(event.metaKey || event.ctrlKey)) return false
+  return event.code === 'KeyP' || event.key.toLowerCase() === 'p'
+}
+
 const EDITOR_SELECTOR = '.ProseMirror, .tiptap-editor, #aritcle-md-editor, .cm-editor, [contenteditable]:not([contenteditable="false"])'
 
 /** 焦點是否在筆記編輯器裡（含 contenteditable 與原始碼模式）。一般輸入框不算。 */

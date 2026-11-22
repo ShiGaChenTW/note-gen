@@ -6865,7 +6865,6 @@
       "infoModified": "修改时间",
       "infoLength": "字数",
       "command": "命令面板",
-      "outsideEditorShortcut": "{shortcut}，编辑器外",
       "more": "更多"
     },
     "statusBar": {
@@ -8909,9 +8908,7 @@
       "addSource": "新增资料源",
       "addSourceShort": "资料源",
       "newThread": "新增对话",
-      "newThreadShort": "对话",
-      "tbd": "待确定",
-      "tbdTip": "功能待确定"
+      "newThreadShort": "对话"
     },
     "legacy": {
       "title": "旧笔记 {count, number} 则",

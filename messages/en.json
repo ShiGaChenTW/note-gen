@@ -6865,7 +6865,6 @@
       "infoModified": "Modified",
       "infoLength": "Length",
       "command": "Command palette",
-      "outsideEditorShortcut": "{shortcut}, outside the editor",
       "more": "More"
     },
     "statusBar": {
@@ -8909,9 +8908,7 @@
       "addSource": "Add source",
       "addSourceShort": "Source",
       "newThread": "New conversation",
-      "newThreadShort": "Chat",
-      "tbd": "To be decided",
-      "tbdTip": "To be decided"
+      "newThreadShort": "Chat"
     },
     "legacy": {
       "title": "Old notes: {count, number}",

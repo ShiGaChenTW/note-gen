@@ -25,7 +25,7 @@ import { useTranslations } from 'next-intl'
 import { v4 as uuid } from 'uuid'
 import { addNewSource } from '@/lib/workbench/actions'
 import { newSourceType } from '@/lib/workbench/judgement'
-import { openWorkbench } from '@/lib/workbench/open'
+import { openAddSource, openWorkbench } from '@/lib/workbench/open'
 import { useCommanderName } from '@/lib/workbench/use-workbench'
 
 const typeIcon: Record<UnifiedRecordType, ReactNode> = {
@@ -53,21 +53,26 @@ function formatRecordingDuration(seconds: number) {
   return `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, '0')}`
 }
 
-export function UnifiedRecordButton({ compact = false }: { compact?: boolean }) {
+/**
+ * Fork（almanac ALMNC-54.18）：target="source" 時改開「新增資料源」（和 V3 側欄↓同一個對話框），標題列在 V3 用這個；
+ * 沒給 target 照舊開記錄對話框。
+ */
+export function UnifiedRecordButton({ compact = false, target }: { compact?: boolean, target?: 'source' }) {
   const t = useTranslations()
   const { isRecording, recordingDuration } = useRecordingStore()
+  const label = target === 'source' ? t('workbench.quick.addSource') : t('record.mark.unified.title')
   return (
     <div className="flex items-center gap-1">
       <Button
         type="button"
         size={compact ? 'icon' : 'sm'}
         variant={compact ? 'ghost' : 'outline'}
-        aria-label={t('record.mark.unified.title')}
-        title={t('record.mark.unified.title')}
-        onClick={() => emitter.emit('unified-record-open')}
+        aria-label={label}
+        title={label}
+        onClick={target === 'source' ? openAddSource : () => emitter.emit('unified-record-open')}
       >
         <Plus />
-        {!compact && <span>{t('record.mark.unified.title')}</span>}
+        {!compact && <span>{label}</span>}
       </Button>
       {isRecording && (
         <Button

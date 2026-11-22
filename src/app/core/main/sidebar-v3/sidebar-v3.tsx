@@ -1,9 +1,9 @@
 'use client'
 
 // Fork（almanac ALMNC-20）：v5 側欄，方案 B「導覽＋檔案樹」。left-sidebar.tsx 在 v3 時直接回傳這個元件。
-// 由上而下：品牌、搜尋（⌘K）、四個新增按鈕（ALMNC-54.8、54.16）、五個導覽、可收合的代理人區、可收合的 MyVault 檔案樹、規則。
+// 由上而下：品牌、搜尋（⌘K）、三個新增按鈕（ALMNC-54.8、54.16、54.18）、五個導覽、可收合的代理人區、可收合的 MyVault 檔案樹、規則。
 import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from 'react'
-import { ArrowDownToLine, CalendarCheck, CalendarDays, ChevronDown, FilePen, ListChecks, Library, MessageSquarePlus, MessagesSquare, MoreHorizontal, Plus, Search, SquareDashed } from 'lucide-react'
+import { ArrowDownToLine, CalendarCheck, CalendarDays, ChevronDown, FilePen, ListChecks, Library, MessageSquarePlus, MessagesSquare, MoreHorizontal, Plus, Search } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { Count } from '@/components/v3/count'
 import { SectionLabel } from '@/components/v3/section-label'
@@ -216,37 +216,31 @@ function VaultSection() {
 }
 
 /**
- * Fork（almanac ALMNC-54.8）：搜尋下方三個只有圖示的按鈕——新增資料源（N）、新增對話（T）、待定（ALMNC-54.15，還沒有功能）。
+ * Fork（almanac ALMNC-54.8、54.16、54.18）：搜尋下方三個只有圖示的按鈕——新增文件、新增資料源（N）、新增對話（T）。
  * 滑鼠停留顯示名稱與快捷鍵；窄螢幕（手機）在圖示下方加小字。
  */
 function QuickActions() {
   const t = useTranslations('workbench.quick')
-  // Fork（almanac ALMNC-54.16）：依序為新增文件、新增資料源、新增對話、待確定（停用）。
-  const items: Array<{ key: string, icon: ComponentType<{ className?: string }>, label: string, short: string, shortcut?: string, onClick?: () => void }> = [
+  // Fork（almanac ALMNC-54.16、54.18）：依序為新增文件、新增資料源、新增對話（54.18 拿掉第四顆「待確定」）。
+  const items: Array<{ key: string, icon: ComponentType<{ className?: string }>, label: string, short: string, shortcut?: string, onClick: () => void }> = [
     { key: 'doc', icon: FilePen, label: t('newDoc'), short: t('newDocShort'), onClick: () => void openNewDocument() },
     { key: 'source', icon: ArrowDownToLine, label: t('addSource'), short: t('addSourceShort'), shortcut: 'N', onClick: openAddSource },
     { key: 'thread', icon: MessageSquarePlus, label: t('newThread'), short: t('newThreadShort'), shortcut: 'T', onClick: () => void openNewConversation() },
-    { key: 'tbd', icon: SquareDashed, label: t('tbdTip'), short: t('tbd') },
   ]
   return (
-    <div role="group" aria-label={t('label')} className="mx-0.5 grid shrink-0 grid-cols-4 gap-1" data-testid="sidebar-quick">
+    <div role="group" aria-label={t('label')} className="mx-0.5 grid shrink-0 grid-cols-3 gap-1" data-testid="sidebar-quick">
       {items.map(item => {
         const Icon = item.icon
-        const disabled = !item.onClick
         const tip = item.shortcut ? `${item.label}　${item.shortcut}` : item.label
         return (
           <span key={item.key} className="group/quick relative flex">
             <button
               type="button"
-              aria-label={disabled ? t('tbd') : item.label}
+              aria-label={item.label}
               aria-keyshortcuts={item.shortcut}
-              disabled={disabled}
               onClick={item.onClick}
               data-quick={item.key}
-              className={cn(
-                'flex min-h-[34px] w-full cursor-pointer flex-col items-center justify-center gap-0.5 rounded-md border border-line bg-bg py-1 text-muted-ink outline-none transition-colors duration-100 hover:border-ink/30 hover:text-ink focus-visible:ring-1 focus-visible:ring-ink/60',
-                disabled && 'cursor-not-allowed border-dashed bg-transparent text-faint hover:border-line hover:text-faint',
-              )}
+              className="flex min-h-[34px] w-full cursor-pointer flex-col items-center justify-center gap-0.5 rounded-md border border-line bg-bg py-1 text-muted-ink outline-none transition-colors duration-100 hover:border-ink/30 hover:text-ink focus-visible:ring-1 focus-visible:ring-ink/60"
             >
               <Icon className="size-[17px] shrink-0" aria-hidden />
               <span className="text-[11px] leading-3 md:hidden" aria-hidden>{item.short}</span>

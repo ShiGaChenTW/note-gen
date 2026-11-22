@@ -103,21 +103,22 @@ it('maps the visible Plan entry to the week overlay and removes the V3 navigatio
   expect(host.querySelector('nav')?.textContent).not.toContain('Decide')
 })
 
-// Fork（almanac ALMNC-54.8、54.16）：側欄搜尋下方四個只有圖示的按鈕，主導覽沒有「收集」。
-it('shows the four icon-only quick buttons under search and no 收集 in the nav', async () => {
+// Fork（almanac ALMNC-54.8、54.16、54.18）：側欄搜尋下方三個只有圖示的按鈕（拿掉「待確定」），主導覽沒有「收集」。
+it('shows the three icon-only quick buttons under search and no 收集 in the nav', async () => {
   await render(React.createElement(LeftSidebar))
   const nav = host.querySelector('[data-sidebar-v3] nav')!
   expect([...nav.querySelectorAll('button')].map(button => button.textContent?.replace(/\d+$/, ''))).toEqual(['今天', '工作台', '對話', '知識', '計畫'])
   const quick = host.querySelector('[data-testid="sidebar-quick"]')!
-  expect(quick.className).toContain('grid-cols-4')
+  expect(quick.className).toContain('grid-cols-3')
   const buttons = [...quick.querySelectorAll('button')]
-  expect(buttons.map(button => button.dataset.quick)).toEqual(['doc', 'source', 'thread', 'tbd'])
-  expect(buttons.map(button => button.getAttribute('aria-label'))).toEqual(['新增文件', '新增資料源', '新增對話', '待確定'])
-  expect(buttons.map(button => button.getAttribute('aria-keyshortcuts'))).toEqual([null, 'N', 'T', null])
-  expect(buttons.map(button => button.disabled)).toEqual([false, false, false, true])
-  expect([...quick.querySelectorAll('[role="tooltip"]')].map(tip => tip.textContent)).toEqual(['新增文件', '新增資料源　N', '新增對話　T', '功能待確定'])
+  expect(buttons.map(button => button.dataset.quick)).toEqual(['doc', 'source', 'thread'])
+  expect(buttons.map(button => button.getAttribute('aria-label'))).toEqual(['新增文件', '新增資料源', '新增對話'])
+  expect(buttons.map(button => button.getAttribute('aria-keyshortcuts'))).toEqual([null, 'N', 'T'])
+  expect(buttons.map(button => button.disabled)).toEqual([false, false, false])
+  expect([...quick.querySelectorAll('[role="tooltip"]')].map(tip => tip.textContent)).toEqual(['新增文件', '新增資料源　N', '新增對話　T'])
+  expect(quick.textContent).not.toContain('待確定')
   // 手機版圖示下的小字（md 以上隱藏）
-  expect(buttons.map(button => button.querySelector('span')?.textContent)).toEqual(['文件', '資料源', '對話', '待確定'])
+  expect(buttons.map(button => button.querySelector('span')?.textContent)).toEqual(['文件', '資料源', '對話'])
   const opened = vi.fn()
   emitter.on('unified-record-open', opened)
   await act(async () => buttons[1].click())
@@ -220,6 +221,43 @@ it('opens the named command palette with ⌘K and returns focus on Escape', asyn
     await act(async () => keyDown(document.activeElement as HTMLElement, 'Escape'))
     expect(document.querySelector('[role="dialog"]')).toBeNull()
     await vi.waitFor(() => expect(document.activeElement).toBe(opener))
+  } finally {
+    if (scrollIntoView) Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', scrollIntoView)
+    else Reflect.deleteProperty(HTMLElement.prototype, 'scrollIntoView')
+  }
+})
+
+// Fork（almanac ALMNC-54.18）：⌘⇧P 在編輯器裡也打開命令面板（⌘K 在那裡是插入連結），而且不讓編輯器或外掛命令面板再接一次。
+it('opens the command palette with ⌘⇧P even from inside the note editor', async () => {
+  const scrollIntoView = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'scrollIntoView')
+  Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', { configurable: true, value: () => {} })
+  try {
+    await render(React.createElement(React.Fragment, null,
+      React.createElement('div', { className: 'ProseMirror', contentEditable: true, suppressContentEditableWarning: true, tabIndex: 0 }, 'note'),
+      React.createElement(AnywhereService),
+    ))
+    expect(useAnywhereStore.getState().paletteHosted).toBe(true)
+    const editor = host.querySelector<HTMLElement>('.ProseMirror')!
+    const editorSaw = vi.fn()
+    editor.addEventListener('keydown', editorSaw)
+    // ⌘K 在編輯器裡不攔
+    await act(async () => keyDown(editor, 'k', { metaKey: true, code: 'KeyK' }))
+    expect(useAnywhereStore.getState().paletteOpen).toBe(false)
+    // ⌘⇧P（注音下 key 不是 p 也用實體鍵位認）
+    let event!: KeyboardEvent
+    await act(async () => { event = keyDown(editor, 'ㄣ', { metaKey: true, shiftKey: true, code: 'KeyP' }) })
+    expect(event.defaultPrevented).toBe(true)
+    expect(useAnywhereStore.getState().paletteOpen).toBe(true)
+    expect(editorSaw).toHaveBeenCalledTimes(1) // 只有前面那次 ⌘K
+    expect(document.querySelector('[role="dialog"]')).not.toBeNull()
+    // Ctrl+Shift+P 再按一次關掉
+    await act(async () => keyDown(document.activeElement as HTMLElement, 'P', { ctrlKey: true, shiftKey: true, code: 'KeyP' }))
+    expect(useAnywhereStore.getState().paletteOpen).toBe(false)
+    // classic 不接，交還給外掛命令面板
+    await act(async () => useUiModeStore.setState({ mode: 'classic' }))
+    expect(useAnywhereStore.getState().paletteHosted).toBe(false)
+    await act(async () => keyDown(editor, 'p', { metaKey: true, shiftKey: true, code: 'KeyP' }))
+    expect(useAnywhereStore.getState().paletteOpen).toBe(false)
   } finally {
     if (scrollIntoView) Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', scrollIntoView)
     else Reflect.deleteProperty(HTMLElement.prototype, 'scrollIntoView')

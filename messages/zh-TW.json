@@ -6930,7 +6930,6 @@
       "infoModified": "修改時間",
       "infoLength": "字數",
       "command": "命令面板",
-      "outsideEditorShortcut": "{shortcut}，編輯器外",
       "more": "更多"
     },
     "statusBar": {
@@ -8974,9 +8973,7 @@
       "addSource": "新增資料源",
       "addSourceShort": "資料源",
       "newThread": "新增對話",
-      "newThreadShort": "對話",
-      "tbd": "待確定",
-      "tbdTip": "功能待確定"
+      "newThreadShort": "對話"
     },
     "legacy": {
       "title": "舊筆記 {count, number} 則",

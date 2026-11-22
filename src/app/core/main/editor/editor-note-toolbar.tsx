@@ -8,7 +8,7 @@
 // - 標籤：讀寫 frontmatter 的 tags（寫法同屬性卡片，只改 tags 那一行）。置頂／收藏：stores/note-marks（每個工作區一份）。
 // 筆記專屬的按鈕只給 .md 筆記；編輯區窄於 720px 時第三、四組收進「⋯」。圖示刻意不用參考稿那套（箭頭、放大鏡、標籤、圖釘、星號⋯⋯）。
 // ALMNC-56.2：按鈕與分隔線改用 components/v3/toolbar（和底部格式列同一套，A11 roving tabindex、V07 外觀）；列本身不帶底色。
-// 命令面板的 ⌘K 在編輯器裡是「插入連結」（anywhere-service 不攔截），提示註明「編輯器外」（A09）。
+// 命令面板：⌘K 在編輯器裡是「插入連結」，所以提示只寫編輯器內外都能用的 ⌘⇧P（ALMNC-54.18，取代 A09 的「⌘K，編輯器外」）。
 import { useEffect, useMemo, useRef, useState, type ReactNode, type Ref } from 'react'
 import {
   ArrowLeft, ArrowRight, ArrowUpToLine, Ellipsis, FileText, Hash, Heart, History, ListTree, Redo2, SquareSlash,
@@ -139,6 +139,7 @@ export function EditorNoteToolbar({ activeTab, isActiveGroup, canGoBack, canGoFo
   if (scope === 'hidden') return null
 
   const mod = mac ? '⌘' : 'Ctrl+'
+  const paletteShortcut = mac ? '⌘⇧P' : 'Ctrl+Shift+P'
   const labels = {
     back: withShortcut(t('back'), mac ? '⌘[' : 'Alt+←'),
     forward: withShortcut(t('forward'), mac ? '⌘]' : 'Alt+→'),
@@ -148,7 +149,7 @@ export function EditorNoteToolbar({ activeTab, isActiveGroup, canGoBack, canGoFo
     outline: withShortcut(noteEditor?.outlineOpen ? tOutline('close') : tOutline('open'), formatShortcutLabel(outlineShortcut, mac)),
     history: tHistory('title'),
     info: t('info'),
-    command: withShortcut(t('command'), t('outsideEditorShortcut', { shortcut: `${mod}K` })),
+    command: withShortcut(t('command'), paletteShortcut),
     undo: `${tTab('undo')} (${mod}Z)`,
     redo: `${tTab('redo')} (${mod}Shift+Z)`,
   }
@@ -217,7 +218,7 @@ export function EditorNoteToolbar({ activeTab, isActiveGroup, canGoBack, canGoFo
                     <DropdownMenuItem onSelect={() => { openInfoAfterMenuRef.current = true }}><FileText />{labels.info}</DropdownMenuItem>
                   </>
                 ) : null}
-                <DropdownMenuItem onSelect={openPalette}><SquareSlash />{t('command')}<DropdownMenuShortcut>{t('outsideEditorShortcut', { shortcut: `${mod}K` })}</DropdownMenuShortcut></DropdownMenuItem>
+                <DropdownMenuItem onSelect={openPalette}><SquareSlash />{t('command')}<DropdownMenuShortcut>{paletteShortcut}</DropdownMenuShortcut></DropdownMenuItem>
                 {showEditorUndoRedo ? (
                   <>
                     <DropdownMenuSeparator />
