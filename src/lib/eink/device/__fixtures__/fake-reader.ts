@@ -8,6 +8,8 @@ export interface FakeReaderOptions {
   /** 上傳成功但存下來的大小不對（模擬 SD 卡寫壞） */
   corruptUpload?: (path: string) => boolean
   opds?: Array<{ name: string, url: string, username: string, password: string }>
+  /** 模擬不認 overwrite=1 的韌體（實機 ALMNC-44）：同名檔一律回 400 File already exists */
+  ignoreOverwrite?: boolean
 }
 
 export function createFakeReader(initial: Record<string, string | Uint8Array> = {}, options: FakeReaderOptions = {}) {
@@ -82,7 +84,7 @@ export function createFakeReader(initial: Record<string, string | Uint8Array> = 
           files.set(`${path}.part`, bytes.slice(0, Math.floor(bytes.length / 2)))
           throw new TypeError('network connection was lost')
         }
-        if (files.has(path) && url.searchParams.get('overwrite') !== '1') return { status: 400, text: `File already exists: ${name}` }
+        if (files.has(path) && (options.ignoreOverwrite || url.searchParams.get('overwrite') !== '1')) return { status: 400, text: `File already exists: ${name}` }
         files.set(path, options.corruptUpload?.(path) ? bytes.slice(1) : bytes)
         return { status: 200, text: `File uploaded successfully: ${name}` }
       }

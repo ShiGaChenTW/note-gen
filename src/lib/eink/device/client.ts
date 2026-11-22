@@ -175,13 +175,20 @@ export class CrossPointClient {
     assertAllowedFile(path, this.allow)
     const { dir, name } = splitDevicePath(path)
     const { body, contentType: multipartType } = buildMultipart(name, bytes, contentType)
+    const send = () => withTimeout(this.http({
+      url: this.url(`${DEVICE_API.upload}?path=${encodeURIComponent(dir)}&overwrite=1`),
+      method: 'POST',
+      headers: { 'Content-Type': multipartType },
+      body,
+    }), this.uploadTimeoutMs, `upload ${name}`)
     try {
-      const response = await withTimeout(this.http({
-        url: this.url(`${DEVICE_API.upload}?path=${encodeURIComponent(dir)}&overwrite=1`),
-        method: 'POST',
-        headers: { 'Content-Type': multipartType },
-        body,
-      }), this.uploadTimeoutMs, `upload ${name}`)
+      let response = await send()
+      // 實機（ALMNC-44，2026-11-22）：有的 CrossPoint 版本不認 overwrite=1，同名檔回 400「File already exists」。
+      // 這時先刪掉舊檔再傳一次；這條路沒有 .part 保護，傳到一半斷線舊檔就沒了（外掛會沿用上一張休眠圖，下次安裝補回）。
+      if (response.status === 400 && /already exists/i.test(response.text)) {
+        await this.delete(path)
+        response = await send()
+      }
       if (response.status !== 200) throw new DeviceError(`upload ${path}: ${response.status} ${response.text.slice(0, 120)}`)
     } catch (error) {
       await this.cleanupPart(dir, name)

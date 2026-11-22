@@ -187,6 +187,19 @@ describe('上傳中斷（AC #3）', () => {
   })
 })
 
+describe('不認 overwrite=1 的韌體（實機 ALMNC-44）', () => {
+  it('重新安裝時同名檔先刪再傳，外掛與休眠圖都換成新的，只動白名單', async () => {
+    const reader = createFakeReader({ '/plugins/almanac/device.json': '{}', '/sleep.bmp': 'old-image' }, { ignoreOverwrite: true })
+    await installToReader(reader.http, READER, await templates(), { server: SERVER, token: TOKEN })
+    expect(new TextDecoder().decode(reader.files.get('/plugins/almanac/device.json'))).toContain('sleep.enter')
+    const commit = vi.fn(async () => {})
+    await pushNow(reader.http, READER, { date: '2026-11-21', epub: new Uint8Array([1, 2, 3]), sleep: new Uint8Array([4, 5]), briefing }, commit)
+    expect(reader.files.get('/sleep.bmp')).toEqual(new Uint8Array([4, 5]))
+    expect(commit).toHaveBeenCalledWith(briefing)
+    expectOnlyAllowedWrites(reader.writes)
+  })
+})
+
 describe('立即推送', () => {
   it('今日簡報放進 /Books/Almanac/、休眠畫面寫到 /sleep.bmp，都確認後才 commitSent；只動白名單', async () => {
     const reader = createFakeReader({ '/Books/Mine/book.epub': 'mine' })
