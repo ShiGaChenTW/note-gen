@@ -9160,6 +9160,7 @@
       "failed": "Import failed",
       "dropUnsupported": "You can drop .eml, .mbox, .vtt or .srt files here",
       "subscribeRss": "Subscribe to RSS",
+      "readLater": "Read later",
       "rssSubscribed": "Subscribed to “{name}”; {count, plural, one {# post} other {# posts}} added and waiting for your decision",
       "meeting": "Meeting transcript",
       "meetingAdded": "Imported {count, plural, one {# meeting} other {# meetings}}; waiting for your decision",

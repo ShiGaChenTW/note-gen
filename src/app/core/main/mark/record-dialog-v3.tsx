@@ -5,12 +5,15 @@
 // - 類型列：token 圓角與底色；選類型用 V3 的下拉選單（和對話頁、編輯區工具列一樣），不用原生 select。
 // - 匯入 Email、會議逐字稿、訂閱 RSS 時的「處理中」狀態列。
 // - 錄音中的停止鈕用 danger 色。
-import type { ReactNode } from 'react'
-import { ChevronDown, LoaderCircle } from 'lucide-react'
+// - 新增資料源貼的是連結時的「稍後讀」（ALMNC-46 AC #6）。
+import { useState, type ReactNode } from 'react'
+import { BookmarkPlus, ChevronDown, LoaderCircle } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { Button } from '@/components/ui/button'
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuShortcut, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { toast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
 
 /** V3 錄音中停止鈕的顏色（classic 維持原本的紅色）。 */
@@ -77,5 +80,39 @@ export function V3TypeRow<T extends string>({ icon, summary, value, options, lab
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
+  )
+}
+
+/**
+ * Fork（almanac ALMNC-46 AC #6，Q17 定案）：新增資料源貼的是連結時，「稍後讀」把連結加進稍後讀清單，不建資料源。
+ * 加入成功提示並呼叫 onAdded（對話框清空並關閉）；同一網址已在清單只提示，對話框留著（還可以改存成資料源）。
+ */
+export function ReadLaterButton({ url, disabled, onAdded }: { url: string, disabled?: boolean, onAdded: () => void }) {
+  const t = useTranslations()
+  const [busy, setBusy] = useState(false)
+  const save = async () => {
+    if (busy) return
+    setBusy(true)
+    try {
+      const { addToReadLater } = await import('@/stores/read-later')
+      const result = await addToReadLater(url)
+      if (result === 'added') {
+        toast({ title: t('settings.eink.readLater.added') })
+        onAdded()
+      } else if (result === 'duplicate') {
+        toast({ title: t('settings.eink.readLater.duplicate') })
+      } else {
+        toast({ title: t('settings.eink.readLater.invalid'), variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: t('common.error'), description: error instanceof Error ? error.message : String(error), variant: 'destructive' })
+    } finally {
+      setBusy(false)
+    }
+  }
+  return (
+    <Button type="button" variant="outline" disabled={disabled || busy} data-testid="record-read-later" onClick={() => void save()}>
+      <BookmarkPlus />{t('workbench.import.readLater')}
+    </Button>
   )
 }
