@@ -3,6 +3,7 @@
 // 資料夾一律「遞迴」：點資料夾時列出它底下所有子資料夾裡的筆記，第二行顯示筆記所在的資料夾。
 import { create } from 'zustand'
 import { isUiV3 } from '@/lib/fork-ui'
+import { sortPinnedFirst } from '@/lib/note-toolbar/note-marks'
 
 export interface NoteListSource {
   path: string
@@ -43,8 +44,9 @@ export function folderName(folder: string): string {
 /**
  * 某資料夾（含子資料夾）裡的 Markdown 筆記，最近修改的在最上面；修改時間相同時依標題排序。
  * folder 為空字串代表「我的筆記」根目錄（整個 vault）。隱藏資料夾（`.` 開頭）裡的檔案不列。
+ * pinned：從編輯區工具列置頂的筆記路徑，排在最上面（置頂的之間同樣最近修改的在上）。
  */
-export function buildNoteList(notes: Iterable<NoteListSource>, folder: string): NoteListItem[] {
+export function buildNoteList(notes: Iterable<NoteListSource>, folder: string, pinned: readonly string[] = []): NoteListItem[] {
   const root = trimSlashes(folder)
   const prefix = root ? `${root}/` : ''
   const items: NoteListItem[] = []
@@ -55,7 +57,7 @@ export function buildNoteList(notes: Iterable<NoteListSource>, folder: string): 
     if (path.split('/').some(part => part.startsWith('.'))) continue
     items.push({ path: note.path, title: noteTitle(path), folder: noteFolder(path), mtime: note.mtime })
   }
-  return items.sort((a, b) => b.mtime - a.mtime || a.title.localeCompare(b.title))
+  return sortPinnedFirst(items.sort((a, b) => b.mtime - a.mtime || a.title.localeCompare(b.title)), pinned)
 }
 
 const MINUTE = 60_000

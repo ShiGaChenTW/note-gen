@@ -1,15 +1,18 @@
 'use client'
 
 // Fork（almanac ALMNC-54.17）：V3「我的筆記」的中間欄。點側欄「我的筆記」或其中的資料夾時出現，
-// 列出該資料夾（含子資料夾）的筆記，最近修改的在上；點一列在右邊編輯器打開，開著的那篇標成選中。
+// 列出該資料夾（含子資料夾）的筆記，最近修改的在上（編輯區工具列置頂的排最前面）；點一列在右邊編輯器打開，開著的那篇標成選中。
 // 其他 V3 頁面（今天、工作台、對話⋯⋯）打開時由 linkExclusiveOverlays 收起，classic 不顯示。
 import { useEffect, useMemo, useState } from 'react'
 import { FileText } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 import { useUiV3 } from '@/lib/fork-ui'
 import { buildNoteList, folderName, relativeTimeLabel, useNoteListStore } from '@/lib/note-list/note-list'
+import { noteMarksWorkspaceKey } from '@/lib/note-toolbar/note-marks'
 import { cn } from '@/lib/utils'
 import useArticleStore from '@/stores/article'
+import useNoteMarksStore, { selectWorkspaceMarks } from '@/stores/note-marks'
+import useSettingStore from '@/stores/setting'
 import useVaultIndexStore from '@/stores/vault-index'
 import { SIDEBAR_ROW } from '../sidebar-row'
 
@@ -38,10 +41,14 @@ function NoteList() {
   const revision = useVaultIndexStore(state => state.revision)
   const activeFilePath = useArticleStore(state => state.activeFilePath)
   const now = useNow()
+  // 編輯區工具列「置頂」的筆記排最上面（stores/note-marks，每個工作區一份）。
+  const workspaceKey = noteMarksWorkspaceKey(useSettingStore(state => state.workspacePath))
+  const pinned = useNoteMarksStore(state => selectWorkspaceMarks(state, 'pinned', workspaceKey))
+  useEffect(() => { void useNoteMarksStore.getState().load() }, [])
   const items = useMemo(
-    () => buildNoteList(notes.values(), folder),
+    () => buildNoteList(notes.values(), folder, pinned),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [notes, revision, folder],
+    [notes, revision, folder, pinned],
   )
   const title = folder ? folderName(folder) : t('vault')
 

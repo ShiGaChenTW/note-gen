@@ -44,7 +44,7 @@ import { Button } from '@/components/ui/button'
 import { MdEditor } from './markdown/md-editor-wrapper'
 import { TabBar, type TabInfo } from './tab-bar'
 import { useUiV3 } from '@/lib/fork-ui'
-import { EditorUndoRedo } from './editor-undo-redo'
+import { EditorNoteToolbar } from './editor-note-toolbar'
 import { collapseToSingleDocument } from './single-document'
 import { BrowserPanel } from './browser-panel'
 import { ImageEditor } from './image/image-editor'
@@ -234,6 +234,7 @@ interface EditorGroupPaneProps {
   onRestartPluginTab: (tabId: string) => void
   onToggleMaximize: (groupId: string) => void
   onCloseGroup: (groupId: string) => void
+  onNavigateHistory: (direction: 'back' | 'forward') => void
   renderActiveContent: (tab: TabInfo, active: boolean, groupId: string) => React.ReactNode
   renderEmpty: (mode: 'new-tab' | 'empty-group', enableShortcuts?: boolean) => React.ReactNode
 }
@@ -241,7 +242,7 @@ interface EditorGroupPaneProps {
 function EditorGroupPane({
   group, tabs, activeLayout, dragging, onActivateGroup, onNewTab, onNewBrowser, onCloseTab,
   onKeepTabs, onSplitTab, onMoveToNewWindow, onPinTab, onUnpinTab, onRestartPluginTab,
-  onToggleMaximize, onCloseGroup,
+  onToggleMaximize, onCloseGroup, onNavigateHistory,
   renderActiveContent, renderEmpty,
 }: EditorGroupPaneProps) {
   const tCanvas = useTranslations('canvas')
@@ -254,14 +255,20 @@ function EditorGroupPane({
     .filter((tab): tab is TabInfo => Boolean(tab))
   const activeTab = groupTabs.find(tab => tab.id === group.activeTabId)
   const isActiveGroup = activeLayout.activeGroupId === group.id
-  // Fork（almanac ALMNC-54.17）：V3 一次只開一篇，不顯示分頁列；復原／重做移到編輯區右上角。
+  // Fork（almanac ALMNC-54.17）：V3 一次只開一篇，不顯示分頁列；編輯區右上角改放筆記工具列（返回／前進、筆記操作、復原／重做）。
   const isV3 = useUiV3()
 
   return (
     <section
       className={cn('relative flex h-full w-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background', isActiveGroup && 'editor-group-active')}
     >
-      {isV3 ? <EditorUndoRedo activeTab={activeTab} isActiveGroup={isActiveGroup} /> : <TabBar
+      {isV3 ? <EditorNoteToolbar
+        activeTab={activeTab}
+        isActiveGroup={isActiveGroup}
+        canGoBack={Boolean(getEditorBackNavigationTarget(activeLayout))}
+        canGoForward={Boolean(getEditorForwardNavigationTarget(activeLayout))}
+        onNavigate={onNavigateHistory}
+      /> : <TabBar
         groupId={group.id}
         tabs={groupTabs}
         activeTabId={group.activeTabId}
@@ -1820,6 +1827,15 @@ export function EditorLayout() {
     return () => window.removeEventListener('keydown', handleKeyDown, { capture: true })
   }, [handleActivateGroup, handleNavigateHistory, handleSplitTab])
 
+  // Fork（almanac）：V3 筆記工具列的返回／前進按鈕，與上面 ⌘[／⌘] 走同一套瀏覽歷史（到頭時不動）。
+  const handleNavigateToolbarHistory = useCallback((direction: 'back' | 'forward') => {
+    const target = direction === 'back'
+      ? getEditorBackNavigationTarget(layoutRef.current)
+      : getEditorForwardNavigationTarget(layoutRef.current)
+    if (!target) return
+    void handleNavigateHistory(direction)
+  }, [handleNavigateHistory])
+
   const renderContentPanel = useCallback((tab: TabInfo, active: boolean, groupId: string) => {
     if (isBrowserEditorTab(tab)) {
       const visible = layout.groups[groupId]?.activeTabId === tab.id
@@ -1953,6 +1969,7 @@ export function EditorLayout() {
           onRestartPluginTab={handleRestartPluginTab}
           onToggleMaximize={handleToggleMaximize}
           onCloseGroup={handleCloseGroup}
+          onNavigateHistory={handleNavigateToolbarHistory}
           renderActiveContent={renderContentPanel}
           renderEmpty={renderEmpty}
         />
@@ -1988,7 +2005,7 @@ export function EditorLayout() {
         })}
       </ResizablePanelGroup>
     )
-  }, [dragging, handleActivateGroup, handleCloseGroup, handleCloseTab, handleKeepTabs, handleMoveToNewWindow, handleNewTab, handleNewBrowser, handlePinTab, handleRestartPluginTab, handleSplitTab, handleToggleMaximize, handleUnpinTab, layout, openTabs, renderContentPanel, renderEmpty, setLayout])
+  }, [dragging, handleActivateGroup, handleCloseGroup, handleCloseTab, handleKeepTabs, handleMoveToNewWindow, handleNewTab, handleNewBrowser, handlePinTab, handleRestartPluginTab, handleSplitTab, handleToggleMaximize, handleUnpinTab, handleNavigateToolbarHistory, layout, openTabs, renderContentPanel, renderEmpty, setLayout])
 
   if (!layoutReady) return <div className="flex h-full items-center justify-center text-sm text-muted-foreground">{tGroups('loadingLayout')}</div>
   const spotlightTitle = activeOnboardingStep ? tOnboarding(`spotlight.${activeOnboardingStep}.title`) : ''

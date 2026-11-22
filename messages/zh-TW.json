@@ -6909,6 +6909,29 @@
       "label": "格式工具列",
       "more": "更多格式"
     },
+    "noteToolbar": {
+      "label": "筆記工具列",
+      "back": "返回",
+      "forward": "前進",
+      "find": "在筆記中尋找",
+      "tags": "標籤",
+      "noTags": "還沒有標籤",
+      "addTag": "新增標籤，按 Enter",
+      "removeTag": "移除 {tag}",
+      "tagsReadOnly": "標籤格式較複雜，請在屬性卡片的原始碼修改",
+      "pin": "置頂",
+      "unpin": "取消置頂",
+      "favorite": "收藏",
+      "unfavorite": "取消收藏",
+      "info": "筆記資訊",
+      "infoFileName": "檔名",
+      "infoFolder": "資料夾",
+      "infoCreated": "建立時間",
+      "infoModified": "修改時間",
+      "infoLength": "字數",
+      "command": "命令面板",
+      "more": "更多"
+    },
     "statusBar": {
       "documentActions": {
         "copy": "複製",

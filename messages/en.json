@@ -6844,6 +6844,29 @@
       "label": "Formatting toolbar",
       "more": "More formatting"
     },
+    "noteToolbar": {
+      "label": "Note toolbar",
+      "back": "Back",
+      "forward": "Forward",
+      "find": "Find in note",
+      "tags": "Tags",
+      "noTags": "No tags yet",
+      "addTag": "Add a tag, press Enter",
+      "removeTag": "Remove {tag}",
+      "tagsReadOnly": "These tags use complex YAML. Edit them in the property card source.",
+      "pin": "Pin to top",
+      "unpin": "Unpin",
+      "favorite": "Favorite",
+      "unfavorite": "Remove from favorites",
+      "info": "Note info",
+      "infoFileName": "File name",
+      "infoFolder": "Folder",
+      "infoCreated": "Created",
+      "infoModified": "Modified",
+      "infoLength": "Length",
+      "command": "Command palette",
+      "more": "More"
+    },
     "statusBar": {
       "documentActions": {
         "copy": "Copy",

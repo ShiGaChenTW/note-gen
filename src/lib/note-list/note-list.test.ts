@@ -37,6 +37,15 @@ describe('buildNoteList', () => {
     expect(buildNoteList(NOTES, 'nope')).toEqual([])
   })
 
+  it('puts pinned notes on top, newest first within each group', () => {
+    expect(buildNoteList(NOTES, '', ['a.md', 'work/deep/c.md']).map(item => item.path))
+      .toEqual(['work/deep/c.md', 'a.md', 'workshop/d.md', 'work/b.md', 'work/Z.MD'])
+  })
+
+  it('ignores pinned notes outside the open folder', () => {
+    expect(buildNoteList(NOTES, 'work', ['a.md', 'work\\deep\\c.md']).map(item => item.path))
+      .toEqual(['work/deep/c.md', 'work/b.md', 'work/Z.MD'])
+  })
 })
 
 describe('path helpers', () => {

@@ -127,7 +127,8 @@ function DocTitleInput({ path, onFocusBody, disabled = false, commit = commitDoc
       placeholder={t('placeholder')}
       spellCheck={false}
       data-doc-title
-      className="mb-2 block w-full border-0 bg-transparent px-4 pt-6 pb-0 text-[1.75em] leading-tight font-semibold text-ink outline-none placeholder:text-faint disabled:opacity-60"
+      // pt-11：編輯區右上角的筆記工具列（top-2、高 28px，到 36px）整條在標題上方，標題再長也不會被壓到。
+      className="mb-2 block w-full border-0 bg-transparent px-4 pt-11 pb-0 text-[1.75em] leading-tight font-semibold text-ink outline-none placeholder:text-faint disabled:opacity-60"
     />
   )
 }
