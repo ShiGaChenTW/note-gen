@@ -39,6 +39,11 @@ export interface ScheduleItem {
   /** 行事曆名稱或任務所在筆記；時段為空字串 */
   source: string
   /**
+   * Fork（almanac ALMNC-48／49）：地點。休眠畫面與今日簡報有就顯示；
+   * 目前行事曆來源（src/lib/calendar）還沒帶地點，所以都是 undefined，等來源補上就會出現。
+   */
+  location?: string
+  /**
    * 私人行程：資料照樣完整保留。今日簡報完整顯示（計畫 v2），
    * 休眠畫面只顯示「私人行程」和時間（ALMNC-49 讀這個旗標）。
    */
