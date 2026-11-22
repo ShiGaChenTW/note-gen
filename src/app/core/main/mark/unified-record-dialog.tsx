@@ -33,7 +33,7 @@ import {
 } from '@/lib/source-import/import-files'
 import { rssErrorText, rssSubscribeErrorText } from '@/lib/source-import/rss-errors'
 import { useUiV3 } from '@/lib/fork-ui'
-import { ImportProgress, V3_STOP_RECORDING_CLASS, V3TypeRow, type ImportBusyKind } from './record-dialog-v3'
+import { ImportProgress, ReadLaterButton, V3_STOP_RECORDING_CLASS, V3TypeRow, type ImportBusyKind } from './record-dialog-v3'
 
 const typeIcon: Record<UnifiedRecordType, ReactNode> = {
   link: <Link2 />,
@@ -532,6 +532,10 @@ export function UnifiedRecordDialog() {
           </Button>
           {target === 'source' && resolvedType === 'link' && (
             <Button type="button" variant="outline" disabled={saving} onClick={() => void subscribeRss()}><Rss />{t('workbench.import.subscribeRss')}</Button>
+          )}
+          {/* Fork（almanac ALMNC-46 AC #6）：V3 新增資料源貼連結時可以改存成稍後讀（classic 不變） */}
+          {isV3 && target === 'source' && resolvedType === 'link' && (
+            <ReadLaterButton url={normalizeUnifiedLinkUrl(text)} disabled={saving} onAdded={resetAfterSave} />
           )}
           <Button type="button" disabled={saving || creatingTag} onClick={() => void handleSave()}>
             {resolvedType === 'link' ? t('record.mark.unified.captureLink') : t('record.mark.unified.saveAs', { type: typeLabel })}
