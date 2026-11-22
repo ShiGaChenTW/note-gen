@@ -1,60 +1,57 @@
-// Fork（almanac ALMNC-49）：灰階像素 → BMP。
-// 2-bit 版本照 aendom/crosspoint-calendar 的 bmp2（MIT License）：未壓縮、4 色調色盤（索引 0 黑 … 3 白）、
+// Fork（almanac ALMNC-49、ALMNC-58）：灰階像素 → 8-bit 灰階 BMP。
+// 格式：BITMAPINFOHEADER、未壓縮、256 色調色盤（第 v 格是 v,v,v 的灰）、像素存 0–255 的灰階值、
 // 由下往上存列、每列補到 4 bytes 的倍數；CrossPoint 直接畫這個格式。
-// 24-bit 是 ALMNC-44 驗證前保留的備案（params.ts 的 SLEEP_BMP_BIT_DEPTH）。
-import { GRAY_LEVELS, type BmpBitDepth } from './params'
+// 實機（X4 Pro、CrossPoint 2.0.6，ALMNC-44／58）：2-bit 灰階太粗；24-bit 細緻但 1.15 MB 超過外掛下載上限；
+// 8-bit 約 385 KB，細緻度與 24-bit 相同。
+import { MAX_EVENT_DOWNLOAD_BYTES } from '@/lib/eink/crosspoint'
+import { SLEEP_BMP_BIT_DEPTH, SLEEP_BMP_PALETTE_SIZE } from './params'
 
 const FILE_HEADER = 14
 const INFO_HEADER = 40
+const PALETTE_BYTES = SLEEP_BMP_PALETTE_SIZE * 4
+const DATA_OFFSET = FILE_HEADER + INFO_HEADER + PALETTE_BYTES
 
-/** 每列的位元組數（補到 4 的倍數）。 */
-export function bmpRowBytes(width: number, bitDepth: BmpBitDepth): number {
-  return Math.ceil((width * bitDepth) / 32) * 4
+/** 外掛下載上限（1 MB）；超過的話外掛會讓整次休眠的下載都失敗，所以編碼時就擋下來。 */
+export const SLEEP_BMP_MAX_BYTES = MAX_EVENT_DOWNLOAD_BYTES
+
+/** 每列的位元組數（每像素 1 byte，補到 4 的倍數）。 */
+export function bmpRowBytes(width: number): number {
+  return Math.ceil(width / 4) * 4
 }
 
-/** 檔案大小：2-bit 480×800 = 70 + 120×800 = 96,070 bytes（約 94 KB）。 */
-export function bmpFileSize(width: number, height: number, bitDepth: BmpBitDepth): number {
-  const palette = bitDepth === 2 ? 4 * 4 : 0
-  return FILE_HEADER + INFO_HEADER + palette + bmpRowBytes(width, bitDepth) * height
+/** 檔案大小：480×800 = 14 + 40 + 1,024 + 480×800 = 385,078 bytes（約 376 KB）。 */
+export function bmpFileSize(width: number, height: number): number {
+  return DATA_OFFSET + bmpRowBytes(width) * height
 }
 
-/** levels：每個像素一個 0–3 的灰階（0 黑、3 白），由上往下、由左往右。 */
-export function encodeBmp(levels: Uint8Array, width: number, height: number, bitDepth: BmpBitDepth = 2): Uint8Array {
-  if (levels.length !== width * height) throw new Error(`expected ${width * height} pixels, got ${levels.length}`)
-  const rowBytes = bmpRowBytes(width, bitDepth)
-  const offset = FILE_HEADER + INFO_HEADER + (bitDepth === 2 ? 16 : 0)
+/** gray：每個像素一個 0–255 的灰階（0 黑、255 白），由上往下、由左往右。 */
+export function encodeBmp(gray: Uint8Array, width: number, height: number): Uint8Array {
+  if (gray.length !== width * height) throw new Error(`expected ${width * height} pixels, got ${gray.length}`)
+  const size = bmpFileSize(width, height)
+  if (size >= SLEEP_BMP_MAX_BYTES) throw new Error(`sleep BMP is ${size} bytes, must be under ${SLEEP_BMP_MAX_BYTES}`)
+  const rowBytes = bmpRowBytes(width)
   const dataSize = rowBytes * height
-  const bytes = new Uint8Array(offset + dataSize)
+  const bytes = new Uint8Array(size)
   const view = new DataView(bytes.buffer)
   view.setUint8(0, 0x42) // B
   view.setUint8(1, 0x4D) // M
-  view.setUint32(2, offset + dataSize, true)
-  view.setUint32(10, offset, true)
+  view.setUint32(2, size, true)
+  view.setUint32(10, DATA_OFFSET, true)
   view.setUint32(14, INFO_HEADER, true)
   view.setInt32(18, width, true)
   view.setInt32(22, height, true) // 正數：由下往上
   view.setUint16(26, 1, true)
-  view.setUint16(28, bitDepth, true)
+  view.setUint16(28, SLEEP_BMP_BIT_DEPTH, true)
   view.setUint32(30, 0, true) // BI_RGB，不壓縮
   view.setUint32(34, dataSize, true)
   view.setInt32(38, 2835, true) // 72 dpi
   view.setInt32(42, 2835, true)
-  view.setUint32(46, bitDepth === 2 ? 4 : 0, true)
+  view.setUint32(46, SLEEP_BMP_PALETTE_SIZE, true)
   view.setUint32(50, 0, true)
-  if (bitDepth === 2) {
-    GRAY_LEVELS.forEach((gray, i) => bytes.set([gray, gray, gray, 0], FILE_HEADER + INFO_HEADER + i * 4))
-    for (let y = 0; y < height; y++) {
-      const row = offset + (height - 1 - y) * rowBytes
-      for (let x = 0; x < width; x++) bytes[row + (x >> 2)] |= (levels[y * width + x] & 3) << (6 - (x & 3) * 2)
-    }
-  } else {
-    for (let y = 0; y < height; y++) {
-      const row = offset + (height - 1 - y) * rowBytes
-      for (let x = 0; x < width; x++) {
-        const gray = GRAY_LEVELS[levels[y * width + x] & 3]
-        bytes.set([gray, gray, gray], row + x * 3)
-      }
-    }
+  for (let v = 0; v < SLEEP_BMP_PALETTE_SIZE; v++) bytes.set([v, v, v, 0], FILE_HEADER + INFO_HEADER + v * 4) // BGRA
+  for (let y = 0; y < height; y++) {
+    const row = DATA_OFFSET + (height - 1 - y) * rowBytes
+    bytes.set(gray.subarray(y * width, (y + 1) * width), row)
   }
   return bytes
 }
@@ -67,14 +64,14 @@ export interface BmpHeader {
   height: number
   bitDepth: number
   compression: number
+  imageSize: number
   colors: number
   palette: number[]
 }
 
-/** 讀 BMP 檔頭（測試與預覽用）。 */
+/** 讀 BMP 檔頭（測試與預覽用）。palette 只列每格的藍色值（灰階調色盤三色相同）。 */
 export function readBmpHeader(bytes: Uint8Array): BmpHeader {
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
-  const bitDepth = view.getUint16(28, true)
   const colors = view.getUint32(46, true)
   const palette: number[] = []
   for (let i = 0; i < colors; i++) palette.push(view.getUint8(FILE_HEADER + INFO_HEADER + i * 4))
@@ -84,26 +81,22 @@ export function readBmpHeader(bytes: Uint8Array): BmpHeader {
     dataOffset: view.getUint32(10, true),
     width: view.getInt32(18, true),
     height: view.getInt32(22, true),
-    bitDepth,
+    bitDepth: view.getUint16(28, true),
     compression: view.getUint32(30, true),
+    imageSize: view.getUint32(34, true),
     colors,
     palette,
   }
 }
 
-/** 解回每個像素的灰階索引（只支援這裡產生的 2-bit 與 24-bit；測試用）。 */
-export function decodeBmpLevels(bytes: Uint8Array): Uint8Array {
-  const header = readBmpHeader(bytes)
-  const { width, height, bitDepth, dataOffset } = header
-  const rowBytes = bmpRowBytes(width, bitDepth as BmpBitDepth)
-  const levels = new Uint8Array(width * height)
+/** 解回每個像素的灰階值（只支援這裡產生的 8-bit；測試用）。 */
+export function decodeBmpGray(bytes: Uint8Array): Uint8Array {
+  const { width, height, dataOffset } = readBmpHeader(bytes)
+  const rowBytes = bmpRowBytes(width)
+  const gray = new Uint8Array(width * height)
   for (let y = 0; y < height; y++) {
     const row = dataOffset + (height - 1 - y) * rowBytes
-    for (let x = 0; x < width; x++) {
-      levels[y * width + x] = bitDepth === 2
-        ? (bytes[row + (x >> 2)] >> (6 - (x & 3) * 2)) & 3
-        : GRAY_LEVELS.indexOf(bytes[row + x * 3] as typeof GRAY_LEVELS[number])
-    }
+    gray.set(bytes.subarray(row, row + width), y * width)
   }
-  return levels
+  return gray
 }
