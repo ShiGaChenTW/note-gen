@@ -55,12 +55,35 @@ function useAutoCollapse(ref: React.RefObject<HTMLElement | null>) {
   }, [ref])
 }
 
+/**
+ * 關閉清單（關閉鈕或 Esc）時焦點不掉到 body（ALMNC-56 重跑稽核）：回到打開清單的那個控制項（側欄「我的筆記」或資料夾列）；
+ * 它不在了就回到編輯器。只在焦點原本在清單裡（或在 body）時才搬，自動收起不動焦點。
+ */
+export function focusAfterNoteListClose(opener: HTMLElement | null) {
+  const target = opener?.isConnected ? opener : document.querySelector<HTMLElement>('.ProseMirror[contenteditable="true"]')
+  target?.focus()
+}
+
 function NoteList() {
   const t = useTranslations('sidebarV3')
   const ref = useRef<HTMLElement>(null)
   useAutoCollapse(ref)
   const locale = useLocale()
   const folder = useNoteListStore(state => state.folder)
+  // 記下打開（或換資料夾）時的焦點所在，就是打開清單的那個控制項
+  const openerRef = useRef<HTMLElement | null>(null)
+  useEffect(() => {
+    const active = document.activeElement
+    if (active instanceof HTMLElement && active !== document.body && !ref.current?.contains(active)) openerRef.current = active
+  }, [folder])
+  const close = () => {
+    // Safari／WKWebView 點按鈕不會把焦點給按鈕，焦點在 body 也算
+    const active = document.activeElement
+    const hadFocus = !active || active === document.body || (ref.current?.contains(active) ?? false)
+    const opener = openerRef.current
+    useNoteListStore.getState().hide()
+    if (hadFocus) requestAnimationFrame(() => focusAfterNoteListClose(opener))
+  }
   const notes = useVaultIndexStore(state => state.notes)
   const revision = useVaultIndexStore(state => state.revision)
   const changeLog = useVaultIndexStore(state => state.changeLog)
@@ -89,7 +112,7 @@ function NoteList() {
       onKeyDown={event => {
         if (event.key !== 'Escape' || event.defaultPrevented || event.nativeEvent.isComposing) return
         event.preventDefault()
-        useNoteListStore.getState().hide()
+        close()
       }}
     >
       <header className="flex h-11 shrink-0 items-center gap-2 border-b border-line-soft pr-2 pl-4">
@@ -100,7 +123,7 @@ function NoteList() {
           aria-label={t('noteList.close')}
           title={t('noteList.close')}
           aria-keyshortcuts="Escape"
-          onClick={() => useNoteListStore.getState().hide()}
+          onClick={close}
           data-testid="note-list-close"
           className="grid size-6 shrink-0 cursor-pointer place-items-center rounded-(--r) text-faint outline-none hover:bg-hover hover:text-ink focus-visible:ring-1 focus-visible:ring-ink/60"
         >

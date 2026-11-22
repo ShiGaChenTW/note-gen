@@ -4232,7 +4232,12 @@
         "network": "Could not connect: {detail}",
         "invalid_url": "Invalid URL",
         "unknown": "Fetch failed: {detail}"
-      }
+      },
+      "undo": "Undo",
+      "deleteError": "Could not delete “{name}”. Try again.",
+      "pauseError": "Could not pause “{name}”. Try again.",
+      "resumeError": "Could not resume “{name}”. Try again.",
+      "restoreError": "Could not restore “{name}”. Subscribe to it again."
     }
   },
   "bases": {
@@ -8414,7 +8419,9 @@
       "done": "Back in the conversation: \"{title}\"",
       "revised": "I’ve revised “{title}” and submitted it for approval.",
       "fromConversation": "From conversation: {title}",
-      "conversation": "this conversation"
+      "conversation": "this conversation",
+      "sending": "Sending…",
+      "failed": "Not sent. Your note is still here, so you can try again."
     }
   },
   "jobs": {

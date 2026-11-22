@@ -2,7 +2,7 @@
 
 // Fork（almanac ALMNC-54.8）：審核分頁的一張卡（v14）。收合時一行：類型字（標籤＋動詞，不用圖示）｜標的物＋第二行｜誰建議的＋等多久；
 // 點一下就地展開：內容、按鈕（依卡片類型）、右邊「先放著 S」。在檯面上的卡片標「檯面上」。
-import { useState, type ReactNode } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 import { useTranslations } from 'next-intl'
 import { Clock, MessagesSquare } from 'lucide-react'
 import { openConversation } from '@/lib/proposals/actions'
@@ -148,11 +148,24 @@ export function ReviewCard({ card, now, current, expanded, leaving, onDesk, comm
   onDesk: boolean
   commanderName: string
   onToggle: () => void
-  onAction: (action: CardAction, payload?: { note?: string, time?: string }) => void
+  /** 「再次討論」用回傳值判斷有沒有送出（false＝沒送出，表單留著）；其他動作不看回傳值。 */
+  onAction: (action: CardAction, payload?: { note?: string, time?: string }) => unknown
   onPutAside: (until?: string) => void
 }) {
   const t = useTranslations('workbench')
   const [mode, setMode] = useState<'none' | 'discuss' | 'aside' | 'schedule'>('none')
+  const panelRef = useRef<HTMLDivElement>(null)
+
+  /** 關掉再次討論表單後，焦點回到「再次討論」按鈕；按鈕不在了就回到卡片的收合列（不掉到 body）。 */
+  function closeDiscuss() {
+    const card = panelRef.current?.closest<HTMLElement>('[data-testid="review-card"]')
+    setMode('none')
+    requestAnimationFrame(() => {
+      if (!card?.isConnected) return
+      const target = card?.querySelector<HTMLElement>('[data-action="discuss"]') ?? card?.querySelector<HTMLElement>('[data-card-toggle]')
+      target?.focus()
+    })
+  }
 
   function click(action: CardAction) {
     if (action === 'discuss') return setMode(value => value === 'discuss' ? 'none' : 'discuss')
@@ -210,7 +223,7 @@ export function ReviewCard({ card, now, current, expanded, leaving, onDesk, comm
         </span>
       </button>
       {expanded && (
-        <div className="px-4 pb-4 pl-[18px]" data-testid="card-panel">
+        <div ref={panelRef} className="px-4 pb-4 pl-[18px]" data-testid="card-panel">
           <CardBody card={card} />
           {card.conversationId !== undefined && <ConversationLink id={card.conversationId} />}
           <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -244,7 +257,15 @@ export function ReviewCard({ card, now, current, expanded, leaving, onDesk, comm
             </button>
           </div>
           {mode === 'discuss' && (
-            <DiscussForm className="mt-3" busy={false} onCancel={() => setMode('none')} onSubmit={note => { setMode('none'); onAction('discuss', { note }) }} />
+            <DiscussForm
+              className="mt-3"
+              onCancel={closeDiscuss}
+              onSubmit={async note => {
+                if (await onAction('discuss', { note }) === false) return false
+                closeDiscuss()
+                return true
+              }}
+            />
           )}
           {mode === 'schedule' && <ScheduleForm onCancel={() => setMode('none')} onSubmit={time => { setMode('none'); onAction('schedule', { time }) }} />}
           {mode === 'aside' && <PutAsideChooser now={now} onCancel={() => setMode('none')} onPick={until => { setMode('none'); onPutAside(until) }} />}

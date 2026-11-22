@@ -4232,7 +4232,12 @@
         "network": "连不上：{detail}",
         "invalid_url": "网址格式不对",
         "unknown": "抓取失败：{detail}"
-      }
+      },
+      "undo": "复原",
+      "deleteError": "没有删掉「{name}」，请再试一次",
+      "pauseError": "没有暂停「{name}」，请再试一次",
+      "resumeError": "没有继续「{name}」，请再试一次",
+      "restoreError": "没有复原「{name}」，请重新订阅"
     }
   },
   "bases": {
@@ -8414,7 +8419,9 @@
       "done": "已带回对话：“{title}”",
       "revised": "我已修订「{title}」，请确认新版提案。",
       "fromConversation": "来自对话：{title}",
-      "conversation": "这段对话"
+      "conversation": "这段对话",
+      "sending": "送出中…",
+      "failed": "没有送出，你写的说明还在，可以再送一次。"
     }
   },
   "jobs": {

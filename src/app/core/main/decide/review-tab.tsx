@@ -139,7 +139,7 @@ export function ReviewTab({ data, actions, commanderName }: {
                       onDesk={card.key === deskCard}
                       commanderName={commanderName}
                       onToggle={() => toggle(card)}
-                      onAction={(action, payload) => void actions.run(card, action, payload)}
+                      onAction={(action, payload) => actions.run(card, action, payload)}
                       onPutAside={until => actions.putAside(card, until)}
                     />
                   ))}

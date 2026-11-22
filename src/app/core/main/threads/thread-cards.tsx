@@ -2,7 +2,7 @@
 
 // Fork（almanac ALMNC-14）：訊息下面的內嵌卡片。只在新介面（v3）顯示。
 // 判斷都在 lib/threads/cards.ts 的 resolveThreadCard，這裡只畫。外觀依 redesign_v5：提案是虛線框、處理後變實線；開工卡是實線框。
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import { Check, CalendarClock, FileText, ListTodo, LoaderCircle, Undo2 } from 'lucide-react'
@@ -19,16 +19,25 @@ import { DiscussForm } from '../decide/discuss-form'
 
 const KIND_ICON = { note: FileText, task: ListTodo, event: CalendarClock } as const
 
-function ProposalCard({ view, onAction, onDiscuss }: { view: ProposalCardView, onAction: (action: CardAction) => void, onDiscuss: (note: string) => Promise<void> }) {
+function ProposalCard({ view, onAction, onDiscuss }: { view: ProposalCardView, onAction: (action: CardAction) => void, onDiscuss: (note: string) => Promise<boolean> }) {
   const t = useTranslations('threads.cards')
   const [discussing, setDiscussing] = useState(false)
-  const [busy, setBusy] = useState(false)
+  const cardRef = useRef<HTMLDivElement>(null)
+  const discussRef = useRef<HTMLButtonElement>(null)
+
+  /** 收起再次討論表單：焦點回到「再次討論」按鈕；按鈕已經消失（討論成功）就回到卡片本身，不掉到 body。 */
+  function closeDiscuss() {
+    setDiscussing(false)
+    requestAnimationFrame(() => (discussRef.current ?? cardRef.current)?.focus())
+  }
   const Icon = KIND_ICON[view.kind]
   return (
     <div
+      ref={cardRef}
+      tabIndex={-1}
       data-slot="thread-card"
       data-card="proposal"
-      className={cn('rounded-(--r-kbd) border bg-bg p-3 text-sm', view.tone === 'pending' ? 'border-dashed border-line' : 'border-line-soft')}
+      className={cn('rounded-(--r-kbd) border bg-bg p-3 text-sm outline-none', view.tone === 'pending' ? 'border-dashed border-line' : 'border-line-soft')}
     >
       <div className="flex items-center gap-2">
         <span className="rounded-(--r-kbd) bg-hover px-1.5 py-0.5 text-ui-compact text-muted-ink">{t('proposal')}</span>
@@ -39,7 +48,7 @@ function ProposalCard({ view, onAction, onDiscuss }: { view: ProposalCardView, o
       {view.detail && <p className="mt-1.5 text-ui-compact text-muted-ink">{view.detail}</p>}
       <div className="mt-2 flex items-center gap-1.5">
         {view.actions.includes('accept') && <Button size="sm" onClick={() => onAction('accept')}>{t('accept')}</Button>}
-        {view.actions.includes('discuss') && <Button size="sm" variant="outline" aria-expanded={discussing} onClick={() => setDiscussing(open => !open)}>{t('discuss')}</Button>}
+        {view.actions.includes('discuss') && <Button ref={discussRef} size="sm" variant="outline" aria-expanded={discussing} onClick={() => setDiscussing(open => !open)}>{t('discuss')}</Button>}
         {view.actions.includes('reject') && <Button size="sm" variant="ghost" onClick={() => onAction('reject')}>{t('reject')}</Button>}
         {view.actions.length === 0 && (
           <span className="flex items-center gap-1 text-ui-compact text-muted-ink">
@@ -51,14 +60,12 @@ function ProposalCard({ view, onAction, onDiscuss }: { view: ProposalCardView, o
       {discussing && view.actions.includes('discuss') && (
         <DiscussForm
           className="mt-2"
-          busy={busy}
-          onCancel={() => setDiscussing(false)}
-          onSubmit={note => {
-            setBusy(true)
-            void onDiscuss(note).finally(() => {
-              setBusy(false)
-              setDiscussing(false)
-            })
+          onCancel={closeDiscuss}
+          onSubmit={async note => {
+            // 失敗時表單留著、文字不清掉（ALMNC-56 重跑稽核）
+            if (!await onDiscuss(note)) return false
+            closeDiscuss()
+            return true
           }}
         />
       )}
@@ -179,14 +186,16 @@ export function ThreadMessageCards({ chatId }: { chatId: number }) {
         } : card)
         const onAction = (action: CardAction) => void act(chatId, card.id, action)
         const onDiscuss = async (note: string) => {
-          if (card.type !== 'proposal') return
+          if (card.type !== 'proposal') return false
           try {
             await discussProposal({ key, conversationId }, note,
               text => t('discuss.message', { title: card.title, note: text }),
               title => t('discuss.revised', { title }))
+            return true
           } catch (error) {
             console.error('[threads] discuss failed:', error)
             toast.error(t('failed'))
+            return false
           }
         }
         if (view.type === 'kickoff-result' && view.placeholder) return null

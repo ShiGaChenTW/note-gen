@@ -1,7 +1,7 @@
 'use client'
 
 // Fork（almanac ALMNC-57.2）：設定裡的「RSS 訂閱」（只在 V3）：新增、命名、暫停、刪除、立即更新；每個訂閱顯示上次更新或上次錯誤與時間。
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -30,11 +30,61 @@ function FeedStatus({ feed }: { feed: RssFeed }) {
   )
 }
 
-function FeedRow({ feed, disabled }: { feed: RssFeed, disabled: boolean }) {
+/**
+ * 刪掉一列後焦點不掉到 body（ALMNC-56 重跑稽核）：移到下一列（沒有就上一列）的刪除鈕，清單空了就回到網址輸入框。
+ */
+function neighborFocusTarget(row: HTMLElement | null): HTMLElement | null {
+  const sibling = (row?.nextElementSibling ?? row?.previousElementSibling) as HTMLElement | null
+  return sibling?.querySelector<HTMLElement>('[data-feed-delete]')
+    ?? row?.closest('[data-rss-settings]')?.querySelector<HTMLElement>('input[type="url"]')
+    ?? null
+}
+
+function FeedRow({ feed, index, disabled }: { feed: RssFeed, index: number, disabled: boolean }) {
   const t = useTranslations('settings.rss')
   const [name, setName] = useState(feed.name)
+  const [pending, setPending] = useState(false)
+  const rowRef = useRef<HTMLLIElement>(null)
   useEffect(() => setName(feed.name), [feed.name])
   const store = useRssStore.getState()
+
+  async function togglePaused() {
+    setPending(true)
+    try {
+      await store.setPaused(feed.id, !feed.paused)
+    } catch (error) {
+      console.error('[rss] pause failed', error)
+      toast.error(t(feed.paused ? 'resumeError' : 'pauseError', { name: feed.name }))
+    } finally {
+      setPending(false)
+    }
+  }
+
+  // 刪除不另外問，改成可以復原（和工作台一樣：通知上有「復原」）。
+  async function remove() {
+    const target = neighborFocusTarget(rowRef.current)
+    setPending(true)
+    try {
+      await store.remove(feed.id)
+    } catch (error) {
+      console.error('[rss] delete failed', error)
+      setPending(false)
+      toast.error(t('deleteError', { name: feed.name }))
+      return
+    }
+    requestAnimationFrame(() => target?.focus())
+    toast.success(t('deleted', { name: feed.name }), {
+      action: {
+        label: t('undo'),
+        onClick: () => {
+          void useRssStore.getState().restore(feed, index).catch(error => {
+            console.error('[rss] restore failed', error)
+            toast.error(t('restoreError', { name: feed.name }))
+          })
+        },
+      },
+    })
+  }
 
   async function commitName() {
     const next = name.trim()
@@ -46,7 +96,7 @@ function FeedRow({ feed, disabled }: { feed: RssFeed, disabled: boolean }) {
   }
 
   return (
-    <li className="flex flex-wrap items-start justify-between gap-3 px-3 py-2">
+    <li ref={rowRef} className="flex flex-wrap items-start justify-between gap-3 px-3 py-2">
       <div className="min-w-0 flex-1 space-y-1">
         <Input
           className="h-8"
@@ -63,15 +113,16 @@ function FeedRow({ feed, disabled }: { feed: RssFeed, disabled: boolean }) {
         <FeedStatus feed={feed} />
       </div>
       <div className="flex shrink-0 gap-2">
-        <Button type="button" size="sm" variant="outline" disabled={disabled} onClick={() => void store.setPaused(feed.id, !feed.paused)}>
+        <Button type="button" size="sm" variant="outline" disabled={disabled || pending} onClick={() => void togglePaused()}>
           {t(feed.paused ? 'resume' : 'pause')}<span className="sr-only"> {feed.name}</span>
         </Button>
         <Button
           type="button"
           size="sm"
           variant="outline"
-          disabled={disabled}
-          onClick={() => void store.remove(feed.id).then(() => toast.success(t('deleted', { name: feed.name })))}
+          disabled={disabled || pending}
+          data-feed-delete
+          onClick={() => void remove()}
         >
           {t('delete')}<span className="sr-only"> {feed.name}</span>
         </Button>
@@ -130,7 +181,7 @@ function RssSettingsPanel() {
   const busy = subscribing || refreshing
   return (
     <SettingSection title={t('title')} desc={t('desc')}>
-      <div className="space-y-3 text-sm text-ink">
+      <div className="space-y-3 text-sm text-ink" data-rss-settings>
         {loadError && <p role="alert">{t('loadError')}</p>}
         {!ready && !loadError && <p role="status">{t('loading')}</p>}
         <form onSubmit={event => void subscribe(event)} className="flex flex-wrap items-end gap-2">
@@ -148,7 +199,7 @@ function RssSettingsPanel() {
         {feeds.length > 0 && (
           <>
             <ul className="divide-y divide-line rounded-md border border-line bg-panel">
-              {feeds.map(feed => <FeedRow key={feed.id} feed={feed} disabled={busy} />)}
+              {feeds.map((feed, index) => <FeedRow key={feed.id} feed={feed} index={index} disabled={busy} />)}
             </ul>
             <Button type="button" variant="outline" disabled={busy} onClick={() => void refreshAll()}>
               {t(refreshing ? 'refreshing' : 'refreshNow')}

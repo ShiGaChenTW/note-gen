@@ -4297,7 +4297,12 @@
         "network": "連不上：{detail}",
         "invalid_url": "網址格式不對",
         "unknown": "抓取失敗：{detail}"
-      }
+      },
+      "undo": "復原",
+      "deleteError": "沒有刪掉「{name}」，請再試一次",
+      "pauseError": "沒有暫停「{name}」，請再試一次",
+      "resumeError": "沒有繼續「{name}」，請再試一次",
+      "restoreError": "沒有復原「{name}」，請重新訂閱"
     }
   },
   "bases": {
@@ -8479,7 +8484,9 @@
       "done": "已帶回對話：「{title}」",
       "revised": "我已修訂「{title}」，請確認新版提案。",
       "fromConversation": "來自對話：{title}",
-      "conversation": "這段對話"
+      "conversation": "這段對話",
+      "sending": "送出中…",
+      "failed": "沒有送出，你寫的說明還在，可以再送一次。"
     }
   },
   "jobs": {

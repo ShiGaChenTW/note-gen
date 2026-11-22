@@ -29,7 +29,7 @@ vi.mock('@/stores/setting', async () => {
 })
 vi.mock('../sidebar-v3/use-vault-name', () => ({ useVaultName: () => 'MyVault' }))
 
-const { NoteListColumn } = await import('./note-list-column')
+const { NoteListColumn, focusAfterNoteListClose } = await import('./note-list-column')
 
 // 清單虛擬化（ALMNC-56.3 P03）後 @tanstack/react-virtual 也會建 ResizeObserver：記下全部，找觀察中間面板的那一個。
 let observers: { callback: ResizeObserverCallback, targets: Element[] }[] = []
@@ -95,6 +95,31 @@ describe('A07: closing the note list', () => {
     act(() => { close.dispatchEvent(event) })
     expect(event.defaultPrevented).toBe(true)
     expect(useNoteListStore.getState().visible).toBe(false)
+  })
+
+  it('關閉後焦點回到打開清單的控制項，不掉到 body（ALMNC-56 重跑稽核）', async () => {
+    act(() => useNoteListStore.getState().hide())
+    const opener = document.createElement('button')
+    document.body.append(opener)
+    opener.focus()
+    act(() => useNoteListStore.getState().show('Work'))
+    const close = container.querySelector<HTMLButtonElement>('[data-testid="note-list-close"]')!
+    close.focus()
+    act(() => close.click())
+    await act(async () => { await new Promise(resolve => setTimeout(resolve, 40)) })
+    expect(document.activeElement).toBe(opener)
+    opener.remove()
+  })
+
+  it('打開它的控制項不在了：焦點回到編輯器', () => {
+    const editor = document.createElement('div')
+    editor.className = 'ProseMirror'
+    editor.setAttribute('contenteditable', 'true')
+    editor.tabIndex = 0
+    document.body.append(editor)
+    focusAfterNoteListClose(null)
+    expect(document.activeElement).toBe(editor)
+    editor.remove()
   })
 
   it('collapses when the centre panel shrinks below 640 px (e.g. the right sidebar opens)', () => {

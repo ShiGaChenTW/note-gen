@@ -247,6 +247,24 @@ describe('審核 tab', () => {
     expect(mocks.discussProposal).toHaveBeenCalledWith({ key: 'collect:old:a', conversationId: 7 }, '日期改到下週', expect.any(Function), expect.any(Function))
   })
 
+  it('再次討論送出失敗：表單留著、文字還在、顯示錯誤；取消後焦點回到「再次討論」（ALMNC-56 重跑稽核）', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    mocks.discussProposal.mockRejectedValueOnce(new Error('offline'))
+    act(() => (card('提案 a').firstElementChild as HTMLElement).click())
+    act(() => button('再次討論D')!.click())
+    type(container.querySelector('textarea')!, '日期改到下週')
+    await act(async () => button(messages.decide.discuss.send)!.click())
+    await wait(0)
+    const form = $('[data-slot="discuss-form"]')!
+    expect(form).not.toBeNull()
+    expect(form.querySelector('textarea')!.value).toBe('日期改到下週')
+    expect(form.querySelector('[role="alert"]')!.textContent).toBe(messages.decide.discuss.failed)
+    act(() => button(messages.decide.discuss.cancel, form)!.click())
+    await wait(40)
+    expect($('[data-slot="discuss-form"]')).toBeNull()
+    expect(document.activeElement).toBe(button('再次討論D', card('提案 a')))
+  })
+
   it('AC#4: any card can be put aside with a reminder date; shows 先放著 N 件 and can be taken back', () => {
     act(() => (card('提案 b').firstElementChild as HTMLElement).click())
     act(() => button('先放著S', card('提案 b'))!.click())

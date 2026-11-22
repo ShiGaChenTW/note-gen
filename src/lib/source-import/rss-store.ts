@@ -61,7 +61,10 @@ interface RssState {
   subscribe: (input: { url: string, name?: string }) => Promise<{ feed: RssFeed, result: RefreshResult }>
   rename: (id: string, name: string) => Promise<void>
   setPaused: (id: string, paused: boolean) => Promise<void>
+  /** 刪除；存檔失敗就放回原位並丟錯。 */
   remove: (id: string) => Promise<void>
+  /** 復原刪除：放回原本的位置（index）並存檔。已經有同一個 id 就什麼都不做。 */
+  restore: (feed: RssFeed, index: number) => Promise<void>
   refreshNow: (ids?: readonly string[]) => Promise<RefreshResult[]>
   /** 給排程用：以最新的值改一個訂閱並存檔。 */
   updateFeed: (id: string, update: (feed: RssFeed) => RssFeed) => Promise<void>
@@ -100,10 +103,37 @@ const useRssStore = create<RssState>((set, get) => ({
     await get().updateFeed(id, feed => ({ ...feed, name: trimmed, named: true }))
   },
   setPaused: async (id, paused) => {
-    await get().updateFeed(id, feed => ({ ...feed, paused }))
+    try {
+      await get().updateFeed(id, feed => ({ ...feed, paused }))
+    } catch (error) {
+      // 沒存到就把畫面上的狀態改回來（ALMNC-56 重跑稽核）
+      set({ feeds: get().feeds.map(feed => (feed.id === id ? { ...feed, paused: !paused } : feed)) })
+      throw error
+    }
   },
   remove: async id => {
-    const feeds = get().feeds.filter(feed => feed.id !== id)
+    const before = get().feeds
+    const index = before.findIndex(feed => feed.id === id)
+    if (index < 0) return
+    const removed = before[index]
+    const feeds = before.filter(feed => feed.id !== id)
+    set({ feeds })
+    try {
+      await persist(feeds)
+    } catch (error) {
+      // Fork（almanac ALMNC-56 重跑稽核）：沒存到就放回清單，畫面和 store.json 一致
+      if (!get().feeds.some(feed => feed.id === id)) {
+        const current = [...get().feeds]
+        current.splice(Math.min(index, current.length), 0, removed)
+        set({ feeds: current })
+      }
+      throw error
+    }
+  },
+  restore: async (feed, index) => {
+    if (get().feeds.some(entry => entry.id === feed.id)) return
+    const feeds = [...get().feeds]
+    feeds.splice(Math.min(Math.max(index, 0), feeds.length), 0, feed)
     set({ feeds })
     await persist(feeds)
   },
