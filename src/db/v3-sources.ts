@@ -105,6 +105,25 @@ export async function getSource(id: string): Promise<Source | undefined> {
   return rows[0] ? sourceFromRow(rows[0]) : undefined
 }
 
+/**
+ * Fork（almanac ALMNC-54.20）：從第一版的 id 往後找到版本鏈最新一版（沒有就回 undefined）。
+ * 「送給指揮官」、對話結論這類用固定 id 的資料源，內容改了再送時要接在最新一版後面。
+ */
+export async function getLatestVersion(rootId: string): Promise<Source | undefined> {
+  const first = await getSource(rootId)
+  if (!first) return undefined
+  let current: Source = first
+  const db = await getDb()
+  const seen = new Set([current.id])
+  for (;;) {
+    const rows: SourceRow[] = await db.select<SourceRow[]>(`select ${SOURCE_COLUMNS} from sources where previous_id = $1 order by version desc limit 1`, [current.id])
+    const next: Source | undefined = rows[0] ? sourceFromRow(rows[0]) : undefined
+    if (!next || seen.has(next.id)) return current
+    seen.add(next.id)
+    current = next
+  }
+}
+
 export async function listSources(options: { status?: SourceStatus; includeArchived?: boolean; limit?: number; excludeKind?: string } = {}): Promise<Source[]> {
   await initV3SourceDb()
   const db = await getDb()

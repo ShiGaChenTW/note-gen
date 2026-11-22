@@ -10,7 +10,7 @@ import type { WorkbenchCard, TaskLike } from './cards'
 import { applyStructuralOp, handwrittenNote, noteFileName, type DeskMaterial, type NoteIo, type StructuralOp } from './desk'
 import { bridgeInput, planHandToCommander, type SourceListRow } from './sources-tab'
 import { ingestSource, judgeSource, newSourceType, type SourceJudgement } from './judgement'
-import { dailyEntrySource, recordTextSource, routeAutoSource, voiceMemoSource, type AutoRouteResult, type AutoSourceInput } from './auto-route'
+import { conversationConclusionSource, dailyEntrySource, externalAudioSource, noteSource, recordTextSource, researchFindingSource, routeAutoSource, routeVersionedSource, voiceMemoSource, type AutoRouteResult, type AutoSourceInput, type ResearchFindingLike, type VersionedRouteResult } from './auto-route'
 
 export type Undo = (() => Promise<unknown>) | undefined
 
@@ -393,9 +393,78 @@ async function autoRegister(input: AutoSourceInput | undefined): Promise<void> {
   }
 }
 
-/** 語音速記存好後（錄音或選音訊檔轉出逐字稿）自動交給指揮官。 */
+/** 語音速記（現場錄音）轉好逐字稿後自動交給指揮官。從檔案選進來的音訊不走這裡，見 registerExternalAudio。 */
 export function registerVoiceMemo(memo: { markId: number, transcript: string, audioPath?: string }): Promise<void> {
   return autoRegister(voiceMemoSource(memo))
+}
+
+/**
+ * Fork（almanac ALMNC-54.20）：從檔案選進來的音訊是外部資料源（R1）：存成等你決定、背景做初步判斷，不自動交給指揮官。
+ * 只在桌面版 V3；同一則記錄重複登錄會跳過。
+ */
+export async function registerExternalAudio(memo: { markId: number, transcript: string, audioPath?: string }): Promise<void> {
+  const input = externalAudioSource(memo)
+  if (!input) return
+  const { isUiV3 } = await import('@/lib/fork-ui')
+  if (!isUiV3()) return
+  if (await isMobileContext()) return
+  try {
+    const db = await import('@/db/v3-sources')
+    const source = await db.addSourceIfAbsent(input)
+    if (!source) return
+    await refreshSources()
+    void requestJudgement(source).catch(error => console.warn('[judgement] failed:', error))
+  } catch (error) {
+    console.warn('[workbench] external audio failed:', error)
+  }
+}
+
+/** 錄音轉好逐字稿後分流：現場錄音（live）是語音速記、自動交給指揮官；選檔（file）是外部資料源、走初步判斷。 */
+export function registerTranscribedAudio(memo: { from: 'live' | 'file', markId: number, transcript: string, audioPath?: string }): Promise<void> {
+  const { from, ...rest } = memo
+  return from === 'file' ? registerExternalAudio(rest) : registerVoiceMemo(rest)
+}
+
+/** 用固定 id 的資料源：內容沒變不重複建立，改了照版本規則接新版（見 routeVersionedSource）。 */
+export async function submitVersionedSource(input: AutoSourceInput): Promise<VersionedRouteResult> {
+  const db = await import('@/db/v3-sources')
+  const result = await routeVersionedSource(input, {
+    latest: id => db.getLatestVersion(id),
+    addIfAbsent: ({ sourceType, ...rest }) => db.addSourceIfAbsent({ ...rest, sourceType }),
+    edit: (id, content) => db.editSource(id, content),
+    kick: kickCommander,
+  })
+  if (result.source) await refreshSources()
+  return result
+}
+
+/**
+ * Fork（almanac ALMNC-54.20）：編輯器右上「送給指揮官」——把目前這篇筆記送成自己寫的資料源。這是 Scott 手動按的，
+ * 所以不擋行動版，失敗會丟出錯誤給按鈕顯示。回傳 added／versioned／unchanged／empty。
+ */
+export async function sendNoteToCommander(note: { path: string, content: string }): Promise<VersionedRouteResult['outcome']> {
+  const input = noteSource(note)
+  if (!input) return 'empty'
+  return (await submitVersionedSource(input)).outcome
+}
+
+/** Fork（almanac ALMNC-54.20）：對話結論（對話摘要存檔）自動交給指揮官；同一段對話重存，內容改了才接新版。 */
+export async function registerConversationConclusion(summary: { conversation: string, content: string, path?: string }): Promise<void> {
+  const input = conversationConclusionSource(summary)
+  if (!input) return
+  const { isUiV3 } = await import('@/lib/fork-ui')
+  if (!isUiV3()) return
+  if (await isMobileContext()) return
+  try {
+    await submitVersionedSource(input)
+  } catch (error) {
+    console.warn('[workbench] conversation conclusion failed:', error)
+  }
+}
+
+/** Fork（almanac ALMNC-54.20）：研究員（G1）查到的外部資料，一題一則系統產生的資料源，自動交給指揮官。 */
+export async function registerResearchFindings(findings: readonly ResearchFindingLike[], periodKey: string): Promise<void> {
+  for (const finding of findings) await autoRegister(researchFindingSource(finding, periodKey))
 }
 
 /** 今天頁快速新增寫進每日筆記的一行（每日筆記條目）自動交給指揮官。 */

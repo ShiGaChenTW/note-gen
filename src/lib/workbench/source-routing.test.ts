@@ -1,7 +1,7 @@
 // Fork（almanac ALMNC-54.10）：工作台的資料源動作接到資料庫與指揮官佇列——照建議處理／處理／不採用／先放著、
 // 新增時的 R1／R2 分流、擷取失敗的重試／刪除。資料庫、佇列、本機模型都換成記憶體裡的假的。
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { canDeleteUnsent, createSource, transitionSource, type NewSourceInput, type Source, type SourceStatus } from '@/lib/v3-model/source'
+import { canDeleteUnsent, createSource, editSourceContent, transitionSource, type NewSourceInput, type Source, type SourceStatus } from '@/lib/v3-model/source'
 import type { SourceJudgement } from './judgement'
 
 const fake = vi.hoisted(() => ({
@@ -22,13 +22,27 @@ vi.mock('@/db/v3-sources', () => ({
     fake.rows.set(source.id, source)
     return source
   },
-  addSourceIfAbsent: async (input: NewSourceInput, now: number) => {
+  addSourceIfAbsent: async (input: NewSourceInput, now = 1000) => {
     if (fake.rows.has(input.id)) return undefined
     const source = createSource(input, now)
     fake.rows.set(source.id, source)
     return source
   },
   getSource: async (id: string) => fake.rows.get(id),
+  getLatestVersion: async (rootId: string) => {
+    let current = fake.rows.get(rootId) as Source | undefined
+    while (current) {
+      const next = [...fake.rows.values()].find(row => (row as Source).previousId === current!.id) as Source | undefined
+      if (!next) return current
+      current = next
+    }
+    return undefined
+  },
+  editSource: async (id: string, content: string) => {
+    const result = editSourceContent(fake.rows.get(id) as Source, content, 3000, `s${++fake.seq}`)
+    fake.rows.set(result.source.id, result.source)
+    return result
+  },
   listSources: async () => [...fake.rows.values()],
   countOutputsBySource: async () => new Map(),
   setSourceStatus: async (id: string, to: SourceStatus) => {
@@ -262,5 +276,67 @@ describe('自己寫的資料源自動交給指揮官（ALMNC-54.10 AC#3，R2）'
     vi.spyOn(console, 'error').mockImplementation(() => undefined)
     fake.kick.mockRejectedValueOnce(new Error('queue down'))
     await expect(actions.registerVoiceMemo({ markId: 9, transcript: '買牛奶' })).resolves.toBeUndefined()
+  })
+})
+
+describe('資料源範圍調整（ALMNC-54.20）', () => {
+  it('AC#2 送給指揮官：第一次送建立自己寫的資料源並叫指揮官；內容沒變重送不重複；改了接新版', async () => {
+    expect(await actions.sendNoteToCommander({ path: 'work/a.md', content: '# A\n第一版' })).toBe('added')
+    expect(fake.rows.get('src_note:work/a.md')).toMatchObject({ sourceType: 'self', status: 'pending_analysis', origin: 'work/a.md' })
+    expect(await actions.sendNoteToCommander({ path: 'work/a.md', content: '# A\n第一版' })).toBe('unchanged')
+    expect(fake.rows.size).toBe(1)
+    expect(fake.kick).toHaveBeenCalledTimes(1)
+    expect(await actions.sendNoteToCommander({ path: 'work/a.md', content: '# A\n第二版' })).toBe('versioned')
+    expect(fake.rows.size).toBe(2)
+    expect([...fake.rows.values()].find(row => (row as Source).previousId === 'src_note:work/a.md')).toMatchObject({ version: 2, status: 'pending_analysis' })
+    expect(fake.kick).toHaveBeenCalledTimes(2)
+    expect(await actions.sendNoteToCommander({ path: 'work/a.md', content: '' })).toBe('empty')
+  })
+
+  it('AC#1 對話結論：V3 建成系統產生的資料源並交給指揮官；重存同一段對話、內容沒變不重複', async () => {
+    await actions.registerConversationConclusion({ conversation: 'c1', content: '## 決議\n- 下週出貨', path: '對話摘要/a.md' })
+    await actions.registerConversationConclusion({ conversation: 'c1', content: '## 決議\n- 下週出貨', path: '對話摘要/a.md' })
+    expect(fake.rows.get('src_conversation:c1')).toMatchObject({ sourceType: 'system', collector: 'system', status: 'pending_analysis' })
+    expect(fake.rows.size).toBe(1)
+    expect(fake.kick).toHaveBeenCalledTimes(1)
+  })
+
+  it('AC#1 指揮官查到的外部資料：查到的建成系統產生的資料源交給指揮官，沒查到的不建；同一期重跑不重複', async () => {
+    const findings = [
+      { domainId: 'ie', question: '節拍 標準', status: 'found' as const, summary: '依需求計算', sources: [{ title: 't', url: 'https://e.com' }] },
+      { domainId: 'ie', question: '換線', status: 'nothing' as const, summary: '', sources: [] },
+    ]
+    await actions.registerResearchFindings(findings, '2026-W47')
+    await actions.registerResearchFindings(findings, '2026-W47')
+    expect([...fake.rows.keys()]).toEqual(['src_research:2026-W47:ie:節拍 標準'])
+    expect(fake.rows.get('src_research:2026-W47:ie:節拍 標準')).toMatchObject({ sourceType: 'system', status: 'pending_analysis' })
+    expect(fake.kick).toHaveBeenCalledTimes(1)
+  })
+
+  it('AC#3 錄音照舊自動交給指揮官；選檔的音訊變成外部資料源、等你決定並做初步判斷，不叫指揮官', async () => {
+    await actions.registerTranscribedAudio({ from: 'live', markId: 20, transcript: '提醒我買牛奶', audioPath: 'rec/20.wav' })
+    expect(status('rec_20')).toBe('pending_analysis')
+    expect(fake.kick).toHaveBeenCalledTimes(1)
+
+    await actions.registerTranscribedAudio({ from: 'file', markId: 21, transcript: '一段外部會議錄音的逐字稿', audioPath: 'recordings/21.mp3' })
+    await actions.registerTranscribedAudio({ from: 'file', markId: 21, transcript: '一段外部會議錄音的逐字稿', audioPath: 'recordings/21.mp3' })
+    await settle()
+    expect(fake.rows.get('rec_21')).toMatchObject({ sourceType: 'external', status: 'awaiting_decision', kind: 'transcript', origin: 'recordings/21.mp3' })
+    expect(fake.kick).toHaveBeenCalledTimes(1)
+    expect(fake.judgements.get('rec_21')).toMatchObject({ status: 'ready', type: '會議紀錄' })
+    expect(fake.generate).toHaveBeenCalledTimes(1)
+  })
+
+  it('AC#4 經典介面與行動版：對話結論、外部資料、選檔音訊都不登錄', async () => {
+    for (const mode of ['classic', 'mobile'] as const) {
+      fake.v3 = mode !== 'classic'
+      fake.mobile = mode === 'mobile'
+      await actions.registerConversationConclusion({ conversation: 'c2', content: '結論' })
+      await actions.registerResearchFindings([{ domainId: 'ie', question: 'q', status: 'found', summary: 's', sources: [] }], 'W1')
+      await actions.registerTranscribedAudio({ from: 'file', markId: 30, transcript: '外部錄音' })
+      await actions.registerTranscribedAudio({ from: 'live', markId: 31, transcript: '錄音' })
+    }
+    expect(fake.rows.size).toBe(0)
+    expect(fake.kick).not.toHaveBeenCalled()
   })
 })

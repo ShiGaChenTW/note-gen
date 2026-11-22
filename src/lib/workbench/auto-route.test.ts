@@ -1,9 +1,12 @@
 // Fork（almanac ALMNC-54.10，R2）：自己寫的（隨手記、每日筆記條目、語音速記、長文草稿）與系統產生的資料源自動交給指揮官；
 // 外部擷取的維持 R1（等你決定，不叫指揮官）。登錄是冪等的：同一個 id 不會建出兩則、也不會再叫一次佇列。
 import { describe, expect, it, vi } from 'vitest'
-import { createSource, type NewSourceInput, type Source } from '@/lib/v3-model/source'
+import { createSource, editSourceContent, latestVersions, versionChain, type NewSourceInput, type Source } from '@/lib/v3-model/source'
 import { ingestSource } from './judgement'
-import { dailyEntrySource, recordTextSource, routeAutoSource, systemSource, voiceMemoSource, type AutoRouteDeps } from './auto-route'
+import {
+  conversationConclusionSource, dailyEntrySource, externalAudioSource, noteSource, recordTextSource, researchFindingSource, routeAutoSource,
+  routeVersionedSource, systemSource, voiceMemoSource, type AutoRouteDeps, type VersionedRouteDeps,
+} from './auto-route'
 import { buildSourceRows } from './sources-tab'
 
 function harness() {
@@ -139,5 +142,100 @@ describe('自己寫的與系統產生的資料源自動交給指揮官（R2）',
     })
     expect(list).toHaveLength(1)
     expect(list[0]).toMatchObject({ origin: 'source', status: 'todo' })
+  })
+})
+
+// —— ALMNC-54.20 ——
+
+function versionedHarness() {
+  const { rows, kick, deps } = harness()
+  let seq = 0
+  const versioned: VersionedRouteDeps = {
+    ...deps,
+    latest: async rootId => {
+      if (!rows.has(rootId)) return undefined
+      const chainEnd = latestVersions([...rows.values()]).find(source => versionChain([...rows.values()], source.id)[0]?.id === rootId)
+      return chainEnd
+    },
+    edit: async (id, content) => {
+      const result = editSourceContent(rows.get(id)!, content, 2000 + seq, `v${++seq}`)
+      rows.set(result.source.id, result.source)
+      return result
+    },
+  }
+  return { rows, kick, deps: versioned }
+}
+
+describe('用固定 id 的資料源：重送不重複建立，內容改了接新版（ALMNC-54.20）', () => {
+  it('第一次送：登錄成待分析並叫指揮官', async () => {
+    const { rows, kick, deps } = versionedHarness()
+    const result = await routeVersionedSource(noteSource({ path: 'work/a.md', content: '# A\n內容' })!, deps)
+    expect(result).toMatchObject({ outcome: 'added', queued: true })
+    expect(rows.get('src_note:work/a.md')).toMatchObject({ sourceType: 'self', status: 'pending_analysis', origin: 'work/a.md', kind: 'text' })
+    expect(kick).toHaveBeenCalledTimes(1)
+  })
+
+  it('內容沒變再送一次：不建立第二則、不再叫指揮官', async () => {
+    const { rows, kick, deps } = versionedHarness()
+    const input = noteSource({ path: 'work/a.md', content: '# A\n內容' })!
+    await routeVersionedSource(input, deps)
+    const again = await routeVersionedSource({ ...input, content: '# A\n內容\n' }, deps)
+    expect(again).toEqual({ outcome: 'unchanged', queued: false })
+    expect(rows.size).toBe(1)
+    expect(kick).toHaveBeenCalledTimes(1)
+  })
+
+  it('內容改了：照版本規則接一版新的（舊版保留、新版連回舊版），叫指揮官分析；之後再改接在最新一版後面', async () => {
+    const { rows, kick, deps } = versionedHarness()
+    await routeVersionedSource(noteSource({ path: 'work/a.md', content: '第一版' })!, deps)
+    const second = await routeVersionedSource(noteSource({ path: 'work/a.md', content: '第二版' })!, deps)
+    expect(second).toMatchObject({ outcome: 'versioned', queued: true, source: { id: 'v1', previousId: 'src_note:work/a.md', version: 2, status: 'pending_analysis', content: '第二版' } })
+    expect(rows.get('src_note:work/a.md')?.content).toBe('第一版')
+    const unchanged = await routeVersionedSource(noteSource({ path: 'work/a.md', content: '第二版' })!, deps)
+    expect(unchanged.outcome).toBe('unchanged')
+    const third = await routeVersionedSource(noteSource({ path: 'work/a.md', content: '第三版' })!, deps)
+    expect(third.source).toMatchObject({ previousId: 'v1', version: 3 })
+    expect(kick).toHaveBeenCalledTimes(3)
+  })
+
+  it('空的筆記不送', async () => {
+    const { rows, deps } = versionedHarness()
+    expect(noteSource({ path: 'a.md', content: '  ' })).toBeUndefined()
+    expect(await routeVersionedSource({ id: 'src_note:a.md', sourceType: 'self', kind: 'text', content: ' ', collector: 'scott' }, deps)).toEqual({ outcome: 'empty', queued: false })
+    expect(rows.size).toBe(0)
+  })
+
+  it('對話結論：系統產生的資料源，id 由對話決定，來處是摘要筆記', () => {
+    expect(conversationConclusionSource({ conversation: 'sync-1', content: '## 決議\n- 下週出貨', path: '對話摘要/a.md' })).toEqual({
+      id: 'src_conversation:sync-1', sourceType: 'system', collector: 'system', kind: 'text', content: '## 決議\n- 下週出貨', origin: '對話摘要/a.md',
+    })
+    expect(conversationConclusionSource({ conversation: 'sync-1', content: ' ' })).toBeUndefined()
+  })
+
+  it('指揮官查到的外部資料：只收查到東西的題目；id 含期別、領域與題目', () => {
+    const found = { domainId: 'ie', question: '節拍時間 最新標準', status: 'found' as const, summary: '新標準依需求計算。', sources: [{ title: '標準', url: 'https://example.com/takt' }] }
+    expect(researchFindingSource(found, '2026-W47')).toEqual({
+      id: 'src_research:2026-W47:ie:節拍時間 最新標準',
+      sourceType: 'system',
+      collector: 'system',
+      kind: 'text',
+      content: '節拍時間 最新標準\n\n新標準依需求計算。\n\n- 標準 <https://example.com/takt>',
+      origin: 'https://example.com/takt',
+    })
+    for (const status of ['nothing', 'unavailable', 'failed'] as const) expect(researchFindingSource({ ...found, status }, '2026-W47')).toBeUndefined()
+  })
+
+  it('任務完成紀錄不是系統產生的資料源：沒有對應的產生者', async () => {
+    const exported = await import('./auto-route')
+    expect(Object.keys(exported).filter(name => /task|complet/i.test(name))).toEqual([])
+  })
+
+  it('選檔的音訊是外部資料源（R1）：等你決定、不能自動交給指揮官；沒有逐字稿不登錄', async () => {
+    const input = externalAudioSource({ markId: 3, transcript: '會議錄音內容', audioPath: 'recordings/a.mp3' })!
+    expect(input).toMatchObject({ id: 'rec_3', sourceType: 'external', kind: 'transcript', origin: 'recordings/a.mp3' })
+    expect(createSource(input, 1).status).toBe('awaiting_decision')
+    const { deps } = harness()
+    await expect(routeAutoSource(input as never, deps)).rejects.toThrow()
+    expect(externalAudioSource({ markId: 4, transcript: ' ' })).toBeUndefined()
   })
 })

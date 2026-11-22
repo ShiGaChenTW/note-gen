@@ -107,7 +107,7 @@ export function ControlRecording() {
       })
 
       // 后台异步识别（使用转换后的 WAV）
-      processTranscription(wavBlob, queueId, tagId)
+      processTranscription(wavBlob, queueId, tagId, 'live')
       
     } catch (error) {
       console.error('停止录音失败:', error)
@@ -151,10 +151,12 @@ export function ControlRecording() {
   }
   
   // 后台处理识别
+  // Fork（almanac ALMNC-54.20）：from 分開現場錄音（live，語音速記、自動交給指揮官）與選檔（file，外部資料源、走初步判斷）。
   const processTranscription = async (
     audioBlob: Blob,
     queueId: string,
     tagId: number,
+    from: 'live' | 'file',
   ) => {
     let audioPath = ''
     try {
@@ -189,8 +191,9 @@ export function ControlRecording() {
       const markId = Number(result.lastInsertId || 0) || null
 
       // Fork（almanac ALMNC-54.10，R2）：V3 的語音速記轉好逐字稿後自動交給指揮官；沒有逐字稿（辨識失敗）就不登錄。
+      // Fork（almanac ALMNC-54.20）：從檔案選進來的音訊改成外部資料源（R1），等 Scott 決定。
       if (markId && !noContent) {
-        void import('@/lib/workbench/actions').then(({ registerVoiceMemo }) => registerVoiceMemo({ markId, transcript: transcription, audioPath })).catch(() => undefined)
+        void import('@/lib/workbench/actions').then(({ registerTranscribedAudio }) => registerTranscribedAudio({ from, markId, transcript: transcription, audioPath })).catch(() => undefined)
       }
       
       // 移除队列
@@ -270,7 +273,7 @@ export function ControlRecording() {
       })
       
       // 后台异步识别
-      processTranscription(audioBlob, queueId, tagId)
+      processTranscription(audioBlob, queueId, tagId, 'file')
       
     } catch (error) {
       console.error('文件选择失败:', error)
@@ -302,7 +305,7 @@ export function ControlRecording() {
       })
       
       // 后台异步识别（File 对象就是 Blob，直接传递）
-      processTranscription(file, queueId, tagId)
+      processTranscription(file, queueId, tagId, 'file')
       
       // 重置 input
       event.target.value = ''
