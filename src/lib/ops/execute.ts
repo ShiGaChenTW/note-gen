@@ -105,7 +105,7 @@ export function dropEmptyUnsorted(raw: string, chapterId: string, path?: string)
 }
 
 /** 依序套用到虛擬檔案層，回傳要做的檔案動作。不寫檔。 */
-export async function planOps(ops: readonly OpSpec[], fs: OpsFs, options?: { requireBefore?: boolean }): Promise<OpsPlan> {
+export async function planOps(ops: readonly OpSpec[], fs: OpsFs, options?: { requireBefore?: boolean, guardedBatch?: boolean }): Promise<OpsPlan> {
   const overlay = new Overlay(fs)
   const actions: OpAction[] = []
   const specs: OpSpec[] = []
@@ -128,6 +128,9 @@ export async function planOps(ops: readonly OpSpec[], fs: OpsFs, options?: { req
       case 'note.create':
       case 'domain.create': {
         const path = await overlay.resolve(op.kind === 'note.create' ? op.noteId : op.mocId, op.path)
+        if (options?.guardedBatch && (path !== op.path || await overlay.read(path) !== null)) {
+          throw new Error(`File already exists: ${op.path}`)
+        }
         await write(path, op.content, record)
         overlay.remember(op.kind === 'note.create' ? op.noteId : op.mocId, path)
         break
@@ -135,12 +138,15 @@ export async function planOps(ops: readonly OpSpec[], fs: OpsFs, options?: { req
       case 'note.delete':
       case 'domain.remove': {
         const path = await overlay.resolve(op.kind === 'note.delete' ? op.noteId : op.mocId, op.path)
+        if (options?.guardedBatch && (path !== op.path || await overlay.read(path) !== op.content)) {
+          throw new Error(`File changed before operation: ${op.path}`)
+        }
         await write(path, null, record)
         break
       }
       case 'note.edit': {
         const path = await overlay.resolve(op.noteId, op.path)
-        if (options?.requireBefore && (path !== op.path || await overlay.read(path) !== op.before)) {
+        if ((options?.requireBefore || options?.guardedBatch) && (path !== op.path || await overlay.read(path) !== op.before)) {
           throw new Error(`Note changed before operation: ${op.path}`)
         }
         await write(path, op.after, record)

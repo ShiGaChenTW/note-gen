@@ -8,6 +8,8 @@
 // - ③ 章節：一直顯示。章節依檔案順序；「尚未分章」放最下面、沒有筆記不顯示；0 則的章節在探索中的 MOC 標「知識缺口：還沒有筆記」。
 // - ④ 重點結論、⑤ 待釐清：有內容才出現。待釐清分矛盾／未解／知識缺口，每項標來源（`（來源：…）`）。
 // - 頁首：上層（frontmatter parent 的 M 編號優先，頁首連結只是給人看的）、相關、相鄰（由 MOC 檔頁首那一行讀）。
+import { branchOrigin } from '@/lib/moc/branching'
+import { membershipsFromMocs } from '@/lib/moc/membership'
 import { NOTE_STATUSES, type NoteStatus } from '@/lib/v3-model/note'
 import { splitFrontmatter } from '@/lib/markdown/frontmatter-split'
 import { blockItems, formalEntries, splitLinkInner, stripComments, type ParsedMoc } from '@/lib/moc/parse'
@@ -191,6 +193,9 @@ export interface MocNoteRow {
   marker?: string
   /** 只是引用、不算歸屬（分家清單或帶 MOC 標記）。 */
   reference: boolean
+  currentMocs?: string[]
+  replacement?: { path: string, title: string }
+  outdated?: boolean
 }
 
 export interface MocChapterView {
@@ -201,6 +206,8 @@ export interface MocChapterView {
   unsorted: boolean
   /** 已長成的新 MOC 名稱。 */
   grownInto?: string
+  grownMocId?: string
+  newSinceSplit?: number
   notes: MocNoteRow[]
   /** 算歸屬的件數（帶 MOC 標記的不算，規格 (b)）。 */
   count: number
@@ -209,6 +216,8 @@ export interface MocChapterView {
 export interface MocPageView {
   /** frontmatter status 是探索中。 */
   exploring: boolean
+  mergeTo?: string
+  siblingSplit?: boolean
   /** 正式收錄、連得到筆記的則數（不重複）。 */
   noteCount: number
   parent?: HeaderItem
@@ -268,28 +277,63 @@ export function mocPageView(
     if (path && notes.has(path)) counted.add(path)
   }
 
-  const row = (entry: ParsedMoc['chapters'][number]['entries'][number]): MocNoteRow => {
+  const allMocs = mocs.includes(moc) ? mocs : [...mocs, moc]
+  const { byNote } = membershipsFromMocs(allMocs, resolve)
+  const branches = new Map(allMocs.flatMap(item => {
+    const origin = branchOrigin(item)
+    return origin && origin.mocId === moc.id ? [[origin.chapterId, item] as const] : []
+  }))
+
+  const row = (entry: ParsedMoc['chapters'][number]['entries'][number], frozen: boolean): MocNoteRow => {
     const path = resolve(entry.target, moc.path)
     const note = path ? notes.get(path) : undefined
     const status = note ? noteStatus(note) : undefined
+    const related = note?.frontmatter?.related
+    const explicit = note?.frontmatter?.superseded_by
+    const replacementRef = typeof explicit === 'string' ? explicit
+      : Array.isArray(related) && related.length === 1 && typeof related[0] === 'string' ? related[0] : undefined
+    const replacementPath = frozen && status === 'superseded' && replacementRef && path
+      ? resolve(replacementRef.replace(/^\[\[|\]\]$/g, ''), path) : null
+    const replacement = replacementPath ? notes.get(replacementPath) : undefined
+    const outdated = note?.frontmatter?.outdated === true || note?.frontmatter?.status === 'outdated'
     return {
       target: entry.target,
       title: (note && noteTitle(note)) || entry.alias || entry.target,
       path: note ? note.path : null,
       relation: entry.relation,
       ...(status ? { status } : {}),
-      ...(entry.mocMarker ? { marker: entry.mocMarker } : {}),
+      ...(!frozen && entry.mocMarker ? { marker: entry.mocMarker } : {}),
+      ...(frozen && note && status !== 'superseded' && status !== 'archived' && !outdated
+        ? { currentMocs: byNote.get(note.path) ?? [] } : {}),
+      ...(replacement ? { replacement: { path: replacement.path, title: noteTitle(replacement) ?? replacement.path.split('/').pop()!.replace(/\.md$/i, '') } } : {}),
+      ...(frozen && outdated ? { outdated: true } : {}),
       reference: entry.reference,
     }
   }
   const chapterView = (chapter: ParsedMoc['chapters'][number], index: number): MocChapterView => {
-    const rows = chapter.entries.filter(entry => !entry.duplicate).map(row)
+    const branch = chapter.grownInto && (chapter.id ? branches.get(chapter.id) : undefined)
+    const linkedPath = chapter.grownInto ? resolve(chapter.grownInto, moc.path) : null
+    const child = branch || (chapter.grownInto ? allMocs.find(item => item.path === linkedPath || item.name === chapter.grownInto) : undefined)
+    const rows = chapter.entries.filter(entry => !entry.duplicate).map(entry => row(entry, Boolean(chapter.grownInto && child)))
+    const frozenPaths = new Set(chapter.entries.flatMap(entry => resolve(entry.target, moc.path) ?? []))
+    const branchMocs = child ? [child] : []
+    for (const item of branchMocs) {
+      for (const candidate of allMocs) {
+        if (!branchMocs.includes(candidate) && item.id && branchOrigin(candidate)?.mocId === item.id) branchMocs.push(candidate)
+      }
+    }
+    const added = new Set(branchMocs.flatMap(item => formalEntries(item).flatMap(({ entry }) => {
+      const path = resolve(entry.target, item.path)
+      return path && !frozenPaths.has(path) ? [path] : []
+    })))
     return {
       key: chapter.id ?? `${chapter.title}#${index}`,
       id: chapter.id,
       title: chapter.title,
       unsorted: chapter.unsorted,
-      ...(chapter.grownInto ? { grownInto: chapter.grownInto } : {}),
+      ...(chapter.grownInto ? { grownInto: child?.name ?? chapter.grownInto } : {}),
+      ...(child?.id ? { grownMocId: child.id } : {}),
+      ...(added.size ? { newSinceSplit: added.size } : {}),
       notes: rows,
       count: rows.filter(item => !item.reference).length,
     }
@@ -307,8 +351,12 @@ export function mocPageView(
 
   const conclusions = blockItems(moc.blocks.conclusions?.text ?? '')
   const open = groupOpenItems(blockItems(moc.blocks.open?.text ?? ''))
+  const origin = branchOrigin(moc)
   return {
     exploring,
+    ...(origin && mocs.some(item => item.id === origin.mocId) && !mocs.some(item => branchOrigin(item)?.mocId === moc.id || item.parent === moc.id)
+      ? { mergeTo: origin.mocId } : {}),
+    ...(moc.parent ? { siblingSplit: true } : {}),
     noteCount: counted.size,
     ...(parent ? { parent } : {}),
     related: header.related,

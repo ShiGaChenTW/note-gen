@@ -7,6 +7,7 @@
 // 純函式：讀到的筆記原文由呼叫端給，產出的是提案（寫入要等 Scott 接受，見 apply.ts）。
 // Fork（almanac ALMNC-69.7）：合併、取代不再把 domains 寫進新筆記的 frontmatter；提案帶 membershipTransfers，接受時由
 // lib/moc transferMemberships 讓新筆記承接舊筆記在各 MOC 的正式收錄（原章節、原關係說明），domains 再由重建算出。
+import { applyFrontmatterEdit } from '@/lib/markdown/frontmatter-edit'
 import { newProposalId } from '@/lib/collect/split'
 import type { DomainEdit, NoteEdit, Proposal, ProposalCardHint } from '@/lib/collect/types'
 import { createV3Note, noteTitle, parseV3Note, writeV3NoteFields } from '@/lib/v3-model/note'
@@ -197,7 +198,8 @@ function applyObservation(
     // Fork（almanac ALMNC-69.7）：新筆記承接舊筆記在 MOC 的正式收錄（原章節、原關係說明），domains 由重建算，不寫 frontmatter。
     working.transfers.push({ from: first, to: newer })
     const related = Array.from(new Set([...parsed.fields.related, wiki(newer)]))
-    touch(working, first, withLog(raw, words, today, words.log.replace({ evidence, other: wiki(newer) }), { status: 'superseded', related }), base(first))
+    const replaced = withLog(raw, words, today, words.log.replace({ evidence, other: wiki(newer) }), { status: 'superseded', related })
+    touch(working, first, applyFrontmatterEdit(replaced, { kind: 'set', key: 'superseded_by', value: wiki(newer), type: 'text' }), base(first))
     const newerRaw = read(working, notes, newer)
     if (newerRaw !== undefined && notes.has(newer)) {
       const fields = parseV3Note(newerRaw).fields

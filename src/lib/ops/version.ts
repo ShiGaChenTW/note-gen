@@ -2,6 +2,7 @@
 // - 快照比對（snapshotMismatch）：organize 的交易照舊用「整份內容相等」判斷（套用前＝before、復原前＝after）。
 // - 內容版本（contentVersion）：ops 只存雜湊（base_versions），復原前比對目前檔案；
 //   筆記 frontmatter 的 domains 由 MOC 正式收錄重建（系統自己會改），不算「後續變更」，算版本時拿掉。
+import { withoutSplitStatus } from '@/lib/moc/split-status'
 import { findFrontmatterEnd } from '@/lib/markdown/frontmatter-split'
 
 /** 一個檔案的前後快照；null＝檔案不存在（新建前、刪除後）。 */
@@ -72,7 +73,7 @@ export function hashText(text: string): string {
 /** 檔案內容的版本；檔案不存在是 null。換行統一成 \n 後再算，domains 不算。 */
 export function contentVersion(content: string | null): string | null {
   if (content === null) return null
-  return hashText(withoutDerivedFields(content.replace(/\r\n/g, '\n')))
+  return hashText(withoutSplitStatus(withoutDerivedFields(content.replace(/\r\n/g, '\n'))))
 }
 
 /** 目前內容和記下的版本相同嗎。 */

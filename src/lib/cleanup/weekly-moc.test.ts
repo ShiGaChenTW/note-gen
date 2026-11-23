@@ -303,3 +303,30 @@ it('keeps concurrent observations for distinct MOCs and does not acknowledge new
   await queue.acknowledge(snapshot)
   expect(await queue.snapshot()).toEqual([updated])
 })
+
+it('persists a weekly sibling proposal and an evidence-based page split, and skips Scott-designated chapters', async () => {
+  const { observeMocPositions, FOUR_WEEKS } = await import('@/lib/moc/positions')
+  const arrange = (pinned: boolean) => {
+    const { files, deps, persisted } = setup({ chapterSplits: [{ chapter: 0, titles: ['怎麼排序', '如何選時段'], second: [0] }] })
+    let text = rawMoc.replace('kind: domain', 'kind: domain\r\nparent: M-20261112-060012-ROOT\r\nlevel: 2')
+    const rows = Array.from({ length: 12 }, (_, n) => {
+      files.set(notePath(n), createV3Note({ title: `筆記 ${n}`, type: 'knowledge', status: 'valid' }, '內容'))
+      return `- [[notes/${n}]] ── 說明 ${n}`
+    })
+    text = text.replace(/- \[\[notes\/0\]\].*\r\n- \[\[notes\/1\]\].*/, rows.join('\r\n'))
+      .replace(/### 尚未分章[\s\S]*?(?=## ④)/, '')
+    files.set(PATH, text)
+    const positions = observeMocPositions(parseMoc(text, PATH), null, deps.resolve, NOW.getTime() - FOUR_WEEKS)
+    deps.branching = { positions: new Map([[ID, positions]]), identify: deps.resolve, isPinned: async pos => pinned && pos.note === notePath(0) }
+    deps.labels.grow = (_, sibling) => sibling ? '升成同層' : '長成 MOC'
+    deps.labels.growBody = count => String(count)
+    deps.labels.splitPage = () => '在頁內拆'
+    return { deps, persisted }
+  }
+  const { deps, persisted } = arrange(false)
+  const items = await runWeeklyMocs(NOW, deps)
+  expect(items.map(item => item.title)).toEqual(['升成同層', '在頁內拆'])
+  const restored = parseItems([...persisted.values()], NOW.getTime())
+  expect(restored[0].proposals.map(item => item.mocBranch)).toEqual(items.map(item => item.mocBranch))
+  expect((await runWeeklyMocs(NOW, arrange(true).deps)).filter(item => item.mocBranch)).toEqual([])
+})

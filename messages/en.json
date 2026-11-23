@@ -8901,6 +8901,13 @@
       "gapChapter": "Knowledge gap: no notes yet",
       "grownInto": "Grown into the {name} MOC",
       "mocMarker": "{name} MOC",
+      "splitMoc": "Grow into a MOC",
+      "splitSibling": "Promote to a sibling MOC",
+      "mergeMoc": "Merge back",
+      "newSinceSplit": "{count, plural, one {# note added since the split} other {# notes added since the split}}",
+      "branchFailed": "Could not update the MOC.",
+      "replacedBy": "Replaced by {name}",
+      "outdatedMarker": "Outdated",
       "exploring": "Exploring",
       "openKind": {
         "contradiction": "Contradictions",
@@ -9570,7 +9577,12 @@
       "outdated": "Possible outdated claim · {title}",
       "place": "File “{note}” under “{chapter}”",
       "tooFew": "Add chapters ({count} currently)",
-      "tooMany": "Consolidate chapters under “{chapter}” ({count} currently)"
+      "tooMany": "Consolidate chapters under “{chapter}” ({count} currently)",
+      "grow": "Grow “{chapter}” into a MOC",
+      "growSibling": "Promote “{chapter}” to a sibling MOC",
+      "mergeBack": "Merge back into “{chapter}”",
+      "splitPage": "Split “{chapter}” into two chapters",
+      "growBody": "{count} notes. The chapter has had no membership changes for at least four weeks."
     }
   },
   "review": {

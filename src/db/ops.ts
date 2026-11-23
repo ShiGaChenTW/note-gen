@@ -108,19 +108,22 @@ export function createOpsDbStore(workspace: () => Promise<string> | string = cur
   const placeholders = (count: number, offset = 0) => Array.from({ length: count }, (_, index) => `$${index + offset + 1}`).join(', ')
 
   return {
-    insert: async records => {
+    insert: async (records, options) => {
+      if (!records.length) return []
       await initOpsDb()
       const db = await getDb()
       const scope = await workspace()
-      for (const record of records) {
-        await db.execute(
-          `insert into ops (id, workspace, at, actor, actor_id, kind, payload, inverse, proposal_id, batch_id, base_versions, undone_at)
-           values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
-          [record.id, scope, record.at, record.actor, record.actorId ?? null, record.kind, JSON.stringify(record.payload), JSON.stringify(record.inverse),
-            record.proposalId ?? null, record.batchId ?? null, JSON.stringify(record.baseVersions), record.undoneAt],
-        )
+      const values = (record: typeof records[number]) => [
+        record.id, scope, record.at, record.actor, record.actorId ?? null, record.kind, JSON.stringify(record.payload), JSON.stringify(record.inverse),
+        record.proposalId ?? null, record.batchId ?? null, JSON.stringify(record.baseVersions), record.undoneAt,
+      ]
+      const insert = 'insert into ops (id, workspace, at, actor, actor_id, kind, payload, inverse, proposal_id, batch_id, base_versions, undone_at)'
+      if (options?.atomic) {
+        const tuples = records.map((_, index) => `(${placeholders(12, index * 12)})`).join(', ')
+        const rows = await db.select<OpRow[]>(`${insert} values ${tuples} returning ${COLUMNS}`, records.flatMap(values))
+        return rows.sort((a, b) => a.seq - b.seq).flatMap(row => opFromRow(row) ?? [])
       }
-      if (!records.length) return []
+      for (const record of records) await db.execute(`${insert} values (${placeholders(12)})`, values(record))
       return select(`id in (${placeholders(records.length)})`, records.map(record => record.id))
     },
     get: async id => (await select('id = $1', [id]))[0] ?? null,

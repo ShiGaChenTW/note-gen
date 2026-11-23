@@ -2,6 +2,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const files = new Map<string, string>()
+const { applyMocBranch } = vi.hoisted(() => ({ applyMocBranch: vi.fn() }))
+vi.mock('@/lib/moc/branch-runtime', () => ({ applyMocBranch }))
 
 vi.mock('@/lib/daily/note-io', () => ({
   noteExists: async (path: string) => files.has(path),
@@ -199,4 +201,17 @@ describe('acceptProposal with a file change', () => {
     expect(result).toEqual({ path: 'k/a.md' })
     expect([...files.keys()]).toEqual([])
   })
+})
+
+it('applies a MOC proposal only from Workbench with its original actor and batch', async () => {
+  const request = { kind: 'merge', mocId: 'M-20261123-120000-CHLD' } as const
+  const proposal = { ...base, id: 'moc', kind: 'note' as const, title: '併回', mocBranch: request }
+  const options = { noteFolder: '10 Inbox', now }
+  await expect(acceptProposal(proposal, options)).rejects.toThrow('Workbench')
+  expect(applyMocBranch).not.toHaveBeenCalled()
+  const ops = { actor: 'expert', actorId: 'expert-1', proposalId: 'collect:weekly:moc', batchId: 'batch-1' } as const
+  applyMocBranch.mockResolvedValueOnce({ path: '20 領域/時間管理.md' })
+  await expect(acceptProposal(proposal, { ...options, ops })).resolves.toEqual({ path: '20 領域/時間管理.md' })
+  expect(applyMocBranch).toHaveBeenCalledWith(request, ops)
+  expect(files.size).toBe(0)
 })

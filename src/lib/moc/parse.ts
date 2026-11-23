@@ -1,3 +1,4 @@
+import { stripSplitEntryStatus } from './split-status'
 // Fork（almanac ALMNC-69.7）：MOC 檔解析器。MOC 章節區的正式收錄是筆記屬於哪些領域的唯一依據，這裡把一個 MOC 檔讀成結構。
 // 純函式、不丟例外：格式壞掉的行列進 problems，其餘照常解析。最小改寫在 edit.ts，收錄 → 筆記 domains 在 membership.ts。
 // 規格：almanac/2026-11-23_proposal_note-type-rules.md 第二節〈資料放哪裡〉〈MOC 頁的五個區塊〉〈在 Obsidian 直接改 MOC 時〉
@@ -217,7 +218,7 @@ export function parseEntryLine(line: string, requireRelation: boolean): ParsedEn
   if (link.index !== 0) return { problem: 'link-not-first' }
   const { target, alias } = splitLinkInner(link[1])
   if (!target) return { problem: 'no-link' }
-  let rest = content.slice(link[0].length)
+  let rest = stripSplitEntryStatus(line).slice(line.length - content.length + link[0].length)
   let mocMarker: string | undefined
   const marker = MOC_MARKER.exec(rest)
   if (marker) {

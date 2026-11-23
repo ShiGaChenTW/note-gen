@@ -8966,6 +8966,13 @@
       "gapChapter": "知識缺口：還沒有筆記",
       "grownInto": "已長成 {name} MOC",
       "mocMarker": "{name} MOC",
+      "splitMoc": "長成 MOC",
+      "splitSibling": "升成同層 MOC",
+      "mergeMoc": "併回原章節",
+      "newSinceSplit": "分家後新增的 {count} 則不列在這裡",
+      "branchFailed": "無法更新 MOC。",
+      "replacedBy": "已由 {name} 取代",
+      "outdatedMarker": "過時",
       "exploring": "探索中",
       "openKind": {
         "contradiction": "矛盾",
@@ -9635,7 +9642,12 @@
       "outdated": "待確認過時 · {title}",
       "place": "把「{note}」放進「{chapter}」",
       "tooFew": "新增章節（目前 {count} 章）",
-      "tooMany": "合併到「{chapter}」（目前 {count} 章）"
+      "tooMany": "合併到「{chapter}」（目前 {count} 章）",
+      "grow": "讓「{chapter}」長成 MOC",
+      "growSibling": "把「{chapter}」升成同層 MOC",
+      "mergeBack": "併回「{chapter}」",
+      "splitPage": "把「{chapter}」拆成兩章",
+      "growBody": "已收錄 {count} 則筆記，且至少四週沒有搬進搬出。"
     }
   },
   "review": {

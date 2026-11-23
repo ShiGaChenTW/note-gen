@@ -8901,6 +8901,13 @@
       "gapChapter": "知识缺口：还没有笔记",
       "grownInto": "已长成 {name} MOC",
       "mocMarker": "{name} MOC",
+      "splitMoc": "长成 MOC",
+      "splitSibling": "升为同级 MOC",
+      "mergeMoc": "合并回原章节",
+      "newSinceSplit": "分出后新增的 {count} 条笔记不在这里列出",
+      "branchFailed": "无法更新 MOC。",
+      "replacedBy": "已由 {name} 取代",
+      "outdatedMarker": "过时",
       "exploring": "探索中",
       "openKind": {
         "contradiction": "矛盾",
@@ -9570,7 +9577,12 @@
       "outdated": "待确认过时 · {title}",
       "place": "将「{note}」归入「{chapter}」",
       "tooFew": "新增章节（目前 {count} 章）",
-      "tooMany": "合并至「{chapter}」（目前 {count} 章）"
+      "tooMany": "合并至「{chapter}」（目前 {count} 章）",
+      "grow": "让「{chapter}」长成 MOC",
+      "growSibling": "把「{chapter}」升为同级 MOC",
+      "mergeBack": "合并回「{chapter}」",
+      "splitPage": "把「{chapter}」拆成两个章节",
+      "growBody": "已有 {count} 条笔记，且至少四周没有移入或移出。"
     }
   },
   "review": {

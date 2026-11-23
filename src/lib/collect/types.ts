@@ -86,6 +86,7 @@ export interface Proposal {
   /** 清理提案：這一則涵蓋哪些處理方式、屬於哪個領域、是不是立刻提出（衝突或錯誤）。 */
   cleanup?: { domainId?: string, actions: CleanupActionName[], immediate: boolean }
   /** 同批項目在工作台合為一張每週 MOC 整理卡。 */
+  mocBranch?: import('@/lib/moc/branching').MocBranchRequest
   mocReview?: { id: string, name: string, week: string }
   /** Fork（almanac ALMNC-54.13）：每週回顧（時期回顧）提案：時期（例如「11 月第 3 週」）與時期鍵。 */
   review?: { period: string, periodKey: string }

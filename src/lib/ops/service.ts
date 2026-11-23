@@ -16,7 +16,7 @@ import { UNDO_WINDOW_MS, type CompareFile, type OpContext, type OpRecord, type O
 /** ops 表（App：note.db；測試：記憶體）。 */
 export interface OpsStore {
   /** 寫入；回傳帶 seq 的紀錄。 */
-  insert: (records: ReadonlyArray<Omit<OpRecord, 'seq'>>) => Promise<OpRecord[]>
+  insert: (records: ReadonlyArray<Omit<OpRecord, 'seq'>>, options?: { atomic?: boolean }) => Promise<OpRecord[]>
   get: (id: string) => Promise<OpRecord | null>
   listBatch: (batchId: string) => Promise<OpRecord[]>
   /** 依 id 讀（設定頁一次查一頁活動紀錄對應的操作）。 */
@@ -83,7 +83,7 @@ export function createOpsService(deps: OpsDeps) {
     await deps.afterChange(specs).catch(error => console.warn('[ops] afterChange failed', error))
   }
 
-  async function save(entries: ReadonlyArray<{ spec: OpSpec, after: Record<string, string | null> }>, context: OpContext, notify = true): Promise<OpRecord[]> {
+  async function save(entries: ReadonlyArray<{ spec: OpSpec, after: Record<string, string | null> }>, context: OpContext, notify = true, atomic = false): Promise<OpRecord[]> {
     if (!entries.length) return []
     const at = now()
     const rows = entries.map(({ spec, after }) => ({
@@ -99,13 +99,13 @@ export function createOpsService(deps: OpsDeps) {
       baseVersions: versions(after),
       undoneAt: null,
     }))
-    const records = await deps.store.insert(rows)
+    const records = await deps.store.insert(rows, atomic ? { atomic } : undefined)
     if (notify) await deps.onRecorded?.(records, context).catch(error => console.warn('[ops] onRecorded failed', error))
     return records
   }
 
   /** 執行操作並記下來（Scott 親自觸發的結構操作、ALMNC-65.3 自動接受的補連結等）。 */
-  async function applyOps(specs: readonly OpSpec[], context: OpContext, options?: { requireBefore?: boolean }): Promise<OpRecord[]> {
+  async function applyOps(specs: readonly OpSpec[], context: OpContext, options?: { requireBefore?: boolean, guardedBatch?: boolean }): Promise<OpRecord[]> {
     const plan = await planOps(specs, deps.fs, options)
     const [action] = plan.actions
     if (options?.requireBefore && (plan.actions.length !== 1 || action.type !== 'write'
@@ -115,7 +115,7 @@ export function createOpsService(deps: OpsDeps) {
     await applyActions(plan.actions, deps.writer)
     let records: OpRecord[] = []
     try {
-      records = await save(plan.specs.map((spec, index) => ({ spec, after: plan.touched[index] ?? {} })), context, !options?.requireBefore)
+      records = await save(plan.specs.map((spec, index) => ({ spec, after: plan.touched[index] ?? {} })), context, !options?.requireBefore, options?.guardedBatch)
       if (options?.requireBefore) {
         if (records.length !== 1) throw new Error('Missing undo record for automatic acceptance')
         await deps.onRecorded?.(records, context)
@@ -125,6 +125,11 @@ export function createOpsService(deps: OpsDeps) {
       if (options?.requireBefore && action.type === 'write') {
         await deps.writer.write(action.path, action.after, action.before)
         if (records.length) await deps.store.markUndone(records.map(record => record.id), now())
+      }
+      if (options?.guardedBatch) {
+        await applyActions([...plan.actions].reverse().map(action => action.type === 'write'
+          ? { ...action, before: action.after, after: action.before }
+          : { ...action, from: action.to, to: action.from }), deps.writer)
       }
       throw error
     }

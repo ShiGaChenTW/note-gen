@@ -2,6 +2,7 @@
 // 保存的是「收集」這個來源自己的狀態（還沒收下的提案關頁、重開後還在），等你定只讀它、不複製。
 // 放在 store.json 的 collectItems：資料小、和其他 fork 設定（新介面開關、首頁卡片）同一處、Tauri 已有權限，
 // 不需要另開資料表或新增檔案位置。
+import { isId } from '@/lib/v3-model/identity'
 import { isoWeekKey } from '@/lib/review/settings'
 import { toDateKey } from '@/lib/daily/format'
 import { isSlotTarget } from '@/lib/timeslots/model'
@@ -65,6 +66,7 @@ export function serializeItems(items: readonly ItemLike[]): PersistedItem[] {
       ...(proposal.memoryEdits ? { memoryEdits: proposal.memoryEdits } : {}),
       ...(proposal.card ? { card: proposal.card } : {}),
       ...(proposal.cleanup ? { cleanup: proposal.cleanup } : {}),
+      ...(proposal.mocBranch ? { mocBranch: proposal.mocBranch } : {}),
       ...(proposal.mocReview ? { mocReview: proposal.mocReview } : {}),
       ...(proposal.review ? { review: proposal.review } : {}),
       status: proposal.status,
@@ -79,7 +81,19 @@ function isProposal(value: unknown): value is PersistedProposal {
   return typeof p.id === 'string' && (p.kind === 'note' || p.kind === 'task' || p.kind === 'event')
     && typeof p.title === 'string' && typeof p.body === 'string' && typeof p.due === 'string' && typeof p.time === 'string'
     && (p.slot === undefined || (p.kind === 'event' && isSlotTarget(p.slot)))
+    && (p.mocBranch === undefined || (p.kind === 'note' && readableMocBranch(p.mocBranch)))
     && Array.isArray(p.tags) && (p.status === 'wait' || p.status === 'ok' || p.status === 'no')
+}
+
+function readableMocBranch(value: unknown): boolean {
+  if (!value || typeof value !== 'object') return false
+  const branch = value as Record<string, unknown>
+  if (typeof branch.mocId !== 'string' || !isId(branch.mocId, 'M')) return false
+  if (branch.kind === 'merge') return true
+  if (typeof branch.chapterId !== 'string' || !isId(branch.chapterId, 'C')) return false
+  if (typeof branch.expectedTitle !== 'string' || !stringArray(branch.expectedEntries)) return false
+  if (branch.kind === 'split') return true
+  return branch.kind === 'split-page' && stringArray(branch.titles)?.length === 2 && Boolean(stringArray(branch.second)?.length)
 }
 
 // Fork（almanac ALMNC-54.6）：指揮官提案的來源資料源、筆記類型、領域、相關的人、專案與撰寫者。

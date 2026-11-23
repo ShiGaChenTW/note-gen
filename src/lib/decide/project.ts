@@ -260,6 +260,8 @@ function projectCollect(items: CollectItemLike[], journal: JournalSnapshot | nul
       } else if (slot && journal) {
         const after = scheduleSlot(journal.before, slot, proposal.due, proposal.time)
         preview = { type: 'file', path: slot.path, diff: after === null ? null : previewDiff(journal.before, after) }
+      } else if (proposal.mocBranch) {
+        preview = { type: 'file', path: proposal.mocReview?.name ?? proposal.title, diff: null }
       } else if (proposal.journalTag?.only) {
         // Fork（almanac ALMNC-69.3）：只貼日誌標籤，不寫任何檔案。
         preview = { type: 'newNote', diff: { context: [], removed: [], added: [], hidden: 0 } }

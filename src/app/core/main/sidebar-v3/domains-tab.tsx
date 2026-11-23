@@ -175,7 +175,9 @@ function ChapterNote({ row }: { row: MocNoteRow }) {
         {row.relation && <span className="line-clamp-2 text-muted-ink" data-testid="domain-note-relation">{row.relation}</span>}
       </span>
       {row.marker && <span className={BADGE}>{t('mocMarker', { name: row.marker })}</span>}
-      {row.status && row.status !== 'valid' && <span className={BADGE}>{t(`status.${row.status}`)}</span>}
+      {row.currentMocs?.map(name => <span key={name} className={BADGE}>{t('mocMarker', { name })}</span>)}
+      {row.outdated && <span className={BADGE}>{t('outdatedMarker')}</span>}
+      {row.status && !row.replacement && row.status !== 'valid' && <span className={BADGE}>{t(`status.${row.status}`)}</span>}
     </>
   )
   if (!row.path) {
@@ -186,31 +188,43 @@ function ChapterNote({ row }: { row: MocNoteRow }) {
     )
   }
   const path = row.path
+  const replacement = row.replacement
   return (
     <li>
       <button type="button" className={cn(ROW, 'items-start')} onClick={() => void openNote(path)} aria-label={t('openNote', { title: row.title })} data-testid="domain-note" data-path={path}>
         {body}
       </button>
+      {replacement && <button type="button" className="px-2 text-ui-compact text-muted-ink underline underline-offset-2" onClick={() => void openNote(replacement.path)}>
+        {t('replacedBy', { name: replacement.title })}
+      </button>}
     </li>
   )
 }
 
-function Chapter({ chapter, exploring, tree, onOpen }: { chapter: MocChapterView, exploring: boolean, tree: DomainNode[], onOpen: (id: string) => void }) {
+function Chapter({ chapter, exploring, tree, onOpen, onSplit, sibling }: { chapter: MocChapterView, exploring: boolean, tree: DomainNode[], onOpen: (id: string) => void, onSplit?: (chapterId: string) => void, sibling?: boolean }) {
   const t = useTranslations('sidebarV3.domains')
-  const grown = chapter.grownInto ? findDomainByName(tree, chapter.grownInto) : undefined
+  const grown = chapter.grownMocId ?? (chapter.grownInto ? findDomainByName(tree, chapter.grownInto)?.domain.id : undefined)
+  const chapterId = chapter.id
   return (
     <div className="flex flex-col gap-1" data-testid="domain-chapter" data-chapter={chapter.id ?? undefined} data-unsorted={chapter.unsorted || undefined}>
       <h3 className="flex min-w-0 items-center gap-2 px-2 text-ui-compact leading-5 font-semibold text-ink">
         <span className="min-w-0 truncate">{chapter.unsorted ? t('unsorted') : chapter.title}</span>
         {chapter.grownInto && (grown
-          ? <button type="button" className="shrink-0 cursor-pointer rounded-(--r-kbd) text-ui-numeric font-normal text-muted-ink underline underline-offset-2 outline-none hover:text-ink focus-visible:ring-2 focus-visible:ring-ink" onClick={() => onOpen(grown.domain.id)} data-domain={grown.domain.id}>{t('grownInto', { name: chapter.grownInto })}</button>
+          ? <button type="button" className="shrink-0 cursor-pointer rounded-(--r-kbd) text-ui-numeric font-normal text-muted-ink underline underline-offset-2 outline-none hover:text-ink focus-visible:ring-2 focus-visible:ring-ink" onClick={() => onOpen(grown)} data-domain={grown}>{t('grownInto', { name: chapter.grownInto })}</button>
           : <span className="shrink-0 text-ui-numeric font-normal text-muted-ink">{t('grownInto', { name: chapter.grownInto })}</span>)}
         <span className="flex-1" />
+        {onSplit && chapterId && !chapter.grownInto && !chapter.unsorted && chapter.count > 0 &&
+          <button type="button" className="text-ui-compact font-normal text-muted-ink underline underline-offset-2" onClick={() => onSplit(chapterId)}>
+            {t(sibling ? 'splitSibling' : 'splitMoc')}
+          </button>}
         <Count value={chapter.count} />
       </h3>
       {chapter.notes.length === 0
         ? <p className="px-2 text-ui-compact leading-5 text-muted-ink" data-testid={exploring ? 'domain-chapter-gap' : 'domain-chapter-empty'}>{exploring ? t('gapChapter') : t('emptyChapter')}</p>
         : <ul className="flex flex-col gap-0.5">{chapter.notes.map((row, index) => <ChapterNote key={`${row.target}#${index}`} row={row} />)}</ul>}
+      {grown && chapter.newSinceSplit ? <button type="button" className="w-fit px-2 text-ui-compact text-muted-ink underline underline-offset-2" onClick={() => onOpen(grown)}>
+        {t('newSinceSplit', { count: chapter.newSinceSplit })}
+      </button> : null}
     </div>
   )
 }
@@ -251,6 +265,20 @@ function DomainDetail({ node, tree, view, notePaths, onOpen, onBack, mocRef }: {
   const t = useTranslations('sidebarV3.domains')
   const locale = useLocale()
   const updated = new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(node.domain.updatedAt)
+  const [branching, setBranching] = useState(false)
+  const branch = async (request: import('@/lib/moc/branching').MocBranchRequest) => {
+    setBranching(true)
+    try {
+      const { applyMocBranch } = await import('@/lib/moc/branch-runtime')
+      const result = await applyMocBranch(request)
+      if (result.mocId) onOpen(result.mocId)
+    } catch (error) {
+      console.warn('[moc] branching failed:', error)
+      toast(t('branchFailed'))
+    } finally {
+      setBranching(false)
+    }
+  }
   const hasHeader = Boolean(view.parent) || view.related.length > 0 || view.adjacent.length > 0
   return (
     <article className="flex flex-col gap-5 p-4" aria-label={node.path} data-testid="domain-detail" data-domain={node.domain.id}>
@@ -265,6 +293,9 @@ function DomainDetail({ node, tree, view, notePaths, onOpen, onBack, mocRef }: {
         <p className="text-ui-compact leading-5 text-muted-ink">
           {[t('count', { count: view.noteCount }), t('updated', { date: updated }), view.owner && t('owner', { owner: view.owner }), view.confirmed && t('confirmed', { date: view.confirmed })].filter(Boolean).join(' · ')}
         </p>
+        {view.mergeTo && mocRef && <button type="button" disabled={branching} className="w-fit text-ui-compact text-muted-ink underline underline-offset-2" onClick={() => void branch({ kind: 'merge', mocId: mocRef.id })}>
+          {t('mergeMoc')}
+        </button>}
         {view.exploring && mocRef && <ExplorationActions moc={mocRef} onWithdraw={onBack} />}
         {(hasHeader || mocRef) && (
           <div className="mt-1 flex flex-col gap-1 text-ui-compact leading-5 text-ink" data-testid="domain-header">
@@ -298,7 +329,7 @@ function DomainDetail({ node, tree, view, notePaths, onOpen, onBack, mocRef }: {
       <Block label={t('chapters')} count={view.noteCount} testId="domain-chapters">
         {view.chapters.length === 0
           ? <EmptyState text={t('emptyChapters')} />
-          : <div className="flex flex-col gap-3">{view.chapters.map(chapter => <Chapter key={chapter.key} chapter={chapter} exploring={view.exploring} tree={tree} onOpen={onOpen} />)}</div>}
+          : <div className="flex flex-col gap-3">{view.chapters.map(chapter => <Chapter key={chapter.key} chapter={chapter} exploring={view.exploring} tree={tree} onOpen={onOpen} sibling={view.siblingSplit} onSplit={mocRef && !branching ? chapterId => void branch({ kind: 'split', mocId: mocRef.id, chapterId }) : undefined} />)}</div>}
       </Block>
       {view.conclusions && (
         <Block label={t('keyConclusions')} count={view.conclusions.length} testId="domain-conclusions">
