@@ -11,6 +11,7 @@ const { planLinkRewrite, applyLinkRewrite, toast } = vi.hoisted(() => ({
 }))
 vi.mock('@/lib/wikilink-rename', () => ({ planLinkRewrite, applyLinkRewrite }))
 vi.mock('@/hooks/use-toast', () => ({ toast }))
+vi.mock('@/db/id-index', () => ({ moveIdIndexPaths: vi.fn(async () => 0) }))
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: keyof typeof messages.linkRewrite, values?: Record<string, number>) =>
     messages.linkRewrite[key].replace(/\{(\w+)\}/g, (_m, name: string) => String(values?.[name] ?? `{${name}}`)),

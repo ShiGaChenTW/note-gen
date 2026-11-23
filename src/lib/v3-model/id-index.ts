@@ -10,7 +10,7 @@ export interface IdIndexEntry {
   path?: string
   /** 上次看到的檔名（不含資料夾與 .md）。 */
   lastName?: string
-  /** MOC 的名稱（M 編號才有）。 */
+  /** MOC 的名稱（M 編號）；章節（C 編號）是章節名稱（ALMNC-69.5 補回 C 註解時用）。 */
   name?: string
   createdAt: number
   updatedAt: number
@@ -50,11 +50,21 @@ export interface RecordIdInput {
   name?: string
 }
 
-/** 驗證後組成要寫入的列；編號與類別不一致、或 name 用在 M 以外時丟錯。 */
+/** 驗證後組成要寫入的列；編號與類別不一致、或 name 用在 M、C 以外時丟錯。 */
 export function idIndexValues(input: RecordIdInput, now: number): IdIndexEntry {
   if (!isId(input.id, input.kind)) throw new Error(`編號與類別不符：${input.id}（${input.kind}）`)
   const name = input.name?.trim() || undefined
-  if (name && input.kind !== 'M') throw new Error('只有 MOC（M）在系統索引記名稱')
+  if (name && input.kind !== 'M' && input.kind !== 'C') throw new Error('只有 MOC（M）與章節（C）在系統索引記名稱')
   const path = input.path?.trim() || undefined
   return { id: input.id, kind: input.kind, path, lastName: path ? lastNameOf(path) : undefined, name, createdAt: now, updatedAt: now }
+}
+
+/** App 內改名／搬動（檔案或資料夾）後，索引裡記的路徑要跟著換；回傳 [舊路徑, 新路徑]。 */
+export function movedIndexPaths(paths: readonly string[], moves: ReadonlyArray<{ sourcePath: string, targetPath: string }>): Array<[string, string]> {
+  const out: Array<[string, string]> = []
+  for (const path of new Set(paths)) {
+    const move = moves.find(item => path === item.sourcePath || path.startsWith(`${item.sourcePath}/`))
+    if (move) out.push([path, move.targetPath + path.slice(move.sourcePath.length)])
+  }
+  return out
 }

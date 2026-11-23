@@ -9523,5 +9523,16 @@
         "6": "星期六"
       }
     }
+  },
+  "idScan": {
+    "renumbered": "“{path}”和“{kept}”的身份编号重复（可能是复制的文件），已保留原文件的编号、为“{path}”换了新编号",
+    "renumberedMany": "{count} 个复制的文件和原文件身份编号重复，已为副本换了新编号",
+    "restored": "“{path}”等 {count} 处的身份编号被删除或改坏，已按系统索引补回原编号",
+    "renamed": "“{name}”等 {count} 个文件在 App 外改了名，已把 {files} 篇笔记里的 {links} 个链接改到新文件名",
+    "renamedNoLinks": "“{name}”等 {count} 个文件在 App 外改了名或移动了位置，已更新系统索引",
+    "clockBehind": "电脑时间比笔记库里最新的身份编号还早，新编号的时间可能不对，请检查系统时钟",
+    "clockFuture": "“{path}”等 {count} 处的身份编号或创建时间在未来，请检查系统时钟",
+    "clockBeforeSource": "“{path}”等 {count} 条笔记的编号时间早于它的资料源，可能是时钟有误",
+    "held": "有 {count} 个笔记没有身份编号，数量较多所以没有自动补上；请先用迁移工具（pnpm migrate:ids）预览后再应用"
   }
 }

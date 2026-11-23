@@ -9523,5 +9523,16 @@
         "6": "Saturday"
       }
     }
+  },
+  "idScan": {
+    "renumbered": "\"{path}\" had the same ID as \"{kept}\" (probably a copied file). The original keeps its ID; \"{path}\" got a new one",
+    "renumberedMany": "{count} copied files shared IDs with their originals; the copies got new IDs",
+    "restored": "IDs in {count} place(s), including \"{path}\", were deleted or broken; restored from the system index",
+    "renamed": "{count} file(s), including \"{name}\", were renamed outside the app; updated {links} links in {files} notes to the new name",
+    "renamedNoLinks": "{count} file(s), including \"{name}\", were renamed or moved outside the app; the system index is updated",
+    "clockBehind": "Your computer's clock is earlier than the newest ID in the vault, so new IDs may have the wrong time. Please check the system clock",
+    "clockFuture": "{count} ID(s) or creation times, including \"{path}\", are in the future. Please check the system clock",
+    "clockBeforeSource": "{count} note(s), including \"{path}\", have IDs earlier than their sources; the clock may be wrong",
+    "held": "{count} notes have no ID. That's too many to add automatically; preview and apply them with the migration tool (pnpm migrate:ids) first"
   }
 }

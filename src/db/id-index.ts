@@ -2,7 +2,7 @@
 // 新表，用 create table if not exists 建立（和其他 V3 表同一套延遲初始化），對舊資料庫安全、可重跑。
 // 薄薄的 SQL 包裝，驗證在 src/lib/v3-model/id-index.ts。
 import { getDb } from './index'
-import { idIndexEntryFromRow, idIndexValues, type IdIndexEntry, type IdIndexRow, type RecordIdInput } from '@/lib/v3-model/id-index'
+import { idIndexEntryFromRow, idIndexValues, lastNameOf, movedIndexPaths, type IdIndexEntry, type IdIndexRow, type RecordIdInput } from '@/lib/v3-model/id-index'
 
 const COLUMNS = 'id, kind, path, last_name as lastName, name, created_at as createdAt, updated_at as updatedAt'
 
@@ -73,4 +73,28 @@ export async function findMocIdByName(name: string): Promise<string | null> {
   const db = await getDb()
   const rows = await db.select<Array<{ id: string }>>("select id from id_index where kind = 'M' and name = $1 order by created_at limit 1", [name.trim()])
   return rows[0]?.id ?? null
+}
+
+/** Fork（almanac ALMNC-69.5）：整張索引（掃描補號與斷鏈修復用）。 */
+export async function listIdIndex(): Promise<IdIndexEntry[]> {
+  await initIdIndexDb()
+  const db = await getDb()
+  const rows = await db.select<IdIndexRow[]>(`select ${COLUMNS} from id_index`)
+  return rows.map(idIndexEntryFromRow)
+}
+
+/**
+ * Fork（almanac ALMNC-69.5）：App 內改名／搬動後同步索引裡的路徑。
+ * 這樣掃描不會把 App 內的改名當成「在 App 外被改」而自己改連結（App 內改名由詢問對話框讓 Scott 決定）。
+ */
+export async function moveIdIndexPaths(moves: ReadonlyArray<{ sourcePath: string, targetPath: string }>, now = Date.now()): Promise<number> {
+  if (moves.length === 0) return 0
+  await initIdIndexDb()
+  const db = await getDb()
+  const rows = await db.select<Array<{ path: string }>>('select distinct path from id_index where path is not null')
+  const changes = movedIndexPaths(rows.map(row => row.path), moves)
+  for (const [from, to] of changes) {
+    await db.execute('update id_index set path = $1, last_name = $2, updated_at = $3 where path = $4', [to, lastNameOf(to), now, from])
+  }
+  return changes.length
 }

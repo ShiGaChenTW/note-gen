@@ -6,7 +6,7 @@
  */
 
 import { create } from 'zustand'
-import type { PathMove } from '@/lib/markdown/wikilink-rewrite'
+import { normalizeMoves, type PathMove } from '@/lib/markdown/wikilink-rewrite'
 import { planLinkRewrite, type LinkRewritePlan } from '@/lib/wikilink-rename'
 
 export interface LinkRewriteRequest {
@@ -47,6 +47,13 @@ export const useLinkRewriteStore = create<LinkRewriteState>((set, get) => ({
  * 0 筆或沒有掛載詢問元件時靜默結束。
  */
 export async function requestLinkRewrite(moves: PathMove[]): Promise<void> {
+  // Fork（almanac ALMNC-69.5）：先同步系統索引的路徑，掃描補號才不會把 App 內改名當成 App 外改名、自己改連結。
+  try {
+    const { moveIdIndexPaths } = await import('@/db/id-index')
+    await moveIdIndexPaths(normalizeMoves(moves))
+  } catch (error) {
+    console.warn('[link-rewrite] 系統索引路徑沒有同步：', error)
+  }
   try {
     const plan = await planLinkRewrite(moves)
     if (plan.files.length === 0) return
