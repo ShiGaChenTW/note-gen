@@ -69,3 +69,26 @@ export function unknownDomainIds(noteDomainIds: readonly string[], domains: read
   const known = new Set(domains.map(domain => domain.id))
   return noteDomainIds.filter(id => !known.has(id))
 }
+
+// ── Fork（almanac ALMNC-69.4）：筆記 domains 的過渡期讀法 ──────────────
+// 筆記 frontmatter 的 domains 改存**領域名稱**（遷移把 dom_… 換成名稱）；還沒遷移的筆記與舊的寫入路徑仍是 dom_ id。
+// 讀的地方一律經過這裡，兩種都認。domains 表的 id 在 ALMNC-69.6 前不換，程式內部仍以 domain.id 為準。
+
+/** frontmatter domains 的一筆（名稱或舊 dom_ id）是不是指這個領域。 */
+export function domainRefMatches(ref: string, domain: Pick<Domain, 'id' | 'name'>): boolean {
+  const key = ref.trim()
+  return !!key && (key === domain.id || key === domain.name.trim())
+}
+
+/** 領域查表：id 與名稱都當 key（id 優先）。 */
+export function domainLookup<T extends Pick<Domain, 'id' | 'name'>>(domains: readonly T[]): Map<string, T> {
+  const map = new Map<string, T>()
+  for (const domain of domains) if (domain.name.trim() && !map.has(domain.name.trim())) map.set(domain.name.trim(), domain)
+  for (const domain of domains) map.set(domain.id, domain)
+  return map
+}
+
+/** frontmatter domains → 領域 id（認名稱與舊 id，去重、保留順序）；對不到的照原樣保留。 */
+export function canonicalDomainIds(refs: readonly string[], lookup: ReadonlyMap<string, Pick<Domain, 'id'>>): string[] {
+  return Array.from(new Set(refs.map(ref => lookup.get(ref.trim())?.id ?? ref.trim()).filter(Boolean)))
+}

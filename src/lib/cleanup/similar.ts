@@ -68,6 +68,8 @@ function describe(note: IndexedNoteForSimilar): string {
 export interface RankOptions {
   /** 只看這個領域（沒給就看沒有領域的知識筆記）。 */
   domainId?: string
+  /** Fork（almanac ALMNC-69.4）：這個領域在筆記 domains 裡可能的寫法（領域名稱、舊 dom_ id）；沒給就只比 domainId。 */
+  domainRefs?: readonly string[]
   /** 不分領域（親手寫的筆記還沒有領域時用）。 */
   allDomains?: boolean
   /** 排除的路徑（例如筆記自己）。 */
@@ -88,7 +90,8 @@ export function rankSimilarNotes(query: string, notes: Iterable<IndexedNoteForSi
     if (!fm || fm.type !== 'knowledge' || exclude.has(note.path)) continue
     if (fm.status === 'superseded' || fm.status === 'archived') continue
     const domains = strings(fm.domains)
-    if (!options.allDomains && (options.domainId ? !domains.includes(options.domainId) : domains.length > 0)) continue
+    const refs = options.domainRefs?.length ? options.domainRefs : options.domainId ? [options.domainId] : []
+    if (!options.allDomains && (options.domainId ? !domains.some(entry => refs.includes(entry)) : domains.length > 0)) continue
     const lexical = similarity(queryGrams, textGrams(describe(note)))
     const hit = options.searchHits?.get(note.path) ?? 0
     const score = Math.min(1, lexical + hit * 0.5)
@@ -106,7 +109,7 @@ export interface SimilarFinderDeps {
 
 /** 包成指揮官 C1 用的 findSimilarNotes（domainId 沒給就看沒有領域的知識筆記）。 */
 export function createSimilarFinder(deps: SimilarFinderDeps, options: Pick<RankOptions, 'limit' | 'minScore'> = {}) {
-  return async (domainId: string | undefined, query: { title: string, body: string }, exclude: readonly string[] = [], scope: { allDomains?: boolean } = {}): Promise<SimilarCandidate[]> => {
+  return async (domainId: string | undefined, query: { title: string, body: string }, exclude: readonly string[] = [], scope: { allDomains?: boolean, domainRefs?: readonly string[] } = {}): Promise<SimilarCandidate[]> => {
     const text = `${query.title}\n${query.body}`.slice(0, 2000)
     let searchHits: Map<string, number> | undefined
     if (deps.search) {
@@ -116,6 +119,6 @@ export function createSimilarFinder(deps: SimilarFinderDeps, options: Pick<RankO
         searchHits = undefined
       }
     }
-    return rankSimilarNotes(text, deps.notes(), { domainId, exclude, searchHits, allDomains: scope.allDomains, ...options })
+    return rankSimilarNotes(text, deps.notes(), { domainId, domainRefs: scope.domainRefs, exclude, searchHits, allDomains: scope.allDomains, ...options })
   }
 }

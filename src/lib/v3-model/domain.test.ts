@@ -1,6 +1,6 @@
 // Fork（almanac ALMNC-54.1）：領域最多兩層（AC5）。
 import { describe, expect, it } from 'vitest'
-import { assertDomainPlacement, domainFromRow, domainPath, domainPlacementError, unknownDomainIds } from './domain'
+import { assertDomainPlacement, canonicalDomainIds, domainFromRow, domainLookup, domainPath, domainPlacementError, domainRefMatches, unknownDomainIds } from './domain'
 
 const domains = [
   { id: 'eng', name: '工程' },
@@ -48,5 +48,24 @@ describe('領域路徑與筆記歸屬', () => {
     expect(domainFromRow({ id: 'a', name: 'A', parentId: null, overview: '', createdAt: 1, updatedAt: 2 })).toEqual({
       id: 'a', name: 'A', parentId: undefined, overview: '', createdAt: 1, updatedAt: 2,
     })
+  })
+})
+
+// Fork（almanac ALMNC-69.4）：筆記 domains 存領域名稱，過渡期也認舊 dom_ id。
+describe('筆記 domains 的名稱與舊 id', () => {
+  const domains = [{ id: 'dom_a', name: '時間管理' }, { id: 'dom_b', name: '專注力 ' }]
+
+  it('名稱與 id 都對得到同一個領域', () => {
+    expect(domainRefMatches('時間管理', domains[0])).toBe(true)
+    expect(domainRefMatches('dom_a', domains[0])).toBe(true)
+    expect(domainRefMatches('專注力', domains[1])).toBe(true)
+    expect(domainRefMatches('dom_b', domains[0])).toBe(false)
+    expect(domainRefMatches(' ', domains[0])).toBe(false)
+  })
+
+  it('換成領域 id：去重、保留順序、對不到的照原樣', () => {
+    const lookup = domainLookup(domains)
+    expect(lookup.get('專注力')?.id).toBe('dom_b')
+    expect(canonicalDomainIds(['專注力', 'dom_a', '時間管理', '不存在'], lookup)).toEqual(['dom_b', 'dom_a', '不存在'])
   })
 })

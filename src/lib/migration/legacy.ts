@@ -11,8 +11,8 @@
 //      進度就是資料源狀態：重開 App 後從還沒處理的那則接著做；暫停只是停在這一則做完之後。
 import type { IndexedNote } from '@/lib/vault-index/index-note'
 import { parseDailyNotePath } from '@/lib/daily/format'
-import { NOTE_TYPES } from '@/lib/v3-model/note'
-import { createLegacyNoteSource, legacySourceId, type Source } from '@/lib/v3-model/source'
+import { isV3NoteTypeValue } from '@/lib/v3-model/note'
+import { createLegacyNoteSource, legacySourceId, sourceKeys, type Source } from '@/lib/v3-model/source'
 import { analyzeSource } from '@/lib/commander/pipeline'
 import type { AnalyzeResult, CommanderDeps, ProposalBatch } from '@/lib/commander/types'
 
@@ -48,8 +48,8 @@ export function isDailyNote(path: string, options: LegacySelectOptions): boolean
 
 /** 已經是 V3 筆記：frontmatter 的 type 是知識／紀錄／專案之一。 */
 export function isV3Note(frontmatter: IndexedNote['frontmatter']): boolean {
-  const type = frontmatter?.type
-  return typeof type === 'string' && (NOTE_TYPES as readonly string[]).includes(type.trim().toLowerCase())
+  // Fork（almanac ALMNC-69.4）：日誌筆記的新類型值 log 也算 V3 筆記，不會被當成舊筆記再標一次。
+  return isV3NoteTypeValue(frontmatter?.type)
 }
 
 export function selectLegacyNotes(notes: Iterable<Pick<IndexedNote, 'path' | 'frontmatter'>>, options: LegacySelectOptions): LegacySelection {
@@ -70,8 +70,9 @@ export function selectLegacyNotes(notes: Iterable<Pick<IndexedNote, 'path' | 'fr
 // ── 2. 標 ────────────────────────────────────────────────────
 
 /** 還沒標過的舊筆記（標過的以資料源 id 判斷；不論狀態，分析完的也不再標）。 */
-export function unmarkedPaths(paths: readonly string[], marked: Iterable<Pick<Source, 'id'>>): string[] {
-  const ids = new Set(Array.from(marked, source => source.id))
+export function unmarkedPaths(paths: readonly string[], marked: Iterable<Pick<Source, 'id' | 'legacyId'>>): string[] {
+  // Fork（almanac ALMNC-69.4）：換成 S 編號的舊筆記資料源，原本的 src_legacy:<路徑> 存在 legacyId。
+  const ids = new Set(Array.from(marked, sourceKeys).flat())
   return paths.filter(path => !ids.has(legacySourceId(path)))
 }
 

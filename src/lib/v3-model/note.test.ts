@@ -1,6 +1,6 @@
 // Fork（almanac ALMNC-54.1）：筆記三類與 frontmatter 欄位（AC3、AC5）。
 import { describe, expect, it } from 'vitest'
-import { createV3Note, noteTitle, parseV3Note, writeV3NoteFields } from './note'
+import { createV3Note, isLogNoteTypeValue, isV3NoteTypeValue, noteTitle, parseV3Note, writeV3NoteFields } from './note'
 
 const FULL = `---
 title: 資料管線要冪等
@@ -104,8 +104,19 @@ describe('寫回 V3 欄位', () => {
 
   it('沒有 frontmatter 的筆記會新增一個', () => {
     const next = writeV3NoteFields('內文\n', { type: 'record', domains: ['life'] })
-    expect(next).toBe('---\ntype: record\ndomains: [ life ]\n---\n內文\n')
+    // Fork（almanac ALMNC-69.4）：日誌筆記的類型值寫成 log，讀回來仍是 record。
+    expect(next).toBe('---\ntype: log\ndomains: [ life ]\n---\n內文\n')
     expect(parseV3Note(next).body).toBe('內文\n')
+    expect(parseV3Note(next).fields.type).toBe('record')
+  })
+
+  it('isV3NoteTypeValue／isLogNoteTypeValue 認 log 與 record', () => {
+    expect(isV3NoteTypeValue('log')).toBe(true)
+    expect(isV3NoteTypeValue(' Knowledge ')).toBe(true)
+    expect(isV3NoteTypeValue('moc')).toBe(false)
+    expect(isLogNoteTypeValue('log')).toBe(true)
+    expect(isLogNoteTypeValue('record')).toBe(true)
+    expect(isLogNoteTypeValue('knowledge')).toBe(false)
   })
 
   it('移除最後一個欄位時拿掉整個 frontmatter', () => {

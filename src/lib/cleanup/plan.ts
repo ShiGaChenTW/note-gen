@@ -222,9 +222,11 @@ function applyObservation(
     }
     // 列進領域的「矛盾與未解問題」。
     const domainIds = observation.domainId ? [observation.domainId] : Array.from(new Set(paths.flatMap(path => parseV3Note(notes.get(path) ?? '').fields.domains)))
-    for (const id of domainIds) {
-      const domain = ctx.domains.get(id)
+    // Fork（almanac ALMNC-69.4）：domains 可能是領域名稱（ctx.domains 以 id 與名稱都當 key），寫回時一律用領域 id。
+    for (const ref of domainIds) {
+      const domain = ctx.domains.get(ref)
       if (!domain) continue
+      const id = domain.id
       const entry = domainWorking.get(id) ?? { base: domain.overview, current: domain.overview }
       entry.current = appendToSection(entry.current, words.openQuestions, `- ${paths.map(wiki).join(' ↔ ')}：${evidence}`)
       domainWorking.set(id, entry)
@@ -287,13 +289,14 @@ export interface CleanupContext {
   immediate: boolean
 }
 
-function domainOf(observation: ConflictObservation, notes: ReadonlyMap<string, string>): string {
-  if (observation.domainId) return observation.domainId
+function domainOf(observation: ConflictObservation, notes: ReadonlyMap<string, string>, domains?: ReadonlyMap<string, DomainInfo>): string {
+  if (observation.domainId) return domains?.get(observation.domainId)?.id ?? observation.domainId
   for (const path of observation.notePaths) {
     const raw = notes.get(path)
     if (!raw) continue
     const domain = parseV3Note(raw).fields.domains[0]
-    if (domain) return domain
+    // Fork（almanac ALMNC-69.4）：domains 存名稱時換回領域 id。
+    if (domain) return domains?.get(domain)?.id ?? domain
   }
   return ''
 }
@@ -312,7 +315,7 @@ export function cleanupProposals(observations: readonly ConflictObservation[], c
     const key = observationKey(observation)
     if (seen.has(key)) continue
     seen.add(key)
-    const domain = domainOf(observation, ctx.notes)
+    const domain = domainOf(observation, ctx.notes, ctx.domains)
     groups.set(domain, [...(groups.get(domain) ?? []), observation])
   }
   const proposals: Proposal[] = []

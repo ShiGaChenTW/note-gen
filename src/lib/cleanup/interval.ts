@@ -116,7 +116,10 @@ export function intervalsByDomain(
   const out = new Map<string, ReconfirmInterval>()
   for (const domain of domains) {
     const parent = domain.parentId ? domains.find(item => item.id === domain.parentId) : undefined
-    out.set(domain.id, ruleOf.get(normalize(domain.name)) ?? (parent && ruleOf.get(normalize(parent.name))) ?? defaultInterval(domain.name))
+    const interval = ruleOf.get(normalize(domain.name)) ?? (parent && ruleOf.get(normalize(parent.name))) ?? defaultInterval(domain.name)
+    out.set(domain.id, interval)
+    // Fork（almanac ALMNC-69.4）：筆記 domains 存領域名稱（舊資料是 dom_ id），名稱也查得到期限。
+    if (domain.name.trim() && !out.has(domain.name.trim())) out.set(domain.name.trim(), interval)
   }
   return out
 }

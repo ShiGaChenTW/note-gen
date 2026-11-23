@@ -5,6 +5,7 @@
 // 衝突或錯誤（矛盾、過時）不等彙整，發現當下就立刻提案。每一步失敗都不影響其他步驟。全部注入依賴，測試用假的。
 import { periodicCheck, submitImmediate, type CheckDeps } from '@/lib/cleanup/check'
 import { cleanupProposals, routeObservations } from '@/lib/cleanup/plan'
+import { domainLookup } from '@/lib/v3-model/domain'
 import type { ConfirmDue } from '@/lib/cleanup/interval'
 import { ymd } from '@/lib/cleanup/interval'
 import type { ConflictObservation, ExternalEvidence } from '@/lib/cleanup/types'
@@ -148,7 +149,8 @@ export async function runReview(deps: ReviewRunDeps): Promise<ReviewRunSummary> 
         const raw = await deps.check.readNote(path).catch(() => null)
         if (raw !== null) notes.set(path, raw)
       }
-      const domains = new Map((await deps.check.domains()).map(domain => [domain.id, domain]))
+      // Fork（almanac ALMNC-69.4）：id 與名稱都當 key（筆記 domains 存名稱，舊資料是 dom_ id）。
+      const domains = domainLookup(await deps.check.domains())
       return cleanupProposals(deferred, { notes, domains, today, labels: deps.check.labels, words: deps.check.words, immediate: false })
     }, [])
   }

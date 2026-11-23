@@ -3,7 +3,7 @@
 import { acceptDecision, rejectDecision } from '@/lib/decide/actions'
 import type { DecideItem } from '@/lib/decide/project'
 import { acceptedFromDecide, logAcceptedProposal } from '@/lib/proposals/accepted-activity'
-import { LEGACY_NOTE_KIND, latestVersions, type NewSourceInput, type Source } from '@/lib/v3-model/source'
+import { LEGACY_NOTE_KIND, latestVersions, sourceKeys, type NewSourceInput, type Source } from '@/lib/v3-model/source'
 import { legacyProgress, type LegacyRunSummary } from '@/lib/migration/legacy'
 import useCollectStore, { applyJournalTag } from '@/stores/collect'
 import { acceptEach } from './batch'
@@ -75,7 +75,7 @@ export async function refreshLegacy(): Promise<void> {
     const [legacy, packs] = await Promise.all([db.listLegacyNoteSources(), packsDb.listOpenLegacyPacks()])
     const { total, processed } = legacyProgress(legacy)
     useWorkbenchStore.getState().setLegacy({
-      markedIds: new Set(legacy.map(source => source.id)),
+      markedIds: new Set(legacy.flatMap(sourceKeys)),
       total,
       processed,
       firstMarkedAt: legacy.length ? Math.min(...legacy.map(source => source.createdAt)) : undefined,
