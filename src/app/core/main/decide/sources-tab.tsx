@@ -19,6 +19,7 @@ import { BTN, BTN_PRIMARY, ButtonKbd } from './review-card'
 import { FilterPills } from './review-tab'
 import { SourceEditor } from './source-editor'
 import { useUndo } from './use-card-actions'
+import { SELECTED_RAISED } from '../sidebar-row'
 
 export function materialOf(row: SourceListRow): DeskMaterial {
   return { id: row.id, kind: row.origin, title: row.title, text: row.content, ...(row.sourceId ? { sourceId: row.sourceId } : {}) }
@@ -100,7 +101,7 @@ function Row({ row, selected, focusable, picked, onSelect, onPick }: { row: Sour
       data-row={row.id}
       data-testid="source-row"
       onClick={onSelect}
-      className={cn('grid w-full cursor-default grid-cols-[auto_minmax(0,1fr)] items-start gap-x-1 rounded-(--r-md) hover:bg-hover', selected && 'bg-active')}
+      className={cn('grid w-full cursor-default grid-cols-[auto_minmax(0,1fr)] items-start gap-x-1 rounded-(--r-md) hover:bg-hover', selected && ['bg-active', SELECTED_RAISED])}
     >
       <Checkbox state={picked} label={t('pickRow', { title: row.title })} onClick={onPick} className="mt-2.5" />
       <button

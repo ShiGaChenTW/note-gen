@@ -8832,6 +8832,7 @@
   "sidebarV3": {
     "navLabel": "Main navigation",
     "search": "Search or run a command",
+    "mainSection": "Main",
     "count": "{count} items",
     "nav": {
       "today": "Today",
@@ -8848,6 +8849,8 @@
       "addFirst": "Add your first crew member"
     },
     "vault": "MyVault",
+    "allNotes": "All notes",
+    "settings": "Settings",
     "collapseSection": "Collapse {title}",
     "expandSection": "Expand {title}",
     "noteList": {

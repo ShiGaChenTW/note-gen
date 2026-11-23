@@ -8897,6 +8897,7 @@
   "sidebarV3": {
     "navLabel": "主要導覽",
     "search": "搜尋或下指令",
+    "mainSection": "主要",
     "count": "{count} 件",
     "nav": {
       "today": "今天",
@@ -8913,6 +8914,8 @@
       "addFirst": "新增第一位夥伴"
     },
     "vault": "我的筆記",
+    "allNotes": "全部筆記",
+    "settings": "設定",
     "collapseSection": "收合{title}",
     "expandSection": "展開{title}",
     "noteList": {

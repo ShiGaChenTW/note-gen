@@ -30,6 +30,7 @@ import { PageHeader, PageSurface } from '../page-ui'
 import { PendingProposalsNote, ThreadTagPrefix } from './thread-status'
 import { usePendingCounts } from '@/lib/decide/use-decisions'
 import { tagOf, type ThreadTag } from '@/lib/threads/tags'
+import { SELECTED_RAISED } from '../sidebar-row'
 
 function relativeTime(ms: number, now: number, t: (key: string, values?: Record<string, number>) => string): string {
   const minutes = Math.max(0, Math.round((now - ms) / 60000))
@@ -40,7 +41,8 @@ function relativeTime(ms: number, now: number, t: (key: string, values?: Record<
   return t('time.days', { count: Math.round(hours / 24) })
 }
 
-function ThreadRow({ thread, tag, pending, project, projects, current, now, onOpen, onMove }: {
+/** 匯出給測試（ALMNC-79.5 選中樣式）。 */
+export function ThreadRow({ thread, tag, pending, project, projects, current, now, onOpen, onMove }: {
   thread: ThreadConversation
   /** Fork（almanac ALMNC-54.4）：名稱前的標籤。 */
   tag: ThreadTag
@@ -56,7 +58,7 @@ function ThreadRow({ thread, tag, pending, project, projects, current, now, onOp
   const t = useTranslations('threads')
   return (
     <div
-      className={cn('group/row relative flex items-center rounded-(--r-kbd) hover:bg-hover', current && 'bg-active')}
+      className={cn('group/row relative flex items-center rounded-(--r-kbd) hover:bg-hover', current && ['bg-active', SELECTED_RAISED])}
       data-thread-id={thread.id}
     >
       <button

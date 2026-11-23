@@ -40,15 +40,16 @@ function Entry({ entry, startHour, dayKey, onOpenTask }: { entry: TimelineEntry,
   const calendar = entry.kind === 'calendar'
   const clickable = entry.kind === 'task' && entry.task
   const className = cn(
-    'absolute overflow-hidden rounded-(--r-kbd) px-2 py-px text-left text-ui-compact leading-4 transition-colors duration-100',
-    calendar ? 'bg-sunken' : 'border border-line bg-hover hover:bg-active',
+    // ALMNC-79.4：圓角色塊、不加框線；夠高時時間放標題下一行
+    'absolute overflow-hidden rounded-(--r-row) px-2 py-1 text-left text-ui-compact leading-4 transition-colors duration-100',
+    calendar ? 'bg-sunken' : 'bg-active hover:bg-sunken',
     clickable && 'cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring',
   )
   const body = (
     <>
       {isPrivate && <EyeOff aria-label={tEink('label')} className="mr-1 inline size-3 align-[-1px] text-muted-ink" data-testid="today-v3-private" />}
       <span className={cn(calendar ? 'font-normal text-muted-ink' : 'font-medium text-ink')}>{entry.title}</span>{' '}
-      <span className="font-mono text-ui-numeric text-muted-ink">{entry.time}</span>
+      <span className={cn('font-mono text-ui-numeric text-muted-ink', height >= 34 && 'block')}>{entry.time}</span>
       {calendar && <Lock aria-label={t('readOnly')} className="absolute top-1.5 right-1.5 size-3 text-muted-ink" />}
     </>
   )

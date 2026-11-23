@@ -2239,7 +2239,7 @@
 
 /* ========================
    Fork（almanac ALMNC-56.5，RPT-2026-009 V01、V02）：V3 編輯器回到單色規範（src/app/fork-theme.css 開頭）。
-   唯一彩色 --brand-accent 只給連結、已勾選任務、引言色條（caret 由 fork-theme.css 處理）；
+   唯一彩色 --brand-accent 只給連結、已勾選任務、筆記內文的引用色條（caret 由 fork-theme.css 處理）；
    程式碼上色與 GitHub 提示框改用 ink、muted-ink、danger、success-ink，這些 token 深淺色各有一組值。
    全部用 :where([data-ui="v3"]) 包住、放在檔案最後：特異度不變、classic 完全不受影響。
    ======================== */

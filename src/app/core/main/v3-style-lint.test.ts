@@ -3,7 +3,7 @@
 // - V08：任意字級 text-[11px]、text-[12.5px]…（11／13／15 px 用 text-ui-numeric／text-ui-compact／text-ui-emphasis，12／14 px 用 text-xs／text-sm）
 // - V09：字重只用 500（font-medium）與 600（font-semibold）；font-normal 只用來把繼承來的粗體還原成內文字重。
 //   字距：標籤字距只有一種（tracking-[0.08em]，SectionLabel 的拉丁字標籤），大標題用 tracking-tight，其他不設。
-// - V13：唯一彩色（text-brand、bg-brand…）只出現在白名單用途：連結、已勾選任務、caret、引言色條。
+// - V13：唯一彩色（text-brand、bg-brand…）只出現在白名單用途：連結、已勾選任務、caret、筆記內文的引用色條（ALMNC-79.1：介面元件不用引言色條）。
 // - V14：圓角只用 --r-kbd、--r、--r-md（rounded-(--r-kbd) 等），圓形用 rounded-full。
 // - V15：鍵盤提示用 components/ui/kbd.tsx（不直接寫 <kbd>）；閱讀寬度用 max-w-ui-reading（不寫 max-w-[720px]）。
 // - 調色盤顏色：不寫 text-red-500 這類 Tailwind 調色盤色，用 token（danger、success-ink、ink⋯）。
@@ -65,7 +65,7 @@ function scan(pattern: RegExp, allowed: (hit: Hit) => boolean = () => false): Hi
 const show = (hits: Hit[]) => hits.map(hit => `${hit.file}:${hit.line}  ${hit.match}`)
 
 /**
- * V13 白名單：唯一彩色只給連結、已勾選任務、caret、引言色條。
+ * V13 白名單：唯一彩色只給連結、已勾選任務、caret、筆記內文的引用色條（在 editor CSS，不在元件裡）。
  * 每一筆都寫明用途；新的用法要先確認屬於這四種，再加進來。
  */
 const BRAND_ALLOWLIST: Array<{ file: string, contains: string, purpose: 'link' | 'checked-task' | 'caret' | 'quote-bar' }> = [
@@ -108,8 +108,9 @@ describe('V3 style lint (RPT-2026-009)', () => {
     }
   })
 
-  it('V14: radii only use --r-kbd, --r, --r-md (rounded-full for circles)', () => {
-    const ok = /^rounded(?:-[trblse]{1,2})?-(?:\((?:--r-kbd|--r|--r-md)\)|full|none)$/
+  // ALMNC-79.1：列用 --r-row（5px）
+  it('V14: radii only use --r-kbd, --r, --r-row, --r-md (rounded-full for circles)', () => {
+    const ok = /^rounded(?:-[trblse]{1,2})?-(?:\((?:--r-kbd|--r|--r-row|--r-md)\)|full|none)$/
     const pattern = new RegExp(`${VARIANTS}rounded(?:-[trblse]{1,2})?(?:-\\[[^\\]]+\\]|-\\([^)]+\\)|-[a-z0-9]+)?(?![\\w-])`, 'g')
     expect(show(scan(pattern, hit => ok.test(hit.match.replace(/^.*:/, ''))))).toEqual([])
   })

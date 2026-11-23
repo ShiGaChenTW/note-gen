@@ -233,3 +233,21 @@ describe('ALMNC-54.22 note selection', () => {
     expect(container.querySelector('[data-testid="note-list-select"]')).toBeNull()
   })
 })
+
+// ALMNC-79.5：V3 目前開著的那篇用「選中浮起」，和側欄一致
+describe('ALMNC-79.5: selected row', () => {
+  const note = (path: string, mtime: number) => ({ path, mtime }) as unknown as IndexedNote
+  it('raises the open note row in V3', async () => {
+    const notes = new Map([['a.md', note('a.md', 1)], ['b.md', note('b.md', 2)]] as const)
+    act(() => useVaultIndexStore.getState().replaceAll(new Map(notes)))
+    const article = (await import('@/stores/article')).default as unknown as { setState: (state: { activeFilePath: string }) => void }
+    act(() => article.setState({ activeFilePath: 'a.md' }))
+    const current = container.querySelector<HTMLElement>('[data-note-list] button[aria-current="true"]')!
+    expect(current.textContent).toContain('a')
+    expect(current.className).toContain('v3:selected-raised')
+    const other = [...container.querySelectorAll<HTMLElement>('[data-note-list] button')].find(button => button.textContent?.startsWith('b'))!
+    expect(other.className).not.toContain('selected-raised')
+    act(() => article.setState({ activeFilePath: '' }))
+  })
+})
+

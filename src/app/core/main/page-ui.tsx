@@ -15,7 +15,7 @@ import { useUiV3 } from '@/lib/fork-ui'
 export const CARD_TITLE = 'text-[15px] font-semibold'
 
 /** 首頁各卡片的外框。 */
-export const CARD = 'rounded-xl bg-background p-4'
+export const CARD = 'rounded-xl v3:rounded-(--r-md) bg-background p-4'
 
 export function PageSurface({ label, children, className, onDismiss }: {
   label: string
@@ -80,16 +80,15 @@ export function PageHeader({ title, subtitle, children, tabs, actions, onBack, b
   const isV3 = useUiV3()
   if (isV3) {
     return (
-      <header className="flex shrink-0 flex-col gap-2 border-b border-line px-5 py-2">
-        <div className="flex min-h-10 flex-wrap items-start justify-between gap-x-5 gap-y-2">
-          <div className="min-w-0">
-            <h1 className="text-xl leading-7 font-semibold tracking-tight text-ink">{title}</h1>
-            {subtitle && <div className="text-ui-compact leading-5 text-muted-ink">{subtitle}</div>}
-          </div>
-          {children && <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">{children}</div>}
-          {actions && <div className="ml-auto flex min-w-0 flex-wrap items-center gap-1">{actions}</div>}
+      // ALMNC-79.2：單行 56px，和側欄品牌列同高、底線切齊；副標接在標題後、過長時截斷，頁籤另起一列。
+      <header className="flex shrink-0 flex-col border-b border-line" data-page-header>
+        <div className="flex h-14 min-w-0 items-center gap-3 px-5">
+          <h1 className="shrink-0 text-ui-emphasis font-semibold tracking-tight text-ink">{title}</h1>
+          {subtitle && <div className="min-w-0 truncate text-xs text-faint">{subtitle}</div>}
+          {children && <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto">{children}</div>}
+          {actions && <div className="ml-auto flex shrink-0 items-center gap-1">{actions}</div>}
         </div>
-        {tabs && <div className="overflow-x-auto p-0.5 -m-0.5">{tabs}</div>}
+        {tabs && <div className="-mt-1 overflow-x-auto px-5 pb-2">{tabs}</div>}
       </header>
     )
   }
