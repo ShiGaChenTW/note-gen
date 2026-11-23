@@ -13,6 +13,9 @@ import { writeV3NoteFields } from '@/lib/v3-model/note'
 import { newId, type IdExists } from '@/lib/v3-model/identity'
 import type { RecordIdInput } from '@/lib/v3-model/id-index'
 import type { FileChange, Proposal } from './types'
+import { snapshotInputs } from '@/lib/ops/refs'
+import type { RecordInput } from '@/lib/ops/service'
+import type { OpContext } from '@/lib/ops/types'
 
 export interface AcceptResult {
   /** 寫入的檔案。 */
@@ -69,31 +72,49 @@ const defaultIdStore: IdStore = {
  * Fork（almanac ALMNC-69.7）：把新筆記收進提案列的領域——寫進各領域 MOC 的「尚未分章」，再由重建更新 domains
  * （依提案的順序，第一個是主要領域）。測試注入假的，預設動態載入 lib/moc/runtime。
  */
-export type AssignDomains = (notePath: string, domains: readonly string[]) => Promise<unknown>
+export type AssignDomains = (notePath: string, domains: readonly string[], ops?: OpContext) => Promise<unknown>
 
-const defaultAssignDomains: AssignDomains = async (notePath, domains) => {
+const defaultAssignDomains: AssignDomains = async (notePath, domains, ops) => {
   const { assignNoteToDomains } = await import('@/lib/moc/runtime')
-  return assignNoteToDomains(notePath, domains)
+  return assignNoteToDomains(notePath, domains, ops ? { ops } : {})
 }
 
 /** Fork（almanac ALMNC-69.7）：清理提案（合併、取代）接受後，新筆記承接舊筆記的 MOC 收錄。測試注入假的。 */
-export type TransferMemberships = (transfers: ReadonlyArray<{ from: string, to: string }>) => Promise<unknown>
+export type TransferMemberships = (transfers: ReadonlyArray<{ from: string, to: string }>, ops?: OpContext) => Promise<unknown>
 
-const defaultTransferMemberships: TransferMemberships = async transfers => {
+const defaultTransferMemberships: TransferMemberships = async (transfers, ops) => {
   const { transferNoteMemberships } = await import('@/lib/moc/runtime')
-  return transferNoteMemberships(transfers)
+  return transferNoteMemberships(transfers, ops ? { ops } : {})
 }
 
-export async function acceptProposal(proposal: Proposal, options: { noteFolder: string, now?: Date, applyChange?: ApplyChange, applyEdits?: ApplyEdits, ids?: IdStore, assignDomains?: AssignDomains, transferMemberships?: TransferMemberships }): Promise<AcceptResult> {
+/**
+ * Fork（almanac ALMNC-69.9）：把接受造成的寫入記成操作（ops 表；7 天內可復原、復原前做版本檢查）。測試注入假的，預設動態載入 lib/ops/runtime。
+ * 記不進去只記錯，不讓接受失敗（寫入已經完成）。
+ */
+export type RecordOps = (inputs: RecordInput[], ops: OpContext) => Promise<unknown>
+
+const defaultRecordOps: RecordOps = async (inputs, ops) => {
+  const { recordOps } = await import('@/lib/ops/runtime')
+  return recordOps(inputs, ops)
+}
+
+export async function acceptProposal(proposal: Proposal, options: { noteFolder: string, now?: Date, applyChange?: ApplyChange, applyEdits?: ApplyEdits, ids?: IdStore, assignDomains?: AssignDomains, transferMemberships?: TransferMemberships, ops?: OpContext, recordOps?: RecordOps }): Promise<AcceptResult> {
   const now = options.now ?? new Date()
+  const ops = options.ops
+  const record = async (inputs: RecordInput[]) => {
+    if (!ops || !inputs.length) return
+    await (options.recordOps ?? defaultRecordOps)(inputs, ops).catch(error => console.error('record ops failed', error))
+  }
   if (proposal.slot) return acceptSlot({ ...proposal, slot: proposal.slot }, now)
   // Fork（almanac ALMNC-69.3）：只貼日誌標籤的卡不寫筆記庫；標籤由 stores/collect 接受後寫進資料源。
   if (proposal.journalTag?.only) return { path: '' }
   if (proposal.edits?.length || proposal.domainEdits?.length || proposal.memoryEdits?.length) {
     const targets = await (options.applyEdits ?? defaultApplyEdits)(proposal)
+    await record(snapshotInputs((proposal.edits ?? []).map(edit => ({ path: edit.path, before: edit.baseContent, after: edit.content }))))
     if (proposal.membershipTransfers?.length) {
       try {
-        await (options.transferMemberships ?? defaultTransferMemberships)(proposal.membershipTransfers)
+        const transfer = options.transferMemberships ?? defaultTransferMemberships
+        await (ops ? transfer(proposal.membershipTransfers, ops) : transfer(proposal.membershipTransfers))
       } catch (error) {
         // 筆記已寫好；MOC 承接失敗不讓接受失敗（Scott 可以在檯面歸入領域）。
         console.error('transfer memberships failed', error)
@@ -102,8 +123,16 @@ export async function acceptProposal(proposal: Proposal, options: { noteFolder: 
     return { path: proposal.edits?.[0]?.path ?? targets[0] ?? '' }
   }
   if (proposal.change) {
-    await (options.applyChange ?? defaultApplyChange)(proposal.change)
-    return { path: proposal.change.targetPath ?? proposal.change.path }
+    const change = proposal.change
+    const paths = [...new Set([change.path, ...(change.targetPath ? [change.targetPath] : [])])].filter(path => /\.md$/i.test(path))
+    const read = (path: string) => readNote(path).catch(() => null)
+    const before = ops ? await Promise.all(paths.map(read)) : []
+    await (options.applyChange ?? defaultApplyChange)(change)
+    if (ops) {
+      const after = await Promise.all(paths.map(read))
+      await record(snapshotInputs(paths.map((path, index) => ({ path, before: before[index], after: after[index] }))))
+    }
+    return { path: change.targetPath ?? change.path }
   }
 
   if (proposal.kind === 'note') {
@@ -124,7 +153,9 @@ export async function acceptProposal(proposal: Proposal, options: { noteFolder: 
     // Fork（almanac ALMNC-69.1）：Scott 接受、檔案建立這一刻才產生 N 編號（草稿不佔編號），寫在 frontmatter 第一行，同時登記到系統索引。
     const ids = options.ids ?? defaultIdStore
     const id = await newId('N', now, { exists: ids.exists })
-    await writeNote(path, writeV3NoteFields(content, proposal.noteType ? { id, lastConfirmed: toDateKey(now) } : { id }))
+    const written = writeV3NoteFields(content, proposal.noteType ? { id, lastConfirmed: toDateKey(now) } : { id })
+    await writeNote(path, written)
+    await record([{ spec: { kind: 'note.create', noteId: id, path, title: proposal.title, content: written } }])
     try {
       await ids.record({ id, kind: 'N', path })
     } catch (error) {
@@ -133,7 +164,8 @@ export async function acceptProposal(proposal: Proposal, options: { noteFolder: 
     }
     if (proposal.domains?.length) {
       try {
-        await (options.assignDomains ?? defaultAssignDomains)(path, proposal.domains)
+        const assign = options.assignDomains ?? defaultAssignDomains
+        await (ops ? assign(path, proposal.domains, ops) : assign(path, proposal.domains))
       } catch (error) {
         // 筆記已寫好；收不進 MOC 不讓接受失敗（Scott 可以在檯面再歸入領域）。
         console.error('assign domains failed', error)
@@ -149,6 +181,7 @@ export async function acceptProposal(proposal: Proposal, options: { noteFolder: 
   const line = proposalTaskLine(proposal, toDateKey(now))
   const insert = (content: string) => insertLinesInSection(content, [line], QUICK_ADD_SECTION)
   const writes = await commitNoteWrites([{ path, before, after: insert(before), rebase: insert }])
+  await record(snapshotInputs(writes))
   return { path, record: { writes } }
 }
 

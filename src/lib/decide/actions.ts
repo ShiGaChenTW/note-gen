@@ -12,6 +12,7 @@ import useDailySettingsStore from '@/stores/daily-settings'
 import useDecideStore from '@/stores/decide'
 import useSettingStore from '@/stores/setting'
 import type { DecideItem, DecideRef } from './project'
+import type { OpContext } from '@/lib/ops/types'
 
 /** 草稿衝突（檔案在草稿之後被改過）或寫入失敗：不在這裡硬寫，交給任務中心的審核畫面逐條確認。 */
 export class DraftNotApplied extends Error {
@@ -46,8 +47,11 @@ function refs(item: DecideItem): DecideRef[] {
   return [item.ref, ...item.duplicates]
 }
 
-/** options.journalTag: false＝收集提案這次不貼日誌標籤（ALMNC-65.2 批次卡整批接受時，最後一起貼一次）。 */
-export async function acceptDecision(item: DecideItem, options?: { journalTag?: boolean }): Promise<AcceptOutcome> {
+/**
+ * options.journalTag: false＝收集提案這次不貼日誌標籤（ALMNC-65.2 批次卡整批接受時，最後一起貼一次）。
+ * options.ops（ALMNC-69.9）：收集提案的寫入記成這個情境的操作（工作台接受時給；其他路徑照舊）。
+ */
+export async function acceptDecision(item: DecideItem, options?: { journalTag?: boolean, ops?: OpContext }): Promise<AcceptOutcome> {
   const { ref } = item
   if (ref.source === 'collect') {
     const store = useCollectStore.getState()

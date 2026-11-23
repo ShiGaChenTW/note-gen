@@ -1,4 +1,5 @@
 import type { NoteChange } from './detect'
+import { snapshotMismatch, type SnapshotDirection } from '@/lib/ops/version'
 
 export interface OrganizeUndoRecord {
   id: string
@@ -18,14 +19,9 @@ export class OrganizeConflict extends Error {
   constructor() { super('ORGANIZE_CONFLICT') }
 }
 
-async function requireSnapshot(changes: NoteChange[], io: OrganizeIO, direction: 'apply' | 'undo' | 'recover') {
-  for (const { path, before, after } of changes) {
-    const current = await io.read(path)
-    if (direction === 'apply' && current === before) continue
-    if (direction === 'undo' && current === after) continue
-    if (direction === 'recover' && (current === before || current === after)) continue
-    throw new OrganizeConflict()
-  }
+async function requireSnapshot(changes: NoteChange[], io: OrganizeIO, direction: SnapshotDirection) {
+  // Fork（almanac ALMNC-69.9）：快照比對抽到 lib/ops/version.ts，和 ops 的復原共用。
+  if ((await snapshotMismatch(changes, io.read, direction)).length) throw new OrganizeConflict()
 }
 
 async function rollback(written: NoteChange[], io: OrganizeIO) {

@@ -14,6 +14,7 @@ export const ACTIVITY_ACTIONS = [
   'linked',
   'reported', // 例如非指揮官發現目前脈絡有誤時回報
   'corrected', // 更正先前的紀錄，一定要有 correctsId
+  'undone', // Fork（almanac ALMNC-69.9）：復原了一筆操作（opId 指向被復原的操作）；原本那筆紀錄不改
 ] as const
 export type ActivityAction = typeof ACTIVITY_ACTIONS[number]
 
@@ -38,14 +39,18 @@ export interface ActivityEntryInput {
   note?: string
   /** 更正哪一筆紀錄。 */
   correctsId?: number
+  /** Fork（almanac ALMNC-69.9）：對應的操作（ops 表）；有就能在 7 天內復原。 */
+  opId?: string
 }
 
-export interface ActivityEntry extends Omit<ActivityEntryInput, 'note' | 'correctsId'> {
+export interface ActivityEntry extends Omit<ActivityEntryInput, 'note' | 'correctsId' | 'opId'> {
   id: number
   at: number
   note: string
   correctsId: number | null
   archivedAt: number | null
+  /** 舊紀錄沒有。 */
+  opId?: string | null
 }
 
 export type ActivityValidationError =
@@ -69,9 +74,10 @@ export interface NormalizedActivityEntry {
   sourceRef: string
   note: string
   correctsId: number | null
+  opId: string | null
 }
 
-const ALLOWED_FIELDS = new Set(['actorId', 'actorRole', 'action', 'targetLink', 'source', 'note', 'correctsId'])
+const ALLOWED_FIELDS = new Set(['actorId', 'actorRole', 'action', 'targetLink', 'source', 'note', 'correctsId', 'opId'])
 const WIKI_LINK = /^\[\[[^[\]\n]+\]\]$/
 const URI_LINK = /^[a-z][a-z0-9+.-]*:\S+$/i
 
@@ -112,9 +118,10 @@ export function validateActivityEntry(input: ActivityEntryInput):
     return fail('CORRECTION_TARGET_REQUIRED')
   }
   if (input.action !== 'corrected' && correctsId !== null) return fail('CORRECTION_ACTION_REQUIRED')
+  const opId = typeof input.opId === 'string' && input.opId.trim() ? input.opId.trim() : null
   return {
     ok: true,
-    entry: { actorId, actorRole: input.actorRole, action: input.action, targetLink, sourceKind: input.source.kind, sourceRef, note, correctsId },
+    entry: { actorId, actorRole: input.actorRole, action: input.action, targetLink, sourceKind: input.source.kind, sourceRef, note, correctsId, opId },
   }
 }
 

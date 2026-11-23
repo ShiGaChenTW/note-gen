@@ -83,8 +83,18 @@
         "updated": "修改",
         "linked": "链接",
         "reported": "回报",
-        "corrected": "更正"
-      }
+        "corrected": "更正",
+        "undone": "复原"
+      },
+      "undoWindowHint": "7 天内的变更可以复原。",
+      "sourceDirect": "直接操作",
+      "undo": "复原",
+      "undoBatch": "撤回这次整理",
+      "undoing": "复原中…",
+      "undoneMark": "已复原",
+      "undoDone": "已复原。",
+      "undoExpired": "已超过 7 天，不能复原。",
+      "undoFailed": "复原失败，没有覆盖任何内容。"
     }
   },
   "agentDiffNavigation": {
@@ -9540,5 +9550,17 @@
     "clockFuture": "“{path}”等 {count} 处的身份编号或创建时间在未来，请检查系统时钟",
     "clockBeforeSource": "“{path}”等 {count} 条笔记的编号时间早于它的资料源，可能是时钟有误",
     "held": "有 {count} 个笔记没有身份编号，数量较多所以没有自动补上；请先用迁移工具（pnpm migrate:ids）预览后再应用"
+  },
+  "ops": {
+    "compare": {
+      "title": "这些文件在那之后被改过",
+      "hint": "复原不会直接覆盖。比较还原后和目前的内容，再决定。",
+      "restored": "还原后",
+      "current": "目前",
+      "missing": "（文件不存在）",
+      "changed": "之后被改过",
+      "confirm": "仍要复原",
+      "cancel": "取消"
+    }
   }
 }

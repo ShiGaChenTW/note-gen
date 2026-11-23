@@ -101,6 +101,31 @@ describe('acceptProposal', () => {
     await expect(acceptProposal({ ...base, id: 'c2', kind: 'note', title: '合併', edits: [{ path: 'k/a.md', baseContent: 'x', content: 'y', summary: 'A' }], membershipTransfers: transfers }, { noteFolder: '10 Inbox', now, applyEdits, transferMemberships: failing })).resolves.toEqual({ path: 'k/a.md' })
   })
 
+  // Fork（almanac ALMNC-69.9）：工作台接受時帶上發起情境——新增筆記記成 note.create（帶 N 編號），MOC 收錄由 assignDomains 用同一個情境記；
+  // 清理提案的筆記變更記成 note.edit／note.create；任務寫進日誌記成日誌的 note.edit。
+  it('records the writes as ops of the accepting context', async () => {
+    const ops = { actor: 'expert' as const, actorId: 'ivy', proposalId: 'collect:i:p', batchId: 'batch-1' }
+    const recordOps = vi.fn(async () => undefined)
+    const assignDomains = vi.fn(async () => undefined)
+    const result = await acceptProposal({ ...base, id: 'o1', kind: 'note', title: '換模', noteType: 'knowledge', domains: ['ie'] }, { noteFolder: '10 Inbox', now, ids, assignDomains, ops, recordOps })
+    const content = files.get(result.path)!
+    const id = content.match(/^---\nid: (\S+)/)?.[1]
+    expect(recordOps).toHaveBeenCalledWith([{ spec: { kind: 'note.create', noteId: id, path: result.path, title: '換模', content } }], ops)
+    expect(assignDomains).toHaveBeenCalledWith(result.path, ['ie'], ops)
+
+    recordOps.mockClear()
+    await acceptProposal({ ...base, id: 'o2', kind: 'note', title: '取代', edits: [{ path: 'k/a.md', baseContent: 'x', content: 'y', summary: 'A' }, { path: 'k/new.md', baseContent: null, content: 'z', summary: 'B' }] }, { noteFolder: '10 Inbox', now, applyEdits: async () => ['k/a.md', 'k/new.md'], ops, recordOps })
+    expect(recordOps).toHaveBeenCalledWith([
+      { spec: { kind: 'note.edit', path: 'k/a.md', title: 'a', before: 'x', after: 'y' } },
+      { spec: { kind: 'note.create', path: 'k/new.md', title: 'new', content: 'z' } },
+    ], ops)
+
+    // 沒有情境（其他路徑）就不記。
+    recordOps.mockClear()
+    await acceptProposal({ ...base, id: 'o3', kind: 'note', title: '不記' }, { noteFolder: '10 Inbox', now, ids, recordOps })
+    expect(recordOps).not.toHaveBeenCalled()
+  })
+
   // Fork（almanac ALMNC-69.1 AC#1）：接受時產生 N 編號，寫在 frontmatter 第一行並登記到系統索引。
   it('gives the accepted note an N id in the first frontmatter line and records it in id_index', async () => {
     const result = await acceptProposal({ ...base, id: 'n3', kind: 'note', title: '節拍時間', noteType: 'knowledge', domains: ['ie'] }, { noteFolder: '10 Inbox', now, ids, assignDomains: async () => undefined })

@@ -22,7 +22,7 @@ describe('activity log format (AC3)', () => {
       ok: true,
       entry: {
         actorId: 'leo', actorRole: 'secretary', action: 'created', targetLink: '[[11/19 會議紀錄]]',
-        sourceKind: 'conversation', sourceRef: 'conv-1', note: '新增會議', correctsId: null,
+        sourceKind: 'conversation', sourceRef: 'conv-1', note: '新增會議', correctsId: null, opId: null,
       },
     })
     expect(validateActivityEntry({ ...valid, actorId: 'scott', actorRole: 'scott', action: 'instructed', note: undefined }))

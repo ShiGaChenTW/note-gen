@@ -8,7 +8,7 @@ import {
   type ActivityEntry, type ActivityEntryInput, type MemoryActor, type MemoryKind, type MemoryWriteDecision,
   type RulesChangeProposal, type SavedSharedContext, type SharedContext, type SoulTemplateAgent,
 } from '@/lib/agent-memory'
-import { AGENT_MEMORY_SCHEMA } from '@/lib/agent-memory/schema'
+import { ACTIVITY_OP_COLUMN, ACTIVITY_OP_TRIGGER, AGENT_MEMORY_SCHEMA } from '@/lib/agent-memory/schema'
 
 export const MEMORY_CONTENT_MAX = 20000
 
@@ -38,6 +38,10 @@ async function memoryDb() {
   const db = await getDb()
   initialization ??= (async () => {
     for (const sql of AGENT_MEMORY_SCHEMA) await db.execute(sql)
+    // Fork（almanac ALMNC-69.9）：舊資料庫補 op_id 欄位。
+    const columns = await db.select<Array<{ name: string }>>('pragma table_info(activity_log)')
+    if (!columns.some(column => column.name === 'op_id')) await db.execute(ACTIVITY_OP_COLUMN)
+    await db.execute(ACTIVITY_OP_TRIGGER)
   })().catch(error => {
     initialization = undefined
     throw error
@@ -192,10 +196,11 @@ export async function mergeSharedContext(actor: MemoryActor, additions: SharedCo
 interface ActivityRow {
   id: number, at: number, actorId: string, actorRole: ActivityEntry['actorRole'], action: string, targetLink: string
   sourceKind: ActivityEntry['source']['kind'], sourceRef: string, note: string, correctsId: number | null, archivedAt: number | null
+  opId: string | null
 }
 
 const SELECT_ACTIVITY = `select id, at, actor_id as actorId, actor_role as actorRole, action, target_link as targetLink,
-  source_kind as sourceKind, source_ref as sourceRef, note, corrects_id as correctsId, archived_at as archivedAt
+  source_kind as sourceKind, source_ref as sourceRef, note, corrects_id as correctsId, archived_at as archivedAt, op_id as opId
   from activity_log`
 
 function activityFromRow(row: ActivityRow): ActivityEntry | undefined {
@@ -216,9 +221,9 @@ export async function appendActivity(actor: MemoryActor, input: ActivityEntryInp
     if (!target) throw new Error('CORRECTION_TARGET_NOT_FOUND')
   }
   const inserted = await db.execute(
-    `insert into activity_log (at, actor_id, actor_role, action, target_link, source_kind, source_ref, note, corrects_id)
-     values ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-    [now, entry.actorId, entry.actorRole, entry.action, entry.targetLink, entry.sourceKind, entry.sourceRef, entry.note, entry.correctsId],
+    `insert into activity_log (at, actor_id, actor_role, action, target_link, source_kind, source_ref, note, corrects_id, op_id)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+    [now, entry.actorId, entry.actorRole, entry.action, entry.targetLink, entry.sourceKind, entry.sourceRef, entry.note, entry.correctsId, entry.opId],
   )
   if (typeof inserted.lastInsertId === 'number') return inserted.lastInsertId
   const [row] = await db.select<Array<{ id: number }>>('select max(id) as id from activity_log')

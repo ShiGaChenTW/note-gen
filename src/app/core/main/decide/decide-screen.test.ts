@@ -236,7 +236,7 @@ describe('審核 tab', () => {
     act(() => (card('提案 a').firstElementChild as HTMLElement).click())
     act(() => button('接受A', card('提案 a'))!.click())
     await wait(260)
-    expect(mocks.acceptDecision).toHaveBeenCalledWith(expect.objectContaining({ key: 'collect:old:a' }))
+    expect(mocks.acceptDecision).toHaveBeenCalledWith(expect.objectContaining({ key: 'collect:old:a' }), expect.objectContaining({ ops: expect.objectContaining({ proposalId: 'collect:old:a' }) }))
     expect(titles()).not.toContain('提案 a')
     expect(mocks.toast).toHaveBeenCalledWith('已接受「提案 a」', expect.objectContaining({ action: expect.objectContaining({ label: '復原 Z' }) }))
     press('z')
@@ -507,7 +507,7 @@ describe('ALMNC-54.21 工作台補齊', () => {
     expect(changes).toContain('00 Inbox → 10 Projects/產線')
     await act(async () => card('產線檢討會議紀錄').querySelector<HTMLButtonElement>('button[data-action="accept"]')!.click())
     await wait(250)
-    expect(mocks.acceptDecision).toHaveBeenCalledWith(expect.objectContaining({ key: 'collect:old:a', title: '產線檢討會議紀錄' }))
+    expect(mocks.acceptDecision).toHaveBeenCalledWith(expect.objectContaining({ key: 'collect:old:a', title: '產線檢討會議紀錄' }), expect.anything())
   })
 
   it('AC#4: cards that are not new notes keep the plain 「接受後寫入」 line', () => {
