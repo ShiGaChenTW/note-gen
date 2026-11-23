@@ -20,13 +20,13 @@ import {
 
 // ── node:sqlite 的最小型別（@types/node 20 還沒有這個模組）──
 
-interface StatementSync {
+export interface StatementSync {
   all(...params: unknown[]): Array<Record<string, unknown>>
   get(...params: unknown[]): Record<string, unknown> | undefined
   run(...params: unknown[]): { changes: number | bigint }
 }
 
-interface DatabaseSync {
+export interface DatabaseSync {
   prepare(sql: string): StatementSync
   exec(sql: string): void
   close(): void
@@ -34,7 +34,7 @@ interface DatabaseSync {
 
 type DatabaseSyncConstructor = new (path: string, options?: { readOnly?: boolean }) => DatabaseSync
 
-async function openDatabase(path: string, readOnly: boolean): Promise<DatabaseSync> {
+export async function openDatabase(path: string, readOnly: boolean): Promise<DatabaseSync> {
   const specifier = 'node:sqlite'
   const sqlite = await import(/* webpackIgnore: true */ specifier) as { DatabaseSync: DatabaseSyncConstructor }
   return new sqlite.DatabaseSync(path, { readOnly })
@@ -93,11 +93,11 @@ const USAGE = `身分編號遷移（ALMNC-69.4）
 
 // ── 讀快照 ──────────────────────────────────────────────────
 
-function tableExists(db: DatabaseSync, name: string): boolean {
+export function tableExists(db: DatabaseSync, name: string): boolean {
   return !!db.prepare("select name from sqlite_master where type = 'table' and name = ?").get(name)
 }
 
-function columnsOf(db: DatabaseSync, table: string): Set<string> {
+export function columnsOf(db: DatabaseSync, table: string): Set<string> {
   return new Set(db.prepare(`pragma table_info(${table})`).all().map(row => String(row.name)))
 }
 
@@ -175,7 +175,7 @@ function planPathFor(preview: string): string {
   return preview.replace(/\.md$/i, '') + '.plan.json'
 }
 
-function writeAtomic(path: string, content: string) {
+export function writeAtomic(path: string, content: string) {
   mkdirSync(dirname(path), { recursive: true })
   const tmp = `${path}.migrate-ids-${process.pid}.tmp`
   writeFileSync(tmp, content, 'utf8')
