@@ -83,9 +83,14 @@ beforeEach(() => {
   setting.setState({ frontmatterCollapsed: false })
 })
 afterEach(async () => {
-  await act(async () => root.unmount())
-  container.remove()
-  editor = null
+  try {
+    await act(async () => root.unmount())
+  } finally {
+    // useEditor defers destruction to a timer after React unmounts.
+    editor?.destroy()
+    container.remove()
+    editor = null
+  }
 })
 
 describe('frontmatter 屬性卡片', () => {

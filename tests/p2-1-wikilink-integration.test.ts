@@ -1,15 +1,18 @@
 // @vitest-environment jsdom
 // Phase 2-1 整合：手動打字與 L2 選單插入都要產生 L1 的 wikilink 節點，存檔仍是原始 `[[ ]]`。
 import { describe, expect, it } from 'vitest'
-import { Editor } from '@tiptap/core'
+import { createTestEditorFactory } from './editor-fixture'
+import type { Editor } from '@tiptap/core'
 import StarterKit from '@tiptap/starter-kit'
 import { Markdown } from '@tiptap/markdown'
 import { MarkdownParagraph, normalizeMarkdownPlaceholders } from '@/app/core/main/editor/markdown/markdown-paragraph'
 import { Wikilink, WIKILINK_NODE_NAME } from '@/app/core/main/editor/markdown/wikilink-extension'
 import { parseWikilink } from '@/lib/markdown/wikilink'
 
+const createTestEditor = createTestEditorFactory()
+
 function createEditor() {
-  return new Editor({
+  return createTestEditor({
     extensions: [
       StarterKit.configure({ blockquote: false, codeBlock: false, link: false, paragraph: false, underline: false, dropcursor: false }),
       MarkdownParagraph,
