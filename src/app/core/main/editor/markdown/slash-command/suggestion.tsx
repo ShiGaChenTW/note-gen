@@ -344,7 +344,7 @@ export interface SlashCommandTranslations {
   imageUpload: {
     success: string
     saveSuccess: string
-    savePath: string
+    savePath: (path: string) => string
     failed: string
   }
   fileInsert: {
@@ -442,7 +442,7 @@ export const suggestionItems = (t?: SlashCommandTranslations): SlashCommandItem[
     imageUpload: {
       success: '上传成功',
       saveSuccess: '保存成功',
-      savePath: '保存路径: __PATH__',
+      savePath: (path: string) => `保存路径: ${path}`,
       failed: '插入图片失败',
     },
     fileInsert: {
@@ -649,6 +649,11 @@ export const suggestionItems = (t?: SlashCommandTranslations): SlashCommandItem[
               relativeSrc: result.relativePath,
             },
           }).run()
+
+          toast({
+            title: result.useImageHosting ? tr.imageUpload.success : tr.imageUpload.saveSuccess,
+            description: tr.imageUpload.savePath(result.relativePath || result.src),
+          })
         } catch (error) {
           // Remove the placeholder on error
           editor.chain().focus().deleteRange({ from: placeholderStart, to: placeholderEnd }).run()
