@@ -55,6 +55,7 @@ export function serializeItems(items: readonly ItemLike[]): PersistedItem[] {
       ...(proposal.conversationId !== undefined ? { conversationId: proposal.conversationId } : {}),
       ...(proposal.previousProposalId ? { previousProposalId: proposal.previousProposalId } : {}),
       ...(proposal.folder !== undefined ? { folder: proposal.folder } : {}),
+      ...(proposal.suggested ? { suggested: { ...proposal.suggested } } : {}),
       ...commanderFields(proposal),
       ...(proposal.change ? { change: { ...proposal.change, args: { ...proposal.change.args } } } : {}),
       ...(proposal.edits ? { edits: proposal.edits } : {}),
@@ -141,7 +142,7 @@ function changeReadable(proposal: PersistedProposal): boolean {
 
 /** Fork（almanac ALMNC-54.5）：來源對話與取代關係型別不對時只丟那個欄位，提案本身留著。 */
 function cleanLinks(proposal: PersistedProposal): PersistedProposal {
-  const { conversationId, previousProposalId, change, folder, ...others } = proposal
+  const { conversationId, previousProposalId, change, folder, suggested, ...others } = proposal
   const rest: Record<string, unknown> = { ...others }
   for (const key of COMMANDER_KEYS) delete rest[key]
   const parsedChange = fileChange(change)
@@ -153,8 +154,17 @@ function cleanLinks(proposal: PersistedProposal): PersistedProposal {
     ...(typeof previousProposalId === 'string' && previousProposalId ? { previousProposalId } : {}),
     // Fork（almanac ALMNC-54.21）：卡片上改過的存放位置；往上跳（..）的不收。
     ...(typeof folder === 'string' && !folder.split('/').includes('..') ? { folder } : {}),
+    ...suggestedField(suggested),
     ...commanderFields(proposal),
   }
+}
+
+/** Fork（almanac ALMNC-69.2）：新增筆記的原建議（標題、位置）；型別不對就丟掉這個欄位。 */
+function suggestedField(value: unknown): Pick<Proposal, 'suggested'> {
+  if (!value || typeof value !== 'object') return {}
+  const { title, folder } = value as Record<string, unknown>
+  if (typeof title !== 'string' || !title || (folder !== undefined && typeof folder !== 'string')) return {}
+  return { suggested: { title, ...(typeof folder === 'string' ? { folder } : {}) } }
 }
 
 /** 讀檔後：丟掉壞資料與太舊且已處理完的項目。 */

@@ -64,6 +64,9 @@
       "activity": "活动记录",
       "activityHint": "系统自动写入，只能新增，不能修改。超过 90 天会归档。",
       "activityEmpty": "还没有活动记录。",
+      "activityFilter": "发起的伙伴",
+      "activityFilterAll": "全部",
+      "activityFilterHint": "接受的提案记在发起它的伙伴名下。",
       "correctsEntry": "更正 #{id}",
       "sourceConversation": "对话 {ref}",
       "sourceProposal": "提案 {ref}",
@@ -9390,7 +9393,10 @@
       "folder": "存放位置",
       "root": "笔记库最上层",
       "invalid": "标题不能空白或含斜线，存放位置不能含「..」",
-      "hint": "接受前可以先改；接受时照这里写入"
+      "hint": "接受前可以先改；接受时照这里写入",
+      "changed": "原建议 → 你的修改",
+      "changedTitle": "标题：{from} → {to}",
+      "changedFolder": "存放位置：{from} → {to}"
     },
     "verdict": {
       "journal": "判断为日志（信心{confidence}）",

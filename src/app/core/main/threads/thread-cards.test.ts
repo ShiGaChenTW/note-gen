@@ -90,6 +90,27 @@ it('shows a replaced proposal in its source conversation without decision button
   expect(container.querySelector('[data-card="proposal"] button')).toBeNull()
 })
 
+// Fork（almanac ALMNC-69.2）：Scott 改過標題或位置的新增筆記，接受後在對話的提案卡上仍看得到原建議與修改。
+it('keeps showing the original suggestion and the edit on an accepted new-note proposal', async () => {
+  const { default: useCollectStore } = await import('@/stores/collect')
+  const { default: useDailySettingsStore } = await import('@/stores/daily-settings')
+  useDailySettingsStore.setState({ inboxFolder: '00 Inbox' })
+  useCollectStore.setState({ items: [{
+    id: 'c1', input: { kind: 'text', text: '' }, createdAt: 0, state: 'ready',
+    proposals: [{ id: 'p1', kind: 'note', title: '產線週會', body: '', due: '', time: '', tags: [], folder: '10 Projects', suggested: { title: '會議紀錄' }, status: 'ok' }],
+  }] })
+  useThreadsStore.getState().attachCard(5, { type: 'proposal', id: 'n1', kind: 'note', title: '會議紀錄', status: 'ok', source: { itemId: 'c1', proposalId: 'p1' } })
+  try {
+    render()
+    const changes = container.querySelector('[data-testid="new-note-changes"]')!.textContent
+    expect(changes).toContain('原建議 → 你的修改')
+    expect(changes).toContain('標題：會議紀錄 → 產線週會')
+    expect(changes).toContain('存放位置：00 Inbox → 10 Projects')
+  } finally {
+    useCollectStore.setState({ items: [] })
+  }
+})
+
 describe('commander threads', () => {
   it('tags a conversation the sidebar commander takes part in as 處理', async () => {
     await useThreadsStore.getState().markCommanderThread({ id: 3, syncId: 'sync-3' })

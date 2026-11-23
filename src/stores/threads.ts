@@ -161,8 +161,12 @@ const useThreadsStore = create<ThreadsState>((set, get) => {
           const result = await collect.accept(card.source.itemId, card.source.proposalId)
           // Fork（almanac ALMNC-54.21）：接受後記一筆活動紀錄（誰提的、改了什麼、來源對話）。
           if (proposal) {
-            const { acceptedFromProposal, logAcceptedProposal } = await import('@/lib/proposals/accepted-activity')
-            await logAcceptedProposal(acceptedFromProposal(key, proposal, result.path))
+            const [{ acceptedFromProposal, logAcceptedProposal }, { newNoteChanges }, { default: useDailySettingsStore }] = await Promise.all([
+              import('@/lib/proposals/accepted-activity'), import('@/lib/workbench/new-note'), import('@/stores/daily-settings'),
+            ])
+            // Fork（almanac ALMNC-69.2）：改過標題或位置的新增筆記，活動紀錄記「原建議 → 你的修改」。
+            const changes = newNoteChanges(proposal, useDailySettingsStore.getState().inboxFolder)
+            await logAcceptedProposal(acceptedFromProposal(key, proposal, result.path, changes))
           }
         }
         if (action === 'reject') collect.reject(card.source.itemId, card.source.proposalId)

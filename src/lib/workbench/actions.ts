@@ -6,6 +6,7 @@ import { acceptedFromDecide, logAcceptedProposal } from '@/lib/proposals/accepte
 import { LEGACY_NOTE_KIND, latestVersions, type NewSourceInput, type Source } from '@/lib/v3-model/source'
 import { legacyProgress, type LegacyRunSummary } from '@/lib/migration/legacy'
 import useCollectStore from '@/stores/collect'
+import { newNoteChanges, type NewNoteChanges } from './new-note'
 import useWorkbenchStore from '@/stores/workbench'
 import type { WorkbenchCard, TaskLike } from './cards'
 import { applyStructuralOp, handwrittenNote, mergeDeskDraft, noteFileName, type DeskMaterial, type NoteIo, type StructuralOp } from './desk'
@@ -154,8 +155,9 @@ export async function requestJudgement(source: Pick<Source, 'id' | 'kind' | 'con
 // Fork（almanac ALMNC-54.21）：接受後記一筆活動紀錄（誰提的、改了什麼、來源對話）；記不進去不擋接受。
 export async function acceptCard(card: WorkbenchCard): Promise<Undo> {
   if (card.decide) {
+    const changes = await retargetedChanges(card.decide)
     const outcome = await acceptDecision(card.decide)
-    await logAcceptedProposal(acceptedFromDecide(card.decide, outcome.path))
+    await logAcceptedProposal(acceptedFromDecide(card.decide, outcome.path, changes))
     return outcome.undo
   }
   if (card.kind === 'domain' && card.domainProposalId) {
@@ -165,6 +167,16 @@ export async function acceptCard(card: WorkbenchCard): Promise<Undo> {
     return undefined
   }
   return undefined
+}
+
+/** Fork（almanac ALMNC-69.2）：收集來的新增筆記被 Scott 改過標題或位置時的差異（接受前算，記進活動紀錄）。 */
+async function retargetedChanges(item: DecideItem): Promise<NewNoteChanges | null> {
+  if (item.ref.source !== 'collect') return null
+  const { itemId, proposalId } = item.ref
+  const proposal = useCollectStore.getState().items.find(entry => entry.id === itemId)?.proposals.find(entry => entry.id === proposalId)
+  if (!proposal?.suggested) return null
+  const { default: useDailySettingsStore } = await import('@/stores/daily-settings')
+  return newNoteChanges(proposal, useDailySettingsStore.getState().inboxFolder)
 }
 
 function collectRefs(item: DecideItem): Array<{ itemId: string, proposalId: string }> {

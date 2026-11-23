@@ -51,4 +51,14 @@ describe('accepted proposal → activity entry', () => {
     expect(accepted).toMatchObject({ kind: 'update', what: '補上交期基準', conversationId: 3 })
     expect(acceptedTargetLink(accepted)).toBe('note:%E7%9F%A5%E8%AD%98/a.md')
   })
+
+  // Fork（almanac ALMNC-69.2）：Scott 改過標題或位置後接受，活動紀錄的說明寫「原建議 → 你的修改」，角色仍是發起的夥伴。
+  it('writes the original suggestion and the edit when Scott retargeted a new note', () => {
+    const changes = { title: '產線週會', titleChange: { from: '會議紀錄', to: '產線週會' }, folderChange: { from: '00 Inbox', to: '10 Projects' } }
+    const entry = acceptedActivityEntry(acceptedFromDecide(item({ drafter: { role: 'secretary', agentId: 's-1' } }), '10 Projects/產線週會.md', changes), ROSTER)
+    expect(entry).toMatchObject({ actorId: 's-1', actorRole: 'secretary', note: '會議紀錄 → 產線週會 · 00 Inbox/ → 10 Projects/' })
+    expect(validateActivityEntry(entry).ok).toBe(true)
+    expect(acceptedFromProposal('collect:b1:p1', { kind: 'note', title: '產線週會' }, undefined, changes).what).toBe('會議紀錄 → 產線週會 · 00 Inbox/ → 10 Projects/')
+    expect(acceptedFromProposal('collect:b1:p1', { kind: 'note', title: '產線週會' }, undefined, null).what).toBe('產線週會')
+  })
 })

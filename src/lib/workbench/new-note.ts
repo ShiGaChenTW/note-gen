@@ -59,11 +59,43 @@ export function retargetNewNote(proposal: Proposal, edit: NewNoteTarget, inboxFo
   const { title, folder } = checked.value
   if (title === current.title && folder === current.folder) return proposal
   const change = proposal.change
+  // ALMNC-69.2：第一次改時記下原建議，之後再改不覆蓋。
+  const suggested = proposal.suggested ?? (change
+    ? { title: current.title, folder: current.folder }
+    : { title: proposal.title, ...(proposal.folder !== undefined ? { folder: proposal.folder } : {}) })
   if (change) {
     // 副檔名照原本的；提案的 title 是變更摘要，不動。
     const fileName = `${title}${splitName(change.path).ext || '.md'}`
-    return { ...proposal, change: { ...change, args: { ...change.args, fileName, folderPath: folder }, path: folder ? `${folder}/${fileName}` : fileName } }
+    return { ...proposal, suggested, change: { ...change, args: { ...change.args, fileName, folderPath: folder }, path: folder ? `${folder}/${fileName}` : fileName } }
   }
   // 位置沒改就不記 folder：接受時照當下的收件資料夾（卡片顯示時設定可能還沒讀好）。
-  return { ...proposal, title, ...(folder !== current.folder ? { folder } : {}) }
+  return { ...proposal, suggested, title, ...(folder !== current.folder ? { folder } : {}) }
+}
+
+/** ALMNC-69.2：原建議和 Scott 改過的值；只列有改的那一項。 */
+export interface NewNoteChanges {
+  /** 目前（改過）的標題，給沒改標題時當作說明的主語。 */
+  title: string
+  titleChange?: { from: string, to: string }
+  folderChange?: { from: string, to: string }
+}
+
+/** Scott 改過標題或位置的新增筆記提案：回傳原建議與修改；沒改過（或改回原樣）回傳 null。接受前後都能用。 */
+export function newNoteChanges(proposal: Proposal, inboxFolder: string): NewNoteChanges | null {
+  const suggested = proposal.suggested
+  if (!suggested) return null
+  const current = newNoteTarget(proposal, inboxFolder)
+  if (!current) return null
+  const from = { title: suggested.title, folder: normalizeFolder(suggested.folder ?? inboxFolder) }
+  const changes: NewNoteChanges = { title: current.title }
+  if (from.title !== current.title) changes.titleChange = { from: from.title, to: current.title }
+  if (from.folder !== current.folder) changes.folderChange = { from: from.folder, to: current.folder }
+  return changes.titleChange || changes.folderChange ? changes : null
+}
+
+/** 活動紀錄用的一行說明（不分語言）：「原標題 → 新標題 · 原位置/ → 新位置/」，最上層寫「/」。 */
+export function newNoteChangesNote(changes: NewNoteChanges): string {
+  const dir = (folder: string) => folder ? `${folder}/` : '/'
+  const head = changes.titleChange ? `${changes.titleChange.from} → ${changes.titleChange.to}` : changes.title
+  return changes.folderChange ? `${head} · ${dir(changes.folderChange.from)} → ${dir(changes.folderChange.to)}` : head
 }

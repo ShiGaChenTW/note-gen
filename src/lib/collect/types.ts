@@ -36,6 +36,11 @@ export interface Proposal {
   conversationId?: number
   /** Fork（almanac ALMNC-54.21）：新增筆記要存的資料夾（Scott 在工作台卡片上改的）；沒有就是收件資料夾，'' 是筆記庫最上層。 */
   folder?: string
+  /**
+   * Fork（almanac ALMNC-69.2）：新增筆記的原建議標題與位置——Scott 第一次在卡片上改標題或位置時記下，之後再改不覆蓋。
+   * folder 沒有就是收件資料夾（同上面的 folder）。用來在卡片上、接受後與活動紀錄裡說明「原建議 → 你的修改」。
+   */
+  suggested?: { title: string, folder?: string }
   /** Fork（almanac ALMNC-54.5）：指揮官依「再次討論」修改後重新提出時，被取代的那則提案（工作台項目 key）。 */
   previousProposalId?: string
   // Fork（almanac ALMNC-54.6）：指揮官分析資料源產生的提案才有下面這些欄位。

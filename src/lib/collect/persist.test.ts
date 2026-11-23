@@ -94,6 +94,20 @@ describe('proposal source conversation', () => {
     expect('folder' in bad).toBe(false)
   })
 
+  // Fork（almanac ALMNC-69.2）：新增筆記的原建議存檔後還在；型別不對只丟這個欄位。
+  it('keeps the original suggestion through save and load', () => {
+    const saved = serializeItems([item({ proposals: [
+      { ...base, id: 'p1', kind: 'note', title: '新', status: 'ok', suggested: { title: '舊', folder: '' } },
+      { ...base, id: 'p2', kind: 'note', title: '乙', status: 'wait', suggested: { title: '甲' } },
+    ] })])
+    const [p1, p2] = parseItems(saved, NOW)[0].proposals
+    expect(p1.suggested).toEqual({ title: '舊', folder: '' })
+    expect(p2.suggested).toEqual({ title: '甲' })
+    const [bad] = parseItems([{ ...item(), proposals: [{ ...base, id: 'p3', kind: 'note', title: '丙', status: 'wait', suggested: { title: 3 } }] }], NOW)[0].proposals
+    expect(bad).toMatchObject({ id: 'p3', title: '丙' })
+    expect('suggested' in bad).toBe(false)
+  })
+
   it('drops only malformed link fields, not the proposal', () => {
     const raw = [{ ...item(), proposals: [{ ...base, id: 'p1', kind: 'task', title: '甲', status: 'wait', conversationId: 'x', previousProposalId: 3 }] }]
     const [proposal] = parseItems(raw, NOW)[0].proposals
