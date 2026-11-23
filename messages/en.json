@@ -5022,7 +5022,11 @@
           "showSteps": "View {count, plural, one {# step} other {# steps}}",
           "hideSteps": "Hide steps",
           "targets": "{count, plural, one {# item} other {# items}}",
-          "tokens": "{count, plural, one {# token} other {# tokens}}"
+          "tokens": "{count, plural, one {# token} other {# tokens}}",
+          "thinking": "Thinking",
+          "thoughtFor": "Thought for {seconds, number} s",
+          "thoughtBriefly": "Thought for less than 1 s",
+          "reasoning": "Reasoning"
         },
         "review": {
           "file": "Edit {name}?",

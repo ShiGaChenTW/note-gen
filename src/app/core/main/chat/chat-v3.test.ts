@@ -244,4 +244,56 @@ describe('v3 chat', () => {
     act(() => useChatStore.setState({ currentConversationId: 2 }))
     expect(container.textContent).not.toContain('可以，套用')
   })
+
+  // Fork（almanac ALMNC-74）
+  describe('reasoning block', () => {
+    const thinking: AgentTraceEvent = {
+      runId: 'run', id: 'model-1', timestamp: 21, type: 'model_call', status: 'running',
+      title: '模型思考', reasoning: '先找出今天的日誌',
+    }
+    const steps = () => container.textContent ?? ''
+
+    it('expands while thinking, then collapses with the duration once the reply starts', () => {
+      render(h(AgentRunTimeline, { chat: assistant, status: 'thinking', isRunning: true, traceEvents: [thinking] }))
+      expect(steps()).toContain('思考中')
+      expect(steps()).toContain('先找出今天的日誌')
+      render(h(AgentRunTimeline, { chat: assistant, status: 'thinking', isRunning: true,
+        traceEvents: [{ ...thinking, reasoningDuration: 12_400 }] }))
+      expect(steps()).toContain('思考了 12 秒')
+      expect(steps()).not.toContain('先找出今天的日誌')
+    })
+
+    it('keeps the reader\'s manual choice after thinking ends', () => {
+      render(h(AgentRunTimeline, { chat: assistant, status: 'thinking', isRunning: true, traceEvents: [thinking] }))
+      click('思考中')
+      expect(steps()).not.toContain('先找出今天的日誌')
+      render(h(AgentRunTimeline, { chat: assistant, status: 'thinking', isRunning: true,
+        traceEvents: [{ ...thinking, reasoningDuration: 3_000 }] }))
+      expect(steps()).not.toContain('先找出今天的日誌')
+      click('思考了 3 秒')
+      expect(steps()).toContain('先找出今天的日誌')
+      render(h(AgentRunTimeline, { chat: assistant, status: 'thinking', isRunning: true,
+        traceEvents: [{ ...thinking, status: 'success', type: 'model_response', reasoningDuration: 3_000, duration: 5_000 }] }))
+      expect(steps()).toContain('先找出今天的日誌')
+    })
+
+    it('labels finished and older records without auto-expanding them', () => {
+      const done: AgentTraceEvent = { ...thinking, type: 'model_response', status: 'success', duration: 900 }
+      render(h(AgentRunTimeline, { chat: assistant, status: 'thinking', isRunning: true,
+        traceEvents: [{ ...done, reasoningDuration: 400 }, { ...step, status: 'running' }] }))
+      expect(steps()).toContain('思考了不到 1 秒')
+      expect(steps()).not.toContain('先找出今天的日誌')
+      render(h(AgentRunTimeline, { chat: assistant, status: 'thinking', isRunning: true,
+        traceEvents: [done, { ...step, status: 'running' }] }))
+      expect(steps()).toContain('思考過程')
+      expect(steps()).not.toContain('先找出今天的日誌')
+    })
+
+    it('leaves the classic timeline label unchanged', () => {
+      render(h(AgentRunTimeline, { chat: assistant, status: 'thinking', isRunning: true,
+        traceEvents: [{ ...thinking, reasoningDuration: 12_400 }] }), false)
+      expect(steps()).toContain('模型思考')
+      expect(steps()).not.toContain('思考了 12 秒')
+    })
+  })
 })
