@@ -2,7 +2,7 @@
 // 分家清單、其他區塊）原樣保留。純函式；寫檔由呼叫端經編輯器協調（lib/daily/coordinated-write）。
 // 收錄行格式 `- [[筆記標題]] ── 關係說明`；「尚未分章」可以沒有關係說明。每則筆記在同一個 MOC 只有一條收錄（已有就不加）。
 import { MOC_HEADINGS, UNCHAPTERED_HEADING } from '@/lib/migration/domain-moc-migration'
-import { formalEntries, parseMoc, targetKey, type MocChapter, type MocEntry, type ParsedMoc } from './parse'
+import { formalEntries, parseMoc, targetKey, isUnsortedTitle, type MocChapter, type MocEntry, type ParsedMoc } from './parse'
 
 /** 放到哪一章：尚未分章、依 C 編號、或依章節名稱。 */
 export type ChapterRef = { unsorted: true } | { id: string } | { title: string }
@@ -139,7 +139,7 @@ export function removeMocEntry(raw: string, match: EntryMatch, path?: string): M
 }
 
 /** 把收錄行搬到另一章（關係說明跟著走）；目的地就是原章節時不改。 */
-export function moveMocEntry(raw: string, match: EntryMatch, to: ChapterRef, options: { newChapterId?: () => string } = {}, path?: string): MocEditResult {
+export function moveMocEntry(raw: string, match: EntryMatch, to: ChapterRef, options: { newChapterId?: () => string, relation?: string } = {}, path?: string): MocEditResult {
   const moc = parseMoc(raw, path)
   const test = matcher(match)
   const found = formalEntries(moc).find(({ entry }) => test(entry))
@@ -149,7 +149,7 @@ export function moveMocEntry(raw: string, match: EntryMatch, to: ChapterRef, opt
   if (!destination && !('unsorted' in to)) return { content: raw, changed: false, reason: 'no-chapter' }
   const { entry } = found
   const removed = removeMocEntry(raw, item => item.line === entry.line, path)
-  const added = addMocEntry(removed.content, { target: entry.target, alias: entry.alias, relation: entry.relation, chapter: to, newChapterId: options.newChapterId }, path)
+  const added = addMocEntry(removed.content, { target: entry.target, alias: entry.alias, relation: options.relation ?? entry.relation, chapter: to, newChapterId: options.newChapterId }, path)
   return added.changed ? added : { content: raw, changed: false, reason: added.reason }
 }
 
@@ -173,4 +173,138 @@ export function replaceMocEntryTarget(raw: string, match: EntryMatch, newTarget:
     drop.delete(first.line)
   }
   return { content: lines.filter((_, index) => !drop.has(index)).join('\n'), changed: true }
+}
+
+/** 每週提案只描述核准的那一項；接受時可以保留其他已接受項目與無關的編輯。 */
+export type MocChange =
+  | { kind: 'bullet', block: 'conclusions' | 'open', before?: string, after?: string }
+  | { kind: 'start', links: string[] }
+  | { kind: 'move', target: string, chapterId: string, relation: string }
+  | { kind: 'add-chapters', chapters: Array<{ id: string, title: string }> }
+  | { kind: 'merge-chapters', from: string[], into: string }
+
+function contentEnd(lines: string[], start: number, end: number): number {
+  while (end > start && isBlank(lines[end - 1])) end--
+  return end
+}
+
+function appendBlock(lines: string[], moc: ParsedMoc, block: 'start' | 'conclusions' | 'open', content: string[]): string {
+  const section = moc.blocks[block]
+  if (section) {
+    const end = contentEnd(lines, section.line + 1, section.endLine)
+    lines.splice(end, 0, ...[...(end === section.line + 1 ? [''] : []), ...content].map(line => withEol(line, moc.eol)))
+  } else {
+    const following = block === 'start' ? ['chapters', 'conclusions', 'open'] : block === 'conclusions' ? ['open'] : []
+    const next = moc.sections.find(item => item.key && following.includes(item.key))
+    const at = next?.line ?? contentEnd(lines, 0, lines.length)
+    const prefix = at > 0 && !isBlank(lines[at - 1]) ? [''] : []
+    lines.splice(at, 0, ...[...prefix, MOC_HEADINGS[block], '', ...content, ''].map(line => withEol(line, moc.eol)))
+  }
+  if (lines[lines.length - 1]?.endsWith('\r')) lines.push('')
+  return lines.join('\n')
+}
+
+/** 只改整行清單項目。段落、多行項目、註解和沒有涉及的區塊保持原樣。 */
+export function editableMocBullets(raw: string, moc: ParsedMoc, block: 'start' | 'conclusions' | 'open'): Array<{ line: number, text: string, prefix: string }> {
+  const section = moc.blocks[block]
+  if (!section) return []
+  const lines = splitLines(raw)
+  const items = []
+  let comment = false
+  let fence = false
+  for (let line = section.line + 1; line < section.endLine; line++) {
+    const text = lines[line].replace(/\r$/, '')
+    if (comment || text.includes('<!--')) {
+      comment = text.lastIndexOf('<!--') > text.lastIndexOf('-->') || (comment && !text.includes('-->'))
+      continue
+    }
+    if (/^\s*(?:```|~~~)/.test(text)) {
+      fence = !fence
+      continue
+    }
+    const match = /^([-*+]\s+|\d+[.)]\s+)(.+)$/.exec(text)
+    if (!fence && match && !/^\s+\S/.test(lines[line + 1] ?? '')) items.push({ line, text: match[2].trim(), prefix: match[1] })
+  }
+  return items
+}
+
+const chapterById = (moc: ParsedMoc, id: string) => {
+  const matches = moc.chapters.filter(chapter => chapter.id === id && !chapter.grownInto)
+  return matches.length === 1 ? matches[0] : undefined
+}
+
+/** 合併時只移除純收錄章節，完整保留各收錄行、目標章節的其他內容和分家清單。 */
+function mergeChapters(raw: string, moc: ParsedMoc, base: ParsedMoc, change: Extract<MocChange, { kind: 'merge-chapters' }>): string | null {
+  if (moc.chapters.length <= 7 || moc.chapters.length - change.from.length > 7 || moc.chapters.length - change.from.length < 3) return null
+  const target = chapterById(moc, change.into)
+  if (!target || target.title !== chapterById(base, change.into)?.title || change.from.includes(change.into)) return null
+  const lines = splitLines(raw)
+  const remove = new Set<number>()
+  const additions: string[] = []
+  for (const id of change.from) {
+    const source = chapterById(moc, id)
+    const original = chapterById(base, id)
+    if (!source || !original || source.title !== original.title || source.entries.length !== original.entries.length) return null
+    const entries = new Set(source.entries.map(entry => entry.line))
+    if (source.entries.some((entry, i) => entry.reference || entry.duplicate || entry.malformed || entry.raw !== original.entries[i].raw)) return null
+    for (let line = source.line; line < source.endLine; line++) {
+      if (line === source.line || line === source.commentLine || isBlank(lines[line]) || entries.has(line)) remove.add(line)
+      else return null
+    }
+    additions.push(...source.entries.map(entry => withEol(entry.raw, moc.eol)))
+  }
+  const at = insertionLine(target)
+  lines.splice(at, 0, ...additions)
+  return lines.filter((_, i) => (i >= at && i < at + additions.length) || !remove.has(i < at ? i : i - additions.length)).join('\n')
+}
+
+/** null 表示原先要改的內容已變動，或這項建議不再適用。 */
+export function applyMocChange(baseRaw: string, latest: string, id: string, change: MocChange): string | null {
+  const moc = parseMoc(latest)
+  const base = parseMoc(baseRaw)
+  if (moc.id !== id || base.id !== id || !moc.isMoc || !base.isMoc) return null
+  const lines = splitLines(latest)
+
+  if (change.kind === 'bullet') {
+    const items = editableMocBullets(latest, moc, change.block)
+    if (change.before === change.after || (change.after && items.some(item => item.text === change.after))) return null
+    if (!change.before) return change.after ? appendBlock(lines, moc, change.block, [`- ${change.after}`]) : null
+    const matches = items.filter(item => item.text === change.before)
+    if (matches.length !== 1) return null
+    const { line, prefix } = matches[0]
+    lines.splice(line, 1, ...(change.after ? [withEol(prefix + change.after, moc.eol)] : []))
+    return lines.join('\n')
+  }
+
+  if (change.kind === 'start') {
+    if (moc.blocks.start?.text !== base.blocks.start?.text) return null
+    const items = editableMocBullets(latest, moc, 'start')
+    const selected = new Set(items.filter(item => /^\[\[[^\]]+\]\]$/.test(item.text)).map(item => item.line))
+    const links = change.links.map((link, index) => `${index + 1}. ${link}`)
+    if (!selected.size) return appendBlock(lines, moc, 'start', links)
+    const first = selected.values().next().value
+    return lines.flatMap((line, i) => i === first ? links.map(link => withEol(link, moc.eol)) : selected.has(i) ? [] : [line]).join('\n')
+  }
+
+  if (change.kind === 'move') {
+    const contains = (parsed: ParsedMoc) => parsed.unsorted?.entries.find(entry => !entry.reference && !entry.duplicate && targetKey(entry.target) === targetKey(change.target))
+    const current = contains(moc)
+    const original = contains(base)
+    const destination = chapterById(moc, change.chapterId)
+    if (!current || !original || current.raw !== original.raw || !destination || destination.title !== chapterById(base, change.chapterId)?.title) return null
+    const result = moveMocEntry(latest, entry => entry.line === current.line, { id: change.chapterId }, { relation: change.relation })
+    return result.changed ? result.content : null
+  }
+
+  if (change.kind === 'merge-chapters') return mergeChapters(latest, moc, base, change)
+
+  const section = moc.blocks.chapters
+  if (moc.chapters.length !== base.chapters.length || moc.chapters.length >= 3 || moc.chapters.length + change.chapters.length !== 3) return null
+  if (change.chapters.some(chapter => isUnsortedTitle(chapter.title) || moc.chapters.some(item => item.title === chapter.title || item.id === chapter.id))) return null
+  const at = moc.unsorted?.line ?? (section ? contentEnd(lines, section.line + 1, section.endLine) : moc.blocks.conclusions?.line ?? moc.blocks.open?.line ?? contentEnd(lines, 0, lines.length))
+  const prefix = at > 0 && !isBlank(lines[at - 1]) ? [''] : []
+  const groups = change.chapters.flatMap(chapter => [`### ${chapter.title}`, `<!-- ${chapter.id} -->`, ''])
+  lines.splice(at, 0, ...[...prefix, ...(section ? [] : [MOC_HEADINGS.chapters, '']), ...groups].map(line => withEol(line, moc.eol)))
+  if (lines[lines.length - 1]?.endsWith('\r')) lines.push('')
+  return lines.join('\n')
 }

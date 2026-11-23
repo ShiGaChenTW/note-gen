@@ -66,6 +66,6 @@ export interface DetectOptions {
   /** 專家的工作指示＋個別記憶。 */
   agentPrompt?: string
   external?: readonly ExternalEvidence[]
-  /** 今天，YYYY-MM-DD（判斷「過時」用）。 */
-  today?: string
+  /** 使用整份 MOC 索引時，指定這組觀察的起點路徑。 */
+  anchor?: string
 }

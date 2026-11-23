@@ -2,13 +2,12 @@
 //   G1 研究員調研各領域 → G2 各專家回顧自己的領域（衝突走清理流程）→ 定期檢查到期的筆記（ALMNC-54.12 發現時機 3）
 //   → G3 秘書回顧行動（寫進時期回顧；排程調整建議作用在 E4）→ 稽核共用工作記憶與工作筆記
 //   → 指揮官統整成一張「每週回顧」提案（附上依領域打包的清理提案、排程調整、稽核提案、超過 14 天沒決定的提案）。
-// 衝突或錯誤（矛盾、過時）不等彙整，發現當下就立刻提案。每一步失敗都不影響其他步驟。全部注入依賴，測試用假的。
-import { periodicCheck, submitImmediate, type CheckDeps } from '@/lib/cleanup/check'
-import { cleanupProposals, routeObservations } from '@/lib/cleanup/plan'
-import { domainLookup } from '@/lib/v3-model/domain'
+// 清理另以 MOC 與 ISO 週送出；每一步失敗都不影響其他步驟。
+import { periodicCheck, type CheckDeps } from '@/lib/cleanup/check'
+import { runWeeklyMocs, type WeeklyMocDeps } from '@/lib/cleanup/weekly-moc'
 import type { ConfirmDue } from '@/lib/cleanup/interval'
 import { ymd } from '@/lib/cleanup/interval'
-import type { ConflictObservation, ExternalEvidence } from '@/lib/cleanup/types'
+import type { ExternalEvidence } from '@/lib/cleanup/types'
 import type { ProposalBatch, RosterAgent } from '@/lib/commander/types'
 import type { CalendarEvent } from '@/lib/today/today-model'
 import type { TaskRef } from '@/lib/vault-index/index-core'
@@ -39,8 +38,9 @@ export interface ReviewRunDeps {
   stale: (now: number) => Promise<Array<{ key: string, title: string, days: number }>>
   memory: () => Promise<{ workNotes: WorkNotesInput[], context?: ContextInput, activity?: Array<{ id: number, note: string }> }>
   auditNotes: () => Promise<AuditNote[]>
-  /** 清理流程的依賴（定期檢查、立刻提案、佇列）。 */
+  /** 清理流程的依賴（定期檢查與佇列）。 */
   check: CheckDeps
+  weeklyMocs?: WeeklyMocDeps
   submit: (batch: ProposalBatch) => Promise<void>
   labels: { weekly: WeeklyLabels, schedule: ScheduleLabels, audit: AuditLabels }
   commanderName?: string
@@ -55,7 +55,6 @@ export interface ReviewRunSummary {
   periodKey?: string
   research: ResearchFinding[]
   expertReviews: ExpertReview[]
-  immediate: ConflictObservation[]
   actions?: ActionStats
   audit: AuditFinding[]
   batch?: ProposalBatch
@@ -86,7 +85,6 @@ export async function runReview(deps: ReviewRunDeps): Promise<ReviewRunSummary> 
   const roster = (await step('roster', errors, deps.roster, [])).filter(agent => agent.enabled)
   const digests = await step('digests', errors, deps.digests, [])
   const domainNames = new Map(digests.map(digest => [digest.domainId, digest.name]))
-  const immediate: ConflictObservation[] = []
 
   // G1 研究員調研。
   const researcher = roster.find(agent => agent.role === 'researcher')
@@ -97,26 +95,20 @@ export async function runReview(deps: ReviewRunDeps): Promise<ReviewRunSummary> 
     await step('research sources', errors, () => deps.registerFindings!(research, period.key), undefined)
   }
 
-  // G2 專家回顧自己的領域；衝突照規則：衝突或錯誤立刻提案，其餘進佇列。
+  // G2 專家回顧自己的領域；衝突進佇列，等 MOC 整理。
   const expertReviews: ExpertReview[] = []
   for (const expert of roster.filter(agent => agent.role === 'expert')) {
     for (const digest of digests.filter(entry => normalize(entry.name) === normalize(expert.domain))) {
       const review = await step(`expert ${expert.id}`, errors, async () => reviewDomain(digest, { ask: deps.ask, prompt: await deps.agentPrompt(expert), agentId: expert.id }), undefined)
       if (!review) continue
       expertReviews.push(review)
-      const routed = routeObservations(review.conflicts)
-      if (routed.immediate.length) {
-        immediate.push(...routed.immediate)
-        await step('immediate cleanup', errors, () => submitImmediate(routed.immediate, [], deps.check, `cleanup:review:${digest.domainId}:${period.key}`), undefined)
-      }
-      if (routed.deferred.length) await step('queue', errors, () => deps.check.queue.add(routed.deferred), undefined)
+      if (review.conflicts.length) await step('queue', errors, () => deps.check.queue.add(review.conflicts), undefined)
     }
   }
 
   // 定期檢查：最後確認日期已過領域期限的筆記（54.12 發現時機 3）。
   const due = await step('due notes', errors, () => deps.dueNotes(today, today), [])
-  const periodic = await step('periodic check', errors, () => periodicCheck(due.map(note => note.path), deps.check, { limit: deps.periodicLimit ?? 10 }), [])
-  for (const result of periodic) immediate.push(...result.immediate)
+  await step('periodic check', errors, () => periodicCheck(due.map(note => note.path), deps.check, { limit: deps.periodicLimit ?? 10 }), [])
 
   // G3 秘書回顧行動。
   const secretary = roster.find(agent => agent.role === 'secretary')
@@ -139,21 +131,9 @@ export async function runReview(deps: ReviewRunDeps): Promise<ReviewRunSummary> 
   const audit = auditMemory(memory, auditNotes)
   const auditExtra = auditProposals(audit, memory, deps.labels.audit)
 
-  // 不急的清理觀察依領域打包。
-  const deferred = await step('queue', errors, () => deps.check.queue.take(), [])
-  let cleanup: ReturnType<typeof cleanupProposals> = []
-  if (deferred.length) {
-    cleanup = await step('cleanup bundle', errors, async () => {
-      const notes = new Map<string, string>()
-      for (const path of new Set(deferred.flatMap(observation => observation.notePaths))) {
-        const raw = await deps.check.readNote(path).catch(() => null)
-        if (raw !== null) notes.set(path, raw)
-      }
-      // Fork（almanac ALMNC-69.4）：id 與名稱都當 key（筆記 domains 存名稱，舊資料是 dom_ id）。
-      const domains = domainLookup(await deps.check.domains())
-      return cleanupProposals(deferred, { notes, domains, today, labels: deps.check.labels, words: deps.check.words, immediate: false })
-    }, [])
-  }
+  const cleanup = deps.weeklyMocs
+    ? await step('MOC cleanup', errors, () => runWeeklyMocs(now, deps.weeklyMocs!, memory.activity, errors), [])
+    : []
 
   const [records, dueThisPeriod, stale] = await Promise.all([
     step('records', errors, () => deps.records(range), []),
@@ -181,12 +161,12 @@ export async function runReview(deps: ReviewRunDeps): Promise<ReviewRunSummary> 
   })
   if (batch) await step('submit', errors, () => deps.submit(batch), undefined)
   await deps.settings.markRun(now.getTime())
-  return { ran: true, periodKey: period.key, research, expertReviews, immediate, actions: actions?.stats, audit, batch, errors }
+  return { ran: true, periodKey: period.key, research, expertReviews, actions: actions?.stats, audit, batch, errors }
 }
 
 /** 頻率到了才跑（關閉時不跑）。 */
 export async function maybeRunReview(deps: ReviewRunDeps): Promise<ReviewRunSummary> {
   const { settings, lastRunAt } = await deps.settings.load()
-  if (!isReviewDue(settings, lastRunAt, deps.now?.() ?? new Date())) return { ran: false, research: [], expertReviews: [], immediate: [], audit: [], errors: [] }
+  if (!isReviewDue(settings, lastRunAt, deps.now?.() ?? new Date())) return { ran: false, research: [], expertReviews: [], audit: [], errors: [] }
   return runReview(deps)
 }

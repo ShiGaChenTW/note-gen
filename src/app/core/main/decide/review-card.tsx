@@ -96,7 +96,7 @@ type CardActionPayload = { note?: string, time?: string, itemKey?: string }
 /** Fork（almanac ALMNC-65.2）：批次卡裡的一則：標題、存放位置（照 Scott 改過的值）；展開看內容、改標題與位置（沿用 NewNoteFields）；逐則接受／退回。 */
 function BatchRow({ item, onAction }: { item: DecideItem, onAction: (action: 'accept' | 'drop') => void }) {
   const t = useTranslations('workbench')
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(Boolean(item.mocReview))
   const ref = item.ref.source === 'collect' ? item.ref : null
   const proposal = useCollectStore(state => ref ? state.items.find(entry => entry.id === ref.itemId)?.proposals.find(entry => entry.id === ref.proposalId) : undefined)
   const inboxFolder = useDailySettingsStore(state => state.inboxFolder)
@@ -123,10 +123,11 @@ function BatchRow({ item, onAction }: { item: DecideItem, onAction: (action: 'ac
       </div>
       {open && (
         <div className="px-3 pb-3 pl-8" data-testid="batch-item-detail">
-          {ref && <NewNoteFields itemId={ref.itemId} proposalId={ref.proposalId} />}
+          {ref && target && <NewNoteFields itemId={ref.itemId} proposalId={ref.proposalId} />}
           {proposal?.body.trim()
             ? <div className="mt-2 max-h-64 overflow-y-auto rounded-(--r-kbd) border border-line-soft bg-bg px-3 py-2 text-ui-compact leading-6 whitespace-pre-wrap break-words text-ink" data-testid="batch-item-content">{proposal.body.trim()}</div>
-            : item.preview.diff && <DiffBlock diff={item.preview.diff} className="mt-2" />}
+            : null}
+          {(!proposal?.body.trim() || item.mocReview) && item.preview.diff && <DiffBlock diff={item.preview.diff} className="mt-2" />}
         </div>
       )}
     </li>
@@ -141,7 +142,7 @@ function BatchBody({ card, onAction }: { card: WorkbenchCard, onAction: (action:
   return (
     <div className="text-ui-compact leading-6 text-muted-ink" data-testid="batch-body">
       {journalItem && <VerdictLines item={journalItem} />}
-      <p>{t('batch.heading', { count: items.length })}</p>
+      <p>{t(items[0]?.mocReview ? 'batch.mocHeading' : 'batch.heading', { count: items.length })}</p>
       {journalItem && <p className="text-xs">{t('batch.journalOnce')}</p>}
       <ul className="mt-2 divide-y divide-line-soft rounded-(--r) border border-line-soft">
         {items.map(item => <BatchRow key={item.key} item={item} onAction={action => onAction(action, { itemKey: item.key })} />)}
