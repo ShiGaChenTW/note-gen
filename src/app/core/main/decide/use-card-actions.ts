@@ -35,6 +35,7 @@ export function deskMaterialsOf(card: WorkbenchCard): DeskMaterial[] {
 /** 執行一次復原（Z 或 toast 上的按鈕）。 */
 export function useUndo() {
   const t = useTranslations('workbench.toast')
+  const opsT = useTranslations('ops.domainUndo')
   return useCallback(async () => {
     const store = useWorkbenchStore.getState()
     const entry = store.popUndo()
@@ -47,17 +48,29 @@ export function useUndo() {
       return
     }
     try {
-      await entry.undo()
+      const result = await entry.undo()
       if (entry.cardKey) {
         if (store.filter !== 'all') store.setFilter('all')
         useWorkbenchStore.getState().setCursor(entry.cardKey)
       }
       toast(t('undone'))
+      // Fork（almanac ALMNC-72）：撤回成立領域提案時選了「一起撤回專家」：告知刪了，或為什麼保留。
+      const { expertOutcomeOf } = await import('@/lib/ops/domain-undo-runtime')
+      const expert = expertOutcomeOf(result)
+      if (expert?.status === 'removed') toast(opsT('expertRemoved', { name: expert.expert.name }))
+      else if (expert?.status === 'kept') {
+        toast(opsT('expertKept', { name: expert.expert.name, reasons: expert.reasons.map(reason => opsT(`reasons.${reason}`)).join('；') }))
+      }
     } catch (error) {
+      if (error instanceof Error && error.name === 'DomainUndoCancelled') {
+        // 詢問時按了取消：什麼都沒動，放回復原堆疊。
+        useWorkbenchStore.getState().pushUndo(entry)
+        return
+      }
       console.error('[workbench] undo failed:', error)
       toast.error(t('cannotUndo'))
     }
-  }, [t])
+  }, [opsT, t])
 }
 
 export function useCardActions({ visible, commanderName }: { visible: readonly WorkbenchCard[], commanderName: string }) {

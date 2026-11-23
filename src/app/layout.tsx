@@ -15,6 +15,8 @@ import { AppLockGate } from "@/components/app-lock-gate";
 import { CustomCssController } from "@/components/custom-css-controller";
 import { UiModeSync } from '@/components/fork/ui-mode'
 import { UI_MODE_BOOT_SCRIPT } from '@/lib/fork-ui'
+// Fork（almanac ALMNC-72）：撤回成立領域提案時的詢問（全 App 一個）。
+import { DomainUndoAskHost } from '@/components/ops/domain-undo-dialog'
 
 function AppRuntime({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -65,6 +67,7 @@ export default function RootLayout({
               <NextIntlProvider>
                 <AppLockGate>
                   <AppRuntime>{children}</AppRuntime>
+                  <DomainUndoAskHost />
                 </AppLockGate>
               </NextIntlProvider>
             </TooltipProvider>

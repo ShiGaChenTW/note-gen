@@ -179,6 +179,8 @@ export async function commanderQueue(): Promise<ReturnType<typeof createAnalysis
 
 /** 成立領域的 MOC 與選配專家。 */
 export async function createDefaultDomainWriter(ops?: import('@/lib/ops/types').OpContext): Promise<import('./domain-proposal').DomainProposalWriter> {
+  // Fork（almanac ALMNC-72）：這次真的新建的專家（沿用既有同領域專家的不算），寫完記憶後登記在這次接受的 batch 下，撤回時才能問要不要一起撤回。
+  const created = new Set<string>()
   return {
     createMoc: async blueprint => {
       const { createBlueprintMoc } = await import('./blueprint-runtime')
@@ -187,15 +189,22 @@ export async function createDefaultDomainWriter(ops?: import('@/lib/ops/types').
     createExpert: async input => {
       const [agentsDb, settings] = await Promise.all([import('@/db/agents'), import('@/lib/agents/settings')])
       const existing = (await agentsDb.listAgentSettings()).find(agent => agent.role === 'expert' && agent.domain === input.domain)
-      return existing?.id ?? agentsDb.createAgentSettings({
+      if (existing) return existing.id
+      const id = await agentsDb.createAgentSettings({
         name: input.name, role: 'expert', domain: input.domain, enabled: true, allowedTools: [...settings.ROLE_TOOLS.expert],
       })
+      created.add(id)
+      return id
     },
     saveMemory: async (agentId, input) => {
       const memoryDb = await import('@/db/agent-memory')
       const agent = { id: agentId, name: input.name, role: 'expert' as const, domain: input.domain }
       await memoryDb.writeAgentMemory('scott', agent, 'soul', input.soul)
       await memoryDb.writeAgentMemory('scott', agent, 'rules', input.rules)
+      if (created.has(agentId) && ops?.batchId) {
+        const { registerProposalExpert } = await import('@/lib/ops/domain-undo-runtime')
+        await registerProposalExpert({ batchId: ops.batchId, ...(ops.proposalId ? { proposalId: ops.proposalId } : {}), agentId, name: input.name, domain: input.domain })
+      }
     },
   }
 }

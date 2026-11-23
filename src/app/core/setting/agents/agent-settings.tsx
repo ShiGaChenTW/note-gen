@@ -197,7 +197,7 @@ function AgentSettingsPanel() {
         </div>
       </SettingSection>
       {/* Fork（almanac ALMNC-54.3）：Agent 設定區接在代理人名單下面。 */}
-      {!!agents?.length && <AgentMemorySettings agents={agents} />}
+      {!!agents?.length && <AgentMemorySettings agents={agents} onAgentsChanged={() => void listAgentSettings().then(setAgents).catch(error => console.error('[agents] reload failed', error))} />}
       {/* Fork（almanac ALMNC-54.13）：調研與回顧的頻率也在 Agent 設定區。 */}
       {agents !== null && <ReviewSettings />}
     </>

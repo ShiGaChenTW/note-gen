@@ -9681,6 +9681,24 @@
       "changed": "Changed later",
       "confirm": "Undo anyway",
       "cancel": "Cancel"
+    },
+    "domainUndo": {
+      "title": "Undo the domain “{domain}”",
+      "description": "Accepting this proposal also created the expert {name}. What should be undone?",
+      "mocOnly": "Undo only the MOC",
+      "mocOnlyHint": "remove the MOC file and its entries; keep the expert and their memory",
+      "withExpert": "Also undo the expert",
+      "withExpertHint": "also remove {name}, created by this proposal, and their memory (kept if already in use)",
+      "cancel": "Cancel",
+      "expertRemoved": "Removed the expert {name} and their memory.",
+      "expertKept": "Kept the expert {name}: {reasons}.",
+      "reasons": {
+        "missing": "the expert no longer exists",
+        "domain-changed": "the expert now works on another domain",
+        "domain-in-use": "another domain with the same name still uses this expert",
+        "edited": "the expert's settings or memory changed after the proposal was accepted",
+        "activity": "the expert already has activity or tasks"
+      }
     }
   },
   "mocReconcile": {

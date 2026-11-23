@@ -9681,6 +9681,24 @@
       "changed": "之后被改过",
       "confirm": "仍要复原",
       "cancel": "取消"
+    },
+    "domainUndo": {
+      "title": "撤回领域「{domain}」",
+      "description": "接受这则提案时也新建了专家 {name}。要撤回哪些？",
+      "mocOnly": "只撤回 MOC",
+      "mocOnlyHint": "移除 MOC 文件与收录，专家和记忆留着",
+      "withExpert": "一起撤回专家",
+      "withExpertHint": "也移除这则提案新建的 {name} 与其记忆（已在使用就保留）",
+      "cancel": "取消",
+      "expertRemoved": "已移除专家 {name} 与其记忆。",
+      "expertKept": "专家 {name} 保留：{reasons}。",
+      "reasons": {
+        "missing": "专家已经不在",
+        "domain-changed": "专家已改负责其他领域",
+        "domain-in-use": "还有同名领域在用这位专家",
+        "edited": "接受之后改过专家设置或记忆",
+        "activity": "专家已有活动记录或任务"
+      }
     }
   },
   "mocReconcile": {
