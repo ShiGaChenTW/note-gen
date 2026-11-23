@@ -7,7 +7,8 @@
 import type { ContentChange } from '@/lib/workbench/risk'
 import useScottPinsStore from '@/stores/scott-pins'
 import { parseMoc } from './parse'
-import { changesPinTouches, type PinNoteResolver } from './scott-pin-check'
+import { branchPositionPinned, changesPinTouches, type PinNoteResolver } from './scott-pin-check'
+import { registerMocBranchPinCheck } from './branch-runtime'
 import { registerScottPinRecorder, type ScottPin } from './scott-pins'
 
 async function workspacePath(): Promise<string> {
@@ -39,6 +40,8 @@ export function registerScottPinStorage(): void {
       await scottPinStore.save(pins)
       await loadScottPins()
     })
+    // ALMNC-69.14：分家／併回前檢查要動的位置有沒有 Scott 指定（每週提議略過、直接執行時擋下）。
+    registerMocBranchPinCheck(async position => branchPositionPinned(position, await loadScottPins(), Date.now()))
   }
   void loadScottPins()
 }

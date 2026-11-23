@@ -131,3 +131,21 @@ export function transferPinTouches(transfers: ReadonlyArray<{ from: string, to: 
     return (id && pin.noteId === id) || pin.notePath === from
   }))
 }
+
+/**
+ * Fork（almanac ALMNC-69.14 × 69.11）：分家／併回要動的位置（MOC＋章節，或章節裡的一則收錄）是否有有效的 Scott 指定。
+ * 有 note：同一個 MOC 裡那則收錄的標記（關係說明或位置；標記帶章節時要同章）。沒有 note：那個章節的章節名標記。
+ */
+export function branchPositionPinned(
+  position: { mocId: string, chapterId: string, note?: string },
+  pins: readonly ScottPin[],
+  now: number,
+): boolean {
+  return pins.some(pin => {
+    if (!isPinActive(pin, now) || pin.mocId !== position.mocId) return false
+    if (!position.note) return pin.kind === 'chapter-title' && pin.chapterId === position.chapterId
+    if (pin.kind !== 'relation' && pin.kind !== 'position') return false
+    if (pin.chapterId && pin.chapterId !== position.chapterId) return false
+    return pin.noteId === position.note || pin.notePath === position.note
+  })
+}
