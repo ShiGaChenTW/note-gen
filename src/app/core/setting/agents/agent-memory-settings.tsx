@@ -9,7 +9,7 @@ import {
   writeAgentMemory, type AgentMemoryView,
 } from '@/db/agent-memory'
 import {
-  formatContextLines, parseContextLines, validateSharedContext,
+  activityActors, filterActivityByActor, formatContextLines, parseContextLines, validateSharedContext,
   type ActivityEntry, type ContextValidationError, type MemoryKind,
 } from '@/lib/agent-memory'
 import { agentRoleLabel } from '@/lib/agents/display'
@@ -49,6 +49,8 @@ export function AgentMemorySettings({ agents }: { agents: SavedAgent[] }) {
   const [drafts, setDrafts] = useState<Record<MemoryKind, string>>({ soul: '', rules: '', work_notes: '' })
   const [context, setContext] = useState<ContextDraft | null>(null)
   const [activity, setActivity] = useState<ActivityEntry[]>([])
+  /** ALMNC-69.2：依發起的夥伴篩選；'' 是全部。 */
+  const [actorFilter, setActorFilter] = useState('')
   const [preferences, setPreferences] = useState<string | null>(null)
   const [loadError, setLoadError] = useState(false)
   const [saving, setSaving] = useState<Section | null>(null)
@@ -126,15 +128,20 @@ export function AgentMemorySettings({ agents }: { agents: SavedAgent[] }) {
     <p role={notice.key === 'saved' ? 'status' : 'alert'} className="text-xs text-muted-foreground">{t(notice.key)}</p>
   )
 
-  const actorName = (entry: ActivityEntry) => entry.actorRole === 'scott'
+  const actorName = (entry: Pick<ActivityEntry, 'actorId' | 'actorRole'>) => entry.actorRole === 'scott'
     ? t('scott')
     : agents.find(item => item.id === entry.actorId)?.name ?? entry.actorId
 
-  const roleLabel = (entry: ActivityEntry) => {
+  const roleLabel = (entry: Pick<ActivityEntry, 'actorId' | 'actorRole'>) => {
     if (entry.actorRole === 'scott') return null
     const known = agents.find(item => item.id === entry.actorId)
     return agentRoleLabel(known ?? { role: entry.actorRole }, tRoles)
   }
+
+  const actors = activityActors(activity)
+  // 選的發起者已經不在紀錄裡（例如重新載入）就當成全部。
+  const activeFilter = actors.some(actor => actor.actorId === actorFilter) ? actorFilter : ''
+  const shownActivity = filterActivityByActor(activity, activeFilter)
 
   return (
     <SettingSection title={t('title')} desc={t('description')}>
@@ -199,11 +206,25 @@ export function AgentMemorySettings({ agents }: { agents: SavedAgent[] }) {
           <div className="space-y-2">
             <div className="font-medium">{t('activity')}</div>
             <p className="text-xs text-muted-foreground">{t('activityHint')}</p>
-            {activity.length === 0
+            {actors.length > 1 && (
+              <label className="flex flex-wrap items-center gap-2 text-xs">
+                <span>{t('activityFilter')}</span>
+                <select className={`${field} w-auto py-1 text-xs`} value={activeFilter} onChange={event => setActorFilter(event.target.value)}>
+                  <option value="">{t('activityFilterAll')}</option>
+                  {actors.map(actor => (
+                    <option key={actor.actorId} value={actor.actorId}>
+                      {[actorName(actor), roleLabel(actor)].filter(Boolean).join(' · ')}
+                    </option>
+                  ))}
+                </select>
+                <span className="text-muted-foreground">{t('activityFilterHint')}</span>
+              </label>
+            )}
+            {shownActivity.length === 0
               ? <p className="text-muted-foreground">{t('activityEmpty')}</p>
               : (
                 <ol aria-label={t('activity')} className="divide-y divide-line rounded-md border border-line bg-panel">
-                  {activity.map(entry => (
+                  {shownActivity.map(entry => (
                     <li key={entry.id} className="space-y-0.5 px-3 py-2 text-xs">
                       <div className="flex flex-wrap gap-x-2">
                         <time dateTime={new Date(entry.at).toISOString()} className="text-muted-foreground">

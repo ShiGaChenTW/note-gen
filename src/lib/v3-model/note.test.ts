@@ -137,3 +137,24 @@ describe('寫回 V3 欄位', () => {
     expect(note.body).toBe('---\n內文以分隔線開頭\n')
   })
 })
+
+// Fork（almanac ALMNC-69.1）：身分編號放 frontmatter 第一行。
+describe('身分編號 id', () => {
+  it('解析 id；格式不對時記為問題', () => {
+    expect(parseV3Note('---\nid: N-20261110-063015-B3XR\n---\n').fields.id).toBe('N-20261110-063015-B3XR')
+    const bad = parseV3Note('---\nid: src_1\n---\n')
+    expect(bad.fields.id).toBeUndefined()
+    expect(bad.issues[0]).toContain('id 必須是')
+  })
+
+  it('寫入時 id 一律放第一行，其他欄位與內文保留', () => {
+    const raw = '---\ntitle: 甲\ncustom: 保留\n---\n# 甲\n'
+    expect(writeV3NoteFields(raw, { id: 'N-20261110-063015-B3XR' })).toBe('---\nid: N-20261110-063015-B3XR\ntitle: 甲\ncustom: 保留\n---\n# 甲\n')
+    expect(writeV3NoteFields('# 乙\n', { id: 'N-20261110-063015-B3XR' })).toBe('---\nid: N-20261110-063015-B3XR\n---\n# 乙\n')
+    expect(createV3Note({ title: '丙', type: 'knowledge', id: 'N-20261110-063015-B3XR' }, '內文\n').startsWith('---\nid: N-20261110-063015-B3XR\ntitle: 丙\n')).toBe(true)
+  })
+
+  it('拒絕格式不對的 id', () => {
+    expect(() => writeV3NoteFields('', { id: 'abc' })).toThrow('身分編號格式不對')
+  })
+})

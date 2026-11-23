@@ -499,6 +499,12 @@ describe('ALMNC-54.21 工作台補齊', () => {
     act(() => { folder.dispatchEvent(new FocusEvent('focusout', { bubbles: true })) })
     expect(useCollectStore.getState().items.find(item => item.id === 'old')!.proposals[0]).toMatchObject({ title: '產線檢討會議紀錄', folder: '10 Projects/產線' })
     expect(titles()).toContain('產線檢討會議紀錄')
+    // ALMNC-69.2：保留原建議，卡上說明「原建議 → 你的修改」
+    expect(useCollectStore.getState().items.find(item => item.id === 'old')!.proposals[0].suggested).toEqual({ title: '提案 a' })
+    const changes = card('產線檢討會議紀錄').querySelector('[data-testid="new-note-changes"]')!.textContent
+    expect(changes).toContain(messages.workbench.newNote.changed)
+    expect(changes).toContain('提案 a → 產線檢討會議紀錄')
+    expect(changes).toContain('00 Inbox → 10 Projects/產線')
     await act(async () => card('產線檢討會議紀錄').querySelector<HTMLButtonElement>('button[data-action="accept"]')!.click())
     await wait(250)
     expect(mocks.acceptDecision).toHaveBeenCalledWith(expect.objectContaining({ key: 'collect:old:a', title: '產線檢討會議紀錄' }))

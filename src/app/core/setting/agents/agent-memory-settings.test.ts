@@ -82,6 +82,20 @@ it('lets Scott view and edit memory, context and preferences, and shows the acti
     expect(items[1].textContent).toContain('proposal p1')
     expect(log.querySelectorAll('input, textarea, button')).toHaveLength(0)
 
+    // ALMNC-69.2：依發起的夥伴篩選（全部／出現過的發起者）。
+    const filter = [...container.querySelectorAll('select')].find(el => el.closest('label')?.textContent?.includes(m.activityFilter))!
+    expect([...filter.options].map(option => option.textContent)).toEqual([m.activityFilterAll, 'Leo · Secretary', 'Scott'])
+    await act(async () => {
+      filter.value = 'leo'
+      filter.dispatchEvent(new Event('change', { bubbles: true }))
+    })
+    expect([...container.querySelectorAll(`ol[aria-label="${m.activity}"] li`)].map(item => item.textContent)).toEqual([expect.stringContaining('Leo')])
+    await act(async () => {
+      filter.value = ''
+      filter.dispatchEvent(new Event('change', { bubbles: true }))
+    })
+    expect(container.querySelectorAll(`ol[aria-label="${m.activity}"] li`)).toHaveLength(2)
+
     // soul.md：Scott 直接存。
     await act(async () => setValue(area(m.soul), 'new soul'))
     await act(async () => save(m.soul).click())
