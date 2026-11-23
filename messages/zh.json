@@ -8911,6 +8911,14 @@
       "noSource": "未标来源",
       "explore": "探索",
       "exploreLabel": "探索相邻领域：{topics}",
+      "newDomain": "新领域",
+      "promote": "转正",
+      "withdraw": "撤回领域",
+      "withdrawDescription": "系统会移除 MOC。笔记会保留其他领域，没有其他领域的笔记会回到未归属。",
+      "cancelWithdrawal": "取消",
+      "promoted": "领域已转正",
+      "withdrawn": "领域已撤回",
+      "explorationChangeFailed": "无法更新探索中的领域",
       "exploreSoon": "探索功能即将推出",
       "owner": "负责：{owner}",
       "unassigned": {
@@ -9064,11 +9072,28 @@
       "noText": "文件里没有可读取的文字。"
     },
     "domainProposal": {
-      "title": "成立领域「{domain}」，新增专家 {name}",
+      "title": "成立领域「{domain}」",
       "summary": "{count} 则知识笔记还没有领域，主题都是「{topic}」"
     }
   },
   "workbench": {
+    "blueprint": {
+      "title": "领域蓝图 · {domain}",
+      "positioning": "定位问题",
+      "readingOrder": "建议阅读顺序",
+      "chapter": "第 {number} 章的问题",
+      "deleteChapter": "删除第 {number} 章",
+      "learningProject": "同时创建学习项目笔记",
+      "pairExpert": "安排 {name} 担任专家",
+      "dialogTitle": "探索主题",
+      "dialogDescription": "指挥官会查看笔记库并起草领域蓝图。",
+      "topic": "想探索什么主题？",
+      "draft": "起草蓝图",
+      "generating": "正在起草领域蓝图…",
+      "ready": "领域蓝图已就绪",
+      "open": "打开工作台",
+      "failed": "无法起草领域蓝图"
+    },
     "title": "工作台",
     "subtitle": "{count} 件等你处理",
     "subtitleSources": "{done} / {total} 已整理",
@@ -9535,6 +9560,7 @@
       "line": "- 「{text}」已经写在 {note}"
     },
     "settings": {
+      "explorationWeeklyLimit": "探索每周外部资料上限",
       "title": "调研与回顾",
       "description": "研究员调研、专家回顾领域、秘书回顾行动，由指挥官统整成一张回顾提案。冲突或错误会立刻提案，不等汇整。",
       "frequency": "频率",

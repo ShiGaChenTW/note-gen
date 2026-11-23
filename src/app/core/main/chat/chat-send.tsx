@@ -504,6 +504,7 @@ export const ChatSend = forwardRef<ChatSendHandle, ChatSendProps>(({
       chatId: placeholder.id,
       scottMessages,
       readOnly,
+      desktopExploration: !isMobile,
       ...(routed?.answerAs ? { answerAs: routed.answerAs } : {}),
       ...(routed ? { routeNote: routeNote(routed) } : {}),
       ...(deskContext ? {

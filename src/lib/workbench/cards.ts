@@ -2,6 +2,7 @@
 // 規格：almanac/2026-11-19_proposal_role-data-model.md 第四節「工作台」；介面以 2026-11-20_proposal_v3-workbench_v14.html 為準。
 // 一條清單、不分區，依「等你回話 → 逾期 → 提案（舊在前）→ 要你親手整理 → 其他任務」分組排序，上方用五個標籤篩選。
 // 卡片本身不存狀態：每次都從各來源（提案投影、筆記庫任務、等你決定的資料源…）現況算出來；先放著另外記（put-aside.ts）。
+import type { BlueprintProposal } from '@/lib/commander/blueprint'
 import type { DecideItem } from '@/lib/decide/project'
 import { PROPOSAL_STALE_DAYS, DAY_MS } from '@/lib/proposals/trail'
 import type { TaskRef } from '@/lib/vault-index/index-core'
@@ -27,7 +28,7 @@ export type CardGroup = typeof CARD_GROUPS[number]
 // Fork（almanac ALMNC-54.14）：legacy＝舊筆記批次卡（R3，「舊筆記 1,240 則」）。
 // Fork（almanac ALMNC-65.2）：batch＝同一資料源的新知識筆記批次卡（全部接受；逐則接受／退回在卡片裡面）。
 // Fork（almanac ALMNC-69.7）：domainLimit＝一則筆記被收錄在超過 3 個領域，請 Scott 選要拿掉哪個（選項＝各領域）。
-export type CardKind = 'proposal' | 'reply' | 'hand' | 'task' | 'confirm' | 'source' | 'domain' | 'legacy' | 'batch' | 'domainLimit'
+export type CardKind = 'proposal' | 'reply' | 'hand' | 'task' | 'confirm' | 'source' | 'domain' | 'legacy' | 'batch' | 'domainLimit' | 'blueprint'
 
 export type CardAction =
   | 'accept' | 'discuss' | 'drop' // 提案
@@ -45,6 +46,7 @@ export type CardAction =
 export const ACTIONS_BY_KIND: Record<CardKind, readonly CardAction[]> = {
   proposal: ['accept', 'discuss', 'drop'],
   domain: ['accept', 'discuss', 'drop'],
+  blueprint: ['accept', 'drop'],
   reply: ['answer'],
   hand: ['desk'],
   task: ['schedule', 'done'],
@@ -120,6 +122,8 @@ export interface WorkbenchCard {
   notePath?: string
   notePaths?: readonly string[]
   domainProposalId?: string
+  domainExpertName?: string
+  blueprint?: BlueprintProposal
   /** Fork（almanac ALMNC-54.10）：資料源卡有初步判斷的建議（「照建議處理」才出現）。 */
   hasSuggestion?: boolean
   /** Fork（almanac ALMNC-54.14）：舊筆記批次卡的進度。 */
@@ -205,6 +209,8 @@ export interface ConfirmLike {
 
 export interface DomainLike {
   id: string
+  expertName?: string
+  positioning?: string
   title: string
   summary: string
   notePaths: readonly string[]
@@ -233,6 +239,7 @@ export interface ReviewInput {
   hand?: readonly HandLike[]
   confirm?: readonly ConfirmLike[]
   domains?: readonly DomainLike[]
+  blueprints?: readonly { proposal: BlueprintProposal, title: string, by?: string }[]
   domainLimits?: readonly DomainLimitLike[]
   /** Fork（almanac ALMNC-54.14）：還有舊筆記沒處理時才給。 */
   legacy?: LegacyBatchLike
@@ -393,7 +400,14 @@ export function buildReviewCards(input: ReviewInput): WorkbenchCard[] {
       key: domain.id, kind: 'domain', group: 'proposal', label: 'knowledge', verb: 'add',
       title: domain.title, summary: domain.summary, by: domain.by, at: domain.at,
       more: domain.notePaths.length > 1 ? domain.notePaths.length - 1 : undefined,
-      actions: ACTIONS_BY_KIND.domain, notePaths: domain.notePaths, domainProposalId: domain.id,
+      actions: ACTIONS_BY_KIND.domain, notePaths: domain.notePaths, domainProposalId: domain.id, domainExpertName: domain.expertName,
+      path: domain.positioning,
+    })
+  }
+  for (const { proposal, title, by } of input.blueprints ?? []) {
+    cards.push({
+      key: proposal.id, kind: 'blueprint', group: 'proposal', label: 'knowledge', verb: 'add',
+      title, summary: proposal.positioning, by, at: proposal.at, blueprint: proposal, actions: ACTIONS_BY_KIND.blueprint,
     })
   }
   for (const limit of input.domainLimits ?? []) {

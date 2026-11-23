@@ -2,6 +2,7 @@
 
 // Fork（almanac ALMNC-54.8）：審核分頁的一張卡（v14）。收合時一行：類型字（標籤＋動詞，不用圖示）｜標的物＋第二行｜誰建議的＋等多久；
 // 點一下就地展開：內容、按鈕（依卡片類型）、右邊「先放著 S」。在檯面上的卡片標「檯面上」。
+import { BlueprintFields, DomainExpertOption } from './blueprint-fields'
 import { useRef, useState, type ReactNode } from 'react'
 import { useTranslations } from 'next-intl'
 import { ChevronRight, Clock, MessagesSquare } from 'lucide-react'
@@ -207,12 +208,16 @@ function CardBody({ card, onAction }: { card: WorkbenchCard, onAction: (action: 
   if (card.kind === 'confirm') return <p className="text-ui-compact text-muted-ink">{t('confirmSince', { date: card.summary })}</p>
   // Fork（almanac ALMNC-69.7）：超過上限卡：說明選了會怎樣（選項按鈕在下面，一個領域一個）。
   if (card.kind === 'domainLimit') return <p className="text-ui-compact leading-6 text-muted-ink" data-testid="domain-limit-body">{t('domainLimit.body', { limit: MAX_DOMAINS })}</p>
+  if (card.blueprint) return <BlueprintFields proposal={card.blueprint} />
   if (card.notePaths?.length) {
     return (
-      <div className="flex flex-wrap gap-1.5">
-        {card.notePaths.map(path => (
-          <span key={path} title={path} className="rounded-(--r-kbd) bg-hover px-2 py-0.5 text-xs text-muted-ink">{(path.split('/').pop() ?? path).replace(/\.md$/i, '')}</span>
-        ))}
+      <div className="space-y-2">
+        <div className="flex flex-wrap gap-1.5">
+          {card.notePaths.map(path => (
+            <span key={path} title={path} className="rounded-(--r-kbd) bg-hover px-2 py-0.5 text-xs text-muted-ink">{(path.split('/').pop() ?? path).replace(/\.md$/i, '')}</span>
+          ))}
+        </div>
+        {card.domainProposalId && card.domainExpertName && <DomainExpertOption id={card.domainProposalId} name={card.domainExpertName} />}
       </div>
     )
   }

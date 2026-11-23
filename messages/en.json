@@ -8911,6 +8911,14 @@
       "noSource": "No source given",
       "explore": "Explore",
       "exploreLabel": "Explore adjacent domains: {topics}",
+      "newDomain": "New domain",
+      "promote": "Make permanent",
+      "withdraw": "Withdraw domain",
+      "withdrawDescription": "The MOC will be removed. Its notes keep any other domains and become unassigned if they have none.",
+      "cancelWithdrawal": "Cancel",
+      "promoted": "Domain made permanent",
+      "withdrawn": "Domain withdrawn",
+      "explorationChangeFailed": "Could not update the exploring domain",
       "exploreSoon": "Explore is coming soon",
       "owner": "Owner: {owner}",
       "unassigned": {
@@ -9064,11 +9072,28 @@
       "noText": "The file contains no readable text."
     },
     "domainProposal": {
-      "title": "Create the domain \"{domain}\" with a new expert, {name}",
+      "title": "Create the domain \"{domain}\"",
       "summary": "{count} knowledge notes have no domain yet, all about \"{topic}\""
     }
   },
   "workbench": {
+    "blueprint": {
+      "title": "Domain blueprint · {domain}",
+      "positioning": "Positioning question",
+      "readingOrder": "Suggested reading order",
+      "chapter": "Chapter {number} question",
+      "deleteChapter": "Remove chapter {number}",
+      "learningProject": "Also create a learning project note",
+      "pairExpert": "Assign {name} as an expert",
+      "dialogTitle": "Explore a topic",
+      "dialogDescription": "The commander will check your vault and draft a domain blueprint.",
+      "topic": "What do you want to explore?",
+      "draft": "Draft blueprint",
+      "generating": "Drafting a domain blueprint…",
+      "ready": "Domain blueprint ready",
+      "open": "Open workbench",
+      "failed": "Could not draft the domain blueprint"
+    },
     "title": "Workbench",
     "subtitle": "{count} waiting for you",
     "subtitleSources": "{done} / {total} organized",
@@ -9535,6 +9560,7 @@
       "line": "- “{text}” is already in {note}"
     },
     "settings": {
+      "explorationWeeklyLimit": "External sources per week for exploration",
       "title": "Research and reviews",
       "description": "The researcher researches, experts review their domains and the secretary reviews actions; the commander compiles one review proposal. Conflicts and errors are proposed immediately, not held for the bundle.",
       "frequency": "Frequency",

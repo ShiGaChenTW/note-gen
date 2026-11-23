@@ -305,6 +305,12 @@ export interface MocContentInput {
   overview: string
   chapterId: string
   members: readonly DomainMembership[]
+  blueprint?: {
+    ref: string
+    exploring: boolean
+    positioning: string
+    chapters: readonly { id: string, question: string, entries: readonly { target: string, relation: string }[] }[]
+  }
 }
 
 /** 一個 MOC 檔的完整內容（frontmatter＋五區塊骨架）。 */
@@ -313,6 +319,10 @@ export function renderMocContent(input: MocContentInput): { content: string, mov
   const fm = ['---', `id: ${input.mocId}`]
   if (input.fileName !== oneLine(input.name)) fm.push(`title: ${JSON.stringify(oneLine(input.name))}`)
   fm.push('kind: domain', `level: ${input.level}`)
+  if (input.blueprint) {
+    fm.push(`blueprint_ref: ${JSON.stringify(input.blueprint.ref)}`)
+    if (input.blueprint.exploring) fm.push('status: 探索中')
+  }
   if (input.parent) fm.push(`parent: ${input.parent.mocId}   # ${oneLine(input.parent.name)}；存編號，改名不會斷`)
   fm.push('---')
 
@@ -325,11 +335,19 @@ export function renderMocContent(input: MocContentInput): { content: string, mov
     if (parts.length) out.push(parts.join('\n\n'), '')
     else out.push(placeholder, '')
   }
-  section(MOC_HEADINGS.position, blocks.position, '<!-- 定位問題還沒寫：舊總覽沒有內容，由專家（沒有專家時由指揮官）補上。 -->')
-  section(MOC_HEADINGS.start, blocks.start, '<!-- 筆記滿 6 則後，由專家挑 3 則先讀的。 -->')
+  section(MOC_HEADINGS.position, input.blueprint ? [input.blueprint.positioning] : blocks.position, '<!-- 定位問題還沒寫：舊總覽沒有內容，由專家（沒有專家時由指揮官）補上。 -->')
+  const readingOrder = input.blueprint?.exploring ? input.blueprint.chapters.map((chapter, index) => `${index + 1}. ${chapter.question}`).join('\n') : undefined
+  section(MOC_HEADINGS.start, readingOrder ? [readingOrder] : blocks.start, '<!-- 筆記滿 6 則後，由專家挑 3 則先讀的。 -->')
 
   out.push(MOC_HEADINGS.chapters, '')
-  if (input.members.length) {
+  if (input.blueprint) {
+    for (const chapter of input.blueprint.chapters) {
+      out.push(`### ${chapter.question}`, `<!-- ${chapter.id} -->`)
+      for (const entry of chapter.entries) out.push(`- [[${entry.target}]] ── ${entry.relation}`)
+      if (input.blueprint.exploring && !chapter.entries.length) out.push('知識缺口：還沒有筆記')
+      out.push('')
+    }
+  } else if (input.members.length) {
     out.push(UNCHAPTERED_HEADING, `<!-- ${input.chapterId} -->`)
     for (const member of input.members) out.push(`- [[${member.link}]]`)
     out.push('')

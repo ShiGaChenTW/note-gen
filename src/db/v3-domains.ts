@@ -130,3 +130,11 @@ export async function syncDomainsTableFromMocs(mocs: readonly Pick<ParsedMoc, 'i
   }
   return plan
 }
+
+/** 撤回 MOC 時清除其快取列，同時解除指向這一列的快取上層。 */
+export async function removeDomainCache(id: string): Promise<void> {
+  await initV3DomainDb()
+  const db = await getDb()
+  await db.execute('update domains set parent_id = null where parent_id = $1', [id])
+  await db.execute('delete from domains where id = $1', [id])
+}

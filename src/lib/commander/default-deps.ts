@@ -171,28 +171,25 @@ export async function commanderQueue(): Promise<ReturnType<typeof createAnalysis
   return sharedQueue
 }
 
-/** Scott 接受領域提案後的寫入：領域表、專家設定、soul／rules、把筆記收進新領域的 MOC（ALMNC-69.7）。畫面在 ALMNC-54.8。 */
-export async function createDefaultDomainWriter(): Promise<import('./domain-proposal').DomainProposalWriter> {
-  const [domainsDb, agentsDb, memoryDb, settings] = await Promise.all([
-    import('@/db/v3-domains'),
-    import('@/db/agents'),
-    import('@/db/agent-memory'),
-    import('@/lib/agents/settings'),
-  ])
+/** 成立領域的 MOC 與選配專家。 */
+export async function createDefaultDomainWriter(ops?: import('@/lib/ops/types').OpContext): Promise<import('./domain-proposal').DomainProposalWriter> {
   return {
-    addDomain: input => domainsDb.addDomain(input),
-    createExpert: input => agentsDb.createAgentSettings({
-      name: input.name, role: 'expert', domain: input.domain, enabled: true, allowedTools: [...settings.ROLE_TOOLS.expert],
-    }),
+    createMoc: async blueprint => {
+      const { createBlueprintMoc } = await import('./blueprint-runtime')
+      return createBlueprintMoc(blueprint, { ops })
+    },
+    createExpert: async input => {
+      const [agentsDb, settings] = await Promise.all([import('@/db/agents'), import('@/lib/agents/settings')])
+      const existing = (await agentsDb.listAgentSettings()).find(agent => agent.role === 'expert' && agent.domain === input.domain)
+      return existing?.id ?? agentsDb.createAgentSettings({
+        name: input.name, role: 'expert', domain: input.domain, enabled: true, allowedTools: [...settings.ROLE_TOOLS.expert],
+      })
+    },
     saveMemory: async (agentId, input) => {
+      const memoryDb = await import('@/db/agent-memory')
       const agent = { id: agentId, name: input.name, role: 'expert' as const, domain: input.domain }
       await memoryDb.writeAgentMemory('scott', agent, 'soul', input.soul)
       await memoryDb.writeAgentMemory('scott', agent, 'rules', input.rules)
-    },
-    // Fork（almanac ALMNC-69.7）：收進新領域的 MOC（找不到就先建骨架，放「尚未分章」），再由重建更新 domains。
-    addNoteDomain: async (path, domainId) => {
-      const { assignNoteToDomains } = await import('@/lib/moc/runtime')
-      await assignNoteToDomains(path, [domainId])
     },
   }
 }

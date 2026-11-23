@@ -147,9 +147,9 @@ export async function opsService(): Promise<OpsService> {
     fs: createAppFs(),
     writer: createAppWriter(),
     store: opsStore,
-    afterChange: async () => {
-      const { runMocRebuild } = await import('@/lib/moc/runtime')
-      await runMocRebuild()
+    afterChange: async specs => {
+      const { runMocRebuild, reconcileDomainIndexes } = await import('@/lib/moc/runtime')
+      await runMocRebuild(await reconcileDomainIndexes(specs))
     },
     onRecorded: async (records, context) => {
       if (shouldLogEach(context)) await appendEntries(records.map(opActivityEntry))

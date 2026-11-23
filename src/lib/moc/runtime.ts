@@ -1,5 +1,8 @@
 // Fork（almanac ALMNC-69.7）：MOC 流程（service.ts）的 App I/O：筆記庫索引找 MOC 與筆記、Tauri 讀檔、編輯器協調寫入、
 // note.db 的 domains 表與系統索引。寫入端（檯面歸入領域、提案、領域提案、超過上限卡）與 MocRebuildService 都經過這裡。
+import type { OpSpec } from '@/lib/ops/types'
+import { buildLinkLookup, resolveWikilinkTargetWithLookup } from '@/lib/vault-index/links'
+import { formalEntries, parseMoc } from './parse'
 import { commitNoteWrites } from '@/lib/daily/coordinated-write'
 import { readNote, removeNote, writeNote } from '@/lib/daily/note-io'
 import { newId } from '@/lib/v3-model/identity'
@@ -71,8 +74,7 @@ export function createMocIo(): MocIo {
 }
 
 /** 重建後的共同收尾：更新快取（領域頁、工作台）、domains 表由 MOC 同步。 */
-async function settle(result: RebuildResult): Promise<void> {
-  useMocStore.getState().setResult({ mocs: result.mocs, overLimit: result.overLimit })
+export async function settleMocRebuild(result: RebuildResult): Promise<void> {
   try {
     const { syncDomainsTableFromMocs } = await import('@/db/v3-domains')
     const plan = await syncDomainsTableFromMocs(result.mocs)
@@ -80,14 +82,26 @@ async function settle(result: RebuildResult): Promise<void> {
   } catch (error) {
     console.warn('[moc] domains 表同步失敗：', error)
   }
+  useMocStore.getState().setResult({ mocs: result.mocs, overLimit: result.overLimit })
+}
+
+let mocQueue: Promise<unknown> = Promise.resolve()
+
+/** 避免索引觸發的重建在領域撤回期間讀到舊 MOC。 */
+export function serializeMocChange<T>(change: () => Promise<T>): Promise<T> {
+  const next = mocQueue.then(change)
+  mocQueue = next.catch(() => undefined)
+  return next
 }
 
 /** 由 MOC 重建全部筆記的 domains。筆記庫索引還沒準備好時回傳 null。 */
 export async function runMocRebuild(options: RebuildOptions = {}): Promise<RebuildResult | null> {
-  if (useVaultIndexStore.getState().status !== 'ready') return null
-  const result = await rebuildFromMocs(createMocIo(), options)
-  await settle(result)
-  return result
+  return serializeMocChange(async () => {
+    if (useVaultIndexStore.getState().status !== 'ready') return null
+    const result = await rebuildFromMocs(createMocIo(), options)
+    await settleMocRebuild(result)
+    return result
+  })
 }
 
 /** Fork（almanac ALMNC-69.9）：寫入端帶上發起情境時，MOC 的改動記成以編號描述的操作（ops），復原改以 ops 為準（7 天、版本檢查）。 */
@@ -132,7 +146,7 @@ export async function assignNoteToDomains(notePath: string, domains: readonly st
   const requests: AssignRequest[] = domains.map(domain => ({ notePath, domain }))
   if (!requests.length) return null
   const result = await assignToMocs(createMocIo(), requests)
-  await settle(result.rebuild)
+  await settleMocRebuild(result.rebuild)
   if (result.failed.length) console.warn('[moc] 沒有收進 MOC：', result.failed)
   return withOps(result, options.ops ? await assignInputs(result) : [], options.ops)
 }
@@ -140,7 +154,7 @@ export async function assignNoteToDomains(notePath: string, domains: readonly st
 /** 超過上限卡：拿掉這則筆記在這個領域 MOC 的收錄。 */
 export async function removeNoteFromDomain(notePath: string, domainName: string, options: MocOpOptions = {}): Promise<RemoveResult & { ops?: OpRecord[] }> {
   const result = await removeFromMoc(createMocIo(), notePath, domainName)
-  if (result.rebuild) await settle(result.rebuild)
+  if (result.rebuild) await settleMocRebuild(result.rebuild)
   const entry = result.entry
   const inputs: RecordInput[] = options.ops && entry ? [{
     spec: {
@@ -157,7 +171,7 @@ export async function removeNoteFromDomain(notePath: string, domainName: string,
 export async function transferNoteMemberships(transfers: readonly MembershipTransfer[], options: MocOpOptions = {}): Promise<(TransferResult & { ops?: OpRecord[] }) | null> {
   if (!transfers.length) return null
   const result = await transferMemberships(createMocIo(), transfers)
-  await settle(result.rebuild)
+  await settleMocRebuild(result.rebuild)
   if (!options.ops) return result
   // 換人承接一次改好幾條收錄：以 MOC 全文前後記成內容修改（復原＝寫回前版本，同樣先做版本檢查）。
   const { idOfContent, titleOfPath } = await import('@/lib/ops/runtime')
@@ -166,4 +180,30 @@ export async function transferNoteMemberships(transfers: readonly MembershipTran
     return { spec: { kind: 'note.edit', ...(mocId ? { noteId: mocId } : {}), path: write.path, title: titleOfPath(write.path), before: write.before, after: write.after } }
   })
   return withOps(result, inputs, options.ops)
+}
+
+/** Ops 套用或復原領域的新增／移除時，同步快取，並重讀受影響的收錄筆記。 */
+export async function reconcileDomainIndexes(specs: readonly OpSpec[]): Promise<RebuildOptions> {
+  const extraMocs: string[] = []
+  const retiredDomains: string[] = []
+  const extraNotes: string[] = []
+  const links = buildLinkLookup([...useVaultIndexStore.getState().notes.keys()])
+  for (const spec of specs) {
+    if (spec.kind !== 'domain.create' && spec.kind !== 'domain.remove') continue
+    if (spec.kind === 'domain.create') extraMocs.push(spec.path)
+    else retiredDomains.push(spec.name)
+    const moc = parseMoc(spec.content, spec.path)
+    for (const { entry } of formalEntries(moc)) {
+      const path = resolveWikilinkTargetWithLookup(entry.target, links, spec.path)
+      if (path) extraNotes.push(path)
+    }
+    if (!spec.mocId) continue
+    const { recordId, retireMocId } = await import('@/db/id-index')
+    if (spec.kind === 'domain.create') await recordId({ id: spec.mocId, kind: 'M', path: spec.path, name: spec.name })
+    else {
+      const { removeDomainCache } = await import('@/db/v3-domains')
+      await Promise.all([removeDomainCache(spec.mocId), retireMocId(spec.mocId)])
+    }
+  }
+  return { extraMocs, retiredDomains, extraNotes }
 }

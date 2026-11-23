@@ -170,10 +170,27 @@ export async function acceptCard(card: WorkbenchCard): Promise<Undo> {
     await logAcceptedProposal({ ...acceptedFromDecide(item, outcome.path, changes), ...(records[0] ? { opId: records[0].id } : {}) })
     return records.length ? await opsUndo(records, () => reopenDecision(item)) : outcome.undo
   }
+  if (card.kind === 'blueprint' && card.blueprint) {
+    const [{ createBlueprintMoc }, { useBlueprintStore }, { default: useSettingStore }] = await Promise.all([
+      import('@/lib/commander/blueprint-runtime'), import('@/lib/commander/blueprint-store'), import('@/stores/setting'),
+    ])
+    const workspace = useSettingStore.getState().workspacePath
+    const proposal = useBlueprintStore.getState().byWorkspace[workspace]?.find(entry => entry.id === card.key)
+    if (!proposal) throw new Error('Blueprint is no longer pending in this workspace')
+    const ops = proposalOpContext(card.key, { role: 'commander' })
+    const { path } = await createBlueprintMoc(proposal, { learningProject: proposal.learningProject, ops })
+    const records = await batchRecords(ops.batchId)
+    useBlueprintStore.getState().remove(workspace, proposal.id)
+    await logAcceptedProposal({ key: card.key, kind: 'blueprint', path, what: card.title, drafter: { role: 'commander' }, ...(records[0] ? { opId: records[0].id } : {}) })
+    return records.length ? opsUndo(records, () => useBlueprintStore.getState().put(workspace, proposal)) : undefined
+  }
   if (card.kind === 'domain' && card.domainProposalId) {
     const { acceptDomainCard } = await import('./domain-cards')
     const ops = proposalOpContext(card.domainProposalId, { role: 'commander' })
-    await acceptDomainCard(card.domainProposalId, ops)
+    const store = useWorkbenchStore.getState()
+    if (store.pairDomainExperts.includes(card.domainProposalId)) await acceptDomainCard(card.domainProposalId, ops, true)
+    else await acceptDomainCard(card.domainProposalId, ops)
+    store.setPairDomainExpert(card.domainProposalId, false)
     const records = await batchRecords(ops.batchId)
     await logAcceptedProposal({ key: card.domainProposalId, kind: 'domain', what: card.title, drafter: { role: 'commander' }, ...(records[0] ? { opId: records[0].id } : {}) })
     return records.length ? opsUndo(records) : undefined
@@ -269,6 +286,17 @@ export async function dropCard(card: WorkbenchCard): Promise<Undo> {
     return async () => {
       for (const ref of refs) useCollectStore.getState().restore(ref.itemId, ref.proposalId)
     }
+  }
+  if (card.kind === 'blueprint' && card.blueprint) {
+    const [{ useBlueprintStore }, { default: useSettingStore }] = await Promise.all([
+      import('@/lib/commander/blueprint-store'), import('@/stores/setting'),
+    ])
+    const workspace = useSettingStore.getState().workspacePath
+    const store = useBlueprintStore.getState()
+    const proposal = store.byWorkspace[workspace]?.find(entry => entry.id === card.key)
+    if (!proposal) return undefined
+    store.remove(workspace, proposal.id)
+    return async () => { store.put(workspace, proposal) }
   }
   if (card.kind === 'domain' && card.domainProposalId) {
     const id = card.domainProposalId
