@@ -5,6 +5,7 @@
 import type { DecideItem } from '@/lib/decide/project'
 import { PROPOSAL_STALE_DAYS, DAY_MS } from '@/lib/proposals/trail'
 import type { TaskRef } from '@/lib/vault-index/index-core'
+import { batchProposals } from './batch'
 
 /** Fork（almanac ALMNC-54.14）：舊筆記批次卡的鍵（也是先放著的鍵）。 */
 export const LEGACY_BATCH_KEY = 'legacy-batch'
@@ -24,7 +25,8 @@ export type CardGroup = typeof CARD_GROUPS[number]
 
 /** 卡片類型決定按鈕（第四節「按鈕代表動作」；資料源卡依 v14 加上照建議處理／自己處理／不採用）。 */
 // Fork（almanac ALMNC-54.14）：legacy＝舊筆記批次卡（R3，「舊筆記 1,240 則」）。
-export type CardKind = 'proposal' | 'reply' | 'hand' | 'task' | 'confirm' | 'source' | 'domain' | 'legacy'
+// Fork（almanac ALMNC-65.2）：batch＝同一資料源的新知識筆記批次卡（全部接受；逐則接受／退回在卡片裡面）。
+export type CardKind = 'proposal' | 'reply' | 'hand' | 'task' | 'confirm' | 'source' | 'domain' | 'legacy' | 'batch'
 
 export type CardAction =
   | 'accept' | 'discuss' | 'drop' // 提案
@@ -48,6 +50,7 @@ export const ACTIONS_BY_KIND: Record<CardKind, readonly CardAction[]> = {
   confirm: ['stillValid', 'toCommander'],
   source: ['process', 'selfProcess', 'reject'],
   legacy: ['migrate'],
+  batch: ['accept'],
 }
 
 /** Fork（almanac ALMNC-54.14）：舊筆記批次卡的按鈕——跑的時候只有「暫停」，否則「開始處理」（處理過一些就是「繼續處理」）。 */
@@ -65,8 +68,9 @@ export function sourceCardActions(source: Pick<AwaitingSourceLike, 'suggestion' 
   return source.suggestion ? ['process', 'handle', 'selfProcess', 'reject'] : ACTIONS_BY_KIND.source
 }
 
-/** 按鈕上的字：沒有建議時 process 就是「處理」。 */
-export function actionLabelKey(card: Pick<WorkbenchCard, 'kind' | 'hasSuggestion'>, action: CardAction): CardAction {
+/** 按鈕上的字：沒有建議時 process 就是「處理」；批次卡的接受是「全部接受」。 */
+export function actionLabelKey(card: Pick<WorkbenchCard, 'kind' | 'hasSuggestion'>, action: CardAction): CardAction | 'acceptAll' {
+  if (card.kind === 'batch' && action === 'accept') return 'acceptAll'
   return card.kind === 'source' && action === 'process' && !card.hasSuggestion ? 'handle' : action
 }
 
@@ -120,6 +124,8 @@ export interface WorkbenchCard {
   legacy?: LegacyBatchLike
   /** Fork（almanac ALMNC-54.14）：判斷不出來的那一包（批次 id）。 */
   packId?: string
+  /** Fork（almanac ALMNC-65.2）：批次卡裡的每一則新知識筆記（依原順序）。 */
+  batch?: readonly DecideItem[]
 }
 
 // —— 投影輸入（結構型別，不綁 store） ——
@@ -256,7 +262,7 @@ export function proposalVerb(item: DecideItem): CardVerb {
   }
 }
 
-function proposalCard(item: DecideItem, now: number): WorkbenchCard {
+export function proposalCard(item: DecideItem, now: number): WorkbenchCard {
   // Fork（almanac ALMNC-54.12）：自己指定卡片的提案（清理、確認、回顧）標題就是標的物，第二行是第一則筆記的資料夾。
   const fileLike = !item.card && (item.source === 'draft' || (item.preview.type === 'file' && item.kind !== 'task' && item.kind !== 'event'))
   const title = item.source === 'draft' ? item.summary || baseName(item.title) : fileLike ? baseName(item.title) : item.title
@@ -278,6 +284,39 @@ function proposalCard(item: DecideItem, now: number): WorkbenchCard {
     decide: item,
     ...(item.notePaths?.length ? { notePaths: item.notePaths } : {}),
   }
+}
+
+/** Fork（almanac ALMNC-65.2）：批次卡的鍵（也是先放著的鍵）。 */
+export function batchCardKey(sourceKey: string): string {
+  return `batch:${sourceKey}`
+}
+
+/**
+ * Fork（almanac ALMNC-65.2）：同一資料源的新知識筆記批次卡。第一行是第一則的標題「等 N 則」，第三行是來源（資料源名稱）；
+ * 標籤照第一則（超過 14 天沒決定就是回顧），動詞是新增。時間取最早的一則。
+ */
+function batchCard(sourceKey: string, items: readonly DecideItem[], now: number): WorkbenchCard {
+  const first = items[0]!
+  return {
+    key: batchCardKey(sourceKey),
+    kind: 'batch',
+    group: 'proposal',
+    label: proposalLabel(first, now),
+    verb: 'add',
+    title: first.title,
+    more: items.length - 1,
+    summary: first.origin,
+    at: Math.min(...items.map(item => item.at)),
+    actions: ACTIONS_BY_KIND.batch,
+    ...(first.conversationId !== undefined ? { conversationId: first.conversationId } : {}),
+    batch: items,
+  }
+}
+
+/** Fork（almanac ALMNC-65.2）：批次卡裡的某一則，組回原本的單張提案卡（逐則接受、退回時用同一套動作）。 */
+export function memberCard(card: Pick<WorkbenchCard, 'batch'>, itemKey: string, now: number): WorkbenchCard | null {
+  const item = card.batch?.find(entry => entry.key === itemKey)
+  return item ? proposalCard(item, now) : null
 }
 
 function taskWhen(task: TaskLike): string {
@@ -318,7 +357,10 @@ export function buildReviewCards(input: ReviewInput): WorkbenchCard[] {
     })
   }
   for (const task of input.overdueTasks ?? []) cards.push(taskCard(task, 'late', now))
-  for (const item of input.proposals) cards.push(proposalCard(item, now))
+  // Fork（almanac ALMNC-65.2）：同一資料源兩則以上的新知識筆記合成一張批次卡（只是投影，提案本身不變）。
+  for (const entry of batchProposals(input.proposals)) {
+    cards.push(entry.type === 'batch' ? batchCard(entry.key, entry.items, now) : proposalCard(entry.item, now))
+  }
   for (const source of input.awaitingSources ?? []) {
     cards.push({
       key: `source:${source.id}`, kind: 'source', group: 'proposal', label: 'source', verb: 'judge',

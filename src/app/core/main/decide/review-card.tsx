@@ -4,7 +4,7 @@
 // 點一下就地展開：內容、按鈕（依卡片類型）、右邊「先放著 S」。在檯面上的卡片標「檯面上」。
 import { useRef, useState, type ReactNode } from 'react'
 import { useTranslations } from 'next-intl'
-import { Clock, MessagesSquare } from 'lucide-react'
+import { ChevronRight, Clock, MessagesSquare } from 'lucide-react'
 import { openConversation } from '@/lib/proposals/actions'
 import { ACTION_KEY, actionForKey, actionLabelKey, ageParts, type CardAction, type WorkbenchCard } from '@/lib/workbench/cards'
 import { reminderPresets } from '@/lib/workbench/put-aside'
@@ -13,7 +13,12 @@ import { KBD_ON_BUTTON, V3_BUTTON_SHAPE } from '@/components/v3/button-shape'
 import { cn } from '@/lib/utils'
 import useChatStore from '@/stores/chat'
 import { JobReviewPreview } from '../jobs/job-result'
-import { destinationText } from './decide-parts'
+import type { DecideItem } from '@/lib/decide/project'
+import { newNoteTarget } from '@/lib/workbench/new-note'
+import useCollectStore from '@/stores/collect'
+import useDailySettingsStore from '@/stores/daily-settings'
+import useWorkbenchStore from '@/stores/workbench'
+import { destinationText, DiffBlock } from './decide-parts'
 import { DiscussForm } from './discuss-form'
 import { NewNoteFields } from './new-note-fields'
 import { ProposalChanges, RiskBadge } from './proposal-risk'
@@ -85,11 +90,71 @@ function VerdictLines({ item }: { item: NonNullable<WorkbenchCard['decide']> }) 
   )
 }
 
-function CardBody({ card }: { card: WorkbenchCard }) {
+type CardActionPayload = { note?: string, time?: string, itemKey?: string }
+
+/** Fork（almanac ALMNC-65.2）：批次卡裡的一則：標題、存放位置（照 Scott 改過的值）；展開看內容、改標題與位置（沿用 NewNoteFields）；逐則接受／退回。 */
+function BatchRow({ item, onAction }: { item: DecideItem, onAction: (action: 'accept' | 'drop') => void }) {
+  const t = useTranslations('workbench')
+  const [open, setOpen] = useState(false)
+  const ref = item.ref.source === 'collect' ? item.ref : null
+  const proposal = useCollectStore(state => ref ? state.items.find(entry => entry.id === ref.itemId)?.proposals.find(entry => entry.id === ref.proposalId) : undefined)
+  const inboxFolder = useDailySettingsStore(state => state.inboxFolder)
+  const leaving = useWorkbenchStore(state => state.leaving.includes(item.key))
+  const target = proposal ? newNoteTarget(proposal, inboxFolder) : null
+  return (
+    <li data-testid="batch-item" data-item={item.key} className={cn('transition-opacity duration-200', leaving && 'opacity-0')}>
+      <div className="flex items-center gap-2 px-3 py-2">
+        <button
+          type="button"
+          aria-expanded={open}
+          data-testid="batch-item-toggle"
+          onClick={() => setOpen(value => !value)}
+          className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-(--r-kbd) text-left outline-none focus-visible:ring-1 focus-visible:ring-ink/60"
+        >
+          <ChevronRight aria-hidden className={cn('size-3.5 shrink-0 text-faint transition-transform duration-100', open && 'rotate-90')} />
+          <span className="min-w-0">
+            <span className="block truncate text-sm text-ink" data-testid="batch-item-title">{target?.title ?? item.title}</span>
+            <span className="block truncate text-xs text-muted-ink" data-testid="batch-item-folder">{target ? target.folder || t('newNote.root') : ''}</span>
+          </span>
+        </button>
+        <button type="button" className={BTN} data-batch-action="accept" onClick={() => onAction('accept')}>{t('batch.accept')}</button>
+        <button type="button" className={BTN} data-batch-action="drop" onClick={() => onAction('drop')}>{t('batch.drop')}</button>
+      </div>
+      {open && (
+        <div className="px-3 pb-3 pl-8" data-testid="batch-item-detail">
+          {ref && <NewNoteFields itemId={ref.itemId} proposalId={ref.proposalId} />}
+          {proposal?.body.trim()
+            ? <div className="mt-2 max-h-64 overflow-y-auto rounded-(--r-kbd) border border-line-soft bg-bg px-3 py-2 text-ui-compact leading-6 whitespace-pre-wrap break-words text-ink" data-testid="batch-item-content">{proposal.body.trim()}</div>
+            : item.preview.diff && <DiffBlock diff={item.preview.diff} className="mt-2" />}
+        </div>
+      )}
+    </li>
+  )
+}
+
+/** Fork（almanac ALMNC-65.2）：同一資料源的新知識筆記批次卡：判斷為日誌（有的話只寫一次）、每一則一列。 */
+function BatchBody({ card, onAction }: { card: WorkbenchCard, onAction: (action: CardAction, payload?: CardActionPayload) => unknown }) {
+  const t = useTranslations('workbench')
+  const items = card.batch ?? []
+  const journalItem = items.find(item => item.journalTag)
+  return (
+    <div className="text-ui-compact leading-6 text-muted-ink" data-testid="batch-body">
+      {journalItem && <VerdictLines item={journalItem} />}
+      <p>{t('batch.heading', { count: items.length })}</p>
+      {journalItem && <p className="text-xs">{t('batch.journalOnce')}</p>}
+      <ul className="mt-2 divide-y divide-line-soft rounded-(--r) border border-line-soft">
+        {items.map(item => <BatchRow key={item.key} item={item} onAction={action => onAction(action, { itemKey: item.key })} />)}
+      </ul>
+    </div>
+  )
+}
+
+function CardBody({ card, onAction }: { card: WorkbenchCard, onAction: (action: CardAction, payload?: CardActionPayload) => unknown }) {
   const t = useTranslations('workbench')
   const decideT = useTranslations('decide')
   const organizeT = useTranslations('organize')
   const item = card.decide
+  if (card.kind === 'batch') return <BatchBody card={card} onAction={onAction} />
   if (item?.journalTag?.only) {
     // Fork（almanac ALMNC-69.3）：只貼日誌標籤的分析結果：沒有要寫的檔案，只說接受後會做什麼。
     return (
@@ -195,7 +260,7 @@ export function ReviewCard({ card, now, current, expanded, leaving, onDesk, comm
   commanderName: string
   onToggle: () => void
   /** 「再次討論」用回傳值判斷有沒有送出（false＝沒送出，表單留著）；其他動作不看回傳值。 */
-  onAction: (action: CardAction, payload?: { note?: string, time?: string }) => unknown
+  onAction: (action: CardAction, payload?: CardActionPayload) => unknown
   onPutAside: (until?: string) => void
 }) {
   const t = useTranslations('workbench')
@@ -271,7 +336,7 @@ export function ReviewCard({ card, now, current, expanded, leaving, onDesk, comm
       </button>
       {expanded && (
         <div ref={panelRef} className="px-4 pb-4 pl-[18px]" data-testid="card-panel">
-          <CardBody card={card} />
+          <CardBody card={card} onAction={onAction} />
           {card.conversationId !== undefined && <ConversationLink id={card.conversationId} />}
           <div className="mt-4 flex flex-wrap items-center gap-2">
             {card.choices?.map((choice, index) => (

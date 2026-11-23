@@ -8,8 +8,8 @@ import { splitInput } from '@/lib/collect/split'
 import { acceptProposal, undoAccepted, type AcceptResult } from '@/lib/collect/write'
 import { linkAcceptedOutputs } from '@/lib/commander/consolidate'
 
-/** Fork（almanac ALMNC-69.3）：替資料源貼上日誌標籤（已經有的不動），貼完重讀資料源分頁。 */
-async function applyJournalTag(sourceIds: readonly string[]): Promise<void> {
+/** Fork（almanac ALMNC-69.3）：替資料源貼上日誌標籤（已經有的不動），貼完重讀資料源分頁。ALMNC-65.2：批次卡整批接受時只貼一次。 */
+export async function applyJournalTag(sourceIds: readonly string[]): Promise<void> {
   const db = await import('@/db/v3-sources')
   for (const id of new Set(sourceIds)) await db.setSourceJournal(id, true)
   const { refreshSources } = await import('@/lib/workbench/actions')
@@ -55,7 +55,8 @@ interface CollectState {
   submit: (input: CollectInput, options?: { recordId?: number }) => Promise<void>
   /** Fork（almanac ALMNC-54.5）：conversationId＝這批提案來自哪段對話（沒有自帶的才補上）。 */
   addProposals: (id: string, origin: string, proposals: Proposal[], options?: { conversationId?: number, recordId?: number }) => void
-  accept: (itemId: string, proposalId: string) => Promise<AcceptResult>
+  /** journalTag: false＝這次不貼日誌標籤（ALMNC-65.2 批次卡整批接受，最後一起貼一次）。 */
+  accept: (itemId: string, proposalId: string, options?: { journalTag?: boolean }) => Promise<AcceptResult>
   reject: (itemId: string, proposalId: string) => void
   /** Fork（almanac ALMNC-54.8）：工作台「復原」放棄——把放棄的提案改回等你決定。 */
   restore: (itemId: string, proposalId: string) => void
@@ -144,7 +145,7 @@ const useCollectStore = create<CollectState>((set, get) => ({
     }, ...state.items] }
   }),
 
-  accept: async (itemId, proposalId) => {
+  accept: async (itemId, proposalId, options) => {
     const item = get().items.find(entry => entry.id === itemId)
     const proposal = item?.proposals.find(entry => entry.id === proposalId)
     if (!item || !proposal || proposal.status !== 'wait' || decisionBlocked(get().items, itemId, proposalId)) throw new Error('proposal not found')
@@ -158,7 +159,7 @@ const useCollectStore = create<CollectState>((set, get) => ({
       await linkAcceptedOutputs(proposal, result).catch(error => console.error('[collect] source output link failed:', error))
     }
     // Fork（almanac ALMNC-69.3）：指揮官「判斷為日誌」隨 Scott 接受一起生效。寫失敗只記錯，不擋已經寫好的筆記。
-    if (proposal.journalTag && proposal.sourceIds?.length) {
+    if (options?.journalTag !== false && proposal.journalTag && proposal.sourceIds?.length) {
       await applyJournalTag(proposal.sourceIds).catch(error => console.error('[collect] journal tag failed:', error))
     }
     // Fork（almanac ALMNC-54.12）：新筆記寫入後，負責的專家在背景比對同領域的類似筆記（發現時機 1）；不擋接受。
