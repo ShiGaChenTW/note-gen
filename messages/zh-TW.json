@@ -78,6 +78,7 @@
         "drafted": "起草",
         "proposed": "提案",
         "accepted": "接受",
+        "auto_accepted": "自動接受",
         "rejected": "放棄",
         "created": "新增",
         "updated": "修改",
@@ -8999,9 +9000,14 @@
       }
     }
   },
+  "autoAcceptLinks": {
+    "title": "自動接受補連結提案",
+    "description": "只補一則一般連結的提案會自動生效，7 天內可在活動紀錄復原。",
+    "settingsError": "無法儲存自動接受設定。"
+  },
   "organize": {
     "title": "自動整理",
-    "description": "閒置 60 分鐘後，最多提出五項變更，在「工作台」逐筆確認。",
+    "description": "閒置 60 分鐘後，最多提出五項變更。需要確認的變更會顯示在「工作台」。",
     "merge": "將 {detail} 合併至 {path}",
     "tag": "為 {path} 補上標籤 #{detail}",
     "link": "從 {path} 連到 {detail}",

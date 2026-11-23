@@ -8,6 +8,7 @@ export const ACTIVITY_ACTIONS = [
   'drafted',
   'proposed',
   'accepted',
+  'auto_accepted',
   'rejected',
   'created',
   'updated',

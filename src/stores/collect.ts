@@ -6,6 +6,8 @@ import { askCollectModel } from '@/lib/collect/ai'
 import { loadItems, mergeItems, saveItems } from '@/lib/collect/persist'
 import { splitInput } from '@/lib/collect/split'
 import { acceptProposal, undoAccepted, type AcceptResult } from '@/lib/collect/write'
+import { collectLinkCandidate } from '@/lib/workbench/auto-accept-sources'
+import { linkEditOf } from '@/lib/workbench/auto-accept'
 import type { OpContext } from '@/lib/ops/types'
 import { linkAcceptedOutputs } from '@/lib/commander/consolidate'
 
@@ -26,6 +28,7 @@ import useHomeStore from './home'
 import useInboxStore from './inbox'
 import usePromptLibraryStore from './prompt-library'
 import useProposalTrailStore from './proposals'
+import useSettingStore from './setting'
 
 export type ProposalStatus = 'wait' | 'ok' | 'no'
 
@@ -55,7 +58,7 @@ interface CollectState {
   hide: () => void
   submit: (input: CollectInput, options?: { recordId?: number }) => Promise<void>
   /** Fork（almanac ALMNC-54.5）：conversationId＝這批提案來自哪段對話（沒有自帶的才補上）。 */
-  addProposals: (id: string, origin: string, proposals: Proposal[], options?: { conversationId?: number, recordId?: number }) => void
+  addProposals: (id: string, origin: string, proposals: Proposal[], options?: { conversationId?: number, recordId?: number }) => Promise<void>
   /** journalTag: false＝這次不貼日誌標籤（ALMNC-65.2 批次卡整批接受，最後一起貼一次）。 */
   accept: (itemId: string, proposalId: string, options?: { journalTag?: boolean, ops?: OpContext }) => Promise<AcceptResult>
   reject: (itemId: string, proposalId: string) => void
@@ -71,6 +74,7 @@ interface CollectState {
 }
 
 let itemCounter = 0
+const submissions = new Map<string, Promise<void>>()
 let hydration: Promise<void> | undefined
 let persistReady = false
 let pendingSave = Promise.resolve()
@@ -131,22 +135,53 @@ const useCollectStore = create<CollectState>((set, get) => ({
     }))
   },
 
-  addProposals: (id, origin, proposals, options) => set(state => {
-    if (!proposals.length || state.items.some(item => item.id === id)) return state
-    return { items: [{
-      id,
-      input: { kind: 'text', text: '', name: origin },
-      createdAt: Date.now(),
-      state: 'ready',
-      source: 'ai',
-      ...(options?.recordId !== undefined ? { recordId: options.recordId } : {}),
-      proposals: proposals.map(proposal => ({
-        ...proposal,
-        ...(proposal.conversationId === undefined && options?.conversationId !== undefined ? { conversationId: options.conversationId } : {}),
-        status: 'wait',
-      })),
-    }, ...state.items] }
-  }),
+  addProposals: (id, origin, proposals, options) => {
+    const pending = submissions.get(id)
+    if (pending) return pending
+    if (!proposals.length || get().items.some(item => item.id === id)) return Promise.resolve()
+
+    const entries: CaptureProposal[] = proposals.map(proposal => ({
+      ...proposal,
+      ...(proposal.conversationId === undefined && options?.conversationId !== undefined ? { conversationId: options.conversationId } : {}),
+      status: 'wait',
+    }))
+    const publish = () => set(state => state.items.some(item => item.id === id) ? state : {
+      items: [{
+        id,
+        input: { kind: 'text', text: '', name: origin },
+        createdAt: Date.now(),
+        state: 'ready',
+        source: 'ai',
+        ...(options?.recordId !== undefined ? { recordId: options.recordId } : {}),
+        proposals: entries,
+      }, ...state.items],
+    })
+
+    const candidates = options?.recordId !== undefined ? [] : entries.flatMap((proposal, index) => {
+      const candidate = collectLinkCandidate(id, proposal)
+      const edit = candidate && linkEditOf(candidate)
+      return edit ? [{ candidate, path: edit.path, index }] : []
+    })
+    if (!candidates.length) {
+      publish()
+      return Promise.resolve()
+    }
+
+    const workspace = useSettingStore.getState().workspacePath || ''
+    const submission = (async () => {
+      const { autoAcceptWorkspace, autoAcceptLink } = await import('@/lib/workbench/auto-accept-runtime')
+      if (autoAcceptWorkspace() !== workspace) return
+      for (const { candidate, path, index } of candidates) {
+        if (await autoAcceptLink(candidate, workspace)) {
+          entries[index] = { ...entries[index], status: 'ok', result: { path } }
+        }
+      }
+    })().catch(error => console.debug('[collect] auto-accept unavailable:', error))
+      .then(publish)
+      .finally(() => { submissions.delete(id) })
+    submissions.set(id, submission)
+    return submission
+  },
 
   accept: async (itemId, proposalId, options) => {
     const item = get().items.find(entry => entry.id === itemId)

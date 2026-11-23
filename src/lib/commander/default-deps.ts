@@ -130,7 +130,7 @@ export async function createDefaultCommanderDeps(): Promise<CommanderDeps> {
       // 先讀回保存的項目，之後的變動才會存檔。
       const collect = useCollectStore.getState()
       await collect.hydrate()
-      collect.addProposals(batch.id, batch.origin, batch.proposals, { conversationId: batch.conversationId, recordId: options?.recordId })
+      await collect.addProposals(batch.id, batch.origin, batch.proposals, { conversationId: batch.conversationId, recordId: options?.recordId })
       if (options?.durable) {
         try {
           await collect.persist()

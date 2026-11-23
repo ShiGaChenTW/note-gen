@@ -94,15 +94,15 @@ function clip(text: string): string {
   return Array.from(text.replace(/\s+/g, ' ').trim()).slice(0, 60).join('')
 }
 
-/** 一筆操作 → 活動紀錄的輸入（Scott 直接做的；夥伴的提案由接受時那一筆 accepted 帶 op_id）。 */
-export function opActivityEntry(record: OpRecord): ActivityEntryInput | null {
+/** 直接操作與自動接受各記一筆，帶 opId 供活動紀錄復原。 */
+export function opActivityEntry(record: OpRecord, context?: LoggedContext): ActivityEntryInput | null {
   if (record.actor === 'system') return null
   const actorRole = record.actor
   const actorId = actorRole === 'scott' ? 'scott' : record.actorId || actorRole
   return {
     actorId,
     actorRole,
-    action: ACTION_OF[record.kind],
+    action: context?.autoAccepted ? 'auto_accepted' : ACTION_OF[record.kind],
     targetLink: `note:${encodeURI(targetPathOf(record.payload))}`,
     source: { kind: 'proposal', ref: opSourceRef(record) },
     note: clip(describeOp(record.payload)),
@@ -152,7 +152,7 @@ export async function opsService(): Promise<OpsService> {
       await runMocRebuild(await reconcileDomainIndexes(specs))
     },
     onRecorded: async (records, context) => {
-      if (shouldLogEach(context)) await appendEntries(records.map(opActivityEntry))
+      if (shouldLogEach(context)) await appendEntries(records.map(record => opActivityEntry(record, context)))
     },
     onUndone: async records => appendEntries([undoneActivityEntry(records)]),
   })
@@ -161,7 +161,7 @@ export async function opsService(): Promise<OpsService> {
   return service
 }
 
-export type LoggedContext = OpContext & { logActivity?: boolean }
+export type LoggedContext = OpContext & { logActivity?: boolean, autoAccepted?: boolean }
 
 /** 記下已經寫好的操作；記不進去只記錯（寫入已經完成，不讓原本的動作失敗）。 */
 export async function recordOps(inputs: readonly RecordInput[], context: LoggedContext): Promise<OpRecord[]> {
@@ -174,8 +174,48 @@ export async function recordOps(inputs: readonly RecordInput[], context: LoggedC
   }
 }
 
-export async function applyOps(specs: readonly OpSpec[], context: LoggedContext): Promise<OpRecord[]> {
-  return (await opsService()).applyOps(specs, context)
+export async function applyOps(specs: readonly OpSpec[], context: LoggedContext, options?: {
+  requireBefore: true
+  workspace: string
+  identity: string
+  canWrite: () => boolean
+}): Promise<OpRecord[]> {
+  if (!options) return (await opsService()).applyOps(specs, context)
+
+  // 自動接受綁定原工作區及可復原紀錄的位置，避免切換筆記庫時寫到同名檔。
+  const [db, vault, memory, guard, { default: article }, editor] = await Promise.all([
+    import('@/db/ops'), import('@/lib/organize/vault-io'), import('@/db/agent-memory'),
+    import('@/lib/local-mcp/workspace-guard'), import('@/stores/article'), import('@/stores/editor-reading'),
+  ])
+  const [edit] = specs
+  const scoped = createOpsService({
+    fs: { ...createAppFs(), read: path => vault.readOrganizeNote(path, options.identity) },
+    writer: {
+      ...createAppWriter(),
+      write: async (path, before, after) => {
+        if (edit?.kind === 'note.edit' && before === edit.before) {
+          const { activeFilePath, currentArticle } = article.getState()
+          const { readOnlyFiles } = editor.useEditorReadingStore.getState()
+          if (!options.canWrite() || readOnlyFiles[editor.readingKey(options.workspace, path)]
+            || (path === activeFilePath && currentArticle !== before)) throw new OpsWriteConflict(path)
+        }
+        await vault.replaceOrganizeNote(path, options.identity, before, after)
+      },
+    },
+    store: db.createOpsDbStore(() => options.workspace),
+    onRecorded: async (records, ctx) => {
+      const entry = opActivityEntry(records[0], ctx)
+      if (!entry) throw new Error('Automatic acceptance requires an activity entry')
+      await memory.appendActivity('system', entry)
+    },
+  })
+  if (!options.canWrite()) return []
+  const release = guard.beginLocalMcpWorkspaceWrite()
+  try {
+    return await scoped.applyOps(specs, context, options)
+  } finally {
+    release()
+  }
 }
 
 export async function undoOp(id: string, options: { force?: boolean } = {}): Promise<UndoResult> {
