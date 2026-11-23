@@ -13,3 +13,10 @@ allowBuilds:
   esbuild: true
   sharp: true
   unrs-resolver: true
+
+# ALMNC-68：這幾個套件的 peer 宣告停在舊大版，實際在新版下運作正常（vitest 與實機測過）。
+peerDependencyRules:
+  allowedVersions:
+    "@sereneinserenade/tiptap-search-and-replace>@tiptap/core": "3"
+    "@sereneinserenade/tiptap-search-and-replace>@tiptap/pm": "3"
+    "openai>zod": "4"
