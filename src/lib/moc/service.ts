@@ -9,7 +9,7 @@
 import { DEFAULT_DOMAIN_FOLDER, mocFileName, renderMocContent } from '@/lib/migration/domain-moc-migration'
 import { buildLinkLookup, resolveWikilinkTargetWithLookup } from '@/lib/vault-index/links'
 import { parseV3Note, writeV3NoteFields } from '@/lib/v3-model/note'
-import { addMocEntry, removeMocEntry, replaceMocEntryTarget } from './edit'
+import { addMocEntry, removeMocEntry, replaceMocEntryTarget, sameTarget } from './edit'
 import { membershipsFromMocs, planDomainRebuild, type DomainRebuildPlan, type NoteDomainChange } from './membership'
 import { formalEntries, parseMoc, type ParsedMoc } from './parse'
 
@@ -159,6 +159,26 @@ export interface AssignResult {
   rebuild: RebuildResult
   /** 復原：改回 MOC 原文、刪掉新建的骨架，再重建。 */
   undo?: () => Promise<void>
+  /** Fork（almanac ALMNC-69.9）：真的收進既有 MOC 的每一條（記成 moc.entry.add 操作用）：收進哪一章、是否補了尚未分章、MOC 寫完後的全文。 */
+  added: AddedEntry[]
+  /** Fork（almanac ALMNC-69.9）：新建的 MOC 骨架（記成 domain.create 操作用）。 */
+  createdMocs: Array<{ path: string, mocId: string, name: string, content: string }>
+}
+
+export interface AddedEntry {
+  notePath: string
+  mocPath: string
+  mocId?: string
+  mocName: string
+  chapterId?: string
+  createdChapter: boolean
+  mocAfter: string
+}
+
+/** 寫完後這則筆記落在哪一章。 */
+function landedChapter(raw: string, path: string, notePath: string, paths: readonly string[]) {
+  const target = entryTargetFor(notePath, paths)
+  return formalEntries(parseMoc(raw, path)).find(({ entry }) => sameTarget(entry.target, target))?.chapter
 }
 
 function nameOf(ref: string, names: ReadonlyMap<string, string>, mocs: readonly ParsedMoc[]): string | null {
@@ -211,6 +231,7 @@ export async function assignToMocs(io: MocIo, requests: readonly AssignRequest[]
   }
 
   const created: string[] = []
+  const createdMocs: AssignResult['createdMocs'] = []
   const edits: MocWrite[] = []
   for (const group of byMoc.values()) {
     // 這個 MOC 要補「尚未分章」時用的 C 編號（一個 MOC 最多補一組，重套用時沿用同一個）。
@@ -249,6 +270,7 @@ export async function assignToMocs(io: MocIo, requests: readonly AssignRequest[]
     try {
       await io.createFile(path, content)
       created.push(path)
+      createdMocs.push({ path, mocId, name: group.name, content })
       await io.recordMoc?.({ id: mocId, path, name: group.name }).catch(error => console.error('[moc] id_index record failed', error))
     } catch (error) {
       console.error('[moc] create MOC failed', path, error)
@@ -264,6 +286,21 @@ export async function assignToMocs(io: MocIo, requests: readonly AssignRequest[]
   }
   const rebuild = await rebuildFromMocs(io, { orderHint: hint, extraNotes: requests.map(request => request.notePath), extraMocs: created })
   const mocPaths = [...committed.map(write => write.path), ...created]
+  const added: AddedEntry[] = []
+  for (const write of committed) {
+    const group = [...byMoc.values()].find(item => item.file?.path === write.path)
+    if (!group?.file) continue
+    const before = parseMoc(write.before, write.path)
+    for (const notePath of group.notes) {
+      const landed = landedChapter(write.after, write.path, notePath, paths)
+      const existed = formalEntries(before).some(({ entry }) => sameTarget(entry.target, entryTargetFor(notePath, paths)))
+      if (!landed || existed) continue
+      added.push({
+        notePath, mocPath: write.path, ...(before.id ? { mocId: before.id } : {}), mocName: group.name,
+        ...(landed.id ? { chapterId: landed.id } : {}), createdChapter: landed.unsorted && !before.unsorted, mocAfter: write.after,
+      })
+    }
+  }
   const undo = mocPaths.length
     ? async () => {
         await io.commit(reverse([...committed, ...rebuild.committed]))
@@ -271,7 +308,7 @@ export async function assignToMocs(io: MocIo, requests: readonly AssignRequest[]
         await rebuildFromMocs(io)
       }
     : undefined
-  return { mocPaths, created, failed, rebuild, ...(undo ? { undo } : {}) }
+  return { mocPaths, created, failed, rebuild, added, createdMocs, ...(undo ? { undo } : {}) }
 }
 
 // ── 從 MOC 拿掉 ─────────────────────────────────────────────
@@ -280,6 +317,8 @@ export interface RemoveResult {
   removed: boolean
   rebuild?: RebuildResult
   undo?: () => Promise<void>
+  /** Fork（almanac ALMNC-69.9）：拿掉的那一條原本在哪一章、關係說明（記成 moc.entry.remove 操作用）。 */
+  entry?: { mocPath: string, mocId?: string, mocName: string, chapterId?: string, relation: string, mocAfter: string }
 }
 
 /** 拿掉某則筆記在某個 MOC（依名稱）的正式收錄，再重建。 */
@@ -291,7 +330,8 @@ export async function removeFromMoc(io: MocIo, notePath: string, domainName: str
   const lookup = buildLinkLookup(paths)
   const mocPath = found.file.path
   const matches = (target: string) => resolveWikilinkTargetWithLookup(target, lookup, mocPath) === notePath
-  if (!formalEntries(found.moc).some(({ entry }) => matches(entry.target))) return { removed: false }
+  const hit = formalEntries(found.moc).find(({ entry }) => matches(entry.target))
+  if (!hit) return { removed: false }
   const apply = (raw: string) => removeMocEntry(raw, entry => matches(entry.target), mocPath).content
   const after = apply(found.file.raw)
   const committed = await io.commit([{ path: mocPath, before: found.file.raw, after, rebase: latest => apply(latest) }])
@@ -300,6 +340,10 @@ export async function removeFromMoc(io: MocIo, notePath: string, domainName: str
   return {
     removed: true,
     rebuild,
+    entry: {
+      mocPath, ...(found.moc.id ? { mocId: found.moc.id } : {}), mocName: found.moc.name,
+      ...(hit.chapter.id ? { chapterId: hit.chapter.id } : {}), relation: hit.entry.relation, mocAfter: committed[0].after,
+    },
     undo: async () => {
       await io.commit(reverse([...committed, ...rebuild.committed]))
       await rebuildFromMocs(io)
@@ -319,6 +363,8 @@ export interface MembershipTransfer {
 export interface TransferResult {
   mocPaths: string[]
   rebuild: RebuildResult
+  /** Fork（almanac ALMNC-69.9）：MOC 的前後全文（記成操作、7 天可復原用）。 */
+  committed: Array<{ path: string, before: string, after: string }>
 }
 
 /**
@@ -350,5 +396,5 @@ export async function transferMemberships(io: MocIo, transfers: readonly Members
   const hint = new Map<string, string[]>()
   for (const { from, to } of transfers) hint.set(to, unique([...(hint.get(to) ?? [...domainsOf(to)]), ...domainsOf(from)]))
   const rebuild = await rebuildFromMocs(io, { orderHint: hint, extraNotes: transfers.map(item => item.to) })
-  return { mocPaths: committed.map(write => write.path), rebuild }
+  return { mocPaths: committed.map(write => write.path), rebuild, committed }
 }

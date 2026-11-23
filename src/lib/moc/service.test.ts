@@ -169,3 +169,26 @@ describe('transferMemberships (cleanup merge / replace)', () => {
     expect(domainsOf(files['10 知識/時間區塊要留兩成緩衝.md'])).toEqual(['時間管理', '專注力'])
   })
 })
+
+// Fork（almanac ALMNC-69.9）：寫入端回報每一條收錄的細節（收進哪一章、是否補了尚未分章、MOC 寫完後的全文），記成以編號描述的操作。
+describe('details for ops (ALMNC-69.9)', () => {
+  it('assignToMocs reports added entries and created MOCs; removeFromMoc reports the chapter and relation', async () => {
+    const io = createMemoryMocIo(vault())
+    const result = await assignToMocs(io, [
+      { notePath: '10 知識/未歸屬.md', domain: '時間管理' },
+      { notePath: '10 知識/未歸屬.md', domain: '寫作' },
+    ])
+    const moc = parseMoc(io.files['20 領域/時間管理.md'], '20 領域/時間管理.md')
+    expect(result.added).toEqual([{
+      notePath: '10 知識/未歸屬.md', mocPath: '20 領域/時間管理.md', mocId: 'M-20261112-060012-VPB3', mocName: '時間管理',
+      chapterId: moc.unsorted?.id, createdChapter: true, mocAfter: io.files['20 領域/時間管理.md'],
+    }])
+    expect(result.createdMocs).toEqual([expect.objectContaining({ name: '寫作', path: '20 領域/寫作.md', content: io.files['20 領域/寫作.md'] })])
+
+    const removed = await removeFromMoc(io, '10 知識/說不比提高效率更省時間.md', '時間管理')
+    expect(removed.entry).toEqual({
+      mocPath: '20 領域/時間管理.md', mocId: 'M-20261112-060012-VPB3', mocName: '時間管理',
+      chapterId: 'C-20261112-060020-N9NR', relation: '和下一章互補：先刪，再排', mocAfter: io.files['20 領域/時間管理.md'],
+    })
+  })
+})

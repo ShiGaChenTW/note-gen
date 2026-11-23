@@ -20,6 +20,8 @@ export interface AcceptedProposal {
   conversationId?: number
   /** 接受後寫到的檔案；沒有就連回提案本身。 */
   path?: string
+  /** Fork（almanac ALMNC-69.9）：這次接受記下的第一筆操作（同一批可「撤回這次整理」）。 */
+  opId?: string
 }
 
 const SCHEDULE_KINDS = new Set(['task', 'event'])
@@ -46,6 +48,7 @@ export function acceptedActivityEntry(proposal: AcceptedProposal, roster: Readon
       ? { kind: 'conversation', ref: String(proposal.conversationId) }
       : { kind: 'proposal', ref: proposal.key },
     note: clip(proposal.what),
+    ...(proposal.opId ? { opId: proposal.opId } : {}),
   }
 }
 

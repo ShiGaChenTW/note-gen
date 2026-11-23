@@ -48,3 +48,12 @@ export const AGENT_MEMORY_SCHEMA = [
     updated_at integer not null
   )`,
 ]
+
+/**
+ * Fork（almanac ALMNC-69.9）：activity_log 補 op_id（對應 ops 表的操作）。舊資料庫啟動時補欄位（預設 null），
+ * 補完再加觸發器：op_id 寫入後不能改（只能新增的規則延伸到新欄位）。
+ */
+export const ACTIVITY_OP_COLUMN = 'alter table activity_log add column op_id text default null'
+export const ACTIVITY_OP_TRIGGER = `create trigger if not exists activity_log_op_fixed before update on activity_log
+  when new.op_id is not old.op_id
+  begin select raise(abort, 'ACTIVITY_LOG_APPEND_ONLY'); end`

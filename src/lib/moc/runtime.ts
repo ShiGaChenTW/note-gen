@@ -3,6 +3,9 @@
 import { commitNoteWrites } from '@/lib/daily/coordinated-write'
 import { readNote, removeNote, writeNote } from '@/lib/daily/note-io'
 import { newId } from '@/lib/v3-model/identity'
+import type { RecordInput } from '@/lib/ops/service'
+import type { LoggedContext } from '@/lib/ops/runtime'
+import type { OpRecord } from '@/lib/ops/types'
 import useMocStore from '@/stores/moc'
 import useVaultIndexStore from '@/stores/vault-index'
 import { assignToMocs, rebuildFromMocs, removeFromMoc, transferMemberships, type AssignRequest, type AssignResult, type MembershipTransfer, type MocIo, type RebuildOptions, type RebuildResult, type RemoveResult, type TransferResult } from './service'
@@ -87,27 +90,80 @@ export async function runMocRebuild(options: RebuildOptions = {}): Promise<Rebui
   return result
 }
 
+/** Fork（almanac ALMNC-69.9）：寫入端帶上發起情境時，MOC 的改動記成以編號描述的操作（ops），復原改以 ops 為準（7 天、版本檢查）。 */
+export interface MocOpOptions {
+  ops?: LoggedContext
+}
+
+async function noteRef(notePath: string): Promise<{ noteId?: string, noteTitle: string, notePath: string }> {
+  const { idOfContent, titleOfPath } = await import('@/lib/ops/runtime')
+  const noteId = idOfContent(await readNote(notePath).catch(() => null))
+  return { ...(noteId ? { noteId } : {}), noteTitle: titleOfPath(notePath), notePath }
+}
+
+/** 收進 MOC 的結果 → 操作（新建的 MOC 記成立領域，收進既有 MOC 的記 moc.entry.add）。 */
+async function assignInputs(result: AssignResult): Promise<RecordInput[]> {
+  const inputs: RecordInput[] = result.createdMocs.map(moc => ({
+    spec: { kind: 'domain.create', mocId: moc.mocId, name: moc.name, path: moc.path, content: moc.content },
+  }))
+  for (const entry of result.added) {
+    inputs.push({
+      spec: {
+        kind: 'moc.entry.add', ...await noteRef(entry.notePath),
+        ...(entry.mocId ? { mocId: entry.mocId } : {}), mocName: entry.mocName, mocPath: entry.mocPath,
+        ...(entry.chapterId ? { chapterId: entry.chapterId } : {}), ...(entry.createdChapter ? { createdChapter: true } : {}),
+      },
+      after: { [entry.mocPath]: entry.mocAfter },
+    })
+  }
+  return inputs
+}
+
+async function withOps<T extends object>(result: T, inputs: RecordInput[], context?: LoggedContext): Promise<T & { ops?: OpRecord[], undo?: () => Promise<void> }> {
+  if (!context || !inputs.length) return result
+  const { recordOps, undoRecords } = await import('@/lib/ops/runtime')
+  const ops = await recordOps(inputs, context)
+  const undo = undoRecords(ops)
+  return undo ? { ...result, ops, undo: async () => { await undo() } } : result
+}
+
 /** 把筆記收進領域的 MOC（尚未分章），再重建 domains。domains 是領域名稱或舊 dom_ id，依序（第一個是主要）。 */
-export async function assignNoteToDomains(notePath: string, domains: readonly string[]): Promise<AssignResult | null> {
+export async function assignNoteToDomains(notePath: string, domains: readonly string[], options: MocOpOptions = {}): Promise<(AssignResult & { ops?: OpRecord[] }) | null> {
   const requests: AssignRequest[] = domains.map(domain => ({ notePath, domain }))
   if (!requests.length) return null
   const result = await assignToMocs(createMocIo(), requests)
   await settle(result.rebuild)
   if (result.failed.length) console.warn('[moc] 沒有收進 MOC：', result.failed)
-  return result
+  return withOps(result, options.ops ? await assignInputs(result) : [], options.ops)
 }
 
 /** 超過上限卡：拿掉這則筆記在這個領域 MOC 的收錄。 */
-export async function removeNoteFromDomain(notePath: string, domainName: string): Promise<RemoveResult> {
+export async function removeNoteFromDomain(notePath: string, domainName: string, options: MocOpOptions = {}): Promise<RemoveResult & { ops?: OpRecord[] }> {
   const result = await removeFromMoc(createMocIo(), notePath, domainName)
   if (result.rebuild) await settle(result.rebuild)
-  return result
+  const entry = result.entry
+  const inputs: RecordInput[] = options.ops && entry ? [{
+    spec: {
+      kind: 'moc.entry.remove', ...await noteRef(notePath), ...(entry.mocId ? { mocId: entry.mocId } : {}),
+      mocName: entry.mocName, mocPath: entry.mocPath, ...(entry.chapterId ? { chapterId: entry.chapterId } : {}),
+      ...(entry.relation ? { relation: entry.relation } : {}),
+    },
+    after: { [entry.mocPath]: entry.mocAfter },
+  }] : []
+  return withOps(result, inputs, options.ops)
 }
 
 /** 清理提案接受後：新筆記承接被合併／被取代筆記的 MOC 收錄，再重建 domains。 */
-export async function transferNoteMemberships(transfers: readonly MembershipTransfer[]): Promise<TransferResult | null> {
+export async function transferNoteMemberships(transfers: readonly MembershipTransfer[], options: MocOpOptions = {}): Promise<(TransferResult & { ops?: OpRecord[] }) | null> {
   if (!transfers.length) return null
   const result = await transferMemberships(createMocIo(), transfers)
   await settle(result.rebuild)
-  return result
+  if (!options.ops) return result
+  // 換人承接一次改好幾條收錄：以 MOC 全文前後記成內容修改（復原＝寫回前版本，同樣先做版本檢查）。
+  const { idOfContent, titleOfPath } = await import('@/lib/ops/runtime')
+  const inputs: RecordInput[] = result.committed.map(write => {
+    const mocId = idOfContent(write.before)
+    return { spec: { kind: 'note.edit', ...(mocId ? { noteId: mocId } : {}), path: write.path, title: titleOfPath(write.path), before: write.before, after: write.after } }
+  })
+  return withOps(result, inputs, options.ops)
 }

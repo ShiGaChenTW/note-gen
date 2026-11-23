@@ -126,6 +126,13 @@ describe('ALMNC-54.3 Agent 設定區', () => {
     expect(prompt).toContain('Active projects: Almanac')
   })
 
+  it('ALMNC-69.9: activity rows carry op_id (added to old tables at startup) and it cannot be changed later', async () => {
+    const id = await appendActivity('system', { actorId: 'scott', actorRole: 'scott', action: 'undone', targetLink: 'note:a.md', source: { kind: 'proposal', ref: 'op:op-1' }, opId: 'op-1' }, 40)
+    const [entry] = (await listActivity({ now: 40, includeArchived: true })).filter(item => item.id === id)
+    expect(entry).toMatchObject({ action: 'undone', opId: 'op-1' })
+    expect(() => sqlite.exec(`update activity_log set op_id = 'op-2' where id = ${id}`)).toThrow('ACTIVITY_LOG_APPEND_ONLY')
+  })
+
   it('schema is idempotent', () => {
     sqlite.exec(AGENT_MEMORY_SCHEMA.join(';\n'))
     expect(sqlite.prepare("select count(*) as n from agent_memory").all({})).toEqual([{ n: 3 }])

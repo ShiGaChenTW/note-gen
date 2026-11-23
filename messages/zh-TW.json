@@ -83,8 +83,18 @@
         "updated": "修改",
         "linked": "連結",
         "reported": "回報",
-        "corrected": "更正"
-      }
+        "corrected": "更正",
+        "undone": "復原"
+      },
+      "undoWindowHint": "7 天內的變更可以復原。",
+      "sourceDirect": "直接操作",
+      "undo": "復原",
+      "undoBatch": "撤回這次整理",
+      "undoing": "復原中…",
+      "undoneMark": "已復原",
+      "undoDone": "已復原。",
+      "undoExpired": "已超過 7 天，不能復原。",
+      "undoFailed": "復原失敗，沒有覆蓋任何內容。"
     }
   },
   "agentDiffNavigation": {
@@ -9629,5 +9639,17 @@
     "clockFuture": "「{path}」等 {count} 處的身分編號或建立時間在未來，請檢查系統時鐘",
     "clockBeforeSource": "「{path}」等 {count} 則筆記的編號時間早於它的資料源，可能是時鐘有誤",
     "held": "有 {count} 個筆記沒有身分編號，數量較多所以沒有自動補上；請先用遷移工具（pnpm migrate:ids）預覽後再套用"
+  },
+  "ops": {
+    "compare": {
+      "title": "這些檔案在那之後被改過",
+      "hint": "復原不會直接覆蓋。比較還原後和目前的內容，再決定。",
+      "restored": "還原後",
+      "current": "目前",
+      "missing": "（檔案不存在）",
+      "changed": "之後被改過",
+      "confirm": "仍要復原",
+      "cancel": "取消"
+    }
   }
 }

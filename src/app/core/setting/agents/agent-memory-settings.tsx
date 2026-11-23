@@ -15,14 +15,20 @@ import {
 import { agentRoleLabel } from '@/lib/agents/display'
 import type { AgentSettings as SavedAgent } from '@/lib/agents/settings'
 import { Button } from '@/components/ui/button'
+import { UndoCompareCard } from '@/components/ops/undo-compare-card'
+import { opUiStates, undoBatch, undoOp, type OpUiState } from '@/lib/ops/runtime'
+import type { CompareFile } from '@/lib/ops/types'
 import { SettingSection } from '../components/setting-base'
 
 const field = 'w-full rounded-md border border-line bg-bg px-3 py-2 text-ink'
 const textarea = `${field} min-h-32 font-mono text-xs`
 const ACTIVITY_LIMIT = 50
 
-type Section = MemoryKind | 'context' | 'preferences'
-type Notice = { section: Section, key: 'saved' | 'saveError' | ContextErrorKey }
+type Section = MemoryKind | 'context' | 'preferences' | 'activity'
+type Notice = { section: Section, key: 'saved' | 'saveError' | ContextErrorKey | UndoNoticeKey }
+type UndoNoticeKey = 'undoDone' | 'undoExpired' | 'undoFailed'
+/** ALMNC-69.9：復原一筆（op）或撤回這次整理（batch）。 */
+type UndoTarget = { entryId: number, mode: 'op', opId: string } | { entryId: number, mode: 'batch', opId: string, batchId: string }
 type ContextErrorKey = 'tooManyProjects' | 'tooManyFocus' | 'tooManyPeople' | 'titleRequired' | 'titleTooLong'
 
 const CONTEXT_ERRORS: Record<ContextValidationError, ContextErrorKey> = {
@@ -55,6 +61,10 @@ export function AgentMemorySettings({ agents }: { agents: SavedAgent[] }) {
   const [loadError, setLoadError] = useState(false)
   const [saving, setSaving] = useState<Section | null>(null)
   const [notice, setNotice] = useState<Notice | null>(null)
+  /** ALMNC-69.9：活動紀錄對應的操作狀態（7 天內、未復原、同一批幾筆）。 */
+  const [opStates, setOpStates] = useState<Map<string, OpUiState>>(new Map())
+  const [undoing, setUndoing] = useState<number | null>(null)
+  const [compare, setCompare] = useState<{ target: UndoTarget, files: CompareFile[] } | null>(null)
 
   const agent = agents.find(item => item.id === selectedId) ?? agents[0]
 
@@ -65,6 +75,7 @@ export function AgentMemorySettings({ agents }: { agents: SavedAgent[] }) {
       setContext({ projects: formatContextLines(ctx.projects), weeklyFocus: formatContextLines(ctx.weeklyFocus), people: ctx.people.join('\n') })
       setActivity(log)
       setPreferences(prefs.content)
+      void loadOpStates(log)
     }).catch(err => {
       console.error('[agents] memory load failed', err)
       if (active) setLoadError(true)
@@ -86,6 +97,52 @@ export function AgentMemorySettings({ agents }: { agents: SavedAgent[] }) {
     })
     return () => { active = false }
   }, [agent])
+
+  async function loadOpStates(log: ActivityEntry[]) {
+    const ids = [...new Set(log.flatMap(entry => entry.opId ? [entry.opId] : []))]
+    try {
+      setOpStates(await opUiStates(ids))
+    } catch (err) {
+      console.debug('[agents] op states unavailable', err)
+    }
+  }
+
+  async function reloadActivity() {
+    const log = await listActivity({ limit: ACTIVITY_LIMIT })
+    setActivity(log)
+    await loadOpStates(log)
+  }
+
+  async function undo(target: UndoTarget, force = false) {
+    setUndoing(target.entryId)
+    setNotice(null)
+    try {
+      const result = target.mode === 'batch' ? await undoBatch(target.batchId, { force }) : await undoOp(target.opId, { force })
+      if (result.status === 'conflict') {
+        setCompare({ target, files: result.files })
+        return
+      }
+      setCompare(null)
+      if (result.status === 'expired') setNotice({ section: 'activity', key: 'undoExpired' })
+      else if (result.status === 'undone') setNotice({ section: 'activity', key: 'undoDone' })
+      await reloadActivity()
+    } catch (err) {
+      console.error('[agents] undo failed', err)
+      setNotice({ section: 'activity', key: 'undoFailed' })
+    } finally {
+      setUndoing(null)
+    }
+  }
+
+  /** 這筆紀錄能做的復原：同一批還有 2 筆以上能復原就是「撤回這次整理」，否則復原這一筆。 */
+  function undoTargetOf(entry: ActivityEntry): UndoTarget | null {
+    if (!entry.opId || entry.action === 'undone') return null
+    const state = opStates.get(entry.opId)
+    if (state?.state !== 'undoable') return null
+    return state.batchId && state.batchSize >= 2
+      ? { entryId: entry.id, mode: 'batch', opId: entry.opId, batchId: state.batchId }
+      : { entryId: entry.id, mode: 'op', opId: entry.opId }
+  }
 
   async function run(section: Section, action: () => Promise<void>) {
     setSaving(section)
@@ -205,7 +262,16 @@ export function AgentMemorySettings({ agents }: { agents: SavedAgent[] }) {
         {context && (
           <div className="space-y-2">
             <div className="font-medium">{t('activity')}</div>
-            <p className="text-xs text-muted-foreground">{t('activityHint')}</p>
+            <p className="text-xs text-muted-foreground">{t('activityHint')} {t('undoWindowHint')}</p>
+            {status('activity')}
+            {compare && (
+              <UndoCompareCard
+                files={compare.files}
+                busy={undoing !== null}
+                onConfirm={() => void undo(compare.target, true)}
+                onCancel={() => setCompare(null)}
+              />
+            )}
             {actors.length > 1 && (
               <label className="flex flex-wrap items-center gap-2 text-xs">
                 <span>{t('activityFilter')}</span>
@@ -224,7 +290,10 @@ export function AgentMemorySettings({ agents }: { agents: SavedAgent[] }) {
               ? <p className="text-muted-foreground">{t('activityEmpty')}</p>
               : (
                 <ol aria-label={t('activity')} className="divide-y divide-line rounded-md border border-line bg-panel">
-                  {shownActivity.map(entry => (
+                  {shownActivity.map(entry => {
+                    const target = undoTargetOf(entry)
+                    const undone = entry.opId && opStates.get(entry.opId)?.state === 'undone' && entry.action !== 'undone'
+                    return (
                     <li key={entry.id} className="space-y-0.5 px-3 py-2 text-xs">
                       <div className="flex flex-wrap gap-x-2">
                         <time dateTime={new Date(entry.at).toISOString()} className="text-muted-foreground">
@@ -236,12 +305,27 @@ export function AgentMemorySettings({ agents }: { agents: SavedAgent[] }) {
                         <span className="break-all">{entry.targetLink}</span>
                         {entry.correctsId !== null && <span className="text-muted-foreground">{t('correctsEntry', { id: entry.correctsId })}</span>}
                       </div>
-                      <div className="text-muted-foreground">
-                        {t(entry.source.kind === 'proposal' ? 'sourceProposal' : 'sourceConversation', { ref: entry.source.ref })}
-                        {entry.note && ` · ${entry.note}`}
+                      <div className="flex flex-wrap items-center gap-x-2 text-muted-foreground">
+                        <span>
+                          {entry.source.ref.startsWith('op:')
+                            ? t('sourceDirect')
+                            : t(entry.source.kind === 'proposal' ? 'sourceProposal' : 'sourceConversation', { ref: entry.source.ref })}
+                          {entry.note && ` · ${entry.note}`}
+                        </span>
+                        {undone && <span>{t('undoneMark')}</span>}
+                        {target && (
+                          <Button
+                            type="button" size="sm" variant="outline" className="h-6 px-2 text-xs"
+                            disabled={undoing !== null}
+                            onClick={() => void undo(target)}
+                          >
+                            {t(undoing === entry.id ? 'undoing' : target.mode === 'batch' ? 'undoBatch' : 'undo')}
+                          </Button>
+                        )}
                       </div>
                     </li>
-                  ))}
+                    )
+                  })}
                 </ol>
               )}
           </div>

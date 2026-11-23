@@ -14,11 +14,15 @@ import { applyStructuralOp, handwrittenNote, mergeDeskDraft, noteFileName, type 
 import { splitFrontmatter } from '@/lib/markdown/frontmatter-split'
 import { noteTitle, parseV3Note } from '@/lib/v3-model/note'
 import { buildDeskContext } from './desk-context'
+import { newBatchId } from '@/lib/ops/ids'
 import { bridgeInput, planHandToCommander, type SourceListRow } from './sources-tab'
 import { attachmentKind, ingestSource, judgeSource, newSourceType, type SourceJudgement } from './judgement'
 import { conversationConclusionSource, dailyEntrySource, externalAudioSource, recordAttachmentSource, noteSource, recordTextSource, researchFindingSource, routeAutoSource, routeVersionedSource, voiceMemoSource, type AutoRouteResult, type AutoSourceInput, type RecordAttachment, type ResearchFindingLike, type VersionedRouteResult } from './auto-route'
 
 export type Undo = (() => Promise<unknown>) | undefined
+
+/** Fork（almanac ALMNC-69.9）：Scott 親自觸發的操作。 */
+const SCOTT = { actor: 'scott', actorId: 'scott' } as const
 
 /** 叫指揮官的分析佇列跑一輪（R2：自己寫的、系統產生的；R1：Scott 選「處理」後）。 */
 export async function kickCommander(): Promise<void> {
@@ -154,20 +158,60 @@ export async function requestJudgement(source: Pick<Source, 'id' | 'kind' | 'con
 // —— 審核：卡片動作 ——
 
 // Fork（almanac ALMNC-54.21）：接受後記一筆活動紀錄（誰提的、改了什麼、來源對話）；記不進去不擋接受。
+// Fork（almanac ALMNC-69.9）：接受造成的寫入記成同一批操作（actor＝撰寫的夥伴、proposal_id＝提案鍵）；
+// 活動紀錄那一筆 accepted 帶 op_id，7 天內可「撤回這次整理」；立即復原（Z）也改以 ops 為準（有後續變更就不覆蓋）。
 export async function acceptCard(card: WorkbenchCard): Promise<Undo> {
   if (card.decide) {
-    const changes = await retargetedChanges(card.decide)
-    const outcome = await acceptDecision(card.decide)
-    await logAcceptedProposal(acceptedFromDecide(card.decide, outcome.path, changes))
-    return outcome.undo
+    const item = card.decide
+    const changes = await retargetedChanges(item)
+    const ops = proposalOpContext(item.key, item.drafter)
+    const outcome = await acceptDecision(item, { ops })
+    const records = await batchRecords(ops.batchId)
+    await logAcceptedProposal({ ...acceptedFromDecide(item, outcome.path, changes), ...(records[0] ? { opId: records[0].id } : {}) })
+    return records.length ? await opsUndo(records, () => reopenDecision(item)) : outcome.undo
   }
   if (card.kind === 'domain' && card.domainProposalId) {
     const { acceptDomainCard } = await import('./domain-cards')
-    await acceptDomainCard(card.domainProposalId)
-    await logAcceptedProposal({ key: card.domainProposalId, kind: 'domain', what: card.title, drafter: { role: 'commander' } })
-    return undefined
+    const ops = proposalOpContext(card.domainProposalId, { role: 'commander' })
+    await acceptDomainCard(card.domainProposalId, ops)
+    const records = await batchRecords(ops.batchId)
+    await logAcceptedProposal({ key: card.domainProposalId, kind: 'domain', what: card.title, drafter: { role: 'commander' }, ...(records[0] ? { opId: records[0].id } : {}) })
+    return records.length ? opsUndo(records) : undefined
   }
   return undefined
+}
+
+/** 提案接受的發起情境：撰寫的夥伴（沒記就是指揮官）、提案鍵、這次接受的批次。 */
+function proposalOpContext(key: string, drafter?: { role: 'commander' | 'expert' | 'secretary', agentId?: string }) {
+  const role = drafter?.role ?? 'commander'
+  return { actor: role, ...(drafter?.agentId ? { actorId: drafter.agentId } : {}), proposalId: key, batchId: newBatchId() }
+}
+
+async function batchRecords(batchId: string) {
+  // 瀏覽器預覽沒有資料庫：沒有操作紀錄，照原本的復原。
+  if (!await inDesktopApp()) return []
+  try {
+    const { opsStore } = await import('@/db/ops')
+    return await opsStore.listBatch(batchId)
+  } catch (error) {
+    console.debug('[workbench] ops unavailable:', error)
+    return []
+  }
+}
+
+async function opsUndo(records: Parameters<typeof import('@/lib/ops/runtime')['undoRecords']>[0], after?: () => void): Promise<Undo> {
+  const { undoRecords } = await import('@/lib/ops/runtime')
+  const undo = undoRecords(records)
+  return undo && (async () => {
+    const done = await undo()
+    if (done) after?.()
+    return done
+  })
+}
+
+/** 復原後收集提案回到等你決定（同原本 stores/collect 的 undo）。 */
+function reopenDecision(item: DecideItem) {
+  if (item.ref.source === 'collect') useCollectStore.getState().reopen(item.ref.itemId, item.ref.proposalId)
 }
 
 export interface BatchAcceptResult {
@@ -185,9 +229,11 @@ export async function acceptBatchCard(card: WorkbenchCard): Promise<BatchAcceptR
   const items = card.batch ?? []
   const outcome = await acceptEach(items, async item => {
     const changes = await retargetedChanges(item)
-    const result = await acceptDecision(item, { journalTag: false })
-    await logAcceptedProposal(acceptedFromDecide(item, result.path, changes))
-    return result
+    const ops = proposalOpContext(item.key, item.drafter)
+    const result = await acceptDecision(item, { journalTag: false, ops })
+    const records = await batchRecords(ops.batchId)
+    await logAcceptedProposal({ ...acceptedFromDecide(item, result.path, changes), ...(records[0] ? { opId: records[0].id } : {}) })
+    return records.length ? { ...result, undo: await opsUndo(records, () => reopenDecision(item)) as (() => Promise<boolean>) } : result
   })
   const accepted = outcome.accepted.map(entry => entry.item)
   const journalSources = accepted.filter(item => item.journalTag).flatMap(item => item.sourceIds ?? [])
@@ -255,7 +301,7 @@ export async function scheduleCardTask(task: TaskLike, time: string): Promise<Un
  */
 export async function removeDomainChoice(path: string, domain: string): Promise<Undo> {
   const { removeNoteFromDomain } = await import('@/lib/moc/runtime')
-  const result = await removeNoteFromDomain(path, domain)
+  const result = await removeNoteFromDomain(path, domain, { ops: SCOTT })
   if (!result.removed) throw new Error(`domain entry not found: ${domain}`)
   return result.undo
 }
@@ -265,8 +311,12 @@ export async function confirmStillValid(path: string, today: string): Promise<Un
   const [{ readNote, writeNote }, { writeV3NoteFields }] = await Promise.all([import('@/lib/daily/note-io'), import('@/lib/v3-model/note')])
   const raw = await readNote(path)
   if (raw === null) throw new Error(`note not found: ${path}`)
-  await writeNote(path, writeV3NoteFields(raw, { lastConfirmed: today }))
-  return async () => writeNote(path, raw)
+  const next = writeV3NoteFields(raw, { lastConfirmed: today })
+  await writeNote(path, next)
+  // Fork（almanac ALMNC-69.9）：Scott 按的，記成內容修改（7 天內可從活動紀錄復原）。
+  const [{ recordOps, undoRecords }, { snapshotInputs }] = await Promise.all([import('@/lib/ops/runtime'), import('@/lib/ops/refs')])
+  const undo = undoRecords(await recordOps(snapshotInputs([{ path, before: raw, after: next }]), SCOTT))
+  return undo ?? (async () => writeNote(path, raw))
 }
 
 /**
@@ -686,17 +736,23 @@ export async function defaultNoteIo(): Promise<NoteIo> {
       return to
     },
     // Fork（almanac ALMNC-69.7）：歸入領域＝寫進該領域 MOC 的「尚未分章」，再由重建更新 domains。
+    // Fork（almanac ALMNC-69.9）：Scott 親自觸發，直接生效並記成操作（7 天內可復原）。
     assignDomain: async (path, domainId) => {
       const { assignNoteToDomains } = await import('@/lib/moc/runtime')
-      const result = await assignNoteToDomains(path, [domainId])
+      const result = await assignNoteToDomains(path, [domainId], { ops: SCOTT })
       if (result?.failed.length) throw new Error(`assign domain failed: ${domainId}`)
       return result?.undo
     },
   }
 }
 
+/** Fork（almanac ALMNC-69.9）：檯面操作記成 ops（Scott 發起、直接生效、活動紀錄每筆附復原）；復原改以 ops 為準。 */
 export async function runDeskOp(op: StructuralOp): Promise<{ path?: string, undo?: () => Promise<void> }> {
-  return applyStructuralOp(op, await defaultNoteIo())
+  const { change, ...result } = await applyStructuralOp(op, await defaultNoteIo())
+  if (!change) return result
+  const { recordOps, undoRecords } = await import('@/lib/ops/runtime')
+  const undo = undoRecords(await recordOps([change], SCOTT))
+  return undo ? { ...result, undo: async () => { await undo() } } : result
 }
 
 async function deskNotePath(title: string, fallbackName: string): Promise<string> {
@@ -716,7 +772,10 @@ export async function saveDeskNote(draft: { title: string, body: string }, mater
   const [{ writeNote }, sources, path] = await Promise.all([
     import('@/lib/daily/note-io'), import('@/db/v3-sources'), deskNotePath(draft.title, fallbackName),
   ])
-  await writeNote(path, handwrittenNote(draft, materials, handTag))
+  const content = handwrittenNote(draft, materials, handTag)
+  await writeNote(path, content)
+  const [{ recordOps }, { snapshotInputs }] = await Promise.all([import('@/lib/ops/runtime'), import('@/lib/ops/refs')])
+  await recordOps(snapshotInputs([{ path, before: null, after: content }]), SCOTT)
   for (const material of materials) {
     if (material.sourceId) await sources.addSourceOutput(material.sourceId, 'note', path).catch(() => undefined)
   }
@@ -749,9 +808,10 @@ export async function mergeDeskNotes(
   }
   checkWorkspace()
   await noteIo.writeNote(path, plan.content, { createNew: true })
+  let archived: Array<{ path: string, before: string, after: string }> = []
   try {
     checkWorkspace()
-    await commitNoteWrites(plan.writes, { requireExisting: true })
+    archived = (await commitNoteWrites(plan.writes, { requireExisting: true })) ?? []
   } catch (error) {
     checkWorkspace()
     if (await noteIo.readNote(path) === plan.content) {
@@ -760,12 +820,16 @@ export async function mergeDeskNotes(
     throw error
   }
 
+  // Fork（almanac ALMNC-69.9）：合併記成同一批操作（新筆記、原件封存、收進 MOC），活動紀錄可「撤回這次整理」。
+  const [{ recordOps }, { snapshotInputs }] = await Promise.all([import('@/lib/ops/runtime'), import('@/lib/ops/refs')])
+  const batch = { ...SCOTT, batchId: newBatchId() }
+  await recordOps(snapshotInputs([{ path, before: null, after: plan.content }, ...archived]), batch)
   // Fork（almanac ALMNC-69.7）：合併後的筆記沿用原件的領域——收進那些領域的 MOC，重建時才不會被拿掉。
   const mergedDomains = parseV3Note(plan.content).fields.domains
   await Promise.allSettled([
     ...plan.sources.map(id => sources.addSourceOutput(id, 'note', path)),
     noteIo.revealInFileTree(path),
-    ...(mergedDomains.length ? [import('@/lib/moc/runtime').then(module => module.assignNoteToDomains(path, mergedDomains))] : []),
+    ...(mergedDomains.length ? [import('@/lib/moc/runtime').then(module => module.assignNoteToDomains(path, mergedDomains, { ops: batch }))] : []),
   ]).then(results => {
     for (const result of results) if (result.status === 'rejected') console.warn('[workbench] merge follow-up failed:', result.reason)
   })

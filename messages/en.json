@@ -83,8 +83,18 @@
         "updated": "updated",
         "linked": "linked",
         "reported": "reported",
-        "corrected": "corrected"
-      }
+        "corrected": "corrected",
+        "undone": "undid"
+      },
+      "undoWindowHint": "Changes from the last 7 days can be undone.",
+      "sourceDirect": "Direct action",
+      "undo": "Undo",
+      "undoBatch": "Undo this whole round",
+      "undoing": "Undoing…",
+      "undoneMark": "Undone",
+      "undoDone": "Undone.",
+      "undoExpired": "More than 7 days ago; it can no longer be undone.",
+      "undoFailed": "Could not undo. Nothing was overwritten."
     }
   },
   "agentDiffNavigation": {
@@ -9564,5 +9574,17 @@
     "clockFuture": "{count} ID(s) or creation times, including \"{path}\", are in the future. Please check the system clock",
     "clockBeforeSource": "{count} note(s), including \"{path}\", have IDs earlier than their sources; the clock may be wrong",
     "held": "{count} notes have no ID. That's too many to add automatically; preview and apply them with the migration tool (pnpm migrate:ids) first"
+  },
+  "ops": {
+    "compare": {
+      "title": "These files changed afterwards",
+      "hint": "Undo will not overwrite them silently. Compare the restored version with the current one, then decide.",
+      "restored": "After undo",
+      "current": "Current",
+      "missing": "(file does not exist)",
+      "changed": "Changed later",
+      "confirm": "Undo anyway",
+      "cancel": "Cancel"
+    }
   }
 }

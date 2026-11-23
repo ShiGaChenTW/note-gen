@@ -5,6 +5,8 @@
 // 再由重建（lib/moc）更新 domains——MOC 上的正式收錄是唯一依據。
 import { archiveMergedNote } from '@/lib/cleanup/plan'
 import { parseV3Note, writeV3NoteFields, createV3Note } from '@/lib/v3-model/note'
+import { idOfContent, titleOfPath } from '@/lib/ops/refs'
+import type { RecordInput } from '@/lib/ops/service'
 
 export type DeskMaterialKind = 'note' | 'source' | 'record' | 'capture'
 
@@ -48,14 +50,27 @@ function wikiTarget(path: string): string {
   return path.replace(/\.md$/i, '')
 }
 
+export interface StructuralOpResult {
+  path?: string
+  undo?: () => Promise<void>
+  /** Fork（almanac ALMNC-69.9）：要記進 ops 的操作（搬移、加標籤、連結）；歸入領域由 io.assignDomain 自己記。 */
+  change?: RecordInput
+}
+
 /** 執行一個結構操作，回傳操作後筆記的路徑（搬移會改路徑）與能復原的寫入。 */
-export async function applyStructuralOp(op: StructuralOp, io: NoteIo): Promise<{ path?: string, undo?: () => Promise<void> }> {
+export async function applyStructuralOp(op: StructuralOp, io: NoteIo): Promise<StructuralOpResult> {
   if (op.op === 'move') {
     const folder = op.folder.trim().replace(/^\/+|\/+$/g, '')
     const from = op.path
     const to = await io.move(from, folder)
     const back = from.includes('/') ? from.slice(0, from.lastIndexOf('/')) : ''
-    return { path: to, undo: async () => { await io.move(to, back) } }
+    const content = to === from ? null : await io.read(to).catch(() => null)
+    const noteId = idOfContent(content)
+    const change: RecordInput | undefined = content === null ? undefined : {
+      spec: { kind: 'note.move', ...(noteId ? { noteId } : {}), title: titleOfPath(to), from, to },
+      after: { [from]: null, [to]: content },
+    }
+    return { path: to, undo: async () => { await io.move(to, back) }, ...(change ? { change } : {}) }
   }
   if (op.op === 'assignDomain') {
     const undo = await io.assignDomain(op.path, op.domainId)
@@ -75,7 +90,12 @@ export async function applyStructuralOp(op: StructuralOp, io: NoteIo): Promise<{
     next = writeV3NoteFields(raw, { related: [...fields.related, target] })
   }
   await io.write(op.path, next)
-  return { path: op.path, undo: async () => { await io.write(op.path, raw) } }
+  const noteId = idOfContent(raw)
+  return {
+    path: op.path,
+    undo: async () => { await io.write(op.path, raw) },
+    change: { spec: { kind: 'note.edit', ...(noteId ? { noteId } : {}), path: op.path, title: titleOfPath(op.path), before: raw, after: next } },
+  }
 }
 
 /** 檯面標題：「產線平衡 等 5 則」。 */

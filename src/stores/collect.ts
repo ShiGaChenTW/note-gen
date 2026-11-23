@@ -6,6 +6,7 @@ import { askCollectModel } from '@/lib/collect/ai'
 import { loadItems, mergeItems, saveItems } from '@/lib/collect/persist'
 import { splitInput } from '@/lib/collect/split'
 import { acceptProposal, undoAccepted, type AcceptResult } from '@/lib/collect/write'
+import type { OpContext } from '@/lib/ops/types'
 import { linkAcceptedOutputs } from '@/lib/commander/consolidate'
 
 /** Fork（almanac ALMNC-69.3）：替資料源貼上日誌標籤（已經有的不動），貼完重讀資料源分頁。ALMNC-65.2：批次卡整批接受時只貼一次。 */
@@ -56,7 +57,7 @@ interface CollectState {
   /** Fork（almanac ALMNC-54.5）：conversationId＝這批提案來自哪段對話（沒有自帶的才補上）。 */
   addProposals: (id: string, origin: string, proposals: Proposal[], options?: { conversationId?: number, recordId?: number }) => void
   /** journalTag: false＝這次不貼日誌標籤（ALMNC-65.2 批次卡整批接受，最後一起貼一次）。 */
-  accept: (itemId: string, proposalId: string, options?: { journalTag?: boolean }) => Promise<AcceptResult>
+  accept: (itemId: string, proposalId: string, options?: { journalTag?: boolean, ops?: OpContext }) => Promise<AcceptResult>
   reject: (itemId: string, proposalId: string) => void
   /** Fork（almanac ALMNC-54.8）：工作台「復原」放棄——把放棄的提案改回等你決定。 */
   restore: (itemId: string, proposalId: string) => void
@@ -64,6 +65,8 @@ interface CollectState {
   /** Fork（almanac ALMNC-54.21）：新增筆記的提案，接受前在工作台卡片上改標題與存放位置（lib/workbench/new-note.ts）。 */
   retarget: (itemId: string, proposalId: string, edit: NewNoteTarget, inboxFolder: string) => void
   undo: (itemId: string, proposalId: string) => Promise<boolean>
+  /** Fork（almanac ALMNC-69.9）：寫入已由 ops 復原，把提案改回等你決定。 */
+  reopen: (itemId: string, proposalId: string) => void
   remove: (itemId: string) => void
 }
 
@@ -151,7 +154,7 @@ const useCollectStore = create<CollectState>((set, get) => ({
     if (!item || !proposal || proposal.status !== 'wait' || decisionBlocked(get().items, itemId, proposalId)) throw new Error('proposal not found')
     await useDailySettingsStore.getState().initSettings()
     if (decisionBlocked(get().items, itemId, proposalId)) throw new Error('proposal is being revised or replaced')
-    const result = await acceptProposal(proposal, { noteFolder: useDailySettingsStore.getState().inboxFolder })
+    const result = await acceptProposal(proposal, { noteFolder: useDailySettingsStore.getState().inboxFolder, ...(options?.ops ? { ops: options.ops } : {}) })
     set(state => ({ items: patchProposal(state.items, itemId, proposalId, { status: 'ok', result }) }))
     // Fork（almanac ALMNC-54.6）：指揮官的提案接受、寫入之後才建立「資料源 → 產出」連結；筆記 frontmatter 的 sources 已同時寫好，
     // 連結表寫失敗也查得到來源（lib/v3-model/links.ts sourcesOfNote 取聯集），所以只記錯、不擋接受。
@@ -208,6 +211,8 @@ const useCollectStore = create<CollectState>((set, get) => ({
     if (undone) set(state => ({ items: patchProposal(state.items, itemId, proposalId, { status: 'wait', result: undefined }) }))
     return undone
   },
+
+  reopen: (itemId, proposalId) => set(state => ({ items: patchProposal(state.items, itemId, proposalId, { status: 'wait', result: undefined }) })),
 
   remove: itemId => set(state => ({ items: state.items.filter(item => item.id !== itemId) })),
 }))

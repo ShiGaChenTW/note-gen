@@ -5,6 +5,7 @@ import type { RosterAgent } from '@/lib/commander/types'
 import type { Domain } from '@/lib/v3-model/domain'
 import { notesDueForConfirm, ymd, type ReconfirmInterval } from '@/lib/cleanup/interval'
 import type { ConfirmLike } from './cards'
+import type { OpContext } from '@/lib/ops/types'
 
 export interface IndexedNoteLike {
   path: string
@@ -59,13 +60,21 @@ export function computeDomainProposals(notes: readonly KnowledgeNoteLike[], doma
   return proposals
 }
 
-export async function acceptDomainCard(id: string): Promise<void> {
+/** Fork（almanac ALMNC-69.9）：ops 給了就把 MOC 的改動（新建 MOC、收錄）記成那個情境的操作，7 天內可撤回。 */
+export async function acceptDomainCard(id: string, ops?: OpContext): Promise<void> {
   const proposal = latest.get(id)
   if (!proposal) throw new Error(`domain proposal not found: ${id}`)
   const [{ acceptDomainProposal }, { createDefaultDomainWriter }] = await Promise.all([
     import('@/lib/commander/domain-proposal'),
     import('@/lib/commander/default-deps'),
   ])
-  await acceptDomainProposal(proposal, await createDefaultDomainWriter())
+  const writer = await createDefaultDomainWriter()
+  await acceptDomainProposal(proposal, ops ? {
+    ...writer,
+    addNoteDomain: async (path, domainId) => {
+      const { assignNoteToDomains } = await import('@/lib/moc/runtime')
+      await assignNoteToDomains(path, [domainId], { ops })
+    },
+  } : writer)
   latest.delete(id)
 }
