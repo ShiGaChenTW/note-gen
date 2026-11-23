@@ -137,7 +137,7 @@ export async function createDefaultCheckDeps(): Promise<CheckDeps> {
     submit: async batch => {
       const { default: useCollectStore } = await import('@/stores/collect')
       await useCollectStore.getState().hydrate()
-      useCollectStore.getState().addProposals(batch.id, batch.origin, batch.proposals, { conversationId: batch.conversationId })
+      await useCollectStore.getState().addProposals(batch.id, batch.origin, batch.proposals, { conversationId: batch.conversationId })
     },
     queue,
     labels,
