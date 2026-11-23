@@ -3,7 +3,8 @@
 // Without the Wikilink node, a `[[A\|a]]` inside a table cell came back as `[[A|a]]`
 // (marked unescapes the pipe) and split the row in Obsidian.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { Editor } from '@tiptap/core'
+import { createTestEditorFactory } from './editor-fixture'
+import type { Editor } from '@tiptap/core'
 import StarterKit from '@tiptap/starter-kit'
 import { Markdown } from '@tiptap/markdown'
 import TaskList from '@tiptap/extension-task-list'
@@ -56,9 +57,11 @@ const FencedCodeBlock = CodeBlock.extend({
   renderMarkdown: renderFencedCodeBlockNode,
 })
 
+const createTestEditor = createTestEditorFactory()
+
 // Mirrors the block-level setup of tiptap-editor.tsx (Wikilink next to RecurringTask).
 function createEditor(withWikilink = true) {
-  return new Editor({
+  return createTestEditor({
     element: document.createElement('div'),
     extensions: [
       Frontmatter,
@@ -153,7 +156,6 @@ describe('L1: wikilink round trip through the visual editor', () => {
     const editor = createEditor(false)
     load(editor, tableSample)
     const out = save(editor)
-    editor.destroy()
     expect(out).toContain('\\[\\[A\\|a\\]\\]')
     expect(out).not.toContain('[[A\\|a]]')
   })
@@ -163,7 +165,6 @@ describe('L1: wikilink round trip through the visual editor', () => {
       const editor = createEditor()
       load(editor, raw)
       const out = save(editor)
-      editor.destroy()
       expectRoundTrip(out, raw)
     })
   }
@@ -173,7 +174,6 @@ describe('L1: wikilink round trip through the visual editor', () => {
     load(editor, notAWikilink)
     expect(wikilinkNodes(editor)).toEqual([])
     const out = save(editor)
-    editor.destroy()
     expectRoundTrip(out, notAWikilinkSaved)
   })
 
@@ -182,7 +182,6 @@ describe('L1: wikilink round trip through the visual editor', () => {
       const editor = createEditor()
       load(editor, raw)
       const out = save(editor)
-      editor.destroy()
       // the upstream table serializer puts a newline before the table as well
       expectRoundTrip(out.replace(/\n\n\n\|/, '\n\n|').replace(/^\n/, ''), raw)
     })
@@ -193,7 +192,6 @@ describe('L1: wikilink round trip through the visual editor', () => {
     load(editor, tableSample)
     const nodes = wikilinkNodes(editor)
     const canonical = normalizeMarkdownPlaceholders(editor.getMarkdown())
-    editor.destroy()
     expect(nodes.map(n => n.raw)).toEqual(['[[A\\|a]]', '[[B]]', '[[C\\|c]]'])
     expect(nodes[0]).toMatchObject({ target: 'A', alias: 'a' })
     expect(canonical).not.toContain('[[A|a]]')
@@ -206,7 +204,6 @@ describe('L1: wikilink round trip through the visual editor', () => {
       const first = save(editor)
       load(editor, first)
       expect(save(editor)).toBe(first)
-      editor.destroy()
     })
   }
 
@@ -214,7 +211,6 @@ describe('L1: wikilink round trip through the visual editor', () => {
     const editor = createEditor()
     load(editor, samples['CJK without spaces, adjacent links'])
     const nodes = wikilinkNodes(editor)
-    editor.destroy()
     expect(nodes).toHaveLength(3)
     expect(nodes[1]).toEqual(parseWikilink('[[A]]'))
     expect(nodes[2]).toEqual(parseWikilink('[[B]]'))
@@ -224,7 +220,6 @@ describe('L1: wikilink round trip through the visual editor', () => {
     const editor = createEditor()
     load(editor, '[[B|別名]] [[C#標題]] [[Note#^abc123]] [[#標題]] ![[圖.png]]')
     const nodes = wikilinkNodes(editor)
-    editor.destroy()
     expect(nodes).toEqual([
       parseWikilink('[[B|別名]]'),
       parseWikilink('[[C#標題]]'),
@@ -239,14 +234,12 @@ describe('L1: wikilink round trip through the visual editor', () => {
     const editor = createEditor()
     load(editor, `${samples['inline code']}\n\n${samples['fenced code']}\n\n${samples['tilde fence']}`)
     expect(wikilinkNodes(editor)).toHaveLength(0)
-    editor.destroy()
   })
 
   it('coexists with the Frontmatter node', () => {
     const editor = createEditor()
     load(editor, samples['frontmatter related'])
     const json = editor.getJSON()
-    editor.destroy()
     expect(json.content?.[0]?.type).toBe('frontmatter')
     expect(json.content?.[0]?.attrs?.raw).toBe('---\nrelated: "[[Front]]"\n---\n')
     expect(JSON.stringify(json).match(/"type":"wikilink"/g)).toHaveLength(1)
@@ -258,7 +251,6 @@ describe('L1: wikilink round trip through the visual editor', () => {
     editor.commands.focus('end')
     editor.commands.insertContent(' 新增')
     const out = save(editor)
-    editor.destroy()
     expect(out).toBe('前面 [[A]] 後面 新增\n')
   })
 
@@ -267,12 +259,10 @@ describe('L1: wikilink round trip through the visual editor', () => {
       const editor = createEditor()
       load(editor, raw)
       expect(save(editor)).toBe(raw)
-      editor.destroy()
     }
     const editor = createEditor()
     load(editor, '沒有結尾換行')
     expect(save(editor)).toBe('沒有結尾換行\n')
-    editor.destroy()
   })
 
   it('is an inline atom (arrow keys skip it, Backspace deletes it whole)', () => {
@@ -280,7 +270,6 @@ describe('L1: wikilink round trip through the visual editor', () => {
     const type = editor.schema.nodes.wikilink
     expect(type.isInline && type.isAtom && type.isLeaf).toBe(true)
     expect(type.spec.selectable).toBe(true)
-    editor.destroy()
   })
 
   // Upstream limitations shared with InlineMath (`$x$`), documented so they flip when
@@ -291,7 +280,6 @@ describe('L1: wikilink round trip through the visual editor', () => {
     const editor = createEditor()
     load(editor, '**粗體 [[B]]**')
     const out = save(editor)
-    editor.destroy()
     expect(out).toBe('**粗體 [[B]]**')
   })
 
@@ -301,7 +289,6 @@ describe('L1: wikilink round trip through the visual editor', () => {
     editor.commands.setTextSelection({ from: 1, to: 5 })
     editor.commands.setBold()
     const out = save(editor)
-    editor.destroy()
     expect(out).toBe('**粗體 [[B]]** 文字')
   })
 
@@ -316,7 +303,6 @@ describe('L1: wikilink round trip through the visual editor', () => {
     const embed = dom.querySelector('span[data-type="wikilink"]')
     expect(embed?.textContent).toBe('⧉ 圖.png')
     expect(embed?.classList.contains('notegen-wikilink-embed')).toBe(true)
-    editor.destroy()
   })
 })
 
@@ -376,7 +362,6 @@ describe('L1: resolution decorations', () => {
     for (const attrs of wikilinkNodes(editor)) {
       expect(Object.keys(attrs).sort()).toEqual(['alias', 'blockId', 'embed', 'heading', 'raw', 'target'])
     }
-    editor.destroy()
   })
 
   it('recomputes after edits insert a new link', () => {
@@ -388,7 +373,6 @@ describe('L1: resolution decorations', () => {
     editor.commands.insertContent(' [[Missing]]', { contentType: 'markdown' })
     expect(Array.from(editor.view.dom.querySelectorAll('.notegen-wikilink-unresolved')).map(el => el.textContent))
       .toEqual(['Missing'])
-    editor.destroy()
   })
 })
 
@@ -501,8 +485,6 @@ describe('#20: single click opens the link', () => {
     expect(setActiveFilePath).toHaveBeenCalledTimes(1)
     // the atom did not become a NodeSelection
     expect(editor.state.selection.constructor.name).not.toBe('NodeSelection')
-    editor.view.dom.remove()
-    editor.destroy()
   })
 
   // prosemirror-view 1.43 handles mouse selection itself and calls preventDefault on every
@@ -526,8 +508,6 @@ describe('#20: single click opens the link', () => {
     document.removeEventListener('mousedown', onDocMouseDown)
     await new Promise(resolve => setTimeout(resolve, 0))
     expect(setActiveFilePath).not.toHaveBeenCalled()
-    editor.view.dom.remove()
-    editor.destroy()
   })
 })
 
@@ -562,10 +542,10 @@ describe('A-2: heading / block jumps', () => {
     Element.prototype.scrollIntoView = scrollIntoView
     setIndex(['Current.md', 'Other.md'])
     useArticleStore.setState({ activeFilePath: 'Current.md', setActiveFilePath } as never)
-  })
-  afterEach(() => {
-    vi.useRealTimers()
-    useArticleStore.setState({ activeFilePath: '' })
+    return () => {
+      vi.useRealTimers()
+      useArticleStore.setState({ activeFilePath: '' })
+    }
   })
 
   it('findWikilinkAnchor: headings by normalized text (wikilink display text included)', () => {
@@ -577,7 +557,6 @@ describe('A-2: heading / block jumps', () => {
     expect(findWikilinkAnchor(d, { heading: '第二章', blockId: '' })?.node.textContent).toBe('第二章')
     expect(findWikilinkAnchor(d, { heading: '沒有', blockId: '' })).toBeNull()
     expect(findWikilinkAnchor(d, { heading: '', blockId: '' })).toBeNull()
-    editor.destroy()
   })
 
   it('findWikilinkAnchor: block ids in paragraphs, list items and table cells', () => {
@@ -588,7 +567,6 @@ describe('A-2: heading / block jumps', () => {
     expect(findWikilinkAnchor(d, { heading: '', blockId: 'ITEM-1' })?.node.textContent).toBe('清單項 ^item-1')
     expect(findWikilinkAnchor(d, { heading: '', blockId: 'row-1' })?.node.textContent).toBe('1 ^row-1')
     expect(findWikilinkAnchor(d, { heading: '', blockId: 'para' })).toBeNull()
-    editor.destroy()
   })
 
   it('scrollToWikilinkAnchor: scrolls the heading into view and moves the cursor there', () => {
@@ -600,7 +578,6 @@ describe('A-2: heading / block jumps', () => {
     expect($from.parent.type.name).toBe('heading')
     expect($from.parent.textContent).toBe('第二章')
     expect(scrollToWikilinkAnchor(editor.view, { heading: '沒有', blockId: '' })).toBe(false)
-    editor.destroy()
   })
 
   it('scrollToWikilinkAnchor: block ids get a 1.5 s highlight decoration', () => {
@@ -618,7 +595,6 @@ describe('A-2: heading / block jumps', () => {
     const out = save(editor)
     expect(out).toContain('段落一 ^para-1')
     expect(out).not.toContain('notegen-wikilink-target')
-    editor.destroy()
   })
 
   it('[[#標題]] scrolls in the clicked editor without touching files', async () => {
@@ -629,7 +605,6 @@ describe('A-2: heading / block jumps', () => {
     expect(editor.state.selection.$from.parent.textContent).toBe('第二章')
     expect(setActiveFilePath).not.toHaveBeenCalled()
     expect(vi.mocked(noteIo).revealInFileTree).not.toHaveBeenCalled()
-    editor.destroy()
   })
 
   it('[[Current#^id]] (target is this note) only scrolls', async () => {
@@ -639,7 +614,6 @@ describe('A-2: heading / block jumps', () => {
     expect(scrollIntoView).toHaveBeenCalledTimes(1)
     expect(setActiveFilePath).not.toHaveBeenCalled()
     expect(editor.view.dom.querySelectorAll('.notegen-wikilink-target')).toHaveLength(1)
-    editor.destroy()
   })
 
   it('[[Other#標題]]: opens the note, then scrolls once its editor has loaded the content', async () => {
@@ -664,8 +638,6 @@ describe('A-2: heading / block jumps', () => {
     load(target, doc)
     vi.advanceTimersByTime(0)
     expect(scrollIntoView).toHaveBeenCalledTimes(1)
-    source.destroy()
-    target.destroy()
   })
 
   it('[[Other#標題]]: target tab already open and visible → scrolls after the open resolves', async () => {
@@ -680,9 +652,6 @@ describe('A-2: heading / block jumps', () => {
     vi.advanceTimersByTime(1000)
     expect(scrollIntoView).toHaveBeenCalledTimes(1)
     expect(target.state.selection.$from.parent.textContent).toBe('第二章')
-    target.view.dom.remove()
-    source.destroy()
-    target.destroy()
   })
 
   it('a missing heading in the target only opens the note; the pending jump expires', async () => {
@@ -693,7 +662,6 @@ describe('A-2: heading / block jumps', () => {
     load(target, doc)
     vi.advanceTimersByTime(0)
     expect(scrollIntoView).not.toHaveBeenCalled()
-    target.destroy()
   })
 
   it('queueWikilinkScroll: a pending jump is ignored while another note is active', () => {
@@ -702,6 +670,5 @@ describe('A-2: heading / block jumps', () => {
     load(editor, doc) // activeFilePath is Current.md
     vi.advanceTimersByTime(0)
     expect(scrollIntoView).not.toHaveBeenCalled()
-    editor.destroy()
   })
 })

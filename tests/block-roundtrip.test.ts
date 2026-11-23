@@ -4,7 +4,8 @@
 // 空清單項 `-` 都不變），區塊之間的空行數照載入時的；動過的區塊走上游序列化器，但「標題後緊接
 // 清單」這種零空行的間距仍保留（只要 CommonMark 不會因此改變結構）。
 import { describe, expect, it } from 'vitest'
-import { Editor, type JSONContent } from '@tiptap/core'
+import { createTestEditorFactory } from './editor-fixture'
+import type { Editor, JSONContent } from '@tiptap/core'
 import StarterKit from '@tiptap/starter-kit'
 import { Markdown } from '@tiptap/markdown'
 import TaskList from '@tiptap/extension-task-list'
@@ -33,8 +34,10 @@ const MarkdownTable = withRawTableRoundtrip(Table.extend({
   renderMarkdown: (node, helpers) => renderTableToMarkdown(node, helpers),
 }))
 
+const createTestEditor = createTestEditorFactory()
+
 function createEditor(withRoundtrip = true) {
-  return new Editor({
+  return createTestEditor({
     element: document.createElement('div'),
     extensions: [
       GitHubAlertBlockquote,
@@ -135,7 +138,6 @@ describe('Issue #18: Daily 模板往返', () => {
     expect(pos).toBeGreaterThan(-1)
     editor.commands.insertContentAt(docPos, ' 寫規格')
     const out = save(editor)
-    editor.destroy()
     expect(out).toBe(DAILY.replace('- [ ] 🔴\n', '- [ ] 🔴 寫規格\n'))
   })
 
@@ -152,7 +154,6 @@ describe('Issue #18: Daily 模板往返', () => {
       return true
     })
     const out = save(editor)
-    editor.destroy()
     expect(out).toBe(DAILY.replace('- [ ] 🔴\n', '- [x] 🔴\n'))
   })
 
@@ -166,7 +167,6 @@ describe('Issue #18: Daily 模板往返', () => {
     })
     editor.commands.insertContentAt(pos, '項')
     const out = save(editor)
-    editor.destroy()
     expect(out).toBe('## 標題\n- 第一項\n- \n')
   })
 
@@ -207,7 +207,6 @@ describe('頂層區塊原文往返', () => {
     expect(taskList.attrs?.[BLOCK_RAW_ATTR]).toBe('- [ ] 任務\n')
     expect(bulletList.attrs?.[BLOCK_RAW_ATTR]).toBe('- 一般\n')
     expect(save(editor)).toBe(raw)
-    editor.destroy()
   })
 
   it('一般項開頭的混合清單被上游從一個 token 拆成多個節點：各段用自己的原文，段之間緊接', () => {
@@ -220,7 +219,6 @@ describe('頂層區塊原文往返', () => {
     expect(taskList.attrs?.[BLOCK_RAW_ATTR]).toBe('- [ ] 任務\n')
     expect(taskList.attrs?.[BLOCK_GAP_ATTR]).toBe(0)
     expect(save(editor)).toBe(raw)
-    editor.destroy()
   })
 
   it('混合清單中間有空行（loose）：段之間的空行照舊', () => {
@@ -233,7 +231,6 @@ describe('頂層區塊原文往返', () => {
     load(editor, '# 一\n段\n\n\n- a\n')
     // 第四個是 TrailingNode 補的空段落
     expect(blocks(editor).map(block => block.attrs?.[BLOCK_GAP_ATTR]).slice(0, 3)).toEqual([null, 0, 2])
-    editor.destroy()
   })
 
   it('改了段落文字就不再用原文（連結會重排，但間距照舊）', () => {
@@ -245,7 +242,6 @@ describe('頂層區塊原文往返', () => {
     })
     editor.commands.insertContentAt(pos, '請')
     const out = save(editor)
-    editor.destroy()
     expect(out.startsWith('## 標\n請看 ')).toBe(true)
     expect(out).toContain('https://example.com')
   })
@@ -257,7 +253,6 @@ describe('頂層區塊原文往返', () => {
     editor.commands.splitBlock()
     expect(blocks(editor)[1].attrs?.[BLOCK_RAW_ATTR]).toBe('甲乙\n')
     expect(save(editor)).toBe('甲\n\n乙\n')
-    editor.destroy()
   })
 })
 
@@ -334,7 +329,6 @@ describe('空段落不存成 &nbsp;（Issue #17）', () => {
     load(editor, 'A\n\nB\n')
     insertEmptyParagraphAfter(editor, 0)
     const out = save(editor)
-    editor.destroy()
     expect(out).not.toContain('&nbsp;')
     expect(out).toBe('A\n\n\nB\n')
   })
@@ -346,7 +340,6 @@ describe('空段落不存成 &nbsp;（Issue #17）', () => {
     insertEmptyParagraphAfter(editor, 0)
     insertEmptyParagraphAfter(editor, 3) // 在 B 後面再加一個，結尾的空段落要省略
     const out = save(editor)
-    editor.destroy()
     expect(out).toBe('A\n\n\n\nB\n')
   })
 
@@ -355,7 +348,6 @@ describe('空段落不存成 &nbsp;（Issue #17）', () => {
     load(editor, 'A\n\nB\n')
     insertEmptyParagraphAfter(editor, 0)
     const first = save(editor)
-    editor.destroy()
     expect(roundTrip(first)).toBe(first)
   })
 
