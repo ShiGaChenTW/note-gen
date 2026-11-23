@@ -83,7 +83,7 @@ export function createOpsService(deps: OpsDeps) {
     await deps.afterChange(specs).catch(error => console.warn('[ops] afterChange failed', error))
   }
 
-  async function save(entries: ReadonlyArray<{ spec: OpSpec, after: Record<string, string | null> }>, context: OpContext): Promise<OpRecord[]> {
+  async function save(entries: ReadonlyArray<{ spec: OpSpec, after: Record<string, string | null> }>, context: OpContext, notify = true): Promise<OpRecord[]> {
     if (!entries.length) return []
     const at = now()
     const rows = entries.map(({ spec, after }) => ({
@@ -100,15 +100,34 @@ export function createOpsService(deps: OpsDeps) {
       undoneAt: null,
     }))
     const records = await deps.store.insert(rows)
-    await deps.onRecorded?.(records, context).catch(error => console.warn('[ops] onRecorded failed', error))
+    if (notify) await deps.onRecorded?.(records, context).catch(error => console.warn('[ops] onRecorded failed', error))
     return records
   }
 
   /** 執行操作並記下來（Scott 親自觸發的結構操作、ALMNC-65.3 自動接受的補連結等）。 */
-  async function applyOps(specs: readonly OpSpec[], context: OpContext): Promise<OpRecord[]> {
-    const plan = await planOps(specs, deps.fs)
+  async function applyOps(specs: readonly OpSpec[], context: OpContext, options?: { requireBefore?: boolean }): Promise<OpRecord[]> {
+    const plan = await planOps(specs, deps.fs, options)
+    const [action] = plan.actions
+    if (options?.requireBefore && (plan.actions.length !== 1 || action.type !== 'write'
+      || action.before === null || action.after === null || specs.length !== 1 || specs[0].kind !== 'note.edit')) {
+      throw new Error('Expected one guarded edit to an existing note')
+    }
     await applyActions(plan.actions, deps.writer)
-    const records = await save(plan.specs.map((spec, index) => ({ spec, after: plan.touched[index] ?? {} })), context)
+    let records: OpRecord[] = []
+    try {
+      records = await save(plan.specs.map((spec, index) => ({ spec, after: plan.touched[index] ?? {} })), context, !options?.requireBefore)
+      if (options?.requireBefore) {
+        if (records.length !== 1) throw new Error('Missing undo record for automatic acceptance')
+        await deps.onRecorded?.(records, context)
+      }
+    } catch (error) {
+      // 自動接受需要有復原與活動紀錄。若記錄失敗，只在檔案仍是這次寫入的版本時還原。
+      if (options?.requireBefore && action.type === 'write') {
+        await deps.writer.write(action.path, action.after, action.before)
+        if (records.length) await deps.store.markUndone(records.map(record => record.id), now())
+      }
+      throw error
+    }
     await settle(specs)
     return records
   }

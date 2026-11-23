@@ -154,7 +154,7 @@ it('shows undo buttons for recent ops, the compare card on a later change, and b
   })
   const log = [
     entry(4, 'op-batch', { actorId: 'mia', actorRole: 'commander', action: 'accepted', source: { kind: 'proposal', ref: 'collect:1:2' } }),
-    entry(3, 'op-single'),
+    entry(3, 'op-single', { actorId: 'mia', actorRole: 'commander', action: 'auto_accepted', source: { kind: 'proposal', ref: 'draft:task:link' } }),
     entry(2, 'op-old'),
     entry(1, null),
   ]
@@ -184,7 +184,8 @@ it('shows undo buttons for recent ops, the compare card on a later change, and b
     expect(button(batchRow, m.undoBatch)).toBeTruthy()
     expect(button(batchRow, m.undo)).toBeUndefined()
     expect(button(singleRow, m.undo)).toBeTruthy()
-    expect(singleRow.textContent).toContain(m.sourceDirect)
+    expect(singleRow.textContent).toContain(m.actions.auto_accepted)
+    expect(singleRow.textContent).toContain('draft:task:link')
     expect(oldRow.querySelector('button')).toBeNull()
     expect(plainRow.querySelector('button')).toBeNull()
 

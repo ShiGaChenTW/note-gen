@@ -31,8 +31,8 @@ export interface SidebarRunDeps {
   readFile: (path: string) => Promise<string | null>
   /** 直接寫一條任務或時段（今日日誌的捕捉軌），回傳寫到哪與復原。 */
   writeSchedule: (proposal: Proposal) => Promise<{ path: string, undo: () => Promise<boolean> }>
-  /** 一批提案送進工作台，回傳收集項目 id（卡片用來接受／放棄）。 */
-  submitProposals: (batch: { id: string, origin: string, proposals: Proposal[], conversationId?: number }) => Promise<void>
+  /** 送出一批提案，回傳已自動接受的提案 ID（其餘才附待決卡）。 */
+  submitProposals: (batch: { id: string, origin: string, proposals: Proposal[], conversationId?: number }) => Promise<ReadonlySet<string> | void>
   attachCard: (chatId: number, card: ProposalCardData) => void
   attachDirectEdit: (chatId: number, card: DirectEditCardData, undo: () => Promise<boolean>) => void
   /** 活動紀錄（#111）；失敗只記錯。 */
@@ -231,8 +231,9 @@ export async function prepareSidebarCommanderRun(
       if (!proposals.length) return []
       batchCounter += 1
       const id = `sidebar-${input.chatId}-${Date.now().toString(36)}-${batchCounter}`
-      await deps.submitProposals({ id, origin: deps.originLabel(displayName), proposals, conversationId: input.conversationId })
+      const accepted = await deps.submitProposals({ id, origin: deps.originLabel(displayName), proposals, conversationId: input.conversationId })
       for (const proposal of proposals) {
+        if (accepted?.has(proposal.id)) continue
         deps.attachCard(input.chatId, {
           type: 'proposal',
           id: `${id}:${proposal.id}`,
@@ -276,7 +277,9 @@ export async function createDefaultSidebarDeps(labels: { roleLabel: RoleTranslat
     },
     submitProposals: async batch => {
       await useCollectStore.getState().hydrate()
-      useCollectStore.getState().addProposals(batch.id, batch.origin, batch.proposals, { conversationId: batch.conversationId })
+      await useCollectStore.getState().addProposals(batch.id, batch.origin, batch.proposals, { conversationId: batch.conversationId })
+      const item = useCollectStore.getState().items.find(entry => entry.id === batch.id)
+      return new Set(item?.proposals.filter(proposal => proposal.status === 'ok').map(proposal => proposal.id))
     },
     attachCard: (chatId, card) => useThreadsStore.getState().attachCard(chatId, card),
     attachDirectEdit: (chatId, card, undo) => useThreadsStore.getState().attachDirectEdit(chatId, card, undo),

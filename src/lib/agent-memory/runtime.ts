@@ -29,7 +29,7 @@ export async function rememberCompletedRoleWork(
           const collect = useCollectStore.getState()
           await collect.hydrate()
           const id = `rules:${target.id}:${work.reference}`
-          collect.addProposals(id, target.name, [{
+          await collect.addProposals(id, target.name, [{
             id: 'rules',
             kind: 'note',
             title,

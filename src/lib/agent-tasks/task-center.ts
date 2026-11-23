@@ -42,6 +42,8 @@ export interface TaskCenterDeps {
   concurrency: () => Promise<number>
   notify: (event: TaskEvent, task: AgentTask) => void
   now: () => number
+  reviewWorkspace?: () => string | undefined
+  autoAcceptDrafts?: (task: AgentTask, workspace: string) => Promise<DraftChange[]>
   buildTools?: (tools: AgentTool[], sink: DraftSink) => AgentTool[]
 }
 
@@ -134,9 +136,16 @@ export class AgentTaskCenter {
   async submitDrafts(input: { kind: 'organize'; title: string; drafts: DraftChange[] }): Promise<void> {
     if (!input.drafts.length) return
     const now = this.deps.now()
-    await this.save({
+    const task: AgentTask = {
       ...input, id: createTaskId(), prompt: '', status: 'awaiting_review', tokens: 0, createdAt: now, updatedAt: now,
-    }, true)
+    }
+    await this.save(await this.beforeReview(task, this.deps.reviewWorkspace?.()), true)
+  }
+
+  private async beforeReview(task: AgentTask, workspace: string | undefined): Promise<AgentTask> {
+    if (workspace === undefined || task.status !== 'awaiting_review' || !this.deps.autoAcceptDrafts) return task
+    const drafts = await this.deps.autoAcceptDrafts(task, workspace)
+    return { ...task, drafts, status: statusAfterRun(drafts), finishedAt: this.deps.now() }
   }
 
   /** 取消：排隊中的直接取消；執行中的請 runtime 停下，已做的草稿留給你審。 */
@@ -241,6 +250,7 @@ export class AgentTaskCenter {
   private async runFixed(id: string, runner: TaskRunner) {
     const initial = this.tasks.get(id)
     if (!initial) return
+    const workspace = initial.drafts.length ? undefined : this.deps.reviewWorkspace?.()
     const controller = new AbortController()
     this.aborts.set(id, controller)
     await this.save({ ...initial, status: 'running', error: undefined, updatedAt: this.deps.now() })
@@ -279,6 +289,7 @@ export class AgentTaskCenter {
     else if (cancelled) next = { ...current, status: 'cancelled', updatedAt: now, finishedAt: now }
     else if (error !== undefined) next = { ...current, status: 'failed', error, updatedAt: now }
     else next = { ...current, status: runStatus, result, updatedAt: now, finishedAt: now }
+    if (!cancelled && error === undefined && !isJobTaskId(id)) next = await this.beforeReview(next, workspace)
     // P6 can dispatch dependents immediately after observing a successful run.
     await this.save(next, isJobTaskId(id))
     if (next.status === 'awaiting_review' || next.status === 'completed' || next.status === 'failed') {
@@ -297,6 +308,7 @@ export class AgentTaskCenter {
       void this.pump()
       return
     }
+    const workspace = initial.drafts.length ? undefined : this.deps.reviewWorkspace?.()
     let drafts = initial.drafts
     const sink: DraftSink = {
       drafts: () => drafts,
@@ -359,6 +371,7 @@ export class AgentTaskCenter {
     } else {
       next = { ...current, drafts, status: statusAfterRun(drafts), result: result?.content, updatedAt: now, finishedAt: now }
     }
+    if (!wasCancelled && error === undefined) next = await this.beforeReview(next, workspace)
     await this.save(next)
     if (next.status === 'awaiting_review' || next.status === 'completed' || next.status === 'failed') {
       this.deps.notify(next.status, next)

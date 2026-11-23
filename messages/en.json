@@ -78,6 +78,7 @@
         "drafted": "drafted",
         "proposed": "proposed",
         "accepted": "accepted",
+        "auto_accepted": "Auto-accepted",
         "rejected": "declined",
         "created": "created",
         "updated": "updated",
@@ -8926,9 +8927,14 @@
       }
     }
   },
+  "autoAcceptLinks": {
+    "title": "Automatically accept link additions",
+    "description": "When a proposal only adds one link, the change is applied automatically. Undo it within 7 days in the activity log.",
+    "settingsError": "Could not save the auto-accept setting."
+  },
   "organize": {
     "title": "Auto-organize",
-    "description": "After 60 minutes of inactivity, suggest up to five changes for review in the Workbench.",
+    "description": "After 60 minutes of inactivity, suggest up to five changes. Changes that need approval appear in the Workbench.",
     "merge": "Merge {detail} into {path}",
     "tag": "Add #{detail} to {path}",
     "link": "Link {path} to {detail}",
