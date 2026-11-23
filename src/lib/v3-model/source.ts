@@ -39,6 +39,11 @@ export interface Source {
   archivedAt?: number
   createdAt: number
   updatedAt: number
+  /**
+   * Fork（almanac ALMNC-69.3）：日誌標籤——Scott 親手寫的事件記錄，原文不拆、不搬，仍可抽出知識。
+   * 舊資料沒有這個欄位（false）。有標籤的資料源不會被轉成不採用，讀過沒有內容就停在已分析。
+   */
+  journal: boolean
 }
 
 /** 不採用的資料源保留多久後自動封存。 */
@@ -83,6 +88,8 @@ export interface NewSourceInput {
   collector: string
   /** 預設等於 now。 */
   collectedAt?: number
+  /** Fork（almanac ALMNC-69.3）：Scott 在新增資料源時勾了「這是日誌」。 */
+  journal?: boolean
 }
 
 /**
@@ -107,6 +114,7 @@ export function createSource(input: NewSourceInput, now: number): Source {
     archivedAt: undefined,
     createdAt: now,
     updatedAt: now,
+    journal: input.journal === true,
   }
 }
 
@@ -144,6 +152,7 @@ export function createLegacyNoteSource(input: { path: string, mtime?: number }, 
     archivedAt: undefined,
     createdAt: now,
     updatedAt: now,
+    journal: false,
   }
 }
 
@@ -151,6 +160,7 @@ export function transitionSource(source: Source, to: SourceStatus, now: number):
   if (source.archivedAt !== undefined) throw new Error('已封存的資料源不能再改狀態')
   if (!canTransition(source.status, to)) throw new Error(`資料源狀態不能從 ${source.status} 改成 ${to}`)
   if (to === 'awaiting_decision' && source.lockedAt !== undefined) throw new Error('已送出的資料源不能改回等你決定')
+  if (to === 'rejected' && source.journal) throw new Error('帶日誌標籤的資料源不會被不採用')
   return {
     ...source,
     status: to,
@@ -159,6 +169,22 @@ export function transitionSource(source: Source, to: SourceStatus, now: number):
     lockedAt: source.lockedAt ?? (to === 'pending_analysis' ? now : undefined),
     updatedAt: now,
   }
+}
+
+/** Fork（almanac ALMNC-69.3）：日誌資料源讀過沒有產出時的終點：已分析，不是不採用。 */
+export function finalStatusAfterAnalysis(source: Pick<Source, 'journal'>, hasProposals: boolean): 'analyzed' | 'rejected' {
+  return hasProposals || source.journal ? 'analyzed' : 'rejected'
+}
+
+/**
+ * Fork（almanac ALMNC-69.3）：貼上或拿掉日誌標籤。已封存的不能改；不採用的資料源不能貼（日誌不會在不採用裡）。
+ * 標籤不鎖定原文，也不改狀態。
+ */
+export function setJournalTag(source: Source, journal: boolean, now: number): Source {
+  if (source.journal === journal) return source
+  if (source.archivedAt !== undefined) throw new Error('已封存的資料源不能改標籤')
+  if (journal && source.status === 'rejected') throw new Error('不採用的資料源不能貼日誌標籤')
+  return { ...source, journal, updatedAt: now }
 }
 
 /** 送出分析（Scott 選「處理」）：等你決定 → 待分析，並鎖定原始內容。 */
@@ -273,6 +299,8 @@ export interface SourceRow {
   archivedAt: number | null
   createdAt: number
   updatedAt: number
+  /** Fork（almanac ALMNC-69.3）：is_journal（0／1；舊資料庫還沒加欄位前讀不到就是沒有）。 */
+  isJournal?: number | null
 }
 
 export function sourceFromRow(row: SourceRow): Source {
@@ -294,6 +322,7 @@ export function sourceFromRow(row: SourceRow): Source {
     archivedAt: row.archivedAt ?? undefined,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
+    journal: Number(row.isJournal ?? 0) === 1,
   }
 }
 
@@ -315,5 +344,6 @@ export function sourceToValues(source: Source): (string | number | null)[] {
     source.archivedAt ?? null,
     source.createdAt,
     source.updatedAt,
+    source.journal ? 1 : 0,
   ]
 }

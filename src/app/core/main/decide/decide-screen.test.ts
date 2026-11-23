@@ -152,7 +152,7 @@ beforeEach(async () => {
   useChatStore.setState({ conversations: [{ id: 7, syncId: 's7', syncUpdatedAt: 0, title: '11/19 會議紀錄整理', createdAt: 1, updatedAt: 1, messageCount: 4, isPinned: false }] } as never)
   useWorkbenchStore.setState({
     tab: 'review', filter: 'all', cursor: null, expanded: null, leaving: [], aside: {}, showAside: false, history: [], dismissed: [],
-    sourceFilter: 'all', picked: new Set(), selectedRow: null, editing: false, edited: new Set(),
+    sourceFilter: { status: 'pending', journal: false }, picked: new Set(), selectedRow: null, editing: false, edited: new Set(),
     sources: [source('w', 'awaiting_decision', '白板照片\n第三站 → SMED'), source('d', 'analyzed', '七大浪費\n過量生產、等待')],
     outputCounts: new Map([['d', 2]]), sourcesError: false, desk: { open: false, materials: [] },
     hydrateAside: vi.fn(async () => {}),
@@ -516,13 +516,21 @@ describe('資料源 tab', () => {
     act(() => $<HTMLButtonElement>('[data-testid="workbench-tabs"] [data-value="sources"]')!.click())
   })
 
-  it('has only a status filter (no input box or search), permanent checkboxes and 「N / M 已整理」', () => {
-    expect($$('[data-testid="source-filters"] button').map(b => b.textContent)).toEqual(['全部5', '等你決定1', '未整理1', '已整理3', '不採用0'])
+  it('has two filter rows — status (待處理 by default) and type (日誌) — no input box or search, permanent checkboxes and 「N / M 已整理」', () => {
+    expect($$('[data-testid="source-filters"] button').map(b => b.textContent)).toEqual(['待處理2', '已分析3', '不採用0'])
+    expect($$('[data-testid="source-type-filters"] button').map(b => b.textContent)).toEqual(['日誌0'])
+    expect($<HTMLButtonElement>('[data-filter="pending"]')!.getAttribute('aria-pressed')).toBe('true')
     expect(container.querySelector('[data-testid="sources-tab"] input')).toBeNull()
-    expect($$('[data-testid="source-row"] [role="checkbox"]')).toHaveLength(5)
+    // 待處理包含等你決定；卡片保留「等你決定」小標（ALMNC-69.3）。
+    expect($$('[data-testid="source-row"]').map(row => row.dataset.row)).toEqual(['src:w', 'rec:5'])
+    expect($('[data-row="src:w"] [data-status]')!.textContent).toBe('等你決定')
+    expect($$('[data-testid="source-row"] [role="checkbox"]')).toHaveLength(2)
     // 舊收集頁丟進來、已拆成提案的項目算已整理（產出在審核）。
     expect($('[data-testid="organised-summary"]')!.textContent).toBe('3 / 5 已整理')
-    act(() => $<HTMLButtonElement>('[data-filter="done"]')!.click())
+    act(() => $<HTMLButtonElement>('[data-filter="journal"]')!.click())
+    expect($$('[data-testid="source-row"]')).toHaveLength(0)
+    act(() => $<HTMLButtonElement>('[data-filter="journal"]')!.click())
+    act(() => $<HTMLButtonElement>('[data-filter="analyzed"]')!.click())
     expect($$('[data-testid="source-row"]').map(row => row.dataset.row)).toEqual(['src:d', 'cap:new', 'cap:old'])
     const row = $('[data-row="src:d"]')!
     expect(row.querySelector('[data-testid="row-done"]')).not.toBeNull()
@@ -531,8 +539,7 @@ describe('資料源 tab', () => {
 
   it('select all → 交給 Mia 整理 hands the picked rows to the commander', async () => {
     await wait(0)
-    act(() => $<HTMLButtonElement>('[data-filter="wait"]')!.click())
-    act(() => $<HTMLButtonElement>('[aria-label="全選目前清單"]')!.click())
+    act(() => $<HTMLButtonElement>('[data-row="src:w"] [role="checkbox"]')!.click())
     expect($('[data-testid="source-multi"]')!.textContent).toContain('已選 1 則')
     const hand = $<HTMLButtonElement>('[data-testid="hand-to-commander"]')!
     expect(hand.textContent).toBe('交給 Mia 整理')
@@ -576,6 +583,17 @@ describe('資料源 tab', () => {
     expect(container.querySelector('[data-testid="sources-tab"]')!.textContent).toContain(messages.workbench.sources.emptyAll)
   })
 
+  it('ALMNC-69.3: a journal-tagged source shows the 日誌 tag, counts under the 日誌 filter and offers no 不採用', () => {
+    act(() => useWorkbenchStore.setState(state => ({ sources: state.sources.map(item => item.id === 'w' ? { ...item, journal: true } : item) })))
+    expect($('[data-row="src:w"] [data-testid="source-journal"]')!.textContent).toBe('日誌')
+    expect($$('[data-testid="source-type-filters"] button').map(b => b.textContent)).toEqual(['日誌1'])
+    act(() => $<HTMLButtonElement>('[data-filter="journal"]')!.click())
+    expect($$('[data-testid="source-row"]').map(row => row.dataset.row)).toEqual(['src:w'])
+    act(() => $<HTMLElement>('[data-row="src:w"]')!.click())
+    expect($('[data-testid="source-detail"] [data-source-action="reject"]')).toBeNull()
+    expect($('[data-testid="source-detail"] [data-source-action="putAside"]')).not.toBeNull()
+  })
+
   it('攤到檯面 from the selection opens the desk with those materials', async () => {
     act(() => $<HTMLButtonElement>('[data-row="rec:5"] [role="checkbox"]')!.click())
     act(() => button('攤到檯面', $('[data-testid="source-multi"]')!)!.click())
@@ -584,6 +602,7 @@ describe('資料源 tab', () => {
   })
 
   it('E opens the full-page editor; saving an organised source stores a new version', async () => {
+    act(() => $<HTMLButtonElement>('[data-filter="analyzed"]')!.click())
     act(() => $<HTMLElement>('[data-row="src:d"]')!.click())
     expect($('[data-testid="source-detail"]')!.textContent).toContain('重新整理')
     press('e')
@@ -604,6 +623,7 @@ describe('資料源 tab', () => {
   })
 
   it('ALMNC-56.1 AC#3: with focus on a clicked row, J / Space keep working; Space on its checkbox goes to the checkbox', () => {
+    act(() => $<HTMLButtonElement>('[data-filter="analyzed"]')!.click())
     const row = $<HTMLButtonElement>('[data-row="src:d"] [data-workbench-item]')!
     act(() => row.click())
     expect(useWorkbenchStore.getState().selectedRow).toBe('src:d')

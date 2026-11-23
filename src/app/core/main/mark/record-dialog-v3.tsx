@@ -6,10 +6,12 @@
 // - 匯入 Email、會議逐字稿、訂閱 RSS 時的「處理中」狀態列。
 // - 錄音中的停止鈕用 danger 色。
 // - 新增資料源貼的是連結時的「稍後讀」（ALMNC-46 AC #6）。
+// - 新增資料源的「這是日誌」與「新增文件」（ALMNC-69.3）。
 import { useState, type ReactNode } from 'react'
-import { BookmarkPlus, ChevronDown, LoaderCircle } from 'lucide-react'
+import { BookmarkPlus, ChevronDown, FilePen, LoaderCircle } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuShortcut, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
@@ -114,5 +116,42 @@ export function ReadLaterButton({ url, disabled, onAdded }: { url: string, disab
     <Button type="button" variant="outline" disabled={disabled || busy} data-testid="record-read-later" onClick={() => void save()}>
       <BookmarkPlus />{t('workbench.import.readLater')}
     </Button>
+  )
+}
+
+/**
+ * Fork（almanac ALMNC-69.3，Q9、Q13）：新增資料源對話框的兩個起點選項——
+ * 「這是日誌」勾選框（Scott 勾了直接生效），和「新增文件」（打開編輯器自己寫，按「完成」才交給指揮官）。
+ */
+export function SourceStartOptions({ journal, journalAvailable = true, onJournalChange, onNewDocument, commanderName, disabled }: {
+  journal: boolean
+  /** 日誌只對文字有意義（連結、待辦、媒體不帶標籤）；不是文字時勾選框停用。 */
+  journalAvailable?: boolean
+  onJournalChange: (journal: boolean) => void
+  onNewDocument: () => void
+  commanderName: string
+  disabled?: boolean
+}) {
+  const t = useTranslations('workbench.add')
+  return (
+    <div data-testid="source-start-options" className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-(--r) border border-line-soft px-3 py-2 text-ui-compact">
+      <label className="flex min-w-0 flex-1 cursor-pointer items-start gap-2">
+        <Checkbox
+          checked={journal && journalAvailable}
+          disabled={disabled || !journalAvailable}
+          data-testid="source-journal-checkbox"
+          aria-describedby="source-journal-hint"
+          className="mt-0.5"
+          onCheckedChange={value => onJournalChange(value === true)}
+        />
+        <span className="min-w-0">
+          <span className="font-medium text-ink">{t('journal')}</span>
+          <span id="source-journal-hint" className="block text-xs text-muted-ink">{t('journalHint')}</span>
+        </span>
+      </label>
+      <Button type="button" variant="outline" size="sm" disabled={disabled} data-testid="source-new-document" title={t('newDocHint', { name: commanderName })} onClick={onNewDocument}>
+        <FilePen />{t('newDoc')}
+      </Button>
+    </div>
   )
 }

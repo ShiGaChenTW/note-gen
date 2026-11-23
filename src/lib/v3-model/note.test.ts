@@ -137,3 +137,12 @@ describe('寫回 V3 欄位', () => {
     expect(note.body).toBe('---\n內文以分隔線開頭\n')
   })
 })
+
+describe('ALMNC-69.3 日誌筆記的類型值 log', () => {
+  it('讀取時 type: log 當成日誌筆記（現行內部值 record），不算格式錯誤', () => {
+    const note = parseV3Note('---\ntype: log\ntitle: 11/10 週會\n---\n內文\n')
+    expect(note.fields.type).toBe('record')
+    expect(note.issues).toEqual([])
+    expect(parseV3Note('---\ntype: record\n---\n').fields.type).toBe('record')
+  })
+})

@@ -10,6 +10,8 @@ export type NoteType = 'knowledge' | 'record' | 'project'
 export type NoteStatus = 'valid' | 'disputed' | 'superseded' | 'archived'
 
 export const NOTE_TYPES: readonly NoteType[] = ['knowledge', 'record', 'project']
+/** Fork（almanac ALMNC-69.3）：日誌筆記的新類型值（Scott 定 record → log）；目前只在讀取時接受。 */
+export const LOG_NOTE_TYPE = 'log'
 export const NOTE_STATUSES: readonly NoteStatus[] = ['valid', 'disputed', 'superseded', 'archived']
 
 /** frontmatter 裡由 V3 管理的欄位；其餘 key 一律原樣保留。 */
@@ -105,7 +107,8 @@ export function parseV3Note(raw: string): ParsedV3Note {
   return {
     fields: {
       title: optionalString(data.title, 'title', issues),
-      type: enumValue(data.type, NOTE_TYPES, 'type', issues),
+      // Fork（almanac ALMNC-69.3）：日誌筆記的新類型值 log（範例 vault 已用）讀起來當成現行的 record；寫入與既有資料遷移在 ALMNC-69.4。
+      type: data.type === LOG_NOTE_TYPE ? 'record' : enumValue(data.type, NOTE_TYPES, 'type', issues),
       summary: optionalString(data.summary, 'summary', issues),
       sources: stringList(data.sources, 'sources', issues),
       tags: stringList(data.tags, 'tags', issues),

@@ -194,3 +194,17 @@ describe('file change proposals from the sidebar commander', () => {
     expect(entry.preview).toEqual({ type: 'file', path: '領域/工業工程.md', targetPath: undefined, diff: { context: ['a'], removed: ['b'], added: ['B'], hidden: 0 } })
   })
 })
+
+describe('ALMNC-69.3 判斷理由與「判斷為日誌」', () => {
+  it('帶到工作台項目上；只貼標籤的卡沒有要寫的內容', () => {
+    const items = [item('c1', 10, [
+      { ...base, id: 'p1', kind: 'note', title: '切換工作的代價比想像中高', status: 'wait', rationale: { reason: '過一年仍成立', confidence: 'high' }, journalTag: { confidence: 'low' } },
+      { ...base, id: 'p2', kind: 'note', title: '11/03 下午', status: 'wait', sourceIds: ['s'], card: { label: 'source', verb: 'judge' }, journalTag: { confidence: 'high', only: true } },
+    ])]
+    const [knowledge, only] = projectDecisions({ items, tasks: [], journal: null })
+    expect(knowledge).toMatchObject({ rationale: { reason: '過一年仍成立', confidence: 'high' }, journalTag: { confidence: 'low' } })
+    expect(only.journalTag).toEqual({ confidence: 'high', only: true })
+    expect(only.card).toEqual({ label: 'source', verb: 'judge' })
+    expect(only.preview).toEqual({ type: 'newNote', diff: { context: [], removed: [], added: [], hidden: 0 } })
+  })
+})

@@ -10,6 +10,7 @@ import usePromptLibraryStore from '@/stores/prompt-library'
 import useThreadsStore from '@/stores/threads'
 import useDecideStore from '@/stores/decide'
 import { hideAllOverlays, hideWhen, linkExclusiveOverlays, toggleWorkspace } from '@/lib/fork-overlays/exclusive'
+import emitter from '@/lib/emitter'
 import { isUiV3, useUiModeStore } from '@/lib/fork-ui'
 import { useWeekOverlay } from '@/lib/week/overlay'
 import { useKnowledgeOverlay } from '@/lib/sidebar-v3/knowledge'
@@ -120,9 +121,13 @@ export function HomeService() {
       if (event.target.closest('[data-left-sidebar] .file-manager-item.active')) hideAllOverlays(ALL_OVERLAYS)
     }
     document.addEventListener('click', onActiveFileClick, true)
+    // Fork（almanac ALMNC-69.3）：新增資料源對話框的「新增文件」不是從左側欄點的，另外叫一聲回到編輯器。
+    const showEditor = () => { hideAllOverlays(ALL_OVERLAYS) }
+    emitter.on('show-editor', showEditor)
     return () => {
       for (const type of TOUCH_EVENTS) document.removeEventListener(type, onTouch, true)
       document.removeEventListener('click', onActiveFileClick, true)
+      emitter.off('show-editor', showEditor)
       unsubscribe()
     }
   }, [])

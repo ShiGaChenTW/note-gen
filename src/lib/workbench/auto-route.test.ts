@@ -239,3 +239,10 @@ describe('用固定 id 的資料源：重送不重複建立，內容改了接新
     expect(externalAudioSource({ markId: 4, transcript: ' ' })).toBeUndefined()
   })
 })
+
+describe('ALMNC-69.3 「完成」帶日誌標籤', () => {
+  it('noteSource 勾了日誌就帶 journal；一般「送給指揮官」不帶', () => {
+    expect(noteSource({ path: 'a.md', content: '內容', journal: true })).toMatchObject({ journal: true, sourceType: 'self' })
+    expect(noteSource({ path: 'a.md', content: '內容' })!.journal).toBeUndefined()
+  })
+})

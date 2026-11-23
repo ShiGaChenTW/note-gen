@@ -4,13 +4,22 @@
 //   2. 舊的 Inbox 記錄（marks＋record_processed）
 //   3. 舊收集頁丟進來的項目（store.json 的 collectItems；指揮官送來的提案批次不算，那是產出不是資料源）
 // 舊資料交給指揮官整理或編輯時，會建立一則 id 固定的資料源（rec_<記錄 id>、cap_<項目 id>），之後清單只列那則資料源，不重複。
-// 狀態篩選：全部／等你決定／未整理／已整理／不採用（v14）；沒有輸入框和搜尋列。
+// 篩選（ALMNC-69.3）：兩排可組合——狀態（待處理〔預設，含等你決定〕／已分析／不採用）＋類型（日誌）；沒有輸入框和搜尋列。
 import type { Source } from '@/lib/v3-model/source'
 import { judgementLine, type SourceJudgement } from './judgement'
 
 export type SourceRowStatus = 'wait' | 'todo' | 'ing' | 'edited' | 'done' | 'no'
-export const SOURCE_FILTERS = ['all', 'wait', 'todo', 'done', 'no'] as const
-export type SourceFilter = typeof SOURCE_FILTERS[number]
+/**
+ * Fork（almanac ALMNC-69.3）：狀態那一排。待處理包含等你決定、待分析、分析中、改過還沒送（等你決定在卡片上保留小標）。
+ */
+export const SOURCE_STATUS_FILTERS = ['pending', 'analyzed', 'rejected'] as const
+export type SourceStatusFilter = typeof SOURCE_STATUS_FILTERS[number]
+/** 類型那一排目前只有「日誌」；journal 為 true 時只列帶日誌標籤的。兩排可以任意組合。 */
+export interface SourceFilter {
+  status: SourceStatusFilter
+  journal: boolean
+}
+export const DEFAULT_SOURCE_FILTER: SourceFilter = { status: 'pending', journal: false }
 
 /**
  * 顯示用的內容形式（v14 的類型字：網頁、文字、截圖、插圖、檔案、錄音、待辦、素材）。
@@ -49,6 +58,8 @@ export interface SourceListRow {
   captureFailed?: boolean
   /** Fork（almanac ALMNC-54.1）：不採用滿 30 天已封存（仍在清單、搜尋得到，只是不能再改回等你決定）。 */
   archived?: boolean
+  /** Fork（almanac ALMNC-69.3）：帶日誌標籤（只有 V3 資料源會有）。 */
+  journal?: boolean
 }
 
 // —— 輸入（結構型別） ——
@@ -160,6 +171,7 @@ function sourceRow(source: Source, input: SourcesTabInput): SourceListRow {
     version: source.version,
     sourceId: source.id,
     ...(source.archivedAt !== undefined ? { archived: true } : {}),
+    ...(source.journal ? { journal: true } : {}),
     ...judgementFields(source, input.judgements?.get(source.id)),
   }
 }
@@ -238,22 +250,33 @@ export function buildSourceRows(input: SourcesTabInput): SourceListRow[] {
   return rows.sort((a, b) => b.at - a.at)
 }
 
-export function matchesFilter(row: Pick<SourceListRow, 'status'>, filter: SourceFilter): boolean {
-  switch (filter) {
-    case 'all': return true
-    case 'wait': return row.status === 'wait'
-    case 'todo': return row.status === 'todo' || row.status === 'ing' || row.status === 'edited'
-    case 'done': return row.status === 'done'
-    case 'no': return row.status === 'no'
+export function matchesStatus(row: Pick<SourceListRow, 'status'>, status: SourceStatusFilter): boolean {
+  switch (status) {
+    case 'pending': return row.status === 'wait' || row.status === 'todo' || row.status === 'ing' || row.status === 'edited'
+    case 'analyzed': return row.status === 'done'
+    case 'rejected': return row.status === 'no'
   }
+}
+
+export function matchesFilter(row: Pick<SourceListRow, 'status' | 'journal'>, filter: SourceFilter): boolean {
+  return matchesStatus(row, filter.status) && (!filter.journal || row.journal === true)
 }
 
 export function filterRows(rows: readonly SourceListRow[], filter: SourceFilter): SourceListRow[] {
   return rows.filter(row => matchesFilter(row, filter))
 }
 
-export function filterCounts(rows: readonly SourceListRow[]): Record<SourceFilter, number> {
-  return Object.fromEntries(SOURCE_FILTERS.map(filter => [filter, filterRows(rows, filter).length])) as Record<SourceFilter, number>
+/**
+ * 篩選鈕上的數字：狀態那排依目前的類型篩選算（勾了日誌就只數日誌）；日誌鈕依目前的狀態算。
+ */
+export function filterCounts(rows: readonly SourceListRow[], filter: SourceFilter): Record<SourceStatusFilter, number> & { journal: number } {
+  const status = Object.fromEntries(SOURCE_STATUS_FILTERS.map(value => [value, filterRows(rows, { ...filter, status: value }).length])) as Record<SourceStatusFilter, number>
+  return { ...status, journal: filterRows(rows, { status: filter.status, journal: true }).length }
+}
+
+/** Fork（almanac ALMNC-69.3）：帶日誌標籤的資料源不會被不採用（卡片上不給「不採用」）。 */
+export function canReject(row: Pick<SourceListRow, 'journal'>): boolean {
+  return row.journal !== true
 }
 
 /** 「N / M 已整理」。 */

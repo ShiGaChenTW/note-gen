@@ -28,6 +28,12 @@ describe('acceptProposal', () => {
     files.clear()
   })
 
+  it('ALMNC-69.3：只貼日誌標籤的卡不寫任何檔案', async () => {
+    const result = await acceptProposal({ ...base, id: 'j1', kind: 'note', title: '11/03 下午', sourceIds: ['src_1'], journalTag: { confidence: 'high', only: true } }, { noteFolder: '10 Inbox', now })
+    expect(result).toEqual({ path: '' })
+    expect(files.size).toBe(0)
+  })
+
   it('writes a note as a new file in the inbox folder', async () => {
     const result = await acceptProposal({ ...base, id: 'n1', kind: 'note', title: '定價想法', body: '三種收費模式並列', tags: ['idea'] }, { noteFolder: '10 Inbox', now })
     expect(result.path).toBe('10 Inbox/2026-11-18 0930 定價想法.md')

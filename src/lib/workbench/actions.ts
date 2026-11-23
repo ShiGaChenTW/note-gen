@@ -352,6 +352,8 @@ export interface NewSourceRequest {
   origin?: string
   /** Fork（almanac ALMNC-54.10）：對話框裡貼上的字數；大部分是貼上的文字算外部擷取。 */
   pastedChars?: number
+  /** Fork（almanac ALMNC-69.3）：Scott 勾了「這是日誌」，直接生效。 */
+  journal?: boolean
 }
 
 /**
@@ -368,6 +370,7 @@ export async function addNewSource(request: NewSourceRequest): Promise<string> {
     content: request.content,
     origin: request.origin || (request.type === 'link' ? request.content : undefined),
     collector: 'scott',
+    ...(request.journal ? { journal: true } : {}),
   }, {
     add: input => db.addSource(input),
     kick: kickCommander,
@@ -472,10 +475,20 @@ export async function submitVersionedSource(input: AutoSourceInput): Promise<Ver
  * Fork（almanac ALMNC-54.20）：編輯器右上「送給指揮官」——把目前這篇筆記送成自己寫的資料源。這是 Scott 手動按的，
  * 所以不擋行動版，失敗會丟出錯誤給按鈕顯示。回傳 added／versioned／unchanged／empty。
  */
-export async function sendNoteToCommander(note: { path: string, content: string }): Promise<VersionedRouteResult['outcome']> {
+export async function sendNoteToCommander(note: { path: string, content: string, journal?: boolean }): Promise<VersionedRouteResult['outcome']> {
   const input = noteSource(note)
   if (!input) return 'empty'
-  return (await submitVersionedSource(input)).outcome
+  const result = await submitVersionedSource(input)
+  // Fork（almanac ALMNC-69.3）：「完成」時勾了日誌，但這篇以前送過（接新版或內容沒變）：Scott 的標籤直接生效。
+  if (note.journal && result.outcome !== 'added') {
+    const db = await import('@/db/v3-sources')
+    const latest = result.source ?? await db.getLatestVersion(input.id)
+    if (latest && !latest.journal && latest.status !== 'rejected' && latest.archivedAt === undefined) {
+      await db.setSourceJournal(latest.id, true)
+      await refreshSources()
+    }
+  }
+  return result.outcome
 }
 
 /** Fork（almanac ALMNC-54.20）：對話結論（對話摘要存檔）自動交給指揮官；同一段對話重存，內容改了才接新版。 */

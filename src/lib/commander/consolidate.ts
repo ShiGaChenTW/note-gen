@@ -5,7 +5,7 @@ import { newProposalId } from '@/lib/collect/split'
 import type { Proposal } from '@/lib/collect/types'
 import type { Source } from '@/lib/v3-model/source'
 import type { OutputTargetType } from '@/lib/v3-model/links'
-import type { Draft, ProposalBatch } from './types'
+import type { Draft, JournalVerdict, ProposalBatch } from './types'
 
 const TAG_RE = /^[\p{L}\p{N}_/-]+$/u
 
@@ -16,6 +16,7 @@ export function projectTag(project: string | undefined): string | undefined {
 }
 
 export function draftToProposal(draft: Draft, sourceIds: readonly string[], conversationId?: number): Proposal {
+  const { reason, confidence } = draft.fragment
   const tags = Array.from(new Set([...draft.tags, ...(draft.kind !== 'note' ? [projectTag(draft.project)].filter((tag): tag is string => !!tag) : [])]))
   return {
     id: newProposalId(),
@@ -30,6 +31,7 @@ export function draftToProposal(draft: Draft, sourceIds: readonly string[], conv
     ...(draft.kind === 'note' && draft.domainIds.length ? { domains: [...draft.domainIds] } : {}),
     ...(draft.people.length ? { people: [...draft.people] } : {}),
     ...(draft.project ? { project: draft.project } : {}),
+    ...(reason || confidence ? { rationale: { ...(reason ? { reason } : {}), ...(confidence ? { confidence } : {}) } } : {}),
     drafter: { role: draft.role, ...(draft.agentId ? { agentId: draft.agentId } : {}) },
     ...(conversationId !== undefined ? { conversationId } : {}),
   }
@@ -41,6 +43,31 @@ export interface ConsolidateInput {
   /** 工作台上「來自…」的名稱，例如「Mia · 指揮官 分析的資料源：…」。 */
   origin: string
   conversationId?: number
+  /** Fork（almanac ALMNC-69.3）：指揮官判斷這則資料源是日誌（已帶標籤的不會有）。 */
+  journal?: JournalVerdict
+  /** 只貼標籤那張卡的標題（資料源的第一行）。 */
+  sourceLabel?: string
+}
+
+/**
+ * Fork（almanac ALMNC-69.3）：只貼日誌標籤的那張卡（這則資料源沒有其他產出時）。不另外出一種卡：沿用提案，
+ * 卡片標成「資料源・判斷」，接受時只貼標籤。
+ */
+export function journalOnlyProposal(sourceId: string, title: string, journal: JournalVerdict, conversationId?: number): Proposal {
+  return {
+    id: newProposalId(),
+    kind: 'note',
+    title,
+    body: '',
+    due: '',
+    time: '',
+    tags: [],
+    sourceIds: [sourceId],
+    card: { label: 'source', verb: 'judge' },
+    journalTag: { confidence: journal.confidence, ...(journal.reason ? { reason: journal.reason } : {}), only: true },
+    drafter: { role: 'commander' },
+    ...(conversationId !== undefined ? { conversationId } : {}),
+  }
 }
 
 /** 同一則資料源、同一件事（種類＋標題＋日期）只提一次。 */
@@ -54,14 +81,23 @@ function dedupe(drafts: readonly Draft[]): Draft[] {
   })
 }
 
-/** 草稿 → 一批提案；沒有草稿（全部不採用）時回傳 undefined。批次 id 以資料源為準，重跑不會重複送。 */
+/**
+ * 草稿 → 一批提案；沒有草稿（全部不採用）時回傳 undefined。批次 id 以資料源為準，重跑不會重複送。
+ * Fork（almanac ALMNC-69.3）：判斷為日誌時，「判斷為日誌」掛在這批的每一則提案上（接受哪一則都會一起貼標籤）；
+ * 沒有任何草稿就出一張只貼標籤的卡。
+ */
 export function consolidate(input: ConsolidateInput): ProposalBatch | undefined {
   const drafts = dedupe(input.drafts)
-  if (!drafts.length) return undefined
+  const journal = input.journal?.verdict ? input.journal : undefined
+  if (!drafts.length && !journal) return undefined
+  const journalTag = journal ? { confidence: journal.confidence, ...(journal.reason ? { reason: journal.reason } : {}) } : undefined
+  const proposals = drafts.length
+    ? drafts.map(draft => ({ ...draftToProposal(draft, [input.source.id], input.conversationId), ...(journalTag ? { journalTag } : {}) }))
+    : [journalOnlyProposal(input.source.id, input.sourceLabel || input.origin, journal!, input.conversationId)]
   return {
     id: `commander:${input.source.id}`,
     origin: input.origin,
-    proposals: drafts.map(draft => draftToProposal(draft, [input.source.id], input.conversationId)),
+    proposals,
     ...(input.conversationId !== undefined ? { conversationId: input.conversationId } : {}),
   }
 }

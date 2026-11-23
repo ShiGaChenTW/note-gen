@@ -7073,7 +7073,11 @@
       "alreadySent": "这篇已经发送过了，内容没有变",
       "emptyNote": "这篇笔记是空的，没有发送",
       "sendFailed": "发送给指挥官失败",
-      "saveBeforeSendFailed": "尚未保存的修改无法写入文件，所以没有发送"
+      "saveBeforeSendFailed": "尚未保存的修改无法写入文件，所以没有发送",
+      "done": "完成",
+      "doneHint": "把这篇文档交给指挥官",
+      "doneSent": "已完成，交给指挥官",
+      "doneJournalSent": "已完成，作为日志交给指挥官"
     },
     "statusBar": {
       "documentActions": {
@@ -9158,11 +9162,10 @@
     "sources": {
       "filterLabel": "依状态筛选",
       "filters": {
-        "all": "全部",
-        "wait": "等你决定",
-        "todo": "未整理",
-        "done": "已整理",
-        "no": "不采用"
+        "pending": "待处理",
+        "analyzed": "已分析",
+        "rejected": "不采用",
+        "journal": "日志"
       },
       "status": {
         "wait": "等你决定",
@@ -9273,7 +9276,9 @@
       "retry": "重试",
       "delete": "删除",
       "captureFailed": "抓取失败",
-      "captureFailedHint": "抓不到这个网页的内容。可以重试，或删除这则资料源。"
+      "captureFailedHint": "抓不到这个网页的内容。可以重试，或删除这则资料源。",
+      "typeFilterLabel": "按类型筛选",
+      "journalTag": "日志"
     },
     "desk": {
       "title": "台面",
@@ -9322,12 +9327,14 @@
       "title": "新增资料源",
       "subtitle": "输入内容，自动分类",
       "saved": "已加进资料源，交给 {name} 整理",
-      "savedLink": "已加进资料源，等你决定要不要处理"
+      "savedLink": "已加进资料源，等你决定要不要处理",
+      "journal": "这是日志",
+      "journalHint": "自己写的事件记录，原文不拆，只从中提炼知识。",
+      "newDoc": "新建文档",
+      "newDocHint": "在编辑器里写，按「完成」才交给 {name}。"
     },
     "quick": {
       "label": "新增",
-      "newDoc": "新增文件",
-      "newDocShort": "文件",
       "addSource": "新增资料源",
       "addSourceShort": "资料源",
       "newThread": "新增对话",
@@ -9384,6 +9391,16 @@
       "root": "笔记库最上层",
       "invalid": "标题不能空白或含斜线，存放位置不能含「..」",
       "hint": "接受前可以先改；接受时照这里写入"
+    },
+    "verdict": {
+      "journal": "判断为日志（信心{confidence}）",
+      "journalOnly": "接受后为这条资料源贴上日志标签，不写笔记。",
+      "rationale": "理由：{reason}",
+      "rationaleWithConfidence": "理由：{reason}（信心{confidence}）",
+      "confidence": {
+        "high": "高",
+        "low": "低"
+      }
     }
   },
   "cleanup": {
