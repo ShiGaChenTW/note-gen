@@ -10,6 +10,7 @@ import { checkNewNoteEdit, newNoteTarget } from '@/lib/workbench/new-note'
 import { cn } from '@/lib/utils'
 import useCollectStore from '@/stores/collect'
 import useDailySettingsStore from '@/stores/daily-settings'
+import { NewNoteChanges } from './new-note-changes'
 
 const INPUT = cn(V3_BUTTON_SHAPE, 'w-full min-w-0 border border-line bg-bg px-2 text-ui-compact text-ink outline-none focus-visible:ring-1 focus-visible:ring-ink/60')
 
@@ -49,6 +50,8 @@ export function NewNoteFields({ itemId, proposalId, fallback }: { itemId: string
       {checked.ok
         ? <p className="col-span-2 text-xs text-faint">{t('hint')}</p>
         : <p role="alert" className="col-span-2 text-xs text-danger">{t('invalid')}</p>}
+      {/* ALMNC-69.2：改過標題或位置時說明原建議 */}
+      {proposal && <NewNoteChanges proposal={proposal} className="col-span-2" />}
     </div>
   )
 }

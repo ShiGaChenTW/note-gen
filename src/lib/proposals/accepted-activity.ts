@@ -6,6 +6,7 @@ import type { AgentRole } from '@/lib/agents/settings'
 import { ACTIVITY_NOTE_MAX, type ActivityEntryInput } from '@/lib/agent-memory/activity'
 import type { Proposal } from '@/lib/collect/types'
 import type { DecideItem } from '@/lib/decide/project'
+import { newNoteChangesNote, type NewNoteChanges } from '@/lib/workbench/new-note'
 
 export interface AcceptedProposal {
   /** 提案的鍵（collect:… / draft:… / job:… / domain:…）。 */
@@ -49,11 +50,12 @@ export function acceptedActivityEntry(proposal: AcceptedProposal, roster: Readon
 }
 
 /** 工作台上的提案（DecideItem）→ 一筆紀錄的輸入；path 是接受後寫到的檔案。 */
-export function acceptedFromDecide(item: Pick<DecideItem, 'key' | 'kind' | 'title' | 'summary' | 'drafter' | 'conversationId'>, path?: string): AcceptedProposal {
+// Fork（almanac ALMNC-69.2）：Scott 改過新增筆記的標題或位置時，說明改寫成「原建議 → 你的修改」（lib/workbench/new-note.ts）。
+export function acceptedFromDecide(item: Pick<DecideItem, 'key' | 'kind' | 'title' | 'summary' | 'drafter' | 'conversationId'>, path?: string, changes?: NewNoteChanges | null): AcceptedProposal {
   return {
     key: item.key,
     kind: item.kind,
-    what: item.summary || item.title,
+    what: changes ? newNoteChangesNote(changes) : item.summary || item.title,
     ...(item.drafter ? { drafter: item.drafter } : {}),
     ...(item.conversationId !== undefined ? { conversationId: item.conversationId } : {}),
     ...(path ? { path } : {}),
@@ -61,11 +63,11 @@ export function acceptedFromDecide(item: Pick<DecideItem, 'key' | 'kind' | 'titl
 }
 
 /** 對話裡提案卡接受的收集提案 → 一筆紀錄的輸入。 */
-export function acceptedFromProposal(key: string, proposal: Pick<Proposal, 'kind' | 'title' | 'change' | 'drafter' | 'conversationId'>, path?: string): AcceptedProposal {
+export function acceptedFromProposal(key: string, proposal: Pick<Proposal, 'kind' | 'title' | 'change' | 'drafter' | 'conversationId'>, path?: string, changes?: NewNoteChanges | null): AcceptedProposal {
   return {
     key,
     kind: proposal.change?.kind ?? proposal.kind,
-    what: proposal.change?.summary || proposal.title,
+    what: changes ? newNoteChangesNote(changes) : proposal.change?.summary || proposal.title,
     ...(proposal.drafter ? { drafter: proposal.drafter } : {}),
     ...(proposal.conversationId !== undefined ? { conversationId: proposal.conversationId } : {}),
     ...(path ? { path } : {}),

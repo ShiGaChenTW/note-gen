@@ -64,6 +64,9 @@
       "activity": "活動紀錄",
       "activityHint": "系統自動寫入，只能新增，不能修改。超過 90 天會封存。",
       "activityEmpty": "還沒有活動紀錄。",
+      "activityFilter": "發起的夥伴",
+      "activityFilterAll": "全部",
+      "activityFilterHint": "接受的提案記在發起它的夥伴名下。",
       "correctsEntry": "更正 #{id}",
       "sourceConversation": "對話 {ref}",
       "sourceProposal": "提案 {ref}",
@@ -9448,7 +9451,10 @@
       "folder": "存放位置",
       "root": "筆記庫最上層",
       "invalid": "標題不能空白或含斜線，存放位置不能含「..」",
-      "hint": "接受前可以先改；接受時照這裡寫入"
+      "hint": "接受前可以先改；接受時照這裡寫入",
+      "changed": "原建議 → 你的修改",
+      "changedTitle": "標題：{from} → {to}",
+      "changedFolder": "存放位置：{from} → {to}"
     }
   },
   "cleanup": {

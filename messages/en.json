@@ -64,6 +64,9 @@
       "activity": "Activity log",
       "activityHint": "Written by the system. Entries can only be added, never edited. Entries older than 90 days are archived.",
       "activityEmpty": "No activity yet.",
+      "activityFilter": "Started by",
+      "activityFilterAll": "Everyone",
+      "activityFilterHint": "Accepted proposals are listed under the crew member who proposed them.",
       "correctsEntry": "corrects #{id}",
       "sourceConversation": "conversation {ref}",
       "sourceProposal": "proposal {ref}",
@@ -9383,7 +9386,10 @@
       "folder": "Folder",
       "root": "Vault root",
       "invalid": "The title can’t be empty or contain slashes, and the folder can’t contain “..”",
-      "hint": "Edit before accepting; the note is written here when you accept"
+      "hint": "Edit before accepting; the note is written here when you accept",
+      "changed": "Original suggestion → your edit",
+      "changedTitle": "Title: {from} → {to}",
+      "changedFolder": "Location: {from} → {to}"
     }
   },
   "cleanup": {
