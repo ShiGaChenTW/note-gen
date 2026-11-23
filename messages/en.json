@@ -9109,7 +9109,7 @@
     },
     "title": "Workbench",
     "subtitle": "{count} waiting for you",
-    "subtitleSources": "{done} / {total} organized",
+    "subtitleSources": "{done} / {total} analyzed",
     "tabs": {
       "label": "Workbench tabs",
       "review": "Review",
@@ -9266,10 +9266,10 @@
       },
       "status": {
         "wait": "Awaiting you",
-        "todo": "Not organized",
+        "todo": "Pending",
         "ing": "Organizing",
         "edited": "Edited",
-        "done": "Organized",
+        "done": "Analyzed",
         "no": "Not used"
       },
       "attachmentJudgement": {
@@ -9293,7 +9293,7 @@
       "selectAll": "Select all",
       "selectAllLabel": "Select everything in this list",
       "pickRow": "Select “{title}”",
-      "organised": "{done} / {total} organized",
+      "organised": "{done} / {total} analyzed",
       "outputs": "{count} outputs",
       "noOutputs": "No outputs",
       "editedSub": "v{version} not sent",
