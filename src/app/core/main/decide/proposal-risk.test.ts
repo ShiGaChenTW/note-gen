@@ -8,6 +8,7 @@ import messages from '../../../../../messages/zh-TW.json'
 import type { DecideItem } from '@/lib/decide/project'
 import type { WorkbenchCard } from '@/lib/workbench/cards'
 import type { ContentChange } from '@/lib/workbench/risk'
+import type { ScottPin } from '@/lib/moc/scott-pins'
 
 await vi.hoisted(async () => {
   vi.stubGlobal('React', (await import('react')).default)
@@ -15,7 +16,8 @@ await vi.hoisted(async () => {
 // decide-parts 會拉進 store 與 Tauri；這裡只需要 DiffBlock 的替身。
 vi.mock('./decide-parts', () => ({ DiffBlock: () => h('div', { 'data-testid': 'decide-diff' }) }))
 
-const { ProposalChanges, RiskBadge } = await import('./proposal-risk')
+const { ProposalChanges, RiskBadge, ScottPinBadge } = await import('./proposal-risk')
+const { default: useScottPinsStore } = await import('@/stores/scott-pins')
 
 const BEFORE = '# 注意力殘留\n\n番茄鐘可以減少切換。\n'
 const LINKED = '# 注意力殘留\n\n[[番茄鐘]]可以減少切換。\n'
@@ -42,6 +44,7 @@ beforeEach(() => {
   root = createRoot(container)
 })
 afterEach(() => {
+  useScottPinsStore.getState().setPins('', [])
   act(() => root.unmount())
   container.remove()
 })
@@ -95,5 +98,40 @@ describe('ProposalChanges', () => {
     render(h(ProposalChanges, { card: card(decide, 'add'), item: decide }))
     expect(container.querySelector('[data-testid="decide-diff"]')).not.toBeNull()
     expect(container.querySelector('[data-testid="change-diff"]')).toBeNull()
+  })
+})
+
+// Fork（almanac ALMNC-69.11）：夥伴的提案仍要改到 Scott 指定的位置時，卡片明確標出。
+describe('Scott 指定的位置', () => {
+  const MOC = '20 領域/時間管理.md'
+  const before = '---\nid: M-1\nkind: domain\ntitle: 時間管理\n---\n# 時間管理\n\n## ③ 章節\n\n### 什麼時候做\n<!-- C-20261112-060020-N9NR -->\n- [[番茄鐘]] ── 切成小段\n\n## ④ 重點結論\n- 舊結論\n'
+  const after = before.replace('- 舊結論', '- 新結論').replace('### 什麼時候做', '### 何時做')
+  const pins: ScottPin[] = [
+    { kind: 'block', block: 'conclusions', mocPath: MOC, mocId: 'M-1', mocName: '時間管理', at: Date.now() - 1000 },
+    { kind: 'chapter-title', chapterId: 'C-20261112-060020-N9NR', mocPath: MOC, mocId: 'M-1', mocName: '時間管理', at: Date.now() - 1000 },
+  ]
+  const decide = item([{ target: 'note', path: MOC, before, after }])
+
+  it('展開後寫出「這是 Scott 指定的位置」與碰到的區塊、章節；收合列標「Scott 指定」', () => {
+    useScottPinsStore.getState().setPins('/v', pins)
+    render(h('div', null, h(ScottPinBadge, { card: card(decide) }), h(ProposalChanges, { card: card(decide), item: decide })))
+    expect(container.querySelector('[data-testid="card-scott-pin-badge"]')?.textContent).toBe('Scott 指定')
+    const notice = container.querySelector('[data-testid="card-scott-pin"]')!
+    expect(notice.textContent).toContain('這是 Scott 指定的位置')
+    expect(notice.textContent).toContain('時間管理：重點結論')
+    expect(notice.textContent).toContain('時間管理：「什麼時候做」章')
+  })
+
+  it('沒有標記、標記過期或改的是別處時不標', () => {
+    render(h(ProposalChanges, { card: card(decide), item: decide }))
+    expect(container.querySelector('[data-testid="card-scott-pin"]')).toBeNull()
+    useScottPinsStore.getState().setPins('/v', pins.map(pin => ({ ...pin, at: Date.now() - 91 * 24 * 60 * 60 * 1000 })))
+    render(h(ProposalChanges, { card: card(decide), item: decide }))
+    expect(container.querySelector('[data-testid="card-scott-pin"]')).toBeNull()
+    useScottPinsStore.getState().setPins('/v', pins)
+    const elsewhere = item([{ target: 'note', path: 'a.md', before: BEFORE, after: LINKED }])
+    render(h('div', null, h(ScottPinBadge, { card: card(elsewhere) }), h(ProposalChanges, { card: card(elsewhere), item: elsewhere })))
+    expect(container.querySelector('[data-testid="card-scott-pin"]')).toBeNull()
+    expect(container.querySelector('[data-testid="card-scott-pin-badge"]')).toBeNull()
   })
 })

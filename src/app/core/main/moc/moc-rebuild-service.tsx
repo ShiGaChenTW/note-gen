@@ -6,6 +6,7 @@
 // 邏輯在 lib/moc（純函式有測試）；超過 3 個領域的筆記記進 stores/moc，由工作台出卡請 Scott 選。
 // Fork（almanac ALMNC-69.10）：重建前先比對 App 外改過的 MOC（lib/moc/reconcile-runtime）：同一次去抖動＝同一批事件；
 // 直接生效的記成 ops，要整批檢查的不生效、出工作台卡；斷鏈、格式壞了、整批檢查用 toast 提醒。
+// Fork（almanac ALMNC-69.11）：啟動時註冊「Scott 指定」標記的儲存（note.db scott_pins），每次重建後重新載入有效標記給畫面用。
 import { useEffect, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import { toast } from '@/hooks/use-toast'
@@ -24,6 +25,11 @@ export function MocRebuildService() {
   const revision = useVaultIndexStore(state => state.revision)
   const running = useRef(false)
   const again = useRef(false)
+
+  useEffect(() => {
+    if (!v3) return
+    void import('@/lib/moc/scott-pins-runtime').then(module => module.registerScottPinStorage()).catch(error => console.debug('[moc] Scott 指定標記儲存未註冊：', error))
+  }, [v3])
 
   useEffect(() => {
     if (!v3 || !ready) return

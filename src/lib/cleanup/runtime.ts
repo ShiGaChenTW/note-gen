@@ -210,6 +210,12 @@ export async function createWeeklyMocDeps(check: CheckDeps, ask: WeeklyMocDeps['
       await state.persist()
       await markSent(batch.id)
     },
+    // Fork（almanac ALMNC-69.11）：碰到「Scott 指定」標記的建議不提。
+    pins: async () => (await import('@/lib/moc/scott-pins-runtime')).loadScottPins(),
+    noteId: path => {
+      const id = vault.notes.get(path)?.frontmatter?.id
+      return typeof id === 'string' && id.trim() ? id.trim() : undefined
+    },
     labels: {
       start: t('moc.start'),
       conclusions: t('moc.conclusions'),

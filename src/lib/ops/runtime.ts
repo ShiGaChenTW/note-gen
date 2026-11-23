@@ -155,6 +155,11 @@ export async function opsService(): Promise<OpsService> {
     },
     onRecorded: async (records, context) => {
       if (shouldLogEach(context)) await appendEntries(records.map(record => opActivityEntry(record, context)))
+      // Fork（almanac ALMNC-69.11）：Scott 親手做的收錄加入／搬動／改說明、章節改名 → 標「Scott 指定」（記不成不影響操作本身）。
+      if (context.actor === 'scott') {
+        const { pinsFromOps, recordScottPins } = await import('@/lib/moc/scott-pins')
+        await recordScottPins(pinsFromOps(records))
+      }
     },
     onUndone: async records => appendEntries([undoneActivityEntry(records)]),
   })

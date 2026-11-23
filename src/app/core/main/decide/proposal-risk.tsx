@@ -3,13 +3,18 @@
 // Fork（almanac ALMNC-65.1）：提案卡的風險標記與差異檢視（改了什麼）。
 // 風險只由 lib/workbench/risk.ts 的 riskOf() 決定（動作類型＋改動內容，不問模型）。收合列只標「低風險」（多數提案都是高風險，全標會變成雜訊）；
 // 展開後一律寫出風險等級與一句理由，下面逐檔列出前後差異（LCS 逐行比較，沒變的行摺起來）。沒有完整前後文的提案（新筆記、任務、時段）沿用原本的 DiffBlock。
+// Fork（almanac ALMNC-69.11）：夥伴的提案仍要改到「Scott 指定」的位置（MOC 上 Scott 90 天內親手改過的收錄、區塊、章節）時，
+// 收合列標「Scott 指定」，展開後寫出「這是 Scott 指定的位置」與碰到哪些位置（判斷在 lib/moc/scott-pin-check.ts，標記來自 stores/scott-pins）。
 import { useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { changeRows, changeStats } from '@/lib/decide/change-diff'
 import type { DecideItem } from '@/lib/decide/project'
 import type { WorkbenchCard } from '@/lib/workbench/cards'
 import { cardRisk, type ContentChange } from '@/lib/workbench/risk'
+import { changesPinTouches, type PinTouch } from '@/lib/moc/scott-pin-check'
+import type { ScottPin } from '@/lib/moc/scott-pins'
 import { cn } from '@/lib/utils'
+import useScottPinsStore from '@/stores/scott-pins'
 import { DiffBlock } from './decide-parts'
 
 /** 一份改動預設最多列幾行（含摺疊列），其餘按「顯示全部」。 */
@@ -21,6 +26,44 @@ export function RiskBadge({ card }: { card: WorkbenchCard }) {
   const risk = useMemo(() => (card.decide ? cardRisk(card) : null), [card])
   if (risk !== 'low') return null
   return <span className="rounded-(--r) bg-hover px-1.5 text-ui-numeric text-ink" data-testid="card-risk-badge">{t('low')}</span>
+}
+
+/** 這張卡的改動碰到哪些有效的 Scott 指定位置（畫面用：連結以檔名比對，不另外查索引）。 */
+export function cardPinTouches(changes: readonly ContentChange[] | undefined, pins: readonly ScottPin[], now = Date.now()): PinTouch[] {
+  return changes?.length && pins.length ? changesPinTouches(changes, pins, { now }) : []
+}
+
+function usePinTouches(changes: readonly ContentChange[] | undefined): PinTouch[] {
+  const pins = useScottPinsStore(state => state.pins)
+  return useMemo(() => cardPinTouches(changes, pins), [changes, pins])
+}
+
+/** 收合列上的「Scott 指定」小標：提案會改到 Scott 指定的位置。 */
+export function ScottPinBadge({ card }: { card: WorkbenchCard }) {
+  const t = useTranslations('workbench.scottPin')
+  // 每週整理卡等批次卡：任何一則碰到就標。
+  const changes = useMemo(() => card.decide?.changes ?? card.batch?.flatMap(item => item.changes ?? []), [card])
+  const touches = usePinTouches(changes)
+  if (!touches.length) return null
+  return <span className="rounded-(--r) border border-line px-1.5 text-ui-numeric text-ink" data-testid="card-scott-pin-badge" title={t('notice')}>{t('badge')}</span>
+}
+
+/** 展開後：「這是 Scott 指定的位置」＋碰到的位置。 */
+export function ScottPinNotice({ changes }: { changes: readonly ContentChange[] | undefined }) {
+  const t = useTranslations('workbench.scottPin')
+  const touches = usePinTouches(changes)
+  if (!touches.length) return null
+  const label = (touch: PinTouch) => touch.location === 'block'
+    ? t('block', { moc: touch.mocName, block: touch.block ? t(`blocks.${touch.block}`) : touch.label })
+    : t(touch.location, { moc: touch.mocName, label: touch.label })
+  return (
+    <div className="mt-2 rounded-(--r-kbd) border border-line px-3 py-2 text-xs" role="note" data-testid="card-scott-pin">
+      <p><b className="font-semibold text-ink">{t('notice')}</b><span className="ml-2 text-muted-ink">{t('hint')}</span></p>
+      <ul className="mt-1 list-disc pl-4 text-muted-ink">
+        {touches.map((touch, index) => <li key={`${touch.location}:${touch.mocPath}:${touch.label}:${index}`}>{label(touch)}</li>)}
+      </ul>
+    </div>
+  )
 }
 
 function changeLabel(t: ReturnType<typeof useTranslations>, change: ContentChange): string {
@@ -73,6 +116,7 @@ export function ProposalChanges({ card, item }: { card: WorkbenchCard, item: Dec
         <b className={cn('font-semibold', risk === 'low' ? 'text-ink' : 'text-muted-ink')}>{t(risk)}</b>
         <span className="ml-2 text-muted-ink">{t(risk === 'low' ? 'lowHint' : 'highHint')}</span>
       </p>
+      <ScottPinNotice changes={item.changes} />
       {changes.length > 0
         ? changes.map((change, index) => <ChangeDiff key={`${change.target}:${change.path}:${index}`} change={change} showPath={changes.length > 1 || change.target !== 'note'} />)
         : item.preview.diff && <DiffBlock diff={item.preview.diff} className="mt-2" />}

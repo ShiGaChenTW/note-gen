@@ -5,6 +5,8 @@ import { createOpsService } from '@/lib/ops/service'
 import { createMemoryOpsIo, createMemoryOpsStore } from '@/lib/ops/testing'
 import { UNDO_WINDOW_MS } from '@/lib/ops/types'
 import { opActivityEntry } from '@/lib/ops/runtime'
+import { changesPinTouches } from '@/lib/moc/scott-pin-check'
+import type { ScottPin } from '@/lib/moc/scott-pins'
 
 const path = '筆記/番茄鐘.md'
 const noteId = 'N-20261123-120000-ABCD'
@@ -102,5 +104,38 @@ describe('低風險提案自動接受', () => {
     expect(await tryAutoAcceptLink(candidate, { ...deps, applyOps: service.applyOps })).toBe(false)
     expect(io.files[path]).toBe(before)
     expect(store.rows[0].undoneAt).not.toBeNull()
+  })
+})
+
+// Fork（almanac ALMNC-69.11）：接上真的標記判斷。MOC 改動在 riskOf 本來就是高風險（不自動接受），標記檢查是第二道保護；
+// 一般筆記補連結不改任何 MOC 位置，照常自動接受；讀不到標記時交回人工審核。
+describe('自動接受遇到 Scott 指定', () => {
+  const NOW = 1_000_000_000_000
+  const mocPath = '20 領域/專注力.md'
+  const mocBefore = '---\nid: M-20261112-060012-VPB3\nkind: domain\ntitle: 專注力\n---\n# 專注力\n\n## ④ 重點結論\n- 番茄鐘可以減少切換。\n\n## ⑤ 待釐清\n- 未解：要多久？\n'
+  const mocChange = { target: 'note' as const, path: mocPath, before: mocBefore, after: mocBefore.replace('- 番茄鐘可以減少切換。', '- [[番茄鐘]]可以減少切換。') }
+  const pin = (block: ScottPin['block'], age: number): ScottPin => ({ kind: 'block', block, mocPath, mocId: 'M-20261112-060012-VPB3', mocName: '專注力', at: NOW - age })
+  const check = (pins: ScottPin[]) => async (change: Parameters<typeof changesPinTouches>[0][number]) => changesPinTouches([change], pins, { now: NOW }).length > 0
+
+  it('MOC 上有標記的區塊被改到：判斷為 Scott 指定，不自動接受', async () => {
+    expect(await check([pin('conclusions', 1000)])(mocChange)).toBe(true)
+    expect(await check([pin('open', 1000)])(mocChange)).toBe(false)
+    expect(await check([pin('conclusions', 90 * 24 * 60 * 60 * 1000)])(mocChange)).toBe(false)
+    const { deps } = setup()
+    expect(await tryAutoAcceptLink({ ...candidate, changes: [mocChange] }, { ...deps, isScottPinned: check([pin('conclusions', 1000)]) })).toBe(false)
+    expect(deps.applyOps).not.toHaveBeenCalled()
+  })
+
+  it('一般筆記補連結不碰 MOC 位置：照常自動接受', async () => {
+    const { io, deps } = setup()
+    expect(await tryAutoAcceptLink(candidate, { ...deps, isScottPinned: check([pin('conclusions', 1000)]) })).toBe(true)
+    expect(io.files[path]).toBe(after)
+  })
+
+  it('讀不到標記時交回人工審核', async () => {
+    const { io, deps } = setup()
+    expect(await tryAutoAcceptLink(candidate, { ...deps, isScottPinned: async () => { throw new Error('db') } })).toBe(false)
+    expect(deps.applyOps).not.toHaveBeenCalled()
+    expect(io.files[path]).toBe(before)
   })
 })

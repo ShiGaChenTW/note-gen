@@ -22,7 +22,7 @@ import useWorkbenchStore from '@/stores/workbench'
 import { destinationText, DiffBlock } from './decide-parts'
 import { DiscussForm } from './discuss-form'
 import { NewNoteFields } from './new-note-fields'
-import { ProposalChanges, RiskBadge } from './proposal-risk'
+import { ProposalChanges, RiskBadge, ScottPinBadge } from './proposal-risk'
 import { MAX_DOMAINS } from '@/lib/moc/membership'
 import { MocBatchBody } from './moc-batch-body'
 
@@ -343,6 +343,7 @@ export function ReviewCard({ card, now, current, expanded, leaving, onDesk, comm
         <span className="flex items-center gap-3">
           {onDesk && <span className="rounded-(--r) bg-hover px-1.5 text-ui-numeric text-ink" data-testid="card-on-desk">{t('onDesk')}</span>}
           <RiskBadge card={card} />
+          <ScottPinBadge card={card} />
           {card.by && <span className="text-xs text-muted-ink">{card.by}</span>}
           <Age card={card} now={now} />
         </span>

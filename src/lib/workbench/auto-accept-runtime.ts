@@ -6,7 +6,7 @@ import { planOf } from '@/lib/organize/drafts'
 import { currentWorkspaceIdentity, inspectNote } from '@/lib/organize/vault-io'
 import { applyOps } from '@/lib/ops/runtime'
 import useSettingStore, { useSettingsHydrationStore } from '@/stores/setting'
-import { isScottPinned, linkEditOf, tryAutoAcceptLink, type AutoAcceptCandidate } from './auto-accept'
+import { linkEditOf, tryAutoAcceptLink, type AutoAcceptCandidate } from './auto-accept'
 import { useAutoAcceptSettings } from './auto-accept-settings'
 import { draftLinkCandidate } from './auto-accept-sources'
 
@@ -26,7 +26,7 @@ export async function autoAcceptLink(candidate: AutoAcceptCandidate, workspace: 
       .find(agent => agent.role === candidate.actor)?.id
     return tryAutoAcceptLink({ ...candidate, actorId }, {
       enabled: canWrite(),
-      isScottPinned,
+      isScottPinned: async change => (await import('@/lib/moc/scott-pins-runtime')).isScottPinnedChange(change),
       applyOps: (specs, context, options) => applyOps(specs, context, { ...options, workspace, identity: scope, canWrite }),
     })
   } catch (error) {
