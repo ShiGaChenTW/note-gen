@@ -27,6 +27,7 @@ import {
   type HeaderItem, type MocChapterView, type MocNoteRow, type MocPageView,
 } from '@/lib/domain-page/moc-view'
 import { requestExplore } from '@/lib/domain-page/explore'
+import { ExplorationActions } from '@/app/core/main/moc/exploration-actions'
 import { resolveWikilinkTarget } from '@/lib/markdown/wikilink'
 import { useDomainPage } from '@/lib/sidebar-v3/domain-page'
 import type { Domain } from '@/lib/v3-model/domain'
@@ -39,6 +40,7 @@ import { buildLinkLookup, resolveWikilinkTargetWithLookup } from '@/lib/vault-in
 type LoadState = 'loading' | 'ready' | 'error'
 
 function useDomains(): { domains: Domain[], state: LoadState } {
+  const mocs = useMocStore(store => store.mocs)
   const [domains, setDomains] = useState<Domain[]>([])
   const [state, setState] = useState<LoadState>('loading')
   useEffect(() => {
@@ -48,7 +50,7 @@ function useDomains(): { domains: Domain[], state: LoadState } {
       .then((list) => { if (active) { setDomains(list); setState('ready') } })
       .catch((error) => { console.warn('[domains] load failed:', error); if (active) setState('error') })
     return () => { active = false }
-  }, [])
+  }, [mocs])
   return { domains, state }
 }
 
@@ -149,7 +151,7 @@ function HeaderLink({ item, tree, onOpen }: { item: HeaderItem, tree: DomainNode
 }
 
 function HeaderRow({ label, items, tree, onOpen, testId, trailing }: { label: string, items: readonly HeaderItem[], tree: DomainNode[], onOpen: (id: string) => void, testId: string, trailing?: ReactNode }) {
-  if (items.length === 0) return null
+  if (items.length === 0 && !trailing) return null
   return (
     <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1" data-testid={testId}>
       <span className="text-faint">{label}</span>
@@ -245,7 +247,7 @@ function exploreAdjacent(node: DomainNode, view: MocPageView, soon: string) {
   if (!handled) toast(soon)
 }
 
-function DomainDetail({ node, tree, view, notePaths, onOpen, onBack }: { node: DomainNode, tree: DomainNode[], view: MocPageView, notePaths: readonly string[], onOpen: (id: string) => void, onBack: () => void }) {
+function DomainDetail({ node, tree, view, notePaths, onOpen, onBack, mocRef }: { mocRef?: { id: string, path: string }, node: DomainNode, tree: DomainNode[], view: MocPageView, notePaths: readonly string[], onOpen: (id: string) => void, onBack: () => void }) {
   const t = useTranslations('sidebarV3.domains')
   const locale = useLocale()
   const updated = new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(node.domain.updatedAt)
@@ -263,7 +265,8 @@ function DomainDetail({ node, tree, view, notePaths, onOpen, onBack }: { node: D
         <p className="text-ui-compact leading-5 text-muted-ink">
           {[t('count', { count: view.noteCount }), t('updated', { date: updated }), view.owner && t('owner', { owner: view.owner }), view.confirmed && t('confirmed', { date: view.confirmed })].filter(Boolean).join(' · ')}
         </p>
-        {hasHeader && (
+        {view.exploring && mocRef && <ExplorationActions moc={mocRef} onWithdraw={onBack} />}
+        {(hasHeader || mocRef) && (
           <div className="mt-1 flex flex-col gap-1 text-ui-compact leading-5 text-ink" data-testid="domain-header">
             <HeaderRow label={t('parent')} items={view.parent ? [view.parent] : []} tree={tree} onOpen={onOpen} testId="domain-header-parent" />
             <HeaderRow label={t('related')} items={view.related} tree={tree} onOpen={onOpen} testId="domain-header-related" />
@@ -447,9 +450,26 @@ export function DomainsTab() {
   if (state === 'loading') body = <p role="status" className="px-4 py-4 text-ui-compact leading-5 text-muted-ink">{t('loading')}</p>
   else if (state === 'error') body = <EmptyState className="px-4 py-4" text={t('loadError')} />
   else if (domainId && !node) body = <EmptyState className="px-4 py-4" text={t('missing')} action={<button type="button" className="cursor-pointer text-ui-compact text-ink underline underline-offset-2" onClick={() => open(null)}>{t('all')}</button>} />
-  else if (node && view) body = <DomainDetail node={node} tree={tree} view={view} notePaths={notePaths} onOpen={open} onBack={() => open(null)} />
+  else if (node && view) {
+    const moc = data.mocByDomain.get(node.domain.id)
+    const mocRef = moc?.id && moc.path ? { id: moc.id, path: moc.path } : undefined
+    body = <DomainDetail node={node} tree={tree} view={view} notePaths={notePaths} onOpen={open} onBack={() => open(null)} mocRef={mocRef} />
+  }
   else if (status !== 'ready') body = <><p role="status" className="px-4 pt-3 text-ui-compact leading-5 text-muted-ink">{t('indexing')}</p>{tree.length > 0 && <DomainList tree={tree} onOpen={open} />}</>
-  else body = <><DomainList tree={tree} onOpen={open} /><UnassignedList notes={unassigned} /></>
+  else body = (
+    <>
+      <div className="flex justify-end px-4 pt-3">
+        <button
+          type="button"
+          className={cn(V3_BUTTON_SHAPE, 'inline-flex h-7 cursor-pointer items-center gap-1 border border-line px-2 text-ui-compact text-ink hover:bg-hover')}
+          onClick={() => { if (!requestExplore({ origin: 'new-domain', topic: '' })) toast(t('exploreSoon')) }}
+          data-testid="domain-new"
+        ><Plus className="size-3.5" aria-hidden />{t('newDomain')}</button>
+      </div>
+      <DomainList tree={tree} onOpen={open} />
+      <UnassignedList notes={unassigned} />
+    </>
+  )
 
   return <div className="h-full overflow-y-auto" aria-label={t('label')}>{body}</div>
 }

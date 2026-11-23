@@ -8977,6 +8977,14 @@
       "noSource": "未標來源",
       "explore": "探索",
       "exploreLabel": "探索相鄰領域：{topics}",
+      "newDomain": "新領域",
+      "promote": "轉正",
+      "withdraw": "撤回領域",
+      "withdrawDescription": "系統會移除 MOC。筆記會保留其他領域，沒有其他領域的筆記會回到未歸屬。",
+      "cancelWithdrawal": "取消",
+      "promoted": "領域已轉正",
+      "withdrawn": "領域已撤回",
+      "explorationChangeFailed": "無法更新探索中的領域",
       "exploreSoon": "探索功能即將推出",
       "owner": "負責：{owner}",
       "unassigned": {
@@ -9135,11 +9143,28 @@
       "noText": "檔案裡沒有可讀取的文字。"
     },
     "domainProposal": {
-      "title": "成立領域「{domain}」，新增專家 {name}",
+      "title": "成立領域「{domain}」",
       "summary": "{count} 則知識筆記還沒有領域，主題都是「{topic}」"
     }
   },
   "workbench": {
+    "blueprint": {
+      "title": "領域藍圖 · {domain}",
+      "positioning": "定位問題",
+      "readingOrder": "建議閱讀順序",
+      "chapter": "第 {number} 章的問題",
+      "deleteChapter": "刪除第 {number} 章",
+      "learningProject": "同時開學習專案（建立專案筆記）",
+      "pairExpert": "安排 {name} 擔任專家",
+      "dialogTitle": "探索主題",
+      "dialogDescription": "指揮官會查閱筆記庫，起草一張領域藍圖。",
+      "topic": "想探索什麼主題？",
+      "draft": "起草藍圖",
+      "generating": "正在起草領域藍圖…",
+      "ready": "領域藍圖已完成",
+      "open": "打開工作台",
+      "failed": "無法起草領域藍圖"
+    },
     "title": "工作台",
     "subtitle": "{count} 件等你處理",
     "subtitleSources": "{done} / {total} 已整理",
@@ -9616,6 +9641,7 @@
       "line": "- 「{text}」已經寫在 {note}"
     },
     "settings": {
+      "explorationWeeklyLimit": "探索每週外部資料上限",
       "title": "調研與回顧",
       "description": "研究員調研、專家回顧領域、秘書回顧行動，由指揮官統整成一張回顧提案。衝突或錯誤會立刻提案，不等彙整。",
       "frequency": "頻率",

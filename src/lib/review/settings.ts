@@ -9,10 +9,12 @@ export interface ReviewSettings {
   frequency: ReviewFrequency
   /** 每週、每兩週在星期幾彙整（0＝星期日，同 Date#getDay）。 */
   weekday: number
+  explorationWeeklyLimit?: number
 }
 
 /** 預設：每週日彙整一次（整週的事都發生完）。 */
-export const DEFAULT_REVIEW_SETTINGS: ReviewSettings = { frequency: 'weekly', weekday: 0 }
+export const MAX_EXPLORATION_WEEKLY_SOURCES = 3
+export const DEFAULT_REVIEW_SETTINGS: ReviewSettings = { frequency: 'weekly', weekday: 0, explorationWeeklyLimit: MAX_EXPLORATION_WEEKLY_SOURCES }
 
 export const REVIEW_SETTINGS_KEY = 'almanacReviewSettings'
 export const REVIEW_LAST_RUN_KEY = 'almanacReviewLastRun'
@@ -21,7 +23,11 @@ export function sanitizeReviewSettings(raw: unknown): ReviewSettings {
   const value = raw && typeof raw === 'object' ? raw as Partial<ReviewSettings> : {}
   const frequency = REVIEW_FREQUENCIES.includes(value.frequency as ReviewFrequency) ? value.frequency as ReviewFrequency : DEFAULT_REVIEW_SETTINGS.frequency
   const weekday = Number.isInteger(value.weekday) && value.weekday! >= 0 && value.weekday! <= 6 ? value.weekday! : DEFAULT_REVIEW_SETTINGS.weekday
-  return { frequency, weekday }
+  const limit = value.explorationWeeklyLimit
+  const explorationWeeklyLimit = typeof limit === 'number' && Number.isInteger(limit)
+    ? Math.min(MAX_EXPLORATION_WEEKLY_SOURCES, Math.max(0, limit))
+    : MAX_EXPLORATION_WEEKLY_SOURCES
+  return { frequency, weekday, explorationWeeklyLimit }
 }
 
 function startOfDay(date: Date): Date {

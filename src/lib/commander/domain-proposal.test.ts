@@ -12,17 +12,13 @@ const note = (path: string, partial: Partial<KnowledgeNoteLike> = {}): Knowledge
   ({ path, title: path, type: 'knowledge', domains: [], tags: [], domainHint: '投資', ...partial })
 
 describe('domainProposal', () => {
-  it('同一主題剛好 3 則未歸屬的知識筆記 → 一則提案：領域＋新專家（本名、soul、rules）', () => {
+  it('同一主題剛好 3 則未歸屬的知識筆記 → 一則 MOC 提案，可選配專家', () => {
     const [proposal, ...rest] = domainProposal([note('a.md'), note('b.md'), note('c.md')], domains, roster)
     expect(rest).toEqual([])
     expect(proposal).toMatchObject({ id: 'domain:投資', topic: '投資', domainName: '投資', notePaths: ['a.md', 'b.md', 'c.md'] })
     // Alex 已經用掉，跳到下一個名字
     expect(proposal.expert).toMatchObject({ name: 'Ivy', role: 'expert', domain: '投資' })
-    expect(proposal.expert.soul).toContain('- 本名：Ivy')
-    expect(proposal.expert.soul).toContain('- 負責領域：投資')
-    expect(proposal.expert.rules).toContain('## 領域：投資')
-    expect(proposal.expert.rules).toContain('## 共用工作記憶')
-    expect(proposal.expert.rules).toContain('標明待查證')
+    expect(proposal.moc.chapters[0].notes.map(entry => entry.path)).toEqual(['a.md', 'b.md', 'c.md'])
   })
 
   it('只有 2 則不提', () => {
@@ -55,25 +51,28 @@ describe('domainProposal', () => {
     const [proposal] = domainProposal([note('a.md'), note('b.md'), note('c.md')], domains, roster)
     const t = (key: string, values?: Record<string, string | number>) => `${key}:${JSON.stringify(values)}`
     expect(describeDomainProposal(proposal, t)).toEqual({
-      title: 'domainProposal.title:{"domain":"投資","name":"Ivy"}',
+      title: 'domainProposal.title:{"domain":"投資"}',
       summary: 'domainProposal.summary:{"count":3,"topic":"投資"}',
     })
   })
 })
 
 describe('acceptDomainProposal', () => {
-  it('Scott 接受後才建立領域、專家、存 soul／rules，再把筆記歸入', async () => {
+  it('預設只建 MOC，勾選時才建專家與記憶', async () => {
     const [proposal] = domainProposal([note('a.md'), note('b.md'), note('c.md')], domains, roster)
-    const calls: string[] = []
     const writer = {
-      addDomain: vi.fn(async () => { calls.push('domain'); return { id: 'd-new' } }),
-      createExpert: vi.fn(async () => { calls.push('expert'); return 'agent-new' }),
-      saveMemory: vi.fn(async () => { calls.push('memory') }),
-      addNoteDomain: vi.fn(async (path: string) => { calls.push(`note:${path}`) }),
+      createMoc: vi.fn(async () => ({ id: 'd-new' })),
+      createExpert: vi.fn(async () => 'agent-new'),
+      saveMemory: vi.fn(async () => undefined),
     }
-    expect(await acceptDomainProposal(proposal, writer)).toEqual({ domainId: 'd-new', agentId: 'agent-new' })
-    expect(calls).toEqual(['domain', 'expert', 'memory', 'note:a.md', 'note:b.md', 'note:c.md'])
+    expect(await acceptDomainProposal(proposal, writer)).toEqual({ domainId: 'd-new' })
+    expect(writer.createMoc).toHaveBeenCalledWith(proposal.moc)
+    expect(writer.createExpert).not.toHaveBeenCalled()
+    expect(await acceptDomainProposal(proposal, writer, true)).toEqual({ domainId: 'd-new', agentId: 'agent-new' })
     expect(writer.createExpert).toHaveBeenCalledWith({ name: 'Ivy', domain: '投資' })
-    expect(writer.addNoteDomain).toHaveBeenCalledWith('a.md', 'd-new')
+    expect(writer.saveMemory).toHaveBeenCalledWith('agent-new', expect.objectContaining({
+      soul: expect.stringContaining('- 本名：Ivy'),
+      rules: expect.stringContaining('## 領域：投資'),
+    }))
   })
 })

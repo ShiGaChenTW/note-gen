@@ -15,7 +15,7 @@ import { computeActionStats, narrateActions, scheduleProposals, suggestReschedul
 import { auditMemory, auditProposals, type AuditFinding, type AuditLabels, type AuditNote, type ContextInput, type WorkNotesInput } from './audit'
 import { reviewDomain, type ExpertReview } from './expert-review'
 import { researchDomains, type AskModel, type DomainDigest, type ResearchFinding } from './research'
-import { isReviewDue, reviewPeriod, reviewRange, type ReviewSettingsStore } from './settings'
+import { MAX_EXPLORATION_WEEKLY_SOURCES, isReviewDue, reviewPeriod, reviewRange, type ReviewSettingsStore } from './settings'
 import { composeWeeklyReview, type WeeklyLabels } from './weekly'
 
 export interface ReviewRunDeps {
@@ -28,6 +28,7 @@ export interface ReviewRunDeps {
   /** 研究員查外部資料；沒有就只列題目。 */
   lookup?: (query: string) => Promise<ExternalEvidence[]>
   digests: () => Promise<DomainDigest[]>
+  researchExplorations?: (now: Date, limit: number) => Promise<void>
   tasks: () => Promise<TaskRef[]>
   events?: (range: { start: Date, end: Date }) => Promise<CalendarEvent[]>
   /** 這期的紀錄筆記。 */
@@ -88,6 +89,9 @@ export async function runReview(deps: ReviewRunDeps): Promise<ReviewRunSummary> 
 
   // G1 研究員調研。
   const researcher = roster.find(agent => agent.role === 'researcher')
+  if (researcher && deps.researchExplorations) {
+    await step('exploration research', errors, () => deps.researchExplorations!(now, settings.explorationWeeklyLimit ?? MAX_EXPLORATION_WEEKLY_SOURCES), undefined)
+  }
   const research = researcher
     ? await step('research', errors, async () => researchDomains(digests, { ask: deps.ask, prompt: await deps.agentPrompt(researcher), lookup: deps.lookup }), [])
     : []

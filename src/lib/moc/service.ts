@@ -63,9 +63,12 @@ export interface RebuildResult {
 export interface RebuildOptions {
   /** 新加的領域依這個順序接在後面（第一個成為主要）。 */
   orderHint?: ReadonlyMap<string, readonly string[]>
-  /** 索引還沒看到的筆記與 MOC 路徑（剛寫的）。 */
+  /** 剛寫入或受操作影響的筆記，即使索引還沒更新，也讀原文重算。 */
   extraNotes?: readonly string[]
+  /** 索引還沒看到的 MOC 路徑（剛寫的）。 */
   extraMocs?: readonly string[]
+  /** 指定撤回的領域仍納入本次重建，才能清掉它留下的 frontmatter 歸屬。 */
+  retiredDomains?: readonly string[]
 }
 
 /** 復原用：把寫入倒過來（依相反順序，內容仍是寫入後的才改回）。 */
@@ -99,7 +102,7 @@ export async function rebuildFromMocs(io: MocIo, options: RebuildOptions = {}): 
   const lookup = buildLinkLookup(paths)
   const { byNote } = membershipsFromMocs(mocs, (target, mocPath) => resolveWikilinkTargetWithLookup(target, lookup, mocPath ?? ''))
   for (const path of [...byNote.keys()]) if (mocPaths.has(path) || !/\.md$/i.test(path)) byNote.delete(path)
-  const managed = new Set(mocs.map(moc => moc.name.trim()))
+  const managed = new Set([...mocs.map(moc => moc.name.trim()), ...options.retiredDomains ?? []])
   const aliases = await io.domainNames().catch(() => new Map<string, string>())
 
   const indexed = (await io.listNotes()).filter(note => !mocPaths.has(note.path))
@@ -117,7 +120,7 @@ export async function rebuildFromMocs(io: MocIo, options: RebuildOptions = {}): 
   }
   const writes: MocWrite[] = []
   const skipped: string[] = []
-  const unread = [...plan.changes.map(change => change.path), ...[...byNote.keys()].filter(path => !known.has(path))]
+  const unread = [...options.extraNotes ?? [], ...plan.changes.map(change => change.path), ...[...byNote.keys()].filter(path => !known.has(path))]
   for (const path of unique(unread)) {
     const raw = await io.readFile(path).catch(() => null)
     if (raw === null) {
@@ -189,7 +192,7 @@ function nameOf(ref: string, names: ReadonlyMap<string, string>, mocs: readonly 
 }
 
 /** 新 MOC 骨架的路徑：<資料夾>/<名稱>.md，被佔用就加序號。 */
-function skeletonPath(folder: string, name: string, taken: ReadonlySet<string>): string {
+export function skeletonPath(folder: string, name: string, taken: ReadonlySet<string>): string {
   const base = `${folder ? `${folder}/` : ''}${mocFileName(name)}`
   for (let n = 1; n < 100; n++) {
     const path = n === 1 ? `${base}.md` : `${base} ${n}.md`

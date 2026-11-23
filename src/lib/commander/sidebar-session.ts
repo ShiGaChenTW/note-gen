@@ -76,6 +76,7 @@ export async function prepareSidebarCommanderRun(
     answerAs?: SidebarRosterAgent
     /** Fork（almanac ALMNC-54.11）：路由器的決定，接在規則後面給模型參考（例如「這是交代秘書的日程」）。 */
     routeNote?: string
+    desktopExploration?: boolean
     deskContext?: DeskContext
     expertToolTitle?: string
     askExpert?: (system: string, question: string, signal?: AbortSignal) => Promise<string>
@@ -163,6 +164,7 @@ export async function prepareSidebarCommanderRun(
 
   const transformTools = (tools: AgentTool[]) => buildSidebarCommanderTools(tools, {
     collector,
+    explore: input.desktopExploration && (!speaker || speaker.role === 'commander'),
     readFile: deps.readFile,
     onChoiceAnswered: () => { choiceAnswered = true },
     ...(awaitReply ? { awaitReply } : {}),

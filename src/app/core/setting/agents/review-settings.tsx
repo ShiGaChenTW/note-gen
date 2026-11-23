@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import {
-  DEFAULT_REVIEW_SETTINGS, REVIEW_FREQUENCIES, defaultReviewSettingsStore, sanitizeReviewSettings,
+  DEFAULT_REVIEW_SETTINGS, MAX_EXPLORATION_WEEKLY_SOURCES, REVIEW_FREQUENCIES, defaultReviewSettingsStore, sanitizeReviewSettings,
   type ReviewFrequency, type ReviewSettings as Settings, type ReviewSettingsStore,
 } from '@/lib/review/settings'
 import { SettingSection } from '../components/setting-base'
@@ -99,6 +99,13 @@ export function ReviewSettings({ store = defaultReviewSettingsStore, runNow = de
             </select>
           </label>
         )}
+        <label className="block space-y-1">
+          <span>{t('explorationWeeklyLimit')}</span>
+          <select className={field} disabled={status === 'loading'} value={settings.explorationWeeklyLimit ?? MAX_EXPLORATION_WEEKLY_SOURCES}
+            onChange={event => void save({ ...settings, explorationWeeklyLimit: Number(event.target.value) })}>
+            {Array.from({ length: MAX_EXPLORATION_WEEKLY_SOURCES + 1 }, (_, limit) => <option key={limit} value={limit}>{limit}</option>)}
+          </select>
+        </label>
         <p className="text-xs text-muted-foreground" role="status">
           {lastRunAt ? t('lastRun', { time: new Date(lastRunAt).toLocaleString() }) : t('never')}
           {status === 'saved' ? ` · ${t('saved')}` : ''}

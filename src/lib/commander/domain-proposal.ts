@@ -1,6 +1,4 @@
-// Fork（almanac ALMNC-54.6）：同一主題累積 3 則以上未歸屬的知識筆記時，指揮官提案成立新領域，同時提案新增一位負責的專家
-// （提議本名、領域，並起草 soul.md 與 rules.md）。規格見定案文件第一節 §3「領域」、第二節「擬人化」。
-// domainProposal 是純函式；acceptDomainProposal 在 Scott 接受後才建立領域、專家並把筆記歸入，所有寫入都由依賴注入。
+import type { DomainBlueprint } from './blueprint'
 import { defaultInterval, formatInterval } from '@/lib/cleanup/interval'
 import { defaultRules, defaultSoul } from '@/lib/agent-memory/templates'
 import { domainLookup, type Domain } from '@/lib/v3-model/domain'
@@ -30,7 +28,8 @@ export interface DomainProposal {
   id: string
   topic: string
   domainName: string
-  expert: { name: string, role: 'expert', domain: string, soul: string, rules: string }
+  expert: { name: string, role: 'expert', domain: string }
+  moc: DomainBlueprint
   notePaths: string[]
 }
 
@@ -93,6 +92,8 @@ export function domainProposal(
     if (pending.has(id)) continue
     const name = EXPERT_NAME_POOL.find(candidate => !usedNames.has(candidate.toLowerCase())) ?? `Expert ${usedNames.size + 1}`
     usedNames.add(name.toLowerCase())
+    const positioning = `如何理解「${group.topic}」？`
+    const members = [...new Map(group.notes.map(note => [note.path, note])).values()]
     proposals.push({
       id,
       topic: group.topic,
@@ -101,32 +102,38 @@ export function domainProposal(
         name,
         role: 'expert',
         domain: group.topic,
-        soul: defaultSoul({ name, role: 'expert', domain: group.topic }),
-        rules: expertRules(group.topic),
       },
-      notePaths: Array.from(new Set(group.notes.map(note => note.path))),
+      moc: {
+        id, name: group.topic, positioning,
+        chapters: [{
+          id: '1', question: positioning,
+          notes: members.map(({ path, title }) => ({ path, title, relation: `提供「${group.topic}」的既有筆記` })),
+        }],
+      },
+      notePaths: members.map(note => note.path),
     })
   }
   return proposals
 }
 
 export interface DomainProposalWriter {
-  addDomain: (input: { name: string }) => Promise<Pick<Domain, 'id'>>
+  createMoc: (blueprint: DomainBlueprint) => Promise<Pick<Domain, 'id'>>
   /** 建立專家，回傳固定編號。 */
   createExpert: (input: { name: string, domain: string }) => Promise<string>
   /** 存 soul.md、rules.md（Scott 接受提案＝Scott 本人寫入）。 */
   saveMemory: (agentId: string, input: { name: string, domain: string, soul: string, rules: string }) => Promise<void>
-  /** 把筆記收進新領域（ALMNC-69.7 起寫進該領域 MOC 的「尚未分章」，domains 由重建更新）。 */
-  addNoteDomain: (path: string, domainId: string) => Promise<void>
 }
 
-/** Scott 接受領域提案後：建立領域 → 建立專家 → 存 soul／rules → 筆記歸入領域。 */
-export async function acceptDomainProposal(proposal: DomainProposal, writer: DomainProposalWriter): Promise<{ domainId: string, agentId: string }> {
-  const domain = await writer.addDomain({ name: proposal.domainName })
-  const agentId = await writer.createExpert({ name: proposal.expert.name, domain: proposal.expert.domain })
-  await writer.saveMemory(agentId, proposal.expert)
-  for (const path of proposal.notePaths) await writer.addNoteDomain(path, domain.id)
-  return { domainId: domain.id, agentId }
+/** 先成立正式 MOC；勾選配專家時才建立角色及其記憶。 */
+export async function acceptDomainProposal(proposal: DomainProposal, writer: DomainProposalWriter, pairExpert = false): Promise<{ domainId: string, agentId?: string }> {
+  const { id: domainId } = await writer.createMoc(proposal.moc)
+  if (!pairExpert) return { domainId }
+  const { name, domain } = proposal.expert
+  const agentId = await writer.createExpert({ name, domain })
+  await writer.saveMemory(agentId, {
+    name, domain, soul: defaultSoul({ name, role: 'expert', domain }), rules: expertRules(domain),
+  })
+  return { domainId, agentId }
 }
 
 type Translate = (key: string, values?: Record<string, string | number>) => string
@@ -134,7 +141,7 @@ type Translate = (key: string, values?: Record<string, string | number>) => stri
 /** 工作台卡片的標題與一句說明（messages 的 commander 命名空間）；畫面在 ALMNC-54.8。 */
 export function describeDomainProposal(proposal: DomainProposal, t: Translate): { title: string, summary: string } {
   return {
-    title: t('domainProposal.title', { domain: proposal.domainName, name: proposal.expert.name }),
+    title: t('domainProposal.title', { domain: proposal.domainName }),
     summary: t('domainProposal.summary', { count: proposal.notePaths.length, topic: proposal.topic }),
   }
 }

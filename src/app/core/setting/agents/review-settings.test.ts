@@ -57,10 +57,18 @@ it('shows the weekly default, saves a frequency change and can run once now', as
     frequency().value = 'daily'
     frequency().dispatchEvent(new Event('change', { bubbles: true }))
   })
-  expect(store.save).toHaveBeenCalledWith({ frequency: 'daily', weekday: 0 })
+  expect(store.save).toHaveBeenCalledWith({ frequency: 'daily', weekday: 0, explorationWeeklyLimit: 3 })
   expect(saved.frequency).toBe('daily')
   expect(weekday()).toBeNull()
   expect(container.textContent).toContain('已儲存')
+
+  const limit = [...container.querySelectorAll('label')].find(label => label.textContent?.includes('探索每週外部資料上限'))!.querySelector('select')!
+  expect(limit.value).toBe('3')
+  await act(async () => {
+    limit.value = '2'
+    limit.dispatchEvent(new Event('change', { bubbles: true }))
+  })
+  expect(saved.explorationWeeklyLimit).toBe(2)
 
   const button = [...container.querySelectorAll('button')].find(btn => btn.textContent === '現在執行一次')!
   await act(async () => { button.click() })

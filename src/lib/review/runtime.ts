@@ -12,6 +12,7 @@ import type { AuditLabels } from './audit'
 import type { ScheduleLabels } from './action-review'
 import type { DomainDigest } from './research'
 import type { ReviewRunDeps } from './runner'
+import { loadExplorationTopics, runExplorationResearch } from './exploration-runtime'
 import { defaultReviewSettingsStore } from './settings'
 import type { WeeklyLabels } from './weekly'
 
@@ -94,17 +95,20 @@ export async function createDefaultReviewDeps(): Promise<ReviewRunDeps> {
   const check = await cleanup.createDefaultCheckDeps()
   const notes = () => Array.from(useVaultIndexStore.getState().notes.values())
   const roster = async (): Promise<RosterAgent[]> => listAgentSettings()
+  let exploring: ReturnType<typeof loadExplorationTopics> | undefined
+  const explorationTopics = () => exploring ??= loadExplorationTopics()
   return {
     settings,
     roster,
+    researchExplorations: async (now, limit) => runExplorationResearch(await explorationTopics(), now, limit),
     agentPrompt: async agent => [ROLE_INSTRUCTIONS[agent.role], await memory.loadAgentMemoryPrompt(agent).catch(() => '')].filter(Boolean).join('\n\n'),
     ask: prompt => askCollectModel(prompt, undefined, { silent: true }),
     // 研究員的外部查詢：既有的網路搜尋。沒開時每題會標成查詢失敗，題目仍列在每週回顧裡。
     lookup: cleanup.defaultLookup,
     digests: async (): Promise<DomainDigest[]> => {
-      const domains = await listDomains()
+      const [domains, topics] = await Promise.all([listDomains(), explorationTopics()])
       const all = notes()
-      return domains.map(domain => ({
+      return domains.filter(domain => !topics.some(topic => topic.id === domain.id || topic.name === domain.name)).map(domain => ({
         domainId: domain.id,
         name: domain.name,
         // Fork（almanac ALMNC-69.4）：domains 存領域名稱（舊資料是 dom_ id）。
