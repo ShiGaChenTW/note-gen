@@ -72,6 +72,9 @@ it('classic still renders the classic sidebar (with its hooks)', () => {
   render()
   expect(container.querySelector('[data-left-sidebar]')).not.toBeNull()
   expect(container.querySelector('nav')?.textContent).toContain('Overview')
+  // Fork（almanac ALMNC-81）：提示詞功能先關閉，classic 側欄不放 Prompts
+  expect(container.querySelector('nav')?.textContent).toContain('Inbox')
+  expect(container.querySelector('nav')?.textContent).not.toContain('Prompts')
   expect(spies.useInboxPendingCount).toHaveBeenCalled()
   expect(spies.usePluginLocalization).toHaveBeenCalled()
 })

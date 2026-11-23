@@ -3,6 +3,7 @@
 import { create } from 'zustand'
 import { isUiV3 } from '@/lib/fork-ui'
 import { KNOWLEDGE_TABS } from './nav'
+import { PROMPT_LIBRARY_ENABLED } from '@/lib/prompt-library/feature'
 
 /** 內建分頁 id（prompts 是獨立的提示詞庫頁）、大綱 id；外掛視圖用 `<pluginId>:<viewId>`。 */
 export const KNOWLEDGE_OUTLINE_TAB = 'outline'
@@ -25,7 +26,10 @@ export interface PluginTabSource {
  * 設定把大綱放在左側欄時的 Outline，以及外掛註冊在左側欄的每個視圖（沒有外掛就沒有）。
  */
 export function buildKnowledgeTabs(input: { outlineInSidebar: boolean, pluginTabs: readonly PluginTabSource[] }): KnowledgeTabItem[] {
-  const tabs: KnowledgeTabItem[] = KNOWLEDGE_TABS.map(id => ({ id, kind: 'builtin' as const }))
+  // ALMNC-81：提示詞功能關閉時不列「提示詞」頁籤
+  const tabs: KnowledgeTabItem[] = KNOWLEDGE_TABS
+    .filter(id => PROMPT_LIBRARY_ENABLED || id !== 'prompts')
+    .map(id => ({ id, kind: 'builtin' as const }))
   if (input.outlineInSidebar) tabs.push({ id: KNOWLEDGE_OUTLINE_TAB, kind: 'outline' })
   for (const plugin of input.pluginTabs) tabs.push({ id: plugin.id, kind: 'plugin', title: plugin.title })
   return tabs

@@ -50,6 +50,7 @@ import { useSkillsStore } from "@/stores/skills"
 import useVaultIndexStore from "@/stores/vault-index"
 import type { CanvasProject } from "@/types/canvas"
 import type { SkillMetadata } from "@/lib/skills/types"
+import { PROMPT_LIBRARY_ENABLED } from "@/lib/prompt-library/feature"
 
 export type ComposerMenuMode = "command" | "resource" | "skill"
 
@@ -209,7 +210,8 @@ export const ChatComposerMenu = forwardRef<
           icon,
           onSelect: () => onCommandSelect(t(`commands.${key}.prompt`)),
         })),
-        ...promptNotes.map(note => ({
+        // ALMNC-81：提示詞功能關閉時選單不列提示詞
+        ...(PROMPT_LIBRARY_ENABLED ? promptNotes : []).map(note => ({
           key: `prompt:${note.path}`,
           group: t("prompts.title"),
           label: promptTitle(note),
