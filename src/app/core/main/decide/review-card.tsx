@@ -13,9 +13,10 @@ import { KBD_ON_BUTTON, V3_BUTTON_SHAPE } from '@/components/v3/button-shape'
 import { cn } from '@/lib/utils'
 import useChatStore from '@/stores/chat'
 import { JobReviewPreview } from '../jobs/job-result'
-import { DiffBlock, destinationText } from './decide-parts'
+import { destinationText } from './decide-parts'
 import { DiscussForm } from './discuss-form'
 import { NewNoteFields } from './new-note-fields'
+import { ProposalChanges, RiskBadge } from './proposal-risk'
 
 // Fork（almanac ALMNC-56.6，V06）：工作台的按鈕和對話、收集同一個高度與圓角（V3_BUTTON_SHAPE）；
 // 主要按鈕的顏色和 Button 的 default 一樣（V3 的 bg-primary 就是反白），不再手動加 bg-invert。
@@ -109,7 +110,8 @@ function CardBody({ card }: { card: WorkbenchCard }) {
             ? <NewNoteFields itemId={item.ref.itemId} proposalId={item.ref.proposalId} fallback={<p>{t('writesTo', { dest: destinationText(decideT, item.preview) })}</p>} />
             : <p>{t('writesTo', { dest: destinationText(decideT, item.preview) })}</p>}
         {item.organizeMerge && <p className="mt-2 text-ink">{organizeT('mergeEffect', item.organizeMerge)}</p>}
-        {item.preview.diff && <DiffBlock diff={item.preview.diff} className="mt-2" />}
+        {/* Fork（almanac ALMNC-65.1）：風險等級＋完整差異（沒有完整前後文時退回原本的 DiffBlock）。 */}
+        <ProposalChanges card={card} item={item} />
         {item.duplicates.length > 0 && <p className="mt-2 text-xs">{decideT('merged', { count: item.duplicates.length })}</p>}
       </div>
     )
@@ -262,6 +264,7 @@ export function ReviewCard({ card, now, current, expanded, leaving, onDesk, comm
         </span>
         <span className="flex items-center gap-3">
           {onDesk && <span className="rounded-(--r) bg-hover px-1.5 text-ui-numeric text-ink" data-testid="card-on-desk">{t('onDesk')}</span>}
+          <RiskBadge card={card} />
           {card.by && <span className="text-xs text-muted-ink">{card.by}</span>}
           <Age card={card} now={now} />
         </span>
