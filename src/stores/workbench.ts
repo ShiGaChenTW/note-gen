@@ -4,7 +4,7 @@
 import { create } from 'zustand'
 import type { LabelFilter, WorkbenchCard } from '@/lib/workbench/cards'
 import { loadAside, putAside, saveAside, takeBack, type AsideMap } from '@/lib/workbench/put-aside'
-import type { SourceFilter } from '@/lib/workbench/sources-tab'
+import { DEFAULT_SOURCE_FILTER, type SourceFilter } from '@/lib/workbench/sources-tab'
 import type { DeskMaterial } from '@/lib/workbench/desk'
 import type { Source } from '@/lib/v3-model/source'
 import type { SourceJudgement } from '@/lib/workbench/judgement'
@@ -152,7 +152,7 @@ const useWorkbenchStore = create<WorkbenchState>((set, get) => ({
     return last
   },
 
-  sourceFilter: 'all',
+  sourceFilter: DEFAULT_SOURCE_FILTER,
   setSourceFilter: sourceFilter => set({ sourceFilter }),
   picked: new Set(),
   setPicked: picked => set({ picked }),

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { buildFragmentPrompt, fallbackFragment, MAX_FRAGMENTS, parseFragments, splitAndClassify } from './split'
+import { buildFragmentPrompt, dropLogFragments, fallbackFragment, MAX_FRAGMENTS, parseFragments, parseJournalVerdict, splitAndClassify, splitSource } from './split'
 
 const TODAY = new Date(2026, 10, 21, 9, 0, 0)
 
@@ -110,5 +110,65 @@ describe('splitAndClassify', () => {
 
   it('保底片段沒有標題時用來處', () => {
     expect(fallbackFragment('', 'meeting.m4a').title).toBe('meeting.m4a')
+  })
+})
+
+describe('ALMNC-69.3 判斷理由、信心與「判斷為日誌」', () => {
+  it('每個片段都可以帶一行理由與信心（高／低）；log 和舊的 record 都收成日誌筆記', () => {
+    const fragments = parseFragments(JSON.stringify({ fragments: [
+      { kind: 'note', noteType: 'log', title: '11/10 週會決定留緩衝', date: '2026-11-10', reason: '綁定 11/10 週會，拿掉日期就失去意義 → 日誌筆記', confidence: 'high' },
+      { kind: 'note', noteType: 'knowledge', title: '早上寫作效率最好', reason: '可能是日誌也可能是知識', confidence: 'low' },
+      { kind: 'task', title: '寄報價單', confidence: 'maybe' },
+    ] }))
+    expect(fragments[0]).toMatchObject({ noteType: 'record', reason: '綁定 11/10 週會，拿掉日期就失去意義 → 日誌筆記', confidence: 'high' })
+    expect(fragments[1]).toMatchObject({ noteType: 'knowledge', confidence: 'low' })
+    expect(fragments[2].confidence).toBeUndefined()
+    expect(fragments[2].reason).toBeUndefined()
+  })
+
+  it('parseJournalVerdict 只在 verdict 為 true 時回傳；信心沒給當成低', () => {
+    expect(parseJournalVerdict(JSON.stringify({ journal: { verdict: true, confidence: 'high', reason: 'Scott 寫的整篇下午記錄' }, fragments: [] })))
+      .toEqual({ verdict: true, confidence: 'high', reason: 'Scott 寫的整篇下午記錄' })
+    expect(parseJournalVerdict(JSON.stringify({ journal: { verdict: 'true' }, fragments: [] }))).toEqual({ verdict: true, confidence: 'low' })
+    expect(parseJournalVerdict(JSON.stringify({ journal: { verdict: false, confidence: 'high' }, fragments: [] }))).toBeUndefined()
+    expect(parseJournalVerdict(JSON.stringify({ fragments: [] }))).toBeUndefined()
+    expect(parseJournalVerdict('壞掉')).toBeUndefined()
+  })
+
+  it('dropLogFragments 去掉日誌筆記片段、重新編號；保底片段留著', () => {
+    const kept = dropLogFragments(parseFragments(JSON.stringify({ fragments: [
+      { kind: 'note', noteType: 'record', title: '下午被打斷', date: '2026-11-03' },
+      { kind: 'note', noteType: 'knowledge', title: '切換工作的代價比想像中高' },
+    ] })))
+    expect(kept.map(f => [f.index, f.title])).toEqual([[0, '切換工作的代價比想像中高']])
+    expect(dropLogFragments([fallbackFragment('原文')])).toHaveLength(1)
+  })
+
+  it('帶日誌標籤：提示要求不產日誌筆記；模型仍給了也去掉；沒有知識片段就是空的（不退回保底片段）', async () => {
+    const prompt = buildFragmentPrompt('11/03 下午被打斷三次', { today: TODAY, journalTagged: true })
+    expect(prompt).toContain('帶「日誌」標籤')
+    expect(prompt).not.toContain('journal.verdict')
+    const ask = vi.fn(async () => JSON.stringify({ fragments: [{ kind: 'note', noteType: 'log', title: '下午被打斷', date: '2026-11-03' }] }))
+    expect(await splitSource('11/03 下午被打斷三次', ask, { today: TODAY, journalTagged: true })).toEqual({ fragments: [] })
+    const withKnowledge = vi.fn(async () => JSON.stringify({ fragments: [
+      { kind: 'note', noteType: 'record', title: '下午被打斷', date: '2026-11-03' },
+      { kind: 'note', noteType: 'knowledge', title: '切換工作的代價比想像中高' },
+    ] }))
+    const result = await splitSource('…', withKnowledge, { today: TODAY, journalTagged: true })
+    expect(result.fragments.map(f => f.title)).toEqual(['切換工作的代價比想像中高'])
+    expect(result.journal).toBeUndefined()
+  })
+
+  it('沒有標籤：提示要指揮官另外判斷是不是日誌；判斷為日誌時帶回判斷、去掉日誌筆記片段', async () => {
+    expect(buildFragmentPrompt('…', { today: TODAY })).toContain('journal.verdict')
+    const ask = vi.fn(async () => JSON.stringify({
+      journal: { verdict: true, confidence: 'low', reason: '第一人稱寫一次經驗' },
+      fragments: [{ kind: 'note', noteType: 'log', title: '下午被打斷', date: '2026-11-03' }],
+    }))
+    expect(await splitSource('我今天下午被打斷三次', ask, { today: TODAY })).toEqual({ fragments: [], journal: { verdict: true, confidence: 'low', reason: '第一人稱寫一次經驗' } })
+    const notJournal = vi.fn(async () => JSON.stringify({ journal: { verdict: false }, fragments: [{ kind: 'note', noteType: 'log', title: '11/10 週會', date: '2026-11-10' }] }))
+    const plain = await splitSource('週會紀錄', notJournal, { today: TODAY })
+    expect(plain.journal).toBeUndefined()
+    expect(plain.fragments.map(f => f.noteType)).toEqual(['record'])
   })
 })

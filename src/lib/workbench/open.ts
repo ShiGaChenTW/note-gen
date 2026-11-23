@@ -22,11 +22,19 @@ export async function openNewConversation(): Promise<void> {
   await useChatStore.getState().startNewConversation()
 }
 
-/** Fork（almanac ALMNC-54.16）：新增文件：建立「未命名.md」、打開編輯頁，游標在標題欄位。 */
-export async function openNewDocument(): Promise<void> {
+/**
+ * Fork（almanac ALMNC-54.16）：新增文件：建立「未命名.md」、打開編輯頁，游標在標題欄位。
+ * Fork（almanac ALMNC-69.3，Q9）：入口改在新增資料源對話框；fromSource 時這篇的工具列顯示「完成」（按了才交給指揮官，存檔不送）。
+ */
+export async function openNewDocument(options: { fromSource?: boolean, journal?: boolean } = {}): Promise<void> {
   try {
     const { createNewDocument } = await import('@/lib/new-doc/create')
-    await createNewDocument()
+    const path = await createNewDocument()
+    if (path && options.fromSource) {
+      const { usePendingDoneStore } = await import('@/lib/new-doc/pending-done')
+      usePendingDoneStore.getState().mark(path, { journal: options.journal === true })
+      emitter.emit('show-editor')
+    }
   } catch (error) {
     const { toast } = await import('@/hooks/use-toast')
     toast({ title: error instanceof Error ? error.message : String(error), variant: 'destructive' })

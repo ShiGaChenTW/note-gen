@@ -3,11 +3,11 @@
 // 只分析「待分析」的資料源：外部擷取的（A5）要等 Scott 在工作台選「處理」才會變成待分析（路由 R1），
 // 自己寫的、系統產生的一進來就是待分析（R2）。所以 A5 進來時不會被轉文字。
 // 分析中途出錯就退回待分析，等下一輪重試；提案批次 id 以資料源為準，重跑不會重複送。
-import { isLegacyNote, type Source } from '@/lib/v3-model/source'
+import { finalStatusAfterAnalysis, isLegacyNote, type Source } from '@/lib/v3-model/source'
 import { assign } from './assign'
 import { consolidate } from './consolidate'
 import { draft } from './draft'
-import { fallbackFragment, splitAndClassify } from './split'
+import { fallbackFragment, splitSource, type SplitResult } from './split'
 import { toText } from './to-text'
 import type { AnalyzeOptions, AnalyzeResult, CommanderDeps, Fragment } from './types'
 
@@ -48,17 +48,20 @@ export async function analyzeSource(sourceId: string, deps: CommanderDeps, optio
       [fallbackFragment(deps.labels.unconverted({ origin: source.origin ?? source.kind, reason }), source.origin)]
     // Fork（almanac ALMNC-54.19）：轉換器回報了明確原因（掃描 PDF、加密檔、不支援的格式…）就直接寫成說明提案，
     // 不把原檔路徑當內容送給模型；資料源照樣標成已分析，佇列繼續下一則。
-    const fragments: Fragment[] = conversion.reason
-      ? unconverted(conversion.reason)
+    // Fork（almanac ALMNC-69.3）：帶日誌標籤的資料源不拆日誌筆記、只找知識；沒標籤時指揮官另外判斷整則是不是日誌（只能提議）。
+    const split: SplitResult = conversion.reason
+      ? { fragments: unconverted(conversion.reason) }
       : conversion.text.trim()
-      ? await splitAndClassify(conversion.text, deps.ask, {
+      ? await splitSource(conversion.text, deps.ask, {
           today: now,
           sourceKind: source.kind,
           origin: source.origin,
           previousText: await previousText(source, deps),
           hint: await hintOf(source, deps),
+          journalTagged: source.journal,
         })
-      : unconverted()
+      : { fragments: unconverted() }
+    const fragments: Fragment[] = split.fragments
 
     const [roster, domains] = await Promise.all([deps.roster(), deps.domains()])
     const assignments = assign(fragments, roster, domains)
@@ -71,10 +74,12 @@ export async function analyzeSource(sourceId: string, deps: CommanderDeps, optio
       drafts,
       origin: deps.labels.origin({ agent: commander?.name ?? '', source: sourceLabel(source) }),
       conversationId: options.conversationId,
+      ...(split.journal ? { journal: split.journal, sourceLabel: sourceLabel(source) } : {}),
     })
     if (batch) await deps.submitProposals(batch)
 
-    const status = batch ? 'analyzed' : 'rejected'
+    // 日誌讀過沒有可提煉的內容就停在已分析，不會被不採用。
+    const status = finalStatusAfterAnalysis(source, !!batch)
     await deps.sources.setStatus(sourceId, status)
     await deps.logActivity?.({
       sourceId,

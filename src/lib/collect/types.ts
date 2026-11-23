@@ -54,6 +54,13 @@ export interface Proposal {
   people?: string[]
   /** 所屬專案。 */
   project?: string
+  /** Fork（almanac ALMNC-69.3）：指揮官對這個片段的判斷理由（一行）與信心。 */
+  rationale?: { reason?: string, confidence?: 'high' | 'low' }
+  /**
+   * Fork（almanac ALMNC-69.3）：指揮官「判斷為日誌」——掛在這則資料源的分析結果上，卡片顯示一行，Scott 接受時一起替 sourceIds 貼上日誌標籤。
+   * only：這則資料源除了貼標籤沒有其他產出，這張卡接受時只貼標籤、不寫筆記。
+   */
+  journalTag?: { confidence: 'high' | 'low', reason?: string, only?: boolean }
   /** 撰寫草稿的角色（C1 專家／C2 指揮官／C3 秘書）與它的固定編號。 */
   drafter?: { role: 'commander' | 'expert' | 'secretary', agentId?: string }
   /**

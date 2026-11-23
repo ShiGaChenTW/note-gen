@@ -170,6 +170,14 @@ describe('ingestSource（新增資料源時的分流）', () => {
   })
 })
 
+describe('newSourceType（ALMNC-69.3 這是日誌）', () => {
+  it('勾了「這是日誌」的文字算自己寫的，即使是貼上的；連結照舊是外部擷取', () => {
+    expect(newSourceType({ type: 'text', content: '貼上的一大段', pastedChars: 100 })).toBe('external')
+    expect(newSourceType({ type: 'text', content: '貼上的一大段', pastedChars: 100, journal: true })).toBe('self')
+    expect(newSourceType({ type: 'link', content: 'https://a.b', journal: true })).toBe('external')
+  })
+})
+
 describe('newSourceType', () => {
   it('links and mostly-pasted text are external; typed text, todos and prompt drafts are self-written', () => {
     expect(newSourceType({ type: 'link', content: 'https://a.b' })).toBe('external')

@@ -11,6 +11,8 @@ import {
   latestVersions,
   sourceFromRow,
   sourceToValues,
+  finalStatusAfterAnalysis,
+  setJournalTag,
   sourcesDueForArchive,
   submitSource,
   transitionSource,
@@ -217,12 +219,13 @@ describe('資料庫列對應', () => {
     expect(source.origin).toBeUndefined()
     expect(source.archivedAt).toBeUndefined()
     expect(source.previousId).toBe('a')
-    expect(sourceToValues(source)).toEqual(['b', 'external', 'link', 'c', null, 1, 'scott', 'rejected', 2, 2, 'a', 3, null, 4, 5])
+    expect(source.journal).toBe(false)
+    expect(sourceToValues(source)).toEqual(['b', 'external', 'link', 'c', null, 1, 'scott', 'rejected', 2, 2, 'a', 3, null, 4, 5, 0])
   })
 
   it('未知的來源類型或狀態丟錯', () => {
     const base = sourceToValues(make('self'))
-    expect(base).toHaveLength(15)
+    expect(base).toHaveLength(16)
     const row = { ...make('self'), origin: null, previousId: null, lockedAt: null, archivedAt: null } as unknown as SourceRow
     expect(() => sourceFromRow({ ...row, sourceType: 'web' })).toThrow()
     expect(() => sourceFromRow({ ...row, status: 'done' })).toThrow()
@@ -237,5 +240,44 @@ describe('ALMNC-54.10 擷取失敗的「刪除」', () => {
     expect(canDeleteUnsent(submitSource(waiting, T0))).toBe(false)
     expect(canDeleteUnsent(transitionSource(waiting, 'rejected', T0))).toBe(false)
     expect(canDeleteUnsent(make('self'))).toBe(false)
+  })
+})
+
+describe('ALMNC-69.3 日誌標籤', () => {
+  it('舊資料與一般新增的沒有標籤；Scott 勾了「這是日誌」就直接帶標籤', () => {
+    expect(make('self').journal).toBe(false)
+    expect(createSource({ id: 'j', sourceType: 'self', kind: 'text', content: '今天下午被打斷三次', collector: 'scott', journal: true }, T0).journal).toBe(true)
+    const row = { ...make('self'), origin: null, previousId: null, lockedAt: null, archivedAt: null } as unknown as SourceRow
+    expect(sourceFromRow({ ...row, isJournal: undefined }).journal).toBe(false)
+    expect(sourceFromRow({ ...row, isJournal: null }).journal).toBe(false)
+    expect(sourceFromRow({ ...row, isJournal: 1 }).journal).toBe(true)
+    expect(sourceToValues({ ...make('self'), journal: true }).at(-1)).toBe(1)
+  })
+
+  it('帶日誌標籤的資料源不能轉成不採用；讀過沒有產出停在已分析', () => {
+    const journal = make('external', { journal: true })
+    expect(() => transitionSource(journal, 'rejected', T0)).toThrow('日誌')
+    const analyzing = transitionSource(make('self', { journal: true }), 'analyzing', T0)
+    expect(() => transitionSource(analyzing, 'rejected', T0)).toThrow()
+    expect(transitionSource(analyzing, 'analyzed', T0).status).toBe('analyzed')
+    expect(finalStatusAfterAnalysis({ journal: true }, false)).toBe('analyzed')
+    expect(finalStatusAfterAnalysis({ journal: false }, false)).toBe('rejected')
+    expect(finalStatusAfterAnalysis({ journal: false }, true)).toBe('analyzed')
+  })
+
+  it('改版時標籤跟著新版本', () => {
+    const locked = submitSource(make('external', { journal: true }), T0)
+    const result = editSourceContent(locked, '改過', T0 + 1, 'a2')
+    expect(result.source.journal).toBe(true)
+  })
+
+  it('setJournalTag：貼上或拿掉；已封存、不採用的不能貼', () => {
+    const source = make('self')
+    const tagged = setJournalTag(source, true, T0 + 5)
+    expect(tagged).toMatchObject({ journal: true, updatedAt: T0 + 5, status: source.status })
+    expect(setJournalTag(tagged, true, T0 + 9)).toBe(tagged)
+    expect(setJournalTag(tagged, false, T0 + 9).journal).toBe(false)
+    expect(() => setJournalTag(transitionSource(make('external'), 'rejected', T0), true, T0)).toThrow()
+    expect(() => setJournalTag({ ...source, archivedAt: T0 }, true, T0)).toThrow()
   })
 })

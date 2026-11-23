@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from
 import { AlmanacWordmark } from '@/components/almanac-wordmark'
 import { LeftSidebarToggleButton, SettingsButton } from '@/components/shell-buttons'
 import { TooltipProvider } from '@/components/ui/tooltip'
-import { ArrowDownToLine, CalendarCheck, CalendarDays, ChevronDown, FilePen, ListChecks, Library, MessageSquarePlus, MessagesSquare, MoreHorizontal, Plus, Search } from 'lucide-react'
+import { ArrowDownToLine, CalendarCheck, CalendarDays, ChevronDown, ListChecks, Library, MessageSquarePlus, MessagesSquare, MoreHorizontal, Plus, Search } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { Kbd } from '@/components/ui/kbd'
 import { Count } from '@/components/v3/count'
@@ -22,7 +22,7 @@ import { useSidebarCollapse, type SidebarSection } from '@/lib/sidebar-v3/collap
 import { buildAgentRows, buildNav, runningAgentCount, type AgentRow, type NavKey } from '@/lib/sidebar-v3/nav'
 import type { AgentSettings } from '@/lib/agents/settings'
 import { useWeekOverlay } from '@/lib/week/overlay'
-import { openAddSource, openNewConversation, openNewDocument } from '@/lib/workbench/open'
+import { openAddSource, openNewConversation } from '@/lib/workbench/open'
 import { useWorkbenchCount } from '@/lib/workbench/use-workbench'
 import { cn } from '@/lib/utils'
 import useArticleStore from '@/stores/article'
@@ -220,7 +220,8 @@ function VaultSection() {
 }
 
 /**
- * Fork（almanac ALMNC-54.8、54.16、54.18）：搜尋下方三個只有圖示的按鈕——新增文件、新增資料源（N）、新增對話（T）。
+ * Fork（almanac ALMNC-54.8、54.16、54.18、69.3）：搜尋下方兩個只有圖示的起點按鈕——新增資料源（N）、新增對話（T）。
+ * ALMNC-69.3（Q9）：「新增文件」收進新增資料源對話框，側欄不再放。
  * 滑鼠停留顯示名稱與快捷鍵；窄螢幕（手機）在圖示下方加小字。
  */
 function QuickActions() {
@@ -229,14 +230,13 @@ function QuickActions() {
   const singleKeys = useSettingStore(state => state.workbenchSingleKeys !== false)
   const workbenchOpen = useDecideStore(state => state.visible)
   const keys = singleKeys && workbenchOpen
-  // Fork（almanac ALMNC-54.16、54.18）：依序為新增文件、新增資料源、新增對話（54.18 拿掉第四顆「待確定」）。
+  // Fork（almanac ALMNC-54.16、54.18、69.3）：依序為新增資料源、新增對話。
   const items: Array<{ key: string, icon: ComponentType<{ className?: string }>, label: string, short: string, shortcut?: string, onClick: () => void }> = [
-    { key: 'doc', icon: FilePen, label: t('newDoc'), short: t('newDocShort'), onClick: () => void openNewDocument() },
     { key: 'source', icon: ArrowDownToLine, label: t('addSource'), short: t('addSourceShort'), shortcut: keys ? 'N' : undefined, onClick: openAddSource },
     { key: 'thread', icon: MessageSquarePlus, label: t('newThread'), short: t('newThreadShort'), shortcut: keys ? 'T' : undefined, onClick: () => void openNewConversation() },
   ]
   return (
-    <div role="group" aria-label={t('label')} className="mx-0.5 grid shrink-0 grid-cols-3 gap-1" data-testid="sidebar-quick">
+    <div role="group" aria-label={t('label')} className="mx-0.5 grid shrink-0 grid-cols-2 gap-1" data-testid="sidebar-quick">
       {items.map(item => {
         const Icon = item.icon
         const tip = item.shortcut ? `${item.label}　${item.shortcut}` : item.label

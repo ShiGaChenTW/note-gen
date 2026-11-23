@@ -193,10 +193,13 @@ export async function ingestSource<TInput>(input: TInput, deps: IngestDeps<TInpu
   return source
 }
 
-/** 新增資料源時的來源類型：連結、大部分是貼上的文字算外部擷取（等你決定）；自己打的字、待辦、Prompt 素材算自己寫的（R2）。 */
-export function newSourceType(input: { type: 'text' | 'link' | 'todo' | 'prompt-draft', content: string, pastedChars?: number }): 'external' | 'self' {
+/**
+ * 新增資料源時的來源類型：連結、大部分是貼上的文字算外部擷取（等你決定）；自己打的字、待辦、Prompt 素材算自己寫的（R2）。
+ * Fork（almanac ALMNC-69.3）：勾了「這是日誌」的文字一律算自己寫的（日誌就是 Scott 親手寫的事件記錄），直接交給指揮官。
+ */
+export function newSourceType(input: { type: 'text' | 'link' | 'todo' | 'prompt-draft', content: string, pastedChars?: number, journal?: boolean }): 'external' | 'self' {
   if (input.type === 'link') return 'external'
-  if (input.type !== 'text') return 'self'
+  if (input.type !== 'text' || input.journal) return 'self'
   const length = Array.from(input.content.trim()).length
   return length > 0 && (input.pastedChars ?? 0) >= length * 0.6 ? 'external' : 'self'
 }

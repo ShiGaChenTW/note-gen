@@ -71,6 +71,19 @@ export interface Converters {
 
 // ── 2. 拆開與判斷 ────────────────────────────────────────────
 
+/** Fork（almanac ALMNC-69.3）：判斷的信心。低＝介於兩類之間，要 Scott 決定。 */
+export type Confidence = 'high' | 'low'
+
+/**
+ * Fork（almanac ALMNC-69.3）：指揮官對整則資料源「是不是日誌」的判斷。
+ * 只能提議：寫進這則資料源的分析結果卡，Scott 接受時才貼上日誌標籤。
+ */
+export interface JournalVerdict {
+  verdict: boolean
+  confidence: Confidence
+  reason?: string
+}
+
 /** 行程、任務、筆記，或不採用。 */
 export type FragmentKind = 'event' | 'task' | 'note' | 'reject'
 
@@ -91,8 +104,10 @@ export interface Fragment {
   /** 模型猜的領域名稱（知識片段才有意義），用來找專家與累積「未歸屬」的主題。 */
   domainHint?: string
   tags: string[]
-  /** 不採用的理由。 */
+  /** 判斷的理由（一行字）；不採用時是不採用的理由。Fork（almanac ALMNC-69.3）：每種片段都可以有。 */
   reason?: string
+  /** Fork（almanac ALMNC-69.3）：這個判斷的信心；模型沒給就沒有。 */
+  confidence?: Confidence
   /** 模型輸出壞掉時的保底片段：整則原文原封不動放在 body。 */
   fallback?: boolean
 }

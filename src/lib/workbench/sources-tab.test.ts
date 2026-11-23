@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { createSource, type Source } from '@/lib/v3-model/source'
 import type { SourceJudgement } from './judgement'
 import {
-  bridgeInput, buildSourceRows, captureSourceId, dayBucket, filterCounts, filterRows, isUserCapture, organisedSummary, pickState,
+  bridgeInput, buildSourceRows, canReject, captureSourceId, dayBucket, DEFAULT_SOURCE_FILTER, filterCounts, filterRows, isUserCapture, organisedSummary, pickState,
   planHandToCommander, recordSourceId, restorePicks, sourceDisplayKind, sourceTitle, toggleAll, togglePick, waitingCount, type CaptureLike, type RecordLike,
 } from './sources-tab'
 
@@ -65,12 +65,34 @@ describe('status filter, counts and summary', () => {
     records: [record(1)],
   })
 
-  it('filters 全部／等你決定／未整理／已整理／不採用 and counts each', () => {
-    expect(filterRows(rows, 'wait').map(row => row.id)).toEqual(['src:w'])
-    expect(filterRows(rows, 'todo').map(row => row.id)).toEqual(['src:p', 'rec:1'])
-    expect(filterRows(rows, 'done').map(row => row.id)).toEqual(['src:d'])
-    expect(filterRows(rows, 'no').map(row => row.id)).toEqual(['src:n'])
-    expect(filterCounts(rows)).toEqual({ all: 5, wait: 1, todo: 2, done: 1, no: 1 })
+  it('filters 待處理（含等你決定）／已分析／不採用 and counts each（ALMNC-69.3）', () => {
+    expect(DEFAULT_SOURCE_FILTER).toEqual({ status: 'pending', journal: false })
+    expect(filterRows(rows, { status: 'pending', journal: false }).map(row => row.id)).toEqual(['src:w', 'src:p', 'rec:1'])
+    expect(filterRows(rows, { status: 'analyzed', journal: false }).map(row => row.id)).toEqual(['src:d'])
+    expect(filterRows(rows, { status: 'rejected', journal: false }).map(row => row.id)).toEqual(['src:n'])
+    expect(filterCounts(rows, DEFAULT_SOURCE_FILTER)).toEqual({ pending: 3, analyzed: 1, rejected: 1, journal: 0 })
+    // 卡片上保留「等你決定」：列的狀態還是 wait。
+    expect(rows.find(row => row.id === 'src:w')?.status).toBe('wait')
+  })
+
+  it('combines the status row with the 日誌 type row（ALMNC-69.3）', () => {
+    const tagged = buildSourceRows({
+      sources: [
+        source('j1', 'pending_analysis', { journal: true }),
+        source('j2', 'analyzed', { journal: true }),
+        source('p', 'pending_analysis'),
+        source('d', 'analyzed'),
+      ],
+    })
+    expect(tagged.find(row => row.id === 'src:j1')?.journal).toBe(true)
+    expect(tagged.find(row => row.id === 'src:p')?.journal).toBeUndefined()
+    expect(filterRows(tagged, { status: 'pending', journal: true }).map(row => row.id)).toEqual(['src:j1'])
+    expect(filterRows(tagged, { status: 'analyzed', journal: true }).map(row => row.id)).toEqual(['src:j2'])
+    expect(filterRows(tagged, { status: 'analyzed', journal: false }).map(row => row.id)).toEqual(['src:j2', 'src:d'])
+    expect(filterCounts(tagged, { status: 'pending', journal: true })).toEqual({ pending: 1, analyzed: 1, rejected: 0, journal: 1 })
+    expect(filterCounts(tagged, { status: 'analyzed', journal: false })).toEqual({ pending: 2, analyzed: 2, rejected: 0, journal: 1 })
+    expect(canReject(tagged.find(row => row.id === 'src:j1')!)).toBe(false)
+    expect(canReject(tagged.find(row => row.id === 'src:p')!)).toBe(true)
   })
 
   it('shows 「N / M 已整理」 and the waiting badge', () => {
@@ -174,7 +196,7 @@ describe('封存的不採用資料源（ALMNC-54.1 AC#6）', () => {
     const archived: Source = { ...base, status: 'rejected', statusChangedAt: 1000, archivedAt: 5000 }
     const fresh: Source = { ...base, id: 'b', content: '剛不採用', status: 'rejected', statusChangedAt: 4000 }
     const rows = buildSourceRows({ sources: [archived, fresh] })
-    expect(filterRows(rows, 'no').map(row => row.sourceId).sort()).toEqual(['a', 'b'])
+    expect(filterRows(rows, { status: 'rejected', journal: false }).map(row => row.sourceId).sort()).toEqual(['a', 'b'])
     expect(rows.find(row => row.sourceId === 'a')).toMatchObject({ status: 'no', archived: true })
     expect(rows.find(row => row.sourceId === 'b')?.archived).toBeUndefined()
   })

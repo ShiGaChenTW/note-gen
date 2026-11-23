@@ -23,6 +23,8 @@ interface Events {
     resolve: (ready: boolean) => void
   };
   'plugin-records-changed': undefined;
+  /** Fork（almanac ALMNC-69.3）：收起所有蓋在編輯器上的全頁畫面（從新增資料源對話框開新文件時）。 */
+  'show-editor': undefined;
   'searchAndScroll': string;
   'ai-completion-loading': boolean;
   'auto-completion-enabled-changed': boolean;

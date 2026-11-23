@@ -11,9 +11,11 @@
 // 命令面板：⌘K 在編輯器裡是「插入連結」，所以提示只寫編輯器內外都能用的 ⌘⇧P（ALMNC-54.18，取代 A09 的「⌘K，編輯器外」）。
 // ALMNC-54.20：第二組最後加「送給指揮官」——先存檔再把畫面上這篇筆記送成自己寫的資料源（id 由路徑決定，重送不重複建立，內容改了接新版）。
 // 第二組不會收進「⋯」，所以窄版也一直看得到。
+// ALMNC-69.3（Q9）：從新增資料源對話框「新增文件」打開的那篇，這顆換成「完成」——存檔不送，按「完成」才交給指揮官（勾了日誌就帶日誌標籤），
+// 之後這篇回到一般筆記的「送給指揮官」。
 import { useEffect, useMemo, useRef, useState, type ReactNode, type Ref } from 'react'
 import {
-  ArrowLeft, ArrowRight, ArrowUpToLine, Ellipsis, FileText, Hash, Heart, History, ListTree, Redo2, Send, SquareSlash,
+  ArrowLeft, ArrowRight, ArrowUpToLine, Check, Ellipsis, FileText, Hash, Heart, History, ListTree, Redo2, Send, SquareSlash,
   TextSearch, Undo2, X,
 } from 'lucide-react'
 import { platform } from '@tauri-apps/plugin-os'
@@ -34,6 +36,7 @@ import emitter from '@/lib/emitter'
 import type { PropertyType } from '@/lib/markdown/frontmatter-edit'
 import { noteFolder } from '@/lib/note-list/note-list'
 import { hasMarkedPath, noteMarksWorkspaceKey } from '@/lib/note-toolbar/note-marks'
+import { usePendingDoneStore } from '@/lib/new-doc/pending-done'
 import { addTag, planTagsWrite, readFrontmatterTags, removeTagAt } from '@/lib/note-toolbar/note-tags'
 import { isCompactToolbar, noteToolbarScope } from '@/lib/note-toolbar/toolbar-layout'
 import { loadObsidianPropertyTypes } from '@/lib/obsidian-types'
@@ -98,6 +101,21 @@ function ToolbarButton({ label, icon, onClick, disabled, pressed, buttonRef, wra
   )
 }
 
+/** 「完成」：帶字的按鈕（比圖示鈕顯眼，這篇寫完就按它）；仍是工具列的一員（roving tabindex）。 */
+function DoneButton({ label, hint, disabled, onClick }: { label: string, hint: string, disabled?: boolean, onClick: () => void }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <ToolbarIconButton aria-label={label} disabled={disabled} onClick={onClick} data-testid="editor-done" className="flex w-auto items-center gap-1 px-2 text-ink">
+          <Check />
+          <span className="text-ui-compact font-medium">{label}</span>
+        </ToolbarIconButton>
+      </TooltipTrigger>
+      <TooltipContent side="bottom"><p>{hint}</p></TooltipContent>
+    </Tooltip>
+  )
+}
+
 interface EditorNoteToolbarProps {
   activeTab?: TabInfo
   isActiveGroup: boolean
@@ -139,6 +157,7 @@ export function EditorNoteToolbar({ activeTab, isActiveGroup, canGoBack, canGoFo
 
   useEffect(() => { setInfoOpen(false) }, [notePath])
   const [sending, setSending] = useState(false)
+  const pendingDone = usePendingDoneStore(state => (notePath ? state.pending[notePath] : undefined))
 
   if (scope === 'hidden') return null
 
@@ -170,9 +189,14 @@ export function EditorNoteToolbar({ activeTab, isActiveGroup, canGoBack, canGoFo
   const sendToCommander = async () => {
     if (!notePath || sending) return
     setSending(true)
+    const done = pendingDone
     try {
-      const outcome = await sendNoteToCommander(notePath, t('saveBeforeSendFailed'))
-      if (outcome === 'added') toast.success(t('sentToCommander'))
+      const outcome = await sendNoteToCommander(notePath, t('saveBeforeSendFailed'), done?.journal === true)
+      if (done && outcome !== 'empty') {
+        // 「完成」：交出去之後這篇就是一般筆記。
+        usePendingDoneStore.getState().clear(notePath)
+        toast.success(done.journal ? t('doneJournalSent') : t('doneSent'))
+      } else if (outcome === 'added') toast.success(t('sentToCommander'))
       else if (outcome === 'versioned') toast.success(t('sentNewVersion'))
       else if (outcome === 'unchanged') toast(t('alreadySent'))
       else toast(t('emptyNote'))
@@ -207,7 +231,11 @@ export function EditorNoteToolbar({ activeTab, isActiveGroup, canGoBack, canGoFo
               <TagsButton editor={noteEditor?.editor ?? null} label={t('tags')} />
               <ToolbarButton label={labels.pin} icon={<ArrowUpToLine />} pressed={pinned} onClick={() => toggleMark('pinned')} />
               <ToolbarButton label={labels.favorite} icon={<Heart />} pressed={favorite} onClick={() => toggleMark('favorites')} />
-              <ToolbarButton label={t('sendToCommander')} icon={<Send />} disabled={sending} onClick={() => void sendToCommander()} />
+              {pendingDone ? (
+                <DoneButton label={t('done')} hint={t('doneHint')} disabled={sending} onClick={() => void sendToCommander()} />
+              ) : (
+                <ToolbarButton label={t('sendToCommander')} icon={<Send />} disabled={sending} onClick={() => void sendToCommander()} />
+              )}
             </>
           ) : null}
 
@@ -280,7 +308,7 @@ export function EditorNoteToolbar({ activeTab, isActiveGroup, canGoBack, canGoFo
  * 「送給指揮官」送出的內容：畫面上的這篇筆記。先把編輯器還在等的修改存進檔案（視覺編輯器有 500 ms 的序列化計時，
  * 加上文章存檔佇列；和切換檔案、移到新視窗前同一套），再讀筆記庫裡的檔案送出。存不進去就不送，讓按鈕顯示失敗。
  */
-async function sendNoteToCommander(path: string, saveFailed: string) {
+async function sendNoteToCommander(path: string, saveFailed: string, journal = false) {
   const [{ default: useArticleStore }, { prepareActiveEditorDeactivationDurably }, { readNote }, { sendNoteToCommander: send }] = await Promise.all([
     import('@/stores/article'),
     import('@/lib/editor-deactivation'),
@@ -289,7 +317,7 @@ async function sendNoteToCommander(path: string, saveFailed: string) {
   ])
   if (useArticleStore.getState().activeFilePath === path && !await prepareActiveEditorDeactivationDurably(path)) throw new Error(saveFailed)
   await useArticleStore.getState().flushPendingArticleSavesForPaths([path])
-  return send({ path, content: (await readNote(path)) ?? '' })
+  return send({ path, content: (await readNote(path)) ?? '', ...(journal ? { journal: true } : {}) })
 }
 
 /** frontmatter 節點的原文；沒有 frontmatter 時回傳 null。 */

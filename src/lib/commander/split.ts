@@ -3,7 +3,7 @@
 // 整則原文放進去，絕不把內容丟掉。
 import { extractJson, isValidYmd, normalizeTime } from '@/lib/collect/split'
 import { NOTE_TYPES, type NoteType } from '@/lib/v3-model/note'
-import type { AskModel, Fragment, FragmentKind } from './types'
+import type { AskModel, Confidence, Fragment, FragmentKind, JournalVerdict } from './types'
 
 export const MAX_FRAGMENTS = 12
 const MAX_TITLE = 120
@@ -42,6 +42,14 @@ export interface SplitContext {
   previousText?: string
   /** Fork（almanac ALMNC-54.10）：Scott 選了「照建議處理」時的初步判斷（「類型｜建議」）。 */
   hint?: string
+  /** Fork（almanac ALMNC-69.3）：這則資料源已經帶日誌標籤（Scott 貼的）：不產日誌筆記，只找知識片段。 */
+  journalTagged?: boolean
+}
+
+/** Fork（almanac ALMNC-69.3）：拆片段的結果，加上對整則資料源「是不是日誌」的判斷（已帶標籤或模型沒說就沒有）。 */
+export interface SplitResult {
+  fragments: Fragment[]
+  journal?: JournalVerdict
 }
 
 export function buildFragmentPrompt(text: string, context: SplitContext): string {
@@ -54,20 +62,31 @@ export function buildFragmentPrompt(text: string, context: SplitContext): string
     '- task：要做的事。title 用動詞開頭；有期限才填 date。',
     '- note：值得留下的筆記，再判斷 noteType：',
     '  - knowledge：跟時間無關、過一年仍然成立的一個想法（概念、主張或方法），title 寫得成一句話；domainHint 寫它屬於哪個領域（例如「工業工程」）。',
-    '  - record：跟時間綁在一起的一個事件（包含行為、習慣、心得反思），填 date。',
+    '  - log（日誌筆記）：跟時間綁在一起的一個事件（包含行為、習慣、心得反思），拿掉日期就失去意義，填 date。',
     '  - project：跟一件進行中、有目標有結束點的事綁在一起，填 project。',
     '- reject：不值得留下（廣告、重複、雜訊），reason 寫一句理由。',
     '每個片段都補上下文：date（日期）、people（相關的人）、project（所屬專案）；沒有就省略，不要編造。',
     'body 放這個片段對應的原文內容（可以稍微整理，但不要漏掉事實）。',
+    '每個片段都附 reason（一行字的判斷理由，例如「綁定 11/10 週會，拿掉日期就失去意義 → 日誌筆記」）與 confidence（high 或 low；類型介於兩者之間、或同時符合兩種條件時用 low）。',
     `最多 ${MAX_FRAGMENTS} 個片段。`,
-    '只輸出 JSON，不要任何說明或程式碼框：',
-    '{"fragments":[{"kind":"event|task|note|reject","noteType":"knowledge|record|project","title":"","body":"","date":"","time":"","people":[],"project":"","domainHint":"","tags":[],"reason":""}]}',
   ]
+  // Fork（almanac ALMNC-69.3）：日誌標籤。Scott 貼了標籤就照辦；沒貼時指揮官判斷整則是不是 Scott 親手寫的事件記錄，只能提議。
+  if (context.journalTagged) {
+    lines.push('這則資料源帶「日誌」標籤（Scott 親手寫的事件記錄）：原文就是日誌，不要拆成日誌筆記（不要輸出 noteType log）；只找出裡面一年後仍成立的知識片段，和要做的事。沒有就輸出空的 fragments。')
+  } else {
+    lines.push('另外判斷整則資料源是不是日誌：Scott 自己寫的整篇事件記錄（做了什麼、發生什麼、當時的感受和反思），原文不拆不搬。是的話 journal.verdict 填 true，這時不要再把它拆成日誌筆記，只找知識片段；附 confidence（high／low）與一行 reason。')
+  }
+  lines.push(
+    '只輸出 JSON，不要任何說明或程式碼框：',
+    context.journalTagged
+      ? '{"fragments":[{"kind":"event|task|note|reject","noteType":"knowledge|project","title":"","body":"","date":"","time":"","people":[],"project":"","domainHint":"","tags":[],"reason":"","confidence":"high|low"}]}'
+      : '{"journal":{"verdict":false,"confidence":"high|low","reason":""},"fragments":[{"kind":"event|task|note|reject","noteType":"knowledge|log|project","title":"","body":"","date":"","time":"","people":[],"project":"","domainHint":"","tags":[],"reason":"","confidence":"high|low"}]}',
+  )
   // Fork（almanac ALMNC-57.3）：會議逐字稿要抽出決議、待辦與負責人。
   if (context.sourceKind === 'meeting') {
     lines.push(
       '這則資料源是一場會議的逐字稿（每段開頭是「講者：」）。不要逐句摘要，請抽出：',
-      '- 決議：會議裡決定的事，每一項拆成一個 note（noteType 用 record，date 填會議日期，people 填參與決定的人）。',
+      '- 決議：會議裡決定的事，每一項拆成一個 note（noteType 用 log，date 填會議日期，people 填參與決定的人）。',
       '- 待辦：要做的事，每一項拆成一個 task；title 用動詞開頭並寫出負責人（例如「Amy：週五前寄報價單給客戶」），people 填負責人，有期限才填 date；沒有說誰負責就在 title 寫「（未指定負責人）」。',
       '- 寒暄、閒聊、重複的討論過程用 reject，或省略。',
     )
@@ -82,9 +101,13 @@ export function buildFragmentPrompt(text: string, context: SplitContext): string
   return lines.join('\n')
 }
 
-/** note 沒說類型時：有專案 → 專案筆記；有日期 → 紀錄筆記；否則知識筆記。 */
+/**
+ * note 沒說類型時：有專案 → 專案筆記；有日期 → 日誌筆記；否則知識筆記。
+ * Fork（almanac ALMNC-69.3）：模型寫 log（日誌筆記的新類型值）或舊的 record 都收；內部仍存 record，改值與遷移在 ALMNC-69.4。
+ */
 function inferNoteType(record: Record<string, unknown>, date: string, project: string): NoteType {
   const raw = asString(record.noteType).toLowerCase()
+  if (raw === 'log') return 'record'
   if ((NOTE_TYPES as readonly string[]).includes(raw)) return raw as NoteType
   if (project) return 'project'
   if (date) return 'record'
@@ -118,7 +141,8 @@ export function parseFragments(raw: string): Fragment[] {
     const project = clip(asString(record.project), MAX_HINT)
     const domainHint = clip(asString(record.domainHint), MAX_HINT)
     const tags = stringList(record.tags, 5).map(tag => tag.replace(/^#/, '')).filter(tag => /^[\p{L}\p{N}_/-]+$/u.test(tag))
-    const reason = asString(record.reason)
+    const reason = clip(asString(record.reason), MAX_TITLE)
+    const confidence = parseConfidence(record.confidence)
     fragments.push({
       index: fragments.length,
       kind,
@@ -131,10 +155,41 @@ export function parseFragments(raw: string): Fragment[] {
       ...(project ? { project } : {}),
       ...(domainHint && kind === 'note' ? { domainHint } : {}),
       tags,
-      ...(kind === 'reject' && reason ? { reason } : {}),
+      ...(reason ? { reason } : {}),
+      ...(confidence ? { confidence } : {}),
     })
   }
   return fragments
+}
+
+function parseConfidence(value: unknown): Confidence | undefined {
+  const raw = asString(value).toLowerCase()
+  if (raw === 'high' || raw === '高') return 'high'
+  if (raw === 'low' || raw === '低') return 'low'
+  return undefined
+}
+
+/** Fork（almanac ALMNC-69.3）：解析整則資料源的「判斷為日誌」。只有 verdict 是 true 才回傳（false 不必出現在卡片上）；信心沒給當成低。 */
+export function parseJournalVerdict(raw: string): JournalVerdict | undefined {
+  const parsed = extractJson(raw)
+  if (!parsed || Array.isArray(parsed) || typeof parsed !== 'object') return undefined
+  const journal = (parsed as { journal?: unknown }).journal
+  if (!journal || typeof journal !== 'object') return undefined
+  const record = journal as Record<string, unknown>
+  const verdict = record.verdict === true || asString(record.verdict).toLowerCase() === 'true'
+  if (!verdict) return undefined
+  const reason = clip(asString(record.reason), MAX_TITLE)
+  return { verdict: true, confidence: parseConfidence(record.confidence) ?? 'low', ...(reason ? { reason } : {}) }
+}
+
+/**
+ * Fork（almanac ALMNC-69.3）：原文本身就是日誌（Scott 貼了標籤，或指揮官判斷為日誌）時，不再拆出日誌筆記，只留其他片段。
+ * 保底片段（模型失敗）不動，避免把整則內容丟掉。
+ */
+export function dropLogFragments(fragments: readonly Fragment[]): Fragment[] {
+  return fragments
+    .filter(fragment => fragment.fallback || !(fragment.kind === 'note' && fragment.noteType === 'record'))
+    .map((fragment, index) => ({ ...fragment, index }))
 }
 
 /** 保底片段：整則原文當成一則紀錄筆記交給指揮官撰寫，Scott 在工作台看得到它沒被拆過。 */
@@ -151,14 +206,27 @@ export function fallbackFragment(text: string, title?: string): Fragment {
   }
 }
 
-/** 主入口：問模型拆開並判斷；模型失敗、輸出壞掉或一個片段都沒有時退回保底片段。 */
-export async function splitAndClassify(text: string, ask: AskModel, context: SplitContext): Promise<Fragment[]> {
-  if (!text.trim()) return [fallbackFragment(text, context.origin)]
+/**
+ * Fork（almanac ALMNC-69.3）：拆開、判斷，並帶回「判斷為日誌」。
+ * 原文是日誌（帶標籤或判斷為日誌）時去掉日誌筆記片段；帶標籤時一個片段都沒剩是正常的（讀過沒有可提煉的內容），不退回保底片段。
+ * 其他情況照舊：模型失敗、輸出壞掉或一個片段都沒有時退回保底片段。
+ */
+export async function splitSource(text: string, ask: AskModel, context: SplitContext): Promise<SplitResult> {
+  if (!text.trim()) return { fragments: context.journalTagged ? [] : [fallbackFragment(text, context.origin)] }
   try {
-    const fragments = parseFragments(await ask(buildFragmentPrompt(text, context)))
-    if (fragments.length) return fragments
+    const raw = await ask(buildFragmentPrompt(text, context))
+    const parsed = parseFragments(raw)
+    const journal = context.journalTagged ? undefined : parseJournalVerdict(raw)
+    const fragments = context.journalTagged || journal ? dropLogFragments(parsed) : parsed
+    const answered = extractJson(raw) !== null
+    if (fragments.length || (answered && (context.journalTagged || journal))) return { fragments, ...(journal ? { journal } : {}) }
   } catch (error) {
     console.warn('[commander] split failed, using fallback fragment:', error)
   }
-  return [fallbackFragment(text, context.origin)]
+  return { fragments: [fallbackFragment(text, context.origin)] }
+}
+
+/** 主入口：問模型拆開並判斷；模型失敗、輸出壞掉或一個片段都沒有時退回保底片段。 */
+export async function splitAndClassify(text: string, ask: AskModel, context: SplitContext): Promise<Fragment[]> {
+  return (await splitSource(text, ask, context)).fragments
 }
