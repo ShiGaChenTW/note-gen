@@ -12,6 +12,7 @@ import type { DraftChange } from '@/lib/agent-tasks/types'
 import { newProposalId } from '@/lib/collect/split'
 import type { FileChange, Proposal } from '@/lib/collect/types'
 import { buildScheduleTools, SCHEDULE_TOOL_NAMES, type ScheduleDeps } from './schedule-direct'
+import { buildExploreTool, EXPLORE_TOOL_NAME } from './blueprint-chat'
 import { buildAwaitReplyTool, withAwaitingQuestion } from './await-reply'
 
 /** 會改檔、要換成提案版本的原工具（同背景任務的草稿工具）。 */
@@ -31,7 +32,7 @@ export const PROPOSAL_TOOL_NAMES = new Set([...DRAFTABLE_TOOL_NAMES].map(proposa
 export type SidebarToolKind = 'read' | 'proposal' | 'schedule'
 
 export function sidebarToolKind(tool: Pick<AgentTool, 'name' | 'risk'>): SidebarToolKind | null {
-  if (PROPOSAL_TOOL_NAMES.has(tool.name)) return 'proposal'
+  if (PROPOSAL_TOOL_NAMES.has(tool.name) || tool.name === EXPLORE_TOOL_NAME) return 'proposal'
   if ((SCHEDULE_TOOL_NAMES as readonly string[]).includes(tool.name)) return 'schedule'
   if (tool.risk === 'read') return 'read'
   return null
@@ -62,6 +63,7 @@ export function createChangeCollector(): ChangeCollector {
 
 export interface SidebarToolDeps {
   collector: ChangeCollector
+  explore?: boolean
   readFile: (path: string) => Promise<string | null>
   schedule: ScheduleDeps
   /** ask_user_question 有回答時呼叫（交代得不夠具體、Scott 選了之後才能直接寫）。 */
@@ -135,7 +137,7 @@ export function buildSidebarCommanderTools(tools: AgentTool[], deps: SidebarTool
     }
     offered.push(tool)
   }
-  return [...offered, ...buildScheduleTools(deps.schedule), ...(deps.awaitReply ? [buildAwaitReplyTool(deps.awaitReply.onAsk)] : [])]
+  return [...offered, ...buildScheduleTools(deps.schedule), ...(deps.awaitReply ? [buildAwaitReplyTool(deps.awaitReply.onAsk)] : []), ...(deps.explore ? [buildExploreTool()] : [])]
 }
 
 /** 收集到的檔案變更 → 工作台的提案（記來源對話與撰寫者）。 */

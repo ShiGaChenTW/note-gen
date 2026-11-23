@@ -71,6 +71,8 @@ interface WorkbenchState {
   dismissed: string[]
   dismiss: (id: string) => void
   undismiss: (id: string) => void
+  pairDomainExperts: string[]
+  setPairDomainExpert: (id: string, selected: boolean) => void
   history: UndoEntry[]
   pushUndo: (entry: UndoEntry) => void
   popUndo: () => UndoEntry | undefined
@@ -143,6 +145,10 @@ const useWorkbenchStore = create<WorkbenchState>((set, get) => ({
   dismissed: [],
   dismiss: id => set(state => ({ dismissed: state.dismissed.includes(id) ? state.dismissed : [...state.dismissed, id] })),
   undismiss: id => set(state => ({ dismissed: state.dismissed.filter(entry => entry !== id) })),
+  pairDomainExperts: [],
+  setPairDomainExpert: (id, selected) => set(state => ({
+    pairDomainExperts: [...state.pairDomainExperts.filter(entry => entry !== id), ...(selected ? [id] : [])],
+  })),
   history: [],
   pushUndo: entry => set(state => ({ history: [...state.history.slice(-19), entry] })),
   popUndo: () => {

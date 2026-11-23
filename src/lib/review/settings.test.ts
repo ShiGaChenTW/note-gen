@@ -12,7 +12,9 @@ describe('review frequency settings', () => {
     expect(DEFAULT_REVIEW_SETTINGS.frequency).toBe('weekly')
     expect(sanitizeReviewSettings(undefined)).toEqual(DEFAULT_REVIEW_SETTINGS)
     expect(sanitizeReviewSettings({ frequency: 'hourly', weekday: 9 })).toEqual(DEFAULT_REVIEW_SETTINGS)
-    expect(sanitizeReviewSettings({ frequency: 'monthly', weekday: 3 })).toEqual({ frequency: 'monthly', weekday: 3 })
+    expect(sanitizeReviewSettings({ frequency: 'monthly', weekday: 3 })).toEqual({ frequency: 'monthly', weekday: 3, explorationWeeklyLimit: 3 })
+    expect(sanitizeReviewSettings({ explorationWeeklyLimit: 8 }).explorationWeeklyLimit).toBe(3)
+    expect(sanitizeReviewSettings({ explorationWeeklyLimit: 0 }).explorationWeeklyLimit).toBe(0)
   })
 
   it('loads the default, saves a change and remembers the last run', async () => {
@@ -21,8 +23,8 @@ describe('review frequency settings', () => {
     expect(await store.load()).toEqual({ settings: DEFAULT_REVIEW_SETTINGS })
     await store.save({ frequency: 'daily', weekday: 2 })
     await store.markRun(123)
-    expect(data.get(REVIEW_SETTINGS_KEY)).toEqual({ frequency: 'daily', weekday: 2 })
-    expect(await store.load()).toEqual({ settings: { frequency: 'daily', weekday: 2 }, lastRunAt: 123 })
+    expect(data.get(REVIEW_SETTINGS_KEY)).toEqual({ frequency: 'daily', weekday: 2, explorationWeeklyLimit: 3 })
+    expect(await store.load()).toEqual({ settings: { frequency: 'daily', weekday: 2, explorationWeeklyLimit: 3 }, lastRunAt: 123 })
     expect(data.has(REVIEW_LAST_RUN_KEY)).toBe(true)
   })
 

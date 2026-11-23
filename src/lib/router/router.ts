@@ -167,6 +167,9 @@ export function routeByRules(rawText: string, context: RouteContext = {}): Route
   if (MULTI_INTENT.test(trimmed)) return ruleDecision('process', 'multi_intent', trimmed, context.roster)
   if (PREFERENCE_MARKERS.test(trimmed)) return ruleDecision('preference', 'preference_marker', trimmed, context.roster)
   // 「是否已經實作」仍是查詢。「幫我安裝嗎」則是包成問句的指令。
+  if (/^(?:我)?(?:想(?:要)?|[幫帮]我|[請请])(?:系[統统](?:化|地))?(?:探索|[學学][習习]|了解)|^I (?:want|would like) to (?:explore|learn about)\b/i.test(trimmed)) {
+    return ruleDecision('process', 'intent_marker', trimmed, context.roster)
+  }
   if (QUERY_REQUEST.test(trimmed) && !/[幫帮]我|\bhelp me\b/i.test(trimmed)) return ruleDecision('query', 'intent_marker', trimmed, context.roster)
   if (SCHEDULE_REQUEST.test(trimmed)) return ruleDecision('schedule', 'intent_marker', trimmed, context.roster)
   if (ACTION_REQUEST.test(trimmed)) return ruleDecision('process', 'intent_marker', trimmed, context.roster)

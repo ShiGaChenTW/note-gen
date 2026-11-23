@@ -2,11 +2,12 @@
 
 // Fork（almanac ALMNC-54.8）：審核分頁的一張卡（v14）。收合時一行：類型字（標籤＋動詞，不用圖示）｜標的物＋第二行｜誰建議的＋等多久；
 // 點一下就地展開：內容、按鈕（依卡片類型）、右邊「先放著 S」。在檯面上的卡片標「檯面上」。
+import { BlueprintFields, DomainExpertOption } from './blueprint-fields'
 import { useRef, useState, type ReactNode } from 'react'
 import { useTranslations } from 'next-intl'
 import { ChevronRight, Clock, MessagesSquare } from 'lucide-react'
 import { openConversation } from '@/lib/proposals/actions'
-import { ACTION_KEY, actionForKey, actionLabelKey, ageParts, type CardAction, type WorkbenchCard } from '@/lib/workbench/cards'
+import { ACTION_KEY, actionForKey, actionLabelKey, ageParts, proposalCard, type CardAction, type WorkbenchCard } from '@/lib/workbench/cards'
 import { reminderPresets } from '@/lib/workbench/put-aside'
 import { Kbd } from '@/components/ui/kbd'
 import { KBD_ON_BUTTON, V3_BUTTON_SHAPE } from '@/components/v3/button-shape'
@@ -97,7 +98,7 @@ type CardActionPayload = { note?: string, time?: string, itemKey?: string }
 /** Fork（almanac ALMNC-65.2）：批次卡裡的一則：標題、存放位置（照 Scott 改過的值）；展開看內容、改標題與位置（沿用 NewNoteFields）；逐則接受／退回。 */
 function BatchRow({ item, onAction }: { item: DecideItem, onAction: (action: 'accept' | 'drop') => void }) {
   const t = useTranslations('workbench')
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(Boolean(item.mocReview))
   const ref = item.ref.source === 'collect' ? item.ref : null
   const proposal = useCollectStore(state => ref ? state.items.find(entry => entry.id === ref.itemId)?.proposals.find(entry => entry.id === ref.proposalId) : undefined)
   const inboxFolder = useDailySettingsStore(state => state.inboxFolder)
@@ -124,10 +125,13 @@ function BatchRow({ item, onAction }: { item: DecideItem, onAction: (action: 'ac
       </div>
       {open && (
         <div className="px-3 pb-3 pl-8" data-testid="batch-item-detail">
-          {ref && <NewNoteFields itemId={ref.itemId} proposalId={ref.proposalId} />}
+          {ref && target && <NewNoteFields itemId={ref.itemId} proposalId={ref.proposalId} />}
           {proposal?.body.trim()
             ? <div className="mt-2 max-h-64 overflow-y-auto rounded-(--r-kbd) border border-line-soft bg-bg px-3 py-2 text-ui-compact leading-6 whitespace-pre-wrap break-words text-ink" data-testid="batch-item-content">{proposal.body.trim()}</div>
-            : item.preview.diff && <DiffBlock diff={item.preview.diff} className="mt-2" />}
+            : null}
+          {item.mocReview
+            ? <ProposalChanges card={proposalCard(item, item.at)} item={item} />
+            : !proposal?.body.trim() && item.preview.diff && <DiffBlock diff={item.preview.diff} className="mt-2" />}
         </div>
       )}
     </li>
@@ -142,7 +146,7 @@ function BatchBody({ card, onAction }: { card: WorkbenchCard, onAction: (action:
   return (
     <div className="text-ui-compact leading-6 text-muted-ink" data-testid="batch-body">
       {journalItem && <VerdictLines item={journalItem} />}
-      <p>{t('batch.heading', { count: items.length })}</p>
+      <p>{t(items[0]?.mocReview ? 'batch.mocHeading' : 'batch.heading', { count: items.length })}</p>
       {journalItem && <p className="text-xs">{t('batch.journalOnce')}</p>}
       <ul className="mt-2 divide-y divide-line-soft rounded-(--r) border border-line-soft">
         {items.map(item => <BatchRow key={item.key} item={item} onAction={action => onAction(action, { itemKey: item.key })} />)}
@@ -209,12 +213,16 @@ function CardBody({ card, onAction }: { card: WorkbenchCard, onAction: (action: 
   if (card.kind === 'confirm') return <p className="text-ui-compact text-muted-ink">{t('confirmSince', { date: card.summary })}</p>
   // Fork（almanac ALMNC-69.7）：超過上限卡：說明選了會怎樣（選項按鈕在下面，一個領域一個）。
   if (card.kind === 'domainLimit') return <p className="text-ui-compact leading-6 text-muted-ink" data-testid="domain-limit-body">{t('domainLimit.body', { limit: MAX_DOMAINS })}</p>
+  if (card.blueprint) return <BlueprintFields proposal={card.blueprint} />
   if (card.notePaths?.length) {
     return (
-      <div className="flex flex-wrap gap-1.5">
-        {card.notePaths.map(path => (
-          <span key={path} title={path} className="rounded-(--r-kbd) bg-hover px-2 py-0.5 text-xs text-muted-ink">{(path.split('/').pop() ?? path).replace(/\.md$/i, '')}</span>
-        ))}
+      <div className="space-y-2">
+        <div className="flex flex-wrap gap-1.5">
+          {card.notePaths.map(path => (
+            <span key={path} title={path} className="rounded-(--r-kbd) bg-hover px-2 py-0.5 text-xs text-muted-ink">{(path.split('/').pop() ?? path).replace(/\.md$/i, '')}</span>
+          ))}
+        </div>
+        {card.domainProposalId && card.domainExpertName && <DomainExpertOption id={card.domainProposalId} name={card.domainExpertName} />}
       </div>
     )
   }

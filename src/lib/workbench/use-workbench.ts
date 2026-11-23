@@ -19,6 +19,8 @@ import useCollectStore from '@/stores/collect'
 import useInboxStore from '@/stores/inbox'
 import useVaultIndexStore, { selectAllTasks } from '@/stores/vault-index'
 import useWorkbenchStore from '@/stores/workbench'
+import { EMPTY_BLUEPRINTS, useBlueprintStore } from '@/lib/commander/blueprint-store'
+import useSettingStore from '@/stores/setting'
 import useMocStore from '@/stores/moc'
 import { MAX_DOMAINS } from '@/lib/moc/membership'
 import useDailySettingsStore from '@/stores/daily-settings'
@@ -67,13 +69,14 @@ export function useCommanderName(): string {
 
 function useDomains(): Domain[] {
   const [domains, setDomains] = useState<Domain[]>([])
+  const mocs = useMocStore(state => state.mocs)
   useEffect(() => {
     let active = true
     listDomains()
       .then(rows => { if (active) setDomains(rows) })
       .catch(() => undefined)
     return () => { active = false }
-  }, [])
+  }, [mocs])
   return domains
 }
 
@@ -211,6 +214,8 @@ export function useReviewData(): ReviewData {
   const judgements = useWorkbenchStore(state => state.judgements)
   const aside = useWorkbenchStore(state => state.aside)
   const dismissed = useWorkbenchStore(state => state.dismissed)
+  const workspace = useSettingStore(state => state.workspacePath)
+  const blueprints = useBlueprintStore(state => state.byWorkspace[workspace] ?? EMPTY_BLUEPRINTS)
   const roster = useRoster()
   const domains = useDomains()
   const commander = roster.find(agent => agent.role === 'commander' && agent.enabled)?.name
@@ -219,7 +224,7 @@ export function useReviewData(): ReviewData {
   const tasks = useMemo(() => pendingTaskGroups(selectAllTasks({ notes, revision }), new Date(now)), [notes, revision, now])
   const noteList = useMemo(() => Array.from(notes.values()), [notes, revision]) // eslint-disable-line react-hooks/exhaustive-deps
   const domainCards = useMemo<DomainLike[]>(() => computeDomainProposals(knowledgeNotesFromIndex(noteList), domains, roster, dismissed)
-    .map(proposal => ({ id: proposal.id, ...describeDomainProposal(proposal, commanderT), notePaths: proposal.notePaths, by: commander, at: now })),
+    .map(proposal => ({ id: proposal.id, ...describeDomainProposal(proposal, commanderT), notePaths: proposal.notePaths, positioning: proposal.moc.positioning, expertName: proposal.expert.name, by: commander, at: now })),
   [noteList, domains, roster, dismissed, commanderT, commander, now])
   const intervals = useReconfirmIntervals(domains, roster)
   const confirm = useMemo(() => confirmNotesFromIndex(noteList, now, intervals), [noteList, now, intervals])
@@ -248,13 +253,14 @@ export function useReviewData(): ReviewData {
         }
       }),
     domains: domainCards,
+    blueprints: blueprints.map(proposal => ({ proposal, title: t('blueprint.title', { domain: proposal.name }), by: commander })),
     domainLimits,
     mocBatch,
     confirm,
     hand: legacyInputs.hand,
     legacy: legacyInputs.legacy,
     now,
-  }), [proposals, replies, tasks, sources, judgements, domainCards, domainLimits, mocBatch, confirm, legacyInputs, now, t])
+  }), [proposals, replies, tasks, sources, judgements, domainCards, blueprints, commander, domainLimits, mocBatch, confirm, legacyInputs, now, t])
 
   return useMemo(() => ({ all, visible: visibleCards(all, aside, now), aside: hiddenCards(all, aside, now), now }), [all, aside, now])
 }

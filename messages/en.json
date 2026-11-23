@@ -78,6 +78,7 @@
         "drafted": "drafted",
         "proposed": "proposed",
         "accepted": "accepted",
+        "auto_accepted": "Auto-accepted",
         "rejected": "declined",
         "created": "created",
         "updated": "updated",
@@ -8911,6 +8912,14 @@
       "noSource": "No source given",
       "explore": "Explore",
       "exploreLabel": "Explore adjacent domains: {topics}",
+      "newDomain": "New domain",
+      "promote": "Make permanent",
+      "withdraw": "Withdraw domain",
+      "withdrawDescription": "The MOC will be removed. Its notes keep any other domains and become unassigned if they have none.",
+      "cancelWithdrawal": "Cancel",
+      "promoted": "Domain made permanent",
+      "withdrawn": "Domain withdrawn",
+      "explorationChangeFailed": "Could not update the exploring domain",
       "exploreSoon": "Explore is coming soon",
       "owner": "Owner: {owner}",
       "unassigned": {
@@ -8926,9 +8935,14 @@
       }
     }
   },
+  "autoAcceptLinks": {
+    "title": "Automatically accept link additions",
+    "description": "When a proposal only adds one link, the change is applied automatically. Undo it within 7 days in the activity log.",
+    "settingsError": "Could not save the auto-accept setting."
+  },
   "organize": {
     "title": "Auto-organize",
-    "description": "After 60 minutes of inactivity, suggest up to five changes for review in the Workbench.",
+    "description": "After 60 minutes of inactivity, suggest up to five changes. Changes that need approval appear in the Workbench.",
     "merge": "Merge {detail} into {path}",
     "tag": "Add #{detail} to {path}",
     "link": "Link {path} to {detail}",
@@ -9064,11 +9078,28 @@
       "noText": "The file contains no readable text."
     },
     "domainProposal": {
-      "title": "Create the domain \"{domain}\" with a new expert, {name}",
+      "title": "Create the domain \"{domain}\"",
       "summary": "{count} knowledge notes have no domain yet, all about \"{topic}\""
     }
   },
   "workbench": {
+    "blueprint": {
+      "title": "Domain blueprint · {domain}",
+      "positioning": "Positioning question",
+      "readingOrder": "Suggested reading order",
+      "chapter": "Chapter {number} question",
+      "deleteChapter": "Remove chapter {number}",
+      "learningProject": "Also create a learning project note",
+      "pairExpert": "Assign {name} as an expert",
+      "dialogTitle": "Explore a topic",
+      "dialogDescription": "The commander will check your vault and draft a domain blueprint.",
+      "topic": "What do you want to explore?",
+      "draft": "Draft blueprint",
+      "generating": "Drafting a domain blueprint…",
+      "ready": "Domain blueprint ready",
+      "open": "Open workbench",
+      "failed": "Could not draft the domain blueprint"
+    },
     "title": "Workbench",
     "subtitle": "{count} waiting for you",
     "subtitleSources": "{done} / {total} organized",
@@ -9468,7 +9499,8 @@
       "heading": "{count} new knowledge notes from the same source. Accept them all, or accept or send back each one; click a title to see its content and change its title or folder.",
       "journalOnce": "Accepting tags this source as a journal once.",
       "accept": "Accept",
-      "drop": "Send back"
+      "drop": "Send back",
+      "mocHeading": "{count} suggested changes"
     },
     "domainLimit": {
       "summary": "Filed under {count} domains, over the limit of {limit}",
@@ -9514,8 +9546,17 @@
     "origin": "Cleanup proposal from {agent}",
     "originSystem": "Cleanup proposal",
     "confirmTitle": "Still valid: {title}",
-    "confirmBody": "Re-checked: nothing outdated, contradictory or duplicated, and external sources agree ({evidence}). Accepting sets the last-confirmed date to today.",
-    "confirmBodyNoExternal": "Re-compared with the notes in this domain: nothing outdated, contradictory or duplicated (no external sources found). Accepting sets the last-confirmed date to today."
+    "confirmBody": "The comparison found no discrepancies, and the external sources agree ({evidence}). Accepting sets the last-confirmed date to today.",
+    "confirmBodyNoExternal": "The notes compared showed no discrepancies. Accepting sets the last-confirmed date to today.",
+    "moc": {
+      "start": "Start here",
+      "conclusions": "Key conclusion",
+      "open": "Open question",
+      "outdated": "Possible outdated claim · {title}",
+      "place": "File “{note}” under “{chapter}”",
+      "tooFew": "Add chapters ({count} currently)",
+      "tooMany": "Consolidate chapters under “{chapter}” ({count} currently)"
+    }
   },
   "review": {
     "period": "Week {week} of {month}/{year}",
@@ -9562,6 +9603,7 @@
       "line": "- “{text}” is already in {note}"
     },
     "settings": {
+      "explorationWeeklyLimit": "External sources per week for exploration",
       "title": "Research and reviews",
       "description": "The researcher researches, experts review their domains and the secretary reviews actions; the commander compiles one review proposal. Conflicts and errors are proposed immediately, not held for the bundle.",
       "frequency": "Frequency",

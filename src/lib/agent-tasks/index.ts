@@ -9,6 +9,9 @@ import { AgentTaskCenter, DEFAULT_CONCURRENCY, type TaskEvent } from './task-cen
 import { applyBulk, applyDraft, discardDraft, inspectDrafts, type DraftReviewView, type ReviewDeps } from './review'
 import { isAgentRunnerKind, type AgentTask } from './types'
 import { createAgentRunner } from '@/lib/agents/runner'
+import { isTauri } from '@tauri-apps/api/core'
+import { isUiV3 } from '@/lib/fork-ui'
+import useSettingStore, { useSettingsHydrationStore } from '@/stores/setting'
 
 export const AGENT_TASK_CONCURRENCY_KEY = 'agentTaskConcurrency'
 
@@ -39,6 +42,20 @@ export const agentTaskCenter = new AgentTaskCenter({
     }
   },
   notify: (event, task) => notifier(event, task),
+  reviewWorkspace: () => {
+    if (isTauri() && isUiV3() && useSettingsHydrationStore.getState().status === 'ready') {
+      return useSettingStore.getState().workspacePath || ''
+    }
+  },
+  autoAcceptDrafts: async (task, workspace) => {
+    try {
+      const { autoAcceptTaskDrafts } = await import('@/lib/workbench/auto-accept-runtime')
+      return await autoAcceptTaskDrafts(task, workspace)
+    } catch (error) {
+      console.debug('[workbench] draft auto-accept unavailable:', error)
+      return task.drafts
+    }
+  },
   now: () => Date.now(),
 })
 

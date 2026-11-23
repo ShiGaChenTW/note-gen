@@ -98,3 +98,10 @@ export async function moveIdIndexPaths(moves: ReadonlyArray<{ sourcePath: string
   }
   return changes.length
 }
+
+/** 保留撤回的身分編號與最後檔名，解除仍有效的路徑及名稱索引。 */
+export async function retireMocId(id: string, now = Date.now()): Promise<void> {
+  await initIdIndexDb()
+  const db = await getDb()
+  await db.execute("update id_index set path = null, name = null, updated_at = $2 where id = $1 and kind = 'M'", [id, now])
+}

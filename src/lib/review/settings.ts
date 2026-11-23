@@ -1,5 +1,5 @@
 // Fork（almanac ALMNC-54.13）：調研與回顧的頻率（G 自我優化）。在 Agent 設定區設定，預設每週彙整一次，
-// 由指揮官整理成一張「每週回顧」提案；衝突或錯誤不等彙整，立刻提案（見 lib/cleanup/plan.ts）。
+// 由指揮官整理成一張「每週回顧」提案。
 // 規格：almanac/2026-11-19_proposal_role-data-model.md 第四節「調研與回顧的頻率」、路由 R6。純函式＋注入的存檔。
 
 export const REVIEW_FREQUENCIES = ['daily', 'weekly', 'biweekly', 'monthly', 'off'] as const
@@ -9,10 +9,12 @@ export interface ReviewSettings {
   frequency: ReviewFrequency
   /** 每週、每兩週在星期幾彙整（0＝星期日，同 Date#getDay）。 */
   weekday: number
+  explorationWeeklyLimit?: number
 }
 
 /** 預設：每週日彙整一次（整週的事都發生完）。 */
-export const DEFAULT_REVIEW_SETTINGS: ReviewSettings = { frequency: 'weekly', weekday: 0 }
+export const MAX_EXPLORATION_WEEKLY_SOURCES = 3
+export const DEFAULT_REVIEW_SETTINGS: ReviewSettings = { frequency: 'weekly', weekday: 0, explorationWeeklyLimit: MAX_EXPLORATION_WEEKLY_SOURCES }
 
 export const REVIEW_SETTINGS_KEY = 'almanacReviewSettings'
 export const REVIEW_LAST_RUN_KEY = 'almanacReviewLastRun'
@@ -21,7 +23,11 @@ export function sanitizeReviewSettings(raw: unknown): ReviewSettings {
   const value = raw && typeof raw === 'object' ? raw as Partial<ReviewSettings> : {}
   const frequency = REVIEW_FREQUENCIES.includes(value.frequency as ReviewFrequency) ? value.frequency as ReviewFrequency : DEFAULT_REVIEW_SETTINGS.frequency
   const weekday = Number.isInteger(value.weekday) && value.weekday! >= 0 && value.weekday! <= 6 ? value.weekday! : DEFAULT_REVIEW_SETTINGS.weekday
-  return { frequency, weekday }
+  const limit = value.explorationWeeklyLimit
+  const explorationWeeklyLimit = typeof limit === 'number' && Number.isInteger(limit)
+    ? Math.min(MAX_EXPLORATION_WEEKLY_SOURCES, Math.max(0, limit))
+    : MAX_EXPLORATION_WEEKLY_SOURCES
+  return { frequency, weekday, explorationWeeklyLimit }
 }
 
 function startOfDay(date: Date): Date {
@@ -110,14 +116,18 @@ function isoWeek(date: Date): { year: number, week: number } {
   return { year: target.getUTCFullYear(), week: Math.ceil(((target.getTime() - yearStart.getTime()) / DAY + 1) / 7) }
 }
 
+export function isoWeekKey(date: Date): string {
+  const { year, week } = isoWeek(date)
+  return `${year}-W${String(week).padStart(2, '0')}`
+}
+
 /** 卡片上的時期，例如「11 月第 3 週」：期間結束那天所在的週，以那週星期一的日期算第幾週。 */
 export function reviewPeriod(settings: ReviewSettings, range: { start: Date, end: Date }): ReviewPeriod {
   const end = startOfDay(range.end)
   const monday = new Date(end.getFullYear(), end.getMonth(), end.getDate() - ((end.getDay() + 6) % 7))
   const pad = (n: number) => String(n).padStart(2, '0')
-  const iso = isoWeek(end)
   const key = settings.frequency === 'daily'
     ? `${end.getFullYear()}-${pad(end.getMonth() + 1)}-${pad(end.getDate())}`
-    : settings.frequency === 'monthly' ? `${end.getFullYear()}-${pad(end.getMonth() + 1)}` : `${iso.year}-W${pad(iso.week)}`
+    : settings.frequency === 'monthly' ? `${end.getFullYear()}-${pad(end.getMonth() + 1)}` : isoWeekKey(end)
   return { key, year: monday.getFullYear(), month: monday.getMonth() + 1, week: Math.ceil(monday.getDate() / 7), start: range.start, end: range.end }
 }

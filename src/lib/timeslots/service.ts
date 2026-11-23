@@ -58,7 +58,7 @@ export async function offerTodaySlots(): Promise<void> {
 
     const current = await readNote(path)
     if (current !== content || !canSchedule(await getAgentSettings(scheduler.id)) || !stillCurrent()) return
-    useCollectStore.getState().addProposals(id, scheduler.name, slots.map(({ task, start }, index) => ({
+    await useCollectStore.getState().addProposals(id, scheduler.name, slots.map(({ task, start }, index) => ({
       id: String(index + 1),
       kind: 'event',
       title: task.title,

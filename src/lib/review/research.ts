@@ -2,6 +2,7 @@
 // 研究員不直接寫入筆記庫。模型與外部查詢都注入；沒有可用的查詢工具時題目照樣列出，標成「沒辦法查」。
 import { extractJson } from '@/lib/collect/split'
 import type { ExternalEvidence } from '@/lib/cleanup/types'
+import { MAX_EXPLORATION_WEEKLY_SOURCES } from './settings'
 
 export type AskModel = (prompt: string) => Promise<string>
 
@@ -127,4 +128,63 @@ export async function researchDomains(digests: readonly DomainDigest[], deps: Re
     }
   }
   return findings
+}
+
+export interface ExplorationTopics {
+  name: string
+  questions: string[]
+}
+
+export function explorationWeek(now: Date): { start: number, end: number } {
+  const monday = now.getDate() - ((now.getDay() + 6) % 7)
+  return {
+    start: new Date(now.getFullYear(), now.getMonth(), monday).getTime(),
+    end: new Date(now.getFullYear(), now.getMonth(), monday + 7).getTime(),
+  }
+}
+
+export async function researchExplorationSources(
+  topics: readonly ExplorationTopics[],
+  deps: {
+    lookup: NonNullable<ResearchDeps['lookup']>
+    count: (weekStart: number) => Promise<number>
+    register: (source: ExternalEvidence, weekStart: number) => Promise<boolean>
+  },
+  now: Date,
+  limit: number,
+): Promise<number> {
+  const questions = topics.flatMap(topic => topic.questions.map(question => `${topic.name} ${question}`))
+  if (!questions.length || limit <= 0) return 0
+  const { start } = explorationWeek(now)
+  const remaining = Math.min(MAX_EXPLORATION_WEEKLY_SOURCES, limit) - await deps.count(start)
+  if (remaining <= 0) return 0
+  // 先輪替起始章節，第一章有大量結果時，其他章仍有機會在後續各週被查到。
+  const offset = Math.round(start / (7 * 86_400_000)) % questions.length
+  const seen = new Set<string>()
+  let added = 0
+  for (const question of [...questions.slice(offset), ...questions.slice(0, offset)]) {
+    const evidence = await deps.lookup(question).catch(error => {
+      console.warn('[review] exploration lookup failed:', error)
+      return []
+    })
+    for (const item of evidence) {
+      const url = externalResearchUrl(item.url)
+      if (!url || seen.has(url)) continue
+      seen.add(url)
+      if (await deps.register({ ...item, url }, start)) added++
+      if (added >= remaining) return added
+    }
+  }
+  return added
+}
+
+function externalResearchUrl(value: string): string | null {
+  try {
+    const url = new URL(value)
+    if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) return null
+    url.hash = ''
+    return url.href
+  } catch {
+    return null
+  }
 }

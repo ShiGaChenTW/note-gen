@@ -78,6 +78,7 @@
         "drafted": "起草",
         "proposed": "提案",
         "accepted": "接受",
+        "auto_accepted": "自动接受",
         "rejected": "放弃",
         "created": "新增",
         "updated": "修改",
@@ -8911,6 +8912,14 @@
       "noSource": "未标来源",
       "explore": "探索",
       "exploreLabel": "探索相邻领域：{topics}",
+      "newDomain": "新领域",
+      "promote": "转正",
+      "withdraw": "撤回领域",
+      "withdrawDescription": "系统会移除 MOC。笔记会保留其他领域，没有其他领域的笔记会回到未归属。",
+      "cancelWithdrawal": "取消",
+      "promoted": "领域已转正",
+      "withdrawn": "领域已撤回",
+      "explorationChangeFailed": "无法更新探索中的领域",
       "exploreSoon": "探索功能即将推出",
       "owner": "负责：{owner}",
       "unassigned": {
@@ -8926,9 +8935,14 @@
       }
     }
   },
+  "autoAcceptLinks": {
+    "title": "自动接受补链接提案",
+    "description": "只补一条普通链接的提案会自动生效，7 天内可在活动记录中撤销。",
+    "settingsError": "无法保存自动接受设置。"
+  },
   "organize": {
     "title": "自动整理",
-    "description": "闲置 60 分钟后，最多提出五项变更，在「工作台」逐项确认。",
+    "description": "闲置 60 分钟后，最多提出五项变更。需要确认的变更会显示在「工作台」。",
     "merge": "将 {detail} 合并到 {path}",
     "tag": "为 {path} 补上标签 #{detail}",
     "link": "从 {path} 链接到 {detail}",
@@ -9064,11 +9078,28 @@
       "noText": "文件里没有可读取的文字。"
     },
     "domainProposal": {
-      "title": "成立领域「{domain}」，新增专家 {name}",
+      "title": "成立领域「{domain}」",
       "summary": "{count} 则知识笔记还没有领域，主题都是「{topic}」"
     }
   },
   "workbench": {
+    "blueprint": {
+      "title": "领域蓝图 · {domain}",
+      "positioning": "定位问题",
+      "readingOrder": "建议阅读顺序",
+      "chapter": "第 {number} 章的问题",
+      "deleteChapter": "删除第 {number} 章",
+      "learningProject": "同时创建学习项目笔记",
+      "pairExpert": "安排 {name} 担任专家",
+      "dialogTitle": "探索主题",
+      "dialogDescription": "指挥官会查看笔记库并起草领域蓝图。",
+      "topic": "想探索什么主题？",
+      "draft": "起草蓝图",
+      "generating": "正在起草领域蓝图…",
+      "ready": "领域蓝图已就绪",
+      "open": "打开工作台",
+      "failed": "无法起草领域蓝图"
+    },
     "title": "工作台",
     "subtitle": "{count} 件等你处理",
     "subtitleSources": "{done} / {total} 已整理",
@@ -9468,7 +9499,8 @@
       "heading": "同一则资料源拆出的 {count} 条新知识笔记。可以全部接受，也可以逐条接受或退回；点标题展开查看内容、修改标题与存放位置。",
       "journalOnce": "接受时为这则资料源贴一次日志标签。",
       "accept": "接受",
-      "drop": "退回"
+      "drop": "退回",
+      "mocHeading": "{count} 项整理建议"
     },
     "domainLimit": {
       "summary": "收录在 {count} 个领域，超过上限 {limit} 个",
@@ -9514,8 +9546,17 @@
     "origin": "{agent} 整理的清理提案",
     "originSystem": "清理提案",
     "confirmTitle": "仍然有效：{title}",
-    "confirmBody": "重新确认后没有发现过时、矛盾或重复，外部资料也没有不同说法（{evidence}）。接受后把最后确认日期改成今天。",
-    "confirmBodyNoExternal": "重新比对同领域的笔记，没有发现过时、矛盾或重复（没有查到外部资料）。接受后把最后确认日期改成今天。"
+    "confirmBody": "比对后未发现差异，外部资料也没有不同说法（{evidence}）。接受后将最后确认日期改为今天。",
+    "confirmBodyNoExternal": "比对同领域的笔记后未发现差异。接受后将最后确认日期改为今天。",
+    "moc": {
+      "start": "从这里开始",
+      "conclusions": "重点结论",
+      "open": "待厘清",
+      "outdated": "待确认过时 · {title}",
+      "place": "将「{note}」归入「{chapter}」",
+      "tooFew": "新增章节（目前 {count} 章）",
+      "tooMany": "合并至「{chapter}」（目前 {count} 章）"
+    }
   },
   "review": {
     "period": "{month} 月第 {week} 周",
@@ -9562,6 +9603,7 @@
       "line": "- 「{text}」已经写在 {note}"
     },
     "settings": {
+      "explorationWeeklyLimit": "探索每周外部资料上限",
       "title": "调研与回顾",
       "description": "研究员调研、专家回顾领域、秘书回顾行动，由指挥官统整成一张回顾提案。冲突或错误会立刻提案，不等汇整。",
       "frequency": "频率",

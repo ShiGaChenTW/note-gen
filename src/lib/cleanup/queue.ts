@@ -1,20 +1,22 @@
-// Fork（almanac ALMNC-54.12）：不急的觀察（情境不同、重複、封存）先放這裡，等每週回顧時依領域打包成清理提案。
-// 衝突或錯誤（矛盾、過時）不進這裡，立刻提案。儲存介面注入；預設存在 store.json（runtime.ts）。
 import { CONFLICT_TYPES, type ConflictObservation } from './types'
 import { observationKey } from './plan'
 
 export interface CleanupQueue {
   add: (observations: readonly ConflictObservation[]) => Promise<void>
-  /** 取出全部並清空。 */
-  take: () => Promise<ConflictObservation[]>
+  snapshot: () => Promise<ConflictObservation[]>
+  acknowledge: (observations: readonly ConflictObservation[]) => Promise<void>
 }
 
 export const CLEANUP_QUEUE_KEY = 'almanacCleanupPending'
 
-/** 合併：同一類型、同一組筆記只留一筆（新的蓋舊的）。 */
+export function queuedKey(observation: ConflictObservation): string {
+  return JSON.stringify([observation.domainId, observationKey(observation)])
+}
+
+/** 同一個 MOC、類型與筆記組合只留最新觀察。 */
 export function mergeQueued(existing: readonly ConflictObservation[], incoming: readonly ConflictObservation[]): ConflictObservation[] {
   const byKey = new Map<string, ConflictObservation>()
-  for (const observation of [...existing, ...incoming]) byKey.set(observationKey(observation), observation)
+  for (const observation of [...existing, ...incoming]) byKey.set(queuedKey(observation), observation)
   return [...byKey.values()]
 }
 
@@ -30,31 +32,40 @@ export function sanitizeQueued(raw: unknown): ConflictObservation[] {
   })
 }
 
-/** 存在記憶體（測試、或沒有 Tauri 時）。 */
+function unacknowledged(items: ConflictObservation[], done: readonly ConflictObservation[]): ConflictObservation[] {
+  const known = new Map(done.map(item => [queuedKey(item), JSON.stringify(item)]))
+  return items.filter(item => known.get(queuedKey(item)) !== JSON.stringify(item))
+}
+
+/** 存在記憶體（測試用）。 */
 export function memoryQueue(initial: readonly ConflictObservation[] = []): CleanupQueue & { items: () => ConflictObservation[] } {
   let items = [...initial]
   return {
     add: async observations => { items = mergeQueued(items, observations) },
-    take: async () => {
-      const out = items
-      items = []
-      return out
-    },
+    snapshot: async () => [...items],
+    acknowledge: async done => { items = unacknowledged(items, done) },
     items: () => [...items],
   }
 }
 
-/** 包一個鍵值存檔（get／set）成佇列。 */
+// App 有多個背景比對會同時取佇列；同一個 store 鍵的讀改寫依序執行。
+let pending = Promise.resolve()
+function serialize<T>(operation: () => Promise<T>): Promise<T> {
+  const next = pending.then(operation)
+  pending = next.then(() => undefined, () => undefined)
+  return next
+}
+
+/** 送出每週卡並存檔後才移除觀察；若其間又加入較新的證據，留給下次整理。 */
 export function storeQueue(store: { get: (key: string) => Promise<unknown>, set: (key: string, value: unknown) => Promise<void> }, key = CLEANUP_QUEUE_KEY): CleanupQueue {
+  const read = async () => sanitizeQueued(await store.get(key))
   return {
-    add: async observations => {
-      if (!observations.length) return
-      await store.set(key, mergeQueued(sanitizeQueued(await store.get(key)), observations))
-    },
-    take: async () => {
-      const items = sanitizeQueued(await store.get(key))
-      if (items.length) await store.set(key, [])
-      return items
-    },
+    add: observations => serialize(async () => {
+      if (observations.length) await store.set(key, mergeQueued(await read(), observations))
+    }),
+    snapshot: () => serialize(read),
+    acknowledge: done => serialize(async () => {
+      if (done.length) await store.set(key, unacknowledged(await read(), done))
+    }),
   }
 }

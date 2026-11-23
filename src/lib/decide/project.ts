@@ -63,6 +63,7 @@ export interface DecideItem {
   previousProposalId?: string
   /** Fork（almanac ALMNC-54.12）：提案指定的卡片標籤與動詞（清理提案、確認、每週回顧）。 */
   card?: ProposalCardHint
+  mocReview?: Proposal['mocReview']
   /** Fork（almanac ALMNC-54.12）：清理提案涵蓋的筆記（多則時卡片顯示「等 N 則」）。 */
   notePaths?: string[]
   /** Fork（almanac ALMNC-54.21）：誰提的（收集提案的撰寫者）；接受時記進活動紀錄。 */
@@ -237,7 +238,7 @@ function projectCollect(items: CollectItemLike[], journal: JournalSnapshot | nul
       // 去重一：同一件事已經在今日日誌裡（例如其他管道寫過了），不再問第二次。
       if (!slot && journal && proposal.kind !== 'note' && journal.before.split(/\r?\n/).includes(proposalTaskLine(proposal, journal.today))) continue
       // 去重二：兩個來源各提了同一件事，只列一次。
-      const identity = statusOf(trail, key) === 'discussing' ? key : sameThingKey(proposal)
+      const identity = proposal.mocReview || statusOf(trail, key) === 'discussing' ? key : sameThingKey(proposal)
       const same = seen.get(identity)
       if (same) { same.duplicates.push(ref); continue }
 
@@ -286,6 +287,7 @@ function projectCollect(items: CollectItemLike[], journal: JournalSnapshot | nul
         ...(proposal.conversationId !== undefined ? { conversationId: proposal.conversationId } : {}),
         ...(proposal.previousProposalId ? { previousProposalId: proposal.previousProposalId } : {}),
         ...(proposal.card ? { card: proposal.card } : {}),
+        ...(proposal.mocReview ? { mocReview: proposal.mocReview } : {}),
         ...(proposal.drafter ? { drafter: proposal.drafter } : {}),
         ...(proposal.rationale ? { rationale: proposal.rationale } : {}),
         ...(proposal.journalTag ? { journalTag: proposal.journalTag } : {}),

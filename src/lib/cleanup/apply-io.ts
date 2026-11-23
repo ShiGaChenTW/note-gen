@@ -10,7 +10,19 @@ export async function defaultEditIo(): Promise<EditIo> {
   ])
   return {
     readNote: noteIo.readNote,
-    writeNote: noteIo.writeNote,
+    writeNote: (path, content) => noteIo.writeNote(path, content, { createNew: true }),
+    rewriteNote: async (path, before, after, rebase) => {
+      const { commitNoteWrites, NoteWriteConflict } = await import('@/lib/daily/coordinated-write')
+      try {
+        await commitNoteWrites([{ path, before, after, rebase }], { requireExisting: true })
+      } catch (error) {
+        if (error instanceof NoteWriteConflict) {
+          const { EditsNotApplied } = await import('./apply')
+          throw new EditsNotApplied(true, [path])
+        }
+        throw error
+      }
+    },
     removeNote: async path => {
       const [{ remove }, { getFilePathOptions }] = await Promise.all([import('@tauri-apps/plugin-fs'), import('@/lib/workspace')])
       const options = await getFilePathOptions(path)

@@ -78,6 +78,7 @@
         "drafted": "起草",
         "proposed": "提案",
         "accepted": "接受",
+        "auto_accepted": "自動接受",
         "rejected": "放棄",
         "created": "新增",
         "updated": "修改",
@@ -8976,6 +8977,14 @@
       "noSource": "未標來源",
       "explore": "探索",
       "exploreLabel": "探索相鄰領域：{topics}",
+      "newDomain": "新領域",
+      "promote": "轉正",
+      "withdraw": "撤回領域",
+      "withdrawDescription": "系統會移除 MOC。筆記會保留其他領域，沒有其他領域的筆記會回到未歸屬。",
+      "cancelWithdrawal": "取消",
+      "promoted": "領域已轉正",
+      "withdrawn": "領域已撤回",
+      "explorationChangeFailed": "無法更新探索中的領域",
       "exploreSoon": "探索功能即將推出",
       "owner": "負責：{owner}",
       "unassigned": {
@@ -8991,9 +9000,14 @@
       }
     }
   },
+  "autoAcceptLinks": {
+    "title": "自動接受補連結提案",
+    "description": "只補一則一般連結的提案會自動生效，7 天內可在活動紀錄復原。",
+    "settingsError": "無法儲存自動接受設定。"
+  },
   "organize": {
     "title": "自動整理",
-    "description": "閒置 60 分鐘後，最多提出五項變更，在「工作台」逐筆確認。",
+    "description": "閒置 60 分鐘後，最多提出五項變更。需要確認的變更會顯示在「工作台」。",
     "merge": "將 {detail} 合併至 {path}",
     "tag": "為 {path} 補上標籤 #{detail}",
     "link": "從 {path} 連到 {detail}",
@@ -9129,11 +9143,28 @@
       "noText": "檔案裡沒有可讀取的文字。"
     },
     "domainProposal": {
-      "title": "成立領域「{domain}」，新增專家 {name}",
+      "title": "成立領域「{domain}」",
       "summary": "{count} 則知識筆記還沒有領域，主題都是「{topic}」"
     }
   },
   "workbench": {
+    "blueprint": {
+      "title": "領域藍圖 · {domain}",
+      "positioning": "定位問題",
+      "readingOrder": "建議閱讀順序",
+      "chapter": "第 {number} 章的問題",
+      "deleteChapter": "刪除第 {number} 章",
+      "learningProject": "同時開學習專案（建立專案筆記）",
+      "pairExpert": "安排 {name} 擔任專家",
+      "dialogTitle": "探索主題",
+      "dialogDescription": "指揮官會查閱筆記庫，起草一張領域藍圖。",
+      "topic": "想探索什麼主題？",
+      "draft": "起草藍圖",
+      "generating": "正在起草領域藍圖…",
+      "ready": "領域藍圖已完成",
+      "open": "打開工作台",
+      "failed": "無法起草領域藍圖"
+    },
     "title": "工作台",
     "subtitle": "{count} 件等你處理",
     "subtitleSources": "{done} / {total} 已整理",
@@ -9533,7 +9564,8 @@
       "heading": "同一則資料源拆出的 {count} 則新知識筆記。可以全部接受，也可以逐則接受或退回；點標題展開看內容、改標題與存放位置。",
       "journalOnce": "接受時替這則資料源貼一次日誌標籤。",
       "accept": "接受",
-      "drop": "退回"
+      "drop": "退回",
+      "mocHeading": "{count} 項整理建議"
     },
     "domainLimit": {
       "summary": "收錄在 {count} 個領域，超過上限 {limit} 個",
@@ -9579,8 +9611,17 @@
     "origin": "{agent} 整理的清理提案",
     "originSystem": "清理提案",
     "confirmTitle": "仍然有效：{title}",
-    "confirmBody": "重新確認後沒有發現過時、矛盾或重複，外部資料也沒有不同說法（{evidence}）。接受後把最後確認日期改成今天。",
-    "confirmBodyNoExternal": "重新比對同領域的筆記，沒有發現過時、矛盾或重複（沒有查到外部資料）。接受後把最後確認日期改成今天。"
+    "confirmBody": "比對後沒有發現差異，外部資料也沒有不同說法（{evidence}）。接受後把最後確認日期改成今天。",
+    "confirmBodyNoExternal": "比對同領域的筆記後沒有發現差異。接受後把最後確認日期改成今天。",
+    "moc": {
+      "start": "從這裡開始",
+      "conclusions": "重點結論",
+      "open": "待釐清",
+      "outdated": "待確認過時 · {title}",
+      "place": "把「{note}」放進「{chapter}」",
+      "tooFew": "新增章節（目前 {count} 章）",
+      "tooMany": "合併到「{chapter}」（目前 {count} 章）"
+    }
   },
   "review": {
     "period": "{month} 月第 {week} 週",
@@ -9627,6 +9668,7 @@
       "line": "- 「{text}」已經寫在 {note}"
     },
     "settings": {
+      "explorationWeeklyLimit": "探索每週外部資料上限",
       "title": "調研與回顧",
       "description": "研究員調研、專家回顧領域、秘書回顧行動，由指揮官統整成一張回顧提案。衝突或錯誤會立刻提案，不等彙整。",
       "frequency": "頻率",

@@ -105,7 +105,7 @@ export function dropEmptyUnsorted(raw: string, chapterId: string, path?: string)
 }
 
 /** 依序套用到虛擬檔案層，回傳要做的檔案動作。不寫檔。 */
-export async function planOps(ops: readonly OpSpec[], fs: OpsFs): Promise<OpsPlan> {
+export async function planOps(ops: readonly OpSpec[], fs: OpsFs, options?: { requireBefore?: boolean }): Promise<OpsPlan> {
   const overlay = new Overlay(fs)
   const actions: OpAction[] = []
   const specs: OpSpec[] = []
@@ -140,6 +140,9 @@ export async function planOps(ops: readonly OpSpec[], fs: OpsFs): Promise<OpsPla
       }
       case 'note.edit': {
         const path = await overlay.resolve(op.noteId, op.path)
+        if (options?.requireBefore && (path !== op.path || await overlay.read(path) !== op.before)) {
+          throw new Error(`Note changed before operation: ${op.path}`)
+        }
         await write(path, op.after, record)
         break
       }

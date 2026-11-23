@@ -492,6 +492,20 @@ describe('整理 > 領域：未歸屬清單（ALMNC-69.8 AC #1）', () => {
     expect(handler).toHaveBeenCalledWith({ origin: 'unassigned', notePaths: expect.arrayContaining(['knowledge/pomodoro.md', 'knowledge/sleep.md']) })
   })
 
+  it('整理頁的＋新領域會啟動探索提案', async () => {
+    const { setExploreHandler } = await import('@/lib/domain-page/explore')
+    const handler = vi.fn()
+    const off = setExploreHandler(handler)
+    try {
+      render()
+      await flush()
+      click($('[data-testid="domain-new"]'))
+      expect(handler).toHaveBeenCalledWith({ origin: 'new-domain', topic: '' })
+    } finally {
+      off()
+    }
+  })
+
   it('shows an empty state when every knowledge note is in a domain', async () => {
     render()
     await flush()

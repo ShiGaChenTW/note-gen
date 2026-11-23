@@ -7,6 +7,7 @@ const fake = vi.hoisted(() => ({
   accept: vi.fn(async () => ({ path: '00 Inbox/2026-11-23 0900 會議紀錄.md' })),
   append: vi.fn(async () => 1),
   domain: vi.fn(async () => {}),
+  blueprint: vi.fn(async () => ({ path: '20 領域/睡眠.md' })),
   listBatch: vi.fn(async (): Promise<Array<{ id: string, batchId: string }>> => []),
   undo: vi.fn(async () => true),
   reopen: vi.fn(),
@@ -15,6 +16,7 @@ const fake = vi.hoisted(() => ({
 vi.mock('@/lib/decide/actions', () => ({ acceptDecision: fake.accept, rejectDecision: vi.fn() }))
 vi.mock('@/db/agent-memory', () => ({ appendActivity: fake.append }))
 vi.mock('@/db/agents', () => ({ listAgentSettings: async () => [{ id: 'c-1', name: 'Mia', role: 'commander', enabled: true }] }))
+vi.mock('@/lib/commander/blueprint-runtime', () => ({ createBlueprintMoc: fake.blueprint }))
 vi.mock('./domain-cards', () => ({ acceptDomainCard: fake.domain }))
 vi.mock('@/db/ops', () => ({ opsStore: { listBatch: fake.listBatch } }))
 vi.mock('@/lib/ops/ids', () => ({ newBatchId: () => 'batch-x' }))
@@ -22,7 +24,16 @@ vi.mock('@/lib/ops/runtime', () => ({ undoRecords: (records: unknown[]) => recor
 vi.mock('@tauri-apps/api/core', () => ({ isTauri: () => true }))
 vi.mock('@/stores/collect', () => ({ default: { getState: () => ({ items: [], reopen: fake.reopen }) }, applyJournalTag: vi.fn() }))
 
+const storage = new Map<string, string>()
+vi.stubGlobal('localStorage', {
+  getItem: (key: string) => storage.get(key) ?? null,
+  setItem: (key: string, value: string) => storage.set(key, value),
+  removeItem: (key: string) => storage.delete(key),
+})
+
 const { acceptCard } = await import('./actions')
+const { useBlueprintStore } = await import('@/lib/commander/blueprint-store')
+const { default: useSettingStore } = await import('@/stores/setting')
 
 const decide: DecideItem = {
   key: 'collect:b1:p1', source: 'collect', kind: 'note', title: '會議紀錄', origin: '11/23 產線檢討', summary: '', when: '', at: 0,
@@ -63,6 +74,23 @@ it('logs accepted domain proposals too', async () => {
   expect(fake.append).toHaveBeenCalledWith('system', expect.objectContaining({
     actorRole: 'commander', action: 'accepted', targetLink: `proposal:${encodeURIComponent('domain:資料工程')}`, note: '成立領域「資料工程」',
   }))
+})
+
+it('accepts the edited blueprint and the learning project option as a single recorded batch', async () => {
+  const workspace = useSettingStore.getState().workspacePath
+  const draft = { kind: 'blueprint' as const, id: 'blueprint:sleep', at: 0, name: '睡眠', positioning: '睡得好嗎？',
+    chapters: [{ id: '1', question: '原始章節', notes: [] }] }
+  const edited = { ...draft, chapters: [{ ...draft.chapters[0], question: '修訂章節' }], learningProject: true }
+  useBlueprintStore.getState().put(workspace, edited)
+  fake.listBatch.mockResolvedValueOnce([{ id: 'op-blueprint', batchId: 'batch-x' }])
+  const undo = await acceptCard(card({ key: draft.id, kind: 'blueprint', decide: undefined, blueprint: draft }))
+  expect(fake.blueprint).toHaveBeenCalledWith(edited, {
+    learningProject: true, ops: { actor: 'commander', proposalId: draft.id, batchId: 'batch-x' },
+  })
+  expect(useBlueprintStore.getState().byWorkspace[workspace]).toEqual([])
+  expect(fake.append).toHaveBeenCalledWith('system', expect.objectContaining({ action: 'accepted', opId: 'op-blueprint' }))
+  expect(await undo!()).toBe(true)
+  expect(useBlueprintStore.getState().byWorkspace[workspace]).toEqual([edited])
 })
 
 // Fork（almanac ALMNC-69.9）：接受造成的寫入記成同一批操作——活動紀錄那一筆帶 op_id，立即復原改以 ops 為準並把提案改回等你決定。
