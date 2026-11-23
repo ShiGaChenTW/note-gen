@@ -51,6 +51,8 @@ export interface ConflictObservation {
   contexts?: Record<string, string>
   /** 外部資料的網址（指揮官查證時）。 */
   externalUrls?: string[]
+  /** 比對時讀到的內容版本。排到每週前若已修改，略過這筆證據。 */
+  observedVersions?: Record<string, string>
   domainId?: string
   by?: { role: 'expert' | 'commander' | 'researcher', agentId?: string }
   trigger: ConflictTrigger
@@ -66,6 +68,6 @@ export interface DetectOptions {
   /** 專家的工作指示＋個別記憶。 */
   agentPrompt?: string
   external?: readonly ExternalEvidence[]
-  /** 今天，YYYY-MM-DD（判斷「過時」用）。 */
-  today?: string
+  /** 使用整份 MOC 索引時，指定這組觀察的起點路徑。 */
+  anchor?: string
 }

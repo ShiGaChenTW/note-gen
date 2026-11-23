@@ -9464,7 +9464,8 @@
       "heading": "同一则资料源拆出的 {count} 条新知识笔记。可以全部接受，也可以逐条接受或退回；点标题展开查看内容、修改标题与存放位置。",
       "journalOnce": "接受时为这则资料源贴一次日志标签。",
       "accept": "接受",
-      "drop": "退回"
+      "drop": "退回",
+      "mocHeading": "{count} 项整理建议"
     },
     "domainLimit": {
       "summary": "收录在 {count} 个领域，超过上限 {limit} 个",
@@ -9487,8 +9488,17 @@
     "origin": "{agent} 整理的清理提案",
     "originSystem": "清理提案",
     "confirmTitle": "仍然有效：{title}",
-    "confirmBody": "重新确认后没有发现过时、矛盾或重复，外部资料也没有不同说法（{evidence}）。接受后把最后确认日期改成今天。",
-    "confirmBodyNoExternal": "重新比对同领域的笔记，没有发现过时、矛盾或重复（没有查到外部资料）。接受后把最后确认日期改成今天。"
+    "confirmBody": "比对后未发现差异，外部资料也没有不同说法（{evidence}）。接受后将最后确认日期改为今天。",
+    "confirmBodyNoExternal": "比对同领域的笔记后未发现差异。接受后将最后确认日期改为今天。",
+    "moc": {
+      "start": "从这里开始",
+      "conclusions": "重点结论",
+      "open": "待厘清",
+      "outdated": "待确认过时 · {title}",
+      "place": "将「{note}」归入「{chapter}」",
+      "tooFew": "新增章节（目前 {count} 章）",
+      "tooMany": "合并至「{chapter}」（目前 {count} 章）"
+    }
   },
   "review": {
     "period": "{month} 月第 {week} 周",

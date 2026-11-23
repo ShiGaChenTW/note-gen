@@ -15,6 +15,7 @@ import type { RecordIdInput } from '@/lib/v3-model/id-index'
 import type { FileChange, Proposal } from './types'
 import { snapshotInputs } from '@/lib/ops/refs'
 import type { RecordInput } from '@/lib/ops/service'
+import type { FileSnapshot } from '@/lib/ops/version'
 import type { OpContext } from '@/lib/ops/types'
 
 export interface AcceptResult {
@@ -52,9 +53,9 @@ const defaultApplyChange: ApplyChange = async change => {
 /** Fork（almanac ALMNC-54.12）：清理、確認、記憶稽核提案的寫入（多則筆記＋領域＋記憶，寫入前比對）。 */
 export type ApplyEdits = (proposal: Proposal) => Promise<string[]>
 
-const defaultApplyEdits: ApplyEdits = async proposal => {
+const defaultApplyEdits = async (proposal: Proposal, onWritten?: (changes: FileSnapshot[]) => void) => {
   const [{ applyEdits }, { defaultEditIo }] = await Promise.all([import('@/lib/cleanup/apply'), import('@/lib/cleanup/apply-io')])
-  return applyEdits(proposal, await defaultEditIo())
+  return applyEdits(proposal, await defaultEditIo(), onWritten)
 }
 
 /** Fork（almanac ALMNC-69.1）：系統索引（id_index）——撞號檢查與登記。測試注入假的，預設動態載入 db。 */
@@ -109,8 +110,21 @@ export async function acceptProposal(proposal: Proposal, options: { noteFolder: 
   // Fork（almanac ALMNC-69.3）：只貼日誌標籤的卡不寫筆記庫；標籤由 stores/collect 接受後寫進資料源。
   if (proposal.journalTag?.only) return { path: '' }
   if (proposal.edits?.length || proposal.domainEdits?.length || proposal.memoryEdits?.length) {
-    const targets = await (options.applyEdits ?? defaultApplyEdits)(proposal)
-    await record(snapshotInputs((proposal.edits ?? []).map(edit => ({ path: edit.path, before: edit.baseContent, after: edit.content }))))
+    const ids = options.ids ?? defaultIdStore
+    const created: RecordIdInput[] = []
+    const edits = proposal.mocReview && proposal.edits ? await Promise.all(proposal.edits.map(async edit => {
+      if (edit.baseContent !== null) return edit
+      const id = await newId('N', now, { exists: ids.exists })
+      created.push({ id, kind: 'N', path: edit.path })
+      return { ...edit, content: writeV3NoteFields(edit.content, { id }) }
+    })) : proposal.edits
+    const planned = edits === proposal.edits ? proposal : { ...proposal, edits }
+    let snapshots: FileSnapshot[] = (edits ?? []).map(edit => ({ path: edit.path, before: edit.baseContent, after: edit.content }))
+    const targets = options.applyEdits
+      ? await options.applyEdits(planned)
+      : await defaultApplyEdits(planned, actual => { snapshots = actual })
+    await record(snapshotInputs(snapshots))
+    for (const note of created) await ids.record(note).catch(error => console.error('id_index record failed', error))
     if (proposal.membershipTransfers?.length) {
       try {
         const transfer = options.transferMemberships ?? defaultTransferMemberships

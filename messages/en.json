@@ -9464,7 +9464,8 @@
       "heading": "{count} new knowledge notes from the same source. Accept them all, or accept or send back each one; click a title to see its content and change its title or folder.",
       "journalOnce": "Accepting tags this source as a journal once.",
       "accept": "Accept",
-      "drop": "Send back"
+      "drop": "Send back",
+      "mocHeading": "{count} suggested changes"
     },
     "domainLimit": {
       "summary": "Filed under {count} domains, over the limit of {limit}",
@@ -9487,8 +9488,17 @@
     "origin": "Cleanup proposal from {agent}",
     "originSystem": "Cleanup proposal",
     "confirmTitle": "Still valid: {title}",
-    "confirmBody": "Re-checked: nothing outdated, contradictory or duplicated, and external sources agree ({evidence}). Accepting sets the last-confirmed date to today.",
-    "confirmBodyNoExternal": "Re-compared with the notes in this domain: nothing outdated, contradictory or duplicated (no external sources found). Accepting sets the last-confirmed date to today."
+    "confirmBody": "The comparison found no discrepancies, and the external sources agree ({evidence}). Accepting sets the last-confirmed date to today.",
+    "confirmBodyNoExternal": "The notes compared showed no discrepancies. Accepting sets the last-confirmed date to today.",
+    "moc": {
+      "start": "Start here",
+      "conclusions": "Key conclusion",
+      "open": "Open question",
+      "outdated": "Possible outdated claim · {title}",
+      "place": "File “{note}” under “{chapter}”",
+      "tooFew": "Add chapters ({count} currently)",
+      "tooMany": "Consolidate chapters under “{chapter}” ({count} currently)"
+    }
   },
   "review": {
     "period": "Week {week} of {month}/{year}",

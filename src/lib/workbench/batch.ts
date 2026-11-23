@@ -20,6 +20,11 @@ export function sourceBatchKey(item: Pick<DecideItem, 'sourceIds'>): string {
   return Array.from(new Set(item.sourceIds ?? [])).sort().join('\u0000')
 }
 
+function batchKey(item: DecideItem): string | undefined {
+  if (item.mocReview && item.ref.source === 'collect') return item.ref.itemId
+  if (isBatchableNewNote(item)) return sourceBatchKey(item)
+}
+
 export type ProposalEntry =
   | { type: 'single', item: DecideItem }
   | { type: 'batch', key: string, items: DecideItem[] }
@@ -31,8 +36,8 @@ export type ProposalEntry =
 export function batchProposals(items: readonly DecideItem[]): ProposalEntry[] {
   const groups = new Map<string, DecideItem[]>()
   for (const item of items) {
-    if (!isBatchableNewNote(item)) continue
-    const key = sourceBatchKey(item)
+    const key = batchKey(item)
+    if (key === undefined) continue
     const group = groups.get(key)
     if (group) group.push(item)
     else groups.set(key, [item])
@@ -40,9 +45,9 @@ export function batchProposals(items: readonly DecideItem[]): ProposalEntry[] {
   const out: ProposalEntry[] = []
   const placed = new Set<string>()
   for (const item of items) {
-    const key = isBatchableNewNote(item) ? sourceBatchKey(item) : null
-    const group = key === null ? undefined : groups.get(key)
-    if (key === null || !group || group.length < 2) {
+    const key = batchKey(item)
+    const group = key === undefined ? undefined : groups.get(key)
+    if (key === undefined || !group || (!item.mocReview && group.length < 2)) {
       out.push({ type: 'single', item })
       continue
     }
