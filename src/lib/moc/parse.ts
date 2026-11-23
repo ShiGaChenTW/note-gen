@@ -109,6 +109,11 @@ export interface ParsedMoc {
   name: string
   /** 第一個 `# ` 標題。 */
   heading?: string
+  /**
+   * Fork（almanac ALMNC-69.8）：第一個 `# ` 標題到第一個 `##` 之間的原文（前後空白去掉）；頁首「上層／相關／相鄰」那一行在這裡，
+   * 由 lib/domain-page/moc-view.ts 的 parseMocHeader 讀。沒有 H1 時是內文開頭到第一個 `##`。
+   */
+  preamble?: string
   /** 上層 MOC 的 M 編號（frontmatter parent）。 */
   parent?: string
   level?: number
@@ -252,6 +257,8 @@ export function parseMoc(raw: string, path?: string): ParsedMoc {
   const sections: MocSection[] = []
   const chapters: MocChapter[] = []
   let heading: string | undefined
+  let preambleStart = bodyLine
+  let preambleEnd: number | null = null
   let fence = false
   let openSection: { key: MocBlockKey | null, heading: string, line: number, legacy: boolean } | null = null
   let chapter: MocChapter | null = null
@@ -278,11 +285,13 @@ export function parseMoc(raw: string, path?: string): ParsedMoc {
       closeSection(i)
       const h1 = H1.exec(line)
       if (h1) {
+        if (heading === undefined && preambleEnd === null) preambleStart = i + 1
         heading ??= h1[1]
         continue
       }
       const h2 = H2.exec(line)
       if (h2) {
+        preambleEnd ??= i
         const block = blockOfHeading(h2[1])
         openSection = { key: block?.key ?? null, heading: h2[1], line: i, legacy: block?.legacy ?? false }
       }
@@ -330,6 +339,7 @@ export function parseMoc(raw: string, path?: string): ParsedMoc {
     current.entries.push(entry)
   }
   closeSection(lines.length)
+  const preamble = lines.slice(preambleStart, preambleEnd ?? lines.length).join('\n').trim()
 
   const blocks: Partial<Record<MocBlockKey, MocSection>> = {}
   for (const section of sections) if (section.key && !blocks[section.key]) blocks[section.key] = section
@@ -344,6 +354,7 @@ export function parseMoc(raw: string, path?: string): ParsedMoc {
     ...(id && isId(id, 'M') ? { id } : {}),
     name,
     ...(heading ? { heading } : {}),
+    ...(preamble ? { preamble } : {}),
     ...(parent && isId(parent, 'M') ? { parent } : {}),
     ...(level !== undefined ? { level } : {}),
     ...(stringValue(fm.status) ? { status: stringValue(fm.status) } : {}),
