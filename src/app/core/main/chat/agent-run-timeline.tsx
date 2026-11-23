@@ -29,6 +29,7 @@ import {
   getAgentToolIcon,
 } from "./agent-display-utils"
 import { estimateTokens } from "@/lib/ai/token-counter"
+import { getQueuedToolSteps } from "./agent-queued-steps"
 import ChatPreview from "./chat-preview"
 import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
@@ -387,11 +388,14 @@ export function AgentRunTimeline({
 
   const events = React.useMemo(() => {
     if (traceEvents.length > 0) {
-      return filterTimelineEvents(traceEvents)
+      // Fork（almanac ALMNC-75）：V3 執行中把同一輪排隊的工具列成「尚未開始」。
+      return filterTimelineEvents(v3 && isRunning
+        ? [...traceEvents, ...getQueuedToolSteps(traceEvents, toolCalls)]
+        : traceEvents)
     }
 
     return toolCalls.map(eventFromToolCall)
-  }, [traceEvents, toolCalls])
+  }, [traceEvents, toolCalls, v3, isRunning])
   const fileChanges = React.useMemo(() => {
     const byId = new Map<string, AgentChange>()
     const add = (value: unknown) => {
@@ -765,7 +769,7 @@ export function AgentRunTimeline({
   return (
     <div className="flex min-w-0 flex-col gap-2">
       <Collapsible className={cn("flex min-w-0 flex-col gap-2", v3 && "rounded-[10px] border border-line bg-bg px-2.5 py-2")}
-        open={processOpen} onOpenChange={setProcessOpen}>
+        open={processOpen || (v3 && events.length === 0)} onOpenChange={setProcessOpen}>
         {v3 && <>
           <div className="flex min-w-0 items-center justify-between gap-2">
             <h3 className="truncate text-ui-compact font-semibold text-ink" title={taskTitle}>{taskTitle || tTask('title')}</h3>
@@ -776,7 +780,8 @@ export function AgentRunTimeline({
             <div className="h-full bg-ink transition-[width] motion-reduce:transition-none" style={{ width: `${progress}%` }} />
           </div>
         </>}
-        {v3 ? <CollapsibleTrigger asChild>
+        {/* Fork（almanac ALMNC-75）：沒有任何步驟時不顯示「看 0 個步驟」這個空清單。 */}
+        {v3 ? events.length > 0 && <CollapsibleTrigger asChild>
           <button type="button" className="flex w-fit items-center gap-1 rounded text-xs text-muted-ink hover:text-ink">
             {processOpen ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
             {tTask(processOpen ? 'hideSteps' : 'showSteps', { count: events.length })}
