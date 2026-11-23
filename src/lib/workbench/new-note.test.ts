@@ -1,7 +1,7 @@
 // Fork（almanac ALMNC-54.21 AC#4）：新增筆記的提案——接受前在卡片上改標題與存放位置，接受時用改過的值。
 import { describe, expect, it } from 'vitest'
 import type { Proposal } from '@/lib/collect/types'
-import { checkNewNoteEdit, newNoteTarget, normalizeFolder, retargetNewNote } from './new-note'
+import { checkNewNoteEdit, newNoteChanges, newNoteChangesNote, newNoteTarget, normalizeFolder, retargetNewNote } from './new-note'
 
 const INBOX = '00 Inbox'
 const note: Proposal = { id: 'p1', kind: 'note', title: '會議紀錄', body: '內文', due: '', time: '', tags: [] }
@@ -44,5 +44,34 @@ describe('new note proposals', () => {
     expect(checkNewNoteEdit({ title: 'a', folder: '知識/../..' })).toEqual({ ok: false, error: 'FOLDER_INVALID' })
     expect(retargetNewNote(note, { title: 'a/b', folder: 'x' }, INBOX)).toBe(note)
     expect(normalizeFolder(' . ')).toBe('')
+  })
+
+  // Fork（almanac ALMNC-69.2）：Scott 改了標題或位置，保留原建議並說明差異。
+  it('records the original suggestion on the first edit and never overwrites it', () => {
+    const once = retargetNewNote(note, { title: '產線會議', folder: INBOX }, INBOX)
+    expect(once.suggested).toEqual({ title: '會議紀錄' })
+    const twice = retargetNewNote(once, { title: '產線週會', folder: '10 Projects' }, INBOX)
+    expect(twice.suggested).toEqual({ title: '會議紀錄' })
+    const created = retargetNewNote(create, { title: 'OEE 的定義', folder: '知識' }, INBOX)
+    expect(created.suggested).toEqual({ title: 'OEE', folder: '知識' })
+    // 一開始就指定了位置（含最上層）也照記
+    expect(retargetNewNote({ ...note, folder: '' }, { title: '新', folder: '' }, INBOX).suggested).toEqual({ title: '會議紀錄', folder: '' })
+  })
+
+  it('explains the difference between the suggestion and the edit, before and after accepting', () => {
+    expect(newNoteChanges(note, INBOX)).toBeNull()
+    const edited = retargetNewNote(note, { title: '產線週會', folder: '10 Projects' }, INBOX)
+    const changes = newNoteChanges(edited, INBOX)
+    expect(changes).toEqual({ title: '產線週會', titleChange: { from: '會議紀錄', to: '產線週會' }, folderChange: { from: INBOX, to: '10 Projects' } })
+    expect(newNoteChanges({ ...edited, status: 'ok' } as Proposal, INBOX)).toEqual(changes)
+    expect(newNoteChangesNote(changes!)).toBe('會議紀錄 → 產線週會 · 00 Inbox/ → 10 Projects/')
+    // 只改位置：主語是標題，最上層寫「/」
+    const moved = newNoteChanges(retargetNewNote(note, { title: '會議紀錄', folder: '' }, INBOX), INBOX)!
+    expect(moved.titleChange).toBeUndefined()
+    expect(newNoteChangesNote(moved)).toBe('會議紀錄 · 00 Inbox/ → /')
+    // 改回原樣就沒有差異
+    expect(newNoteChanges(retargetNewNote(edited, { title: '會議紀錄', folder: INBOX }, INBOX), INBOX)).toBeNull()
+    const createdChanges = newNoteChanges(retargetNewNote(create, { title: 'OEE 的定義', folder: '知識' }, INBOX), INBOX)
+    expect(createdChanges).toEqual({ title: 'OEE 的定義', titleChange: { from: 'OEE', to: 'OEE 的定義' } })
   })
 })

@@ -2,7 +2,7 @@
 
 // Fork（almanac ALMNC-14）：訊息下面的內嵌卡片。只在新介面（v3）顯示。
 // 判斷都在 lib/threads/cards.ts 的 resolveThreadCard，這裡只畫。外觀依 redesign_v5：提案是虛線框、處理後變實線；開工卡是實線框。
-import { useRef, useState } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import { Check, CalendarClock, FileText, ListTodo, LoaderCircle, Undo2 } from 'lucide-react'
@@ -16,10 +16,11 @@ import useThreadsStore from '@/stores/threads'
 import useCollectStore from '@/stores/collect'
 import useProposalTrailStore from '@/stores/proposals'
 import { DiscussForm } from '../decide/discuss-form'
+import { NewNoteChanges } from '../decide/new-note-changes'
 
 const KIND_ICON = { note: FileText, task: ListTodo, event: CalendarClock } as const
 
-function ProposalCard({ view, onAction, onDiscuss }: { view: ProposalCardView, onAction: (action: CardAction) => void, onDiscuss: (note: string) => Promise<boolean> }) {
+function ProposalCard({ view, onAction, onDiscuss, children }: { view: ProposalCardView, onAction: (action: CardAction) => void, onDiscuss: (note: string) => Promise<boolean>, children?: ReactNode }) {
   const t = useTranslations('threads.cards')
   const [discussing, setDiscussing] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
@@ -46,6 +47,7 @@ function ProposalCard({ view, onAction, onDiscuss }: { view: ProposalCardView, o
         {view.when && <span className="shrink-0 text-xs text-muted-ink tabular-nums">{view.when}</span>}
       </div>
       {view.detail && <p className="mt-1.5 text-ui-compact text-muted-ink">{view.detail}</p>}
+      {children}
       <div className="mt-2 flex items-center gap-1.5">
         {view.actions.includes('accept') && <Button size="sm" onClick={() => onAction('accept')}>{t('accept')}</Button>}
         {view.actions.includes('discuss') && <Button ref={discussRef} size="sm" variant="outline" aria-expanded={discussing} onClick={() => setDiscussing(open => !open)}>{t('discuss')}</Button>}
@@ -201,7 +203,12 @@ export function ThreadMessageCards({ chatId }: { chatId: number }) {
         if (view.type === 'kickoff-result' && view.placeholder) return null
         if (view.type === 'direct-edit') return <DirectEditCard key={card.id} view={view} onAction={onAction} />
         return view.type === 'proposal'
-          ? <ProposalCard key={card.id} view={view} onAction={onAction} onDiscuss={onDiscuss} />
+          ? (
+            <ProposalCard key={card.id} view={view} onAction={onAction} onDiscuss={onDiscuss}>
+              {/* Fork（almanac ALMNC-69.2）：改過標題或位置的新增筆記，接受前後都說明原建議 */}
+              {proposal && <NewNoteChanges proposal={proposal} className="mt-1.5" />}
+            </ProposalCard>
+          )
           : <KickoffCard key={card.id} view={view} onAction={onAction} />
       })}
     </div>
