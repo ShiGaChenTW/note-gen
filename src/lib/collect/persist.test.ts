@@ -129,3 +129,12 @@ describe('file change proposals', () => {
     expect(parseItems(raw, NOW)[0].proposals.map(proposal => proposal.id)).toEqual(['p2'])
   })
 })
+
+// Fork（almanac ALMNC-69.7）：清理提案的領域承接（合併、取代）重開後還在，接受時才能寫 MOC。
+describe('membership transfers', () => {
+  it('keeps membershipTransfers through save and load', () => {
+    const membershipTransfers = [{ from: 'k/a.md', to: 'k/b.md' }]
+    const saved = serializeItems([item({ proposals: [{ ...base, id: 'p1', kind: 'note', title: '取代', status: 'wait', membershipTransfers }] })])
+    expect(parseItems(saved, NOW)[0].proposals[0]).toMatchObject({ membershipTransfers })
+  })
+})

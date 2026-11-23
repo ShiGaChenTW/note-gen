@@ -73,6 +73,11 @@ export interface Proposal {
   edits?: NoteEdit[]
   /** 領域的變更（例如在總覽的「矛盾與未解問題」加一條）。 */
   domainEdits?: DomainEdit[]
+  /**
+   * Fork（almanac ALMNC-69.7）：合併、取代時的領域承接——接受後由 to（合併留下的、取代的新筆記）承接 from 在各 MOC 的正式收錄
+   * （lib/moc transferMemberships）。domains 不再寫進新筆記的 frontmatter。
+   */
+  membershipTransfers?: Array<{ from: string, to: string }>
   /** Fork（almanac ALMNC-54.13）：記憶稽核——刪掉工作筆記或目前脈絡裡和筆記重疊的內容（Scott 接受＝Scott 本人寫入）。 */
   memoryEdits?: MemoryEdit[]
   /** 工作台卡片的標籤與動詞（沒有就照種類推）。 */

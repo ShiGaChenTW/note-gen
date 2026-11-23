@@ -9,7 +9,7 @@
 import { DEFAULT_DOMAIN_FOLDER, mocFileName, renderMocContent } from '@/lib/migration/domain-moc-migration'
 import { buildLinkLookup, resolveWikilinkTargetWithLookup } from '@/lib/vault-index/links'
 import { parseV3Note, writeV3NoteFields } from '@/lib/v3-model/note'
-import { addMocEntry, removeMocEntry } from './edit'
+import { addMocEntry, removeMocEntry, replaceMocEntryTarget } from './edit'
 import { membershipsFromMocs, planDomainRebuild, type DomainRebuildPlan, type NoteDomainChange } from './membership'
 import { formalEntries, parseMoc, type ParsedMoc } from './parse'
 
@@ -305,4 +305,50 @@ export async function removeFromMoc(io: MocIo, notePath: string, domainName: str
       await rebuildFromMocs(io)
     },
   }
+}
+
+// ── 換人承接（清理的合併、取代） ─────────────────────────────
+
+export interface MembershipTransfer {
+  /** 被合併／被取代的筆記。 */
+  from: string
+  /** 承接的筆記（合併留下的那則、取代的新筆記）。 */
+  to: string
+}
+
+export interface TransferResult {
+  mocPaths: string[]
+  rebuild: RebuildResult
+}
+
+/**
+ * 清理提案接受後：新筆記承接舊筆記在每個 MOC 的正式收錄（原章節、原關係說明；新筆記已在那個 MOC 就只留一條），
+ * 舊筆記就此離開那些 MOC（已被取代、合併後封存的預設不再引用；分家清單的現況標記由 69.14 維護，這裡不動引用）。
+ * 再重建 domains：承接者原本的順序在前，舊筆記的領域依它原本的順序接在後面。
+ */
+export async function transferMemberships(io: MocIo, transfers: readonly MembershipTransfer[]): Promise<TransferResult> {
+  const loaded = await loadMocs(io)
+  const paths = unique([...io.paths(), ...transfers.flatMap(item => [item.from, item.to])])
+  const lookup = buildLinkLookup(paths)
+  const edits: MocWrite[] = []
+  for (const { file } of loaded) {
+    const mocPath = file.path
+    const resolves = (target: string, notePath: string) => resolveWikilinkTargetWithLookup(target, lookup, mocPath) === notePath
+    const apply = (raw: string): string => {
+      let content = raw
+      for (const { from, to } of transfers) {
+        content = replaceMocEntryTarget(content, entry => resolves(entry.target, from), entryTargetFor(to, paths), mocPath, entry => resolves(entry.target, to)).content
+      }
+      return content
+    }
+    const after = apply(file.raw)
+    if (after !== file.raw) edits.push({ path: mocPath, before: file.raw, after, rebase: latest => apply(latest) })
+  }
+  const committed = edits.length ? await io.commit(edits) : []
+  const notes = await io.listNotes()
+  const domainsOf = (path: string) => notes.find(note => note.path === path)?.domains ?? []
+  const hint = new Map<string, string[]>()
+  for (const { from, to } of transfers) hint.set(to, unique([...(hint.get(to) ?? [...domainsOf(to)]), ...domainsOf(from)]))
+  const rebuild = await rebuildFromMocs(io, { orderHint: hint, extraNotes: transfers.map(item => item.to) })
+  return { mocPaths: committed.map(write => write.path), rebuild }
 }

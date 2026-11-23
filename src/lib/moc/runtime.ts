@@ -5,7 +5,7 @@ import { readNote, removeNote, writeNote } from '@/lib/daily/note-io'
 import { newId } from '@/lib/v3-model/identity'
 import useMocStore from '@/stores/moc'
 import useVaultIndexStore from '@/stores/vault-index'
-import { assignToMocs, rebuildFromMocs, removeFromMoc, type AssignRequest, type AssignResult, type MocIo, type RebuildOptions, type RebuildResult, type RemoveResult } from './service'
+import { assignToMocs, rebuildFromMocs, removeFromMoc, transferMemberships, type AssignRequest, type AssignResult, type MembershipTransfer, type MocIo, type RebuildOptions, type RebuildResult, type RemoveResult, type TransferResult } from './service'
 
 function strings(value: unknown): string[] {
   if (typeof value === 'string') return value.trim() ? [value.trim()] : []
@@ -101,5 +101,13 @@ export async function assignNoteToDomains(notePath: string, domains: readonly st
 export async function removeNoteFromDomain(notePath: string, domainName: string): Promise<RemoveResult> {
   const result = await removeFromMoc(createMocIo(), notePath, domainName)
   if (result.rebuild) await settle(result.rebuild)
+  return result
+}
+
+/** 清理提案接受後：新筆記承接被合併／被取代筆記的 MOC 收錄，再重建 domains。 */
+export async function transferNoteMemberships(transfers: readonly MembershipTransfer[]): Promise<TransferResult | null> {
+  if (!transfers.length) return null
+  const result = await transferMemberships(createMocIo(), transfers)
+  await settle(result.rebuild)
   return result
 }

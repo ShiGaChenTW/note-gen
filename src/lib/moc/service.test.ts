@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { parseV3Note } from '@/lib/v3-model/note'
-import { assignToMocs, entryTargetFor, rebuildFromMocs, removeFromMoc } from './service'
+import { assignToMocs, entryTargetFor, rebuildFromMocs, removeFromMoc, transferMemberships } from './service'
 import { createMemoryMocIo } from './testing'
 import { formalEntries, parseMoc } from './parse'
 
@@ -136,5 +136,36 @@ describe('removeFromMoc (over-limit card)', () => {
     // 復原連筆記 domains 的順序也還原（專注力仍是主要）。
     expect(domainsOf(io.files['10 知識/切換工作的代價比想像中高.md'])).toEqual(['專注力', '時間管理'])
     expect((await removeFromMoc(io, '10 知識/未歸屬.md', '專注力')).removed).toBe(false)
+  })
+})
+
+describe('transferMemberships (cleanup merge / replace)', () => {
+  it('replace: the new note takes over the old note entries in every MOC; the superseded note leaves', async () => {
+    const files = vault()
+    const io = createMemoryMocIo(files)
+    await rebuildFromMocs(io)
+    files['10 知識/切換工作的代價其實更高.md'] = note()
+    const result = await transferMemberships(io, [{ from: '10 知識/切換工作的代價比想像中高.md', to: '10 知識/切換工作的代價其實更高.md' }])
+    expect(result.mocPaths.sort()).toEqual(['20 領域/專注力.md', '20 領域/時間管理.md'])
+    const time = parseMoc(files['20 領域/時間管理.md'])
+    expect(time.chapters[2].entries).toEqual([expect.objectContaining({ target: '切換工作的代價其實更高', relation: '也屬於 [[專注力]]；被打斷一次的代價遠大於那幾秒' })])
+    expect(parseMoc(files['20 領域/專注力.md']).chapters[0].entries[0].target).toBe('切換工作的代價其實更高')
+    // 新筆記承接舊筆記的領域順序（專注力原本是主要）；舊筆記不再屬於任何 MOC。
+    expect(domainsOf(files['10 知識/切換工作的代價其實更高.md'])).toEqual(['專注力', '時間管理'])
+    expect(domainsOf(files['10 知識/切換工作的代價比想像中高.md'])).toEqual([])
+    // 上層的分家清單（引用）不動。
+    expect(files['20 領域/個人效能.md']).toBe(fixture('個人效能'))
+  })
+
+  it('merge: the keeper takes over entries where it is missing and keeps a single entry where both are listed', async () => {
+    const files = vault()
+    const io = createMemoryMocIo(files)
+    await rebuildFromMocs(io)
+    await transferMemberships(io, [{ from: '10 知識/切換工作的代價比想像中高.md', to: '10 知識/時間區塊要留兩成緩衝.md' }])
+    const time = formalEntries(parseMoc(files['20 領域/時間管理.md'])).map(({ entry }) => entry.target)
+    expect(time.filter(target => target === '時間區塊要留兩成緩衝')).toHaveLength(1)
+    expect(time).not.toContain('切換工作的代價比想像中高')
+    expect(parseMoc(files['20 領域/專注力.md']).chapters[0].entries[0].target).toBe('時間區塊要留兩成緩衝')
+    expect(domainsOf(files['10 知識/時間區塊要留兩成緩衝.md'])).toEqual(['時間管理', '專注力'])
   })
 })

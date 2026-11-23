@@ -5,6 +5,8 @@
 // 原則：不偷偷覆寫，舊內容一律留下紀錄。同一個領域的觀察打包成一則提案（工作台標「知識」、動詞「整理」）；
 // 只有一項時就是單則筆記的提案（標「筆記」、動詞照處理方式）。衝突或錯誤（矛盾、過時）立刻提案，其餘等每週回顧一起送。
 // 純函式：讀到的筆記原文由呼叫端給，產出的是提案（寫入要等 Scott 接受，見 apply.ts）。
+// Fork（almanac ALMNC-69.7）：合併、取代不再把 domains 寫進新筆記的 frontmatter；提案帶 membershipTransfers，接受時由
+// lib/moc transferMemberships 讓新筆記承接舊筆記在各 MOC 的正式收錄（原章節、原關係說明），domains 再由重建算出。
 import { newProposalId } from '@/lib/collect/split'
 import type { DomainEdit, NoteEdit, Proposal, ProposalCardHint } from '@/lib/collect/types'
 import { createV3Note, noteTitle, parseV3Note, writeV3NoteFields } from '@/lib/v3-model/note'
@@ -117,6 +119,8 @@ interface Working {
   base: Map<string, string | null>
   current: Map<string, string>
   order: string[]
+  /** Fork（almanac ALMNC-69.7）：合併、取代後由誰承接誰的 MOC 收錄（接受時才寫 MOC）。 */
+  transfers: Array<{ from: string, to: string }>
 }
 
 function touch(working: Working, path: string, content: string, base: string | null) {
@@ -196,7 +200,7 @@ function applyObservation(
       newer = `${folderOf(first)}${title.replace(/[\\/:*?"<>|#^[\]]+/g, ' ').trim()}.md`
       const content = createV3Note({
         title, type: parsed.fields.type ?? 'knowledge', summary: parsed.fields.summary, sources: parsed.fields.sources, tags: parsed.fields.tags,
-        related: [wiki(first)], domains: parsed.fields.domains, status: 'valid', lastConfirmed: today,
+        related: [wiki(first)], status: 'valid', lastConfirmed: today,
       }, `${observation.revisedBody.trim()}\n`)
       touch(working, newer, content, null)
     }
@@ -204,6 +208,8 @@ function applyObservation(
       // 沒有新的筆記可以取代，也沒有新內文：退回待查證，不偷偷改。
       return applyObservation({ ...observation, type: 'contradiction' }, 'verify', ctx, working, domainWorking)
     }
+    // Fork（almanac ALMNC-69.7）：新筆記承接舊筆記在 MOC 的正式收錄（原章節、原關係說明），domains 由重建算，不寫 frontmatter。
+    working.transfers.push({ from: first, to: newer })
     const related = Array.from(new Set([...parsed.fields.related, wiki(newer)]))
     touch(working, first, withLog(raw, words, today, words.log.replace({ evidence, other: wiki(newer) }), { status: 'superseded', related }), base(first))
     const newerRaw = read(working, notes, newer)
@@ -257,14 +263,15 @@ function applyObservation(
     const tags = Array.from(new Set([keeperParsed.fields.tags, ...otherParsed.map(entry => entry.parsed.fields.tags)].flat()))
     const related = Array.from(new Set([...keeperParsed.fields.related, ...otherParsed.flatMap(entry => entry.parsed.fields.related)]))
       .filter(link => link !== wiki(keeper))
-    const domains = Array.from(new Set([keeperParsed.fields.domains, ...otherParsed.map(entry => entry.parsed.fields.domains)].flat()))
     const mergedBody = observation.revisedBody
       ? `${observation.revisedBody.trim()}\n`
       : [keeperParsed.body.replace(/\s+$/, ''), ...otherParsed.map(entry => `## ${words.mergedFrom(wiki(entry.path))}\n\n${entry.parsed.body.trim()}`)].join('\n\n') + '\n'
     let next = replaceBody(raw, mergedBody)
+    // Fork（almanac ALMNC-69.7）：留下的那則承接被合併筆記在 MOC 的正式收錄；domains 由重建算，不寫 frontmatter。
     next = withLog(next, words, today, words.log.mergeKeeper({ evidence, other: others.map(wiki).join('、') }), {
-      sources, tags, related, domains, lastConfirmed: today,
+      sources, tags, related, lastConfirmed: today,
     })
+    for (const entry of otherParsed) working.transfers.push({ from: entry.path, to: keeper })
     touch(working, keeper, next, base(keeper))
     for (const entry of otherParsed) {
       const current = read(working, notes, entry.path)!
@@ -320,7 +327,7 @@ export function cleanupProposals(observations: readonly ConflictObservation[], c
   }
   const proposals: Proposal[] = []
   for (const [domainId, group] of groups) {
-    const working: Working = { base: new Map(), current: new Map(), order: [] }
+    const working: Working = { base: new Map(), current: new Map(), order: [], transfers: [] }
     const domainWorking = new Map<string, { base: string, current: string }>()
     const done: Array<{ observation: ConflictObservation, action: CleanupAction }> = []
     for (const observation of group) {
@@ -358,6 +365,7 @@ export function cleanupProposals(observations: readonly ConflictObservation[], c
       ...(domainId ? { domains: [domainId] } : {}),
       edits,
       ...(domainEdits.length ? { domainEdits } : {}),
+      ...(working.transfers.length ? { membershipTransfers: working.transfers } : {}),
       card: single ? { label: 'note', verb: VERB_OF[done[0].action] } : { label: 'knowledge', verb: 'organize' },
       cleanup: { ...(domainId ? { domainId } : {}), actions, immediate: ctx.immediate },
       drafter: { role: 'commander' },

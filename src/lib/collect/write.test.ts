@@ -88,6 +88,19 @@ describe('acceptProposal', () => {
     expect(none).not.toHaveBeenCalled()
   })
 
+  // Fork（almanac ALMNC-69.7）：清理提案（合併、取代）寫完筆記後，新筆記承接舊筆記的 MOC 收錄。
+  it('applies cleanup membership transfers through the MOC after the note edits', async () => {
+    const applyEdits = vi.fn(async () => ['k/a.md', 'k/b.md'])
+    const transferMemberships = vi.fn(async () => undefined)
+    const transfers = [{ from: 'k/a.md', to: 'k/b.md' }]
+    await acceptProposal({ ...base, id: 'c1', kind: 'note', title: '取代', edits: [{ path: 'k/a.md', baseContent: 'x', content: 'y', summary: 'A' }], membershipTransfers: transfers }, { noteFolder: '10 Inbox', now, applyEdits, transferMemberships })
+    expect(applyEdits).toHaveBeenCalled()
+    expect(transferMemberships).toHaveBeenCalledWith(transfers)
+    const failing = vi.fn(async () => { throw new Error('moc down') })
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    await expect(acceptProposal({ ...base, id: 'c2', kind: 'note', title: '合併', edits: [{ path: 'k/a.md', baseContent: 'x', content: 'y', summary: 'A' }], membershipTransfers: transfers }, { noteFolder: '10 Inbox', now, applyEdits, transferMemberships: failing })).resolves.toEqual({ path: 'k/a.md' })
+  })
+
   // Fork（almanac ALMNC-69.1 AC#1）：接受時產生 N 編號，寫在 frontmatter 第一行並登記到系統索引。
   it('gives the accepted note an N id in the first frontmatter line and records it in id_index', async () => {
     const result = await acceptProposal({ ...base, id: 'n3', kind: 'note', title: '節拍時間', noteType: 'knowledge', domains: ['ie'] }, { noteFolder: '10 Inbox', now, ids, assignDomains: async () => undefined })

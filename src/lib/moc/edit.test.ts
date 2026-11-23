@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { renderMocContent } from '@/lib/migration/domain-moc-migration'
-import { addMocEntry, moveMocEntry, removeMocEntry, renderEntryLine, sameTarget } from './edit'
+import { addMocEntry, moveMocEntry, removeMocEntry, renderEntryLine, replaceMocEntryTarget, sameTarget } from './edit'
 import { formalEntries, parseMoc } from './parse'
 
 const time = readFileSync(join(__dirname, 'fixtures', '時間管理.md'), 'utf8')
@@ -105,5 +105,27 @@ describe('removeMocEntry / moveMocEntry', () => {
     expect(parseMoc(moved.content).unsorted?.entries[0]).toMatchObject({ target: '說不比提高效率更省時間', relation: '和下一章互補：先刪，再排' })
     expect(moveMocEntry(moved.content, '說不比提高效率更省時間', { unsorted: true }).changed).toBe(false)
     expect(moveMocEntry(time, '沒有', { unsorted: true }).reason).toBe('not-found')
+  })
+})
+
+describe('replaceMocEntryTarget (cleanup merge / replace)', () => {
+  it('points the old line at the new note: same line, same chapter, same relation', () => {
+    const result = replaceMocEntryTarget(time, '時間區塊要留兩成緩衝', '時間區塊要留緩衝（更新）')
+    expect(lineDiff(time, result.content)).toEqual({
+      removed: ['- [[時間區塊要留兩成緩衝]] ── 支持「計畫的價值在調整」'],
+      added: ['- [[時間區塊要留緩衝（更新）]] ── 支持「計畫的價值在調整」'],
+    })
+    expect(time.split('\n').indexOf('- [[時間區塊要留兩成緩衝]] ── 支持「計畫的價值在調整」')).toBe(result.content.split('\n').indexOf('- [[時間區塊要留緩衝（更新）]] ── 支持「計畫的價值在調整」'))
+  })
+
+  it('when the new note is already in this MOC, keeps its own entry and drops the old one', () => {
+    const result = replaceMocEntryTarget(time, '時間區塊要留兩成緩衝', '說不比提高效率更省時間')
+    expect(lineDiff(time, result.content)).toEqual({ removed: ['- [[時間區塊要留兩成緩衝]] ── 支持「計畫的價值在調整」'], added: [] })
+  })
+
+  it('does not touch split-list references or MOCs without the old note', () => {
+    const parent = readFileSync(join(__dirname, 'fixtures', '個人效能.md'), 'utf8')
+    expect(replaceMocEntryTarget(parent, '時間區塊要留兩成緩衝', '新').changed).toBe(false)
+    expect(replaceMocEntryTarget(time, '沒有這則', '新').reason).toBe('not-found')
   })
 })

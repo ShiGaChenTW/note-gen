@@ -76,13 +76,29 @@ const defaultAssignDomains: AssignDomains = async (notePath, domains) => {
   return assignNoteToDomains(notePath, domains)
 }
 
-export async function acceptProposal(proposal: Proposal, options: { noteFolder: string, now?: Date, applyChange?: ApplyChange, applyEdits?: ApplyEdits, ids?: IdStore, assignDomains?: AssignDomains }): Promise<AcceptResult> {
+/** Fork（almanac ALMNC-69.7）：清理提案（合併、取代）接受後，新筆記承接舊筆記的 MOC 收錄。測試注入假的。 */
+export type TransferMemberships = (transfers: ReadonlyArray<{ from: string, to: string }>) => Promise<unknown>
+
+const defaultTransferMemberships: TransferMemberships = async transfers => {
+  const { transferNoteMemberships } = await import('@/lib/moc/runtime')
+  return transferNoteMemberships(transfers)
+}
+
+export async function acceptProposal(proposal: Proposal, options: { noteFolder: string, now?: Date, applyChange?: ApplyChange, applyEdits?: ApplyEdits, ids?: IdStore, assignDomains?: AssignDomains, transferMemberships?: TransferMemberships }): Promise<AcceptResult> {
   const now = options.now ?? new Date()
   if (proposal.slot) return acceptSlot({ ...proposal, slot: proposal.slot }, now)
   // Fork（almanac ALMNC-69.3）：只貼日誌標籤的卡不寫筆記庫；標籤由 stores/collect 接受後寫進資料源。
   if (proposal.journalTag?.only) return { path: '' }
   if (proposal.edits?.length || proposal.domainEdits?.length || proposal.memoryEdits?.length) {
     const targets = await (options.applyEdits ?? defaultApplyEdits)(proposal)
+    if (proposal.membershipTransfers?.length) {
+      try {
+        await (options.transferMemberships ?? defaultTransferMemberships)(proposal.membershipTransfers)
+      } catch (error) {
+        // 筆記已寫好；MOC 承接失敗不讓接受失敗（Scott 可以在檯面歸入領域）。
+        console.error('transfer memberships failed', error)
+      }
+    }
     return { path: proposal.edits?.[0]?.path ?? targets[0] ?? '' }
   }
   if (proposal.change) {

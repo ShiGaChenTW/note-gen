@@ -60,6 +60,7 @@ export function serializeItems(items: readonly ItemLike[]): PersistedItem[] {
       ...(proposal.change ? { change: { ...proposal.change, args: { ...proposal.change.args } } } : {}),
       ...(proposal.edits ? { edits: proposal.edits } : {}),
       ...(proposal.domainEdits ? { domainEdits: proposal.domainEdits } : {}),
+      ...(proposal.membershipTransfers ? { membershipTransfers: proposal.membershipTransfers.map(item => ({ ...item })) } : {}),
       ...(proposal.memoryEdits ? { memoryEdits: proposal.memoryEdits } : {}),
       ...(proposal.card ? { card: proposal.card } : {}),
       ...(proposal.cleanup ? { cleanup: proposal.cleanup } : {}),

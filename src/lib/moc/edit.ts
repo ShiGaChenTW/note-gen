@@ -152,3 +152,25 @@ export function moveMocEntry(raw: string, match: EntryMatch, to: ChapterRef, opt
   const added = addMocEntry(removed.content, { target: entry.target, alias: entry.alias, relation: entry.relation, chapter: to, newChapterId: options.newChapterId }, path)
   return added.changed ? added : { content: raw, changed: false, reason: added.reason }
 }
+
+/**
+ * 換人承接收錄（清理的合併、取代）：這個 MOC 裡舊筆記的正式收錄改成指向新筆記——同一行、同一章、關係說明不變（別名是舊標題，拿掉）。
+ * 新筆記在這個 MOC 已經有收錄時，只留新筆記原本那條，舊的那條移除（每則筆記在同一個 MOC 只有一條）。分家清單的引用不動。
+ */
+export function replaceMocEntryTarget(raw: string, match: EntryMatch, newTarget: string, path?: string, isNew?: EntryMatch): MocEditResult {
+  const moc = parseMoc(raw, path)
+  const test = matcher(match)
+  const testNew = matcher(isNew ?? newTarget)
+  const formal = formalEntries(moc).map(({ entry }) => entry)
+  const old = formal.filter(entry => test(entry) && !testNew(entry))
+  if (!old.length) return { content: raw, changed: false, reason: 'not-found' }
+  const lines = splitLines(raw)
+  const drop = new Set(old.map(entry => entry.line))
+  if (!formal.some(entry => testNew(entry))) {
+    const [first] = old
+    const eol = lines[first.line].endsWith('\r') ? '\r' : ''
+    lines[first.line] = `${renderEntryLine({ target: newTarget, relation: first.relation })}${eol}`
+    drop.delete(first.line)
+  }
+  return { content: lines.filter((_, index) => !drop.has(index)).join('\n'), changed: true }
+}
