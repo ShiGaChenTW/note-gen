@@ -5195,6 +5195,7 @@
           "changed": "模型已從 {from} 切換為 {to}"
         },
         "promptSelect": {
+          "defaultTitle": "寫作助手",
           "tooltip": "選擇對話角色",
           "placeholder": "搜尋對話角色",
           "conversationPromptApplied": "此對話的系統提示詞已由一則提示詞設定"
@@ -8865,6 +8866,7 @@
     "collapseSection": "收合{title}",
     "expandSection": "展開{title}",
     "noteList": {
+      "resize": "拖曳調整筆記清單寬度",
       "select": "勾選",
       "selected": "已選 {count} 則",
       "spread": "攤到檯面",

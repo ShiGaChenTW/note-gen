@@ -5,7 +5,7 @@ import { platform } from '@tauri-apps/plugin-os'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import type { UnlistenFn } from '@tauri-apps/api/event'
 import { isMobileDevice } from '@/lib/check'
-import { Settings, Minus, Square, Copy, X, PanelLeft, PanelRight, SquarePen, Cog, BookOpen } from 'lucide-react'
+import { Minus, Square, Copy, X, PanelRight, SquarePen, BookOpen } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useSidebarStore } from '@/stores/sidebar'
 import { PluginTitleBar } from './plugins/plugin-title-bar'
@@ -13,9 +13,8 @@ import { PinToggle } from './pin-toggle'
 import AppStatus from './app-status'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Button } from '@/components/ui/button'
-import useUpdateStore from '@/stores/update'
 import { useToolbarShortcuts } from '@/hooks/use-toolbar-shortcuts'
-import { useSettingsDialogStore } from '@/stores/settings-dialog'
+import { LeftSidebarToggleButton, SettingsButton, usePanelVisibility, wouldCauseLeftOnly, type PanelKey } from './shell-buttons'
 import { UnifiedRecordButton } from '@/app/core/main/mark/unified-record-dialog'
 import { useUiV3 } from '@/lib/fork-ui'
 import { useWikiNavigation } from '@/components/wiki/use-wiki-navigation'
@@ -27,34 +26,16 @@ export function TitleBar() {
   const [currentPlatform, setCurrentPlatform] = useState<Platform>('unknown')
   const [isMobile, setIsMobile] = useState(true)
   const [isMaximized, setIsMaximized] = useState(false)
-  const { open: settingsOpen, openSettings, closeSettings } = useSettingsDialogStore()
-  const { leftSidebarVisible, centerPanelVisible, rightSidebarVisible, toggleLeftSidebar, toggleCenterPanel, toggleRightSidebar } = useSidebarStore()
+  const { centerPanelVisible, rightSidebarVisible, leftSidebarVisible, toggleCenterPanel, toggleRightSidebar } = useSidebarStore()
   
-  // 检查关闭面板后是否会导致"仅左"状态或无面板状态
-  const wouldCauseLeftOnly = (currentVisible: boolean, panel: 'left' | 'center' | 'right') => {
-    // 如果面板本来就不可见，不会导致问题（打开面板总是允许的）
-    if (!currentVisible) return false
-    
-    const visibleCount = [leftSidebarVisible, centerPanelVisible, rightSidebarVisible].filter(Boolean).length
-    
-    if (visibleCount === 1) return true // 不允许关闭最后一个面板
-    
-    if (visibleCount === 2) {
-      // 只有当关闭中间或右侧面板会导致"仅左"状态时才阻止
-      if (panel === 'center' && leftSidebarVisible && !rightSidebarVisible) return true
-      if (panel === 'right' && leftSidebarVisible && !centerPanelVisible) return true
-      // 关闭左侧面板不会导致"仅左"状态（它会变成"仅中"或"仅右"），所以允许
-    }
-    
-    return false
-  }
-  const { hasUpdate } = useUpdateStore()
+  const visibility = usePanelVisibility()
+  const blocked = (panel: PanelKey) => wouldCauseLeftOnly(visibility, panel)
   const t = useTranslations()
   const v3 = useUiV3()
-  const leftLabel = t(leftSidebarVisible ? 'navigation.hideLeftSidebar' : 'navigation.showLeftSidebar')
   const centerLabel = t(centerPanelVisible ? 'navigation.hideCenterPanel' : 'navigation.showCenterPanel')
   const rightLabel = t(rightSidebarVisible ? 'navigation.hideRightSidebar' : 'navigation.showRightSidebar')
-  const settingsLabel = t(settingsOpen ? 'common.back' : 'common.settings')
+  // Fork（almanac ALMNC-62）：V3 側欄展開時，左側欄開關與設定移到側欄頂端，標題列就不再重複顯示。
+  const shellButtonsInSidebar = v3 && leftSidebarVisible
   useToolbarShortcuts()
 
   useEffect(() => {
@@ -186,28 +167,7 @@ export function TitleBar() {
             <TooltipTrigger asChild><Button variant="ghost" size="icon" className="size-8" aria-label={t('wiki.open')} onClick={() => void openWikiFolder()}><BookOpen /></Button></TooltipTrigger>
             <TooltipContent side="bottom">{t('wiki.title')}</TooltipContent>
           </Tooltip>
-          {/* 左侧边栏切换按钮 */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className={`h-8 w-8 ${wouldCauseLeftOnly(leftSidebarVisible, 'left') ? 'cursor-not-allowed opacity-50' : ''}`}
-                aria-label={v3 ? leftLabel : undefined}
-                aria-disabled={v3 && wouldCauseLeftOnly(leftSidebarVisible, 'left') ? true : undefined}
-                onClick={() => {
-                  if (!wouldCauseLeftOnly(leftSidebarVisible, 'left')) {
-                    toggleLeftSidebar()
-                  }
-                }}
-              >
-                <PanelLeft className={`h-4 w-4 ${!leftSidebarVisible ? 'opacity-30' : ''}`} />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">
-              <p>{leftLabel}</p>
-            </TooltipContent>
-          </Tooltip>
+          {!shellButtonsInSidebar && <LeftSidebarToggleButton />}
 
           {/* 中间面板切换按钮 */}
           <Tooltip>
@@ -215,11 +175,11 @@ export function TitleBar() {
               <Button
                 variant="ghost"
                 size="icon"
-                className={`h-8 w-8 ${wouldCauseLeftOnly(centerPanelVisible, 'center') ? 'cursor-not-allowed opacity-50' : ''}`}
+                className={`h-8 w-8 ${blocked('center') ? 'cursor-not-allowed opacity-50' : ''}`}
                 aria-label={v3 ? centerLabel : undefined}
-                aria-disabled={v3 && wouldCauseLeftOnly(centerPanelVisible, 'center') ? true : undefined}
+                aria-disabled={v3 && blocked('center') ? true : undefined}
                 onClick={() => {
-                  if (!wouldCauseLeftOnly(centerPanelVisible, 'center')) {
+                  if (!blocked('center')) {
                     toggleCenterPanel()
                   }
                 }}
@@ -238,11 +198,11 @@ export function TitleBar() {
               <Button
                 variant="ghost"
                 size="icon"
-                className={`h-8 w-8 ${wouldCauseLeftOnly(rightSidebarVisible, 'right') ? 'cursor-not-allowed opacity-50' : ''}`}
+                className={`h-8 w-8 ${blocked('right') ? 'cursor-not-allowed opacity-50' : ''}`}
                 aria-label={v3 ? rightLabel : undefined}
-                aria-disabled={v3 && wouldCauseLeftOnly(rightSidebarVisible, 'right') ? true : undefined}
+                aria-disabled={v3 && blocked('right') ? true : undefined}
                 onClick={() => {
-                  if (!wouldCauseLeftOnly(rightSidebarVisible, 'right')) {
+                  if (!blocked('right')) {
                     toggleRightSidebar()
                   }
                 }}
@@ -257,29 +217,7 @@ export function TitleBar() {
           
           <PinToggle withTooltip={v3} />
           
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className={`h-8 w-8 relative ${settingsOpen ? 'bg-active hover:bg-active' : ''}`}
-                aria-label={v3 ? settingsLabel : undefined}
-                onClick={() => settingsOpen ? closeSettings() : openSettings()}
-              >
-                {settingsOpen ? (
-                  <Cog className="h-4 w-4" />
-                ) : (
-                  <Settings className="h-4 w-4" />
-                )}
-                {hasUpdate && !settingsOpen && (
-                  <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500" />
-                )}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">
-              <p>{settingsLabel}</p>
-            </TooltipContent>
-          </Tooltip>
+          {!shellButtonsInSidebar && <SettingsButton />}
           
           <AppStatus />
         </div>

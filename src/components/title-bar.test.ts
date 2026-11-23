@@ -4,10 +4,12 @@ import React, { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { NextIntlClientProvider } from 'next-intl'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
-import zhTW from '../../messages/zh-TW.json'
+import zhTWBase from '../../messages/zh-TW.json'
+import commonZhTW from '../../messages/common/zh-TW.json'
 import emitter from '@/lib/emitter'
 import { useUiModeStore } from '@/lib/fork-ui'
 import { TitleBar } from './title-bar'
+import { useSidebarStore } from '@/stores/sidebar'
 
 vi.mock('@tauri-apps/plugin-os', () => ({ platform: () => 'macos' }))
 vi.mock('@tauri-apps/api/window', () => ({ getCurrentWindow: () => ({}) }))
@@ -27,6 +29,8 @@ await vi.hoisted(async () => {
     removeItem: (key: string) => values.delete(key),
   })
 })
+
+const zhTW = { ...zhTWBase, common: commonZhTW }
 
 let host: HTMLDivElement
 let root: Root
@@ -70,4 +74,24 @@ it('keeps the record dialog behind the ＋ in classic', async () => {
   expect(plus.getAttribute('aria-label')).toBe(zhTW.record.mark.unified.title)
   expect(opened).toHaveBeenCalledTimes(1)
   expect(opened.mock.calls[0][0]).toBeUndefined()
+})
+
+// Fork（almanac ALMNC-62）：V3 側欄展開時，左側欄開關與設定在側欄頂端，標題列不重複；側欄收起時回到標題列。
+async function renderTitleBar() {
+  const providerProps = { locale: 'zh-TW', messages: zhTW, timeZone: 'Asia/Taipei', children: React.createElement(TitleBar) }
+  await act(async () => root.render(React.createElement(NextIntlClientProvider, providerProps)))
+  const labels = [...host.querySelectorAll('button')].map(button => button.getAttribute('aria-label'))
+  return { hasLeftToggle: labels.some(l => l === zhTW.navigation.hideLeftSidebar || l === zhTW.navigation.showLeftSidebar), hasSettings: labels.includes(zhTW.common.settings) }
+}
+
+it('moves the left-sidebar toggle and settings out of the title bar while the V3 sidebar is open', async () => {
+  useUiModeStore.setState({ mode: 'v3' })
+  useSidebarStore.setState({ leftSidebarVisible: true, centerPanelVisible: true, rightSidebarVisible: true })
+  expect(await renderTitleBar()).toEqual({ hasLeftToggle: false, hasSettings: false })
+})
+
+it('puts them back in the title bar when the V3 sidebar is hidden', async () => {
+  useUiModeStore.setState({ mode: 'v3' })
+  useSidebarStore.setState({ leftSidebarVisible: false, centerPanelVisible: true, rightSidebarVisible: true })
+  expect(await renderTitleBar()).toEqual({ hasLeftToggle: true, hasSettings: true })
 })

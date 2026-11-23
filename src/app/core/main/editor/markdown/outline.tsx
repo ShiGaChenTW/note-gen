@@ -1226,6 +1226,8 @@ export function Outline({
       className={cn(
         getOutlinePanelClass(position, floating),
         !floating ? 'relative' : '',
+        // Fork（almanac ALMNC-62）：V3 編輯區右上角浮著筆記工具列（約 40px 高），右側大綱往下讓開，搜尋框才不會被工具列蓋住
+        position === 'right' && 'v3:pt-10',
         'flex flex-col overflow-hidden'
       )}
       style={outlinePanelStyle}
