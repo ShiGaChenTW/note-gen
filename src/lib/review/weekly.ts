@@ -1,7 +1,7 @@
 // Fork（almanac ALMNC-54.13）：指揮官把 G1 調研、G2 專家回顧、G3 秘書的行動回顧、這期的紀錄筆記、到期要確認的筆記、
 // 超過 14 天沒決定的提案和記憶稽核，統整成一張「每週回顧」提案（標「回顧」、標的物是時期，例如「11 月第 3 週」）。
-// 接受後寫成一則時期回顧（E2）。同一批另外附上：依領域打包的清理提案（知識／整理）、排程調整（日程／改時間，作用在 E4）、
-// 記憶稽核的刪除提案。衝突或錯誤不在這裡，早就立刻提案了。純函式。
+// 接受後寫成一則時期回顧（E2）。同一批另外附上排程調整（日程／改時間，作用在 E4）、
+// 記憶稽核的刪除提案。MOC 整理另外送出，回顧只計數。
 import { newProposalId } from '@/lib/collect/split'
 import type { Proposal } from '@/lib/collect/types'
 import type { ProposalBatch } from '@/lib/commander/types'
@@ -98,7 +98,7 @@ export function weeklyReviewBody(input: WeeklyInput): string {
     const notes = observation.notePaths.map(wiki).join('、')
     return `- ${labels.expertItem({ agent: (review.agentId && input.agentNames?.get(review.agentId)) || '', domain: domain(review.domainId), text: observation.text })}${notes ? `（${notes}）` : ''}`
   }))
-  const attachedCount = { cleanup: input.cleanup.length, schedule: input.schedule.length, audit: input.auditProposals.length }
+  const attachedCount = { cleanup: new Set(input.cleanup.map(item => item.mocReview?.id)).size, schedule: input.schedule.length, audit: input.auditProposals.length }
   return [
     ...section(labels.sections.actions, actionLines),
     ...section(labels.sections.records, input.records.map(record => `- ${wiki(record.path)}`)),
@@ -114,7 +114,7 @@ export function weeklyReviewBody(input: WeeklyInput): string {
 /** 每週回顧提案＋附帶的提案，一批送到工作台；完全沒有內容時回傳 undefined。批次 id 以時期為準，重跑不會重複送。 */
 export function composeWeeklyReview(input: WeeklyInput): ProposalBatch | undefined {
   const body = weeklyReviewBody(input)
-  const extras = [...input.cleanup, ...input.schedule, ...input.auditProposals]
+  const extras = [...input.schedule, ...input.auditProposals]
   if (!body && !extras.length) return undefined
   const period = input.labels.period({ month: input.period.month, week: input.period.week, year: input.period.year })
   const review: Proposal = {

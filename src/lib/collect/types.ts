@@ -1,4 +1,5 @@
 import type { SlotTarget } from '@/lib/timeslots/model'
+import type { MocChange } from '@/lib/moc/edit'
 import type { NoteType } from '@/lib/v3-model/note'
 
 // Fork（almanac ALMNC-8）：收集頁的資料型別。全是純資料，不碰 I/O，方便單元測試。
@@ -84,6 +85,8 @@ export interface Proposal {
   card?: ProposalCardHint
   /** 清理提案：這一則涵蓋哪些處理方式、屬於哪個領域、是不是立刻提出（衝突或錯誤）。 */
   cleanup?: { domainId?: string, actions: CleanupActionName[], immediate: boolean }
+  /** 同批項目在工作台合為一張每週 MOC 整理卡。 */
+  mocReview?: { id: string, name: string, week: string }
   /** Fork（almanac ALMNC-54.13）：每週回顧（時期回顧）提案：時期（例如「11 月第 3 週」）與時期鍵。 */
   review?: { period: string, periodKey: string }
 }
@@ -99,6 +102,7 @@ export interface ProposalCardHint {
 
 /** Fork（almanac ALMNC-54.12）：一則筆記的完整新內容。baseContent 是提案當下的原文；null＝新增的筆記（當時不存在）。 */
 export interface NoteEdit {
+  moc?: { id: string, change: MocChange }
   path: string
   baseContent: string | null
   content: string

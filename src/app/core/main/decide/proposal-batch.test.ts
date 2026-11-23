@@ -218,3 +218,33 @@ describe('同一資料源的新知識筆記批次卡（ALMNC-65.2）', () => {
     expect(mocks.setSourceJournal).toHaveBeenCalledWith('S-1', true)
   })
 })
+
+it('keeps a weekly MOC as one 整理 card and lets Scott accept or return each change', async () => {
+  const id = 'M-20261112-060012-VPB3'
+  const mocReview = { id, week: '2026-W48', name: '時間管理' }
+  const itemId = `cleanup:moc:${id}:2026-W48`
+  const edit = (text: string) => ({ path: '領域.md', baseContent: '# 時間管理', content: `# 時間管理\n${text}`, summary: text })
+  act(() => useCollectStore.setState({
+    items: [{
+      id: itemId, input: { kind: 'text', text: '', name: '清理提案' }, createdAt: NOW, state: 'ready', proposals: [
+        { ...knowledge('conclusion'), title: '重點結論', body: '先排重要的事', edits: [edit('先排重要的事')], mocReview },
+        { ...knowledge('open'), title: '待釐清', body: '還有什麼例子？', edits: [edit('還有什麼例子？')], mocReview },
+      ],
+    }],
+  }))
+  expect(titles()).toEqual(['時間管理'])
+  expect(batchCard()!.querySelector('[data-testid="card-kind"]')!.textContent).toBe('知識整理')
+  expand()
+  expect(rowTitles()).toEqual(['重點結論', '待釐清'])
+  expect(batchCard()!.querySelector('[data-action="accept"]')).toBeNull()
+  expect(row(`collect:${itemId}:conclusion`).textContent).toContain('先排重要的事')
+  act(() => row(`collect:${itemId}:conclusion`).querySelector<HTMLButtonElement>('[data-batch-action="accept"]')!.click())
+  await wait(230)
+  expect(statusOf('conclusion')).toBe('ok')
+  expect(titles()).toEqual(['時間管理'])
+  expect(rowTitles()).toEqual(['待釐清'])
+  act(() => row(`collect:${itemId}:open`).querySelector<HTMLButtonElement>('[data-batch-action="drop"]')!.click())
+  await wait(230)
+  expect(statusOf('open')).toBe('no')
+  expect(titles()).toEqual([])
+})

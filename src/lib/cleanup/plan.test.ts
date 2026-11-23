@@ -1,7 +1,7 @@
 // Fork（almanac ALMNC-54.12）：指揮官依衝突類型做清理提案——類型 → 處理方式、同領域打包、立刻提出 vs 等每週回顧、不偷偷覆寫。
 import { describe, expect, it } from 'vitest'
 import { createV3Note, parseV3Note } from '@/lib/v3-model/note'
-import { appendToSection, cleanupProposals, confirmProposal, isImmediate, planAction, routeObservations, type CleanupLabels } from './plan'
+import { appendToSection, cleanupProposals, confirmProposal, planAction, type CleanupLabels } from './plan'
 import type { ConflictObservation } from './types'
 
 const labels: CleanupLabels = {
@@ -40,13 +40,7 @@ describe('planAction', () => {
     expect(planAction({ type: 'obsolete' })).toBe('archive')
   })
 
-  it('sends conflicts and errors immediately and defers the rest to the weekly bundle', () => {
-    expect(isImmediate({ type: 'contradiction' })).toBe(true)
-    expect(isImmediate({ type: 'outdated' })).toBe(true)
-    const routed = routeObservations([obs('duplicate', ['k/c.md', 'k/d.md']), obs('contradiction', ['k/a.md', 'k/b.md']), obs('context', ['k/a.md', 'k/b.md']), obs('obsolete', ['k/a.md'])])
-    expect(routed.immediate.map(entry => entry.type)).toEqual(['contradiction'])
-    expect(routed.deferred.map(entry => entry.type)).toEqual(['duplicate', 'context', 'obsolete'])
-  })
+
 })
 
 describe('cleanupProposals', () => {

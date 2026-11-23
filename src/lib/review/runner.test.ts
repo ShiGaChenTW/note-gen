@@ -1,5 +1,5 @@
 // Fork（almanac ALMNC-54.13）：一輪 G 自我優化——每週回顧提案的組成（G1／G2／G3＋14 天沒決定的提案＋到期筆記＋稽核），
-// 不急的清理觀察依領域打包附在同一批，衝突或錯誤不等彙整立刻提案；頻率沒到或關閉時不跑。
+// 清理觀察一律等待另行依 MOC 打包；頻率沒到或關閉時不跑。
 import { describe, expect, it, vi } from 'vitest'
 import type { CheckDeps } from '@/lib/cleanup/check'
 import type { CleanupLabels } from '@/lib/cleanup/plan'
@@ -117,15 +117,13 @@ function setup(options: { settings?: Record<string, unknown> } = {}) {
 
 describe('runReview', () => {
   it('compiles G1, G2, G3, stale proposals, due notes and the audit into one weekly review batch', async () => {
-    const { deps, submitted, data } = setup()
+    const { deps, submitted, data, queue } = setup()
     const summary = await runReview(deps)
     expect(summary.errors).toEqual([])
 
-    // 衝突（矛盾）不等彙整，先單獨送出。
-    const [immediate, review] = submitted
-    expect(immediate.id).toBe('cleanup:review:ie:2026-W47')
-    expect(immediate.proposals).toHaveLength(1)
-    expect(immediate.proposals[0]).toMatchObject({ card: { verb: 'verify' }, cleanup: { immediate: true } })
+    const [review] = submitted
+    expect(submitted).toHaveLength(1)
+    expect(queue.items().map(observation => observation.type)).toEqual(['context', 'contradiction', 'duplicate'])
 
     expect(review.id).toBe('review:2026-W47')
     expect(review.origin).toBe('Mia 統整的每週回顧')
@@ -142,17 +140,14 @@ describe('runReview', () => {
     expect(body).toContain('[[k/takt]]（2026-01-01 到期）')
     expect(body).toContain('舊提案（等了 20 天）')
     expect(body).toContain('work_notes：「- 節拍時間是 60 秒，等於可用時間除以需求量」和 [[k/takt]] 重疊')
-    expect(body).toContain('清理 1、排程 1、稽核 1')
+    expect(body).toContain('清理 0、排程 1、稽核 1')
 
-    // 附帶：依領域打包的清理提案（佇列裡的情境不同＋G2 的重複）、排程調整（E4）、稽核。
     expect(extras.map(proposal => proposal.card)).toEqual([
-      { label: 'knowledge', verb: 'organize' },
       { label: 'schedule', verb: 'reschedule' },
       { label: 'knowledge', verb: 'organize' },
     ])
-    expect(extras[0]).toMatchObject({ title: '整理「工業工程」：2 項', cleanup: { immediate: false, actions: ['supplement', 'merge'] } })
-    expect(extras[1]).toMatchObject({ title: '改時間：寄報價 → 2026-11-23', drafter: { role: 'secretary', agentId: 'sec' } })
-    expect(extras[2].memoryEdits?.[0]).toMatchObject({ target: 'work_notes', content: '' })
+    expect(extras[0]).toMatchObject({ title: '改時間：寄報價 → 2026-11-23', drafter: { role: 'secretary', agentId: 'sec' } })
+    expect(extras[1].memoryEdits?.[0]).toMatchObject({ target: 'work_notes', content: '' })
 
     expect(data.get('almanacReviewLastRun')).toBe(new Date(2026, 10, 22, 20).getTime())
   })

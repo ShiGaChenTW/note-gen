@@ -1,6 +1,7 @@
 // Fork（almanac ALMNC-54.13）：G2 專家回顧——每位專家回顧自己的領域，只提出觀察，交給指揮官（R6）。
 // 觀察分兩種：一般觀察（缺口、結構、該更新的地方）放進每週回顧；衝突（過時、矛盾、情境不同、重複、封存）走清理流程
-// （衝突或錯誤立刻提案，其餘等每週回顧依領域打包）。專家只讀筆記庫，不查外部資料。
+// （每週整理依 MOC 打包）。專家只讀筆記庫，不查外部資料。
+import { CONTENT_EVIDENCE_RULE } from '@/lib/cleanup/detect'
 import { extractJson } from '@/lib/collect/split'
 import { CONFLICT_TYPES, type ConflictObservation, type ConflictType } from '@/lib/cleanup/types'
 import type { AskModel, DomainDigest } from './research'
@@ -26,9 +27,10 @@ export function buildExpertReviewPrompt(digest: DomainDigest): string {
     `Review your domain "${digest.name}". You only read; report observations for the commander, do not write notes.`,
     'observations: gap (missing topic), structure (overview or grouping should change), stale (likely outdated, needs re-checking), other.',
     'conflicts: pairs of notes that are outdated / contradiction / context / duplicate, or a single obsolete note; give evidence.',
+    CONTENT_EVIDENCE_RULE,
     'Use the language of the notes. Output JSON only: {"observations":[{"kind":"gap","text":"","notes":[0]}],"conflicts":[{"type":"duplicate","notes":[0,1],"evidence":"","conclusionChanged":false}]}',
     '---',
-    ...digest.notes.slice(0, 60).map((note, index) => `[${index}] ${note.title}${note.summary ? ` — ${note.summary}` : ''}${note.status && note.status !== 'valid' ? ` (${note.status})` : ''}${note.lastConfirmed ? ` [confirmed ${note.lastConfirmed}]` : ''}`),
+    ...digest.notes.slice(0, 60).map((note, index) => `[${index}] ${note.title}${note.summary ? ` — ${note.summary}` : ''}${note.status && note.status !== 'valid' ? ` (${note.status})` : ''}`),
   ].join('\n')
 }
 

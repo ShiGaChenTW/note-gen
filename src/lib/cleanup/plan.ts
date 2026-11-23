@@ -3,14 +3,14 @@
 //   矛盾 → 待查證（兩則都標，列進領域的「矛盾與未解問題」）；情境不同 → 補情境（兩則都保留，各補適用條件）
 //   重複 → 合併（合成一則，來源全部保留）；已經沒用 → 封存
 // 原則：不偷偷覆寫，舊內容一律留下紀錄。同一個領域的觀察打包成一則提案（工作台標「知識」、動詞「整理」）；
-// 只有一項時就是單則筆記的提案（標「筆記」、動詞照處理方式）。衝突或錯誤（矛盾、過時）立刻提案，其餘等每週回顧一起送。
+// 每週整理用各觀察產生可獨立接受的筆記變更。
 // 純函式：讀到的筆記原文由呼叫端給，產出的是提案（寫入要等 Scott 接受，見 apply.ts）。
 // Fork（almanac ALMNC-69.7）：合併、取代不再把 domains 寫進新筆記的 frontmatter；提案帶 membershipTransfers，接受時由
 // lib/moc transferMemberships 讓新筆記承接舊筆記在各 MOC 的正式收錄（原章節、原關係說明），domains 再由重建算出。
 import { newProposalId } from '@/lib/collect/split'
 import type { DomainEdit, NoteEdit, Proposal, ProposalCardHint } from '@/lib/collect/types'
 import { createV3Note, noteTitle, parseV3Note, writeV3NoteFields } from '@/lib/v3-model/note'
-import type { CleanupAction, ConflictObservation, ConflictType } from './types'
+import type { CleanupAction, ConflictObservation } from './types'
 
 /** 每種衝突類型對應的處理方式（過時看結論有沒有改變）。 */
 export function planAction(observation: Pick<ConflictObservation, 'type' | 'conclusionChanged'>): CleanupAction {
@@ -26,20 +26,6 @@ export function planAction(observation: Pick<ConflictObservation, 'type' | 'conc
 /** 處理方式 → 卡片動詞（補情境用「補充」）。 */
 export const VERB_OF: Record<CleanupAction, ProposalCardHint['verb']> = {
   modify: 'modify', replace: 'replace', verify: 'verify', supplement: 'supplement', merge: 'merge', archive: 'archive',
-}
-
-/** 衝突或錯誤：立刻提案，不等每週彙整（規格第四節「調研與回顧的頻率」）。 */
-export const IMMEDIATE_TYPES: ReadonlySet<ConflictType> = new Set(['contradiction', 'outdated'])
-
-export function isImmediate(observation: Pick<ConflictObservation, 'type'>): boolean {
-  return IMMEDIATE_TYPES.has(observation.type)
-}
-
-export function routeObservations<T extends Pick<ConflictObservation, 'type'>>(observations: readonly T[]): { immediate: T[], deferred: T[] } {
-  return {
-    immediate: observations.filter(isImmediate),
-    deferred: observations.filter(observation => !isImmediate(observation)),
-  }
 }
 
 export function observationKey(observation: Pick<ConflictObservation, 'type' | 'notePaths'>): string {
@@ -292,7 +278,7 @@ export interface CleanupContext {
   today: string
   labels: CleanupLabels
   words?: NoteWords
-  /** 立刻提出（衝突或錯誤）或等每週回顧。 */
+  /** 舊提案相容欄位；每週整理固定為 false。 */
   immediate: boolean
 }
 

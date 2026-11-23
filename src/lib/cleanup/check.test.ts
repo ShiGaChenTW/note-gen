@@ -1,5 +1,5 @@
 // Fork（almanac ALMNC-54.12）：三種發現時機（新筆記寫入、親手寫的筆記、定期檢查）＋確認卡「交給指揮官」的重新確認。
-// 衝突或錯誤立刻送到工作台；其餘進佇列，等每週回顧依領域打包。
+// 所有觀察進佇列，等每週依 MOC 整理。
 import { describe, expect, it, vi } from 'vitest'
 import type { ProposalBatch } from '@/lib/commander/types'
 import { createV3Note, parseV3Note } from '@/lib/v3-model/note'
@@ -53,19 +53,14 @@ const contradiction: ConflictObservation = { type: 'contradiction', notePaths: [
 const duplicate: ConflictObservation = { type: 'duplicate', notePaths: ['k/dup.md', 'k/new.md'], evidence: '同一件事', trigger: 'written' }
 
 describe('checkNote', () => {
-  it('after a note is written: the domain expert compares, conflicts are proposed immediately, the rest waits', async () => {
-    const { deps, submitted, queue, detect } = setup(() => [contradiction, duplicate])
+  it('after a note is written: the domain expert compares, all observations wait for the weekly card', async () => {
+    const { deps, submitted, queue, detect } = setup(() => [contradiction, { ...contradiction, type: 'outdated' }, duplicate])
     const result = await checkNote('k/new.md', 'written', deps)
     expect(detect.mock.calls[0][1].map(note => note.path)).toEqual(['k/old.md', 'k/dup.md'])
-    expect(detect.mock.calls[0][2]).toMatchObject({ trigger: 'written', domainId: 'ie', agentPrompt: '# 工業工程專家', by: { role: 'expert', agentId: 'exp_ie' }, today: '2026-11-21' })
-    expect(result.immediate.map(entry => entry.type)).toEqual(['contradiction'])
-    expect(submitted).toHaveLength(1)
-    expect(submitted[0]).toMatchObject({ id: 'cleanup:written:k/new.md:2026-11-21', origin: 'Mia 整理的清理提案' })
-    const [proposal] = submitted[0].proposals
-    expect(proposal).toMatchObject({ card: { label: 'note', verb: 'verify' }, cleanup: { immediate: true, domainId: 'ie' } })
-    expect(proposal.edits!.map(edit => parseV3Note(edit.content).fields.status)).toEqual(['disputed', 'disputed'])
-    expect(proposal.domainEdits?.[0].overview).toContain('## 矛盾與未解問題')
-    expect((queue as ReturnType<typeof memoryQueue>).items().map(entry => entry.type)).toEqual(['duplicate'])
+    expect(detect.mock.calls[0][2]).toMatchObject({ trigger: 'written', domainId: 'ie', agentPrompt: '# 工業工程專家', by: { role: 'expert', agentId: 'exp_ie' } })
+    expect(result.deferred.map(entry => entry.type)).toEqual(['contradiction', 'outdated', 'duplicate'])
+    expect(submitted).toEqual([])
+    expect(queue.items()).toEqual(result.deferred)
   })
 
   it('a hand-written note without a domain is compared across all domains by the commander', async () => {
@@ -90,19 +85,20 @@ describe('checkNote', () => {
     const results = await periodicCheck(['k/old.md', 'k/dup.md', 'k/new.md'], deps, { limit: 2 })
     expect(results).toHaveLength(2)
     expect(detect.mock.calls.map(call => [call[0].path, call[2].trigger])).toEqual([['k/old.md', 'periodic'], ['k/dup.md', 'periodic']])
-    expect(submitted.map(batch => batch.id)).toEqual(['cleanup:periodic:k/old.md:2026-11-21'])
+    expect(results[0].deferred).toHaveLength(1)
+    expect(submitted).toEqual([])
   })
 })
 
 describe('recheckNote（確認卡「交給指揮官」）', () => {
-  it('looks up external evidence and proposes everything it finds immediately', async () => {
+  it('looks up external evidence and queues observations for weekly review', async () => {
     const lookup = vi.fn(async () => [{ title: '新版標準', url: 'https://example.com', snippet: '45 秒' }])
     const { deps, detect, submitted, queue } = setup(() => [duplicate], { lookup })
     await recheckNote('k/old.md', deps)
     expect(lookup).toHaveBeenCalledWith('節拍 60 秒')
     expect(detect.mock.calls[0][2].external).toHaveLength(1)
-    expect(submitted[0].proposals[0].cleanup?.immediate).toBe(true)
-    expect((queue as ReturnType<typeof memoryQueue>).items()).toEqual([])
+    expect(submitted).toEqual([])
+    expect(queue.items()).toHaveLength(1)
   })
 
   it('proposes "still valid" when nothing is wrong, even if the lookup fails', async () => {
