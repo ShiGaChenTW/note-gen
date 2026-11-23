@@ -135,7 +135,7 @@ export const SlashMenu = forwardRef<SlashMenuRef, SlashMenuProps>(({ editor, ran
     imageUpload: {
       success: t('imageUpload.success'),
       saveSuccess: t('imageUpload.saveSuccess'),
-      savePath: t('imageUpload.savePath'),
+      savePath: (path: string) => t('imageUpload.savePath', { path }),
       failed: t('imageUpload.failed'),
     },
     fileInsert: {

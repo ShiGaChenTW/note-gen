@@ -7434,7 +7434,7 @@
       "imageUpload": {
         "success": "上传成功",
         "saveSuccess": "保存成功",
-        "savePath": "保存路径: __PATH__",
+        "savePath": "保存路径: {path}",
         "failed": "插入图片失败"
       },
       "fileInsert": {
