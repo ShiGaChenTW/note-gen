@@ -9109,7 +9109,7 @@
     },
     "title": "工作台",
     "subtitle": "{count} 件等你处理",
-    "subtitleSources": "{done} / {total} 已整理",
+    "subtitleSources": "{done} / {total} 已分析",
     "tabs": {
       "label": "工作台分页",
       "review": "审核",
@@ -9266,10 +9266,10 @@
       },
       "status": {
         "wait": "等你决定",
-        "todo": "未整理",
+        "todo": "待处理",
         "ing": "整理中",
         "edited": "已修改",
-        "done": "已整理",
+        "done": "已分析",
         "no": "不采用"
       },
       "attachmentJudgement": {
@@ -9293,7 +9293,7 @@
       "selectAll": "全选",
       "selectAllLabel": "全选目前清单",
       "pickRow": "勾选「{title}」",
-      "organised": "{done} / {total} 已整理",
+      "organised": "{done} / {total} 已分析",
       "outputs": "{count} 则产出",
       "noOutputs": "没有产出",
       "editedSub": "v{version} 未送出",
