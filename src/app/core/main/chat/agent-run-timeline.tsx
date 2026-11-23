@@ -46,6 +46,7 @@ import { AgentQuestionPanel, AgentQuestionResult } from "./agent-question-panel"
 import { cn } from '@/lib/utils'
 import { useChatV3 } from './chat-v3'
 import { getAgentArtifactPaths } from "@/lib/agent/artifacts"
+import { getReasoningLabel, getReasoningPhase, isReasoningExpanded } from "./reasoning-display"
 
 interface AgentRunTimelineProps {
   chat?: Chat
@@ -322,6 +323,20 @@ function eventFromToolCall(toolCall: ToolCall): AgentTraceEvent {
   }
 }
 
+/** 思考內容；follow 時（思考中）跟著新內容捲到底。 */
+function ReasoningText({ text, follow }: { text: string; follow: boolean }) {
+  const ref = React.useRef<HTMLDivElement>(null)
+  React.useLayoutEffect(() => {
+    if (follow && ref.current) ref.current.scrollTop = ref.current.scrollHeight
+  }, [text, follow])
+  return (
+    <div ref={ref}
+      className="max-h-48 overflow-y-auto rounded bg-muted/60 p-2 whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-muted-foreground">
+      {text}
+    </div>
+  )
+}
+
 export function AgentRunTimeline({
   chat,
   status = "idle",
@@ -526,7 +541,11 @@ export function AgentRunTimeline({
           ? 'input.agent.confirmation.cancelled' : 'input.agent.ui.expired'
     const storedExpanded = expandedEvents[event.id] ?? (event.editSkipped || eventUi.some(block => block.mode === 'display'))
     const isModelEvent = event.type === "model_call" || event.type === "model_response"
-    const eventLabel = event.editOutcome && event.editOutcome !== "applied" ? t(`input.agent.changes.${event.editOutcome}`)
+    // V3：有思考內容的模型事件，思考中展開、結束自動收起並顯示「思考了 N 秒」。
+    const reasoningPhase = v3 && isModelEvent ? getReasoningPhase(event, isRunning) : null
+    const reasoningLabel = reasoningPhase ? getReasoningLabel(reasoningPhase, event.reasoningDuration) : null
+    const eventLabel = reasoningLabel ? tTask(reasoningLabel.key, reasoningLabel.key === 'thoughtFor' ? { seconds: reasoningLabel.seconds } : undefined)
+      : event.editOutcome && event.editOutcome !== "applied" ? t(`input.agent.changes.${event.editOutcome}`)
       : event.editSkipped ? t("input.agent.editorEditSkipped") : hasUi ? eventUi[0].title : event.toolName
       ? (v3 ? formatAgentToolDescription(event, count => tTask('targets', { count })) : formatAgentToolActivity(event))
       : event.title
@@ -545,8 +564,8 @@ export function AgentRunTimeline({
       hasTraceDetails
     )
     const stepWaiting = Boolean(waitingForUi || activeApproval || (activeQuestion && activeQuestion.response === undefined))
-    const forceExpanded = waitingForUi || Boolean((activeApproval && !reviewOutsideProcess && !v3) || (!v3 && activeQuestion)) || (isModelEvent && event.status === "running")
-    const expanded = forceExpanded || storedExpanded
+    const forceExpanded = waitingForUi || Boolean((activeApproval && !reviewOutsideProcess && !v3) || (!v3 && activeQuestion)) || (isModelEvent && event.status === "running" && !reasoningPhase)
+    const expanded = forceExpanded || (reasoningPhase ? isReasoningExpanded(expandedEvents[event.id], reasoningPhase) : storedExpanded)
     const canToggle = hasDetails && !forceExpanded
     const displayDuration = event.duration ?? (
       event.status === "running"
@@ -584,7 +603,7 @@ export function AgentRunTimeline({
               {v3 && stepWaiting && <span className="shrink-0 text-xs text-faint">{tTask('waiting')}</span>}
               {isApproval && (!v3 || !stepWaiting) && <Badge variant="secondary">{event.editOutcome ? t(`input.agent.changes.${event.editOutcome}`) : t(approvalStatus)}</Badge>}
               {isQuestion && (!v3 || !stepWaiting) && <Badge variant="secondary">{t(`input.agent.ui.${activeQuestion ? 'waiting' : hasRecordedQuestionAnswers(event) ? 'submitted' : event.status === 'error' ? 'cancelled' : 'expired'}`)}</Badge>}
-              {displayDuration !== undefined && (
+              {displayDuration !== undefined && !reasoningPhase && (
                 <span className={cn("shrink-0 text-xs tabular-nums text-muted-foreground", v3 && "font-mono text-ui-numeric text-faint")}>
                   {formatAgentDuration(displayDuration)}
                 </span>
@@ -632,11 +651,9 @@ export function AgentRunTimeline({
           </div>
         )}
 
-        {modelReasoningContent && expanded && event.status !== "running" && (
+        {modelReasoningContent && expanded && (event.status !== "running" || reasoningPhase) && (
           <div className="mt-2 min-w-0 pb-2 text-xs">
-            <div className="max-h-48 overflow-y-auto rounded bg-muted/60 p-2 whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-muted-foreground">
-              {modelReasoningContent}
-            </div>
+            <ReasoningText text={modelReasoningContent} follow={reasoningPhase === "thinking"} />
           </div>
         )}
 

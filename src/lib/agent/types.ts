@@ -229,6 +229,8 @@ export interface AgentTraceEvent {
   output?: unknown
   message?: string
   reasoning?: string
+  /** 從送出請求到思考結束（開始輸出回覆或呼叫工具）的毫秒數；只有模型有輸出思考時才有值 */
+  reasoningDuration?: number
   isIntermediateResponse?: boolean
   streamedTokenCount?: number
   streamedCharacterCount?: number

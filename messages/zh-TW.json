@@ -5087,7 +5087,11 @@
           "showSteps": "看 {count} 個步驟",
           "hideSteps": "收起步驟",
           "targets": "{count, number} 項",
-          "tokens": "{count, number} 個詞元"
+          "tokens": "{count, number} 個詞元",
+          "thinking": "思考中",
+          "thoughtFor": "思考了 {seconds, number} 秒",
+          "thoughtBriefly": "思考了不到 1 秒",
+          "reasoning": "思考過程"
         },
         "review": {
           "file": "要改 {name}，可以嗎？",

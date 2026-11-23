@@ -5022,7 +5022,11 @@
           "showSteps": "看 {count} 个步骤",
           "hideSteps": "收起步骤",
           "targets": "{count, number} 项",
-          "tokens": "{count, number} 个令牌"
+          "tokens": "{count, number} 个令牌",
+          "thinking": "思考中",
+          "thoughtFor": "思考了 {seconds, number} 秒",
+          "thoughtBriefly": "思考了不到 1 秒",
+          "reasoning": "思考过程"
         },
         "review": {
           "file": "要修改 {name}，可以吗？",

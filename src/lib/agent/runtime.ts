@@ -37,6 +37,7 @@ import type {
   ToolCall,
   ToolResult,
 } from './types'
+import { computeReasoningDuration } from './reasoning-duration'
 
 const ABSOLUTE_MAX_MODEL_ROUNDS = 30
 const MAX_CONSECUTIVE_NO_PROGRESS_ROUNDS = 2
@@ -1070,6 +1071,7 @@ export class AgentRuntime {
     let activeModelTraceId: string | undefined
     let activeModelStartedAt = 0
     let activeModelReasoning = ''
+    let activeModelReasoningEndedAt = 0
     let activeModelContent = ''
     let activeModelStreamedTokenCount = 0
     const discoveredFolderFiles = new Map<string, Set<string>>()
@@ -1355,6 +1357,12 @@ export class AgentRuntime {
         duration: Date.now() - activeModelStartedAt,
         output: activeModelContent || undefined,
         reasoning: activeModelReasoning || undefined,
+        reasoningDuration: computeReasoningDuration({
+          startedAt: activeModelStartedAt,
+          endedAt: activeModelReasoningEndedAt,
+          now: Date.now(),
+          hasReasoning: Boolean(activeModelReasoning),
+        }),
         isIntermediateResponse: isIntermediateResponse && Boolean(activeModelContent)
           && activeModelContent !== finalContent,
         streamedTokenCount: activeModelStreamedTokenCount,
@@ -1364,6 +1372,7 @@ export class AgentRuntime {
       activeModelTraceId = undefined
       activeModelStartedAt = 0
       activeModelReasoning = ''
+      activeModelReasoningEndedAt = 0
       activeModelContent = ''
       activeModelStreamedTokenCount = 0
     }
@@ -1413,6 +1422,7 @@ export class AgentRuntime {
         activeModelTraceId = modelTrace.id
         activeModelStartedAt = modelTrace.timestamp
         activeModelReasoning = ''
+        activeModelReasoningEndedAt = 0
         activeModelContent = ''
         activeModelStreamedTokenCount = 0
         callbacks.onTrace?.(modelTrace)
@@ -1586,6 +1596,10 @@ export class AgentRuntime {
           if (Array.isArray(extendedDelta.reasoning_details)) {
             assistantReasoningDetails.push(...extendedDelta.reasoning_details)
           }
+          if (assistantReasoning && !activeModelReasoningEndedAt
+            && ((typeof delta.content === 'string' && delta.content) || (delta.tool_calls?.length ?? 0) > 0)) {
+            activeModelReasoningEndedAt = Date.now()
+          }
           if (typeof delta.content === 'string' && delta.content) {
             assistantContent += delta.content
             streamedText += delta.content
@@ -1637,6 +1651,14 @@ export class AgentRuntime {
             const progressTrace = recorder.update(modelTrace.id, {
               output: assistantContent || undefined,
               reasoning: assistantReasoning || undefined,
+              reasoningDuration: activeModelReasoningEndedAt
+                ? computeReasoningDuration({
+                  startedAt: modelTrace.timestamp,
+                  endedAt: activeModelReasoningEndedAt,
+                  now,
+                  hasReasoning: Boolean(assistantReasoning),
+                })
+                : undefined,
               streamedTokenCount,
             })
             if (progressTrace) callbacks.onTrace?.(progressTrace)
@@ -1707,6 +1729,12 @@ export class AgentRuntime {
           duration: Date.now() - modelTrace.timestamp,
           output: modelTraceOutput,
           reasoning: assistantReasoning || undefined,
+          reasoningDuration: computeReasoningDuration({
+            startedAt: modelTrace.timestamp,
+            endedAt: activeModelReasoningEndedAt,
+            now: Date.now(),
+            hasReasoning: Boolean(assistantReasoning),
+          }),
           // Keep every emitted paragraph until this response is accepted as
           // the final reply. A review, steering, or stop can still follow.
           isIntermediateResponse: Boolean(assistantContent),
@@ -1716,6 +1744,7 @@ export class AgentRuntime {
         activeModelTraceId = undefined
         activeModelStartedAt = 0
         activeModelReasoning = ''
+        activeModelReasoningEndedAt = 0
         activeModelContent = ''
         activeModelStreamedTokenCount = 0
         if (toolCallsStarted && candidateAnswerRendered) {
