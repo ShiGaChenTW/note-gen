@@ -19,10 +19,12 @@ import useCollectStore from '@/stores/collect'
 import useInboxStore from '@/stores/inbox'
 import useVaultIndexStore, { selectAllTasks } from '@/stores/vault-index'
 import useWorkbenchStore from '@/stores/workbench'
+import useMocStore from '@/stores/moc'
+import { MAX_DOMAINS } from '@/lib/moc/membership'
 import useDailySettingsStore from '@/stores/daily-settings'
 import { DEFAULT_LEGACY_BATCH_SIZE, legacyPackKey, packsToShow, unmarkedLegacyNotes } from '@/lib/migration/legacy'
 import type { IndexedNote } from '@/lib/vault-index/index-note'
-import { buildReviewCards, type DomainLike, type HandLike, type LegacyBatchLike, type ReplyLike, type WorkbenchCard } from './cards'
+import { buildReviewCards, type DomainLike, type DomainLimitLike, type HandLike, type LegacyBatchLike, type ReplyLike, type WorkbenchCard } from './cards'
 import { computeDomainProposals, confirmNotesFromIndex, knowledgeNotesFromIndex } from './domain-cards'
 import { hiddenCards, isHidden, visibleCards } from './put-aside'
 import { buildSourceRows, sourceDisplayKind, sourceTitle, type SourceListRow } from './sources-tab'
@@ -151,6 +153,23 @@ function useReplies(): ReplyLike[] {
   }), [map, conversations, t])
 }
 
+/** Fork（almanac ALMNC-69.7）：收錄超過 3 個領域的筆記（MOC 重建時發現），每則一張卡請 Scott 選要拿掉哪個領域。 */
+function useDomainLimits(notes: ReadonlyMap<string, IndexedNote>): DomainLimitLike[] {
+  const t = useTranslations('workbench.domainLimit')
+  const overLimit = useMocStore(state => state.overLimit)
+  return useMemo(() => overLimit.map(item => {
+    const title = notes.get(item.path)?.frontmatter?.title
+    return {
+      notePath: item.path,
+      title: typeof title === 'string' && title.trim() ? title.trim() : baseName(item.path),
+      domains: item.after,
+      summary: t('summary', { count: item.after.length, limit: MAX_DOMAINS }),
+      by: t('by'),
+      at: item.at,
+    }
+  }), [overLimit, notes, t])
+}
+
 export interface ReviewData {
   /** 所有卡片（含先放著的），已排好序。 */
   all: WorkbenchCard[]
@@ -186,6 +205,7 @@ export function useReviewData(): ReviewData {
   const confirm = useMemo(() => confirmNotesFromIndex(noteList, now, intervals), [noteList, now, intervals])
   const legacyInputs = useLegacyInputs(noteList, now, commander)
   const replies = useReplies()
+  const domainLimits = useDomainLimits(notes)
 
   const all = useMemo(() => buildReviewCards({
     proposals,
@@ -207,11 +227,12 @@ export function useReviewData(): ReviewData {
         }
       }),
     domains: domainCards,
+    domainLimits,
     confirm,
     hand: legacyInputs.hand,
     legacy: legacyInputs.legacy,
     now,
-  }), [proposals, replies, tasks, sources, judgements, domainCards, confirm, legacyInputs, now, t])
+  }), [proposals, replies, tasks, sources, judgements, domainCards, domainLimits, confirm, legacyInputs, now, t])
 
   return useMemo(() => ({ all, visible: visibleCards(all, aside, now), aside: hiddenCards(all, aside, now), now }), [all, aside, now])
 }

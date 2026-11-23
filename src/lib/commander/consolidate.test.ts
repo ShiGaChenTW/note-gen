@@ -45,11 +45,12 @@ describe('consolidate', () => {
 })
 
 describe('接受後才寫的東西', () => {
-  it('筆記內容帶 V3 frontmatter：類型、來源、領域、狀態，加上日期、相關的人、專案', () => {
+  it('筆記內容帶 V3 frontmatter：類型、來源、狀態，加上日期、相關的人、專案；領域不寫 frontmatter（ALMNC-69.7 改寫進 MOC）', () => {
     const proposal = draftToProposal({ ...noteDraft, noteType: 'record', date: '2026-11-20', project: '新官網' }, ['src_1'])
+    expect(proposal.domains).toEqual(['d-ie'])
     const parsed = parseV3Note(proposalNoteContent(proposal))
     expect(parsed.issues).toEqual([])
-    expect(parsed.fields).toMatchObject({ type: 'record', sources: ['src_1'], domains: ['d-ie'], status: 'valid', tags: ['工業工程'] })
+    expect(parsed.fields).toMatchObject({ type: 'record', sources: ['src_1'], domains: [], status: 'valid', tags: ['工業工程'] })
     expect(parsed.extra).toMatchObject({ date: '2026-11-20', people: ['Amy'], project: '新官網' })
     expect(parsed.body).toContain('# 產線平衡要先算節拍時間')
   })

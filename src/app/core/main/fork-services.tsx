@@ -18,6 +18,7 @@ import { AnywhereService } from './anywhere/anywhere-service'
 import { RssService } from './rss/rss-service'
 import { SourceArchiveService } from './decide/source-archive-service'
 import { IdScanService } from './id-scan/id-scan-service'
+import { MocRebuildService } from './moc/moc-rebuild-service'
 
 /**
  * F3: keep the vault index in sync with the active workspace.
@@ -56,6 +57,7 @@ export function ForkServices() {
       <RssService />
       <SourceArchiveService />
       <IdScanService />
+      <MocRebuildService />
     </>
   )
 }

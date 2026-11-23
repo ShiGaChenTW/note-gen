@@ -65,7 +65,18 @@ const defaultIdStore: IdStore = {
   record: async input => (await import('@/db/id-index')).recordId(input),
 }
 
-export async function acceptProposal(proposal: Proposal, options: { noteFolder: string, now?: Date, applyChange?: ApplyChange, applyEdits?: ApplyEdits, ids?: IdStore }): Promise<AcceptResult> {
+/**
+ * Fork（almanac ALMNC-69.7）：把新筆記收進提案列的領域——寫進各領域 MOC 的「尚未分章」，再由重建更新 domains
+ * （依提案的順序，第一個是主要領域）。測試注入假的，預設動態載入 lib/moc/runtime。
+ */
+export type AssignDomains = (notePath: string, domains: readonly string[]) => Promise<unknown>
+
+const defaultAssignDomains: AssignDomains = async (notePath, domains) => {
+  const { assignNoteToDomains } = await import('@/lib/moc/runtime')
+  return assignNoteToDomains(notePath, domains)
+}
+
+export async function acceptProposal(proposal: Proposal, options: { noteFolder: string, now?: Date, applyChange?: ApplyChange, applyEdits?: ApplyEdits, ids?: IdStore, assignDomains?: AssignDomains }): Promise<AcceptResult> {
   const now = options.now ?? new Date()
   if (proposal.slot) return acceptSlot({ ...proposal, slot: proposal.slot }, now)
   // Fork（almanac ALMNC-69.3）：只貼日誌標籤的卡不寫筆記庫；標籤由 stores/collect 接受後寫進資料源。
@@ -103,6 +114,14 @@ export async function acceptProposal(proposal: Proposal, options: { noteFolder: 
     } catch (error) {
       // 檔案已寫好、編號在檔案身上；索引登記失敗留給掃描補登（ALMNC-69.5），不讓接受失敗。
       console.error('id_index record failed', error)
+    }
+    if (proposal.domains?.length) {
+      try {
+        await (options.assignDomains ?? defaultAssignDomains)(path, proposal.domains)
+      } catch (error) {
+        // 筆記已寫好；收不進 MOC 不讓接受失敗（Scott 可以在檯面再歸入領域）。
+        console.error('assign domains failed', error)
+      }
     }
     await revealInFileTree(path)
     return { path }

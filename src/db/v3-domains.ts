@@ -1,9 +1,12 @@
 // Fork（almanac ALMNC-54.1）：V3 領域表（note.db）。最多兩層的規則在 src/lib/v3-model/domain.ts 驗證後才寫入。
-// 筆記屬於哪些領域寫在筆記 frontmatter 的 domains（ALMNC-69.4 起存領域名稱，舊資料是領域 id），這張表只存領域本身。
-// 每個領域的 M 編號記在系統索引 id_index（kind M、name＝領域名稱）；這張表的 id 到 ALMNC-69.6 才換。
+// 筆記屬於哪些領域：ALMNC-69.7 起以 MOC 檔章節區的正式收錄為唯一依據（lib/moc），筆記 frontmatter 的 domains 由收錄重建；
+// 這張表退成索引快取（syncDomainsTableFromMocs 由 MOC 檔重建），不再是權威。
+// 每個領域的 M 編號記在系統索引 id_index（kind M、name＝領域名稱）；由 MOC 補進來的列 id 就是 M 編號，舊列仍是 dom_…。
 import { getDb } from './index'
 import { initIdIndexDb } from './id-index'
-import { assertDomainPlacement, domainFromRow, type Domain, type DomainRow } from '@/lib/v3-model/domain'
+import { assertDomainPlacement, domainFromRow, domainPlacementError, type Domain, type DomainRow } from '@/lib/v3-model/domain'
+import { planDomainsTableSync, type DomainsSyncPlan } from '@/lib/moc/domains-sync'
+import type { ParsedMoc } from '@/lib/moc/parse'
 
 const COLUMNS = 'id, name, parent_id as parentId, overview, created_at as createdAt, updated_at as updatedAt'
 
@@ -82,4 +85,48 @@ export async function updateDomain(id: string, patch: { name?: string; parentId?
     await db.execute("update id_index set name = $2, updated_at = $3 where kind = 'M' and name = $1", [current.name, next.name, now])
   }
   return next
+}
+
+/**
+ * Fork（almanac ALMNC-69.7）：domains 表退成索引快取，由 MOC 檔重建：補上有 MOC 檔但表裡沒有的領域（id＝M 編號）、
+ * 同步名稱與上層。沒有 MOC 檔的舊列不刪（只回報）。違反兩層規則的上層不套用（新列先放頂層），其餘照做。
+ */
+export async function syncDomainsTableFromMocs(mocs: readonly Pick<ParsedMoc, 'id' | 'name' | 'parent' | 'path'>[], now = Date.now()): Promise<DomainsSyncPlan> {
+  const current = await listDomains()
+  const plan = planDomainsTableSync(mocs, current)
+  if (!plan.inserts.length && !plan.updates.length) return plan
+  const db = await getDb()
+  const working: Array<Pick<Domain, 'id' | 'parentId'>> = current.map(domain => ({ id: domain.id, parentId: domain.parentId }))
+  for (const insert of plan.inserts) {
+    const error = domainPlacementError(working, { id: insert.id, parentId: insert.parentId })
+    const parentId = error ? undefined : insert.parentId
+    if (error) console.warn('[domains] 由 MOC 補列時上層不合法，先放頂層：', insert.name, error)
+    await db.execute(
+      'insert into domains (id, name, parent_id, overview, created_at, updated_at) values ($1, $2, $3, $4, $5, $6) on conflict(id) do nothing',
+      [insert.id, insert.name, parentId ?? null, '', now, now]
+    )
+    working.push({ id: insert.id, parentId })
+  }
+  for (const update of plan.updates) {
+    let parentId = update.parentId
+    const row = working.find(item => item.id === update.id)
+    if (parentId !== undefined && row) {
+      const error = domainPlacementError(working, { id: update.id, parentId: parentId ?? undefined })
+      if (error) {
+        console.warn('[domains] 由 MOC 同步上層不合法，略過：', update.id, error)
+        parentId = undefined
+      } else {
+        row.parentId = parentId ?? undefined
+      }
+    }
+    if (update.name === undefined && parentId === undefined) continue
+    const sets: string[] = []
+    const values: unknown[] = [update.id]
+    if (update.name !== undefined) { values.push(update.name); sets.push(`name = $${values.length}`) }
+    if (parentId !== undefined) { values.push(parentId); sets.push(`parent_id = $${values.length}`) }
+    values.push(now)
+    sets.push(`updated_at = $${values.length}`)
+    await db.execute(`update domains set ${sets.join(', ')} where id = $1`, values)
+  }
+  return plan
 }

@@ -24,8 +24,10 @@ export function proposalNoteContent(proposal: Proposal): string {
   return v3NoteContent(proposal, content)
 }
 
-// Fork（almanac ALMNC-54.6）：指揮官提案寫成筆記時的 frontmatter——V3 欄位（類型、來源、領域、標籤、狀態），
+// Fork（almanac ALMNC-54.6）：指揮官提案寫成筆記時的 frontmatter——V3 欄位（類型、來源、標籤、狀態），
 // 加上補上的上下文（日期、相關的人、所屬專案）。上下文不是 V3 管理的欄位，writeV3NoteFields 會原樣保留。
+// Fork（almanac ALMNC-69.7）：領域不寫進 frontmatter——接受時（write.ts）把收錄行寫進該領域 MOC 的「尚未分章」，
+// 再由重建（lib/moc）更新 domains；MOC 上的正式收錄是唯一依據。
 function v3NoteContent(proposal: Proposal, content: string): string {
   const context: Record<string, unknown> = {}
   if (proposal.due) context.date = proposal.due
@@ -35,7 +37,6 @@ function v3NoteContent(proposal: Proposal, content: string): string {
     title: proposal.title.trim(),
     type: proposal.noteType,
     sources: proposal.sourceIds,
-    domains: proposal.domains,
     tags: proposal.tags.length ? proposal.tags : undefined,
     status: 'valid' as const,
   }

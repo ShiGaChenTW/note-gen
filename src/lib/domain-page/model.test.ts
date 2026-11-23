@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Domain } from '@/lib/v3-model/domain'
+import type { NoteLike } from './model'
 import { buildDomainTree, findDomainNode, knowledgeNotesByDomain, parseDomainSections, relatedDomains, splitWikiLinks } from './model'
 
 const domain = (id: string, name: string, parentId?: string, overview = ''): Domain => ({ id, name, parentId, overview, createdAt: 1, updatedAt: 2 })
@@ -114,5 +115,29 @@ describe('domain tree (at most two levels)', () => {
     expect(data.parent?.domain.id).toBe('eng')
     expect(data.siblings.map(n => n.domain.id)).toEqual(['soft'])
     expect(relatedDomains(tree, 'ie')).toEqual({ children: [], siblings: [] })
+  })
+})
+
+// Fork（almanac ALMNC-69.7）：領域頁的資料來源改成 MOC 檔。
+describe('domainPageData', () => {
+  it('uses MOC entries and blocks for domains with a MOC, falls back to frontmatter for the rest, and lists MOC-only domains', async () => {
+    const { parseMoc } = await import('@/lib/moc/parse')
+    const { domainPageData } = await import('./model')
+    const parent = parseMoc('---\nid: M-20261104-014500-A57V\nkind: domain\n---\n# 個人效能\n', '20 領域/個人效能.md')
+    const child = parseMoc('---\nid: M-20261112-060012-VPB3\nkind: domain\nparent: M-20261104-014500-A57V\n---\n# 時間管理\n\n## ① 這個領域在回答什麼\n<!-- 註解 -->\n時間怎麼分配？\n\n## ③ 章節\n### 尚未分章\n- [[k/b]]\n- [[k/a]]\n', '20 領域/時間管理.md')
+    const notes = new Map<string, NoteLike>([
+      ['k/a.md', note('k/a.md', { type: 'knowledge', title: 'A', domains: ['時間管理'] })],
+      ['k/b.md', note('k/b.md', { type: 'knowledge', title: 'B' })],
+      ['k/c.md', note('k/c.md', { type: 'knowledge', title: 'C', domains: ['舊領域', '時間管理'] })],
+      ['20 領域/時間管理.md', { ...note('20 領域/時間管理.md', { kind: 'domain' }), mtime: 99 }],
+    ])
+    const resolve = (target: string) => (notes.has(`${target}.md`) ? `${target}.md` : null)
+    const data = domainPageData([domain('dom_t', '時間管理'), domain('dom_old', '舊領域')], [parent, child], notes, resolve)
+    expect(data.notesByDomain.get('dom_t')?.map(item => item.path)).toEqual(['k/b.md', 'k/a.md'])
+    expect(data.sectionsByDomain.get('dom_t')?.summary).toBe('時間怎麼分配？')
+    expect(data.domains.find(item => item.id === 'dom_t')?.updatedAt).toBe(99)
+    expect(data.notesByDomain.get('dom_old')?.map(item => item.path)).toEqual(['k/c.md'])
+    // 個人效能只有 MOC 檔：也列出來（id＝M 編號），時間管理的上層以表裡的列為準（syncDomainsTableFromMocs 會由 MOC 補上）。
+    expect(data.domains.find(item => item.id === 'M-20261104-014500-A57V')).toMatchObject({ name: '個人效能' })
   })
 })

@@ -73,9 +73,24 @@ describe('acceptProposal', () => {
     expect(files.get('10 Inbox/定價想法.md')).toBe('舊內容')
   })
 
+  // Fork（almanac ALMNC-69.7）：提案的領域不寫進 frontmatter，而是在筆記寫好後收進各領域 MOC（依提案順序，第一個是主要）。
+  it('files the accepted note into the proposal domains through the MOC, not the frontmatter', async () => {
+    const assignDomains = vi.fn(async () => undefined)
+    const result = await acceptProposal({ ...base, id: 'n4', kind: 'note', title: '換模', noteType: 'knowledge', domains: ['ie', '精實'] }, { noteFolder: '10 Inbox', now, ids, assignDomains })
+    expect(assignDomains).toHaveBeenCalledWith(result.path, ['ie', '精實'])
+    expect(files.get(result.path)).not.toContain('domains')
+    const failing = vi.fn(async () => { throw new Error('moc down') })
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    const second = await acceptProposal({ ...base, id: 'n5', kind: 'note', title: '換模二', noteType: 'knowledge', domains: ['ie'] }, { noteFolder: '10 Inbox', now, ids, assignDomains: failing })
+    expect(files.has(second.path)).toBe(true)
+    const none = vi.fn(async () => undefined)
+    await acceptProposal({ ...base, id: 'n6', kind: 'note', title: '沒領域' }, { noteFolder: '10 Inbox', now, ids, assignDomains: none })
+    expect(none).not.toHaveBeenCalled()
+  })
+
   // Fork（almanac ALMNC-69.1 AC#1）：接受時產生 N 編號，寫在 frontmatter 第一行並登記到系統索引。
   it('gives the accepted note an N id in the first frontmatter line and records it in id_index', async () => {
-    const result = await acceptProposal({ ...base, id: 'n3', kind: 'note', title: '節拍時間', noteType: 'knowledge', domains: ['ie'] }, { noteFolder: '10 Inbox', now, ids })
+    const result = await acceptProposal({ ...base, id: 'n3', kind: 'note', title: '節拍時間', noteType: 'knowledge', domains: ['ie'] }, { noteFolder: '10 Inbox', now, ids, assignDomains: async () => undefined })
     const content = files.get(result.path) ?? ''
     expect(content).toMatch(ID)
     const id = content.match(/^---\nid: (\S+)/)?.[1] ?? ''

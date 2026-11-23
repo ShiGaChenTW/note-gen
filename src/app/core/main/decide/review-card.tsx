@@ -22,6 +22,7 @@ import { destinationText, DiffBlock } from './decide-parts'
 import { DiscussForm } from './discuss-form'
 import { NewNoteFields } from './new-note-fields'
 import { ProposalChanges, RiskBadge } from './proposal-risk'
+import { MAX_DOMAINS } from '@/lib/moc/membership'
 
 // Fork（almanac ALMNC-56.6，V06）：工作台的按鈕和對話、收集同一個高度與圓角（V3_BUTTON_SHAPE）；
 // 主要按鈕的顏色和 Button 的 default 一樣（V3 的 bg-primary 就是反白），不再手動加 bg-invert。
@@ -204,6 +205,8 @@ function CardBody({ card, onAction }: { card: WorkbenchCard, onAction: (action: 
     )
   }
   if (card.kind === 'confirm') return <p className="text-ui-compact text-muted-ink">{t('confirmSince', { date: card.summary })}</p>
+  // Fork（almanac ALMNC-69.7）：超過上限卡：說明選了會怎樣（選項按鈕在下面，一個領域一個）。
+  if (card.kind === 'domainLimit') return <p className="text-ui-compact leading-6 text-muted-ink" data-testid="domain-limit-body">{t('domainLimit.body', { limit: MAX_DOMAINS })}</p>
   if (card.notePaths?.length) {
     return (
       <div className="flex flex-wrap gap-1.5">

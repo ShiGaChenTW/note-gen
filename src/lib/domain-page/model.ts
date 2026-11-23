@@ -2,8 +2,12 @@
 // 領域表只存名稱、上層與總覽（Markdown，src/db/v3-domains.ts）；核心概念、重點結論、矛盾與未解問題是總覽裡的 `## 標題` 段落
 // （整理時 lib/cleanup/plan.ts 會把待查證的衝突寫進「矛盾與未解問題」）。這裡把總覽拆成段落、把領域的知識筆記從筆記庫索引找出來。
 // 沒有的段落就是空的，畫面顯示空狀態；不替沒有寫的內容編造。
+// Fork（almanac ALMNC-69.7）：資料來源改成 MOC 檔——成員是 MOC 章節區的正式收錄（依 MOC 順序），段落從五區塊取
+// （① 定位問題 → 總覽、④ → 重點結論、⑤ → 待釐清），見 domainPageData。還沒有 MOC 檔的舊領域才退回 frontmatter 反查與領域表的總覽。
+// 畫面改版（五區塊、章節分組）是 ALMNC-69.8，這裡只換資料來源。
 import { canonicalDomainIds, domainLookup, domainPath, type Domain } from '@/lib/v3-model/domain'
 import { NOTE_STATUSES, type NoteStatus } from '@/lib/v3-model/note'
+import { blockItems, formalEntries, stripComments, type ParsedMoc } from '@/lib/moc/parse'
 
 export interface DomainSections {
   /** 總覽段落（沒有 `## 總覽` 標題時，用第一個標題之前、`# 領域名稱` 之後的文字）。 */
@@ -114,6 +118,8 @@ export interface NoteLike {
   path: string
   frontmatter: Record<string, unknown> | null
   headings?: ReadonlyArray<{ level: number, text: string }>
+  /** 檔案修改時間（毫秒）；MOC 的「更新」日期用。 */
+  mtime?: number
 }
 
 function stringList(value: unknown): string[] {
@@ -138,15 +144,20 @@ function titleOf(note: NoteLike): string {
  * frontmatter 是知識筆記（type: knowledge）而且列了這個領域的筆記；依標題排序。
  * Fork（almanac ALMNC-69.4）：domains 存領域名稱（舊資料是 dom_ id）；給 domains 時兩種都換成領域 id 當 key。
  */
+function domainNoteOf(note: NoteLike): DomainNote {
+  const fm = note.frontmatter ?? {}
+  const status = (NOTE_STATUSES as readonly string[]).includes(text(fm.status)) ? text(fm.status) as NoteStatus : 'valid'
+  const lastConfirmed = /^\d{4}-\d{2}-\d{2}$/.test(text(fm.lastConfirmed)) ? text(fm.lastConfirmed) : undefined
+  return { path: note.path, title: titleOf(note), summary: text(fm.summary), status, lastConfirmed }
+}
+
 export function knowledgeNotesByDomain(notes: Iterable<NoteLike>, domains: readonly Pick<Domain, 'id' | 'name'>[] = []): Map<string, DomainNote[]> {
   const lookup = domainLookup(domains)
   const byDomain = new Map<string, DomainNote[]>()
   for (const note of notes) {
     const fm = note.frontmatter
     if (!fm || text(fm.type) !== 'knowledge') continue
-    const status = (NOTE_STATUSES as readonly string[]).includes(text(fm.status)) ? text(fm.status) as NoteStatus : 'valid'
-    const lastConfirmed = /^\d{4}-\d{2}-\d{2}$/.test(text(fm.lastConfirmed)) ? text(fm.lastConfirmed) : undefined
-    const entry: DomainNote = { path: note.path, title: titleOf(note), summary: text(fm.summary), status, lastConfirmed }
+    const entry = domainNoteOf(note)
     for (const id of canonicalDomainIds(stringList(fm.domains), lookup)) {
       const list = byDomain.get(id) ?? []
       list.push(entry)
@@ -198,4 +209,84 @@ export function relatedDomains(tree: readonly DomainNode[], id: string): { paren
   const parent = tree.find(item => item.children.some(child => child.domain.id === id))
   if (!parent) return { children: [], siblings: [] }
   return { parent, children: [], siblings: parent.children.filter(child => child.domain.id !== id) }
+}
+
+// ── Fork（almanac ALMNC-69.7）：MOC 當資料來源 ──────────────────────
+
+/** MOC 五區塊 → 領域頁現有的段落（① → 總覽、④ → 重點結論、⑤ → 待釐清；HTML 註解不算內容）。 */
+export function sectionsFromMoc(moc: Pick<ParsedMoc, 'blocks'>): DomainSections {
+  return {
+    summary: stripComments(moc.blocks.position?.text ?? ''),
+    coreConcepts: [],
+    keyConclusions: blockItems(moc.blocks.conclusions?.text ?? ''),
+    openQuestions: blockItems(moc.blocks.open?.text ?? ''),
+  }
+}
+
+/** MOC 的成員：章節區正式收錄連到的筆記，依 MOC 順序（章節 → 尚未分章）、不重複；連不到的（斷鏈）略過。 */
+export function notesFromMoc(moc: ParsedMoc, notes: ReadonlyMap<string, NoteLike>, resolve: (target: string, mocPath: string | undefined) => string | null): DomainNote[] {
+  const out: DomainNote[] = []
+  const seen = new Set<string>()
+  for (const { entry } of formalEntries(moc)) {
+    const path = resolve(entry.target, moc.path)
+    const note = path ? notes.get(path) : undefined
+    if (!note || seen.has(note.path)) continue
+    seen.add(note.path)
+    out.push(domainNoteOf(note))
+  }
+  return out
+}
+
+export interface DomainPageData {
+  /** 領域表的列＋只有 MOC 檔、表裡還沒有的領域（id 用 M 編號）。 */
+  domains: Domain[]
+  notesByDomain: Map<string, DomainNote[]>
+  sectionsByDomain: Map<string, DomainSections>
+  /** 領域 id → 它的 MOC 檔（有的才有）。 */
+  mocByDomain: Map<string, ParsedMoc>
+}
+
+/**
+ * 領域頁的資料：有 MOC 檔的領域（依 id＝M 編號或名稱對到）成員與段落都從 MOC 來；沒有 MOC 檔的舊領域退回 frontmatter 反查
+ * 與領域表總覽。MOC 有、表裡沒有的領域也列出來（表只是快取）。
+ */
+export function domainPageData(
+  rows: readonly Domain[],
+  mocs: readonly ParsedMoc[],
+  notes: ReadonlyMap<string, NoteLike>,
+  resolve: (target: string, mocPath: string | undefined) => string | null,
+): DomainPageData {
+  const mocByDomain = new Map<string, ParsedMoc>()
+  const used = new Set<ParsedMoc>()
+  for (const row of rows) {
+    const moc = mocs.find(item => !used.has(item) && item.id && item.id === row.id) ?? mocs.find(item => !used.has(item) && item.name.trim() === row.name.trim())
+    if (!moc) continue
+    used.add(moc)
+    mocByDomain.set(row.id, moc)
+  }
+  const domains: Domain[] = rows.map(row => {
+    const moc = mocByDomain.get(row.id)
+    const mtime = moc?.path ? notes.get(moc.path)?.mtime : undefined
+    return moc && mtime ? { ...row, updatedAt: mtime } : row
+  })
+  const extra = mocs.filter(moc => !used.has(moc) && moc.name.trim())
+  const idOfMoc = (moc: ParsedMoc) => [...mocByDomain].find(([, item]) => item === moc)?.[0] ?? moc.id ?? `moc:${moc.path ?? moc.name}`
+  for (const moc of extra) {
+    const id = moc.id ?? `moc:${moc.path ?? moc.name}`
+    mocByDomain.set(id, moc)
+  }
+  for (const moc of extra) {
+    const parent = moc.parent ? mocs.find(item => item.id === moc.parent) : undefined
+    const mtime = moc.path ? notes.get(moc.path)?.mtime ?? 0 : 0
+    domains.push({ id: idOfMoc(moc), name: moc.name.trim(), parentId: parent ? idOfMoc(parent) : undefined, overview: '', createdAt: mtime, updatedAt: mtime })
+  }
+  const fallback = knowledgeNotesByDomain(notes.values(), rows)
+  const notesByDomain = new Map<string, DomainNote[]>()
+  const sectionsByDomain = new Map<string, DomainSections>()
+  for (const domain of domains) {
+    const moc = mocByDomain.get(domain.id)
+    notesByDomain.set(domain.id, moc ? notesFromMoc(moc, notes, resolve) : fallback.get(domain.id) ?? [])
+    sectionsByDomain.set(domain.id, moc ? sectionsFromMoc(moc) : parseDomainSections(domain.overview))
+  }
+  return { domains, notesByDomain, sectionsByDomain, mocByDomain }
 }

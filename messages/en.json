@@ -9177,7 +9177,8 @@
       "deleted": "Deleted “{title}”",
       "batchAccepted": "Accepted {count, plural, one {# new note} other {# new notes}}",
       "batchPartial": "{count, plural, one {# note} other {# notes}} could not be accepted: {titles}. The rest were accepted.",
-      "batchFailed": "None could be accepted: {titles}"
+      "batchFailed": "None could be accepted: {titles}",
+      "domainRemoved": "Removed “{title}” from “{domain}”"
     },
     "sources": {
       "filterLabel": "Filter by status",
@@ -9430,6 +9431,11 @@
       "journalOnce": "Accepting tags this source as a journal once.",
       "accept": "Accept",
       "drop": "Send back"
+    },
+    "domainLimit": {
+      "summary": "Filed under {count} domains, over the limit of {limit}",
+      "body": "A note can belong to at most {limit} domains. Pick the domain to drop: the note’s entry is removed from that MOC; the other domains stay.",
+      "by": "System"
     }
   },
   "cleanup": {

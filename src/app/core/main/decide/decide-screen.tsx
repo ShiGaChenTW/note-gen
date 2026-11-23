@@ -108,7 +108,7 @@ function useWorkbenchKeys(data: ReviewData, rows: SourceListRow[], actions: Retu
           return
         }
         if (key === 's') { event.preventDefault(); actions.putAside(current); return }
-        if (/^[1-9]$/.test(key) && current.choices?.[Number(key) - 1]) { event.preventDefault(); void actions.run(current, 'pick'); return }
+        if (/^[1-9]$/.test(key) && current.choices?.[Number(key) - 1]) { event.preventDefault(); void actions.run(current, 'pick', { note: current.choices[Number(key) - 1] }); return }
         const action = actionForKey(current, key)
         if (!action) return
         event.preventDefault()
