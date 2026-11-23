@@ -9159,7 +9159,8 @@
       "migrate": "開始處理",
       "resume": "繼續處理",
       "pause": "暫停",
-      "packDone": "整理好了"
+      "packDone": "整理好了",
+      "acceptAll": "全部接受"
     },
     "listLabel": "等你處理的事",
     "more": "等 {count} 則",
@@ -9238,7 +9239,10 @@
       "undo": "復原",
       "retried": "已重新擷取「{title}」",
       "retryFailed": "還是抓不到「{title}」",
-      "deleted": "已刪除「{title}」"
+      "deleted": "已刪除「{title}」",
+      "batchAccepted": "已接受 {count} 則新筆記",
+      "batchPartial": "{count} 則沒有接受成功：{titles}，其他則已接受",
+      "batchFailed": "全部沒有接受成功：{titles}"
     },
     "sources": {
       "filterLabel": "依狀態篩選",
@@ -9485,6 +9489,12 @@
         "high": "高",
         "low": "低"
       }
+    },
+    "batch": {
+      "heading": "同一則資料源拆出的 {count} 則新知識筆記。可以全部接受，也可以逐則接受或退回；點標題展開看內容、改標題與存放位置。",
+      "journalOnce": "接受時替這則資料源貼一次日誌標籤。",
+      "accept": "接受",
+      "drop": "退回"
     }
   },
   "cleanup": {

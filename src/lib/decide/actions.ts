@@ -46,11 +46,12 @@ function refs(item: DecideItem): DecideRef[] {
   return [item.ref, ...item.duplicates]
 }
 
-export async function acceptDecision(item: DecideItem): Promise<AcceptOutcome> {
+/** options.journalTag: false＝收集提案這次不貼日誌標籤（ALMNC-65.2 批次卡整批接受時，最後一起貼一次）。 */
+export async function acceptDecision(item: DecideItem, options?: { journalTag?: boolean }): Promise<AcceptOutcome> {
   const { ref } = item
   if (ref.source === 'collect') {
     const store = useCollectStore.getState()
-    const result = await store.accept(ref.itemId, ref.proposalId)
+    const result = await store.accept(ref.itemId, ref.proposalId, options)
     // 同一件事的重複提案：寫過一次就夠，其餘標成不要
     for (const dup of item.duplicates) if (dup.source === 'collect') store.reject(dup.itemId, dup.proposalId)
     void refreshJournal()
