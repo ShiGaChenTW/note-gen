@@ -1,8 +1,9 @@
 // Fork（almanac ALMNC-54.1）：第二層「筆記」——知識、紀錄、專案三類。筆記仍是 vault 裡的 Markdown，
 // V3 欄位寫在 YAML frontmatter；這裡負責解析與寫回，未知欄位、註解與內文一律保留。
 // 規格見 almanac/2026-11-19_proposal_role-data-model.md 第一節 §2、§4。
-import { isMap, parseDocument, type Document } from 'yaml'
+import { isMap, isScalar, parseDocument, type Document } from 'yaml'
 import { joinFrontmatter, splitFrontmatter } from '@/lib/markdown/frontmatter-split'
+import { isId } from './identity'
 
 /** 知識筆記、紀錄筆記、專案筆記。 */
 export type NoteType = 'knowledge' | 'record' | 'project'
@@ -13,10 +14,13 @@ export const NOTE_TYPES: readonly NoteType[] = ['knowledge', 'record', 'project'
 export const NOTE_STATUSES: readonly NoteStatus[] = ['valid', 'disputed', 'superseded', 'archived']
 
 /** frontmatter 裡由 V3 管理的欄位；其餘 key 一律原樣保留。 */
-export const V3_NOTE_KEYS = ['title', 'type', 'summary', 'sources', 'tags', 'related', 'domains', 'status', 'lastConfirmed'] as const
+// Fork（almanac ALMNC-69.1）：id＝身分編號（筆記 N、MOC M），寫入時一律放在 frontmatter 第一行。
+export const V3_NOTE_KEYS = ['id', 'title', 'type', 'summary', 'sources', 'tags', 'related', 'domains', 'status', 'lastConfirmed'] as const
 export type V3NoteKey = typeof V3_NOTE_KEYS[number]
 
 export interface V3NoteFields {
+  /** 身分編號（`N-…`／`M-…`）；一經產生就不改。舊筆記可能還沒有。 */
+  id?: string
   /** frontmatter 沒寫時，由 noteTitle() 退回第一個 H1 或檔名。 */
   title?: string
   type?: NoteType
@@ -66,6 +70,13 @@ function optionalString(value: unknown, key: string, issues: string[]): string |
   return value
 }
 
+function idValue(value: unknown, issues: string[]): string | undefined {
+  if (value === undefined || value === null || value === '') return undefined
+  if (isId(value)) return value
+  issues.push('id 必須是 類別-YYYYMMDD-HHMMSS-4碼 格式')
+  return undefined
+}
+
 function enumValue<T extends string>(value: unknown, allowed: readonly T[], key: string, issues: string[]): T | undefined {
   if (value === undefined || value === null || value === '') return undefined
   if (typeof value === 'string' && (allowed as readonly string[]).includes(value)) return value as T
@@ -104,6 +115,7 @@ export function parseV3Note(raw: string): ParsedV3Note {
   else if (rawDate !== undefined && rawDate !== null && rawDate !== '') issues.push('lastConfirmed 必須是 YYYY-MM-DD')
   return {
     fields: {
+      id: idValue(data.id, issues),
       title: optionalString(data.title, 'title', issues),
       type: enumValue(data.type, NOTE_TYPES, 'type', issues),
       summary: optionalString(data.summary, 'summary', issues),
@@ -132,9 +144,20 @@ export function noteTitle(note: Pick<ParsedV3Note, 'fields' | 'body'>, path?: st
 export type V3NoteFieldsPatch = { [K in V3NoteKey]?: V3NoteFields[K] | null }
 
 function validatePatch(patch: V3NoteFieldsPatch) {
+  if (patch.id && !isId(patch.id)) throw new Error(`身分編號格式不對：${patch.id}`)
   if (patch.type && !NOTE_TYPES.includes(patch.type)) throw new Error(`未知的筆記類型：${patch.type}`)
   if (patch.status && !NOTE_STATUSES.includes(patch.status)) throw new Error(`未知的筆記狀態：${patch.status}`)
   if (patch.lastConfirmed && !DATE.test(patch.lastConfirmed)) throw new Error('lastConfirmed 必須是 YYYY-MM-DD')
+}
+
+/** 把某個 key 移到 frontmatter 第一行（身分編號固定放最上面）。 */
+function moveKeyFirst(doc: Document, key: string) {
+  if (!isMap(doc.contents)) return
+  const items = doc.contents.items
+  const index = items.findIndex(pair => (isScalar(pair.key) ? pair.key.value : pair.key) === key)
+  if (index <= 0) return
+  const [pair] = items.splice(index, 1)
+  items.unshift(pair)
 }
 
 /**
@@ -162,6 +185,7 @@ export function writeV3NoteFields(raw: string, patch: V3NoteFieldsPatch): string
       doc.set(key, value)
     }
   }
+  if (patch.id) moveKeyFirst(doc, 'id')
   const empty = !doc.contents || (isMap(doc.contents) && doc.contents.items.length === 0)
   if (empty && !doc.commentBefore && !doc.comment) return bom + body
   const yaml = doc.toString({ lineWidth: 0 })

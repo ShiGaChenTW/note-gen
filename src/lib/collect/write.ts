@@ -4,12 +4,14 @@ import { noteExists, readNote, revealInFileTree, writeNote } from '@/lib/daily/n
 import { commitNoteWrites } from '@/lib/daily/coordinated-write'
 import { toDateKey } from '@/lib/daily/format'
 import { ensureDailyNote } from '@/lib/daily/open-daily-note'
-import { captureFileName, capturePath } from '@/lib/home/capture'
+import { capturePath, noteFileName } from '@/lib/home/capture'
 import { QUICK_ADD_SECTION, undoWrites, type WriteRecord } from '@/lib/today/today-actions'
 import { insertLinesInSection } from '@/lib/today/today-model'
 import { proposalNoteContent, proposalTaskLine } from './builders'
 import { acceptSlot } from '@/lib/timeslots/apply'
 import { writeV3NoteFields } from '@/lib/v3-model/note'
+import { newId, type IdExists } from '@/lib/v3-model/identity'
+import type { RecordIdInput } from '@/lib/v3-model/id-index'
 import type { FileChange, Proposal } from './types'
 
 export interface AcceptResult {
@@ -52,7 +54,18 @@ const defaultApplyEdits: ApplyEdits = async proposal => {
   return applyEdits(proposal, await defaultEditIo())
 }
 
-export async function acceptProposal(proposal: Proposal, options: { noteFolder: string, now?: Date, applyChange?: ApplyChange, applyEdits?: ApplyEdits }): Promise<AcceptResult> {
+/** Fork（almanac ALMNC-69.1）：系統索引（id_index）——撞號檢查與登記。測試注入假的，預設動態載入 db。 */
+export interface IdStore {
+  exists: IdExists
+  record: (input: RecordIdInput) => Promise<unknown>
+}
+
+const defaultIdStore: IdStore = {
+  exists: async id => (await import('@/db/id-index')).idExists(id),
+  record: async input => (await import('@/db/id-index')).recordId(input),
+}
+
+export async function acceptProposal(proposal: Proposal, options: { noteFolder: string, now?: Date, applyChange?: ApplyChange, applyEdits?: ApplyEdits, ids?: IdStore }): Promise<AcceptResult> {
   const now = options.now ?? new Date()
   if (proposal.slot) return acceptSlot({ ...proposal, slot: proposal.slot }, now)
   if (proposal.edits?.length || proposal.domainEdits?.length || proposal.memoryEdits?.length) {
@@ -65,7 +78,8 @@ export async function acceptProposal(proposal: Proposal, options: { noteFolder: 
   }
 
   if (proposal.kind === 'note') {
-    const name = captureFileName(proposal.title, now)
+    // Fork（almanac ALMNC-69.1）：檔名就是標題，同名才加序號；舊檔不改名。
+    const name = noteFileName(proposal.title, now)
     // Fork（almanac ALMNC-54.21）：卡片上改過存放位置就寫到那裡。
     const folder = proposal.folder ?? options.noteFolder
     let path: string | null = null
@@ -78,7 +92,16 @@ export async function acceptProposal(proposal: Proposal, options: { noteFolder: 
     if (!path) throw new Error('too many notes with the same name')
     // Fork（almanac ALMNC-54.12）：V3 筆記寫入時記下最後確認日期（重新確認的期限從這天起算）。
     const content = proposalNoteContent(proposal)
-    await writeNote(path, proposal.noteType ? writeV3NoteFields(content, { lastConfirmed: toDateKey(now) }) : content)
+    // Fork（almanac ALMNC-69.1）：Scott 接受、檔案建立這一刻才產生 N 編號（草稿不佔編號），寫在 frontmatter 第一行，同時登記到系統索引。
+    const ids = options.ids ?? defaultIdStore
+    const id = await newId('N', now, { exists: ids.exists })
+    await writeNote(path, writeV3NoteFields(content, proposal.noteType ? { id, lastConfirmed: toDateKey(now) } : { id }))
+    try {
+      await ids.record({ id, kind: 'N', path })
+    } catch (error) {
+      // 檔案已寫好、編號在檔案身上；索引登記失敗留給掃描補登（ALMNC-69.5），不讓接受失敗。
+      console.error('id_index record failed', error)
+    }
     await revealInFileTree(path)
     return { path }
   }
