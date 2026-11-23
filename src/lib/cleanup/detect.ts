@@ -6,12 +6,13 @@ import { CONFLICT_TYPES, type ConflictObservation, type ConflictType, type Detec
 
 export type AskModel = (prompt: string) => Promise<string>
 
+export const CONTENT_EVIDENCE_RULE = 'Never use dates, last-confirmed timestamps, file age, or identity numbers as evidence that a claim is newer or outdated. Cite the actual change in content or source evidence. When the evidence does not settle a disagreement, report a contradiction for verification.'
+
 const BODY_MAX = 1500
 
 function describe(index: number, note: NoteText): string {
   const meta = [
     note.fields.status ? `status=${note.fields.status}` : '',
-    note.fields.lastConfirmed ? `lastConfirmed=${note.fields.lastConfirmed}` : '',
     note.fields.sources.length ? `sources=${note.fields.sources.length}` : '',
   ].filter(Boolean).join('; ')
   return [`### [${index}] ${note.title} (${note.path}${meta ? `; ${meta}` : ''})`, Array.from(note.body.trim()).slice(0, BODY_MAX).join('')].join('\n')
@@ -25,7 +26,8 @@ export function buildDetectPrompt(note: NoteText, candidates: readonly NoteText[
     'contradiction = two notes disagree and you cannot tell which is right; context = both are right under different conditions (give one sentence of conditions per note in "contexts"); duplicate = the same thing written twice (first index is the note to keep);',
     'obsolete = no longer relevant at all (archive).',
     'For outdated or duplicate you may give "revisedBody": the corrected or merged Markdown body, keeping every fact and source. Do not invent facts.',
-    `Today is ${options.today ?? 'unknown'}. Report nothing when the notes are merely related. Use the language of the notes.`,
+    CONTENT_EVIDENCE_RULE,
+    'Report nothing when the notes are merely related. Use the language of the notes.',
     'Output JSON only, no explanation or code fence: {"observations":[{"type":"outdated|contradiction|context|duplicate|obsolete","notes":[0,1],"evidence":"","conclusionChanged":false,"revisedBody":"","contexts":{"0":"","1":""},"external":[0]}]}',
     '---',
     describe(0, note),
@@ -52,14 +54,14 @@ export function parseObservations(raw: string, note: NoteText, candidates: reado
     if (!CONFLICT_TYPES.includes(type)) continue
     const evidence = typeof record.evidence === 'string' ? record.evidence.trim() : ''
     if (!evidence) continue
-    const indexes = (Array.isArray(record.notes) ? record.notes : []).map(Number).filter(index => Number.isInteger(index) && index >= 0 && index < all.length)
+    const indexes = (Array.isArray(record.notes) ? record.notes : []).filter((index): index is number => typeof index === 'number' && Number.isInteger(index) && index >= 0 && index < all.length)
     const notePaths = Array.from(new Set(indexes.map(index => all[index].path)))
-    if (!notePaths.length) continue
+    if (!notePaths.length || !notePaths.includes(options.anchor ?? note.path)) continue
     // 兩則之間的關係至少要兩則；過時只有一則時要有外部證據。
     if (PAIR_TYPES.has(type) && notePaths.length < 2) continue
     const externalUrls = (Array.isArray(record.external) ? record.external : []).map(Number)
       .filter(index => Number.isInteger(index) && index >= 0 && index < external.length).map(index => external[index].url)
-    if (type === 'outdated' && notePaths.length < 2 && !externalUrls.length && !external.length) continue
+    if (type === 'outdated' && notePaths.length < 2 && !externalUrls.length) continue
     const key = `${type}|${[...notePaths].sort().join('|')}`
     if (seen.has(key)) continue
     seen.add(key)

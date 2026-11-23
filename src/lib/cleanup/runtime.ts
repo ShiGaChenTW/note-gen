@@ -10,8 +10,11 @@ import type { CleanupLabels } from './plan'
 import { storeQueue, type CleanupQueue } from './queue'
 import { createSimilarFinder } from './similar'
 import type { CleanupAction, ExternalEvidence } from './types'
+import type { WeeklyMocDeps } from './weekly-moc'
 
-async function translator(namespace: string) {
+const WEEKLY_MOC_KEY = 'almanacWeeklyMocCards'
+
+async function translator() {
   let locale = DEFAULT_LOCALE
   let messages: AbstractIntlMessages = {}
   try {
@@ -20,11 +23,11 @@ async function translator(namespace: string) {
   } catch (error) {
     console.warn('[cleanup] messages unavailable', error)
   }
-  return createTranslator({ locale, messages, namespace: namespace as 'cleanup' })
+  return createTranslator({ locale, messages, namespace: 'cleanup' })
 }
 
 export async function cleanupLabels(): Promise<CleanupLabels> {
-  const t = await translator('cleanup')
+  const t = await translator()
   return {
     action: (action: CleanupAction) => t(`actions.${action}`),
     bundleTitle: values => t('bundleTitle', values),
@@ -154,8 +157,67 @@ export async function checkAfterWrite(path: string, trigger: 'written' | 'handwr
   }
 }
 
-/** 確認卡「交給指揮官」：重新確認（比對＋查外部資料），結果一律變成提案。 */
+/** 確認卡「交給指揮官」：重新確認（比對＋查外部資料），有發現就納入每週整理。 */
 export async function recheckFromCard(path: string): Promise<void> {
   const { recheckNote } = await import('./check')
   await recheckNote(path, await createDefaultCheckDeps())
+}
+
+/** 先存卡，再存送出紀錄；兩次存檔之間若關閉 App，下次可從已存卡片補上紀錄。 */
+export async function createWeeklyMocDeps(check: CheckDeps, ask: WeeklyMocDeps['ask']): Promise<WeeklyMocDeps> {
+  const [t, store, { createMocIo }, { default: useVaultIndexStore }, { default: useCollectStore }, links] = await Promise.all([
+    translator(), appStore(), import('@/lib/moc/runtime'), import('@/stores/vault-index'), import('@/stores/collect'), import('@/lib/vault-index/links'),
+  ])
+  const io = createMocIo()
+  const vault = useVaultIndexStore.getState()
+  const lookup = links.buildLinkLookup(vault.notes.keys())
+  const keys = await store.get(WEEKLY_MOC_KEY)
+  const sent = new Set(Array.isArray(keys) ? keys.filter(key => typeof key === 'string') : [])
+  const markSent = async (key: string) => {
+    sent.add(key)
+    try {
+      await store.set(WEEKLY_MOC_KEY, [...sent])
+    } catch (error) {
+      sent.delete(key)
+      throw error
+    }
+  }
+  const verifyWorkspace = () => {
+    if (vault.workspace !== useVaultIndexStore.getState().workspace) throw new Error('Workspace changed during MOC review')
+  }
+  return {
+    check: { ...check, readNote: path => { verifyWorkspace(); return check.readNote(path) } },
+    ask,
+    files: () => {
+      verifyWorkspace()
+      return vault.status === 'ready' ? io.listMocFiles() : Promise.resolve([])
+    },
+    resolve: (target, path) => links.resolveWikilinkTargetWithLookup(target, lookup, path),
+    newChapterId: () => io.newId('C'),
+    hasCard: async key => {
+      if (sent.has(key)) return true
+      await useCollectStore.getState().hydrate()
+      const state = useCollectStore.getState()
+      if (!state.items.some(item => item.id === key)) return false
+      await state.persist()
+      await markSent(key)
+      return true
+    },
+    submit: async batch => {
+      verifyWorkspace()
+      const state = useCollectStore.getState()
+      state.addProposals(batch.id, batch.origin, batch.proposals)
+      await state.persist()
+      await markSent(batch.id)
+    },
+    labels: {
+      start: t('moc.start'),
+      conclusions: t('moc.conclusions'),
+      open: t('moc.open'),
+      outdated: title => t('moc.outdated', { title }),
+      place: (note, chapter) => t('moc.place', { note, chapter }),
+      tooFew: count => t('moc.tooFew', { count }),
+      tooMany: (count, chapter) => t('moc.tooMany', { count, chapter }),
+    },
+  }
 }

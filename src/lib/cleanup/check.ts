@@ -3,13 +3,14 @@
 //   2. Scott 在檯面存了親手寫的筆記（handwritten）
 //   3. 定期檢查：最後確認日期超過領域期限的筆記（periodic，由回顧排程呼叫）
 // 加上確認卡「交給指揮官」的重新確認（recheck：必要時查外部資料；沒發現問題就提案「仍然有效」）。
-// 專家比對（只讀）→ 指揮官依類型做成清理提案 → 衝突或錯誤立刻送到工作台，其餘放進佇列等每週回顧。全部注入依賴，測試用假的。
+// 專家比對（只讀），觀察進佇列等每週整理。
+import { contentVersion } from '@/lib/ops/version'
 import type { ProposalBatch, SimilarNote } from '@/lib/commander/types'
 import { noteTitle, parseV3Note } from '@/lib/v3-model/note'
 import { canonicalDomainIds, domainLookup } from '@/lib/v3-model/domain'
 import { ymd } from './interval'
-import { cleanupProposals, confirmProposal, observationKey, routeObservations, type CleanupLabels, type DomainInfo, type NoteWords } from './plan'
-import type { CleanupQueue } from './queue'
+import { confirmProposal, type CleanupLabels, type DomainInfo, type NoteWords } from './plan'
+import { queuedKey, type CleanupQueue } from './queue'
 import type { ConflictDetector, ConflictObservation, ConflictTrigger, ExternalEvidence, NoteText } from './types'
 
 export interface CheckDeps {
@@ -36,12 +37,11 @@ export interface CheckResult {
   status: 'skipped' | 'checked'
   reason?: 'not_found' | 'inactive'
   observations: ConflictObservation[]
-  immediate: ConflictObservation[]
   deferred: ConflictObservation[]
   batch?: ProposalBatch
 }
 
-const SKIPPED = (reason: CheckResult['reason']): CheckResult => ({ status: 'skipped', reason, observations: [], immediate: [], deferred: [] })
+const SKIPPED = (reason: CheckResult['reason']): CheckResult => ({ status: 'skipped', reason, observations: [], deferred: [] })
 
 export function toNoteText(path: string, raw: string): NoteText {
   const parsed = parseV3Note(raw)
@@ -61,47 +61,43 @@ async function readTexts(paths: readonly string[], deps: Pick<CheckDeps, 'readNo
   return out
 }
 
-async function compare(note: NoteText, trigger: ConflictTrigger, deps: CheckDeps, external?: ExternalEvidence[]): Promise<{ observations: ConflictObservation[], texts: NoteText[] }> {
-  const today = ymd(deps.now?.() ?? new Date())
+async function compare(note: NoteText, trigger: ConflictTrigger, deps: CheckDeps, external?: ExternalEvidence[]): Promise<ConflictObservation[]> {
   // Fork（almanac ALMNC-69.4）：筆記 domains 存領域名稱（舊資料是 dom_ id），先換成領域 id；找類似筆記時兩種寫法都比。
   const lookup = await domainMap(deps)
   const domainIds = canonicalDomainIds(note.fields.domains, lookup)
   const scopes: Array<string | undefined> = domainIds.length ? domainIds : [undefined]
   const observations: ConflictObservation[] = []
-  const texts = new Map<string, NoteText>([[note.path, note]])
   for (const domainId of scopes) {
     const domain = domainId ? lookup.get(domainId) : undefined
     const scope = domainId ? (domain ? { domainRefs: [domain.id, domain.name] } : {}) : { allDomains: true }
     const similar = await deps.similar(domainId, { title: note.title, body: note.body }, [note.path], scope).catch(() => [])
     const candidates = await readTexts(similar.map(entry => entry.path).filter(path => path !== note.path), deps)
-    for (const candidate of candidates) texts.set(candidate.path, candidate)
     if (!candidates.length && !external?.length) continue
     const expert = domainId ? await deps.expertFor?.(domainId).catch(() => undefined) : undefined
     const prompt = expert?.prompt ?? await deps.commanderPrompt?.().catch(() => undefined)
     const found = await deps.detect(note, candidates, {
       trigger,
       domainId,
-      today,
       agentPrompt: prompt,
       external,
       by: expert ? { role: 'expert', agentId: expert.agentId } : { role: 'commander' },
     })
-    observations.push(...found)
+    const versions = new Map([note, ...candidates].map(text => [text.path, contentVersion(text.raw)!]))
+    observations.push(...found.map(observation => ({
+      ...observation,
+      observedVersions: Object.fromEntries(observation.notePaths.flatMap(path => {
+        const version = versions.get(path)
+        return version ? [[path, version]] : []
+      })),
+    })))
   }
   const seen = new Set<string>()
-  return {
-    observations: observations.filter(observation => {
-      const key = observationKey(observation)
-      if (seen.has(key)) return false
-      seen.add(key)
-      return true
-    }),
-    texts: [...texts.values()],
-  }
-}
-
-function batchOf(id: string, origin: string, proposals: ProposalBatch['proposals']): ProposalBatch | undefined {
-  return proposals.length ? { id, origin, proposals } : undefined
+  return observations.filter(observation => {
+    const key = queuedKey(observation)
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
 }
 
 async function domainMap(deps: Pick<CheckDeps, 'domains'>): Promise<Map<string, DomainInfo>> {
@@ -113,50 +109,19 @@ async function domainMap(deps: Pick<CheckDeps, 'domains'>): Promise<Map<string, 
   }
 }
 
-/** 立刻提出的觀察做成提案批次並送出。批次 id 以時機＋筆記＋日期為準，同一天重跑不會重複送。 */
-export async function submitImmediate(
-  observations: readonly ConflictObservation[],
-  texts: readonly NoteText[],
-  deps: Pick<CheckDeps, 'readNote' | 'domains' | 'submit' | 'labels' | 'words' | 'commanderName' | 'now'>,
-  id: string,
-): Promise<ProposalBatch | undefined> {
-  if (!observations.length) return undefined
-  const notes = new Map(texts.map(text => [text.path, text.raw]))
-  // 觀察裡提到、但還沒讀過的筆記補讀。
-  for (const path of new Set(observations.flatMap(observation => observation.notePaths))) {
-    if (notes.has(path)) continue
-    const raw = await deps.readNote(path).catch(() => null)
-    if (raw !== null) notes.set(path, raw)
-  }
-  const proposals = cleanupProposals(observations, {
-    notes,
-    domains: await domainMap(deps),
-    today: ymd(deps.now?.() ?? new Date()),
-    labels: deps.labels,
-    words: deps.words,
-    immediate: true,
-  })
-  const batch = batchOf(id, deps.labels.origin({ agent: deps.commanderName ?? '' }), proposals)
-  if (batch) await deps.submit(batch)
-  return batch
-}
-
-/** 時機 1～3：比對一則筆記。衝突或錯誤立刻提案，其餘進佇列。 */
+/** 比對一則筆記；所有觀察等每週整理時一起審核。 */
 export async function checkNote(path: string, trigger: Exclude<ConflictTrigger, 'recheck' | 'review'>, deps: CheckDeps): Promise<CheckResult> {
   const raw = await deps.readNote(path)
   if (raw === null) return SKIPPED('not_found')
   const note = toNoteText(path, raw)
   if (note.fields.status === 'superseded' || note.fields.status === 'archived') return SKIPPED('inactive')
-  const { observations, texts } = await compare(note, trigger, deps)
-  const { immediate, deferred } = routeObservations(observations)
-  const today = ymd(deps.now?.() ?? new Date())
-  const batch = await submitImmediate(immediate, texts, deps, `cleanup:${trigger}:${path}:${today}`)
-  if (deferred.length) await deps.queue.add(deferred)
-  return { status: 'checked', observations, immediate, deferred, batch }
+  const observations = await compare(note, trigger, deps)
+  if (observations.length) await deps.queue.add(observations)
+  return { status: 'checked', observations, deferred: observations }
 }
 
 /**
- * 確認卡「交給指揮官」：指揮官重新確認（比對筆記庫＋查外部資料）。Scott 主動要求，所以發現什麼都立刻提案；
+ * 確認卡「交給指揮官」：指揮官重新確認（比對筆記庫＋查外部資料）。有發現就納入每週整理；
  * 什麼都沒發現就提案「仍然有效」（接受後最後確認日期改成今天）。
  */
 export async function recheckNote(path: string, deps: CheckDeps): Promise<CheckResult> {
@@ -171,16 +136,20 @@ export async function recheckNote(path: string, deps: CheckDeps): Promise<CheckR
       console.warn('[cleanup] external lookup failed:', error)
     }
   }
-  const { observations, texts } = await compare(note, 'recheck', deps, external)
-  const today = ymd(deps.now?.() ?? new Date())
-  const id = `cleanup:recheck:${path}:${today}`
-  let batch = await submitImmediate(observations, texts, deps, id)
-  if (!batch) {
-    const evidence = external.length ? external.map(item => item.url).join('、') : ''
-    batch = batchOf(id, deps.labels.origin({ agent: deps.commanderName ?? '' }), [confirmProposal(path, raw, { today, labels: deps.labels, evidence })])!
-    await deps.submit(batch)
+  const observations = await compare(note, 'recheck', deps, external)
+  if (observations.length) {
+    await deps.queue.add(observations)
+    return { status: 'checked', observations, deferred: observations }
   }
-  return { status: 'checked', observations, immediate: observations, deferred: [], batch }
+  const today = ymd(deps.now?.() ?? new Date())
+  const evidence = external.map(item => item.url).join('、')
+  const batch = {
+    id: `cleanup:recheck:${path}:${today}`,
+    origin: deps.labels.origin({ agent: deps.commanderName ?? '' }),
+    proposals: [confirmProposal(path, raw, { today, labels: deps.labels, evidence })],
+  }
+  await deps.submit(batch)
+  return { status: 'checked', observations, deferred: [], batch }
 }
 
 /** 時機 3：定期檢查到期的筆記（每次最多 limit 則，舊的先）。 */

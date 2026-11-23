@@ -168,6 +168,7 @@ export async function createDefaultReviewDeps(): Promise<ReviewRunDeps> {
       return out
     },
     check,
+    weeklyMocs: await cleanup.createWeeklyMocDeps(check, prompt => askCollectModel(prompt, undefined, { silent: true })),
     submit: check.submit,
     // Fork（almanac ALMNC-54.20）：研究員查到的外部資料建成系統產生的資料源、自動交給指揮官（只在桌面版 V3）。
     registerFindings: async (findings, periodKey) => {

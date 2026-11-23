@@ -2,6 +2,7 @@
 // 保存的是「收集」這個來源自己的狀態（還沒收下的提案關頁、重開後還在），等你定只讀它、不複製。
 // 放在 store.json 的 collectItems：資料小、和其他 fork 設定（新介面開關、首頁卡片）同一處、Tauri 已有權限，
 // 不需要另開資料表或新增檔案位置。
+import { isoWeekKey } from '@/lib/review/settings'
 import { toDateKey } from '@/lib/daily/format'
 import { isSlotTarget } from '@/lib/timeslots/model'
 import { NOTE_TYPES } from '@/lib/v3-model/note'
@@ -64,6 +65,7 @@ export function serializeItems(items: readonly ItemLike[]): PersistedItem[] {
       ...(proposal.memoryEdits ? { memoryEdits: proposal.memoryEdits } : {}),
       ...(proposal.card ? { card: proposal.card } : {}),
       ...(proposal.cleanup ? { cleanup: proposal.cleanup } : {}),
+      ...(proposal.mocReview ? { mocReview: proposal.mocReview } : {}),
       ...(proposal.review ? { review: proposal.review } : {}),
       status: proposal.status,
       result: proposal.result ? { path: proposal.result.path } : undefined,
@@ -182,7 +184,8 @@ export function parseItems(value: unknown, now: number): PersistedItem[] {
     const proposals = Array.isArray(item.proposals) ? item.proposals.filter(isProposal).filter(changeReadable).map(cleanLinks) : []
     const waiting = proposals.some(proposal => proposal.status === 'wait')
     if (proposals.length && proposals.every(proposal => proposal.slot && proposal.due < today)) continue
-    if (!waiting && now - item.createdAt > DECIDED_KEEP_MS) continue
+    const currentMocWeek = item.id.startsWith('cleanup:moc:') && item.id.endsWith(':' + isoWeekKey(new Date(now)))
+    if (!waiting && !currentMocWeek && now - item.createdAt > DECIDED_KEEP_MS) continue
     out.push({
       id: item.id,
       input: { kind: input.kind, text: input.text, name: typeof input.name === 'string' ? input.name : undefined },

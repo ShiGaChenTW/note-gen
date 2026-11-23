@@ -53,10 +53,12 @@ describe('createConflictDetector', () => {
 
   it('puts the expert prompt first and survives model failures', async () => {
     const ask = vi.fn<(prompt: string) => Promise<string>>(async () => '{"observations":[{"type":"duplicate","notes":[0,1],"evidence":"同一件事"}]}')
-    const found = await createConflictDetector(ask)(a, [b], { trigger: 'handwritten', agentPrompt: '# 專家 rules', today: '2026-11-21' })
+    const found = await createConflictDetector(ask)(a, [b], { trigger: 'handwritten', agentPrompt: '# 專家 rules' })
     expect(found).toHaveLength(1)
     expect(ask.mock.calls[0][0].startsWith('# 專家 rules')).toBe(true)
     expect(ask.mock.calls[0][0]).toContain('[1] 節拍時間（新） (k/b.md')
+    expect(ask.mock.calls[0][0]).toContain('Never use dates')
+    expect(ask.mock.calls[0][0]).not.toContain('lastConfirmed=')
     const broken = createConflictDetector(async () => { throw new Error('offline') })
     expect(await broken(a, [b], { trigger: 'written' })).toEqual([])
   })
