@@ -358,3 +358,36 @@ describe('佇列', () => {
     expect(queue.running).toBe(false)
   })
 })
+
+describe('ALMNC-69.3 日誌標籤', () => {
+  it('帶日誌標籤：提示不產日誌筆記；讀過沒有可提煉的內容停在已分析，不是不採用', async () => {
+    const sources = memorySources([src('j', { journal: true, content: '11/03 下午被打斷三次' })])
+    const ask = fakeModel({ fragments: [{ kind: 'note', noteType: 'log', title: '下午被打斷', date: '2026-11-03' }] })
+    const { deps: d, batches } = deps(sources, ask)
+    const result = await analyzeSource('j', d)
+    expect(ask.calls[0]).toContain('帶「日誌」標籤')
+    expect(result.status).toBe('analyzed')
+    expect(batches).toHaveLength(0)
+    expect(sources.rows.get('j')).toMatchObject({ status: 'analyzed', journal: true })
+  })
+
+  it('帶日誌標籤仍可抽出知識筆記', async () => {
+    const sources = memorySources([src('j', { journal: true })])
+    const { deps: d, batches } = deps(sources, fakeModel({ fragments: [
+      { kind: 'note', noteType: 'record', title: '下午被打斷', date: '2026-11-03' },
+      { kind: 'note', noteType: 'knowledge', title: '切換工作的代價比想像中高', domainHint: '工業工程' },
+    ] }))
+    await analyzeSource('j', d)
+    expect(batches[0].proposals.map(p => p.noteType)).toEqual(['knowledge'])
+    expect(batches[0].proposals[0].journalTag).toBeUndefined()
+  })
+
+  it('指揮官判斷為日誌：寫進這則資料源的分析結果（沒有其他產出就出一張判斷卡），標籤要等 Scott 接受', async () => {
+    const sources = memorySources([src('s', { content: '我今天下午被打斷三次' })])
+    const { deps: d, batches } = deps(sources, fakeModel({ journal: { verdict: true, confidence: 'high', reason: '整篇是自己的經驗' }, fragments: [] }))
+    const result = await analyzeSource('s', d)
+    expect(result.status).toBe('analyzed')
+    expect(batches[0].proposals).toEqual([expect.objectContaining({ title: '我今天下午被打斷三次', journalTag: { confidence: 'high', reason: '整篇是自己的經驗', only: true } })])
+    expect(sources.rows.get('s')!.journal).toBe(false)
+  })
+})

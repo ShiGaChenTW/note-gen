@@ -57,14 +57,52 @@ function ConversationLink({ id }: { id: number }) {
   )
 }
 
+/**
+ * Fork（almanac ALMNC-69.3）：指揮官判斷附的一行理由與信心，以及「判斷為日誌（信心高／低）」——
+ * 寫在原本的分析結果卡上，不另外出卡；接受這張卡時一起貼日誌標籤。
+ */
+function VerdictLines({ item }: { item: NonNullable<WorkbenchCard['decide']> }) {
+  const t = useTranslations('workbench.verdict')
+  const journal = item.journalTag
+  const rationale = item.rationale
+  if (!journal && !rationale?.reason) return null
+  return (
+    <div className="mb-2 space-y-0.5" data-testid="card-verdict">
+      {journal && (
+        <p className="text-ink" data-testid="card-journal-verdict">
+          <b className="font-semibold">{t('journal', { confidence: t(`confidence.${journal.confidence}`) })}</b>
+          {journal.reason ? <span className="text-muted-ink">　{journal.reason}</span> : null}
+        </p>
+      )}
+      {rationale?.reason && (
+        <p className="text-xs" data-testid="card-rationale">
+          {rationale.confidence
+            ? t('rationaleWithConfidence', { reason: rationale.reason, confidence: t(`confidence.${rationale.confidence}`) })
+            : t('rationale', { reason: rationale.reason })}
+        </p>
+      )}
+    </div>
+  )
+}
+
 function CardBody({ card }: { card: WorkbenchCard }) {
   const t = useTranslations('workbench')
   const decideT = useTranslations('decide')
   const organizeT = useTranslations('organize')
   const item = card.decide
+  if (item?.journalTag?.only) {
+    // Fork（almanac ALMNC-69.3）：只貼日誌標籤的分析結果：沒有要寫的檔案，只說接受後會做什麼。
+    return (
+      <div className="text-ui-compact leading-6 text-muted-ink">
+        <VerdictLines item={item} />
+        <p className="mt-1">{t('verdict.journalOnly')}</p>
+      </div>
+    )
+  }
   if (item) {
     return (
       <div className="text-ui-compact leading-6 text-muted-ink">
+        <VerdictLines item={item} />
         {item.preview.type === 'job'
           ? <JobReviewPreview criterion={item.preview.criterion} result={item.preview.result} />
           : item.ref.source === 'collect' && (item.preview.type === 'newNote' || item.kind === 'create')

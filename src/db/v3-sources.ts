@@ -10,6 +10,7 @@ import {
   sourceFromRow,
   latestVersions,
   searchSources,
+  setJournalTag,
   sourceToValues,
   transitionSource,
   type NewSourceInput,
@@ -23,11 +24,19 @@ import { sourceOutputFromRow, type OutputTargetType, type SourceOutput, type Sou
 
 const SOURCE_COLUMNS = `id, source_type as sourceType, kind, content, origin, collected_at as collectedAt, collector,
   status, status_changed_at as statusChangedAt, version, previous_id as previousId, locked_at as lockedAt,
-  archived_at as archivedAt, created_at as createdAt, updated_at as updatedAt`
+  archived_at as archivedAt, created_at as createdAt, updated_at as updatedAt, is_journal as isJournal`
 
 const OUTPUT_COLUMNS = 'source_id as sourceId, target_type as targetType, target_ref as targetRef, created_at as createdAt'
 
 let initialized: Promise<void> | null = null
+
+async function addSourcesColumn(db: Awaited<ReturnType<typeof getDb>>, columnSql: string): Promise<void> {
+  try {
+    await db.execute(`alter table sources add column ${columnSql}`)
+  } catch {
+    // 欄位已經存在。
+  }
+}
 
 export function initV3SourceDb(): Promise<void> {
   if (!initialized) {
@@ -52,6 +61,9 @@ export function initV3SourceDb(): Promise<void> {
           updated_at integer not null
         )
       `)
+      // Fork（almanac ALMNC-69.3）：日誌標籤。冪等遷移：欄位已存在時 SQLite 會丟錯，吞掉即可；舊資料預設 0（沒有標籤）。
+      // 這個專案的 note.db 沒有編號遷移，每張表在 init 時自己補欄位（同 memories、chats）。
+      await addSourcesColumn(db, 'is_journal integer not null default 0')
       await db.execute('create index if not exists idx_sources_status on sources(status, status_changed_at)')
       await db.execute('create index if not exists idx_sources_previous on sources(previous_id)')
       await db.execute(`
@@ -81,8 +93,8 @@ async function insertSource(source: Source): Promise<void> {
   await db.execute(
     `insert into sources
        (id, source_type, kind, content, origin, collected_at, collector, status, status_changed_at,
-        version, previous_id, locked_at, archived_at, created_at, updated_at)
-     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
+        version, previous_id, locked_at, archived_at, created_at, updated_at, is_journal)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`,
     sourceToValues(source)
   )
 }
@@ -92,9 +104,9 @@ async function updateSource(source: Source): Promise<void> {
   const db = await getDb()
   await db.execute(
     `update sources set content = $2, status = $3, status_changed_at = $4, locked_at = $5,
-       archived_at = $6, updated_at = $7
+       archived_at = $6, updated_at = $7, is_journal = $8
      where id = $1`,
-    [source.id, source.content, source.status, source.statusChangedAt, source.lockedAt ?? null, source.archivedAt ?? null, source.updatedAt]
+    [source.id, source.content, source.status, source.statusChangedAt, source.lockedAt ?? null, source.archivedAt ?? null, source.updatedAt, source.journal ? 1 : 0]
   )
 }
 
@@ -168,7 +180,7 @@ export async function insertLegacyNoteSources(sources: readonly Source[]): Promi
     const result = await db.execute(
       `insert into sources
          (id, source_type, kind, content, origin, collected_at, collector, status, status_changed_at,
-          version, previous_id, locked_at, archived_at, created_at, updated_at)
+          version, previous_id, locked_at, archived_at, created_at, updated_at, is_journal)
        values ${tuples.join(', ')}
        on conflict(id) do nothing`,
       values
@@ -196,8 +208,8 @@ export async function addSourceIfAbsent(input: NewSourceInput, now = Date.now())
   const result = await db.execute(
     `insert into sources
        (id, source_type, kind, content, origin, collected_at, collector, status, status_changed_at,
-        version, previous_id, locked_at, archived_at, created_at, updated_at)
-     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+        version, previous_id, locked_at, archived_at, created_at, updated_at, is_journal)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
      on conflict(id) do nothing`,
     sourceToValues(source)
   )
@@ -213,6 +225,14 @@ async function requireSource(id: string): Promise<Source> {
 export async function setSourceStatus(id: string, to: SourceStatus, now = Date.now()): Promise<Source> {
   const next = transitionSource(await requireSource(id), to, now)
   await updateSource(next)
+  return next
+}
+
+/** Fork（almanac ALMNC-69.3）：貼上或拿掉日誌標籤（Scott 直接生效，或接受指揮官的「判斷為日誌」）。 */
+export async function setSourceJournal(id: string, journal: boolean, now = Date.now()): Promise<Source> {
+  const current = await requireSource(id)
+  const next = setJournalTag(current, journal, now)
+  if (next !== current) await updateSource(next)
   return next
 }
 

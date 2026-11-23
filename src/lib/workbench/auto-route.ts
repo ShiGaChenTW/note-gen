@@ -181,10 +181,10 @@ export function noteSourceId(path: string): string {
 }
 
 /** 編輯器右上「送給指揮官」：把目前這篇筆記送成自己寫的資料源（來處是筆記路徑）。 */
-export function noteSource(note: { path: string, content: string }): AutoSourceInput | undefined {
+export function noteSource(note: { path: string, content: string, journal?: boolean }): AutoSourceInput | undefined {
   const content = note.content.trim()
   if (!content || !note.path) return undefined
-  return { id: noteSourceId(note.path), sourceType: 'self', kind: 'text', content, origin: note.path, collector: 'scott' }
+  return { id: noteSourceId(note.path), sourceType: 'self', kind: 'text', content, origin: note.path, collector: 'scott', ...(note.journal ? { journal: true } : {}) }
 }
 
 /** 對話結論（對話摘要存檔時）：系統產生的資料源；id 由對話決定（有 syncId 用 syncId），同一段對話重存只會接新版。 */

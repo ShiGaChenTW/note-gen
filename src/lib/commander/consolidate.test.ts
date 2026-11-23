@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { proposalNoteContent } from '@/lib/collect/builders'
 import { parseItems, serializeItems } from '@/lib/collect/persist'
 import { parseV3Note } from '@/lib/v3-model/note'
-import { acceptedOutputLinks, consolidate, draftToProposal, linkAcceptedOutputs } from './consolidate'
+import { acceptedOutputLinks, consolidate, draftToProposal, journalOnlyProposal, linkAcceptedOutputs } from './consolidate'
 import type { Draft, Fragment } from './types'
 
 const frag = (partial: Partial<Fragment> = {}): Fragment => ({ index: 0, kind: 'note', title: 't', body: '', people: [], tags: [], ...partial })
@@ -87,5 +87,31 @@ describe('接受後才寫的東西', () => {
     expect(broken[0].proposals[0].drafter).toBeUndefined()
     expect(broken[0].proposals[0].sourceIds).toBeUndefined()
     expect(broken[0].proposals[0].title).toBe(noteDraft.title)
+  })
+})
+
+describe('ALMNC-69.3 判斷理由與「判斷為日誌」', () => {
+  it('片段的理由與信心帶到提案上', () => {
+    const proposal = draftToProposal({ ...noteDraft, fragment: frag({ reason: '過一年仍成立', confidence: 'high' }) }, ['src_1'])
+    expect(proposal.rationale).toEqual({ reason: '過一年仍成立', confidence: 'high' })
+    expect(draftToProposal(noteDraft, ['src_1']).rationale).toBeUndefined()
+  })
+
+  it('判斷為日誌：掛在這批每一則提案上（接受哪一則都會一起貼標籤）', () => {
+    const batch = consolidate({ source, drafts: [noteDraft], origin: 'o', journal: { verdict: true, confidence: 'high', reason: '整篇是下午的記錄' } })!
+    expect(batch.proposals).toHaveLength(1)
+    expect(batch.proposals[0].journalTag).toEqual({ confidence: 'high', reason: '整篇是下午的記錄' })
+    expect(consolidate({ source, drafts: [noteDraft], origin: 'o' })!.proposals[0].journalTag).toBeUndefined()
+  })
+
+  it('判斷為日誌但沒有其他產出：出一張只貼標籤的判斷卡；沒判斷為日誌就照舊回 undefined', () => {
+    const batch = consolidate({ source, drafts: [], origin: 'o', sourceLabel: '11/03 下午', journal: { verdict: true, confidence: 'low' } })!
+    expect(batch.id).toBe('commander:src_1')
+    expect(batch.proposals).toEqual([expect.objectContaining({
+      kind: 'note', title: '11/03 下午', body: '', sourceIds: ['src_1'], card: { label: 'source', verb: 'judge' },
+      journalTag: { confidence: 'low', only: true },
+    })])
+    expect(consolidate({ source, drafts: [], origin: 'o' })).toBeUndefined()
+    expect(journalOnlyProposal('s', 't', { verdict: true, confidence: 'high' }, 9).conversationId).toBe(9)
   })
 })

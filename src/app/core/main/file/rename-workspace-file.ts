@@ -9,6 +9,7 @@ import { rewriteWorkspaceMarkdownMediaPaths } from '@/lib/markdown-media-path'
 import { moveSelfHostedWorkspacePath } from '@/lib/self-hosted-sync/files'
 import { withWorkspacePathMove } from '@/lib/sync/workspace-path-moves'
 import useArticleStore from '@/stores/article'
+import { usePendingDoneStore } from '@/lib/new-doc/pending-done'
 import { requestLinkRewrite } from '../link-rewrite/link-rewrite-store'
 
 /**
@@ -71,6 +72,8 @@ export async function renameWorkspaceFile(
         throw error
       }
       useArticleStore.getState().completeFileTreeRename(path, targetRelativePath, renameOperationId)
+      // Fork（almanac ALMNC-69.3）：從新增資料源對話框開的文件，「完成」按鈕跟著新路徑走。
+      usePendingDoneStore.getState().rename(path, targetRelativePath)
       options.onMoved?.()
     })
     const { renameVectorDocumentsByFilename } = await import('@/db/vector')

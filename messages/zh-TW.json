@@ -7141,7 +7141,11 @@
       "alreadySent": "這篇已經送過了，內容沒有變",
       "emptyNote": "這篇筆記是空的，沒有送出",
       "sendFailed": "送給指揮官失敗",
-      "saveBeforeSendFailed": "還沒存進檔案的修改存不進去，所以沒有送出"
+      "saveBeforeSendFailed": "還沒存進檔案的修改存不進去，所以沒有送出",
+      "done": "完成",
+      "doneHint": "把這篇文件交給指揮官",
+      "doneSent": "已完成，交給指揮官",
+      "doneJournalSent": "已完成，當成日誌交給指揮官"
     },
     "statusBar": {
       "documentActions": {
@@ -9239,11 +9243,10 @@
     "sources": {
       "filterLabel": "依狀態篩選",
       "filters": {
-        "all": "全部",
-        "wait": "等你決定",
-        "todo": "未整理",
-        "done": "已整理",
-        "no": "不採用"
+        "pending": "待處理",
+        "analyzed": "已分析",
+        "rejected": "不採用",
+        "journal": "日誌"
       },
       "status": {
         "wait": "等你決定",
@@ -9354,7 +9357,9 @@
       "retry": "重試",
       "delete": "刪除",
       "captureFailed": "擷取失敗",
-      "captureFailedHint": "抓不到這個網頁的內容。可以重試，或刪除這則資料源。"
+      "captureFailedHint": "抓不到這個網頁的內容。可以重試，或刪除這則資料源。",
+      "typeFilterLabel": "依類型篩選",
+      "journalTag": "日誌"
     },
     "desk": {
       "title": "檯面",
@@ -9403,12 +9408,14 @@
       "title": "新增資料源",
       "subtitle": "輸入內容，自動分類",
       "saved": "已加進資料源，交給 {name} 整理",
-      "savedLink": "已加進資料源，等你決定要不要處理"
+      "savedLink": "已加進資料源，等你決定要不要處理",
+      "journal": "這是日誌",
+      "journalHint": "自己寫的事件記錄，原文不拆，只從裡面抽出知識。",
+      "newDoc": "新增文件",
+      "newDocHint": "在編輯器裡寫，按「完成」才交給 {name}。"
     },
     "quick": {
       "label": "新增",
-      "newDoc": "新增文件",
-      "newDocShort": "文件",
       "addSource": "新增資料源",
       "addSourceShort": "資料源",
       "newThread": "新增對話",
@@ -9468,6 +9475,16 @@
       "changed": "原建議 → 你的修改",
       "changedTitle": "標題：{from} → {to}",
       "changedFolder": "存放位置：{from} → {to}"
+    },
+    "verdict": {
+      "journal": "判斷為日誌（信心{confidence}）",
+      "journalOnly": "接受後替這則資料源貼上日誌標籤，不寫筆記。",
+      "rationale": "理由：{reason}",
+      "rationaleWithConfidence": "理由：{reason}（信心{confidence}）",
+      "confidence": {
+        "high": "高",
+        "low": "低"
+      }
     }
   },
   "cleanup": {

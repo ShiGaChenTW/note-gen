@@ -7,6 +7,14 @@ import { loadItems, mergeItems, saveItems } from '@/lib/collect/persist'
 import { splitInput } from '@/lib/collect/split'
 import { acceptProposal, undoAccepted, type AcceptResult } from '@/lib/collect/write'
 import { linkAcceptedOutputs } from '@/lib/commander/consolidate'
+
+/** Fork（almanac ALMNC-69.3）：替資料源貼上日誌標籤（已經有的不動），貼完重讀資料源分頁。 */
+async function applyJournalTag(sourceIds: readonly string[]): Promise<void> {
+  const db = await import('@/db/v3-sources')
+  for (const id of new Set(sourceIds)) await db.setSourceJournal(id, true)
+  const { refreshSources } = await import('@/lib/workbench/actions')
+  await refreshSources()
+}
 import type { CollectInput, Proposal, SplitSource } from '@/lib/collect/types'
 import { setRecordsProcessed } from '@/lib/inbox/actions'
 import { replacedProposalKeys } from '@/lib/proposals/trail'
@@ -148,6 +156,10 @@ const useCollectStore = create<CollectState>((set, get) => ({
     // 連結表寫失敗也查得到來源（lib/v3-model/links.ts sourcesOfNote 取聯集），所以只記錯、不擋接受。
     if (proposal.sourceIds?.length) {
       await linkAcceptedOutputs(proposal, result).catch(error => console.error('[collect] source output link failed:', error))
+    }
+    // Fork（almanac ALMNC-69.3）：指揮官「判斷為日誌」隨 Scott 接受一起生效。寫失敗只記錯，不擋已經寫好的筆記。
+    if (proposal.journalTag && proposal.sourceIds?.length) {
+      await applyJournalTag(proposal.sourceIds).catch(error => console.error('[collect] journal tag failed:', error))
     }
     // Fork（almanac ALMNC-54.12）：新筆記寫入後，負責的專家在背景比對同領域的類似筆記（發現時機 1）；不擋接受。
     if (proposal.kind === 'note' && !proposal.slot && !proposal.change && !proposal.edits?.length && !proposal.review && result.path) {

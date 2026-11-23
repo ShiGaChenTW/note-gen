@@ -68,6 +68,8 @@ const defaultIdStore: IdStore = {
 export async function acceptProposal(proposal: Proposal, options: { noteFolder: string, now?: Date, applyChange?: ApplyChange, applyEdits?: ApplyEdits, ids?: IdStore }): Promise<AcceptResult> {
   const now = options.now ?? new Date()
   if (proposal.slot) return acceptSlot({ ...proposal, slot: proposal.slot }, now)
+  // Fork（almanac ALMNC-69.3）：只貼日誌標籤的卡不寫筆記庫；標籤由 stores/collect 接受後寫進資料源。
+  if (proposal.journalTag?.only) return { path: '' }
   if (proposal.edits?.length || proposal.domainEdits?.length || proposal.memoryEdits?.length) {
     const targets = await (options.applyEdits ?? defaultApplyEdits)(proposal)
     return { path: proposal.edits?.[0]?.path ?? targets[0] ?? '' }

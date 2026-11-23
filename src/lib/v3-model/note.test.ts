@@ -138,6 +138,15 @@ describe('寫回 V3 欄位', () => {
   })
 })
 
+describe('ALMNC-69.3 日誌筆記的類型值 log', () => {
+  it('讀取時 type: log 當成日誌筆記（現行內部值 record），不算格式錯誤', () => {
+    const note = parseV3Note('---\ntype: log\ntitle: 11/10 週會\n---\n內文\n')
+    expect(note.fields.type).toBe('record')
+    expect(note.issues).toEqual([])
+    expect(parseV3Note('---\ntype: record\n---\n').fields.type).toBe('record')
+  })
+})
+
 // Fork（almanac ALMNC-69.1）：身分編號放 frontmatter 第一行。
 describe('身分編號 id', () => {
   it('解析 id；格式不對時記為問題', () => {

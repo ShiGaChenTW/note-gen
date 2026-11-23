@@ -106,26 +106,27 @@ it('maps the visible Plan entry to the week overlay and removes the V3 navigatio
   expect(host.querySelector('nav')?.textContent).not.toContain('Decide')
 })
 
-// Fork（almanac ALMNC-54.8、54.16、54.18）：側欄搜尋下方三個只有圖示的按鈕（拿掉「待確定」），主導覽沒有「收集」。
-it('shows the three icon-only quick buttons under search and no 收集 in the nav', async () => {
+// Fork（almanac ALMNC-54.8、54.16、54.18、69.3）：側欄搜尋下方兩個只有圖示的起點按鈕（新增文件收進新增資料源對話框），主導覽沒有「收集」。
+it('shows the two icon-only quick buttons under search and no 收集 in the nav', async () => {
   await render(React.createElement(LeftSidebar))
   const nav = host.querySelector('[data-sidebar-v3] nav')!
   expect([...nav.querySelectorAll('button')].map(button => button.textContent?.replace(/\d+$/, ''))).toEqual(['今天', '工作台', '對話', '整理', '計畫'])
   const quick = host.querySelector('[data-testid="sidebar-quick"]')!
-  expect(quick.className).toContain('grid-cols-3')
+  expect(quick.className).toContain('grid-cols-2')
   const buttons = [...quick.querySelectorAll('button')]
-  expect(buttons.map(button => button.dataset.quick)).toEqual(['doc', 'source', 'thread'])
-  expect(buttons.map(button => button.getAttribute('aria-label'))).toEqual(['新增文件', '新增資料源', '新增對話'])
+  expect(buttons.map(button => button.dataset.quick)).toEqual(['source', 'thread'])
+  expect(buttons.map(button => button.getAttribute('aria-label'))).toEqual(['新增資料源', '新增對話'])
   // ALMNC-56.4：工作台沒開時單鍵 N／T 不作用，就不標（見下一則測試）
-  expect(buttons.map(button => button.getAttribute('aria-keyshortcuts'))).toEqual([null, null, null])
-  expect(buttons.map(button => button.disabled)).toEqual([false, false, false])
-  expect([...quick.querySelectorAll('[role="tooltip"]')].map(tip => tip.textContent)).toEqual(['新增文件', '新增資料源', '新增對話'])
+  expect(buttons.map(button => button.getAttribute('aria-keyshortcuts'))).toEqual([null, null])
+  expect(buttons.map(button => button.disabled)).toEqual([false, false])
+  expect([...quick.querySelectorAll('[role="tooltip"]')].map(tip => tip.textContent)).toEqual(['新增資料源', '新增對話'])
   expect(quick.textContent).not.toContain('待確定')
+  expect(quick.querySelector('[data-quick="doc"]')).toBeNull()
   // 手機版圖示下的小字（md 以上隱藏）
-  expect(buttons.map(button => button.querySelector('span')?.textContent)).toEqual(['文件', '資料源', '對話'])
+  expect(buttons.map(button => button.querySelector('span')?.textContent)).toEqual(['資料源', '對話'])
   const opened = vi.fn()
   emitter.on('unified-record-open', opened)
-  await act(async () => buttons[1].click())
+  await act(async () => buttons[0].click())
   expect(opened).toHaveBeenCalledWith({ target: 'source' })
   emitter.off('unified-record-open', opened)
 })
@@ -138,16 +139,16 @@ it('labels N / T on the quick buttons only while the workbench is open and the s
   const quick = () => host.querySelector('[data-testid="sidebar-quick"]')!
   const shortcuts = () => [...quick().querySelectorAll('button')].map(button => button.getAttribute('aria-keyshortcuts'))
   const tips = () => [...quick().querySelectorAll('[role="tooltip"]')].map(tip => tip.textContent)
-  expect(shortcuts()).toEqual([null, null, null])
-  expect(tips()).toEqual(['新增文件', '新增資料源', '新增對話'])
+  expect(shortcuts()).toEqual([null, null])
+  expect(tips()).toEqual(['新增資料源', '新增對話'])
 
   await act(async () => useDecideStore.setState({ visible: true }))
-  expect(shortcuts()).toEqual([null, 'N', 'T'])
-  expect(tips()).toEqual(['新增文件', '新增資料源　N', '新增對話　T'])
+  expect(shortcuts()).toEqual(['N', 'T'])
+  expect(tips()).toEqual(['新增資料源　N', '新增對話　T'])
 
   await act(async () => useSettingStore.setState({ workbenchSingleKeys: false }))
-  expect(shortcuts()).toEqual([null, null, null])
-  expect(tips()).toEqual(['新增文件', '新增資料源', '新增對話'])
+  expect(shortcuts()).toEqual([null, null])
+  expect(tips()).toEqual(['新增資料源', '新增對話'])
 
   await act(async () => {
     useSettingStore.setState({ workbenchSingleKeys: true })
@@ -193,16 +194,6 @@ it('titles the file tree with the vault folder name and follows workspace switch
   expect(section().getAttribute('aria-label')).toBe('Personal')
   expect(section().querySelector('button[aria-expanded]')!.getAttribute('aria-label')).toBe('收合Personal')
   useSettingStore.setState({ workspacePath: '' })
-})
-
-it('creates a new document from the first quick button', async () => {
-  const create = await import('@/lib/new-doc/create')
-  const spy = vi.spyOn(create, 'createNewDocument').mockResolvedValue('未命名.md')
-  await render(React.createElement(LeftSidebar))
-  const button = host.querySelector<HTMLButtonElement>('[data-quick="doc"]')!
-  await act(async () => button.click())
-  await vi.waitFor(() => expect(spy).toHaveBeenCalledTimes(1))
-  spy.mockRestore()
 })
 
 it('switches to Ask with Tab and lets the next Tab and Shift+Tab leave the input', async () => {

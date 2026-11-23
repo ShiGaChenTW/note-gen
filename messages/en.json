@@ -7076,7 +7076,11 @@
       "alreadySent": "Already sent, and the note hasn't changed",
       "emptyNote": "This note is empty, so nothing was sent",
       "sendFailed": "Couldn't send to the commander",
-      "saveBeforeSendFailed": "Couldn't save the latest changes, so nothing was sent"
+      "saveBeforeSendFailed": "Couldn't save the latest changes, so nothing was sent",
+      "done": "Done",
+      "doneHint": "Hand this document to the commander",
+      "doneSent": "Done. Handed to the commander",
+      "doneJournalSent": "Done. Handed to the commander as a journal entry"
     },
     "statusBar": {
       "documentActions": {
@@ -9174,11 +9178,10 @@
     "sources": {
       "filterLabel": "Filter by status",
       "filters": {
-        "all": "All",
-        "wait": "Awaiting you",
-        "todo": "Not organized",
-        "done": "Organized",
-        "no": "Not used"
+        "pending": "Pending",
+        "analyzed": "Analyzed",
+        "rejected": "Not used",
+        "journal": "Journal"
       },
       "status": {
         "wait": "Awaiting you",
@@ -9289,7 +9292,9 @@
       "retry": "Retry",
       "delete": "Delete",
       "captureFailed": "Capture failed",
-      "captureFailedHint": "Couldn't read this page. Retry, or delete this source."
+      "captureFailedHint": "Couldn't read this page. Retry, or delete this source.",
+      "typeFilterLabel": "Filter by type",
+      "journalTag": "Journal"
     },
     "desk": {
       "title": "Desk",
@@ -9338,12 +9343,14 @@
       "title": "Add source",
       "subtitle": "Type anything; it's classified automatically",
       "saved": "Added to sources; {name} will organize it",
-      "savedLink": "Added to sources; waiting for your decision"
+      "savedLink": "Added to sources; waiting for your decision",
+      "journal": "This is a journal entry",
+      "journalHint": "Something you wrote about what happened. It stays as written; only knowledge is drawn from it.",
+      "newDoc": "New document",
+      "newDocHint": "Write it in the editor; press Done to hand it to {name}."
     },
     "quick": {
       "label": "Add",
-      "newDoc": "New document",
-      "newDocShort": "Doc",
       "addSource": "Add source",
       "addSourceShort": "Source",
       "newThread": "New conversation",
@@ -9403,6 +9410,16 @@
       "changed": "Original suggestion → your edit",
       "changedTitle": "Title: {from} → {to}",
       "changedFolder": "Location: {from} → {to}"
+    },
+    "verdict": {
+      "journal": "Judged as a journal entry (confidence: {confidence})",
+      "journalOnly": "Accepting tags this source as a journal entry. No note is written.",
+      "rationale": "Reason: {reason}",
+      "rationaleWithConfidence": "Reason: {reason} (confidence: {confidence})",
+      "confidence": {
+        "high": "high",
+        "low": "low"
+      }
     }
   },
   "cleanup": {

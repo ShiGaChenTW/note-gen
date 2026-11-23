@@ -69,6 +69,10 @@ export interface DecideItem {
   drafter?: Proposal['drafter']
   /** Fork（almanac ALMNC-65.1）：接受後會改到的完整前後內容（風險判斷與差異檢視用）；新增筆記、任務、時段、搬移等沒有。 */
   changes?: ContentChange[]
+  /** Fork（almanac ALMNC-69.3）：指揮官對片段的判斷理由與信心。 */
+  rationale?: Proposal['rationale']
+  /** Fork（almanac ALMNC-69.3）：「判斷為日誌」（接受時一起貼標籤）。 */
+  journalTag?: Proposal['journalTag']
 }
 
 export type DecideRef =
@@ -251,6 +255,9 @@ function projectCollect(items: CollectItemLike[], journal: JournalSnapshot | nul
       } else if (slot && journal) {
         const after = scheduleSlot(journal.before, slot, proposal.due, proposal.time)
         preview = { type: 'file', path: slot.path, diff: after === null ? null : previewDiff(journal.before, after) }
+      } else if (proposal.journalTag?.only) {
+        // Fork（almanac ALMNC-69.3）：只貼日誌標籤，不寫任何檔案。
+        preview = { type: 'newNote', diff: { context: [], removed: [], added: [], hidden: 0 } }
       } else if (proposal.kind === 'note') {
         preview = { type: 'newNote', diff: previewDiff('', proposalNoteContent(proposal)) }
       } else if (journal) {
@@ -276,6 +283,8 @@ function projectCollect(items: CollectItemLike[], journal: JournalSnapshot | nul
         ...(proposal.previousProposalId ? { previousProposalId: proposal.previousProposalId } : {}),
         ...(proposal.card ? { card: proposal.card } : {}),
         ...(proposal.drafter ? { drafter: proposal.drafter } : {}),
+        ...(proposal.rationale ? { rationale: proposal.rationale } : {}),
+        ...(proposal.journalTag ? { journalTag: proposal.journalTag } : {}),
         ...(proposal.edits?.length ? { notePaths: Array.from(new Set(proposal.edits.map(item => item.path))) } : {}),
         ...(changes.length ? { changes } : {}),
       }

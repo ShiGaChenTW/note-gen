@@ -1,13 +1,13 @@
 'use client'
 
 // Fork（almanac ALMNC-54.8）：工作台「資料源」分頁（原收集箱，Q36；v14）。
-// 左邊清單：上方只有狀態篩選（全部／等你決定／未整理／已整理／不採用），沒有輸入框和搜尋列；常駐勾選框＋全選，顯示「N / M 已整理」；
+// 左邊清單：上方兩排篩選（ALMNC-69.3：狀態〔待處理／已分析／不採用〕＋類型〔日誌〕，可組合），沒有輸入框和搜尋列；常駐勾選框＋全選，顯示「N / M 已整理」；
 // 已整理的列有勾號與「N 則產出」。勾選後可以「交給 <指揮官本名> 整理」或「攤到檯面」。右邊讀原文、做決定；E 進整頁編輯器。
 import { useTranslations } from 'next-intl'
 import { ArrowLeft, Check, Lock } from 'lucide-react'
 import { toast } from 'sonner'
 import {
-  SOURCE_FILTERS, dayBucket, filterCounts, filterRows, organisedSummary, pickState, restorePicks, toggleAll, togglePick, type SourceListRow,
+  SOURCE_STATUS_FILTERS, canReject, dayBucket, filterCounts, filterRows, organisedSummary, pickState, restorePicks, toggleAll, togglePick, type SourceListRow,
 } from '@/lib/workbench/sources-tab'
 import { deleteFailedSource, handToCommander, processSource, refreshSources, rejectSource, restoreSource, retryCapture, sendToCommander } from '@/lib/workbench/actions'
 import type { DeskMaterial } from '@/lib/workbench/desk'
@@ -45,6 +45,34 @@ function Checkbox({ state, label, onClick, className }: { state: 'all' | 'some' 
         {mixed && <span className="h-0.5 w-[7px] bg-ink" />}
       </span>
     </button>
+  )
+}
+
+/** Fork（almanac ALMNC-69.3）：日誌標籤的小標。 */
+function JournalTag() {
+  const t = useTranslations('workbench.sources')
+  return <span className="rounded-(--r-kbd) border border-line px-1.5 py-px text-ui-numeric whitespace-nowrap text-muted-ink" data-testid="source-journal">{t('journalTag')}</span>
+}
+
+/** 類型那一排：目前只有「日誌」一顆，可以和狀態任意組合（按一下切換）。外觀同 FilterPills。 */
+function TypeFilter({ pressed, count, onToggle }: { pressed: boolean, count: number, onToggle: () => void }) {
+  const t = useTranslations('workbench.sources')
+  return (
+    <div role="group" aria-label={t('typeFilterLabel')} className="flex gap-1.5" data-testid="source-type-filters">
+      <button
+        type="button"
+        aria-pressed={pressed}
+        data-filter="journal"
+        onClick={onToggle}
+        className={cn(
+          'inline-flex h-7 flex-none cursor-pointer items-center gap-1.5 rounded-(--r) border border-line px-[11px] text-ui-compact text-muted-ink outline-none transition-colors duration-100 hover:border-ink/25 hover:text-ink focus-visible:ring-1 focus-visible:ring-ink/60',
+          pressed && 'border-invert bg-invert font-semibold text-invert-ink hover:text-invert-ink',
+        )}
+      >
+        {t('filters.journal')}
+        <span className={cn('text-xs tabular-nums text-faint', pressed && 'text-invert-ink/65')}>{count}</span>
+      </button>
+    </div>
   )
 }
 
@@ -92,6 +120,7 @@ function Row({ row, selected, focusable, picked, onSelect, onPick }: { row: Sour
         </span>
         <span className="mt-0.5 flex flex-col items-end gap-0.5 pl-2.5">
           <StatusTag status={row.status} />
+          {row.journal && <JournalTag />}
           {sub && <span className="text-ui-numeric whitespace-nowrap text-faint" data-testid="row-sub">{sub}</span>}
         </span>
       </button>
@@ -146,7 +175,8 @@ function Detail({ row, commanderName, onDesk }: { row: SourceListRow, commanderN
           ]
         : [{ key: 'process', label: t('handle'), primary: true, kbd: 'A', run: () => void act(() => processSource(sourceId), toastT('processed', { title: row.title, name: commanderName })) }]),
       { key: 'putAside', label: t('putAside'), run: putAside },
-      { key: 'reject', label: t('reject'), kbd: 'X', run: () => void act(() => rejectSource(sourceId), t('toast.rejected', { title: row.title })) },
+      // Fork（almanac ALMNC-69.3）：帶日誌標籤的不給不採用。
+      ...(canReject(row) ? [{ key: 'reject', label: t('reject'), kbd: 'X', run: () => void act(() => rejectSource(sourceId), t('toast.rejected', { title: row.title })) }] : []),
     ]
   } else if (row.status === 'todo') {
     actions = [sourceId
@@ -170,6 +200,7 @@ function Detail({ row, commanderName, onDesk }: { row: SourceListRow, commanderN
         <button type="button" aria-label={t('back')} onClick={() => selectRow(null)} className="grid size-7 cursor-pointer place-items-center rounded-(--r-kbd) hover:bg-hover md:hidden"><ArrowLeft className="size-4" aria-hidden /></button>
         <span className="font-semibold text-ink">{t(`kind.${row.kind}`)}</span>
         <StatusTag status={row.status} />
+        {row.journal && <JournalTag />}
         {row.archived && <span className="rounded-(--r-kbd) bg-hover px-1.5 py-px text-ui-numeric whitespace-nowrap text-muted-ink" data-testid="source-archived">{t('archived')}</span>}
         {row.version > 1 && <span className="tabular-nums">{t('version', { version: row.version })}</span>}
         <span className="flex-1" />
@@ -223,7 +254,7 @@ export function SourcesTab({ rows, commanderName, onDesk }: { rows: SourceListRo
   const loadError = useWorkbenchStore(state => state.sourcesError)
 
   const visible = filterRows(rows, filter)
-  const counts = filterCounts(rows)
+  const counts = filterCounts(rows, filter)
   const summary = organisedSummary(rows)
   const ids = visible.map(row => row.id)
   const current = rows.find(row => row.id === selected) ?? null
@@ -254,13 +285,16 @@ export function SourcesTab({ rows, commanderName, onDesk }: { rows: SourceListRo
   return (
     <div className="grid min-h-0 flex-1 grid-cols-1 md:grid-cols-[440px_minmax(0,1fr)]" data-testid="sources-tab">
       <div className={cn('relative flex min-h-0 flex-col overflow-y-auto border-r border-line-soft px-2.5 pt-3 pb-10', current && 'max-md:hidden')}>
-        <div className="px-1"><FilterPills
-          items={SOURCE_FILTERS.map(value => ({ value, label: t(`filters.${value}`), count: counts[value] }))}
-          value={filter}
-          onChange={setFilter}
-          label={t('filterLabel')}
-          testId="source-filters"
-        /></div>
+        <div className="flex flex-col gap-1.5 px-1">
+          <FilterPills
+            items={SOURCE_STATUS_FILTERS.map(value => ({ value, label: t(`filters.${value}`), count: counts[value] }))}
+            value={filter.status}
+            onChange={status => setFilter({ ...filter, status })}
+            label={t('filterLabel')}
+            testId="source-filters"
+          />
+          <TypeFilter pressed={filter.journal} count={counts.journal} onToggle={() => setFilter({ ...filter, journal: !filter.journal })} />
+        </div>
         <div className="flex items-center gap-1.5 pt-2.5 pr-3 pb-0.5 text-xs text-muted-ink">
           <Checkbox state={pickState(ids, picked)} label={t('selectAllLabel')} onClick={() => setPicked(toggleAll(ids, picked))} />
           <span>{t('selectAll')}</span>

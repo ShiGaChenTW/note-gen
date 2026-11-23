@@ -25,7 +25,7 @@ import { useTranslations } from 'next-intl'
 import { v4 as uuid } from 'uuid'
 import { addNewSource } from '@/lib/workbench/actions'
 import { newSourceType } from '@/lib/workbench/judgement'
-import { openAddSource, openWorkbench } from '@/lib/workbench/open'
+import { openAddSource, openNewDocument, openWorkbench } from '@/lib/workbench/open'
 import { useCommanderName } from '@/lib/workbench/use-workbench'
 import { MBOX_LIMIT } from '@/lib/source-import/email'
 import {
@@ -33,7 +33,7 @@ import {
 } from '@/lib/source-import/import-files'
 import { rssErrorText, rssSubscribeErrorText } from '@/lib/source-import/rss-errors'
 import { useUiV3 } from '@/lib/fork-ui'
-import { ImportProgress, ReadLaterButton, V3_STOP_RECORDING_CLASS, V3TypeRow, type ImportBusyKind } from './record-dialog-v3'
+import { ImportProgress, ReadLaterButton, SourceStartOptions, V3_STOP_RECORDING_CLASS, V3TypeRow, type ImportBusyKind } from './record-dialog-v3'
 
 const typeIcon: Record<UnifiedRecordType, ReactNode> = {
   link: <Link2 />,
@@ -114,6 +114,8 @@ export function UnifiedRecordDialog() {
   const [sourceUrl, setSourceUrl] = useState('')
   // Fork（almanac ALMNC-54.10）：貼上的字數；資料源模式下大部分是貼上的文字算外部擷取（等你決定＋初步判斷），自己打的算自己寫的（R2）。
   const pastedCharsRef = useRef(0)
+  // Fork（almanac ALMNC-69.3）：資料源模式的「這是日誌」；Scott 勾了直接生效（存進資料源的日誌標籤）。
+  const [journal, setJournal] = useState(false)
   const [expanded, setExpanded] = useState(false)
   const [modifierLabel, setModifierLabel] = useState('⌘')
   const [saving, setSaving] = useState(false)
@@ -160,6 +162,7 @@ export function UnifiedRecordDialog() {
     const openDialog = (payload?: { type?: UnifiedRecordSelection; prefillText?: string; target?: 'source' }) => {
       setTarget(payload?.target ?? 'record')
       setSelection(payload?.type ?? 'auto')
+      setJournal(false)
       const prefillText = payload?.prefillText ?? onboardingPrefillRef.current
       if (prefillText) setText(prefillText)
       setOpen(true)
@@ -195,7 +198,16 @@ export function UnifiedRecordDialog() {
     setTodo({ title: '', description: '', priority: 'medium' })
     setExpanded(false)
     setSelection('auto')
+    setJournal(false)
     setOpen(false)
+  }
+
+  // Fork（almanac ALMNC-69.3，Q9）：「新增文件」收進新增資料源對話框：打開編輯器自己寫，按「完成」才交給指揮官（存檔不送）。
+  const startNewDocument = () => {
+    const asJournal = journal
+    setOpen(false)
+    setJournal(false)
+    void openNewDocument({ fromSource: true, journal: asJournal })
   }
 
   // 關閉視窗不清空草稿：媒體流程有自己的原生視窗，結束後重新打開仍可接著寫。
@@ -214,8 +226,9 @@ export function UnifiedRecordDialog() {
       : type === 'todo'
         ? [todoDraft.title, todoDraft.description].filter(Boolean).join('\n\n')
         : value
-    const rowId = await addNewSource({ type, content, origin: type === 'prompt-draft' ? sourceUrl.trim() || undefined : undefined, pastedChars: pastedCharsRef.current })
-    const external = newSourceType({ type, content, pastedChars: pastedCharsRef.current }) === 'external'
+    const asJournal = journal && type === 'text'
+    const rowId = await addNewSource({ type, content, origin: type === 'prompt-draft' ? sourceUrl.trim() || undefined : undefined, pastedChars: pastedCharsRef.current, journal: asJournal })
+    const external = newSourceType({ type, content, pastedChars: pastedCharsRef.current, journal: asJournal }) === 'external'
     toast({ title: external ? t('workbench.add.savedLink') : t('workbench.add.saved', { name: commanderName }) })
     openWorkbench('sources', rowId)
   }
@@ -523,6 +536,9 @@ export function UnifiedRecordDialog() {
                 </div>
               )}
             </div>
+          )}
+          {target === 'source' && (
+            <SourceStartOptions journal={journal} journalAvailable={resolvedType === 'text'} onJournalChange={setJournal} onNewDocument={startNewDocument} commanderName={commanderName} disabled={saving} />
           )}
           {target === 'record' && <RecordSaveTarget selectedTagId={selectedTagId} tags={tags} disabled={saving} onTagChange={setSelectedTagId} onCreatingChange={setCreatingTag} />}
         </div>
