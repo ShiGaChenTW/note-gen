@@ -75,6 +75,9 @@ describe('cleanupProposals', () => {
     expect(old.fields.related).toContain('[[k/b]]')
     expect(old.body).toContain('節拍時間是 60 秒。')
     expect(parseV3Note(after.get('k/b.md')!).fields.related).toContain('[[k/a]]')
+    // ALMNC-69.7：新筆記承接舊筆記的 MOC 收錄（接受時寫 MOC），不改任何筆記的 frontmatter domains。
+    expect(proposal.membershipTransfers).toEqual([{ from: 'k/a.md', to: 'k/b.md' }])
+    expect(parseV3Note(after.get('k/b.md')!).fields.domains).toEqual(['ie'])
   })
 
   it('replace without a newer note creates one from the revised body', () => {
@@ -84,12 +87,16 @@ describe('cleanupProposals', () => {
     expect(parseV3Note(created.content).fields).toMatchObject({ status: 'valid', sources: ['src_A'], related: ['[[k/a]]'], lastConfirmed: '2026-11-21' })
     expect(parseV3Note(after.get('k/a.md')!).fields.status).toBe('superseded')
     expect(proposal.body).toContain('https://example.com')
+    // ALMNC-69.7：新筆記不寫 domains（不當權威），由承接 MOC 收錄後重建。
+    expect(parseV3Note(created.content).fields.domains).toEqual([])
+    expect(proposal.membershipTransfers).toEqual([{ from: 'k/a.md', to: created.path }])
   })
 
   it('replace with nothing to replace falls back to needs-verification instead of overwriting', () => {
     const { proposal, after } = single(obs('outdated', ['k/a.md'], { conclusionChanged: true }))
     expect(proposal.card?.verb).toBe('verify')
     expect(parseV3Note(after.get('k/a.md')!).fields.status).toBe('disputed')
+    expect(proposal.membershipTransfers).toBeUndefined()
   })
 
   it('verify: marks both notes disputed and lists the issue in the domain', () => {
@@ -121,6 +128,9 @@ describe('cleanupProposals', () => {
     expect(other.fields.status).toBe('archived')
     expect(other.fields.related).toContain('[[k/c]]')
     expect(other.body).toContain('產線平衡率的定義同 C。')
+    // ALMNC-69.7：留下的那則承接被合併那則的 MOC 收錄；frontmatter domains 不由合併寫入。
+    expect(proposal.membershipTransfers).toEqual([{ from: 'k/d.md', to: 'k/c.md' }])
+    expect(keeper.fields.domains).toEqual(parseV3Note(notes.get('k/c.md')!).fields.domains)
   })
 
   it('archive: only changes the status and logs why', () => {

@@ -14,7 +14,7 @@ import { dateKey } from '@/lib/today/today-model'
 import type { CardAction, WorkbenchCard } from '@/lib/workbench/cards'
 import { memberCard, nextCursor } from '@/lib/workbench/cards'
 import {
-  acceptBatchCard, acceptCard, completeTask, confirmStillValid, confirmToCommander, deleteFailedSource, dropCard, pauseLegacy, processSource, rejectSource,
+  acceptBatchCard, acceptCard, completeTask, confirmStillValid, removeDomainChoice, confirmToCommander, deleteFailedSource, dropCard, pauseLegacy, processSource, rejectSource,
   resolveLegacyPack, retryCapture, scheduleCardTask, startLegacy, type Undo,
 } from '@/lib/workbench/actions'
 import { currentUnmarkedLegacy } from '@/lib/workbench/use-workbench'
@@ -242,8 +242,16 @@ export function useCardActions({ visible, commanderName }: { visible: readonly W
       case 'packDone':
         if (!card.packId) return
         return settle(card, () => resolveLegacyPack(card.packId!), t('legacy.toast.packDone', { title }))
-      case 'answer':
       case 'pick':
+        // Fork（almanac ALMNC-69.7）：超過上限卡：選的是要拿掉的領域。
+        if (card.kind === 'domainLimit') {
+          const domain = payload?.note
+          if (!card.notePath || !domain) return
+          return settle(card, () => removeDomainChoice(card.notePath!, domain), t('toast.domainRemoved', { title, domain }))
+        }
+        if (card.conversationId !== undefined) await openConversation(card.conversationId)
+        return
+      case 'answer':
         if (card.conversationId !== undefined) await openConversation(card.conversationId)
         return
     }

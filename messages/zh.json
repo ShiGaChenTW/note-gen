@@ -9177,7 +9177,8 @@
       "deleted": "已删除「{title}」",
       "batchAccepted": "已接受 {count} 条新笔记",
       "batchPartial": "{count} 条没有接受成功：{titles}，其他条已接受",
-      "batchFailed": "全部没有接受成功：{titles}"
+      "batchFailed": "全部没有接受成功：{titles}",
+      "domainRemoved": "已把“{title}”从“{domain}”拿掉"
     },
     "sources": {
       "filterLabel": "依状态筛选",
@@ -9430,6 +9431,11 @@
       "journalOnce": "接受时为这则资料源贴一次日志标签。",
       "accept": "接受",
       "drop": "退回"
+    },
+    "domainLimit": {
+      "summary": "收录在 {count} 个领域，超过上限 {limit} 个",
+      "body": "一则笔记最多属于 {limit} 个领域。选一个要拿掉的领域，会从那个 MOC 移除这则笔记的收录；其他领域照旧。",
+      "by": "系统"
     }
   },
   "cleanup": {

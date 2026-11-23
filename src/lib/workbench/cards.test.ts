@@ -235,3 +235,20 @@ describe('legacy batch and pack cards', () => {
     expect(actionForKey(card!, 'c')).toBe('packDone')
   })
 })
+
+// Fork（almanac ALMNC-69.7）：收錄超過 3 個領域的筆記 → 一張卡，選項是各領域（選的是要拿掉的那個）。
+describe('domain limit cards', () => {
+  it('projects an over-limit note into a knowledge card whose choices are its domains', () => {
+    const [card] = buildReviewCards({
+      now: NOW,
+      proposals: [],
+      domainLimits: [{ notePath: '10 知識/切換工作.md', title: '切換工作', domains: ['時間管理', '專注力', '睡眠', '寫作'], summary: '收錄在 4 個領域', by: '系統', at: NOW - DAY }],
+    })
+    expect(card).toMatchObject({
+      key: 'domain-limit:10 知識/切換工作.md', kind: 'domainLimit', group: 'proposal', label: 'knowledge', verb: 'organize',
+      title: '切換工作', path: '10 知識', notePath: '10 知識/切換工作.md', choices: ['時間管理', '專注力', '睡眠', '寫作'],
+    })
+    expect(card.actions).toEqual(ACTIONS_BY_KIND.domainLimit)
+    expect(card.actions).toEqual(['pick'])
+  })
+})

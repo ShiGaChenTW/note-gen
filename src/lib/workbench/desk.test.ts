@@ -1,6 +1,9 @@
 // Fork（almanac ALMNC-54.8）：檯面（AC#5）——結構操作直接生效（搬移、加標籤、連結、歸入領域）。
 import { describe, expect, it, vi } from 'vitest'
 import { parseV3Note } from '@/lib/v3-model/note'
+import { assignToMocs } from '@/lib/moc/service'
+import { createMemoryMocIo } from '@/lib/moc/testing'
+import { parseMoc } from '@/lib/moc/parse'
 import { STRUCTURAL_OPS, applyStructuralOp, deskHeading, handwrittenNote, initialDraft, mergeDeskDraft, noteFileName, type NoteIo } from './desk'
 
 function memoryIo(files: Record<string, string>): NoteIo & { files: Record<string, string> } {
@@ -14,6 +17,8 @@ function memoryIo(files: Record<string, string>): NoteIo & { files: Record<strin
       delete files[path]
       return to
     }),
+    // Fork（almanac ALMNC-69.7）：歸入領域走 MOC（同 actions.ts defaultNoteIo，只是 I/O 換成記憶體）。
+    assignDomain: async (path, domainId) => (await assignToMocs(createMemoryMocIo(files, { domainNames: { dom_1: '工業工程' } }), [{ notePath: path, domain: domainId }])).undo,
   }
 }
 
@@ -22,17 +27,26 @@ describe('desk structural operations', () => {
     expect(STRUCTURAL_OPS).toEqual(['move', 'tag', 'link', 'assignDomain'])
   })
 
-  it('AC#5: tag, link and assign-domain write the note frontmatter directly and can be undone', async () => {
+  it('AC#5: tag and link write the note frontmatter directly and can be undone', async () => {
     const io = memoryIo({ 'inbox/a.md': '# A\n內文\n' })
     const tagged = await applyStructuralOp({ op: 'tag', path: 'inbox/a.md', tag: '#產線 平衡' }, io)
     expect(parseV3Note(io.files['inbox/a.md']).fields.tags).toEqual(['產線-平衡'])
     await applyStructuralOp({ op: 'link', path: 'inbox/a.md', target: '知識/節拍時間.md' }, io)
     expect(parseV3Note(io.files['inbox/a.md']).fields.related).toEqual(['[[知識/節拍時間]]'])
-    await applyStructuralOp({ op: 'assignDomain', path: 'inbox/a.md', domainId: 'dom_1' }, io)
-    expect(parseV3Note(io.files['inbox/a.md']).fields.domains).toEqual(['dom_1'])
     expect(io.files['inbox/a.md']).toContain('# A\n內文')
     await tagged.undo!()
     expect(io.files['inbox/a.md']).toBe('# A\n內文\n')
+  })
+
+  it('ALMNC-69.7: assign-domain writes a MOC entry (尚未分章), domains follow from the rebuild, and it can be undone', async () => {
+    const moc = '---\nid: M-20261120-000000-IEIE\nkind: domain\nlevel: 1\n---\n# 工業工程\n\n## ③ 章節\n\n### 換模\n<!-- C-20261120-000001-SMED -->\n- [[b]] ── 例子\n'
+    const io = memoryIo({ 'inbox/a.md': '---\ntype: knowledge\n---\n# A\n', 'inbox/b.md': '---\ntype: knowledge\ndomains: [工業工程]\n---\n# B\n', '20 領域/工業工程.md': moc })
+    const result = await applyStructuralOp({ op: 'assignDomain', path: 'inbox/a.md', domainId: 'dom_1' }, io)
+    expect(parseMoc(io.files['20 領域/工業工程.md']).unsorted?.entries.map(entry => entry.target)).toEqual(['a'])
+    expect(parseV3Note(io.files['inbox/a.md']).fields.domains).toEqual(['工業工程'])
+    await result.undo!()
+    expect(io.files['20 領域/工業工程.md']).toBe(moc)
+    expect(parseV3Note(io.files['inbox/a.md']).fields.domains).toEqual([])
   })
 
   it('AC#5: move relocates the note and undo moves it back', async () => {

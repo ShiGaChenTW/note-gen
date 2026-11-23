@@ -116,7 +116,7 @@ export interface DomainProposalWriter {
   createExpert: (input: { name: string, domain: string }) => Promise<string>
   /** 存 soul.md、rules.md（Scott 接受提案＝Scott 本人寫入）。 */
   saveMemory: (agentId: string, input: { name: string, domain: string, soul: string, rules: string }) => Promise<void>
-  /** 把筆記的 frontmatter domains 加上新領域。 */
+  /** 把筆記收進新領域（ALMNC-69.7 起寫進該領域 MOC 的「尚未分章」，domains 由重建更新）。 */
   addNoteDomain: (path: string, domainId: string) => Promise<void>
 }
 

@@ -249,6 +249,17 @@ export async function scheduleCardTask(task: TaskLike, time: string): Promise<Un
   return record.writes.length ? async () => undoWrites(record) : undefined
 }
 
+/**
+ * Fork（almanac ALMNC-69.7）：超過上限卡選了一個領域——從那個 MOC 拿掉這則筆記的收錄，再由重建更新 domains。
+ * 找不到收錄（例如 Scott 已經在 Obsidian 改掉）就丟錯，卡片留著等下次重建更新。
+ */
+export async function removeDomainChoice(path: string, domain: string): Promise<Undo> {
+  const { removeNoteFromDomain } = await import('@/lib/moc/runtime')
+  const result = await removeNoteFromDomain(path, domain)
+  if (!result.removed) throw new Error(`domain entry not found: ${domain}`)
+  return result.undo
+}
+
 /** 確認類卡片「仍然有效」：把 lastConfirmed 改成今天。 */
 export async function confirmStillValid(path: string, today: string): Promise<Undo> {
   const [{ readNote, writeNote }, { writeV3NoteFields }] = await Promise.all([import('@/lib/daily/note-io'), import('@/lib/v3-model/note')])
@@ -674,6 +685,13 @@ export async function defaultNoteIo(): Promise<NoteIo> {
       await sources.renameNoteOutputs(path, to).catch(() => undefined)
       return to
     },
+    // Fork（almanac ALMNC-69.7）：歸入領域＝寫進該領域 MOC 的「尚未分章」，再由重建更新 domains。
+    assignDomain: async (path, domainId) => {
+      const { assignNoteToDomains } = await import('@/lib/moc/runtime')
+      const result = await assignNoteToDomains(path, [domainId])
+      if (result?.failed.length) throw new Error(`assign domain failed: ${domainId}`)
+      return result?.undo
+    },
   }
 }
 
@@ -742,9 +760,12 @@ export async function mergeDeskNotes(
     throw error
   }
 
+  // Fork（almanac ALMNC-69.7）：合併後的筆記沿用原件的領域——收進那些領域的 MOC，重建時才不會被拿掉。
+  const mergedDomains = parseV3Note(plan.content).fields.domains
   await Promise.allSettled([
     ...plan.sources.map(id => sources.addSourceOutput(id, 'note', path)),
     noteIo.revealInFileTree(path),
+    ...(mergedDomains.length ? [import('@/lib/moc/runtime').then(module => module.assignNoteToDomains(path, mergedDomains))] : []),
   ]).then(results => {
     for (const result of results) if (result.status === 'rejected') console.warn('[workbench] merge follow-up failed:', result.reason)
   })

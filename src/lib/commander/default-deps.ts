@@ -171,15 +171,13 @@ export async function commanderQueue(): Promise<ReturnType<typeof createAnalysis
   return sharedQueue
 }
 
-/** Scott 接受領域提案後的寫入：領域表、專家設定、soul／rules、筆記 frontmatter 的 domains。畫面在 ALMNC-54.8。 */
+/** Scott 接受領域提案後的寫入：領域表、專家設定、soul／rules、把筆記收進新領域的 MOC（ALMNC-69.7）。畫面在 ALMNC-54.8。 */
 export async function createDefaultDomainWriter(): Promise<import('./domain-proposal').DomainProposalWriter> {
-  const [domainsDb, agentsDb, memoryDb, settings, noteIo, note] = await Promise.all([
+  const [domainsDb, agentsDb, memoryDb, settings] = await Promise.all([
     import('@/db/v3-domains'),
     import('@/db/agents'),
     import('@/db/agent-memory'),
     import('@/lib/agents/settings'),
-    import('@/lib/daily/note-io'),
-    import('@/lib/v3-model/note'),
   ])
   return {
     addDomain: input => domainsDb.addDomain(input),
@@ -191,12 +189,10 @@ export async function createDefaultDomainWriter(): Promise<import('./domain-prop
       await memoryDb.writeAgentMemory('scott', agent, 'soul', input.soul)
       await memoryDb.writeAgentMemory('scott', agent, 'rules', input.rules)
     },
+    // Fork（almanac ALMNC-69.7）：收進新領域的 MOC（找不到就先建骨架，放「尚未分章」），再由重建更新 domains。
     addNoteDomain: async (path, domainId) => {
-      const raw = await noteIo.readNote(path)
-      if (raw === null) return
-      const { fields } = note.parseV3Note(raw)
-      if (fields.domains.includes(domainId)) return
-      await noteIo.writeNote(path, note.writeV3NoteFields(raw, { domains: [...fields.domains, domainId] }))
+      const { assignNoteToDomains } = await import('@/lib/moc/runtime')
+      await assignNoteToDomains(path, [domainId])
     },
   }
 }

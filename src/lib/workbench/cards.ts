@@ -26,7 +26,8 @@ export type CardGroup = typeof CARD_GROUPS[number]
 /** 卡片類型決定按鈕（第四節「按鈕代表動作」；資料源卡依 v14 加上照建議處理／自己處理／不採用）。 */
 // Fork（almanac ALMNC-54.14）：legacy＝舊筆記批次卡（R3，「舊筆記 1,240 則」）。
 // Fork（almanac ALMNC-65.2）：batch＝同一資料源的新知識筆記批次卡（全部接受；逐則接受／退回在卡片裡面）。
-export type CardKind = 'proposal' | 'reply' | 'hand' | 'task' | 'confirm' | 'source' | 'domain' | 'legacy' | 'batch'
+// Fork（almanac ALMNC-69.7）：domainLimit＝一則筆記被收錄在超過 3 個領域，請 Scott 選要拿掉哪個（選項＝各領域）。
+export type CardKind = 'proposal' | 'reply' | 'hand' | 'task' | 'confirm' | 'source' | 'domain' | 'legacy' | 'batch' | 'domainLimit'
 
 export type CardAction =
   | 'accept' | 'discuss' | 'drop' // 提案
@@ -51,6 +52,7 @@ export const ACTIONS_BY_KIND: Record<CardKind, readonly CardAction[]> = {
   source: ['process', 'selfProcess', 'reject'],
   legacy: ['migrate'],
   batch: ['accept'],
+  domainLimit: ['pick'],
 }
 
 /** Fork（almanac ALMNC-54.14）：舊筆記批次卡的按鈕——跑的時候只有「暫停」，否則「開始處理」（處理過一些就是「繼續處理」）。 */
@@ -210,6 +212,17 @@ export interface DomainLike {
   at: number
 }
 
+/** Fork（almanac ALMNC-69.7）：收錄超過 3 個領域的筆記（lib/moc 重建時發現，不自動砍）。 */
+export interface DomainLimitLike {
+  notePath: string
+  title: string
+  /** 目前收錄它的領域（依 domains 順序，第一個是主要）；卡片上一個領域一個選項。 */
+  domains: readonly string[]
+  summary: string
+  by?: string
+  at: number
+}
+
 export interface ReviewInput {
   proposals: readonly DecideItem[]
   overdueTasks?: readonly TaskLike[]
@@ -220,6 +233,7 @@ export interface ReviewInput {
   hand?: readonly HandLike[]
   confirm?: readonly ConfirmLike[]
   domains?: readonly DomainLike[]
+  domainLimits?: readonly DomainLimitLike[]
   /** Fork（almanac ALMNC-54.14）：還有舊筆記沒處理時才給。 */
   legacy?: LegacyBatchLike
   now: number
@@ -284,6 +298,11 @@ export function proposalCard(item: DecideItem, now: number): WorkbenchCard {
     decide: item,
     ...(item.notePaths?.length ? { notePaths: item.notePaths } : {}),
   }
+}
+
+/** Fork（almanac ALMNC-69.7）：超過上限卡的鍵（也是先放著的鍵）。 */
+export function domainLimitCardKey(notePath: string): string {
+  return `domain-limit:${notePath}`
 }
 
 /** Fork（almanac ALMNC-65.2）：批次卡的鍵（也是先放著的鍵）。 */
@@ -375,6 +394,13 @@ export function buildReviewCards(input: ReviewInput): WorkbenchCard[] {
       title: domain.title, summary: domain.summary, by: domain.by, at: domain.at,
       more: domain.notePaths.length > 1 ? domain.notePaths.length - 1 : undefined,
       actions: ACTIONS_BY_KIND.domain, notePaths: domain.notePaths, domainProposalId: domain.id,
+    })
+  }
+  for (const limit of input.domainLimits ?? []) {
+    cards.push({
+      key: domainLimitCardKey(limit.notePath), kind: 'domainLimit', group: 'proposal', label: 'knowledge', verb: 'organize',
+      title: limit.title, path: folderOf(limit.notePath) || undefined, summary: limit.summary, by: limit.by, at: limit.at,
+      actions: ACTIONS_BY_KIND.domainLimit, choices: limit.domains, notePath: limit.notePath,
     })
   }
   for (const note of input.confirm ?? []) {

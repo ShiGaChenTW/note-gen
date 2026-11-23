@@ -9242,7 +9242,8 @@
       "deleted": "已刪除「{title}」",
       "batchAccepted": "已接受 {count} 則新筆記",
       "batchPartial": "{count} 則沒有接受成功：{titles}，其他則已接受",
-      "batchFailed": "全部沒有接受成功：{titles}"
+      "batchFailed": "全部沒有接受成功：{titles}",
+      "domainRemoved": "已把「{title}」從「{domain}」拿掉"
     },
     "sources": {
       "filterLabel": "依狀態篩選",
@@ -9495,6 +9496,11 @@
       "journalOnce": "接受時替這則資料源貼一次日誌標籤。",
       "accept": "接受",
       "drop": "退回"
+    },
+    "domainLimit": {
+      "summary": "收錄在 {count} 個領域，超過上限 {limit} 個",
+      "body": "一則筆記最多屬於 {limit} 個領域。選一個要拿掉的領域，會從那個 MOC 移除這則筆記的收錄；其他領域照舊。",
+      "by": "系統"
     }
   },
   "cleanup": {

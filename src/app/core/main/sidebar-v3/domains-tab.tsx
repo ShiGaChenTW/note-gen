@@ -3,6 +3,8 @@
 // Fork（almanac ALMNC-54.23）：整理頁的「領域」分頁。領域最多兩層（例如「工程 › 資料工程」），每個領域列出它的知識筆記，
 // 進到領域看到總覽、核心概念、重點結論（附出處筆記）、矛盾與未解問題、相關領域。內容來自領域表的總覽（lib/domain-page/model.ts 拆段落），
 // 沒有寫的段落顯示空狀態，不替它編造。只在 V3 的整理頁出現。
+// Fork（almanac ALMNC-69.7）：成員與段落改由 MOC 檔解析結果提供（stores/moc，MocRebuildService 更新；domainPageData），
+// 還沒有 MOC 檔的舊領域退回原本的 frontmatter 反查。畫面改版在 ALMNC-69.8。
 import { useEffect, useMemo, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
@@ -11,8 +13,8 @@ import { SectionLabel } from '@/components/v3/section-label'
 import { Count } from '@/components/v3/count'
 import { revealInFileTree } from '@/lib/daily/note-io'
 import {
-  buildDomainTree, findDomainNode, knowledgeNotesByDomain, parseDomainSections, relatedDomains, splitWikiLinks,
-  type DomainNode, type DomainNote,
+  buildDomainTree, domainPageData, findDomainNode, relatedDomains, splitWikiLinks,
+  type DomainNode, type DomainNote, type DomainSections,
 } from '@/lib/domain-page/model'
 import { resolveWikilinkTarget } from '@/lib/markdown/wikilink'
 import { useDomainPage } from '@/lib/sidebar-v3/domain-page'
@@ -20,6 +22,8 @@ import type { Domain } from '@/lib/v3-model/domain'
 import { cn } from '@/lib/utils'
 import useArticleStore from '@/stores/article'
 import useVaultIndexStore from '@/stores/vault-index'
+import useMocStore from '@/stores/moc'
+import { buildLinkLookup, resolveWikilinkTargetWithLookup } from '@/lib/vault-index/links'
 
 type LoadState = 'loading' | 'ready' | 'error'
 
@@ -136,10 +140,11 @@ function RelatedGroup({ label, nodes, onOpen }: { label: string, nodes: DomainNo
   )
 }
 
-function DomainDetail({ node, tree, notePaths, onOpen, onBack }: { node: DomainNode, tree: DomainNode[], notePaths: readonly string[], onOpen: (id: string) => void, onBack: () => void }) {
+const EMPTY_SECTIONS: DomainSections = { summary: '', coreConcepts: [], keyConclusions: [], openQuestions: [] }
+
+function DomainDetail({ node, tree, sections = EMPTY_SECTIONS, notePaths, onOpen, onBack }: { node: DomainNode, tree: DomainNode[], sections?: DomainSections, notePaths: readonly string[], onOpen: (id: string) => void, onBack: () => void }) {
   const t = useTranslations('sidebarV3.domains')
   const locale = useLocale()
-  const sections = useMemo(() => parseDomainSections(node.domain.overview), [node.domain.overview])
   const related = relatedDomains(tree, node.domain.id)
   const hasRelated = Boolean(related.parent) || related.children.length > 0 || related.siblings.length > 0
   const updated = new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(node.domain.updatedAt)
@@ -185,21 +190,29 @@ function DomainDetail({ node, tree, notePaths, onOpen, onBack }: { node: DomainN
 
 export function DomainsTab() {
   const t = useTranslations('sidebarV3.domains')
-  const { domains, state } = useDomains()
+  const { domains: rows, state: rowState } = useDomains()
   const status = useVaultIndexStore(store => store.status)
   const notes = useVaultIndexStore(store => store.notes)
+  const revision = useVaultIndexStore(store => store.revision)
+  const mocs = useMocStore(store => store.mocs)
+  const mocsLoaded = useMocStore(store => store.loaded)
   const domainId = useDomainPage(store => store.domainId)
   const open = useDomainPage(store => store.open)
-  const byDomain = useMemo(() => knowledgeNotesByDomain(notes.values(), domains), [notes, domains])
-  const tree = useMemo(() => buildDomainTree(domains, byDomain), [domains, byDomain])
-  const notePaths = useMemo(() => [...notes.keys()], [notes])
+  const notePaths = useMemo(() => [...notes.keys()], [notes, revision]) // eslint-disable-line react-hooks/exhaustive-deps
+  const data = useMemo(() => {
+    const lookup = buildLinkLookup(notePaths)
+    return domainPageData(rows, mocs, notes, (target, mocPath) => resolveWikilinkTargetWithLookup(target, lookup, mocPath ?? ''))
+  }, [rows, mocs, notes, notePaths])
+  const tree = useMemo(() => buildDomainTree(data.domains, data.notesByDomain), [data])
+  // 筆記庫索引好了、MOC 還沒解析過時先顯示載入中，避免先閃一次舊的 frontmatter 結果。
+  const state: LoadState = rowState === 'ready' && status === 'ready' && !mocsLoaded ? 'loading' : rowState
   const node = domainId ? findDomainNode(tree, domainId) : undefined
 
   let body
   if (state === 'loading') body = <p role="status" className="px-4 py-4 text-ui-compact leading-5 text-muted-ink">{t('loading')}</p>
   else if (state === 'error') body = <EmptyState className="px-4 py-4" text={t('loadError')} />
   else if (domainId && !node) body = <EmptyState className="px-4 py-4" text={t('missing')} action={<button type="button" className="cursor-pointer text-ui-compact text-ink underline underline-offset-2" onClick={() => open(null)}>{t('all')}</button>} />
-  else if (node) body = <DomainDetail node={node} tree={tree} notePaths={notePaths} onOpen={open} onBack={() => open(null)} />
+  else if (node) body = <DomainDetail node={node} tree={tree} sections={data.sectionsByDomain.get(node.domain.id)} notePaths={notePaths} onOpen={open} onBack={() => open(null)} />
   else if (status !== 'ready' && tree.length > 0) body = <><p role="status" className="px-4 pt-3 text-ui-compact leading-5 text-muted-ink">{t('indexing')}</p><DomainList tree={tree} onOpen={open} /></>
   else body = <DomainList tree={tree} onOpen={open} />
 

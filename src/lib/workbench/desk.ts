@@ -1,6 +1,8 @@
 // Fork（almanac ALMNC-54.8）：檯面（專注模式）——素材、工作稿、協助三欄。
 // 檯面上的結構操作直接生效，不走提案（第四節「檯面上的整理直接生效」）：搬移、加標籤、連結、合併筆記、歸入領域。
 // 寫檔由 actions.ts 提供 Tauri I/O。
+// Fork（almanac ALMNC-69.7）：「歸入領域」不再直接改筆記 frontmatter 的 domains，而是把收錄行寫進該領域 MOC 的「尚未分章」，
+// 再由重建（lib/moc）更新 domains——MOC 上的正式收錄是唯一依據。
 import { archiveMergedNote } from '@/lib/cleanup/plan'
 import { parseV3Note, writeV3NoteFields, createV3Note } from '@/lib/v3-model/note'
 
@@ -34,6 +36,8 @@ export interface NoteIo {
   write: (path: string, content: string) => Promise<void>
   /** 搬到資料夾，回傳新路徑。 */
   move: (path: string, folder: string) => Promise<string>
+  /** Fork（almanac ALMNC-69.7）：把筆記收進領域的 MOC（尚未分章）並重建 domains；回傳復原（沒有改到就是 undefined）。 */
+  assignDomain: (path: string, domainId: string) => Promise<(() => Promise<void>) | undefined>
 }
 
 function cleanTag(tag: string): string {
@@ -53,6 +57,10 @@ export async function applyStructuralOp(op: StructuralOp, io: NoteIo): Promise<{
     const back = from.includes('/') ? from.slice(0, from.lastIndexOf('/')) : ''
     return { path: to, undo: async () => { await io.move(to, back) } }
   }
+  if (op.op === 'assignDomain') {
+    const undo = await io.assignDomain(op.path, op.domainId)
+    return undo ? { path: op.path, undo } : { path: op.path }
+  }
   const raw = await io.read(op.path)
   if (raw === null) throw new Error(`note not found: ${op.path}`)
   const { fields } = parseV3Note(raw)
@@ -65,9 +73,6 @@ export async function applyStructuralOp(op: StructuralOp, io: NoteIo): Promise<{
     const target = `[[${wikiTarget(op.target)}]]`
     if (op.target === op.path || fields.related.includes(target)) return { path: op.path }
     next = writeV3NoteFields(raw, { related: [...fields.related, target] })
-  } else if (op.op === 'assignDomain') {
-    if (fields.domains.includes(op.domainId)) return { path: op.path }
-    next = writeV3NoteFields(raw, { domains: [...fields.domains, op.domainId] })
   }
   await io.write(op.path, next)
   return { path: op.path, undo: async () => { await io.write(op.path, raw) } }

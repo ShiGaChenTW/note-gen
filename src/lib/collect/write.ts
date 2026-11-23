@@ -65,13 +65,40 @@ const defaultIdStore: IdStore = {
   record: async input => (await import('@/db/id-index')).recordId(input),
 }
 
-export async function acceptProposal(proposal: Proposal, options: { noteFolder: string, now?: Date, applyChange?: ApplyChange, applyEdits?: ApplyEdits, ids?: IdStore }): Promise<AcceptResult> {
+/**
+ * Fork（almanac ALMNC-69.7）：把新筆記收進提案列的領域——寫進各領域 MOC 的「尚未分章」，再由重建更新 domains
+ * （依提案的順序，第一個是主要領域）。測試注入假的，預設動態載入 lib/moc/runtime。
+ */
+export type AssignDomains = (notePath: string, domains: readonly string[]) => Promise<unknown>
+
+const defaultAssignDomains: AssignDomains = async (notePath, domains) => {
+  const { assignNoteToDomains } = await import('@/lib/moc/runtime')
+  return assignNoteToDomains(notePath, domains)
+}
+
+/** Fork（almanac ALMNC-69.7）：清理提案（合併、取代）接受後，新筆記承接舊筆記的 MOC 收錄。測試注入假的。 */
+export type TransferMemberships = (transfers: ReadonlyArray<{ from: string, to: string }>) => Promise<unknown>
+
+const defaultTransferMemberships: TransferMemberships = async transfers => {
+  const { transferNoteMemberships } = await import('@/lib/moc/runtime')
+  return transferNoteMemberships(transfers)
+}
+
+export async function acceptProposal(proposal: Proposal, options: { noteFolder: string, now?: Date, applyChange?: ApplyChange, applyEdits?: ApplyEdits, ids?: IdStore, assignDomains?: AssignDomains, transferMemberships?: TransferMemberships }): Promise<AcceptResult> {
   const now = options.now ?? new Date()
   if (proposal.slot) return acceptSlot({ ...proposal, slot: proposal.slot }, now)
   // Fork（almanac ALMNC-69.3）：只貼日誌標籤的卡不寫筆記庫；標籤由 stores/collect 接受後寫進資料源。
   if (proposal.journalTag?.only) return { path: '' }
   if (proposal.edits?.length || proposal.domainEdits?.length || proposal.memoryEdits?.length) {
     const targets = await (options.applyEdits ?? defaultApplyEdits)(proposal)
+    if (proposal.membershipTransfers?.length) {
+      try {
+        await (options.transferMemberships ?? defaultTransferMemberships)(proposal.membershipTransfers)
+      } catch (error) {
+        // 筆記已寫好；MOC 承接失敗不讓接受失敗（Scott 可以在檯面歸入領域）。
+        console.error('transfer memberships failed', error)
+      }
+    }
     return { path: proposal.edits?.[0]?.path ?? targets[0] ?? '' }
   }
   if (proposal.change) {
@@ -103,6 +130,14 @@ export async function acceptProposal(proposal: Proposal, options: { noteFolder: 
     } catch (error) {
       // 檔案已寫好、編號在檔案身上；索引登記失敗留給掃描補登（ALMNC-69.5），不讓接受失敗。
       console.error('id_index record failed', error)
+    }
+    if (proposal.domains?.length) {
+      try {
+        await (options.assignDomains ?? defaultAssignDomains)(path, proposal.domains)
+      } catch (error) {
+        // 筆記已寫好；收不進 MOC 不讓接受失敗（Scott 可以在檯面再歸入領域）。
+        console.error('assign domains failed', error)
+      }
     }
     await revealInFileTree(path)
     return { path }

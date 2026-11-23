@@ -60,6 +60,7 @@ vi.mock('@/stores/prompt-library', async () => {
 vi.mock('@/lib/inbox/use-inbox-pending', () => ({ useInboxPendingCount: () => 0 }))
 
 const useVaultIndexStore = (await import('@/stores/vault-index')).default
+const useMocStore = (await import('@/stores/moc')).default
 const { useDomainPage, showDomainPage } = await import('@/lib/sidebar-v3/domain-page')
 const { useKnowledgeOverlay } = await import('@/lib/sidebar-v3/knowledge')
 const { DomainsTab } = await import('./domains-tab')
@@ -106,6 +107,8 @@ beforeEach(() => {
   window.matchMedia = vi.fn().mockReturnValue({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() })
   useUiModeStore.setState({ mode: 'v3' })
   useDomainPage.setState({ domainId: null })
+  // Fork（almanac ALMNC-69.7）：這組測試是沒有 MOC 檔的舊領域（退回 frontmatter 反查與領域表總覽）；MOC 當資料來源另有測試。
+  useMocStore.setState({ mocs: [], overLimit: [], loaded: true })
   useKnowledgeOverlay.setState({ visible: false, tab: 'timeline' })
   mocks.listDomains.mockResolvedValue([
     domain('eng', '工程', undefined, '# 工程\n\n## 總覽\n\n軟硬體與資料的工程方法。\n'),
@@ -277,5 +280,35 @@ describe('整理頁的入口（ALMNC-54.23 AC #1、#3）', () => {
     expect(useKnowledgeOverlay.getState().visible).toBe(false)
     render(zhTW, 'zh-TW', KnowledgeScreen)
     expect(container.innerHTML).toBe('')
+  })
+})
+
+describe('領域頁的資料來源是 MOC 檔（ALMNC-69.7）', () => {
+  it('lists the MOC formal entries (in MOC order, ignoring frontmatter domains) and takes the sections from the five blocks', async () => {
+    const { parseMoc } = await import('@/lib/moc/parse')
+    const moc = parseMoc([
+      '---', 'id: M-20261120-000000-DATA', 'kind: domain', 'level: 2', '---', '# 資料工程', '',
+      '## ① 這個領域在回答什麼', '資料怎麼可靠地流到分析端？', '',
+      '## ③ 章節', '', '### 怎麼重跑', '<!-- C-20261120-000001-RERN -->', '- [[stream]] ── 延遲取捨', '- [[idempotent]] ── 先求冪等', '',
+      '## ④ 重點結論', '- 先確保冪等（[[knowledge/idempotent]]）', '',
+      '## ⑤ 待釐清', '- **未解**：批次還是串流？', '',
+    ].join('\n'), '20 領域/資料工程.md')
+    act(() => useMocStore.setState({ mocs: [moc], loaded: true }))
+    render()
+    await flush()
+    click($('[data-domain="data"]'))
+    // batch 的 frontmatter 列了資料工程，但 MOC 沒收錄 → 不算；順序照 MOC。
+    expect($$('[data-testid="domain-note"]').map(note => note.dataset.path)).toEqual(['knowledge/stream.md', 'knowledge/idempotent.md'])
+    expect($('[data-testid="domain-overview"]')?.textContent).toContain('資料怎麼可靠地流到分析端？')
+    expect($('[data-testid="domain-key-conclusions"]')?.textContent).toContain('先確保冪等')
+    expect($('[data-testid="domain-open-questions"]')?.textContent).toContain('批次還是串流？')
+  })
+
+  it('shows loading until the MOCs have been parsed once', async () => {
+    act(() => useMocStore.setState({ mocs: [], loaded: false }))
+    render()
+    await flush()
+    expect($('[role="status"]')?.textContent).toBeTruthy()
+    expect($$('[data-testid="domain-row"]')).toEqual([])
   })
 })
