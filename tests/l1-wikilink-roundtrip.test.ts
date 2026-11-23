@@ -129,8 +129,13 @@ const samples: Record<string, string> = {
   'fenced code with language': '```md\n![[x]]\n```',
   'heading and emphasis': '# 標題 [[A]]\n\n**粗體** [[B]] 與 *斜體* [[C|c]] 與 ~~刪除~~ [[D]]',
   'frontmatter related': '---\nrelated: "[[Front]]"\n---\n\n內文 [[Body]]',
-  'not a wikilink': '[A] 與 [[]] 與 [[ ]] 與 [[a]b]] 與 [[未結束',
 }
+
+// Brackets that are not a wikilink stay plain text. Since Tiptap 3.25.0 the serializer escapes
+// `[` and `]` in plain text, so a block that goes through the editor comes back escaped
+// (untouched top-level blocks are still written verbatim by block-roundtrip-extension).
+const notAWikilink = '[A] 與 [[]] 與 [[ ]] 與 [[a]b]] 與 [[未結束'
+const notAWikilinkSaved = '\\[A\\] 與 \\[\\[\\]\\] 與 \\[\\[ \\]\\] 與 \\[\\[a\\]b\\]\\] 與 \\[\\[未結束'
 
 const tableSample = '| [[A\\|a]] | [[B]] |\n| -------- | ----- |\n| [[C\\|c]] | y     |'
 const tableSamples: Record<string, string> = {
@@ -141,12 +146,15 @@ const tableSamples: Record<string, string> = {
 }
 
 describe('L1: wikilink round trip through the visual editor', () => {
-  it('reproduces the original bug without the Wikilink node (table pipe lost)', () => {
+  // Tiptap 3.19 dropped the `\|` (the row split in Obsidian). Since 3.31.4 upstream keeps the
+  // `\|` but, since 3.25.0, escapes every `[`/`]` in plain text, so without the Wikilink node the
+  // cell still does not survive: it comes back as literal text, no longer a link in Obsidian.
+  it('without the Wikilink node a table-cell link does not survive (brackets escaped)', () => {
     const editor = createEditor(false)
     load(editor, tableSample)
     const out = save(editor)
     editor.destroy()
-    expect(out).toContain('[[A|a]]')
+    expect(out).toContain('\\[\\[A\\|a\\]\\]')
     expect(out).not.toContain('[[A\\|a]]')
   })
 
@@ -159,6 +167,15 @@ describe('L1: wikilink round trip through the visual editor', () => {
       expectRoundTrip(out, raw)
     })
   }
+
+  it('not a wikilink: stays plain text, brackets escaped by the upstream serializer', () => {
+    const editor = createEditor()
+    load(editor, notAWikilink)
+    expect(wikilinkNodes(editor)).toEqual([])
+    const out = save(editor)
+    editor.destroy()
+    expectRoundTrip(out, notAWikilinkSaved)
+  })
 
   for (const [name, raw] of Object.entries(tableSamples)) {
     it(`${name}: save(load(x)) === x`, () => {
@@ -182,7 +199,7 @@ describe('L1: wikilink round trip through the visual editor', () => {
     expect(canonical).not.toContain('[[A|a]]')
   })
 
-  for (const [name, raw] of Object.entries({ ...samples, ...tableSamples })) {
+  for (const [name, raw] of Object.entries({ ...samples, 'not a wikilink': notAWikilink, ...tableSamples })) {
     it(`${name}: stable across repeated load/save`, () => {
       const editor = createEditor()
       load(editor, raw)
@@ -472,8 +489,14 @@ describe('#20: single click opens the link', () => {
     const editor = mount('前 [[Note|別名]] 後')
     editor.commands.focus('start')
     const anchor = editor.view.dom.querySelector('a[data-type="wikilink"]')!
+    let bubbledOut = false
+    const onDocMouseDown = () => { bubbledOut = true }
+    document.addEventListener('mousedown', onDocMouseDown)
     const down = click(anchor)
+    document.removeEventListener('mousedown', onDocMouseDown)
     expect(down.defaultPrevented).toBe(true)
+    // stopped in the capture phase, so ProseMirror never starts a MouseDown for it
+    expect(bubbledOut).toBe(false)
     await vi.waitFor(() => expect(setActiveFilePath).toHaveBeenCalledWith('folder/Note.md'))
     expect(setActiveFilePath).toHaveBeenCalledTimes(1)
     // the atom did not become a NodeSelection
@@ -482,13 +505,25 @@ describe('#20: single click opens the link', () => {
     editor.destroy()
   })
 
+  // prosemirror-view 1.43 handles mouse selection itself and calls preventDefault on every
+  // mousedown it takes, so `defaultPrevented` no longer tells whether the wikilink capture
+  // handler swallowed the event. A swallowed mousedown is also stopped, so check that it
+  // still bubbles out of the editor instead.
   it('leaves embeds, shift-clicks and text outside links to ProseMirror', async () => {
     const editor = mount('前 ![[圖.png]] [[Note]] 後')
+    const reached: EventTarget[] = []
+    const onDocMouseDown = (event: MouseEvent) => { if (event.target) reached.push(event.target) }
+    document.addEventListener('mousedown', onDocMouseDown)
     const embed = editor.view.dom.querySelector('[data-type="wikilink"].notegen-wikilink-embed, span[data-type="wikilink"]')!
-    expect(click(embed).defaultPrevented).toBe(false)
+    click(embed)
+    expect(reached).toContain(embed)
     const anchor = editor.view.dom.querySelector('a[data-type="wikilink"]')!
-    expect(click(anchor, { shiftKey: true }).defaultPrevented).toBe(false)
-    expect(click(editor.view.dom.querySelector('p')!).defaultPrevented).toBe(false)
+    click(anchor, { shiftKey: true })
+    expect(reached).toContain(anchor)
+    const paragraph = editor.view.dom.querySelector('p')!
+    click(paragraph)
+    expect(reached).toContain(paragraph)
+    document.removeEventListener('mousedown', onDocMouseDown)
     await new Promise(resolve => setTimeout(resolve, 0))
     expect(setActiveFilePath).not.toHaveBeenCalled()
     editor.view.dom.remove()
