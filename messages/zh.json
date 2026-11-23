@@ -5130,6 +5130,7 @@
           "changed": "模型已从 {from} 切换为 {to}"
         },
         "promptSelect": {
+          "defaultTitle": "写作助手",
           "tooltip": "选择对话角色",
           "placeholder": "搜索对话角色",
           "conversationPromptApplied": "此对话的系统提示词已由一则提示词设定"
@@ -8800,6 +8801,7 @@
     "collapseSection": "收起{title}",
     "expandSection": "展开{title}",
     "noteList": {
+      "resize": "拖动调整笔记列表宽度",
       "select": "勾选",
       "selected": "已选 {count} 则",
       "spread": "摊到台面",

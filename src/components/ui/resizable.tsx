@@ -127,7 +127,7 @@ function ResizableHandle({
     <ResizablePrimitive.Separator
       data-slot="resizable-handle"
       className={cn(
-        "group/resize-handle relative z-10 flex w-px touch-none items-center justify-center bg-border ring-offset-background after:absolute after:inset-y-0 after:left-1/2 after:w-1 after:-translate-x-1/2 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-hidden aria-[orientation=horizontal]:h-px aria-[orientation=horizontal]:w-full aria-[orientation=horizontal]:after:left-0 aria-[orientation=horizontal]:after:h-1 aria-[orientation=horizontal]:after:w-full aria-[orientation=horizontal]:after:translate-x-0 aria-[orientation=horizontal]:after:-translate-y-1/2 [&[aria-orientation=horizontal]>div]:rotate-90",
+        "group/resize-handle relative z-10 flex w-px touch-none items-center justify-center bg-border ring-offset-background transition-colors after:absolute after:inset-y-0 after:left-1/2 after:w-2 after:-translate-x-1/2 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-hidden aria-[orientation=horizontal]:h-px aria-[orientation=horizontal]:w-full aria-[orientation=horizontal]:after:left-0 aria-[orientation=horizontal]:after:h-1 aria-[orientation=horizontal]:after:w-full aria-[orientation=horizontal]:after:translate-x-0 aria-[orientation=horizontal]:after:-translate-y-1/2 [&[aria-orientation=horizontal]>div]:rotate-90",
         collapsed &&
           expandDirection === "right" &&
           "after:left-0 after:w-8 after:translate-x-0",
@@ -135,6 +135,8 @@ function ResizableHandle({
           expandDirection === "left" &&
           "after:right-0 after:left-auto after:w-8 after:translate-x-0",
         collapsed && "pointer-events-none",
+        // Fork（almanac ALMNC-62）：v3 抓取範圍 8px、滑過與拖曳時分隔線變深，看得出可以拖
+        isV3 && !collapsed && "cursor-col-resize hover:bg-muted-foreground/50 data-[separator=active]:bg-muted-foreground/70",
         className
       )}
       onPointerDown={(event) => {

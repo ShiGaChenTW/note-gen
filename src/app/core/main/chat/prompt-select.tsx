@@ -3,6 +3,7 @@ import { useEffect } from "react"
 import { useTranslations } from "next-intl"
 import { Drama } from "lucide-react"
 import usePromptStore from "@/stores/prompt"
+import { displayPromptTitle } from "@/lib/prompt-title"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Command, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { TooltipButton } from "@/components/tooltip-button"
@@ -19,6 +20,8 @@ export function PromptSelect({ display = 'icon', disabled = false }: PromptSelec
   const [open, setOpen] = React.useState(false)
   const t = useTranslations('record.chat.input.promptSelect')
   const tTools = useTranslations('record.chat.input.toolsMenu')
+  const titleOf = (prompt: Parameters<typeof displayPromptTitle>[0]) => displayPromptTitle(prompt, t('defaultTitle'))
+  const currentTitle = titleOf(currentPrompt)
 
   // 初始化prompt列表
   useEffect(() => {
@@ -44,7 +47,7 @@ export function PromptSelect({ display = 'icon', disabled = false }: PromptSelec
             aria-label={t('tooltip')}
           >
             <Drama data-icon="inline-start" />
-            <span className="truncate">{currentPrompt?.title || '-'}</span>
+            <span className="truncate">{currentTitle || '-'}</span>
           </Button>
         ) : display === 'panel' ? (
           <ChatToolItem
@@ -52,7 +55,7 @@ export function PromptSelect({ display = 'icon', disabled = false }: PromptSelec
             title={tTools('prompt.title')}
             description={tTools('prompt.description')}
             disabled={disabled}
-            value={<span title={currentPrompt?.title}>{currentPrompt?.title || '-'}</span>}
+            value={<span title={currentTitle}>{currentTitle || '-'}</span>}
           />
         ) : (
           <div className="hidden md:block">
@@ -83,7 +86,7 @@ export function PromptSelect({ display = 'icon', disabled = false }: PromptSelec
                     setOpen(false)
                   }}
                 >
-                  {item.title}
+                  {titleOf(item)}
                 </CommandItem>
               ))}
             </CommandGroup>

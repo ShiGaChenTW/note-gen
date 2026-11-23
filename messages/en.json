@@ -5214,6 +5214,7 @@
           "changed": "Model changed from {from} to {to}"
         },
         "promptSelect": {
+          "defaultTitle": "Writing assistant",
           "tooltip": "Select prompt",
           "placeholder": "Search prompts",
           "conversationPromptApplied": "This conversation's system prompt was set from a prompt"
@@ -8800,6 +8801,7 @@
     "collapseSection": "Collapse {title}",
     "expandSection": "Expand {title}",
     "noteList": {
+      "resize": "Drag to resize the note list",
       "select": "Select",
       "selected": "{count} selected",
       "spread": "Spread to desk",

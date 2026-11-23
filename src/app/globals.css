@@ -230,7 +230,7 @@
     --component-inactive-color: var(--muted-foreground);
     --component-bg: var(--card);
     --component-shadow: var(--border);
-    --scrollbar-size: 12px;
+    --scrollbar-size: 10px; /* Fork（almanac ALMNC-62）：原本 12px，捲軸再細一點 */
     --scrollbar-track-hover: hsl(var(--muted) / 0.28);
     --scrollbar-thumb: hsl(var(--muted-foreground) / 0.26);
     --scrollbar-thumb-hover: hsl(var(--muted-foreground) / 0.48);
@@ -613,7 +613,7 @@ html, body {
 :not(table)::-webkit-scrollbar-thumb {
   border-radius: 9999px;
   background-color: var(--scrollbar-thumb);
-  border-width: 4px;
+  border-width: 3.5px; /* 可見寬度 3px（原本 4px） */
   border-style: solid;
   border-color: transparent;
   background-clip: padding-box;
@@ -625,7 +625,7 @@ html, body {
 }
 
 :not(table)::-webkit-scrollbar-thumb:hover {
-  border-width: 2px;
+  border-width: 2.5px;
   background-color: var(--scrollbar-thumb-hover);
 }
 
@@ -638,9 +638,13 @@ html, body {
   background-color: transparent;
 }
 
-:not(table) {
-  scrollbar-width: thin;
-  scrollbar-color: var(--scrollbar-thumb) transparent;
+/* Fork（almanac ALMNC-62）：新版 WebKit／Chromium 只要設了標準的 scrollbar-width／scrollbar-color，
+   就忽略上面的 ::-webkit-scrollbar 樣式、改畫系統捲軸（較粗）。標準屬性只給不支援 ::-webkit-scrollbar 的瀏覽器（Firefox）。 */
+@supports not selector(::-webkit-scrollbar) {
+  :not(table) {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) transparent;
+  }
 }
 
 /* Main side panels contain overscroll without reserving permanent scrollbar space. */

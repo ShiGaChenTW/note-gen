@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 import { useTranslations } from "next-intl"
 import { Check, Drama } from "lucide-react"
 import usePromptStore from "@/stores/prompt"
+import { displayPromptTitle } from "@/lib/prompt-title"
 import { ChatToolItem } from "@/app/core/main/chat/chat-tool-item"
 import {
   Drawer,
@@ -62,6 +63,7 @@ export function PromptSelector() {
   const [open, setOpen] = useState(false)
   const t = useTranslations('record.chat.input.promptSelect')
   const tTools = useTranslations('record.chat.input.toolsMenu')
+  const currentTitle = displayPromptTitle(currentPrompt, t('defaultTitle'))
 
   useEffect(() => {
     initPromptData()
@@ -79,7 +81,7 @@ export function PromptSelector() {
         icon={Drama}
         title={tTools('prompt.title')}
         description={tTools('prompt.description')}
-        value={<span title={currentPrompt?.title}>{currentPrompt?.title || '-'}</span>}
+        value={<span title={currentTitle}>{currentTitle || '-'}</span>}
         onClick={() => setOpen(true)}
       />
 
@@ -90,7 +92,7 @@ export function PromptSelector() {
           </DrawerHeader>
           <div className="p-4">
             <PromptListContent
-              promptList={promptList.map(({ id, title }) => ({ id, title }))}
+              promptList={promptList.map(prompt => ({ id: prompt.id, title: displayPromptTitle(prompt, t('defaultTitle')) }))}
               currentPromptId={currentPrompt?.id}
               onSelect={async (id) => {
                 await promptSelectChangeHandler(id)

@@ -1,6 +1,7 @@
 'use client'
 import { SettingType } from '../components/setting-base'
 import { useTranslations } from 'next-intl'
+import { displayPromptTitle } from '@/lib/prompt-title'
 import { Button } from '@/components/ui/button'
 import {
   Item,
@@ -55,6 +56,7 @@ export function SettingPrompt({id, icon}: {id: string, icon?: React.ReactNode}) 
   const t = useTranslations('settings')
   const { currentLocale } = useI18n();
   const commonT = useTranslations('common')
+  const promptSelectT = useTranslations('record.chat.input.promptSelect')
   const { promptList, initPromptData, addPrompt, updatePrompt, deletePrompt } = usePromptStore()
   const { systemPrompt, setSystemPrompt } = useSettingStore()
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -377,7 +379,7 @@ ${newContent}`
           {promptList.map((prompt) => (
             <Item key={prompt.id} variant="outline" className="mobile-prompt-card">
               <ItemContent>
-                <ItemTitle>{prompt.title}</ItemTitle>
+                <ItemTitle>{displayPromptTitle(prompt, promptSelectT('defaultTitle'))}</ItemTitle>
                 <ItemDescription className="whitespace-pre-wrap">
                   {prompt.content || t('prompt.noContent')}
                 </ItemDescription>

@@ -1,6 +1,7 @@
 'use client'
 
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
+import { readStoredWidth, storeWidth } from "@/hooks/use-drag-width"
 import { useUiV3 } from "@/lib/fork-ui"
 import { useWorkspaceCovered } from "@/lib/fork-overlays/use-page-visibility"
 import { LeftSidebar } from "./left-sidebar"
@@ -69,6 +70,10 @@ function getDefaultLayout(layoutKey: string) {
   }
 }
 
+const V3_LEFT_WIDTH_KEY = 'almanac:left-sidebar-width'
+const V3_LEFT_MIN_PX = 200
+const V3_LEFT_MAX_PX = 400
+
 function ResizableWrapper() {
   // Fork（almanac ALMNC-56.3 P02）：只取用到的欄位；取整個 store 時，側欄任何欄位一變（分頁、搜尋字…）整個 app 都重繪。
   const {
@@ -98,6 +103,8 @@ function ResizableWrapper() {
   const centerPanelVisible = preferredCenterPanelVisible || temporaryCenterPanel
   const workspaceCovered = useWorkspaceCovered()
   const MIN_LEFT_SIDEBAR_WIDTH_PX = 240 // Fork：原本 320；almanac v5 規格 240px
+  // Fork（almanac ALMNC-62）：v3 左欄改成可拖曳（200–400 px），寬度記在 localStorage
+  const [v3LeftWidth] = useState(() => readStoredWidth(V3_LEFT_WIDTH_KEY, MIN_LEFT_SIDEBAR_WIDTH_PX, V3_LEFT_MIN_PX, V3_LEFT_MAX_PX))
   const MIN_RIGHT_SIDEBAR_WIDTH_PX = 280
   const MIN_EDITOR_WIDTH_PX = 400
   const [minLeftSidebarSize, setMinLeftSidebarSize] = useState(24)
@@ -271,14 +278,15 @@ function ResizableWrapper() {
         key="left"
         id="left"
         panelRef={leftPanelRef}
-        defaultSize={isV3 ? `${MIN_LEFT_SIDEBAR_WIDTH_PX}px` : `${leftLayoutSize}%`}
-        minSize={isV3 ? `${MIN_LEFT_SIDEBAR_WIDTH_PX}px` : `${minLeftSidebarSize}%`}
-        maxSize={isV3 ? `${MIN_LEFT_SIDEBAR_WIDTH_PX}px` : undefined}
+        defaultSize={isV3 ? `${v3LeftWidth}px` : `${leftLayoutSize}%`}
+        minSize={isV3 ? `${V3_LEFT_MIN_PX}px` : `${minLeftSidebarSize}%`}
+        maxSize={isV3 ? `${V3_LEFT_MAX_PX}px` : undefined}
         collapsible={true}
         collapsedSize="0%"
         onResize={(size) => {
           setLeftPanelCollapsed(size.asPercentage < 0.1)
           setLeftPanelWidth(Math.round(size.inPixels))
+          if (isV3 && size.inPixels >= V3_LEFT_MIN_PX - 1) storeWidth(V3_LEFT_WIDTH_KEY, size.inPixels)
         }}
       >
         <LeftSidebarPanel />

@@ -23,6 +23,10 @@ import useNoteMarksStore, { selectWorkspaceMarks } from '@/stores/note-marks'
 import useSettingStore from '@/stores/setting'
 import useVaultIndexStore from '@/stores/vault-index'
 import { SIDEBAR_ROW } from '../sidebar-row'
+import { useDragWidth } from '@/hooks/use-drag-width'
+
+const NOTE_LIST_MIN_WIDTH = 220
+const NOTE_LIST_MAX_WIDTH = 480
 import { useVaultName } from '../sidebar-v3/use-vault-name'
 
 /** 每分鐘重算一次相對時間（「現在」→「1 分鐘前」）。 */
@@ -82,6 +86,8 @@ function NoteList() {
   }), [])
   const ref = useRef<HTMLElement>(null)
   useAutoCollapse(ref)
+  // ALMNC-62：右緣可以拖曳調寬（220–480 px），記在 localStorage
+  const { width, handleProps } = useDragWidth('almanac:note-list-width', 280, NOTE_LIST_MIN_WIDTH, NOTE_LIST_MAX_WIDTH)
   const locale = useLocale()
   const folder = useNoteListStore(state => state.folder)
   // 記下打開（或換資料夾）時的焦點所在，就是打開清單的那個控制項
@@ -129,7 +135,8 @@ function NoteList() {
     <aside
       ref={ref}
       aria-label={t('noteList.label', { folder: title })}
-      className="flex h-full w-[280px] shrink-0 flex-col border-r border-line-soft bg-background"
+      className="relative flex h-full shrink-0 flex-col border-r border-line-soft bg-background"
+      style={{ width }}
       data-note-list
       onKeyDown={event => {
         if (event.key !== 'Escape' || event.defaultPrevented || event.nativeEvent.isComposing) return
@@ -143,6 +150,18 @@ function NoteList() {
         }
       }}
     >
+      <div
+        role="separator"
+        aria-orientation="vertical"
+        aria-label={t('noteList.resize')}
+        aria-valuemin={NOTE_LIST_MIN_WIDTH}
+        aria-valuemax={NOTE_LIST_MAX_WIDTH}
+        aria-valuenow={width}
+        tabIndex={0}
+        data-note-list-resize
+        className="absolute inset-y-0 -right-1 z-10 w-2 cursor-col-resize touch-none outline-none after:absolute after:inset-y-0 after:left-1/2 after:w-px after:-translate-x-1/2 after:transition-colors hover:after:bg-muted-foreground/50 focus-visible:after:bg-ring active:after:bg-muted-foreground/70"
+        {...handleProps}
+      />
       <header className="flex h-11 shrink-0 items-center gap-2 border-b border-line-soft pr-2 pl-4">
         <h2 className="min-w-0 flex-1 truncate text-sm font-semibold text-ink" title={folder || title}>{title}</h2>
         <span className="shrink-0 text-xs tabular-nums text-faint" aria-label={t('count', { count: items.length })}>{items.length}</span>

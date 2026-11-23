@@ -3,6 +3,9 @@
 // Fork（almanac ALMNC-20）：v5 側欄，方案 B「導覽＋檔案樹」。left-sidebar.tsx 在 v3 時直接回傳這個元件。
 // 由上而下：品牌、搜尋（⌘K）、三個新增按鈕（ALMNC-54.8、54.16、54.18）、五個導覽、可收合的代理人區、可收合的 MyVault 檔案樹、規則。
 import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from 'react'
+import { AlmanacWordmark } from '@/components/almanac-wordmark'
+import { LeftSidebarToggleButton, SettingsButton } from '@/components/shell-buttons'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import { ArrowDownToLine, CalendarCheck, CalendarDays, ChevronDown, FilePen, ListChecks, Library, MessageSquarePlus, MessagesSquare, MoreHorizontal, Plus, Search } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { Kbd } from '@/components/ui/kbd'
@@ -279,9 +282,14 @@ export function SidebarV3() {
 
   return (
     <div className="flex h-full w-full flex-col gap-3 border-r border-line-soft bg-panel px-2 py-3" data-left-sidebar data-sidebar-v3>
-      <div className="flex shrink-0 items-baseline gap-2 px-2 py-1">
-        <b className="text-sm font-semibold">NoteGen</b>
-        <span className="text-ui-compact text-faint" aria-hidden>v3</span>
+      {/* Fork（almanac ALMNC-62）：頂端放 Almanac Notes 字標；左側欄開關與設定從標題列移到這裡（側欄收起時回到標題列）。 */}
+      <div className="flex h-8 shrink-0 items-center gap-1 pr-0.5 pl-2" data-sidebar-brand>
+        <AlmanacWordmark className="h-[15px] text-ink" />
+        <span className="flex-1" />
+        <TooltipProvider>
+          <LeftSidebarToggleButton />
+          <SettingsButton />
+        </TooltipProvider>
       </div>
       <button
         type="button"
