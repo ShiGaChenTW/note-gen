@@ -7465,6 +7465,26 @@
       "renameFailed": "Could not rename to this title",
       "fileExists": "A file with this name already exists",
       "busy": "This file is busy, try again shortly"
+    },
+    "viewModes": {
+      "label": "View",
+      "menuTitle": "Switch view",
+      "markup": "Markup",
+      "live": "Live Preview",
+      "split": "Live Preview (Split)",
+      "reading": "Reading",
+      "wysiwyg": "WYSIWYG",
+      "desc": {
+        "markup": "Edit the raw Markdown",
+        "live": "Show syntax only on the line you are editing",
+        "split": "Source on the left, live preview on the right",
+        "reading": "Read-only formatted view",
+        "wysiwyg": "Edit like a word processor"
+      },
+      "focus": "Focus mode",
+      "focusExit": "Exit focus mode",
+      "focusHint": "Press Esc to exit",
+      "splitPreview": "Preview"
     }
   },
   "editorWindow": {

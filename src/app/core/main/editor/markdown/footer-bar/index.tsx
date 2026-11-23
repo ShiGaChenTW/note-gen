@@ -21,6 +21,8 @@ import { usePluginStore } from '@/stores/plugins'
 import { WordCount } from './word-count'
 import { StatusBarItem } from '@/app/core/main/status-bar-order'
 import emitter from '@/lib/emitter'
+import type { EditorViewPresentation } from '@/lib/editor-layout-styles'
+import { ViewModeMenu } from './view-mode-menu'
 
 interface FooterBarProps {
   editor: Editor
@@ -29,6 +31,10 @@ interface FooterBarProps {
   onToggleOutline?: () => void
   viewMode?: 'visual' | 'source'
   onToggleViewMode?: () => void
+  /** Fork（almanac ALMNC-63）：給了就用檢視選單取代兩段式切換鈕 */
+  viewPresentation?: EditorViewPresentation
+  viewPresentations?: readonly EditorViewPresentation[]
+  onSelectViewPresentation?: (presentation: EditorViewPresentation) => void
   sourceMarkdown?: string
   getMarkdown?: () => string
   prepareExternalAction?: () => boolean
@@ -43,6 +49,9 @@ export function FooterBar({
   onToggleOutline,
   viewMode = 'visual',
   onToggleViewMode,
+  viewPresentation,
+  viewPresentations,
+  onSelectViewPresentation,
   sourceMarkdown,
   getMarkdown,
   prepareExternalAction,
@@ -58,6 +67,14 @@ export function FooterBar({
   const tSourceMode = useTranslations('settings.editor.sourceMode')
   const tReading = useTranslations('editor.readingMode')
   const prepareWriteAction = () => !readOnly && (prepareExternalAction?.() ?? true)
+  const viewModeMenu = onSelectViewPresentation && viewPresentation && viewPresentations ? (
+    <ViewModeMenu
+      value={viewPresentation}
+      options={viewPresentations}
+      onSelect={onSelectViewPresentation}
+      showFocusToggle={!isMobile}
+    />
+  ) : null
   if (isMobile) {
     return (
       <div className="mobile-editor-footer flex h-7 select-none items-center justify-between gap-3 border-t border-border bg-background px-3 text-xs text-muted-foreground">
@@ -67,7 +84,7 @@ export function FooterBar({
           </div>
         ) : null}
         <div className="flex min-w-0 items-center gap-2 overflow-x-auto">
-          {onToggleViewMode ? (
+          {viewModeMenu ?? (onToggleViewMode ? (
             <Button
               type="button"
               variant="ghost"
@@ -79,7 +96,7 @@ export function FooterBar({
               {viewMode === 'source' ? <Code2 /> : <Eye />}
               <span>{tSourceMode(viewMode)}</span>
             </Button>
-          ) : null}
+          ) : null)}
           {readOnly ? (
             <>
               <Button
@@ -125,7 +142,10 @@ export function FooterBar({
       <div className={embedded ? 'contents' : 'flex items-center gap-1'}>
         {!embedded ? <PluginStatusBarItems alignment="left" /> : null}
         {!readOnly && !embedded && viewMode === 'visual' ? <PluginEditorToolbar editor={editor} location="editor/toolbar" /> : null}
-        {onToggleViewMode ? (embedded ? <StatusBarItem id="editor:view-mode" rank={20}>
+        {viewModeMenu ? (embedded
+          ? <StatusBarItem id="editor:view-mode" rank={20}>{viewModeMenu}</StatusBarItem>
+          : viewModeMenu
+        ) : onToggleViewMode ? (embedded ? <StatusBarItem id="editor:view-mode" rank={20}>
           <Button
             type="button"
             variant="ghost"

@@ -276,6 +276,7 @@ function ResizableWrapper() {
     panels.push(
       <ResizablePanel
         key="left"
+        data-focus-hide
         id="left"
         panelRef={leftPanelRef}
         defaultSize={isV3 ? `${v3LeftWidth}px` : `${leftLayoutSize}%`}
@@ -300,6 +301,7 @@ function ResizableWrapper() {
     panels.push(
       <ResizableHandle
         key="handle-left-center"
+        data-focus-hide
         withHandle
         collapsed={isLeftHandleCollapsed}
         expandDirection="right"
@@ -341,6 +343,7 @@ function ResizableWrapper() {
     panels.push(
       <ResizableHandle
         key="handle-center-right"
+        data-focus-hide
         withHandle
         collapsed={isRightHandleCollapsed}
         expandDirection="left"
@@ -354,6 +357,7 @@ function ResizableWrapper() {
     panels.push(
       <ResizablePanel
         key="right"
+        data-focus-hide
         id="right"
         // Fork（almanac ALMNC-24）：v3 全頁畫面只蓋中間，右側欄照常可用
         panelRef={rightPanelRef}

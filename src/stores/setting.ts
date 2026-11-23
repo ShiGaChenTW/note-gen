@@ -35,9 +35,13 @@ import {
   normalizeEditorContentWidth,
   normalizeEditorLineHeight,
   normalizeEditorViewMode,
+  normalizeEditorViewPresentation,
+  engineOfPresentation,
+  presentationForEngine,
   type EditorContentWidth,
   type EditorLineHeight,
   type EditorViewMode,
+  type EditorViewPresentation,
 } from '@/lib/editor-layout-styles'
 import {
   DEFAULT_OUTLINE_POSITION,
@@ -426,6 +430,9 @@ interface SettingState {
 
   editorViewMode: EditorViewMode
   setEditorViewMode: (viewMode: EditorViewMode) => Promise<void>
+  // Fork（almanac ALMNC-63）：五種檢視；editorViewMode 是它的底層引擎，兩者一起存
+  editorViewPresentation: EditorViewPresentation
+  setEditorViewPresentation: (presentation: EditorViewPresentation) => Promise<void>
 
   enableOutline: boolean
   setEnableOutline: (enable: boolean) => Promise<void>
@@ -674,6 +681,15 @@ const useSettingStore = create<SettingState>((set, get) => ({
     const normalizedViewMode = normalizeEditorViewMode(storedEditorViewMode)
     if (normalizedViewMode !== storedEditorViewMode) {
       await store.set('editorViewMode', normalizedViewMode)
+      preferencesChanged = true
+    }
+    const storedEditorViewPresentation = await store.get('editorViewPresentation')
+    let normalizedViewPresentation = normalizeEditorViewPresentation(storedEditorViewPresentation, normalizedViewMode)
+    if (engineOfPresentation(normalizedViewPresentation) !== normalizedViewMode) {
+      normalizedViewPresentation = presentationForEngine(normalizedViewMode)
+    }
+    if (normalizedViewPresentation !== storedEditorViewPresentation) {
+      await store.set('editorViewPresentation', normalizedViewPresentation)
       preferencesChanged = true
     }
 
@@ -2039,11 +2055,30 @@ const useSettingStore = create<SettingState>((set, get) => ({
       editorViewMode !== get().editorViewMode
       && !prepareActiveEditorDeactivation()
     ) return
-    set({ editorViewMode })
+    // 引擎換了，檢視就回到該引擎的預設（wysiwyg／markup）；引擎沒變就保留原本的檢視
+    const editorViewPresentation = engineOfPresentation(get().editorViewPresentation) === editorViewMode
+      ? get().editorViewPresentation
+      : presentationForEngine(editorViewMode)
+    set({ editorViewMode, editorViewPresentation })
     const store = await Store.load('store.json')
     await store.set('editorViewMode', editorViewMode)
+    await store.set('editorViewPresentation', editorViewPresentation)
     await store.save()
   },
+  editorViewPresentation: presentationForEngine(DEFAULT_EDITOR_VIEW_MODE),
+  setEditorViewPresentation: async (editorViewPresentation) => {
+    const editorViewMode = engineOfPresentation(editorViewPresentation)
+    if (
+      editorViewMode !== get().editorViewMode
+      && !prepareActiveEditorDeactivation()
+    ) return
+    set({ editorViewMode, editorViewPresentation })
+    const store = await Store.load('store.json')
+    await store.set('editorViewMode', editorViewMode)
+    await store.set('editorViewPresentation', editorViewPresentation)
+    await store.save()
+  },
+
 
   enableOutline: false,
   setEnableOutline: async (enableOutline) => {

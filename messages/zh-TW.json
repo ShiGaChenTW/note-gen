@@ -7530,6 +7530,26 @@
       "renameFailed": "沒有改成這個標題",
       "fileExists": "已有同名檔案，請換一個標題",
       "busy": "這個檔案正在處理，請稍後再試"
+    },
+    "viewModes": {
+      "label": "檢視",
+      "menuTitle": "切換檢視",
+      "markup": "原始碼",
+      "live": "即時預覽",
+      "split": "並排預覽",
+      "reading": "閱讀",
+      "wysiwyg": "所見即所得",
+      "desc": {
+        "markup": "直接編輯 Markdown 原文",
+        "live": "游標所在行顯示符號，其他行直接套用樣式",
+        "split": "左邊原始碼、右邊即時預覽",
+        "reading": "只看不改的排版畫面",
+        "wysiwyg": "像文書軟體一樣編輯"
+      },
+      "focus": "專注模式",
+      "focusExit": "退出專注模式",
+      "focusHint": "按 Esc 退出",
+      "splitPreview": "預覽"
     }
   },
   "editorWindow": {

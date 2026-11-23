@@ -428,7 +428,7 @@ export function TabBar({
   }
 
   return (
-    <div className="flex h-12 shrink-0 items-center border-b bg-background">
+    <div data-focus-hide className="flex h-12 shrink-0 items-center border-b bg-background">
       {isActiveGroup && showEditorUndoRedo && activeTab && activeTab.kind !== 'record' && activeTab.kind !== 'blank' && activeTab.kind !== 'plugin' && activeTab.kind !== 'browser' && (
         <div className="flex shrink-0 items-center gap-0.5 border-r px-1">
           <TooltipButton icon={<Undo2 />} tooltipText={`${t('undo')} (${modKey}Z)`} side="bottom" buttonClassName="size-7" disabled={!canUndo} onClick={() => runUndoRedo(false)} />

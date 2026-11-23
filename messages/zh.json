@@ -7465,6 +7465,26 @@
       "renameFailed": "没有改成这个标题",
       "fileExists": "已有同名文件，请换一个标题",
       "busy": "这个文件正在处理，请稍后再试"
+    },
+    "viewModes": {
+      "label": "视图",
+      "menuTitle": "切换视图",
+      "markup": "源码",
+      "live": "实时预览",
+      "split": "并排预览",
+      "reading": "阅读",
+      "wysiwyg": "所见即所得",
+      "desc": {
+        "markup": "直接编辑 Markdown 原文",
+        "live": "光标所在行显示符号，其他行直接套用样式",
+        "split": "左边源码、右边实时预览",
+        "reading": "只看不改的排版画面",
+        "wysiwyg": "像文字处理软件一样编辑"
+      },
+      "focus": "专注模式",
+      "focusExit": "退出专注模式",
+      "focusHint": "按 Esc 退出",
+      "splitPreview": "预览"
     }
   },
   "editorWindow": {
