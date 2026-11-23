@@ -47,6 +47,7 @@ import {
 import { useEffect, useRef } from 'react'
 import { cn } from '@/lib/utils'
 import { buildTextEdits } from '@/lib/agent/text-diff'
+import { livePreviewExtension } from './source-live-preview'
 import { sourceMarkdownLanguage } from './source-markdown-language'
 
 export interface SourceMarkdownRemoteCursor {
@@ -76,6 +77,10 @@ interface SourceMarkdownEditorProps {
   lineHeight: number
   ariaLabel: string
   className?: string
+  /** Fork（almanac ALMNC-63）：游標不在的行藏起 Markdown 符號 */
+  livePreview?: boolean
+  /** Fork（almanac ALMNC-63）：Split 檢視用來同步右側預覽的捲動 */
+  onScrollRatioChange?: (ratio: number) => void
 }
 
 export interface SourceMarkdownEditorController {
@@ -386,6 +391,8 @@ export function SourceMarkdownEditor({
   lineHeight,
   ariaLabel,
   className,
+  livePreview = false,
+  onScrollRatioChange,
 }: SourceMarkdownEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const viewRef = useRef<EditorView | null>(null)
@@ -404,6 +411,9 @@ export function SourceMarkdownEditor({
   const wrappingCompartmentRef = useRef(new Compartment())
   const themeCompartmentRef = useRef(new Compartment())
   const attributesCompartmentRef = useRef(new Compartment())
+  const livePreviewCompartmentRef = useRef(new Compartment())
+  const onScrollRatioChangeRef = useRef(onScrollRatioChange)
+  onScrollRatioChangeRef.current = onScrollRatioChange
 
   useEffect(() => {
     onChangeRef.current = onChange
@@ -463,6 +473,7 @@ export function SourceMarkdownEditor({
           remoteCursorDecorations,
           highlightActiveLine(),
           highlightSelectionMatches(),
+          livePreviewCompartmentRef.current.of(livePreview && language === 'markdown' ? livePreviewExtension() : []),
           keymap.of([indentWithTab, ...defaultKeymap, ...historyKeymap, ...searchKeymap]),
           editableCompartmentRef.current.of([
             EditorState.readOnly.of(!editable),
@@ -509,6 +520,12 @@ export function SourceMarkdownEditor({
     const handleBlur = () => onFocusChangeRef.current?.(false)
     view.contentDOM.addEventListener('focus', handleFocus)
     view.contentDOM.addEventListener('blur', handleBlur)
+    const handleScroll = () => {
+      const scroller = view.scrollDOM
+      const max = scroller.scrollHeight - scroller.clientHeight
+      onScrollRatioChangeRef.current?.(max > 0 ? scroller.scrollTop / max : 0)
+    }
+    view.scrollDOM.addEventListener('scroll', handleScroll, { passive: true })
     let restoreScrollFrame = window.requestAnimationFrame(() => {
       restoreScrollFrame = 0
       view.scrollDOM.scrollTop = initialScrollTop
@@ -617,6 +634,7 @@ export function SourceMarkdownEditor({
     return () => {
       view.contentDOM.removeEventListener('focus', handleFocus)
       view.contentDOM.removeEventListener('blur', handleBlur)
+      view.scrollDOM.removeEventListener('scroll', handleScroll)
       if (restoreScrollFrame) window.cancelAnimationFrame(restoreScrollFrame)
       const finalSelection = view.state.selection.main
       const finalSnapshot = view.state.field(sourceSnapshotField)
@@ -643,6 +661,16 @@ export function SourceMarkdownEditor({
       ],
     })
   }, [language, placeholder])
+
+  useEffect(() => {
+    const view = viewRef.current
+    if (!view) return
+    view.dispatch({
+      effects: livePreviewCompartmentRef.current.reconfigure(
+        livePreview && language === 'markdown' ? livePreviewExtension() : []
+      ),
+    })
+  }, [language, livePreview])
 
   useEffect(() => {
     const view = viewRef.current

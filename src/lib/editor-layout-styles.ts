@@ -37,6 +37,45 @@ export function normalizeEditorViewMode(value: unknown): EditorViewMode {
     : DEFAULT_EDITOR_VIEW_MODE
 }
 
+// Fork（almanac ALMNC-63）：使用者看到的五種檢視。底層仍只有兩個引擎：
+// Tiptap（visual：wysiwyg、reading）與 CodeMirror（source：markup、live、split）。
+export type EditorViewPresentation = 'markup' | 'live' | 'split' | 'reading' | 'wysiwyg'
+
+export const EDITOR_VIEW_PRESENTATIONS: readonly EditorViewPresentation[] = ['markup', 'live', 'split', 'reading', 'wysiwyg']
+/** classic 介面只有原本的兩種。 */
+export const CLASSIC_EDITOR_VIEW_PRESENTATIONS: readonly EditorViewPresentation[] = ['markup', 'wysiwyg']
+
+export function isEditorViewPresentation(value: unknown): value is EditorViewPresentation {
+  return typeof value === 'string' && (EDITOR_VIEW_PRESENTATIONS as readonly string[]).includes(value)
+}
+
+export function engineOfPresentation(presentation: EditorViewPresentation): EditorViewMode {
+  return presentation === 'wysiwyg' || presentation === 'reading' ? 'visual' : 'source'
+}
+
+export function presentationForEngine(mode: EditorViewMode): EditorViewPresentation {
+  return mode === 'source' ? 'markup' : 'wysiwyg'
+}
+
+/** 沒存過檢視時，從舊的 editorViewMode 推出來。 */
+export function normalizeEditorViewPresentation(value: unknown, legacyMode?: unknown): EditorViewPresentation {
+  if (isEditorViewPresentation(value)) return value
+  return presentationForEngine(normalizeEditorViewMode(legacyMode))
+}
+
+/**
+ * 實際要顯示的檢視：classic 收斂成兩種；引擎被迫改變（解析失敗、大檔案退回原始碼）時跟著引擎走。
+ */
+export function resolveEditorViewPresentation(options: {
+  preferred: EditorViewPresentation
+  effectiveMode: EditorViewMode
+  allowExtended: boolean
+}): EditorViewPresentation {
+  const { preferred, effectiveMode, allowExtended } = options
+  const allowed = allowExtended ? preferred : presentationForEngine(engineOfPresentation(preferred))
+  return engineOfPresentation(allowed) === effectiveMode ? allowed : presentationForEngine(effectiveMode)
+}
+
 export function getEditorContentContainerClass(options: {
   contentWidth: EditorContentWidth
   isMobile: boolean

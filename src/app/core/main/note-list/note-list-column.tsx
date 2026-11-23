@@ -133,6 +133,7 @@ function NoteList() {
 
   return (
     <aside
+      data-focus-hide
       ref={ref}
       aria-label={t('noteList.label', { folder: title })}
       className="relative flex h-full shrink-0 flex-col border-r border-line-soft bg-background"

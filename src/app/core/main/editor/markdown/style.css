@@ -2383,3 +2383,58 @@
 :where([data-ui="v3"]) .tiptap-editor .agent-diff-map-inserted {
   background: var(--success-ink);
 }
+
+/* Fork（almanac ALMNC-63）：專注模式。<html data-editor-focus> 由 editor-focus-mode.ts 設定。 */
+:where([data-ui="v3"])[data-editor-focus] [data-focus-hide] {
+  display: none !important;
+}
+
+:where([data-ui="v3"]) [data-focus-editor="true"] .editor-focus-exit {
+  opacity: 0.25;
+  transition: opacity 150ms ease-out;
+}
+
+:where([data-ui="v3"]) [data-focus-editor="true"] .editor-focus-exit:hover,
+:where([data-ui="v3"]) [data-focus-editor="true"] .editor-focus-exit:focus-visible {
+  opacity: 1;
+}
+
+/* 淡化目前段落以外的內容 */
+:where([data-ui="v3"]) [data-focus-editor="true"] .ProseMirror > * {
+  transition: opacity 150ms ease-out;
+}
+
+:where([data-ui="v3"]) [data-focus-editor="true"] .ProseMirror:focus-within > *:not(.is-focus-block) {
+  opacity: 0.35;
+}
+
+:where([data-ui="v3"]) [data-focus-editor="true"] .cm-editor.cm-focused .cm-line {
+  transition: opacity 150ms ease-out;
+}
+
+:where([data-ui="v3"]) [data-focus-editor="true"] .cm-editor.cm-focused .cm-line:not(.cm-activeLine) {
+  opacity: 0.35;
+}
+
+:where([data-ui="v3"]) [data-focus-editor="true"] .cm-editor .cm-activeLine {
+  background-color: transparent !important;
+}
+
+/* 打字機捲動：前後留半個畫面，第一行與最後一行也能捲到中間 */
+:where([data-ui="v3"]) [data-focus-editor="true"] .ProseMirror {
+  padding-top: 40vh;
+  padding-bottom: 50vh;
+}
+
+:where([data-ui="v3"]) [data-focus-editor="true"] .cm-content {
+  max-width: 46rem !important;
+  margin: 0 auto !important;
+  padding-top: 40vh !important;
+  padding-bottom: 50vh !important;
+}
+
+/* Split 檢視右側預覽 */
+:where([data-ui="v3"]) [data-editor-split-preview] {
+  font-size: var(--editor-font-size, 16px);
+  line-height: var(--editor-line-height, 1.7);
+}

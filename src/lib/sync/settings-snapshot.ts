@@ -1,6 +1,6 @@
 import { normalizeSpeechMode } from '@/lib/speech/preferences'
 import { filterSyncData, type SyncExclusionOptions } from '@/config/sync-exclusions'
-import { DEFAULT_EDITOR_CONTENT_WIDTH, normalizeEditorContentWidth, normalizeEditorLineHeight, normalizeEditorViewMode } from '@/lib/editor-layout-styles'
+import { DEFAULT_EDITOR_CONTENT_WIDTH, normalizeEditorContentWidth, normalizeEditorLineHeight, normalizeEditorViewMode, normalizeEditorViewPresentation, engineOfPresentation, presentationForEngine } from '@/lib/editor-layout-styles'
 import { normalizeOutlinePosition } from '@/lib/outline-preferences'
 import { normalizeRecordSortMode, normalizeRecordViewMode } from '@/lib/record-display-preferences'
 import { normalizeRecordCompletionBehavior, normalizeRecordSaveTargetMode, normalizeRecordTagId } from '@/lib/record-save-preferences'
@@ -28,6 +28,11 @@ export function normalizeSettingsSnapshot(value: Record<string, unknown>, defaul
     canvasInsertBehavior: normalizeCanvasInsertBehavior,
   }
   for (const [key, normalize] of Object.entries(normalizers)) result[key] = normalize(result[key])
+  // Fork（almanac ALMNC-63）：檢視跟著引擎走，舊快照沒有檢視時由引擎推出
+  const presentation = normalizeEditorViewPresentation(value.editorViewPresentation, result.editorViewMode)
+  result.editorViewPresentation = engineOfPresentation(presentation) === result.editorViewMode
+    ? presentation
+    : presentationForEngine(result.editorViewMode as 'visual' | 'source')
   result.agentSystemPromptExtension = typeof value.agentSystemPromptExtension === 'string' ? value.agentSystemPromptExtension
     : typeof value.systemPrompt === 'string' && !isManagedAgentSystemPrompt(value.systemPrompt) ? value.systemPrompt : ''
   delete result.systemPrompt // Legacy storage alias; the extension is the persisted preference.

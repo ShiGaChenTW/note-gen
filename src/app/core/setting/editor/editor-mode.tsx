@@ -12,14 +12,25 @@ import {
   ItemTitle,
 } from '@/components/ui/item'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import type { EditorViewMode } from '@/lib/editor-layout-styles'
+import {
+  CLASSIC_EDITOR_VIEW_PRESENTATIONS,
+  EDITOR_VIEW_PRESENTATIONS,
+  isEditorViewPresentation,
+} from '@/lib/editor-layout-styles'
+import { isMobileDevice } from '@/lib/check'
+import { useUiV3 } from '@/lib/fork-ui'
 import useSettingStore from '@/stores/setting'
-
-const viewModeOptions: EditorViewMode[] = ['visual', 'source']
 
 export default function EditorMode() {
   const t = useTranslations('settings.editor.mode')
-  const { editorViewMode, setEditorViewMode } = useSettingStore()
+  const tViews = useTranslations('editor.viewModes')
+  const { editorViewPresentation, setEditorViewPresentation } = useSettingStore()
+  // Fork（almanac ALMNC-63）：V3 桌面版有五種檢視；classic 與手機維持原本兩種
+  const isV3 = useUiV3()
+  const options = isV3 && !isMobileDevice() ? EDITOR_VIEW_PRESENTATIONS : CLASSIC_EDITOR_VIEW_PRESENTATIONS
+  const value = options.includes(editorViewPresentation)
+    ? editorViewPresentation
+    : editorViewPresentation === 'reading' ? 'wysiwyg' : 'markup'
 
   return (
     <Item variant="outline">
@@ -34,21 +45,22 @@ export default function EditorMode() {
         <ToggleGroup
           type="single"
           variant="outline"
-          value={editorViewMode}
-          className="w-full sm:w-auto"
+          value={value}
+          className="w-full flex-wrap sm:w-auto"
           aria-label={t('title')}
-          onValueChange={(value) => {
-            if (value) void setEditorViewMode(value as EditorViewMode)
+          onValueChange={(next) => {
+            if (isEditorViewPresentation(next)) void setEditorViewPresentation(next)
           }}
         >
-          {viewModeOptions.map((option) => (
+          {options.map((option) => (
             <ToggleGroupItem
               key={option}
               value={option}
               className="flex-1 sm:flex-none"
-              aria-label={t(`options.${option}`)}
+              aria-label={tViews(option)}
+              title={tViews(`desc.${option}`)}
             >
-              {t(`options.${option}`)}
+              {tViews(option)}
             </ToggleGroupItem>
           ))}
         </ToggleGroup>

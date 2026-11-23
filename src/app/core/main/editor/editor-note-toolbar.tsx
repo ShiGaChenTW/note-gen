@@ -188,6 +188,7 @@ export function EditorNoteToolbar({ activeTab, isActiveGroup, canGoBack, canGoFo
     <TooltipProvider>
       <Popover open={infoOpen} onOpenChange={setInfoOpen}>
         <div
+          data-focus-hide
           ref={rootRef}
           role="toolbar"
           aria-label={t('label')}
