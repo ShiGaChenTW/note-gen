@@ -13,6 +13,7 @@ const db = vi.hoisted(() => ({
   getSharedContext: vi.fn(),
   saveSharedContext: vi.fn(async () => {}),
   listActivity: vi.fn(),
+  listActivityActors: vi.fn(async (): Promise<Array<{ actorId: string, actorRole: string }>> => []),
   getScottPreferences: vi.fn(),
   saveScottPreferences: vi.fn(async () => {}),
 }))
@@ -291,5 +292,57 @@ it('asks before undoing a domain proposal that created an expert: MOC only keeps
     await act(async () => root.unmount())
     container.remove()
     domainUndo.proposalExpertForTarget.mockResolvedValue(null)
+  }
+})
+
+// Fork（almanac ALMNC-71）：系統修復紀錄（actor＝system）顯示修復種類、檔案與細節；篩選選單有「系統修復」，和夥伴並存，篩選查資料庫。
+it('shows system repair entries and filters them alongside partners', async () => {
+  Object.assign(globalThis, { React, IS_REACT_ACT_ENVIRONMENT: true })
+  const m = en.agents.memory
+  const repair: ActivityEntry = {
+    id: 3, at: 3000, actorId: 'system', actorRole: 'system', action: 'repaired', targetLink: `note:${encodeURI('知識/新筆記.md')}`,
+    source: { kind: 'system', ref: 'id-scan:relink?links=3' }, note: '→ 乙', correctsId: null, archivedAt: null,
+  }
+  db.getAgentMemory.mockResolvedValue({ soul: doc('s'), rules: doc('r'), workNotes: doc('') })
+  db.getSharedContext.mockResolvedValue({ projects: [], weeklyFocus: [], people: [], updatedAt: null, updatedBy: null })
+  db.getScottPreferences.mockResolvedValue({ content: '', updatedAt: null })
+  db.listActivity.mockReset()
+  db.listActivity.mockImplementation(async (options: { actorId?: string }) =>
+    options.actorId ? [repair, ...activity].filter(entry => entry.actorId === options.actorId) : [repair, ...activity])
+  db.listActivityActors.mockResolvedValue([
+    { actorId: 'leo', actorRole: 'secretary' }, { actorId: 'system', actorRole: 'system' }, { actorId: 'scott', actorRole: 'scott' },
+  ])
+
+  const container = document.createElement('div')
+  document.body.append(container)
+  const root = createRoot(container)
+  const items = () => [...container.querySelectorAll(`ol[aria-label="${m.activity}"] li`)].map(item => item.textContent ?? '')
+  try {
+    await act(async () => root.render(React.createElement(AgentMemorySettings, { agents })))
+    const [first] = items()
+    expect(first).toContain(m.system)
+    expect(first).toContain(m.actions.repaired)
+    expect(first).toContain('Updated 3 links to the new file name')
+    expect(first).toContain('note:知識/新筆記.md')
+    expect(first).toContain('→ 乙')
+    expect(first).not.toContain('id-scan:')
+
+    const filter = [...container.querySelectorAll('select')].find(el => el.closest('label')?.textContent?.includes(m.activityFilter))!
+    expect([...filter.options].map(option => option.textContent)).toEqual([m.activityFilterAll, m.systemRepairFilter, 'Leo · Secretary', 'Scott'])
+    await act(async () => {
+      filter.value = 'system'
+      filter.dispatchEvent(new Event('change', { bubbles: true }))
+    })
+    expect(db.listActivity).toHaveBeenLastCalledWith({ limit: 50, actorId: 'system' })
+    expect(items()).toEqual([expect.stringContaining(m.actions.repaired)])
+    await act(async () => {
+      filter.value = 'leo'
+      filter.dispatchEvent(new Event('change', { bubbles: true }))
+    })
+    expect(db.listActivity).toHaveBeenLastCalledWith({ limit: 50, actorId: 'leo' })
+    expect(items()).toEqual([expect.stringContaining('Leo')])
+  } finally {
+    await act(async () => root.unmount())
+    container.remove()
   }
 })

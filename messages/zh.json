@@ -66,11 +66,13 @@
       "activityEmpty": "还没有活动记录。",
       "activityFilter": "发起的伙伴",
       "activityFilterAll": "全部",
+      "systemRepairFilter": "系统修复",
       "activityFilterHint": "接受的提案记在发起它的伙伴名下。",
       "correctsEntry": "更正 #{id}",
       "sourceConversation": "对话 {ref}",
       "sourceProposal": "提案 {ref}",
       "scott": "Scott",
+      "system": "系统",
       "preferences": "Scott 的偏好",
       "preferencesHint": "所有 agent 共读，只有你能修改。例如回复语言、摘要长度。",
       "actions": {
@@ -85,7 +87,8 @@
         "linked": "链接",
         "reported": "回报",
         "corrected": "更正",
-        "undone": "复原"
+        "undone": "复原",
+        "repaired": "系统修复"
       },
       "undoWindowHint": "7 天内的变更可以复原。",
       "sourceDirect": "直接操作",
@@ -95,7 +98,16 @@
       "undoneMark": "已复原",
       "undoDone": "已复原。",
       "undoExpired": "已超过 7 天，不能复原。",
-      "undoFailed": "复原失败，没有覆盖任何内容。"
+      "undoFailed": "复原失败，没有覆盖任何内容。",
+      "repair": {
+        "assign": "补上身份编号",
+        "renumber": "和“{kept}”重号，为副本换了新编号",
+        "restore": "按系统索引补回身份编号",
+        "rename": "在 App 外从“{from}”改名或移动，已更新系统索引",
+        "relink": "按新文件名改了 {links} 个链接",
+        "clock": "时钟可能有误，请检查系统时间",
+        "held": "有 {count} 个笔记没有身份编号，数量较多所以没有自动补，请用迁移工具预览后应用"
+      }
     }
   },
   "agentDiffNavigation": {
@@ -9109,7 +9121,7 @@
     },
     "title": "工作台",
     "subtitle": "{count} 件等你处理",
-    "subtitleSources": "{done} / {total} 已整理",
+    "subtitleSources": "{done} / {total} 已分析",
     "tabs": {
       "label": "工作台分页",
       "review": "审核",
@@ -9266,10 +9278,10 @@
       },
       "status": {
         "wait": "等你决定",
-        "todo": "未整理",
+        "todo": "待处理",
         "ing": "整理中",
         "edited": "已修改",
-        "done": "已整理",
+        "done": "已分析",
         "no": "不采用"
       },
       "attachmentJudgement": {
@@ -9293,7 +9305,7 @@
       "selectAll": "全选",
       "selectAllLabel": "全选目前清单",
       "pickRow": "勾选「{title}」",
-      "organised": "{done} / {total} 已整理",
+      "organised": "{done} / {total} 已分析",
       "outputs": "{count} 则产出",
       "noOutputs": "没有产出",
       "editedSub": "v{version} 未送出",

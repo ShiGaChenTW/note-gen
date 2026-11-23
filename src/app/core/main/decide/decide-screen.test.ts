@@ -522,7 +522,7 @@ describe('資料源 tab', () => {
     act(() => $<HTMLButtonElement>('[data-testid="workbench-tabs"] [data-value="sources"]')!.click())
   })
 
-  it('has two filter rows — status (待處理 by default) and type (日誌) — no input box or search, permanent checkboxes and 「N / M 已整理」', () => {
+  it('has two filter rows — status (待處理 by default) and type (日誌) — no input box or search, permanent checkboxes and 「N / M 已分析」', () => {
     expect($$('[data-testid="source-filters"] button').map(b => b.textContent)).toEqual(['待處理2', '已分析3', '不採用0'])
     expect($$('[data-testid="source-type-filters"] button').map(b => b.textContent)).toEqual(['日誌0'])
     expect($<HTMLButtonElement>('[data-filter="pending"]')!.getAttribute('aria-pressed')).toBe('true')
@@ -530,15 +530,17 @@ describe('資料源 tab', () => {
     // 待處理包含等你決定；卡片保留「等你決定」小標（ALMNC-69.3）。
     expect($$('[data-testid="source-row"]').map(row => row.dataset.row)).toEqual(['src:w', 'rec:5'])
     expect($('[data-row="src:w"] [data-status]')!.textContent).toBe('等你決定')
+    expect($('[data-row="rec:5"] [data-status]')!.textContent).toBe('待處理')
     expect($$('[data-testid="source-row"] [role="checkbox"]')).toHaveLength(2)
-    // 舊收集頁丟進來、已拆成提案的項目算已整理（產出在審核）。
-    expect($('[data-testid="organised-summary"]')!.textContent).toBe('3 / 5 已整理')
+    // 舊收集頁丟進來、已拆成提案的項目算已分析（產出在審核）。
+    expect($('[data-testid="organised-summary"]')!.textContent).toBe('3 / 5 已分析')
     act(() => $<HTMLButtonElement>('[data-filter="journal"]')!.click())
     expect($$('[data-testid="source-row"]')).toHaveLength(0)
     act(() => $<HTMLButtonElement>('[data-filter="journal"]')!.click())
     act(() => $<HTMLButtonElement>('[data-filter="analyzed"]')!.click())
     expect($$('[data-testid="source-row"]').map(row => row.dataset.row)).toEqual(['src:d', 'cap:new', 'cap:old'])
     const row = $('[data-row="src:d"]')!
+    expect(row.querySelector('[data-status]')!.textContent).toBe('已分析')
     expect(row.querySelector('[data-testid="row-done"]')).not.toBeNull()
     expect(row.querySelector('[data-testid="row-sub"]')!.textContent).toBe('2 則產出')
   })
@@ -610,6 +612,7 @@ describe('資料源 tab', () => {
   it('E opens the full-page editor; saving an organised source stores a new version', async () => {
     act(() => $<HTMLButtonElement>('[data-filter="analyzed"]')!.click())
     act(() => $<HTMLElement>('[data-row="src:d"]')!.click())
+    expect($('[data-testid="source-detail"] [data-status]')!.textContent).toBe('已分析')
     expect($('[data-testid="source-detail"]')!.textContent).toContain('重新整理')
     press('e')
     expect($('[data-testid="editor-heading"]')!.textContent).toBe('正在編輯 · 新版本 v2')

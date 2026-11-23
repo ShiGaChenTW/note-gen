@@ -43,7 +43,7 @@ export interface SourceListRow {
   from: string
   at: number
   status: SourceRowStatus
-  /** 已整理的產出數（source_outputs；舊記錄有轉成筆記算 1）。 */
+  /** 已分析的產出數（source_outputs；舊記錄有轉成筆記算 1）。 */
   outputs: number
   /** V3 資料源的版本號；舊資料是 1。 */
   version: number
@@ -279,7 +279,7 @@ export function canReject(row: Pick<SourceListRow, 'journal'>): boolean {
   return row.journal !== true
 }
 
-/** 「N / M 已整理」。 */
+/** 「N / M 已分析」。 */
 export function organisedSummary(rows: readonly SourceListRow[]): { done: number, total: number } {
   return { done: rows.filter(row => row.status === 'done').length, total: rows.length }
 }
@@ -328,7 +328,7 @@ export function toggleAll(visibleIds: readonly string[], picked: ReadonlySet<str
 export type HandStep =
   /** 等你決定 → 送出（待分析）。 */
   | { op: 'submit', sourceId: string }
-  /** 已整理或不採用的再整理一次：另存同內容的新版本交給指揮官（舊版保留）。 */
+  /** 已分析或不採用的再整理一次：另存同內容的新版本交給指揮官（舊版保留）。 */
   | { op: 'reanalyze', sourceId: string, content: string }
   /** 已經在等分析（含改過還沒送的）：只要叫佇列跑。 */
   | { op: 'kick', sourceId: string }

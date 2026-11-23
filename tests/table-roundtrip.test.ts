@@ -5,7 +5,8 @@
 // which on top of the serializer's blank line between blocks gave one extra blank line before
 // every table.
 import { describe, expect, it } from 'vitest'
-import { Editor, type JSONContent } from '@tiptap/core'
+import { createTestEditorFactory } from './editor-fixture'
+import type { Editor, JSONContent } from '@tiptap/core'
 import StarterKit from '@tiptap/starter-kit'
 import { Markdown } from '@tiptap/markdown'
 import TaskList from '@tiptap/extension-task-list'
@@ -50,8 +51,10 @@ const MarkdownTable = withRawTableRoundtrip(Table.extend({
   renderMarkdown: (node, helpers) => renderTableToMarkdown(promoteFirstTableRowInMarkdown(node), helpers),
 }))
 
+const createTestEditor = createTestEditorFactory()
+
 function createEditor(withRaw = true) {
-  return new Editor({
+  return createTestEditor({
     element: document.createElement('div'),
     extensions: [
       Frontmatter,
@@ -150,7 +153,6 @@ describe('A-3: untouched tables are saved byte-for-byte', () => {
       const first = save(editor)
       load(editor, first)
       expect(save(editor)).toBe(first)
-      editor.destroy()
     })
   }
 
@@ -170,7 +172,6 @@ describe('A-3: untouched tables are saved byte-for-byte', () => {
     expect(node?.attrs?.[TABLE_SIGNATURE_ATTR]).toBe(tableSignature(node!))
     expect(editor.getHTML()).not.toContain('rawMarkdown')
     expect(editor.getHTML()).not.toContain('rawSignature')
-    editor.destroy()
   })
 
   it('edited cell: falls back to the normal serializer', () => {
@@ -187,7 +188,6 @@ describe('A-3: untouched tables are saved byte-for-byte', () => {
     editor.commands.setTextSelection(pos)
     editor.commands.insertContent('x')
     const out = save(editor)
-    editor.destroy()
     // upstream serializer: leading `\n`, padded cells, `| --- |`
     expect(out.replace(/\n+$/, '')).toBe('\n| a   | b   |\n| --- | --- |\n| 1   | x2  |')
     expect(rawTableMarkdownIfUnchanged(json.content![0]!)).toBe(compact.trimEnd())
@@ -204,7 +204,6 @@ describe('A-3: untouched tables are saved byte-for-byte', () => {
     editor.commands.setTextSelection({ from, to: from + 1 })
     editor.commands.setBold()
     const out = save(editor)
-    editor.destroy()
     expect(out).toContain('| **a** | b   |')
   })
 
@@ -220,7 +219,6 @@ describe('A-3: untouched tables are saved byte-for-byte', () => {
     editor.commands.insertContent('x')
     editor.commands.undo()
     const out = save(editor)
-    editor.destroy()
     expectExact(out, compact)
   })
 
@@ -230,7 +228,6 @@ describe('A-3: untouched tables are saved byte-for-byte', () => {
     editor.commands.focus('end')
     editor.commands.insertTable({ rows: 2, cols: 2, withHeaderRow: true })
     const out = save(editor)
-    editor.destroy()
     expect(out).toMatch(/\| -{3,} \| -{3,} \|/)
   })
 

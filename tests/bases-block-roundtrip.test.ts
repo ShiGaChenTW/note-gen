@@ -2,7 +2,8 @@
 // Phase 2-3b 軌道 A：筆記內的 ```base 區塊往返一字不差（harness 照 tests/table-roundtrip.test.ts）。
 // 區塊讀入時記住原文 raw；內容沒改時 renderMarkdown 直接輸出 raw，改過才重組 fence。
 import { describe, expect, it } from 'vitest'
-import { Editor, type JSONContent } from '@tiptap/core'
+import { createTestEditorFactory } from './editor-fixture'
+import type { Editor, JSONContent } from '@tiptap/core'
 import StarterKit from '@tiptap/starter-kit'
 import { Markdown } from '@tiptap/markdown'
 import TaskList from '@tiptap/extension-task-list'
@@ -23,8 +24,10 @@ import {
   renderBasesBlockMarkdown,
 } from '@/app/core/main/editor/markdown/bases-block-extension'
 
+const createTestEditor = createTestEditorFactory()
+
 function createEditor() {
-  return new Editor({
+  return createTestEditor({
     element: document.createElement('div'),
     extensions: [
       Frontmatter,
@@ -118,7 +121,6 @@ describe('```base 區塊：沒改過時存檔一字不差', () => {
       const first = save(editor)
       load(editor, first)
       expect(save(editor)).toBe(first)
-      editor.destroy()
     })
   }
 
@@ -133,7 +135,6 @@ describe('```base 區塊：沒改過時存檔一字不差', () => {
     // source 跟 mermaid 的 code 一樣會進 HTML（剪貼簿用）；raw 只用於序列化
     expect(editor.getHTML()).not.toContain('raw=')
     expect(editor.getHTML()).not.toContain('```base')
-    editor.destroy()
   })
 
   it('CRLF：lexer 先把整份換成 LF，區塊內容其餘不變', () => {
@@ -149,7 +150,6 @@ describe('```base 區塊：沒改過時存檔一字不差', () => {
       load(editor, raw)
       expect(blockNodes(editor)).toHaveLength(0)
       expect((editor.getJSON().content ?? []).some(node => node.type === 'codeBlock')).toBe(true)
-      editor.destroy()
     }
   })
 
@@ -157,7 +157,6 @@ describe('```base 區塊：沒改過時存檔一字不差', () => {
     const editor = createEditor()
     load(editor, '```base\nfilters: a\n\ntext\n')
     expect(blockNodes(editor)).toHaveLength(0)
-    editor.destroy()
   })
 
   it('區塊前後其他內容不受影響（表格、wikilink）', () => {
@@ -184,7 +183,6 @@ describe('```base 區塊：改過內容後重組', () => {
       return true
     })
     const out = save(editor)
-    editor.destroy()
     expect(out.replace(/\n+$/, '')).toBe('前\n\n```base\nfilters: changed\n```\n\n```base  \nfilters: b\n```\n\n後')
   })
 
@@ -201,7 +199,6 @@ describe('```base 區塊：改過內容後重組', () => {
       return true
     })
     expectExact(save(editor), raw)
-    editor.destroy()
   })
 })
 
