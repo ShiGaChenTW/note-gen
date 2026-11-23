@@ -94,6 +94,8 @@ export interface DomainRebuildOptions {
   aliases?: ReadonlyMap<string, string>
   /** 新加的領域依這個順序接在後面（例如提案列的順序，第一個成為主要）；其他依 MOC 順序。 */
   orderHint?: ReadonlyMap<string, readonly string[]>
+  /** 分家／併回與復原指定原主要領域由誰承接，仍只考慮現有正式歸屬。 */
+  preferredOrder?: ReadonlyMap<string, readonly string[]>
   limit?: number
 }
 
@@ -146,7 +148,7 @@ export function planDomainRebuild(notes: readonly RebuildNoteInput[], byNote: Re
     const unmanaged = canonical.filter(name => !options.managed.has(name))
     const members = hinted((byNote.get(note.path) ?? []).filter(name => options.managed.has(name)), options.orderHint?.get(note.path))
     const managed = rebuildDomains(managedOld, members, options.limit)
-    const after = rebuildDomains(canonical, [...managed.domains, ...unmanaged]).domains
+    const after = rebuildDomains([...options.preferredOrder?.get(note.path) ?? [], ...canonical], [...managed.domains, ...unmanaged]).domains
     const change = { path: note.path, before, after, added: managed.added, removed: managed.removed }
     if (managed.overLimit) overLimit.push(change)
     else if (!sameList(note.domains.map(item => item.trim()).filter(Boolean), after)) changes.push(change)

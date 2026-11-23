@@ -57,3 +57,10 @@ describe('ops table', () => {
     expect(await opsStore.get('c')).toBeNull()
   })
 })
+
+it('inserts a guarded batch as one statement', async () => {
+  const inserted = await opsStore.insert([row('atomic-a', 120, 'atomic'), row('atomic-b', 120, 'atomic')], { atomic: true })
+  expect(inserted.map(op => op.id)).toEqual(['atomic-a', 'atomic-b'])
+  await expect(opsStore.insert([row('atomic-c', 120, 'fail'), row('atomic-a', 120, 'fail')], { atomic: true })).rejects.toThrow()
+  expect(await opsStore.listBatch('fail')).toEqual([])
+})

@@ -8,6 +8,8 @@ export interface Domain {
   name: string
   /** 上層領域；頂層沒有。 */
   parentId?: string
+  /** 由分家來源取得的專家備援，依序嘗試。 */
+  expertFallbackIds?: readonly string[]
   /** 總覽（Markdown）；核心概念、重點結論等其餘組成之後由專家寫入。 */
   overview: string
   createdAt: number

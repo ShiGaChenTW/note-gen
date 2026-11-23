@@ -108,7 +108,13 @@ export async function createDefaultCommanderDeps(): Promise<CommanderDeps> {
     ask: prompt => askCollectModel(prompt, undefined, { silent: true }),
     roster,
     rememberWork: rememberCompletedRoleWork,
-    domains: domainsDb.listDomains,
+    domains: async () => {
+      const [domains, { branchExpertSourceIds }, { default: useMocStore }] = await Promise.all([
+        domainsDb.listDomains(), import('@/lib/moc/branching'), import('@/stores/moc'),
+      ])
+      const { mocs } = useMocStore.getState()
+      return domains.map(domain => ({ ...domain, expertFallbackIds: branchExpertSourceIds(domain.id, mocs).slice(1) }))
+    },
     agentPrompt: async (agent, fallbackRole) => {
       const instructions = ROLE_INSTRUCTIONS[agent?.role ?? fallbackRole]
       if (!agent) return instructions

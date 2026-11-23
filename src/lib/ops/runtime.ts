@@ -150,6 +150,10 @@ export async function opsService(): Promise<OpsService> {
     writer: createAppWriter(),
     store: opsStore,
     afterChange: async specs => {
+      if (specs.some(spec => spec.kind === 'note.edit' && spec.domainOrder)) {
+        const { runMocReconcile } = await import('@/lib/moc/reconcile-runtime')
+        await runMocReconcile().catch(error => console.warn('[ops] could not reconcile applied MOC changes:', error))
+      }
       const { runMocRebuild, reconcileDomainIndexes } = await import('@/lib/moc/runtime')
       await runMocRebuild(await reconcileDomainIndexes(specs))
     },
@@ -186,8 +190,8 @@ export async function applyOps(specs: readonly OpSpec[], context: LoggedContext,
   workspace: string
   identity: string
   canWrite: () => boolean
-}): Promise<OpRecord[]> {
-  if (!options) return (await opsService()).applyOps(specs, context)
+} | { guardedBatch: true }): Promise<OpRecord[]> {
+  if (!options || 'guardedBatch' in options) return (await opsService()).applyOps(specs, context, options)
 
   // 自動接受綁定原工作區及可復原紀錄的位置，避免切換筆記庫時寫到同名檔。
   const [db, vault, memory, guard, { default: article }, editor] = await Promise.all([

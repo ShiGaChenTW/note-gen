@@ -25,6 +25,7 @@ export function resolveDomain(hint: string | undefined, domains: readonly Domain
  * 所以同時比對領域名稱、完整路徑和 domainHint 本身（領域表還沒建時也能對到）。
  */
 export function expertFor(hint: string | undefined, domain: Domain | undefined, domains: readonly Domain[], roster: readonly RosterAgent[]): RosterAgent | undefined {
+  const match = (keys: ReadonlySet<string>) => roster.find(agent => agent.role === 'expert' && agent.enabled && keys.has(normalizeDomainName(agent.domain)))
   const keys = new Set([normalizeDomainName(hint)])
   if (domain) {
     keys.add(normalizeDomainName(domain.name))
@@ -33,7 +34,15 @@ export function expertFor(hint: string | undefined, domain: Domain | undefined, 
   }
   keys.delete('')
   if (!keys.size) return undefined
-  return roster.find(agent => agent.role === 'expert' && agent.enabled && keys.has(normalizeDomainName(agent.domain)))
+  const direct = match(keys)
+  if (direct) return direct
+  for (const id of domain?.expertFallbackIds ?? []) {
+    const fallback = domains.find(domain => domain.id === id)
+    if (!fallback) continue
+    const found = match(new Set([fallback.id, fallback.name, domainPath(domains, fallback.id)].map(normalizeDomainName)))
+    if (found) return found
+  }
+  return undefined
 }
 
 function single(roster: readonly RosterAgent[], role: 'commander' | 'secretary'): string | undefined {

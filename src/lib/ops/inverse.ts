@@ -5,7 +5,10 @@ export function inverseOf(op: OpSpec): OpSpec {
   switch (op.kind) {
     case 'note.create': return { ...op, kind: 'note.delete' }
     case 'note.delete': return { ...op, kind: 'note.create' }
-    case 'note.edit': return { ...op, before: op.after, after: op.before }
+    case 'note.edit': return {
+      ...op, before: op.after, after: op.before,
+      ...(op.domainOrder ? { domainOrder: op.domainOrder.map(item => ({ ...item, before: item.after, after: item.before })) } : {}),
+    }
     case 'note.move': return { ...op, from: op.to, to: op.from }
     case 'moc.entry.add': return { ...op, kind: 'moc.entry.remove' }
     case 'moc.entry.remove': return { ...op, kind: 'moc.entry.add' }

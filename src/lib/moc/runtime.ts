@@ -115,6 +115,9 @@ export async function runMocRebuild(options: RebuildOptions = {}): Promise<Rebui
     if (useVaultIndexStore.getState().status !== 'ready') return null
     const result = await rebuildFromMocs(createMocIo(), options)
     await settleMocRebuild(result)
+    const { trackMocPositions, refreshMocSplitStatuses } = await import('./branch-runtime')
+    await trackMocPositions(result.mocs).catch(error => console.warn('[moc] positions not saved:', error))
+    await refreshMocSplitStatuses(result.mocs, mocOverrides).catch(error => console.warn('[moc] split status not refreshed:', error))
     return result
   })
 }
@@ -199,11 +202,18 @@ export async function transferNoteMemberships(transfers: readonly MembershipTran
 
 /** Ops 套用或復原領域的新增／移除時，同步快取，並重讀受影響的收錄筆記。 */
 export async function reconcileDomainIndexes(specs: readonly OpSpec[]): Promise<RebuildOptions> {
+  const preferredOrder = new Map<string, readonly string[]>()
   const extraMocs: string[] = []
   const retiredDomains: string[] = []
   const extraNotes: string[] = []
   const links = buildLinkLookup([...useVaultIndexStore.getState().notes.keys()])
   for (const spec of specs) {
+    if (spec.kind === 'note.edit') {
+      for (const item of spec.domainOrder ?? []) {
+        preferredOrder.set(item.path, item.after)
+        extraNotes.push(item.path)
+      }
+    }
     if (spec.kind !== 'domain.create' && spec.kind !== 'domain.remove') continue
     if (spec.kind === 'domain.create') extraMocs.push(spec.path)
     else retiredDomains.push(spec.name)
@@ -220,5 +230,5 @@ export async function reconcileDomainIndexes(specs: readonly OpSpec[]): Promise<
       await Promise.all([removeDomainCache(spec.mocId), retireMocId(spec.mocId)])
     }
   }
-  return { extraMocs, retiredDomains, extraNotes }
+  return { extraMocs, retiredDomains, extraNotes, preferredOrder }
 }

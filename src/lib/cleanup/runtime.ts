@@ -126,8 +126,10 @@ export async function createDefaultCheckDeps(): Promise<CheckDeps> {
     detect: createConflictDetector(prompt => askCollectModel(prompt, undefined, { silent: true })),
     domains: async () => domains,
     expertFor: async domainId => {
-      const domain = domains.find(item => item.id === domainId)
-      const expert = agents.find(agent => agent.role === 'expert' && agent.enabled && normalize(agent.domain) === normalize(domain?.name))
+      const [{ branchExpertSourceIds }, { default: useMocStore }] = await Promise.all([import('@/lib/moc/branching'), import('@/stores/moc')])
+      const sourceIds = branchExpertSourceIds(domainId, useMocStore.getState().mocs)
+      const expert = sourceIds.map(id => domains.find(item => item.id === id)?.name).filter(Boolean)
+        .map(name => agents.find(agent => agent.role === 'expert' && agent.enabled && normalize(agent.domain) === normalize(name))).find(Boolean)
       if (!expert) return undefined
       const prompt = [ROLE_INSTRUCTIONS.expert, await memory.loadAgentMemoryPrompt(expert).catch(() => '')].filter(Boolean).join('\n\n')
       return { agentId: expert.id, prompt }
@@ -171,6 +173,13 @@ export async function createWeeklyMocDeps(check: CheckDeps, ask: WeeklyMocDeps['
   const io = createMocIo()
   const vault = useVaultIndexStore.getState()
   const lookup = links.buildLinkLookup(vault.notes.keys())
+  const [{ loadMocPositions }, { mocBranchLinks, isMocBranchPinned }] = await Promise.all([
+    import('@/db/moc-positions'), import('@/lib/moc/branch-runtime'),
+  ])
+  const positions = await loadMocPositions(vault.workspace).catch(error => {
+    console.warn('[moc] positions not loaded:', error)
+    return new Map()
+  })
   const keys = await store.get(WEEKLY_MOC_KEY)
   const sent = new Set(Array.isArray(keys) ? keys.filter(key => typeof key === 'string') : [])
   const markSent = async (key: string) => {
@@ -193,6 +202,7 @@ export async function createWeeklyMocDeps(check: CheckDeps, ask: WeeklyMocDeps['
       return vault.status === 'ready' ? io.listMocFiles() : Promise.resolve([])
     },
     resolve: (target, path) => links.resolveWikilinkTargetWithLookup(target, lookup, path),
+    branching: { positions, identify: mocBranchLinks(vault).identify, isPinned: isMocBranchPinned },
     newChapterId: () => io.newId('C'),
     hasCard: async key => {
       if (sent.has(key)) return true
@@ -224,6 +234,10 @@ export async function createWeeklyMocDeps(check: CheckDeps, ask: WeeklyMocDeps['
       place: (note, chapter) => t('moc.place', { note, chapter }),
       tooFew: count => t('moc.tooFew', { count }),
       tooMany: (count, chapter) => t('moc.tooMany', { count, chapter }),
+      grow: (chapter, sibling) => t(sibling ? 'moc.growSibling' : 'moc.grow', { chapter }),
+      mergeBack: chapter => t('moc.mergeBack', { chapter }),
+      splitPage: chapter => t('moc.splitPage', { chapter }),
+      growBody: count => t('moc.growBody', { count }),
     },
   }
 }

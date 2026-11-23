@@ -106,6 +106,12 @@ export async function acceptProposal(proposal: Proposal, options: { noteFolder: 
     if (!ops || !inputs.length) return
     await (options.recordOps ?? defaultRecordOps)(inputs, ops).catch(error => console.error('record ops failed', error))
   }
+  if (proposal.mocBranch) {
+    if (!ops?.proposalId) throw new ChangeNotApplied(false, 'MOC branching requires Workbench approval')
+    const { applyMocBranch } = await import('@/lib/moc/branch-runtime')
+    const result = await applyMocBranch(proposal.mocBranch, ops)
+    return { path: result.path }
+  }
   if (proposal.slot) return acceptSlot({ ...proposal, slot: proposal.slot }, now)
   // Fork（almanac ALMNC-69.3）：只貼日誌標籤的卡不寫筆記庫；標籤由 stores/collect 接受後寫進資料源。
   if (proposal.journalTag?.only) return { path: '' }

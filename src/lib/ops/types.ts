@@ -32,6 +32,8 @@ export interface NoteEditOp {
   title: string
   before: string
   after: string
+  /** 排序提示；成員仍由 MOC 正式收錄重建。 */
+  domainOrder?: Array<{ path: string, before: string[], after: string[] }>
 }
 
 /** 搬到別的資料夾。反向＝搬回來。 */

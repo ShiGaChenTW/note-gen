@@ -103,7 +103,7 @@ function BatchRow({ item, onAction }: { item: DecideItem, onAction: (action: 'ac
   const proposal = useCollectStore(state => ref ? state.items.find(entry => entry.id === ref.itemId)?.proposals.find(entry => entry.id === ref.proposalId) : undefined)
   const inboxFolder = useDailySettingsStore(state => state.inboxFolder)
   const leaving = useWorkbenchStore(state => state.leaving.includes(item.key))
-  const target = proposal ? newNoteTarget(proposal, inboxFolder) : null
+  const target = proposal && !proposal.mocBranch ? newNoteTarget(proposal, inboxFolder) : null
   return (
     <li data-testid="batch-item" data-item={item.key} className={cn('transition-opacity duration-200', leaving && 'opacity-0')}>
       <div className="flex items-center gap-2 px-3 py-2">

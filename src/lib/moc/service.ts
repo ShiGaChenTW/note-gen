@@ -63,6 +63,7 @@ export interface RebuildResult {
 export interface RebuildOptions {
   /** 新加的領域依這個順序接在後面（第一個成為主要）。 */
   orderHint?: ReadonlyMap<string, readonly string[]>
+  preferredOrder?: ReadonlyMap<string, readonly string[]>
   /** 剛寫入或受操作影響的筆記，即使索引還沒更新，也讀原文重算。 */
   extraNotes?: readonly string[]
   /** 索引還沒看到的 MOC 路徑（剛寫的）。 */
@@ -108,7 +109,7 @@ export async function rebuildFromMocs(io: MocIo, options: RebuildOptions = {}): 
   const indexed = (await io.listNotes()).filter(note => !mocPaths.has(note.path))
   const known = new Set(indexed.map(note => note.path))
   const notes = [...indexed, ...[...byNote.keys()].filter(path => !known.has(path)).map(path => ({ path, domains: [] as string[] }))]
-  const plannedOptions = { managed, aliases, orderHint: options.orderHint }
+  const plannedOptions = { managed, aliases, orderHint: options.orderHint, preferredOrder: options.preferredOrder }
   const plan = planDomainRebuild(notes, byNote, plannedOptions)
 
   // 索引可能落後：寫之前讀原文重算一次，只在真的有變化時寫；寫入時內容又被改過就用最新內容再算。
