@@ -9594,6 +9594,21 @@
         "chapter-rename": "章節「{before}」改名為「{after}」"
       },
       "notices": "另有 {count} 則提醒（斷鏈或格式壞了），不影響歸屬"
+    },
+    "scottPin": {
+      "badge": "Scott 指定",
+      "notice": "這是 Scott 指定的位置",
+      "hint": "你親手改過這裡（90 天內），夥伴一般整理不會主動改；這則提案仍要改動，請確認是你要的。",
+      "entry": "{moc}：「{label}」的收錄",
+      "block": "{moc}：{block}",
+      "chapter": "{moc}：「{label}」章",
+      "blocks": {
+        "position": "定位問題",
+        "start": "從這裡開始",
+        "chapters": "章節",
+        "conclusions": "重點結論",
+        "open": "待釐清"
+      }
     }
   },
   "cleanup": {

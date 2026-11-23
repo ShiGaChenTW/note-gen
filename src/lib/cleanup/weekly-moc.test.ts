@@ -6,6 +6,7 @@ import { contentVersion } from '@/lib/ops/version'
 import { parseMoc } from '@/lib/moc/parse'
 import { createV3Note, parseV3Note } from '@/lib/v3-model/note'
 import { buildReviewCards } from '@/lib/workbench/cards'
+import { SCOTT_PIN_TTL_MS, type ScottPin } from '@/lib/moc/scott-pins'
 import { applyEdits } from './apply'
 import type { CleanupLabels } from './plan'
 import { memoryQueue, storeQueue } from './queue'
@@ -238,6 +239,55 @@ describe('weekly MOC cards', () => {
     expect(queue.items()).toEqual([contradiction])
     expect(await runWeeklyMocs(NOW, deps)).toHaveLength(1)
     expect(queue.items()).toEqual([])
+  })
+})
+
+// Fork（almanac ALMNC-69.11）：有「Scott 指定」標記的位置，一般整理（每週整理卡與清理提案）不主動提議改動；90 天後失效。
+describe('Scott 指定', () => {
+  const DAY = 24 * 60 * 60 * 1000
+  const pin = (extra: Partial<ScottPin>, age = DAY): ScottPin => ({ kind: 'block', mocPath: PATH, mocId: ID, mocName: '時間管理', at: NOW.getTime() - age, ...extra })
+  const withPins = (deps: WeeklyMocDeps, pins: ScottPin[]): WeeklyMocDeps => ({ ...deps, pins: async () => pins })
+
+  it('有標記的區塊不提；別的區塊照提；90 天後失效又會提', async () => {
+    const output = { conclusions: [{ before: 0, text: '先排重要的事', notes: [0] }], open: [{ text: '還需要例子嗎？', kind: 'gap' }] }
+    const pinned = setup(output)
+    const items = await runWeeklyMocs(NOW, withPins(pinned.deps, [pin({ block: 'conclusions' })]))
+    expect(items.map(item => item.title)).toEqual(['待釐清'])
+    const expired = setup(output)
+    expect((await runWeeklyMocs(NOW, withPins(expired.deps, [pin({ block: 'conclusions' }, SCOTT_PIN_TTL_MS)]))).map(item => item.title)).toEqual(['重點結論', '待釐清'])
+  })
+
+  it('有標記的收錄不會被取代或合併換掉', async () => {
+    const output = { conflicts: [{ type: 'outdated', notes: [1, 0], evidence: '原規則已修訂成另一項要求', conclusionChanged: true }] }
+    const pinned = setup(output)
+    expect(await runWeeklyMocs(NOW, withPins(pinned.deps, [pin({ kind: 'relation', notePath: notePath(1), chapterId: CHAPTER })]))).toEqual([])
+    const other = setup(output)
+    expect(await runWeeklyMocs(NOW, withPins(other.deps, [pin({ kind: 'relation', notePath: notePath(5), chapterId: CHAPTER })]))).toHaveLength(1)
+  })
+
+  it('待釐清有標記時，矛盾提案照提但不改 MOC', async () => {
+    const { deps } = setup({}, [contradiction])
+    const [proposal] = await runWeeklyMocs(NOW, withPins(deps, [pin({ block: 'open' })]))
+    expect(proposal.cleanup?.actions).toEqual(['verify'])
+    expect(proposal.edits?.map(edit => edit.path)).not.toContain(PATH)
+  })
+
+  it('有標記的章節不會被併掉；尚未分章的收錄（只保護歸屬）仍可排進章節', async () => {
+    const { deps, files } = setup({ merge: { from: [1], into: 0, reason: '都在回答什麼時候做' } })
+    const extra = Array.from({ length: 7 }, (_, n) => [`### 子問題 ${n + 1}`, `<!-- C-20261112-060030-AAA${n} -->`, ''].join('\r\n')).join('\r\n')
+    files.set(PATH, rawMoc.replace('### 尚未分章', `${extra}\r\n### 尚未分章`))
+    expect(await runWeeklyMocs(NOW, withPins(deps, [pin({ kind: 'chapter-title', chapterId: 'C-20261112-060030-AAA0' })]))).toEqual([])
+
+    const placed = setup({ placements: [{ note: 2, chapter: 0, relation: '回答時機' }] })
+    const items = await runWeeklyMocs(NOW, withPins(placed.deps, [pin({ kind: 'position', notePath: notePath(2), chapterId: UNSORTED })]))
+    expect(items.map(item => item.title)).toEqual(['筆記 2 → 什麼時候做'])
+  })
+
+  it('讀不到標記時記錯，照沒有標記處理', async () => {
+    const { deps } = setup({ open: [{ text: '還需要例子嗎？', kind: 'gap' }] })
+    const errors: string[] = []
+    expect(await runWeeklyMocs(NOW, { ...deps, pins: async () => { throw new Error('db') } }, [], errors)).toHaveLength(1)
+    expect(errors[0]).toContain('pins')
   })
 })
 

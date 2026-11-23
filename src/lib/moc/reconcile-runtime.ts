@@ -24,7 +24,7 @@ import {
   type MocBaseline, type MocFileNow, type NoteRefOf, type PlannedMoc, type ReconcileDiff, type ReconcileOptions,
 } from './reconcile'
 import { setMocOverrides } from './runtime'
-import { pinsFromDiffs, recordScottPins } from './scott-pins'
+import { blockPinsFromEdit, pinsFromDiffs, recordScottPins } from './scott-pins'
 import { entryTargetFor } from './service'
 
 /** 給畫面的提醒（翻譯鍵在 mocReconcile 底下）。 */
@@ -246,6 +246,8 @@ export async function runMocReconcile(): Promise<ReconcileRunResult> {
     const actual = await writeMoc(item.path, item.current, item.result.repaired)
     if (actual === null) continue
     applied += (await recordDiffs(item, item.result.diffs, actual, batchId, context.noteRef)).length
+    // Fork（almanac ALMNC-69.11）：Scott 直接改了區塊（定位問題、從這裡開始、重點結論、待釐清）也標 Scott 指定。
+    await recordScottPins(blockPinsFromEdit(item.old, actual, { mocPath: item.path, at: Date.now() }))
     setBaseline(current, dirty, item, item.result.effective)
     if (item.result.effective !== actual) overrides.set(item.path, item.result.effective)
     notices.push(...noticesOf(item))
@@ -293,6 +295,7 @@ export async function settleMocBatch(mode: 'accept' | 'reject'): Promise<{ undo?
     if (actual === null) throw new MocBatchStale(item.path)
     const again = reconcileMoc(item.old, actual, { path: item.path, ...context })
     ops.push(...await recordDiffs(item, again.diffs, actual, batchId, context.noteRef))
+    await recordScottPins(blockPinsFromEdit(item.old, actual, { mocPath: item.path, at: Date.now() }))
     if (mode === 'reject' && actual !== item.current) {
       // 退回本身也能復原：記成 MOC 全文的內容修改（復原＝寫回 Scott 存檔時的內容）。
       const mocId = idOfContent(item.current)

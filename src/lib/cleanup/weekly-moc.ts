@@ -5,6 +5,8 @@ import { isExploring } from '@/lib/domain-page/moc-view'
 import { applyMocChange, editableMocBullets, type MocChange } from '@/lib/moc/edit'
 import { blockItems, formalEntries, parseMoc, splitLinkInner, type ParsedMoc } from '@/lib/moc/parse'
 import type { ResolveTarget } from '@/lib/moc/membership'
+import { changesPinTouches, transferPinTouches, type PinNoteResolver } from '@/lib/moc/scott-pin-check'
+import type { ScottPin } from '@/lib/moc/scott-pins'
 import { sameVersion } from '@/lib/ops/version'
 import { isoWeekKey } from '@/lib/review/settings'
 import { toNoteText, type CheckDeps } from './check'
@@ -99,6 +101,13 @@ export interface WeeklyMocDeps {
   ask: AskModel
   labels: WeeklyMocLabels
   check: WeeklyMocCheck
+  /**
+   * Fork（almanac ALMNC-69.11）：有效的「Scott 指定」標記。碰到標記的建議（改有標記的區塊、搬動或改說明有標記的收錄、
+   * 併掉或改名有標記的章節、合併／取代會換掉有標記收錄的清理）在一般整理裡不提。沒給就不檢查。
+   */
+  pins?: () => Promise<readonly ScottPin[]>
+  /** 筆記的 N 編號（比對標記用；沒給就只比路徑）。 */
+  noteId?: (path: string) => string | undefined
 }
 
 const issueFor = (moc: ParsedMoc, members: readonly Member[]) => chapterCountIssue(moc.chapters.length, members.length, isExploring(moc.status))
@@ -217,6 +226,18 @@ export async function runWeeklyMocs(
   now: Date, deps: WeeklyMocDeps, activity: readonly Activity[] = [], errors: string[] = [],
 ): Promise<Proposal[]> {
   const proposals: Proposal[] = []
+  const pins = await deps.pins?.().catch(error => {
+    errors.push(`pins: ${String(error)}`)
+    return []
+  }) ?? []
+  const pinCheck = { now: now.getTime(), resolve: ((target, mocPath) => {
+    const path = deps.resolve(target, mocPath)
+    if (!path) return null
+    const id = deps.noteId?.(path)
+    return id ? { path, id } : { path }
+  }) as PinNoteResolver }
+  const touchesPin = (edits: readonly NoteEdit[]) => pins.length > 0
+    && changesPinTouches(edits.map(edit => ({ path: edit.path, before: edit.baseContent, after: edit.content })), pins, pinCheck).length > 0
   const queued = await deps.check.queue.snapshot()
   const files = await deps.files()
   const domains = await deps.check.domains()
@@ -259,7 +280,7 @@ export async function runWeeklyMocs(
       const known = new Set<string>()
       for (const { change, title, body } of changes) {
         const edit = mocEdit(file, id, change, title)
-        if (!edit || known.has(edit.content)) continue
+        if (!edit || known.has(edit.content) || touchesPin([edit])) continue
         known.add(edit.content)
         items.push({ id: newProposalId(), kind: 'note', title, body, due: '', time: '', tags: [], edits: [edit], mocReview, drafter })
       }
@@ -290,11 +311,15 @@ export async function runWeeklyMocs(
           notes, domains: new Map(), today: ymd(now), labels: deps.check.labels, words: deps.check.words, immediate: false,
         })
         if (!item) continue
+        // Scott 指定：合併／取代會換掉有標記的收錄、或改到有標記的 MOC 位置時，一般整理不提。
+        if (touchesPin(item.edits ?? []) || transferPinTouches(item.membershipTransfers ?? [], pins, { now: pinCheck.now, idOf: deps.noteId }).length) continue
         if (item.cleanup?.actions.includes('verify')) {
           const links = observation.notePaths.map(wiki).join(' ↔ ')
           const sources = [...observation.notePaths.map(wiki), ...(observation.externalUrls ?? []).map(url => `<${url}>`)].join('、')
           const after = `矛盾：${links} ── 待查證：${line(observation.evidence)}（來源：${sources}）`
-          const edit = mocEdit(file, id, { kind: 'bullet', block: 'open', after }, deps.labels.open)
+          const candidate = mocEdit(file, id, { kind: 'bullet', block: 'open', after }, deps.labels.open)
+          // 待釐清有 Scott 指定標記時不加這一條（清理提案本身照提）。
+          const edit = candidate && !touchesPin([candidate]) ? candidate : undefined
           if (edit) item.edits = [...(item.edits ?? []), edit]
           else if (observation.notePaths.every(path => active.find(note => note.path === path)?.fields.status === 'disputed')) continue
         }

@@ -11,9 +11,8 @@ export interface AutoAcceptCandidate extends RiskSubject {
   actorId?: string
 }
 
-/** ALMNC-69.11 在此接入標記查詢。前後文一起傳入，讓查詢能判斷受影響的位置。 */
+/** 標記查詢（ALMNC-69.11：App 用 lib/moc/scott-pins-runtime isScottPinnedChange）。前後文一起傳入，讓查詢能判斷受影響的位置。 */
 export type IsScottPinned = (change: Readonly<ContentChange>) => Promise<boolean> | boolean
-export const isScottPinned: IsScottPinned = () => false
 
 export function linkEditOf(candidate: RiskSubject): NoteEditOp | undefined {
   const change = candidate.changes?.[0]

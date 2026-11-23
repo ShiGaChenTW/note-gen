@@ -9529,6 +9529,21 @@
         "chapter-rename": "Rename chapter “{before}” to “{after}”"
       },
       "notices": "{count} more reminders (broken links or malformed lines) don’t change memberships"
+    },
+    "scottPin": {
+      "badge": "Set by Scott",
+      "notice": "This is a place Scott set",
+      "hint": "You changed this yourself within the last 90 days, so routine cleanup leaves it alone. This proposal still changes it; make sure that is what you want.",
+      "entry": "{moc}: entry for “{label}”",
+      "block": "{moc}: {block}",
+      "chapter": "{moc}: chapter “{label}”",
+      "blocks": {
+        "position": "Positioning question",
+        "start": "Start here",
+        "chapters": "Chapters",
+        "conclusions": "Key conclusions",
+        "open": "Open questions"
+      }
     }
   },
   "cleanup": {
