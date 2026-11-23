@@ -27,6 +27,13 @@ const ops = vi.hoisted(() => ({
 }))
 vi.mock('@/lib/ops/runtime', () => ops)
 
+// ALMNC-72：撤回成立領域提案時，新建了專家才問（預設沒有，直接撤回）。
+const domainUndo = vi.hoisted(() => ({
+  proposalExpertForTarget: vi.fn(async (): Promise<unknown> => null),
+  removeProposalExpert: vi.fn(),
+}))
+vi.mock('@/lib/ops/domain-undo-runtime', () => domainUndo)
+
 vi.mock('next-intl', async importOriginal => {
   const intl = await importOriginal<typeof import('next-intl')>()
   return {
@@ -37,6 +44,7 @@ vi.mock('next-intl', async importOriginal => {
 })
 
 import { AgentMemorySettings } from './agent-memory-settings'
+import { DomainUndoAskHost } from '@/components/ops/domain-undo-dialog'
 
 const agents: SavedAgent[] = [
   { id: 'mia', name: 'Mia', role: 'commander', enabled: true, allowedTools: [], createdAt: 1, updatedAt: 1 },
@@ -221,6 +229,69 @@ it('shows undo buttons for recent ops, the compare card on a later change, and b
   } finally {
     await act(async () => root.unmount())
     container.remove()
+  }
+})
+
+it('asks before undoing a domain proposal that created an expert: MOC only keeps the expert, the other choice removes it', async () => {
+  Object.assign(globalThis, { React, IS_REACT_ACT_ENVIRONMENT: true })
+  const m = en.agents.memory
+  const d = en.ops.domainUndo
+  const expert = { batchId: 'batch-domain', proposalId: 'domain:investing', agentId: 'agent-ivy', name: 'Ivy', domain: 'Investing', at: 1 }
+  const row: ActivityEntry = {
+    id: 9, at: 9000, actorId: 'mia', actorRole: 'commander', action: 'accepted', targetLink: 'proposal:domain%3Ainvesting',
+    source: { kind: 'proposal', ref: 'domain:investing' }, note: 'Investing', correctsId: null, archivedAt: null, opId: 'op-domain',
+  }
+  db.getAgentMemory.mockImplementation(async () => ({ soul: doc('s'), rules: doc('r'), workNotes: doc('') }))
+  db.getSharedContext.mockResolvedValue({ projects: [], weeklyFocus: [], people: [], updatedAt: 1, updatedBy: 'scott' })
+  db.listActivity.mockResolvedValue([row])
+  db.getScottPreferences.mockResolvedValue({ content: '', updatedAt: 1 })
+  ops.opUiStates.mockResolvedValue(new Map<string, unknown>([['op-domain', { state: 'undoable', batchId: 'batch-domain', batchSize: 1 }]]))
+  ops.undoOp.mockReset()
+  ops.undoOp.mockResolvedValue({ status: 'undone', ops: [] })
+  domainUndo.proposalExpertForTarget.mockResolvedValue(expert)
+  domainUndo.removeProposalExpert.mockResolvedValue({ status: 'removed', expert })
+  const onAgentsChanged = vi.fn()
+
+  const container = document.createElement('div')
+  document.body.append(container)
+  const root = createRoot(container)
+  const undoButton = () => [...container.querySelectorAll('button')].find(btn => btn.textContent === m.undo)!
+  const choose = async (choice: string) => {
+    const button = document.querySelector<HTMLButtonElement>(`[data-testid="domain-undo-ask"] [data-choice="${choice}"]`)
+    expect(button).toBeTruthy()
+    await act(async () => button!.click())
+  }
+  try {
+    await act(async () => root.render(React.createElement(React.Fragment, null,
+      React.createElement(AgentMemorySettings, { agents, onAgentsChanged }), React.createElement(DomainUndoAskHost))))
+
+    // 只撤回 MOC：先問，回答前不動；選了只跑原本的撤回，專家留著。
+    await act(async () => undoButton().click())
+    expect(domainUndo.proposalExpertForTarget).toHaveBeenCalledWith({ opId: 'op-domain' })
+    expect(document.querySelector('[data-testid="domain-undo-ask"]')!.textContent).toContain(d.title.replace('{domain}', 'Investing'))
+    expect(ops.undoOp).not.toHaveBeenCalled()
+    await choose('moc-only')
+    expect(ops.undoOp).toHaveBeenCalledWith('op-domain', { force: false })
+    expect(domainUndo.removeProposalExpert).not.toHaveBeenCalled()
+    expect(container.textContent).toContain(m.undoDone)
+    expect(onAgentsChanged).not.toHaveBeenCalled()
+
+    // 一起撤回專家：撤回 MOC 後移除新建的專家，並告知。
+    await act(async () => undoButton().click())
+    await choose('with-expert')
+    expect(ops.undoOp).toHaveBeenCalledTimes(2)
+    expect(domainUndo.removeProposalExpert).toHaveBeenCalledWith(expert)
+    expect(container.textContent).toContain(d.expertRemoved.replace('{name}', 'Ivy'))
+    expect(onAgentsChanged).toHaveBeenCalledTimes(1)
+
+    // 取消：什麼都不動。
+    await act(async () => undoButton().click())
+    await choose('cancel')
+    expect(ops.undoOp).toHaveBeenCalledTimes(2)
+  } finally {
+    await act(async () => root.unmount())
+    container.remove()
+    domainUndo.proposalExpertForTarget.mockResolvedValue(null)
   }
 })
 

@@ -193,7 +193,12 @@ export async function acceptCard(card: WorkbenchCard): Promise<Undo> {
     store.setPairDomainExpert(card.domainProposalId, false)
     const records = await batchRecords(ops.batchId)
     await logAcceptedProposal({ key: card.domainProposalId, kind: 'domain', what: card.title, drafter: { role: 'commander' }, ...(records[0] ? { opId: records[0].id } : {}) })
-    return records.length ? opsUndo(records) : undefined
+    if (!records.length) return undefined
+    // Fork（almanac ALMNC-72）：立即復原前，這則提案若新建了專家，先問要不要一起撤回。
+    const undo = await opsUndo(records)
+    if (!undo) return undefined
+    const { domainAwareUndo } = await import('@/lib/ops/domain-undo-runtime')
+    return domainAwareUndo(records, async () => Boolean(await undo()))
   }
   return undefined
 }

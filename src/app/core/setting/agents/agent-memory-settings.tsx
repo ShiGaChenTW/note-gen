@@ -18,6 +18,9 @@ import type { AgentSettings as SavedAgent } from '@/lib/agents/settings'
 import { Button } from '@/components/ui/button'
 import { UndoCompareCard } from '@/components/ops/undo-compare-card'
 import { opUiStates, undoBatch, undoOp, type OpUiState } from '@/lib/ops/runtime'
+import { runDomainUndo, type DomainUndoChoice, type ExpertUndoOutcome, type ProposalExpert } from '@/lib/ops/domain-undo'
+import { askDomainUndo } from '@/lib/ops/domain-undo-ask'
+import { proposalExpertForTarget, removeProposalExpert } from '@/lib/ops/domain-undo-runtime'
 import type { CompareFile } from '@/lib/ops/types'
 import { SettingSection } from '../components/setting-base'
 
@@ -37,10 +40,12 @@ function displayTarget(link: string): string {
 }
 
 type Section = MemoryKind | 'context' | 'preferences' | 'activity'
-type Notice = { section: Section, key: 'saved' | 'saveError' | ContextErrorKey | UndoNoticeKey }
+type Notice = { section: Section, key: 'saved' | 'saveError' | ContextErrorKey | UndoNoticeKey, expert?: ExpertUndoOutcome }
 type UndoNoticeKey = 'undoDone' | 'undoExpired' | 'undoFailed'
 /** ALMNC-69.9：復原一筆（op）或撤回這次整理（batch）。 */
 type UndoTarget = { entryId: number, mode: 'op', opId: string } | { entryId: number, mode: 'batch', opId: string, batchId: string }
+/** ALMNC-72：撤回成立領域提案時已經問過的選擇（比較卡「仍要復原」再跑時沿用，不再問）。 */
+type DomainPrior = { choice: DomainUndoChoice, expert: ProposalExpert | null }
 type ContextErrorKey = 'tooManyProjects' | 'tooManyFocus' | 'tooManyPeople' | 'titleRequired' | 'titleTooLong'
 
 const CONTEXT_ERRORS: Record<ContextValidationError, ContextErrorKey> = {
@@ -59,8 +64,9 @@ const MEMORY_FIELDS: Array<{ kind: MemoryKind, view: keyof AgentMemoryView, labe
 
 interface ContextDraft { projects: string, weeklyFocus: string, people: string }
 
-export function AgentMemorySettings({ agents }: { agents: SavedAgent[] }) {
+export function AgentMemorySettings({ agents, onAgentsChanged }: { agents: SavedAgent[], onAgentsChanged?: () => void }) {
   const t = useTranslations('agents.memory')
+  const tDomainUndo = useTranslations('ops.domainUndo')
   const tRoles = useTranslations('agents.roles')
   const [selectedId, setSelectedId] = useState(agents[0]?.id ?? '')
   const [memory, setMemory] = useState<AgentMemoryView | null>(null)
@@ -78,7 +84,7 @@ export function AgentMemorySettings({ agents }: { agents: SavedAgent[] }) {
   /** ALMNC-69.9：活動紀錄對應的操作狀態（7 天內、未復原、同一批幾筆）。 */
   const [opStates, setOpStates] = useState<Map<string, OpUiState>>(new Map())
   const [undoing, setUndoing] = useState<number | null>(null)
-  const [compare, setCompare] = useState<{ target: UndoTarget, files: CompareFile[] } | null>(null)
+  const [compare, setCompare] = useState<{ target: UndoTarget, files: CompareFile[], prior?: DomainPrior } | null>(null)
 
   const agent = agents.find(item => item.id === selectedId) ?? agents[0]
 
@@ -140,18 +146,30 @@ export function AgentMemorySettings({ agents }: { agents: SavedAgent[] }) {
     })
   }
 
-  async function undo(target: UndoTarget, force = false) {
+  async function undo(target: UndoTarget, force = false, prior?: DomainPrior) {
     setUndoing(target.entryId)
     setNotice(null)
     try {
-      const result = target.mode === 'batch' ? await undoBatch(target.batchId, { force }) : await undoOp(target.opId, { force })
+      // ALMNC-72：成立領域提案新建了專家時，先問只撤回 MOC 還是一起撤回專家（取消就什麼都不動）。
+      const expert = prior ? prior.expert : await proposalExpertForTarget(target.mode === 'batch' ? { opId: target.opId, batchId: target.batchId } : { opId: target.opId })
+      const outcome = await runDomainUndo({
+        expert,
+        ...(prior ? { choice: prior.choice } : {}),
+        ask: askDomainUndo,
+        undo: () => target.mode === 'batch' ? undoBatch(target.batchId, { force }) : undoOp(target.opId, { force }),
+        succeeded: result => result.status === 'undone',
+        removeExpert: removeProposalExpert,
+      })
+      if (outcome.status === 'cancelled') return
+      const result = outcome.result
       if (result.status === 'conflict') {
-        setCompare({ target, files: result.files })
+        setCompare({ target, files: result.files, prior: { choice: outcome.choice, expert } })
         return
       }
       setCompare(null)
       if (result.status === 'expired') setNotice({ section: 'activity', key: 'undoExpired' })
-      else if (result.status === 'undone') setNotice({ section: 'activity', key: 'undoDone' })
+      else if (result.status === 'undone') setNotice({ section: 'activity', key: 'undoDone', ...(outcome.expert ? { expert: outcome.expert } : {}) })
+      if (outcome.expert?.status === 'removed') onAgentsChanged?.()
       await reloadActivity()
     } catch (err) {
       console.error('[agents] undo failed', err)
@@ -208,8 +226,14 @@ export function AgentMemorySettings({ agents }: { agents: SavedAgent[] }) {
     void run('context', () => saveSharedContext('scott', checked.context))
   }
 
+  const expertNotice = (outcome: ExpertUndoOutcome) => outcome.status === 'removed'
+    ? tDomainUndo('expertRemoved', { name: outcome.expert.name })
+    : tDomainUndo('expertKept', { name: outcome.expert.name, reasons: outcome.reasons.map(reason => tDomainUndo(`reasons.${reason}`)).join('；') })
+
   const status = (section: Section) => notice?.section === section && (
-    <p role={notice.key === 'saved' ? 'status' : 'alert'} className="text-xs text-muted-foreground">{t(notice.key)}</p>
+    <p role={notice.key === 'saved' ? 'status' : 'alert'} className="text-xs text-muted-foreground">
+      {t(notice.key)}{notice.expert && ` ${expertNotice(notice.expert)}`}
+    </p>
   )
 
   const actorName = (entry: Pick<ActivityEntry, 'actorId' | 'actorRole'>) => {
@@ -302,7 +326,7 @@ export function AgentMemorySettings({ agents }: { agents: SavedAgent[] }) {
               <UndoCompareCard
                 files={compare.files}
                 busy={undoing !== null}
-                onConfirm={() => void undo(compare.target, true)}
+                onConfirm={() => void undo(compare.target, true, compare.prior)}
                 onCancel={() => setCompare(null)}
               />
             )}
