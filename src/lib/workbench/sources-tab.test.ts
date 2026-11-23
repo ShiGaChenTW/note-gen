@@ -18,7 +18,7 @@ const record = (id: number, extra: Partial<RecordLike> = {}): RecordLike => ({ i
 const capture = (id: string, extra: Partial<CaptureLike> = {}): CaptureLike => ({ id, input: { kind: 'text', text: `收集 ${id}` }, createdAt: NOW - 3 * H, state: 'ready', proposals: [], ...extra })
 
 describe('buildSourceRows', () => {
-  it('maps V3 statuses: 等你決定／未整理（待分析、分析中、改過未送）／已整理（產出數）／不採用', () => {
+  it('maps V3 statuses: 等你決定／待處理（待分析、分析中、改過未送）／已分析（產出數）／不採用', () => {
     const rows = buildSourceRows({
       sources: [source('w', 'awaiting_decision'), source('p', 'pending_analysis'), source('i', 'analyzing'), source('d', 'analyzed'), source('n', 'rejected'), source('e', 'pending_analysis', { version: 2 })],
       outputCounts: new Map([['d', 3]]),
@@ -95,7 +95,7 @@ describe('status filter, counts and summary', () => {
     expect(canReject(tagged.find(row => row.id === 'src:p')!)).toBe(true)
   })
 
-  it('shows 「N / M 已整理」 and the waiting badge', () => {
+  it('counts analyzed and total rows for the summary and counts waiting rows separately', () => {
     expect(organisedSummary(rows)).toEqual({ done: 1, total: 5 })
     expect(waitingCount(rows)).toBe(1)
   })
