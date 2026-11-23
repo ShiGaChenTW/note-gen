@@ -27,7 +27,8 @@ export type CardGroup = typeof CARD_GROUPS[number]
 // Fork（almanac ALMNC-54.14）：legacy＝舊筆記批次卡（R3，「舊筆記 1,240 則」）。
 // Fork（almanac ALMNC-65.2）：batch＝同一資料源的新知識筆記批次卡（全部接受；逐則接受／退回在卡片裡面）。
 // Fork（almanac ALMNC-69.7）：domainLimit＝一則筆記被收錄在超過 3 個領域，請 Scott 選要拿掉哪個（選項＝各領域）。
-export type CardKind = 'proposal' | 'reply' | 'hand' | 'task' | 'confirm' | 'source' | 'domain' | 'legacy' | 'batch' | 'domainLimit'
+// Fork（almanac ALMNC-69.10）：mocBatch＝Scott 在 Obsidian 一次改太多 MOC 收錄的「整批檢查」（全部接受／逐條取消／全部取消）。
+export type CardKind = 'proposal' | 'reply' | 'hand' | 'task' | 'confirm' | 'source' | 'domain' | 'legacy' | 'batch' | 'domainLimit' | 'mocBatch'
 
 export type CardAction =
   | 'accept' | 'discuss' | 'drop' // 提案
@@ -53,6 +54,7 @@ export const ACTIONS_BY_KIND: Record<CardKind, readonly CardAction[]> = {
   legacy: ['migrate'],
   batch: ['accept'],
   domainLimit: ['pick'],
+  mocBatch: ['accept', 'drop'],
 }
 
 /** Fork（almanac ALMNC-54.14）：舊筆記批次卡的按鈕——跑的時候只有「暫停」，否則「開始處理」（處理過一些就是「繼續處理」）。 */
@@ -71,8 +73,9 @@ export function sourceCardActions(source: Pick<AwaitingSourceLike, 'suggestion' 
 }
 
 /** 按鈕上的字：沒有建議時 process 就是「處理」；批次卡的接受是「全部接受」。 */
-export function actionLabelKey(card: Pick<WorkbenchCard, 'kind' | 'hasSuggestion'>, action: CardAction): CardAction | 'acceptAll' {
-  if (card.kind === 'batch' && action === 'accept') return 'acceptAll'
+export function actionLabelKey(card: Pick<WorkbenchCard, 'kind' | 'hasSuggestion'>, action: CardAction): CardAction | 'acceptAll' | 'cancelAll' {
+  if ((card.kind === 'batch' || card.kind === 'mocBatch') && action === 'accept') return 'acceptAll'
+  if (card.kind === 'mocBatch' && action === 'drop') return 'cancelAll'
   return card.kind === 'source' && action === 'process' && !card.hasSuggestion ? 'handle' : action
 }
 
@@ -223,6 +226,17 @@ export interface DomainLimitLike {
   at: number
 }
 
+/** Fork（almanac ALMNC-69.10）：等 Scott 確認的整批檢查（lib/moc/reconcile-runtime；同時只有一批）。 */
+export interface MocBatchLike {
+  id: string
+  title: string
+  summary: string
+  /** 會生效的差異條數。 */
+  count: number
+  by?: string
+  at: number
+}
+
 export interface ReviewInput {
   proposals: readonly DecideItem[]
   overdueTasks?: readonly TaskLike[]
@@ -234,6 +248,7 @@ export interface ReviewInput {
   confirm?: readonly ConfirmLike[]
   domains?: readonly DomainLike[]
   domainLimits?: readonly DomainLimitLike[]
+  mocBatch?: MocBatchLike | null
   /** Fork（almanac ALMNC-54.14）：還有舊筆記沒處理時才給。 */
   legacy?: LegacyBatchLike
   now: number
@@ -303,6 +318,11 @@ export function proposalCard(item: DecideItem, now: number): WorkbenchCard {
 /** Fork（almanac ALMNC-69.7）：超過上限卡的鍵（也是先放著的鍵）。 */
 export function domainLimitCardKey(notePath: string): string {
   return `domain-limit:${notePath}`
+}
+
+/** Fork（almanac ALMNC-69.10）：整批檢查卡的鍵。 */
+export function mocBatchCardKey(id: string): string {
+  return `moc-batch:${id}`
 }
 
 /** Fork（almanac ALMNC-65.2）：批次卡的鍵（也是先放著的鍵）。 */
@@ -401,6 +421,13 @@ export function buildReviewCards(input: ReviewInput): WorkbenchCard[] {
       key: domainLimitCardKey(limit.notePath), kind: 'domainLimit', group: 'proposal', label: 'knowledge', verb: 'organize',
       title: limit.title, path: folderOf(limit.notePath) || undefined, summary: limit.summary, by: limit.by, at: limit.at,
       actions: ACTIONS_BY_KIND.domainLimit, choices: limit.domains, notePath: limit.notePath,
+    })
+  }
+  if (input.mocBatch) {
+    const batch = input.mocBatch
+    cards.push({
+      key: mocBatchCardKey(batch.id), kind: 'mocBatch', group: 'proposal', label: 'knowledge', verb: 'confirm',
+      title: batch.title, summary: batch.summary, by: batch.by, at: batch.at, actions: ACTIONS_BY_KIND.mocBatch,
     })
   }
   for (const note of input.confirm ?? []) {

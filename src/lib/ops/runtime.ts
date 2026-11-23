@@ -81,6 +81,8 @@ const ACTION_OF: Record<OpSpec['kind'], ActivityEntryInput['action']> = {
   'moc.entry.add': 'linked',
   'moc.entry.remove': 'updated',
   'moc.entry.move': 'updated',
+  'moc.entry.relation': 'updated',
+  'moc.chapter.rename': 'updated',
   'domain.create': 'created',
   'domain.remove': 'updated',
 }

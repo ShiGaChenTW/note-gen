@@ -23,6 +23,7 @@ import { DiscussForm } from './discuss-form'
 import { NewNoteFields } from './new-note-fields'
 import { ProposalChanges, RiskBadge } from './proposal-risk'
 import { MAX_DOMAINS } from '@/lib/moc/membership'
+import { MocBatchBody } from './moc-batch-body'
 
 // Fork（almanac ALMNC-56.6，V06）：工作台的按鈕和對話、收集同一個高度與圓角（V3_BUTTON_SHAPE）；
 // 主要按鈕的顏色和 Button 的 default 一樣（V3 的 bg-primary 就是反白），不再手動加 bg-invert。
@@ -156,6 +157,7 @@ function CardBody({ card, onAction }: { card: WorkbenchCard, onAction: (action: 
   const organizeT = useTranslations('organize')
   const item = card.decide
   if (card.kind === 'batch') return <BatchBody card={card} onAction={onAction} />
+  if (card.kind === 'mocBatch') return <MocBatchBody />
   if (item?.journalTag?.only) {
     // Fork（almanac ALMNC-69.3）：只貼日誌標籤的分析結果：沒有要寫的檔案，只說接受後會做什麼。
     return (

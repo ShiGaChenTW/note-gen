@@ -24,7 +24,8 @@ import { MAX_DOMAINS } from '@/lib/moc/membership'
 import useDailySettingsStore from '@/stores/daily-settings'
 import { DEFAULT_LEGACY_BATCH_SIZE, legacyPackKey, packsToShow, unmarkedLegacyNotes } from '@/lib/migration/legacy'
 import type { IndexedNote } from '@/lib/vault-index/index-note'
-import { buildReviewCards, type DomainLike, type DomainLimitLike, type HandLike, type LegacyBatchLike, type ReplyLike, type WorkbenchCard } from './cards'
+import { buildReviewCards, type DomainLike, type DomainLimitLike, type HandLike, type LegacyBatchLike, type MocBatchLike, type ReplyLike, type WorkbenchCard } from './cards'
+import useMocReconcileStore from '@/stores/moc-reconcile'
 import { computeDomainProposals, confirmNotesFromIndex, knowledgeNotesFromIndex } from './domain-cards'
 import { hiddenCards, isHidden, visibleCards } from './put-aside'
 import { buildSourceRows, sourceDisplayKind, sourceTitle, type SourceListRow } from './sources-tab'
@@ -170,6 +171,25 @@ function useDomainLimits(notes: ReadonlyMap<string, IndexedNote>): DomainLimitLi
   }), [overLimit, notes, t])
 }
 
+/** Fork（almanac ALMNC-69.10）：Obsidian 手動編輯 MOC 要整批檢查時的那一張卡（同時只有一批）。 */
+function useMocBatch(): MocBatchLike | null {
+  const t = useTranslations('workbench.mocBatch')
+  const pending = useMocReconcileStore(state => state.pending)
+  return useMemo(() => {
+    if (!pending) return null
+    const names = [...new Set(pending.mocs.map(item => item.result.mocName))]
+    const reasons = pending.reasons.map(reason => t(`reasons.${reason}`, { count: reason === 'removals' ? pending.removals : pending.mocs.length })).join('、')
+    return {
+      id: pending.id,
+      title: t('title', { mocs: names.join('、') }),
+      summary: t('summary', { count: pending.diffs.length, reasons }),
+      count: pending.diffs.length,
+      by: t('by'),
+      at: pending.at,
+    }
+  }, [pending, t])
+}
+
 export interface ReviewData {
   /** 所有卡片（含先放著的），已排好序。 */
   all: WorkbenchCard[]
@@ -206,6 +226,7 @@ export function useReviewData(): ReviewData {
   const legacyInputs = useLegacyInputs(noteList, now, commander)
   const replies = useReplies()
   const domainLimits = useDomainLimits(notes)
+  const mocBatch = useMocBatch()
 
   const all = useMemo(() => buildReviewCards({
     proposals,
@@ -228,11 +249,12 @@ export function useReviewData(): ReviewData {
       }),
     domains: domainCards,
     domainLimits,
+    mocBatch,
     confirm,
     hand: legacyInputs.hand,
     legacy: legacyInputs.legacy,
     now,
-  }), [proposals, replies, tasks, sources, judgements, domainCards, domainLimits, confirm, legacyInputs, now, t])
+  }), [proposals, replies, tasks, sources, judgements, domainCards, domainLimits, mocBatch, confirm, legacyInputs, now, t])
 
   return useMemo(() => ({ all, visible: visibleCards(all, aside, now), aside: hiddenCards(all, aside, now), now }), [all, aside, now])
 }

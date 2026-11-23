@@ -13,6 +13,7 @@
  * 回傳實際寫入的前後內容，讓復原紀錄對得上磁碟。
  */
 import { rewriteNotes } from '@/lib/note-rewrite'
+import { noteAppWrite } from '@/lib/moc/app-writes'
 
 export class NoteWriteConflict extends Error {
   constructor(public readonly path: string) {
@@ -52,10 +53,13 @@ export async function commitNoteWrites(writes: CoordinatedWrite[], options?: { r
   })), options)
   // rewriteNotes 只回傳真的有改到的檔案，依呼叫順序整理回來
   const byPath = new Map(result.map(item => [normalize(item.path), item]))
-  return writes.flatMap(write => {
+  const committed = writes.flatMap(write => {
     const item = byPath.get(normalize(write.path))
     return item ? [{ path: write.path, before: item.previousContent, after: item.content }] : []
   })
+  // Fork（almanac ALMNC-69.10）：App 自己寫的 MOC 不算 Obsidian 手動編輯。
+  for (const write of committed) noteAppWrite(write.path, write.before, write.after)
+  return committed
 }
 
 /** 復原：檔案仍是我們寫入的內容才還原，否則回傳 false，不動任何內容。 */

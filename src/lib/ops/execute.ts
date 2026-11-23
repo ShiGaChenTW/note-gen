@@ -1,7 +1,7 @@
 // Fork（almanac ALMNC-69.9）：把操作算成實際的檔案動作。先在一層虛擬檔案上依序套用（同一批的後一筆看得到前一筆的結果），
 // 每筆操作依編號解析路徑（id_index；查不到才用記錄當下的路徑），算出寫入／搬動動作；真正寫檔由 applyActions 經注入的 writer 做。
 import { buildLinkLookup, resolveWikilinkTargetWithLookup } from '@/lib/vault-index/links'
-import { addMocEntry, moveMocEntry, removeMocEntry, sameTarget, type ChapterRef } from '@/lib/moc/edit'
+import { addMocEntry, moveMocEntry, removeMocEntry, renameMocChapter, sameTarget, setMocEntryRelation, type ChapterRef } from '@/lib/moc/edit'
 import { formalEntries, parseMoc, type MocEntry } from '@/lib/moc/parse'
 import { entryTargetFor } from '@/lib/moc/service'
 import type { OpSpec } from './types'
@@ -160,9 +160,19 @@ export async function planOps(ops: readonly OpSpec[], fs: OpsFs): Promise<OpsPla
         record[op.to] = content
         break
       }
+      case 'moc.chapter.rename': {
+        // Fork（almanac ALMNC-69.10）：依 C 編號改章節標題（找不到再依舊名稱）。
+        const mocPath = await overlay.resolve(op.mocId, op.mocPath)
+        const raw = await overlay.read(mocPath)
+        if (raw === null) break
+        const content = renameMocChapter(raw, { ...(op.chapterId ? { id: op.chapterId } : {}), title: op.before }, op.after, mocPath).content
+        await write(mocPath, content, record)
+        break
+      }
       case 'moc.entry.add':
       case 'moc.entry.remove':
-      case 'moc.entry.move': {
+      case 'moc.entry.move':
+      case 'moc.entry.relation': {
         const mocPath = await overlay.resolve(op.mocId, op.mocPath)
         const notePath = await overlay.resolve(op.noteId, op.notePath)
         const raw = await overlay.read(mocPath)
@@ -170,7 +180,9 @@ export async function planOps(ops: readonly OpSpec[], fs: OpsFs): Promise<OpsPla
         const paths = await overlay.paths()
         const matches = entryMatcher(notePath, mocPath, paths)
         let content = raw
-        if (op.kind === 'moc.entry.remove') {
+        if (op.kind === 'moc.entry.relation') {
+          content = setMocEntryRelation(raw, matches, op.after, mocPath).content
+        } else if (op.kind === 'moc.entry.remove') {
           content = removeMocEntry(raw, matches, mocPath).content
           if (op.createdChapter && op.chapterId) content = dropEmptyUnsorted(content, op.chapterId, mocPath)
         } else if (op.kind === 'moc.entry.add') {

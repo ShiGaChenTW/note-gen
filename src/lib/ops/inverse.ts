@@ -17,6 +17,9 @@ export function inverseOf(op: OpSpec): OpSpec {
         ...(fromChapterId !== undefined ? { toChapterId: fromChapterId } : {}),
       }
     }
+    case 'moc.entry.relation':
+    case 'moc.chapter.rename':
+      return { ...op, before: op.after, after: op.before }
     case 'domain.create': return { ...op, kind: 'domain.remove' }
     case 'domain.remove': return { ...op, kind: 'domain.create' }
   }
@@ -33,7 +36,10 @@ export function describeOp(op: OpSpec): string {
     case 'moc.entry.add':
     case 'moc.entry.remove':
     case 'moc.entry.move':
+    case 'moc.entry.relation':
       return `${op.noteTitle} › ${op.mocName}`
+    case 'moc.chapter.rename':
+      return `${op.mocName} › ${op.before} → ${op.after}`
     case 'domain.create':
     case 'domain.remove':
       return op.name
@@ -47,6 +53,8 @@ export function targetPathOf(op: OpSpec): string {
     case 'moc.entry.add':
     case 'moc.entry.remove':
     case 'moc.entry.move':
+    case 'moc.entry.relation':
+    case 'moc.chapter.rename':
       return op.mocPath
     default: return op.path
   }

@@ -9129,7 +9129,8 @@
       "resume": "继续处理",
       "pause": "暂停",
       "packDone": "整理好了",
-      "acceptAll": "全部接受"
+      "acceptAll": "全部接受",
+      "cancelAll": "全部取消"
     },
     "listLabel": "等你处理的事",
     "more": "等 {count} 则",
@@ -9212,7 +9213,10 @@
       "batchAccepted": "已接受 {count} 条新笔记",
       "batchPartial": "{count} 条没有接受成功：{titles}，其他条已接受",
       "batchFailed": "全部没有接受成功：{titles}",
-      "domainRemoved": "已把“{title}”从“{domain}”拿掉"
+      "domainRemoved": "已把“{title}”从“{domain}”拿掉",
+      "mocBatchAccepted": "已应用 {applied} 处修改，取消 {cancelled} 处",
+      "mocBatchRestored": "已把 MOC 的收录改回上次的状态",
+      "mocBatchStale": "MOC 在确认前又被修改，卡片已更新，请再确认一次"
     },
     "sources": {
       "filterLabel": "依状态筛选",
@@ -9470,6 +9474,29 @@
       "summary": "收录在 {count} 个领域，超过上限 {limit} 个",
       "body": "一则笔记最多属于 {limit} 个领域。选一个要拿掉的领域，会从那个 MOC 移除这则笔记的收录；其他领域照旧。",
       "by": "系统"
+    },
+    "mocBatch": {
+      "title": "整批检查：{mocs}",
+      "summary": "{count} 处变更 · {reasons}",
+      "reasons": {
+        "removals": "一次移除 {count} 条收录",
+        "mocs": "同时改到 {count} 个 MOC",
+        "import": "整批导入"
+      },
+      "body": "在 Obsidian 的这次修改先不生效。不要的那几条点“取消这条”，再点“全部接受”应用其余的；点“全部取消”会把 MOC 的收录改回上次的状态（其他段落的修改保留）。两种都可以在 7 天内从活动记录撤销。",
+      "by": "系统",
+      "cancel": "取消这条",
+      "restore": "恢复",
+      "cancelled": "已取消",
+      "unsorted": "尚未分章",
+      "diff": {
+        "remove": "移除“{note}”（{chapter}）",
+        "add": "加入“{note}”到“{chapter}”",
+        "move": "“{note}”从“{from}”移到“{to}”",
+        "relation": "“{note}”的说明改成“{after}”",
+        "chapter-rename": "章节“{before}”改名为“{after}”"
+      },
+      "notices": "另有 {count} 条提醒（断链或格式坏了），不影响归属"
     }
   },
   "cleanup": {
@@ -9586,5 +9613,12 @@
       "confirm": "仍要复原",
       "cancel": "取消"
     }
+  },
+  "mocReconcile": {
+    "broken": "“{moc}”有 {count} 条收录链接到不存在的笔记，已标为断链，归属不变",
+    "malformed": "“{moc}”有 {count} 行收录格式坏了（没有 [[ ]] 或少了 ──），先当作没改、原本的归属保留，请修正",
+    "repaired": "“{moc}”有 {count} 条断掉的链接已按编号修回",
+    "batch": "在 Obsidian 的修改改到 {mocs} 个 MOC、共 {changes} 处（移除 {removals} 条），先不生效，请到工作台的“整批检查”卡确认",
+    "applied": "已应用在 Obsidian 对 MOC 的 {count} 处修改，7 天内可在活动记录撤销"
   }
 }

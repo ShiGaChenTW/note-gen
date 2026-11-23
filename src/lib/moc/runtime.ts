@@ -20,6 +20,16 @@ function isMocFrontmatter(frontmatter: Record<string, unknown> | null): boolean 
   return typeof frontmatter?.kind === 'string' && frontmatter.kind.trim().toLowerCase() === 'domain'
 }
 
+/**
+ * Fork（almanac ALMNC-69.10）：重建與寫入端讀 MOC 時改用的內容（reconcile-runtime 每次比對後設定）：
+ * 整批檢查還沒確認的 MOC → 上次已知狀態（null＝系統沒看過的 MOC，先不算）；收錄行格式壞了或斷鏈但保留原歸屬 → 有效內容。
+ */
+let mocOverrides = new Map<string, string | null>()
+
+export function setMocOverrides(next: ReadonlyMap<string, string | null>): void {
+  mocOverrides = new Map(next)
+}
+
 export function createMocIo(): MocIo {
   return {
     listMocFiles: async (extra = []) => {
@@ -27,6 +37,11 @@ export function createMocIo(): MocIo {
       const paths = new Set([...[...notes.values()].filter(note => isMocFrontmatter(note.frontmatter)).map(note => note.path), ...extra])
       const files = []
       for (const path of paths) {
+        if (mocOverrides.has(path)) {
+          const override = mocOverrides.get(path)
+          if (override !== null && override !== undefined) files.push({ path, raw: override })
+          continue
+        }
         const raw = await readNote(path).catch(() => null)
         if (raw !== null) files.push({ path, raw })
       }

@@ -9129,7 +9129,8 @@
       "resume": "Continue",
       "pause": "Pause",
       "packDone": "Done organizing",
-      "acceptAll": "Accept all"
+      "acceptAll": "Accept all",
+      "cancelAll": "Cancel all"
     },
     "listLabel": "Things waiting for you",
     "more": "+{count} more",
@@ -9212,7 +9213,10 @@
       "batchAccepted": "Accepted {count, plural, one {# new note} other {# new notes}}",
       "batchPartial": "{count, plural, one {# note} other {# notes}} could not be accepted: {titles}. The rest were accepted.",
       "batchFailed": "None could be accepted: {titles}",
-      "domainRemoved": "Removed “{title}” from “{domain}”"
+      "domainRemoved": "Removed “{title}” from “{domain}”",
+      "mocBatchAccepted": "Applied {applied} changes, cancelled {cancelled}",
+      "mocBatchRestored": "MOC entries are back to their last known state",
+      "mocBatchStale": "The MOC changed before you confirmed. The card is updated — please check it again"
     },
     "sources": {
       "filterLabel": "Filter by status",
@@ -9470,6 +9474,29 @@
       "summary": "Filed under {count} domains, over the limit of {limit}",
       "body": "A note can belong to at most {limit} domains. Pick the domain to drop: the note’s entry is removed from that MOC; the other domains stay.",
       "by": "System"
+    },
+    "mocBatch": {
+      "title": "Batch check: {mocs}",
+      "summary": "{count} changes · {reasons}",
+      "reasons": {
+        "removals": "{count} entries removed at once",
+        "mocs": "{count} MOCs changed together",
+        "import": "Bulk import"
+      },
+      "body": "These Obsidian edits are on hold. Use “Cancel this” on the ones you don’t want, then “Accept all” to apply the rest; “Cancel all” puts the MOC entries back to their last known state (edits elsewhere are kept). Either way you can undo from the activity log for 7 days.",
+      "by": "System",
+      "cancel": "Cancel this",
+      "restore": "Restore",
+      "cancelled": "Cancelled",
+      "unsorted": "Unsorted",
+      "diff": {
+        "remove": "Remove “{note}” ({chapter})",
+        "add": "Add “{note}” to “{chapter}”",
+        "move": "Move “{note}” from “{from}” to “{to}”",
+        "relation": "Change the relation of “{note}” to “{after}”",
+        "chapter-rename": "Rename chapter “{before}” to “{after}”"
+      },
+      "notices": "{count} more reminders (broken links or malformed lines) don’t change memberships"
     }
   },
   "cleanup": {
@@ -9586,5 +9613,12 @@
       "confirm": "Undo anyway",
       "cancel": "Cancel"
     }
+  },
+  "mocReconcile": {
+    "broken": "{count} entries in “{moc}” link to notes that don’t exist. Marked as broken links; memberships unchanged",
+    "malformed": "{count} entry lines in “{moc}” are malformed (no [[ ]] or missing ──). Treated as unchanged and the original memberships kept. Please fix them",
+    "repaired": "{count} broken links in “{moc}” were repaired by ID",
+    "batch": "Your Obsidian edits touch {mocs} MOCs with {changes} changes ({removals} removals). They are on hold — confirm them on the “Batch check” card in the workbench",
+    "applied": "Applied {count} MOC changes made in Obsidian. You can undo them from the activity log for 7 days"
   }
 }
