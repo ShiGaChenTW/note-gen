@@ -9588,5 +9588,16 @@
         "6": "星期六"
       }
     }
+  },
+  "idScan": {
+    "renumbered": "「{path}」和「{kept}」的身分編號重複（可能是複製的檔案），已保留原檔的編號、替「{path}」換了新編號",
+    "renumberedMany": "{count} 個複製的檔案和原檔身分編號重複，已替複本換了新編號",
+    "restored": "「{path}」等 {count} 處的身分編號被刪除或改壞，已依系統索引補回原編號",
+    "renamed": "「{name}」等 {count} 個檔案在 App 外改了名，已把 {files} 篇筆記裡的 {links} 個連結改到新檔名",
+    "renamedNoLinks": "「{name}」等 {count} 個檔案在 App 外改了名或搬了位置，已更新系統索引",
+    "clockBehind": "電腦時間比筆記庫裡最新的身分編號還早，新編號的時間可能不對，請檢查系統時鐘",
+    "clockFuture": "「{path}」等 {count} 處的身分編號或建立時間在未來，請檢查系統時鐘",
+    "clockBeforeSource": "「{path}」等 {count} 則筆記的編號時間早於它的資料源，可能是時鐘有誤",
+    "held": "有 {count} 個筆記沒有身分編號，數量較多所以沒有自動補上；請先用遷移工具（pnpm migrate:ids）預覽後再套用"
   }
 }
