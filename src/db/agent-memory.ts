@@ -1,6 +1,6 @@
 // Fork（almanac ALMNC-54.3）：Agent 設定區的資料存取——個別記憶、共用工作記憶（目前脈絡、活動紀錄）、Scott 的偏好。
 // 每個寫入都要帶 actor，先過 src/lib/agent-memory/permissions.ts 的判斷。活動紀錄只有新增和封存，沒有修改或刪除的函式。
-import { getDb } from './index'
+import { executeRecordTransaction, getDb } from './index'
 import {
   actorLabel, archiveCutoff, CONTEXT_MAX_PROJECTS, CONTEXT_MAX_FOCUS, CONTEXT_MAX_PEOPLE, buildMemoryPrompt, decideActivityWrite, decideAgentMemoryWrite, decideContextWrite,
   decidePreferencesWrite, defaultRules, defaultSoul, EMPTY_CONTEXT, isActivityAction, parseStoredItems,
@@ -8,7 +8,7 @@ import {
   type ActivityEntry, type ActivityEntryInput, type MemoryActor, type MemoryKind, type MemoryWriteDecision,
   type RulesChangeProposal, type SavedSharedContext, type SharedContext, type SoulTemplateAgent,
 } from '@/lib/agent-memory'
-import { ACTIVITY_OP_COLUMN, ACTIVITY_OP_TRIGGER, AGENT_MEMORY_SCHEMA } from '@/lib/agent-memory/schema'
+import { ACTIVITY_OP_COLUMN, ACTIVITY_OP_TRIGGER, AGENT_MEMORY_SCHEMA, migrateActivityLog } from '@/lib/agent-memory/schema'
 
 export const MEMORY_CONTENT_MAX = 20000
 
@@ -41,6 +41,8 @@ async function memoryDb() {
     // Fork（almanac ALMNC-69.9）：舊資料庫補 op_id 欄位。
     const columns = await db.select<Array<{ name: string }>>('pragma table_info(activity_log)')
     if (!columns.some(column => column.name === 'op_id')) await db.execute(ACTIVITY_OP_COLUMN)
+    // Fork（almanac ALMNC-71）：舊表的角色／來源限制放寬成可寫系統修復（重建表，整段一個交易）。
+    await migrateActivityLog(db, executeRecordTransaction)
     await db.execute(ACTIVITY_OP_TRIGGER)
   })().catch(error => {
     initialization = undefined
@@ -246,16 +248,29 @@ export async function archiveOldActivity(now = Date.now()): Promise<number> {
   return ids.length
 }
 
-/** 最新的在前；預設不含已封存的紀錄。讀之前先封存過期的。 */
-export async function listActivity(options: { limit?: number, includeArchived?: boolean, now?: number } = {}): Promise<ActivityEntry[]> {
+/**
+ * 最新的在前；預設不含已封存的紀錄。讀之前先封存過期的。
+ * Fork（almanac ALMNC-71）：actorId 只列這位發起者（'system'＝系統修復），篩選在資料庫做，不只篩已載入的幾筆。
+ */
+export async function listActivity(options: { limit?: number, includeArchived?: boolean, now?: number, actorId?: string } = {}): Promise<ActivityEntry[]> {
   await archiveOldActivity(options.now)
   const db = await memoryDb()
   const limit = Math.max(1, Math.min(500, Math.floor(options.limit ?? 50)))
+  const where = [options.includeArchived ? '' : 'archived_at is null', options.actorId ? 'actor_id = $2' : ''].filter(Boolean)
   const rows = await db.select<ActivityRow[]>(
-    `${SELECT_ACTIVITY} ${options.includeArchived ? '' : 'where archived_at is null'} order by at desc, id desc limit $1`,
-    [limit],
+    `${SELECT_ACTIVITY} ${where.length ? `where ${where.join(' and ')}` : ''} order by at desc, id desc limit $1`,
+    options.actorId ? [limit, options.actorId] : [limit],
   )
   return rows.flatMap(row => activityFromRow(row) ?? [])
+}
+
+/** Fork（almanac ALMNC-71）：還沒封存的紀錄裡出現過的發起者（最近有紀錄的在前），給設定頁的篩選選單用。 */
+export async function listActivityActors(): Promise<Array<Pick<ActivityEntry, 'actorId' | 'actorRole'>>> {
+  const db = await memoryDb()
+  return db.select<Array<Pick<ActivityEntry, 'actorId' | 'actorRole'>>>(
+    `select actor_id as actorId, actor_role as actorRole from activity_log where archived_at is null
+     group by actor_id order by max(at) desc, max(id) desc`,
+  )
 }
 
 export interface ScottPreferences {

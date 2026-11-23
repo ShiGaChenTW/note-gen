@@ -66,11 +66,13 @@
       "activityEmpty": "No activity yet.",
       "activityFilter": "Started by",
       "activityFilterAll": "Everyone",
+      "systemRepairFilter": "System repairs",
       "activityFilterHint": "Accepted proposals are listed under the crew member who proposed them.",
       "correctsEntry": "corrects #{id}",
       "sourceConversation": "conversation {ref}",
       "sourceProposal": "proposal {ref}",
       "scott": "Scott",
+      "system": "System",
       "preferences": "Scott's preferences",
       "preferencesHint": "Read by every agent; only you can edit them. For example reply language or summary length.",
       "actions": {
@@ -85,7 +87,8 @@
         "linked": "linked",
         "reported": "reported",
         "corrected": "corrected",
-        "undone": "undid"
+        "undone": "undid",
+        "repaired": "System repair"
       },
       "undoWindowHint": "Changes from the last 7 days can be undone.",
       "sourceDirect": "Direct action",
@@ -95,7 +98,16 @@
       "undoneMark": "Undone",
       "undoDone": "Undone.",
       "undoExpired": "More than 7 days ago; it can no longer be undone.",
-      "undoFailed": "Could not undo. Nothing was overwritten."
+      "undoFailed": "Could not undo. Nothing was overwritten.",
+      "repair": {
+        "assign": "Added an ID",
+        "renumber": "Duplicated the ID of \"{kept}\"; gave the copy a new ID",
+        "restore": "Restored the ID from the system index",
+        "rename": "Renamed or moved outside the app from \"{from}\"; system index updated",
+        "relink": "Updated {links} links to the new file name",
+        "clock": "The system clock may be wrong; please check it",
+        "held": "{count} notes have no ID; too many to add automatically. Preview and apply with the migration tool"
+      }
     }
   },
   "agentDiffNavigation": {

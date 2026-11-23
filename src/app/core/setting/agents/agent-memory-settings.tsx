@@ -5,14 +5,15 @@
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import {
-  getAgentMemory, getScottPreferences, getSharedContext, listActivity, saveScottPreferences, saveSharedContext,
+  getAgentMemory, getScottPreferences, getSharedContext, listActivity, listActivityActors, saveScottPreferences, saveSharedContext,
   writeAgentMemory, type AgentMemoryView,
 } from '@/db/agent-memory'
 import {
-  activityActors, filterActivityByActor, formatContextLines, parseContextLines, validateSharedContext,
-  type ActivityEntry, type ContextValidationError, type MemoryKind,
+  activityActors, filterActivityByActor, formatContextLines, parseContextLines, SYSTEM_ACTOR_ID, validateSharedContext,
+  type ActivityActor, type ActivityEntry, type ContextValidationError, type MemoryKind,
 } from '@/lib/agent-memory'
 import { agentRoleLabel } from '@/lib/agents/display'
+import { parseRepairRef } from '@/lib/v3-model/id-scan-activity'
 import type { AgentSettings as SavedAgent } from '@/lib/agents/settings'
 import { Button } from '@/components/ui/button'
 import { UndoCompareCard } from '@/components/ops/undo-compare-card'
@@ -23,6 +24,17 @@ import { SettingSection } from '../components/setting-base'
 const field = 'w-full rounded-md border border-line bg-bg px-3 py-2 text-ink'
 const textarea = `${field} min-h-32 font-mono text-xs`
 const ACTIVITY_LIMIT = 50
+
+/** Fork（almanac ALMNC-71）：note:／task: 連結裡的路徑是 encodeURI 過的，顯示時還原成看得懂的路徑。 */
+function displayTarget(link: string): string {
+  const match = /^(note|task):(.+)$/.exec(link)
+  if (!match) return link
+  try {
+    return `${match[1]}:${decodeURI(match[2])}`
+  } catch {
+    return link
+  }
+}
 
 type Section = MemoryKind | 'context' | 'preferences' | 'activity'
 type Notice = { section: Section, key: 'saved' | 'saveError' | ContextErrorKey | UndoNoticeKey }
@@ -57,6 +69,8 @@ export function AgentMemorySettings({ agents }: { agents: SavedAgent[] }) {
   const [activity, setActivity] = useState<ActivityEntry[]>([])
   /** ALMNC-69.2：依發起的夥伴篩選；'' 是全部。 */
   const [actorFilter, setActorFilter] = useState('')
+  /** ALMNC-71：資料庫裡出現過的發起者（含 'system'＝系統修復）；篩選在資料庫做，不只篩載入的 50 筆。 */
+  const [loggedActors, setLoggedActors] = useState<ActivityActor[]>([])
   const [preferences, setPreferences] = useState<string | null>(null)
   const [loadError, setLoadError] = useState(false)
   const [saving, setSaving] = useState<Section | null>(null)
@@ -70,10 +84,11 @@ export function AgentMemorySettings({ agents }: { agents: SavedAgent[] }) {
 
   useEffect(() => {
     let active = true
-    Promise.all([getSharedContext(), listActivity({ limit: ACTIVITY_LIMIT }), getScottPreferences()]).then(([ctx, log, prefs]) => {
+    Promise.all([getSharedContext(), listActivity({ limit: ACTIVITY_LIMIT }), getScottPreferences(), listActivityActors().catch(() => [])]).then(([ctx, log, prefs, actors]) => {
       if (!active) return
       setContext({ projects: formatContextLines(ctx.projects), weeklyFocus: formatContextLines(ctx.weeklyFocus), people: ctx.people.join('\n') })
       setActivity(log)
+      setLoggedActors(actors)
       setPreferences(prefs.content)
       void loadOpStates(log)
     }).catch(err => {
@@ -107,10 +122,22 @@ export function AgentMemorySettings({ agents }: { agents: SavedAgent[] }) {
     }
   }
 
-  async function reloadActivity() {
-    const log = await listActivity({ limit: ACTIVITY_LIMIT })
+  async function reloadActivity(filter = actorFilter) {
+    const [log, actors] = await Promise.all([
+      listActivity({ limit: ACTIVITY_LIMIT, ...(filter ? { actorId: filter } : {}) }),
+      listActivityActors().catch(() => loggedActors),
+    ])
     setActivity(log)
+    setLoggedActors(actors)
     await loadOpStates(log)
+  }
+
+  function changeActorFilter(value: string) {
+    setActorFilter(value)
+    reloadActivity(value).catch(err => {
+      console.error('[agents] activity filter failed', err)
+      setLoadError(true)
+    })
   }
 
   async function undo(target: UndoTarget, force = false) {
@@ -185,17 +212,24 @@ export function AgentMemorySettings({ agents }: { agents: SavedAgent[] }) {
     <p role={notice.key === 'saved' ? 'status' : 'alert'} className="text-xs text-muted-foreground">{t(notice.key)}</p>
   )
 
-  const actorName = (entry: Pick<ActivityEntry, 'actorId' | 'actorRole'>) => entry.actorRole === 'scott'
-    ? t('scott')
-    : agents.find(item => item.id === entry.actorId)?.name ?? entry.actorId
+  const actorName = (entry: Pick<ActivityEntry, 'actorId' | 'actorRole'>) => {
+    if (entry.actorRole === 'scott') return t('scott')
+    if (entry.actorRole === 'system') return t('system')
+    return agents.find(item => item.id === entry.actorId)?.name ?? entry.actorId
+  }
 
   const roleLabel = (entry: Pick<ActivityEntry, 'actorId' | 'actorRole'>) => {
-    if (entry.actorRole === 'scott') return null
+    if (entry.actorRole === 'scott' || entry.actorRole === 'system') return null
     const known = agents.find(item => item.id === entry.actorId)
     return agentRoleLabel(known ?? { role: entry.actorRole }, tRoles)
   }
 
-  const actors = activityActors(activity)
+  // 系統修復排在最前面（全部之後），其他照最近有紀錄的順序。
+  const actors = [...(loggedActors.length ? loggedActors : activityActors(activity))]
+    .sort((a, b) => Number(b.actorId === SYSTEM_ACTOR_ID) - Number(a.actorId === SYSTEM_ACTOR_ID))
+  const filterLabel = (actor: ActivityActor) => actor.actorRole === 'system'
+    ? t('systemRepairFilter')
+    : [actorName(actor), roleLabel(actor)].filter(Boolean).join(' · ')
   // 選的發起者已經不在紀錄裡（例如重新載入）就當成全部。
   const activeFilter = actors.some(actor => actor.actorId === actorFilter) ? actorFilter : ''
   const shownActivity = filterActivityByActor(activity, activeFilter)
@@ -275,11 +309,11 @@ export function AgentMemorySettings({ agents }: { agents: SavedAgent[] }) {
             {actors.length > 1 && (
               <label className="flex flex-wrap items-center gap-2 text-xs">
                 <span>{t('activityFilter')}</span>
-                <select className={`${field} w-auto py-1 text-xs`} value={activeFilter} onChange={event => setActorFilter(event.target.value)}>
+                <select className={`${field} w-auto py-1 text-xs`} value={activeFilter} onChange={event => changeActorFilter(event.target.value)}>
                   <option value="">{t('activityFilterAll')}</option>
                   {actors.map(actor => (
                     <option key={actor.actorId} value={actor.actorId}>
-                      {[actorName(actor), roleLabel(actor)].filter(Boolean).join(' · ')}
+                      {filterLabel(actor)}
                     </option>
                   ))}
                 </select>
@@ -293,6 +327,7 @@ export function AgentMemorySettings({ agents }: { agents: SavedAgent[] }) {
                   {shownActivity.map(entry => {
                     const target = undoTargetOf(entry)
                     const undone = entry.opId && opStates.get(entry.opId)?.state === 'undone' && entry.action !== 'undone'
+                    const repair = entry.source.kind === 'system' ? parseRepairRef(entry.source.ref) : null
                     return (
                     <li key={entry.id} className="space-y-0.5 px-3 py-2 text-xs">
                       <div className="flex flex-wrap gap-x-2">
@@ -302,15 +337,22 @@ export function AgentMemorySettings({ agents }: { agents: SavedAgent[] }) {
                         <span className="font-medium">{actorName(entry)}</span>
                         {roleLabel(entry) && <span className="text-muted-foreground">{roleLabel(entry)}</span>}
                         <span>{t(`actions.${entry.action}`)}</span>
-                        <span className="break-all">{entry.targetLink}</span>
+                        {repair && <span>{t(`repair.${repair.kind}`, repair.values)}</span>}
+                        <span className="break-all">{displayTarget(entry.targetLink)}</span>
                         {entry.correctsId !== null && <span className="text-muted-foreground">{t('correctsEntry', { id: entry.correctsId })}</span>}
                       </div>
                       <div className="flex flex-wrap items-center gap-x-2 text-muted-foreground">
                         <span>
-                          {entry.source.ref.startsWith('op:')
-                            ? t('sourceDirect')
-                            : t(entry.source.kind === 'proposal' ? 'sourceProposal' : 'sourceConversation', { ref: entry.source.ref })}
-                          {entry.note && ` · ${entry.note}`}
+                          {entry.source.kind === 'system'
+                            ? entry.note
+                            : (
+                              <>
+                                {entry.source.ref.startsWith('op:')
+                                  ? t('sourceDirect')
+                                  : t(entry.source.kind === 'proposal' ? 'sourceProposal' : 'sourceConversation', { ref: entry.source.ref })}
+                                {entry.note && ` · ${entry.note}`}
+                              </>
+                            )}
                         </span>
                         {undone && <span>{t('undoneMark')}</span>}
                         {target && (

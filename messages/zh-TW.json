@@ -66,11 +66,13 @@
       "activityEmpty": "還沒有活動紀錄。",
       "activityFilter": "發起的夥伴",
       "activityFilterAll": "全部",
+      "systemRepairFilter": "系統修復",
       "activityFilterHint": "接受的提案記在發起它的夥伴名下。",
       "correctsEntry": "更正 #{id}",
       "sourceConversation": "對話 {ref}",
       "sourceProposal": "提案 {ref}",
       "scott": "Scott",
+      "system": "系統",
       "preferences": "Scott 的偏好",
       "preferencesHint": "所有 agent 共讀，只有你能修改。例如回覆語言、摘要長度。",
       "actions": {
@@ -85,7 +87,8 @@
         "linked": "連結",
         "reported": "回報",
         "corrected": "更正",
-        "undone": "復原"
+        "undone": "復原",
+        "repaired": "系統修復"
       },
       "undoWindowHint": "7 天內的變更可以復原。",
       "sourceDirect": "直接操作",
@@ -95,7 +98,16 @@
       "undoneMark": "已復原",
       "undoDone": "已復原。",
       "undoExpired": "已超過 7 天，不能復原。",
-      "undoFailed": "復原失敗，沒有覆蓋任何內容。"
+      "undoFailed": "復原失敗，沒有覆蓋任何內容。",
+      "repair": {
+        "assign": "補上身分編號",
+        "renumber": "和「{kept}」重號，替複本換了新編號",
+        "restore": "依系統索引補回身分編號",
+        "rename": "在 App 外從「{from}」改名或搬移，已更新系統索引",
+        "relink": "依新檔名改了 {links} 個連結",
+        "clock": "時鐘可能有誤，請檢查系統時間",
+        "held": "有 {count} 個筆記沒有身分編號，數量多所以沒有自動補，請用遷移工具預覽後套用"
+      }
     }
   },
   "agentDiffNavigation": {
