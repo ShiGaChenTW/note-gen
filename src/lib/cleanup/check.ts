@@ -4,6 +4,7 @@
 //   3. 定期檢查：最後確認日期超過領域期限的筆記（periodic，由回顧排程呼叫）
 // 加上確認卡「交給指揮官」的重新確認（recheck：必要時查外部資料；沒發現問題就提案「仍然有效」）。
 // 專家比對（只讀），觀察進佇列等每週整理。
+import { contentVersion } from '@/lib/ops/version'
 import type { ProposalBatch, SimilarNote } from '@/lib/commander/types'
 import { noteTitle, parseV3Note } from '@/lib/v3-model/note'
 import { canonicalDomainIds, domainLookup } from '@/lib/v3-model/domain'
@@ -81,7 +82,14 @@ async function compare(note: NoteText, trigger: ConflictTrigger, deps: CheckDeps
       external,
       by: expert ? { role: 'expert', agentId: expert.agentId } : { role: 'commander' },
     })
-    observations.push(...found)
+    const versions = new Map([note, ...candidates].map(text => [text.path, contentVersion(text.raw)!]))
+    observations.push(...found.map(observation => ({
+      ...observation,
+      observedVersions: Object.fromEntries(observation.notePaths.flatMap(path => {
+        const version = versions.get(path)
+        return version ? [[path, version]] : []
+      })),
+    })))
   }
   const seen = new Set<string>()
   return observations.filter(observation => {

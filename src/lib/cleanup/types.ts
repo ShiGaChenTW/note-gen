@@ -51,6 +51,8 @@ export interface ConflictObservation {
   contexts?: Record<string, string>
   /** 外部資料的網址（指揮官查證時）。 */
   externalUrls?: string[]
+  /** 比對時讀到的內容版本。排到每週前若已修改，略過這筆證據。 */
+  observedVersions?: Record<string, string>
   domainId?: string
   by?: { role: 'expert' | 'commander' | 'researcher', agentId?: string }
   trigger: ConflictTrigger

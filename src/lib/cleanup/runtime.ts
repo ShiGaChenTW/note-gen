@@ -214,6 +214,7 @@ export async function createWeeklyMocDeps(check: CheckDeps, ask: WeeklyMocDeps['
       start: t('moc.start'),
       conclusions: t('moc.conclusions'),
       open: t('moc.open'),
+      outdated: title => t('moc.outdated', { title }),
       place: (note, chapter) => t('moc.place', { note, chapter }),
       tooFew: count => t('moc.tooFew', { count }),
       tooMany: (count, chapter) => t('moc.tooMany', { count, chapter }),

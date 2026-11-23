@@ -5,6 +5,7 @@ import { isExploring } from '@/lib/domain-page/moc-view'
 import { applyMocChange, editableMocBullets, type MocChange } from '@/lib/moc/edit'
 import { blockItems, formalEntries, parseMoc, splitLinkInner, type ParsedMoc } from '@/lib/moc/parse'
 import type { ResolveTarget } from '@/lib/moc/membership'
+import { sameVersion } from '@/lib/ops/version'
 import { isoWeekKey } from '@/lib/review/settings'
 import { toNoteText, type CheckDeps } from './check'
 import { CONTENT_EVIDENCE_RULE, parseObservations, type AskModel } from './detect'
@@ -17,6 +18,7 @@ export interface WeeklyMocLabels {
   start: string
   conclusions: string
   open: string
+  outdated: (title: string) => string
   place: (note: string, chapter: string) => string
   tooFew: (count: number) => string
   tooMany: (count: number, chapter: string) => string
@@ -137,10 +139,11 @@ async function changesFor(
   const changes: Array<{ change: MocChange, title: string, body: string }> = []
   for (const block of ['conclusions', 'open'] as const) {
     const existing = editableMocBullets(file.raw, moc, block)
+    const replaced = new Set<string>()
     for (const item of list(value[block]).slice(0, 20)) {
       const entry = record(item)
       const before = at(existing, entry.before)?.text
-      if (entry.before !== undefined && !before) continue
+      if (entry.before !== undefined && (!before || replaced.has(before))) continue
       const text = plain(entry.text)
       if (!text && (entry.text !== undefined || !before)) continue
       const links = notes(entry.notes).map(wiki).join('、')
@@ -155,6 +158,7 @@ async function changesFor(
         const source = [links, activityId === undefined ? '' : `活動紀錄 #${activityId}`].filter(Boolean).join('、') || '專家發現'
         after = `${kind}：${text}（來源：${source}）`
       }
+      if (before) replaced.add(before)
       changes.push({ change: { kind: 'bullet', block, before, after }, title: labels[block], body: [before && `− ${before}`, after && `+ ${after}`].filter(Boolean).join('\n') })
     }
   }
@@ -190,7 +194,12 @@ async function changesFor(
     }
   }
 
+  const merge = changes.find(item => item.change.kind === 'merge-chapters')?.change
+  const removed = merge?.kind === 'merge-chapters' && moc.id && applyMocChange(file.raw, file.raw, moc.id, merge) !== null
+    ? new Set(merge.from)
+    : new Set()
   for (const change of organizeUnsorted(list(value.placements), candidates, moc.chapters)) {
+    if (removed.has(change.chapterId)) continue
     const member = candidates.find(item => item.target === change.target)!
     const destination = moc.chapters.find(chapter => chapter.id === change.chapterId)!
     changes.push({ change, title: labels.place(member.note.title, destination.title), body: change.relation })
@@ -244,7 +253,7 @@ export async function runWeeklyMocs(
       } catch (error) {
         errors.push(`${key} model: ${String(error)}`)
       }
-      const mocReview = { name: moc.name, week: isoWeekKey(now) }
+      const mocReview = { id, name: moc.name, week: isoWeekKey(now) }
       const items: Proposal[] = []
       const changes = await changesFor(value, file, moc, members, recent, deps)
       const known = new Set<string>()
@@ -263,8 +272,15 @@ export async function runWeeklyMocs(
         return note && active.length ? parseObservations(JSON.stringify([item]), active[0], active.slice(1), { trigger: 'review', domainId: id, by: drafter, anchor: note.path }) : []
       })
       const notes = new Map(active.map(note => [note.path, note.raw]))
+      const stale = relevant.filter(observation => observation.observedVersions &&
+        observation.notePaths.some(path => notes.has(path) && !sameVersion(notes.get(path)!, observation.observedVersions![path])))
+      const latest = relevant.filter(observation => !stale.includes(observation))
       const conflicts = new Map<string, ConflictObservation>()
-      for (const observation of [...relevant, ...newConflicts]) conflicts.set(observationKey(observation), observation)
+      for (const observation of [...latest, ...newConflicts]) {
+        const key = observationKey(observation)
+        // 外部查證的證據沒有傳給模型，保留原始查證結果。
+        if (!conflicts.get(key)?.externalUrls?.length) conflicts.set(key, observation)
+      }
       for (const evidence of conflicts.values()) {
         if (!evidence.notePaths.every(path => notes.has(path))) continue
         const observation = evidence.type === 'outdated' && !evidence.conclusionChanged && !evidence.revisedBody
@@ -277,14 +293,20 @@ export async function runWeeklyMocs(
         if (item.cleanup?.actions.includes('verify')) {
           const links = observation.notePaths.map(wiki).join(' ↔ ')
           const sources = [...observation.notePaths.map(wiki), ...(observation.externalUrls ?? []).map(url => `<${url}>`)].join('、')
-          const after = `矛盾：${links} ── ${line(observation.evidence)}（來源：${sources}）`
+          const after = `矛盾：${links} ── 待查證：${line(observation.evidence)}（來源：${sources}）`
           const edit = mocEdit(file, id, { kind: 'bullet', block: 'open', after }, deps.labels.open)
           if (edit) item.edits = [...(item.edits ?? []), edit]
           else if (observation.notePaths.every(path => active.find(note => note.path === path)?.fields.status === 'disputed')) continue
         }
+        if (observation.type === 'outdated' && item.cleanup?.actions.includes('modify')) {
+          item.title = deps.labels.outdated(active.find(note => note.path === observation.notePaths[0])!.title)
+        }
         items.push({ ...item, mocReview, drafter: observation.by && observation.by.role !== 'researcher' ? { ...observation.by, role: observation.by.role } : drafter })
       }
-      if (!items.length) continue
+      if (!items.length) {
+        await deps.check.queue.acknowledge(stale)
+        continue
+      }
       await deps.submit({ id: key, origin: deps.check.labels.origin({ agent: deps.check.commanderName ?? '' }), proposals: items })
       proposals.push(...items)
       await deps.check.queue.acknowledge(relevant)

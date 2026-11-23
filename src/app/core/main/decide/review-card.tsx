@@ -6,7 +6,7 @@ import { useRef, useState, type ReactNode } from 'react'
 import { useTranslations } from 'next-intl'
 import { ChevronRight, Clock, MessagesSquare } from 'lucide-react'
 import { openConversation } from '@/lib/proposals/actions'
-import { ACTION_KEY, actionForKey, actionLabelKey, ageParts, type CardAction, type WorkbenchCard } from '@/lib/workbench/cards'
+import { ACTION_KEY, actionForKey, actionLabelKey, ageParts, proposalCard, type CardAction, type WorkbenchCard } from '@/lib/workbench/cards'
 import { reminderPresets } from '@/lib/workbench/put-aside'
 import { Kbd } from '@/components/ui/kbd'
 import { KBD_ON_BUTTON, V3_BUTTON_SHAPE } from '@/components/v3/button-shape'
@@ -127,7 +127,9 @@ function BatchRow({ item, onAction }: { item: DecideItem, onAction: (action: 'ac
           {proposal?.body.trim()
             ? <div className="mt-2 max-h-64 overflow-y-auto rounded-(--r-kbd) border border-line-soft bg-bg px-3 py-2 text-ui-compact leading-6 whitespace-pre-wrap break-words text-ink" data-testid="batch-item-content">{proposal.body.trim()}</div>
             : null}
-          {(!proposal?.body.trim() || item.mocReview) && item.preview.diff && <DiffBlock diff={item.preview.diff} className="mt-2" />}
+          {item.mocReview
+            ? <ProposalChanges card={proposalCard(item, item.at)} item={item} />
+            : !proposal?.body.trim() && item.preview.diff && <DiffBlock diff={item.preview.diff} className="mt-2" />}
         </div>
       )}
     </li>

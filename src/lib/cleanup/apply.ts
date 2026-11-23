@@ -1,6 +1,7 @@
 // Fork（almanac ALMNC-54.12）：接受清理提案（以及確認、記憶稽核提案）時的寫入。
 // 原則「不偷偷覆寫」：先逐一比對每則筆記、領域總覽、記憶是不是還是提案當下的內容；只要有一處被改過就整則不寫（CONFLICT），
 // 交回工作台讓 Scott 再次討論。寫到一半失敗時，已寫的盡量還原。純邏輯，I/O 由外面注入（預設實作在 apply-io.ts）。
+import type { FileSnapshot } from '@/lib/ops/version'
 import { applyMocChange } from '@/lib/moc/edit'
 import type { DomainEdit, MemoryEdit, NoteEdit, Proposal } from '@/lib/collect/types'
 
@@ -43,6 +44,7 @@ interface Step {
   target: string
   write: () => Promise<void>
   undo: () => Promise<void>
+  snapshot?: () => FileSnapshot
 }
 
 async function planNote(edit: NoteEdit, io: EditIo, conflicts: string[]): Promise<Step | undefined> {
@@ -60,6 +62,7 @@ async function planNote(edit: NoteEdit, io: EditIo, conflicts: string[]): Promis
   let written = content
   return {
     target: edit.path,
+    snapshot: () => ({ path: edit.path, before: previous, after: written }),
     write: () => current !== null && io.rewriteNote
       ? io.rewriteNote(edit.path, current, content, rebase && (latest => {
         const rebased = rebase(latest)
@@ -115,7 +118,7 @@ async function planMemory(edit: MemoryEdit, io: EditIo, conflicts: string[]): Pr
  * 寫入提案裡所有的變更。全部比對通過才開始寫；寫到一半失敗會把已寫的還原再丟出錯誤。
  * 回傳寫了哪些對象（筆記路徑、domain:<id>、memory:<id>）。
  */
-export async function applyEdits(proposal: Pick<Proposal, 'edits' | 'domainEdits' | 'memoryEdits'>, io: EditIo): Promise<string[]> {
+export async function applyEdits(proposal: Pick<Proposal, 'edits' | 'domainEdits' | 'memoryEdits'>, io: EditIo, onWritten?: (changes: FileSnapshot[]) => void): Promise<string[]> {
   const conflicts: string[] = []
   const steps: Step[] = []
   // 同一則筆記在一則提案裡只會出現一次（plan.ts 已合併），這裡仍照順序處理。
@@ -144,5 +147,6 @@ export async function applyEdits(proposal: Pick<Proposal, 'edits' | 'domainEdits
     if (error instanceof EditsNotApplied) throw error
     throw new EditsNotApplied(false, steps.map(step => step.target), error instanceof Error ? error.message : String(error))
   }
+  onWritten?.(done.flatMap(step => step.snapshot?.() ?? []))
   return steps.map(step => step.target)
 }

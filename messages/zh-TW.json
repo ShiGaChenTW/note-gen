@@ -9559,6 +9559,7 @@
       "start": "從這裡開始",
       "conclusions": "重點結論",
       "open": "待釐清",
+      "outdated": "待確認過時 · {title}",
       "place": "把「{note}」放進「{chapter}」",
       "tooFew": "新增章節（目前 {count} 章）",
       "tooMany": "合併到「{chapter}」（目前 {count} 章）"

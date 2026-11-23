@@ -9494,6 +9494,7 @@
       "start": "从这里开始",
       "conclusions": "重点结论",
       "open": "待厘清",
+      "outdated": "待确认过时 · {title}",
       "place": "将「{note}」归入「{chapter}」",
       "tooFew": "新增章节（目前 {count} 章）",
       "tooMany": "合并至「{chapter}」（目前 {count} 章）"

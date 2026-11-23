@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { parseItems, serializeItems, type PersistedItem } from '@/lib/collect/persist'
 import type { ProposalBatch } from '@/lib/commander/types'
 import { projectProposals } from '@/lib/decide/project'
+import { contentVersion } from '@/lib/ops/version'
 import { parseMoc } from '@/lib/moc/parse'
 import { createV3Note, parseV3Note } from '@/lib/v3-model/note'
 import { buildReviewCards } from '@/lib/workbench/cards'
@@ -48,7 +49,7 @@ function setup(output: object = {}, initial: ConflictObservation[] = []) {
     notePath(n), createV3Note({ title: `筆記 ${n}`, type: 'knowledge', status: 'valid', lastConfirmed: '2001-01-01' }, `本文 ${n}`),
   ])])
   const queue = memoryQueue(initial)
-  const ask = vi.fn(async (_prompt: string) => JSON.stringify(output))
+  const ask = vi.fn<WeeklyMocDeps['ask']>(async () => JSON.stringify(output))
   const deps: WeeklyMocDeps = {
     files: async () => [{ path: PATH, raw: files.get(PATH)! }],
     resolve: target => files.has(`${target}.md`) ? `${target}.md` : null,
@@ -65,7 +66,7 @@ function setup(output: object = {}, initial: ConflictObservation[] = []) {
     newChapterId: vi.fn()
       .mockResolvedValueOnce('C-20270104-000001-AAAA')
       .mockResolvedValueOnce('C-20270104-000001-AAAB'),
-    labels: { start: '從這裡開始', conclusions: '重點結論', open: '待釐清', place: (note, chapter) => `${note} → ${chapter}`, tooFew: () => '新增章節', tooMany: () => '合併章節' },
+    labels: { start: '從這裡開始', conclusions: '重點結論', open: '待釐清', outdated: title => `過時待確認：${title}`, place: (note, chapter) => `${note} → ${chapter}`, tooFew: () => '新增章節', tooMany: () => '合併章節' },
     check: { queue, readNote: async path => files.get(path) ?? null, domains: async () => [{ id: ID, name: '時間管理', overview: '' }], labels },
   }
   const io = { readNote: deps.check.readNote, writeNote: async (path: string, content: string) => { files.set(path, content) } }
@@ -115,7 +116,7 @@ describe('weekly MOC cards', () => {
     const decided = { ...stored, proposals: stored.proposals.map(item => ({ ...item, status: 'no' })) }
     const reopened = parseItems([decided], new Date(2027, 0, 10).getTime())
     expect(reopened).toHaveLength(1)
-    expect(reopened[0].proposals[0].mocReview).toEqual({ name: '時間管理', week: '2027-W01' })
+    expect(reopened[0].proposals[0].mocReview).toEqual({ id: ID, name: '時間管理', week: '2027-W01' })
     const again = {
       ...deps, hasCard: async (key: string) => reopened.some(item => item.id === key),
       files: async () => [{ path: '改名.md', raw: rawMoc.replace('title: 時間管理', 'title: 新的領域名') }],
@@ -192,6 +193,41 @@ describe('weekly MOC cards', () => {
     const [proposal] = await runWeeklyMocs(NOW, deps)
     expect(proposal.title).toBe('新增章節')
     expect(parseMoc(proposal.edits![0].content).chapters.map(chapter => chapter.title)).toEqual(['什麼時候做', '哪些事先做？', '怎麼檢查安排？'])
+  })
+
+  it('records the actual before and after of a rebased MOC edit for undo', async () => {
+    const { deps, files, io } = setup({ open: [{ text: '要不要加例子？', kind: 'gap' }] })
+    const [proposal] = await runWeeklyMocs(NOW, deps)
+    const onWritten = vi.fn()
+    const manual = rawMoc.replace('怎麼安排時間？', '如何排時間？')
+    await applyEdits(proposal, {
+      ...io,
+      rewriteNote: async (path, _before, _after, rebase) => {
+        files.set(path, manual)
+        files.set(path, rebase!(manual)!)
+      },
+    }, onWritten)
+    expect(onWritten).toHaveBeenCalledWith([{ path: PATH, before: manual, after: files.get(PATH) }])
+    expect(files.get(PATH)).toContain('如何排時間？')
+  })
+
+  it('leaves an older claim valid until Scott accepts replacement based on content evidence', async () => {
+    const { deps, files, io } = setup({
+      conflicts: [{ type: 'outdated', notes: [1, 0], evidence: '原規則已修訂成另一項要求', conclusionChanged: true }],
+    })
+    const [proposal] = await runWeeklyMocs(NOW, deps)
+    expect(proposal).toMatchObject({ card: { verb: 'replace' }, membershipTransfers: [{ from: notePath(1), to: notePath(0) }] })
+    expect(parseV3Note(files.get(notePath(1))!).fields.status).toBe('valid')
+    await applyEdits(proposal, io)
+    expect(parseV3Note(files.get(notePath(1))!).fields.status).toBe('superseded')
+  })
+
+  it('does not act on a queued observation once the evidence notes have changed', async () => {
+    const { deps, files, queue } = setup()
+    await queue.add([{ ...contradiction, observedVersions: Object.fromEntries(contradiction.notePaths.map(path => [path, contentVersion(files.get(path)!)!])) }])
+    files.set(notePath(0), files.get(notePath(0))!.replace('本文 0', 'Scott 的更正'))
+    expect(await runWeeklyMocs(NOW, deps)).toEqual([])
+    expect(queue.items()).toEqual([])
   })
 
   it('leaves queued conflicts for retry when submitting the card fails', async () => {

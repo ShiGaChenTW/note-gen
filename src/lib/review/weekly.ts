@@ -98,7 +98,7 @@ export function weeklyReviewBody(input: WeeklyInput): string {
     const notes = observation.notePaths.map(wiki).join('、')
     return `- ${labels.expertItem({ agent: (review.agentId && input.agentNames?.get(review.agentId)) || '', domain: domain(review.domainId), text: observation.text })}${notes ? `（${notes}）` : ''}`
   }))
-  const attachedCount = { cleanup: input.cleanup.length, schedule: input.schedule.length, audit: input.auditProposals.length }
+  const attachedCount = { cleanup: new Set(input.cleanup.map(item => item.mocReview?.id)).size, schedule: input.schedule.length, audit: input.auditProposals.length }
   return [
     ...section(labels.sections.actions, actionLines),
     ...section(labels.sections.records, input.records.map(record => `- ${wiki(record.path)}`)),

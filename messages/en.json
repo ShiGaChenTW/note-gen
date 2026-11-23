@@ -9494,6 +9494,7 @@
       "start": "Start here",
       "conclusions": "Key conclusion",
       "open": "Open question",
+      "outdated": "Possible outdated claim · {title}",
       "place": "File “{note}” under “{chapter}”",
       "tooFew": "Add chapters ({count} currently)",
       "tooMany": "Consolidate chapters under “{chapter}” ({count} currently)"
