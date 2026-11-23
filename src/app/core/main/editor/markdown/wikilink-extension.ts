@@ -556,11 +556,14 @@ export const Wikilink = Node.create({
   },
 
   // 只有嵌入走 React node view；一般連結與沒有 React（EditorContent）的環境回傳空物件，
-  // ProseMirror 就退回 renderHTML（ReactNodeViewRenderer 本身在沒有 contentComponent 時也是如此）
+  // ProseMirror 就退回 renderHTML。Tiptap 3.35 的 ReactNodeViewRenderer 在沒有 contentComponent 時
+  // 改回傳空的 <span>（3.19 是回傳空物件），所以這裡自己先判斷，`⧉ 名稱` 的退路才不會變成空白
   addNodeView() {
     const renderEmbed = ReactNodeViewRenderer(WikilinkEmbedView, { as: 'span', className: 'notegen-embed-host' })
     const fallback = {} as ReturnType<NodeViewRenderer>
-    return props => ((props.node.attrs as WikilinkData).embed ? renderEmbed(props) : fallback)
+    return props => ((props.node.attrs as WikilinkData).embed && (props.editor as { contentComponent?: unknown }).contentComponent
+      ? renderEmbed(props)
+      : fallback)
   },
 
   // 手動打完 `]]`（或 L2 之外的輸入）時，把 `[[...]]` 文字換成節點；不合法的照原樣留著
