@@ -2,7 +2,8 @@
 // F1: frontmatter must survive the visual editor byte-for-byte.
 // Without the Frontmatter node, `---` became a thematic break and the first key a `## heading`.
 import { describe, expect, it } from 'vitest'
-import { Editor } from '@tiptap/core'
+import { createTestEditorFactory } from './editor-fixture'
+import type { Editor } from '@tiptap/core'
 import StarterKit from '@tiptap/starter-kit'
 import { Markdown } from '@tiptap/markdown'
 import TaskList from '@tiptap/extension-task-list'
@@ -18,8 +19,10 @@ import {
 import { splitFrontmatter } from '@/lib/markdown/frontmatter-split'
 
 // Mirrors the block-level setup of tiptap-editor.tsx.
+const createTestEditor = createTestEditorFactory()
+
 function createEditor(withFrontmatter = true) {
-  return new Editor({
+  return createTestEditor({
     extensions: [
       ...(withFrontmatter ? [Frontmatter] : []),
       StarterKit.configure({
@@ -85,7 +88,6 @@ describe('F1: frontmatter round trip through the visual editor', () => {
     const editor = createEditor(false)
     editor.chain().setContent(samples['daily note'], { contentType: 'markdown' }).run()
     expect(save(editor)).toContain('## created: 2026-10-16')
-    editor.destroy()
   })
 
   for (const [name, raw] of Object.entries(samples)) {
@@ -93,7 +95,6 @@ describe('F1: frontmatter round trip through the visual editor', () => {
       const editor = createEditor()
       load(editor, raw)
       const out = save(editor)
-      editor.destroy()
       const { block, body } = splitFrontmatter(raw)
       const yaml = block.replace(/(?:\r?\n)+$/, '')
       const rest = body.replace(/^(?:\r?\n)+/, '')
@@ -111,7 +112,6 @@ describe('F1: frontmatter round trip through the visual editor', () => {
     editor.commands.focus('end')
     editor.commands.insertContent('新增一行')
     const out = save(editor)
-    editor.destroy()
     expect(out.startsWith(splitFrontmatter(raw).block + '\n')).toBe(true)
     expect(out).toContain('新增一行')
   })
@@ -123,7 +123,6 @@ describe('F1: frontmatter round trip through the visual editor', () => {
       const first = save(editor)
       load(editor, first)
       expect(save(editor)).toBe(first)
-      editor.destroy()
     })
   }
 
@@ -131,7 +130,6 @@ describe('F1: frontmatter round trip through the visual editor', () => {
     const editor = createEditor()
     load(editor, samples['daily note'])
     expect(save(editor).trimEnd()).toBe(samples['daily note'].trimEnd())
-    editor.destroy()
   })
 
   it('leaves documents without frontmatter untouched by the encoder', () => {

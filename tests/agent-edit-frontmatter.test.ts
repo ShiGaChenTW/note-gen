@@ -3,7 +3,8 @@
 // fork 的 frontmatter 要先編成 marker 才會變成 Frontmatter 節點；沒編碼時開頭的 --- 會變分隔線，
 // 和編輯器裡的文件對不上，Agent 改內文就會被當成「動到不相關的地方」或整份重排。
 import { describe, expect, it } from 'vitest'
-import { Editor } from '@tiptap/core'
+import { createTestEditorFactory } from './editor-fixture'
+import type { Editor } from '@tiptap/core'
 import StarterKit from '@tiptap/starter-kit'
 import { Markdown } from '@tiptap/markdown'
 import { MarkdownParagraph, normalizeMarkdownPlaceholders } from '@/app/core/main/editor/markdown/markdown-paragraph'
@@ -16,8 +17,10 @@ import {
   buildAgentMarkdownEdit,
 } from '@/app/core/main/editor/markdown/agent-markdown-edit'
 
+const createTestEditor = createTestEditorFactory()
+
 function createEditor() {
-  return new Editor({
+  return createTestEditor({
     extensions: [
       Frontmatter,
       StarterKit.configure({
