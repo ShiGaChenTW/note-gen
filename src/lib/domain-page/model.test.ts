@@ -80,6 +80,15 @@ describe('knowledgeNotesByDomain', () => {
     expect(byDomain.get('d2')?.map(n => n.path)).toEqual(['k/b.md'])
     expect(byDomain.has('d3')).toBe(false)
   })
+
+  it('domains 存領域名稱或舊 dom_ id 都歸到同一個領域（ALMNC-69.4）', () => {
+    const byDomain = knowledgeNotesByDomain([
+      note('k/a.md', { type: 'knowledge', domains: ['時間管理'] }),
+      note('k/b.md', { type: 'knowledge', domains: ['dom_time', '時間管理'] }),
+    ], [{ id: 'dom_time', name: '時間管理' }])
+    expect(byDomain.get('dom_time')?.map(n => n.path)).toEqual(['k/a.md', 'k/b.md'])
+    expect(byDomain.has('時間管理')).toBe(false)
+  })
 })
 
 describe('domain tree (at most two levels)', () => {

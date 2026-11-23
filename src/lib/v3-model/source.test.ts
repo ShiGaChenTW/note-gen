@@ -10,6 +10,7 @@ import {
   initialStatus,
   latestVersions,
   sourceFromRow,
+  sourceKeys,
   sourceToValues,
   finalStatusAfterAnalysis,
   setJournalTag,
@@ -155,6 +156,15 @@ describe('修改原始內容（AC2）', () => {
       id: 'b', content: '第二版', version: 2, previousId: 'a', status: 'pending_analysis',
       lockedAt: T0 + 9, createdAt: T0 + 9, sourceType: 'external', origin: 'https://example.com', collector: 'scott', collectedAt: T0,
     })
+  })
+
+  it('遷移過的資料源改版時，舊 id（legacyId）不傳給新版（ALMNC-69.4）', () => {
+    const old = { ...submitSource(make('external'), T0 + 1), id: 'S-20261101-000000-AAAA', legacyId: 'src_email:<m@x>' }
+    const result = editSourceContent(old, '第二版', T0 + 9, 'S-20261101-000009-BBBB')
+    expect(result.source.legacyId).toBeUndefined()
+    expect(result.source.previousId).toBe('S-20261101-000000-AAAA')
+    expect(sourceKeys(old)).toEqual(['S-20261101-000000-AAAA', 'src_email:<m@x>'])
+    expect(sourceKeys(result.source)).toEqual(['S-20261101-000009-BBBB'])
   })
 
   it('新版本必須換 id', () => {

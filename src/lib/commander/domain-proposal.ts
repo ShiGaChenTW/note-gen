@@ -3,7 +3,7 @@
 // domainProposal 是純函式；acceptDomainProposal 在 Scott 接受後才建立領域、專家並把筆記歸入，所有寫入都由依賴注入。
 import { defaultInterval, formatInterval } from '@/lib/cleanup/interval'
 import { defaultRules, defaultSoul } from '@/lib/agent-memory/templates'
-import type { Domain } from '@/lib/v3-model/domain'
+import { domainLookup, type Domain } from '@/lib/v3-model/domain'
 import type { NoteType } from '@/lib/v3-model/note'
 import { normalizeDomainName } from './assign'
 import type { RosterAgent } from './types'
@@ -40,9 +40,10 @@ function topicOf(note: KnowledgeNoteLike): string | undefined {
 }
 
 /** 沒有歸入任何（存在的）領域的知識筆記。 */
-export function unassignedKnowledgeNotes(notes: readonly KnowledgeNoteLike[], domains: readonly Pick<Domain, 'id'>[]): KnowledgeNoteLike[] {
-  const known = new Set(domains.map(domain => domain.id))
-  return notes.filter(note => note.type === 'knowledge' && !note.domains.some(id => known.has(id)))
+export function unassignedKnowledgeNotes(notes: readonly KnowledgeNoteLike[], domains: readonly Pick<Domain, 'id' | 'name'>[]): KnowledgeNoteLike[] {
+  // Fork（almanac ALMNC-69.4）：domains 存領域名稱（舊資料是 dom_ id），兩種都算歸入。
+  const known = domainLookup(domains)
+  return notes.filter(note => note.type === 'knowledge' && !note.domains.some(ref => known.has(ref.trim())))
 }
 
 export function expertRules(domain: string): string {

@@ -6,7 +6,8 @@ import { createTranslator, type AbstractIntlMessages } from 'next-intl'
 import { DEFAULT_LOCALE, LANGUAGE_STORAGE_KEY, loadMessagesWithFallback, normalizeLocale } from '@/i18n/config'
 import { notesDueForConfirm, ymd } from '@/lib/cleanup/interval'
 import type { RosterAgent } from '@/lib/commander/types'
-import { parseV3Note } from '@/lib/v3-model/note'
+import { isLogNoteTypeValue, isV3NoteTypeValue, parseV3Note } from '@/lib/v3-model/note'
+import { domainRefMatches } from '@/lib/v3-model/domain'
 import type { AuditLabels } from './audit'
 import type { ScheduleLabels } from './action-review'
 import type { DomainDigest } from './research'
@@ -106,7 +107,8 @@ export async function createDefaultReviewDeps(): Promise<ReviewRunDeps> {
       return domains.map(domain => ({
         domainId: domain.id,
         name: domain.name,
-        notes: all.filter(note => note.frontmatter?.type === 'knowledge' && strings(note.frontmatter.domains).includes(domain.id)).map(note => ({
+        // Fork（almanac ALMNC-69.4）：domains 存領域名稱（舊資料是 dom_ id）。
+        notes: all.filter(note => note.frontmatter?.type === 'knowledge' && strings(note.frontmatter.domains).some(ref => domainRefMatches(ref, domain))).map(note => ({
           path: note.path,
           title: titleOf(note.path, note.frontmatter),
           ...(typeof note.frontmatter?.summary === 'string' ? { summary: note.frontmatter.summary } : {}),
@@ -125,7 +127,8 @@ export async function createDefaultReviewDeps(): Promise<ReviewRunDeps> {
       const start = ymd(range.start)
       const end = ymd(range.end)
       return notes().filter(note => {
-        if (note.frontmatter?.type !== 'record') return false
+        // Fork（almanac ALMNC-69.4）：日誌筆記寫成 log，舊資料是 record。
+        if (!note.frontmatter || !isLogNoteTypeValue(note.frontmatter.type)) return false
         const date = note.frontmatter.date instanceof Date ? ymd(note.frontmatter.date) : typeof note.frontmatter.date === 'string' ? note.frontmatter.date : note.mtime ? ymd(new Date(note.mtime)) : ''
         return date >= start && date <= end
       }).map(note => ({ path: note.path, title: titleOf(note.path, note.frontmatter) }))
@@ -154,7 +157,7 @@ export async function createDefaultReviewDeps(): Promise<ReviewRunDeps> {
     auditNotes: async () => {
       const { readNote } = await import('@/lib/daily/note-io')
       const out = []
-      for (const note of notes().filter(entry => ['knowledge', 'record', 'project'].includes(String(entry.frontmatter?.type))).slice(0, 400)) {
+      for (const note of notes().filter(entry => isV3NoteTypeValue(entry.frontmatter?.type)).slice(0, 400)) {
         const raw = await readNote(note.path).catch(() => null)
         if (raw) out.push({ path: note.path, title: titleOf(note.path, note.frontmatter), body: parseV3Note(raw).body })
       }

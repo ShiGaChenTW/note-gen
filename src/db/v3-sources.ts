@@ -21,12 +21,18 @@ import {
 } from '@/lib/v3-model/source'
 import { sweepRejectedSources } from '@/lib/v3-model/archive-sweep'
 import { sourceOutputFromRow, type OutputTargetType, type SourceOutput, type SourceOutputRow } from '@/lib/v3-model/links'
+import { lastNameOf } from '@/lib/v3-model/id-index'
+import { initIdIndexDb } from './id-index'
 
 const SOURCE_COLUMNS = `id, source_type as sourceType, kind, content, origin, collected_at as collectedAt, collector,
   status, status_changed_at as statusChangedAt, version, previous_id as previousId, locked_at as lockedAt,
-  archived_at as archivedAt, created_at as createdAt, updated_at as updatedAt, is_journal as isJournal`
+  archived_at as archivedAt, created_at as createdAt, updated_at as updatedAt, is_journal as isJournal, legacy_id as legacyId`
 
-const OUTPUT_COLUMNS = 'source_id as sourceId, target_type as targetType, target_ref as targetRef, created_at as createdAt'
+// Fork（almanac ALMNC-69.4）：target_ref 是編號時（N-… 或 N-…#提案 id），順便從 id_index 查回路徑（indexedPath）；查不到就是 null。
+const TARGET_BASE = "case when instr(o.target_ref, '#') > 0 then substr(o.target_ref, 1, instr(o.target_ref, '#') - 1) else o.target_ref end"
+const OUTPUT_SELECT = `select o.source_id as sourceId, o.target_type as targetType, o.target_ref as targetRef, o.created_at as createdAt,
+  i.path as indexedPath
+  from source_outputs o left join id_index i on i.id = ${TARGET_BASE}`
 
 let initialized: Promise<void> | null = null
 
@@ -64,6 +70,9 @@ export function initV3SourceDb(): Promise<void> {
       // Fork（almanac ALMNC-69.3）：日誌標籤。冪等遷移：欄位已存在時 SQLite 會丟錯，吞掉即可；舊資料預設 0（沒有標籤）。
       // 這個專案的 note.db 沒有編號遷移，每張表在 init 時自己補欄位（同 memories、chats）。
       await addSourcesColumn(db, 'is_journal integer not null default 0')
+      // Fork（almanac ALMNC-69.4）：換成 S 編號前的舊 id（遷移時寫入；新資料是 null）。匯入去重與舊筆記標記都認它。
+      await addSourcesColumn(db, 'legacy_id text')
+      await db.execute('create unique index if not exists idx_sources_legacy on sources(legacy_id) where legacy_id is not null')
       await db.execute('create index if not exists idx_sources_status on sources(status, status_changed_at)')
       await db.execute('create index if not exists idx_sources_previous on sources(previous_id)')
       await db.execute(`
@@ -76,6 +85,8 @@ export function initV3SourceDb(): Promise<void> {
         )
       `)
       await db.execute('create index if not exists idx_source_outputs_target on source_outputs(target_type, target_ref)')
+      // 讀連結時 left join id_index，表要先在。
+      await initIdIndexDb()
     })().catch(error => {
       initialized = null
       throw error
@@ -110,11 +121,28 @@ async function updateSource(source: Source): Promise<void> {
   )
 }
 
+/**
+ * Fork（almanac ALMNC-69.4）：也認遷移前的舊 id（legacy_id）。還記著 src_… 的地方（尚未接受的提案、
+ * 固定 id 的系統資料源如 src_conversation:…）照樣找得到同一則資料源。
+ */
 export async function getSource(id: string): Promise<Source | undefined> {
   await initV3SourceDb()
   const db = await getDb()
-  const rows = await db.select<SourceRow[]>(`select ${SOURCE_COLUMNS} from sources where id = $1`, [id])
+  const rows = await db.select<SourceRow[]>(`select ${SOURCE_COLUMNS} from sources where id = $1 or legacy_id = $1 order by (id = $1) desc limit 1`, [id])
   return rows[0] ? sourceFromRow(rows[0]) : undefined
+}
+
+/** 舊 id → 現在的 id（沒遷移過或找不到就回傳原值）。 */
+async function currentSourceId(id: string): Promise<string> {
+  const db = await getDb()
+  const rows = await db.select<Array<{ id: string }>>('select id from sources where legacy_id = $1 limit 1', [id])
+  return rows[0]?.id ?? id
+}
+
+async function sourceKeyExists(id: string): Promise<boolean> {
+  const db = await getDb()
+  const rows = await db.select<Array<{ id: string }>>('select id from sources where id = $1 or legacy_id = $1 limit 1', [id])
+  return rows.length > 0
 }
 
 /**
@@ -168,9 +196,15 @@ export async function listLegacyNoteSources(): Promise<Source[]> {
 export async function insertLegacyNoteSources(sources: readonly Source[]): Promise<number> {
   await initV3SourceDb()
   const db = await getDb()
+  // Fork（almanac ALMNC-69.4）：已遷移成 S 編號的舊筆記，src_legacy:<路徑> 存在 legacy_id；on conflict(id) 擋不到，先濾掉。
+  const migrated = new Set((await db.select<Array<{ legacyId: string }>>(
+    'select legacy_id as legacyId from sources where kind = $1 and legacy_id is not null',
+    [LEGACY_NOTE_KIND]
+  )).map(row => row.legacyId))
+  const fresh = sources.filter(source => !migrated.has(source.id))
   let added = 0
-  for (let start = 0; start < sources.length; start += 50) {
-    const chunk = sources.slice(start, start + 50)
+  for (let start = 0; start < fresh.length; start += 50) {
+    const chunk = fresh.slice(start, start + 50)
     const values: (string | number | null)[] = []
     const tuples = chunk.map((source, row) => {
       const fields = sourceToValues(source)
@@ -203,6 +237,8 @@ export async function addSource(input: Omit<NewSourceInput, 'id'> & { id?: strin
  */
 export async function addSourceIfAbsent(input: NewSourceInput, now = Date.now()): Promise<Source | undefined> {
   await initV3SourceDb()
+  // Fork（almanac ALMNC-69.4）：同一個原始識別在遷移後存在 legacy_id，on conflict(id) 擋不到，先查。
+  if (await sourceKeyExists(input.id)) return undefined
   const source = createSource(input, now)
   const db = await getDb()
   const result = await db.execute(
@@ -269,15 +305,20 @@ export async function searchSourcesByText(query: string, limit = 200): Promise<S
 export async function addSourceOutput(sourceId: string, targetType: OutputTargetType, targetRef: string, now = Date.now()): Promise<void> {
   await initV3SourceDb()
   const db = await getDb()
+  // Fork（almanac ALMNC-69.4）：呼叫端還拿著舊 id（例如遷移前就排著的提案）時，連結記在現在的 S 編號上。
+  const id = await currentSourceId(sourceId)
   await db.execute(
     `insert into source_outputs (source_id, target_type, target_ref, created_at)
      values ($1, $2, $3, $4)
      on conflict(source_id, target_type, target_ref) do nothing`,
-    [sourceId, targetType, targetRef, now]
+    [id, targetType, targetRef, now]
   )
 }
 
-/** 筆記搬移或改名時，把連結改指到新路徑。 */
+/**
+ * 筆記搬移或改名時，把連結改指到新路徑。Fork（almanac ALMNC-69.4）：已改存 N 編號的連結不用動，
+ * 但系統索引記的路徑要跟著改，編號才解析得回來。
+ */
 export async function renameNoteOutputs(fromPath: string, toPath: string): Promise<void> {
   await initV3SourceDb()
   const db = await getDb()
@@ -285,22 +326,34 @@ export async function renameNoteOutputs(fromPath: string, toPath: string): Promi
     `update or ignore source_outputs set target_ref = $2 where target_type = 'note' and target_ref = $1`,
     [fromPath, toPath]
   )
+  await db.execute(
+    "update id_index set path = $2, last_name = $3, updated_at = $4 where kind = 'N' and path = $1",
+    [fromPath, toPath, lastNameOf(toPath), Date.now()]
+  )
 }
 
 export async function listOutputsOfSource(sourceId: string): Promise<SourceOutput[]> {
   await initV3SourceDb()
   const db = await getDb()
-  const rows = await db.select<SourceOutputRow[]>(`select ${OUTPUT_COLUMNS} from source_outputs where source_id = $1 order by created_at`, [sourceId])
+  const rows = await db.select<SourceOutputRow[]>(`${OUTPUT_SELECT} where o.source_id = $1 order by o.created_at`, [sourceId])
   return rows.map(sourceOutputFromRow)
 }
 
+/**
+ * 指向某個目標的連結。Fork（almanac ALMNC-69.4）：筆記同時比對路徑（舊資料）與系統索引裡這個路徑的 N 編號（遷移後）；
+ * 索引沒有這個路徑就只比對路徑（降級，不會丟錯）。
+ */
 export async function listOutputsToTarget(targetType: OutputTargetType, targetRef: string): Promise<SourceOutput[]> {
   await initV3SourceDb()
   const db = await getDb()
-  const rows = await db.select<SourceOutputRow[]>(
-    `select ${OUTPUT_COLUMNS} from source_outputs where target_type = $1 and target_ref = $2 order by created_at`,
-    [targetType, targetRef]
-  )
+  const rows = targetType === 'note'
+    ? await db.select<SourceOutputRow[]>(
+      `${OUTPUT_SELECT} where o.target_type = 'note'
+         and (o.target_ref = $1 or o.target_ref in (select id from id_index where kind = 'N' and path = $1))
+       order by o.created_at`,
+      [targetRef]
+    )
+    : await db.select<SourceOutputRow[]>(`${OUTPUT_SELECT} where o.target_type = $1 and o.target_ref = $2 order by o.created_at`, [targetType, targetRef])
   return rows.map(sourceOutputFromRow)
 }
 
@@ -320,8 +373,8 @@ export async function countOutputsBySource(): Promise<Map<string, number>> {
  */
 export async function deleteUnsentSource(id: string): Promise<void> {
   const source = await requireSource(id)
-  const outputs = await listOutputsOfSource(id)
+  const outputs = await listOutputsOfSource(source.id)
   if (!canDeleteUnsent(source, outputs.length)) throw new Error('只有還沒送出、沒有產出的外部擷取可以刪除')
   const db = await getDb()
-  await db.execute('delete from sources where id = $1', [id])
+  await db.execute('delete from sources where id = $1', [source.id])
 }

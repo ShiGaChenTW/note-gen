@@ -6,6 +6,7 @@
 // 專家比對（只讀）→ 指揮官依類型做成清理提案 → 衝突或錯誤立刻送到工作台，其餘放進佇列等每週回顧。全部注入依賴，測試用假的。
 import type { ProposalBatch, SimilarNote } from '@/lib/commander/types'
 import { noteTitle, parseV3Note } from '@/lib/v3-model/note'
+import { canonicalDomainIds, domainLookup } from '@/lib/v3-model/domain'
 import { ymd } from './interval'
 import { cleanupProposals, confirmProposal, observationKey, routeObservations, type CleanupLabels, type DomainInfo, type NoteWords } from './plan'
 import type { CleanupQueue } from './queue'
@@ -14,7 +15,7 @@ import type { ConflictDetector, ConflictObservation, ConflictTrigger, ExternalEv
 export interface CheckDeps {
   readNote: (path: string) => Promise<string | null>
   /** 依領域找類似筆記（similar.ts createSimilarFinder）。 */
-  similar: (domainId: string | undefined, query: { title: string, body: string }, exclude: readonly string[], scope?: { allDomains?: boolean }) => Promise<SimilarNote[]>
+  similar: (domainId: string | undefined, query: { title: string, body: string }, exclude: readonly string[], scope?: { allDomains?: boolean, domainRefs?: readonly string[] }) => Promise<SimilarNote[]>
   detect: ConflictDetector
   domains: () => Promise<DomainInfo[]>
   /** 負責這個領域的專家：固定編號與工作指示＋個別記憶。沒有專家時由指揮官比對。 */
@@ -62,11 +63,16 @@ async function readTexts(paths: readonly string[], deps: Pick<CheckDeps, 'readNo
 
 async function compare(note: NoteText, trigger: ConflictTrigger, deps: CheckDeps, external?: ExternalEvidence[]): Promise<{ observations: ConflictObservation[], texts: NoteText[] }> {
   const today = ymd(deps.now?.() ?? new Date())
-  const scopes: Array<string | undefined> = note.fields.domains.length ? note.fields.domains : [undefined]
+  // Fork（almanac ALMNC-69.4）：筆記 domains 存領域名稱（舊資料是 dom_ id），先換成領域 id；找類似筆記時兩種寫法都比。
+  const lookup = await domainMap(deps)
+  const domainIds = canonicalDomainIds(note.fields.domains, lookup)
+  const scopes: Array<string | undefined> = domainIds.length ? domainIds : [undefined]
   const observations: ConflictObservation[] = []
   const texts = new Map<string, NoteText>([[note.path, note]])
   for (const domainId of scopes) {
-    const similar = await deps.similar(domainId, { title: note.title, body: note.body }, [note.path], domainId ? {} : { allDomains: true }).catch(() => [])
+    const domain = domainId ? lookup.get(domainId) : undefined
+    const scope = domainId ? (domain ? { domainRefs: [domain.id, domain.name] } : {}) : { allDomains: true }
+    const similar = await deps.similar(domainId, { title: note.title, body: note.body }, [note.path], scope).catch(() => [])
     const candidates = await readTexts(similar.map(entry => entry.path).filter(path => path !== note.path), deps)
     for (const candidate of candidates) texts.set(candidate.path, candidate)
     if (!candidates.length && !external?.length) continue
@@ -100,7 +106,8 @@ function batchOf(id: string, origin: string, proposals: ProposalBatch['proposals
 
 async function domainMap(deps: Pick<CheckDeps, 'domains'>): Promise<Map<string, DomainInfo>> {
   try {
-    return new Map((await deps.domains()).map(domain => [domain.id, domain]))
+    // id 與名稱都當 key（筆記 domains 過渡期兩種寫法都有）；取出來的 domain.id 才是領域 id。
+    return domainLookup(await deps.domains())
   } catch {
     return new Map()
   }

@@ -11,8 +11,19 @@ export type NoteType = 'knowledge' | 'record' | 'project'
 export type NoteStatus = 'valid' | 'disputed' | 'superseded' | 'archived'
 
 export const NOTE_TYPES: readonly NoteType[] = ['knowledge', 'record', 'project']
-/** Fork（almanac ALMNC-69.3）：日誌筆記的新類型值（Scott 定 record → log）；目前只在讀取時接受。 */
+/** Fork（almanac ALMNC-69.3）：日誌筆記的新類型值（Scott 定 record → log）。讀取時 log 與 record 都當日誌；
+ * ALMNC-69.4 起寫入一律寫 log（模型裡仍叫 record，見 writeV3NoteFields）。 */
 export const LOG_NOTE_TYPE = 'log'
+
+/** frontmatter 的 type 原始值是不是 V3 筆記類型（含日誌的新值 log）。 */
+export function isV3NoteTypeValue(value: unknown): boolean {
+  return typeof value === 'string' && (value.trim().toLowerCase() === LOG_NOTE_TYPE || (NOTE_TYPES as readonly string[]).includes(value.trim().toLowerCase()))
+}
+
+/** frontmatter 的 type 原始值是不是日誌筆記（新值 log 或舊值 record）。 */
+export function isLogNoteTypeValue(value: unknown): boolean {
+  return value === LOG_NOTE_TYPE || value === 'record'
+}
 export const NOTE_STATUSES: readonly NoteStatus[] = ['valid', 'disputed', 'superseded', 'archived']
 
 /** frontmatter 裡由 V3 管理的欄位；其餘 key 一律原樣保留。 */
@@ -180,7 +191,10 @@ export function writeV3NoteFields(raw: string, patch: V3NoteFieldsPatch): string
       doc.delete(key)
       continue
     }
-    if (Array.isArray(value)) {
+    if (key === 'type' && value === 'record') {
+      // Fork（almanac ALMNC-69.4）：日誌筆記的類型值寫成 log；讀取時兩種都接受。
+      doc.set(key, LOG_NOTE_TYPE)
+    } else if (Array.isArray(value)) {
       const node = doc.createNode(Array.from(new Set(value)))
       node.flow = true
       doc.set(key, node)

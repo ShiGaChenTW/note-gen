@@ -2,7 +2,7 @@
 // 領域表只存名稱、上層與總覽（Markdown，src/db/v3-domains.ts）；核心概念、重點結論、矛盾與未解問題是總覽裡的 `## 標題` 段落
 // （整理時 lib/cleanup/plan.ts 會把待查證的衝突寫進「矛盾與未解問題」）。這裡把總覽拆成段落、把領域的知識筆記從筆記庫索引找出來。
 // 沒有的段落就是空的，畫面顯示空狀態；不替沒有寫的內容編造。
-import { domainPath, type Domain } from '@/lib/v3-model/domain'
+import { canonicalDomainIds, domainLookup, domainPath, type Domain } from '@/lib/v3-model/domain'
 import { NOTE_STATUSES, type NoteStatus } from '@/lib/v3-model/note'
 
 export interface DomainSections {
@@ -134,8 +134,12 @@ function titleOf(note: NoteLike): string {
   return (note.path.split('/').pop() ?? note.path).replace(/\.md$/i, '')
 }
 
-/** frontmatter 是知識筆記（type: knowledge）而且列了這個領域的筆記；依標題排序。 */
-export function knowledgeNotesByDomain(notes: Iterable<NoteLike>): Map<string, DomainNote[]> {
+/**
+ * frontmatter 是知識筆記（type: knowledge）而且列了這個領域的筆記；依標題排序。
+ * Fork（almanac ALMNC-69.4）：domains 存領域名稱（舊資料是 dom_ id）；給 domains 時兩種都換成領域 id 當 key。
+ */
+export function knowledgeNotesByDomain(notes: Iterable<NoteLike>, domains: readonly Pick<Domain, 'id' | 'name'>[] = []): Map<string, DomainNote[]> {
+  const lookup = domainLookup(domains)
   const byDomain = new Map<string, DomainNote[]>()
   for (const note of notes) {
     const fm = note.frontmatter
@@ -143,7 +147,7 @@ export function knowledgeNotesByDomain(notes: Iterable<NoteLike>): Map<string, D
     const status = (NOTE_STATUSES as readonly string[]).includes(text(fm.status)) ? text(fm.status) as NoteStatus : 'valid'
     const lastConfirmed = /^\d{4}-\d{2}-\d{2}$/.test(text(fm.lastConfirmed)) ? text(fm.lastConfirmed) : undefined
     const entry: DomainNote = { path: note.path, title: titleOf(note), summary: text(fm.summary), status, lastConfirmed }
-    for (const id of new Set(stringList(fm.domains))) {
+    for (const id of canonicalDomainIds(stringList(fm.domains), lookup)) {
       const list = byDomain.get(id) ?? []
       list.push(entry)
       byDomain.set(id, list)

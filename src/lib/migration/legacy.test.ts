@@ -6,7 +6,7 @@ import { createAnalysisQueue } from '@/lib/commander/pipeline'
 import { toText } from '@/lib/commander/to-text'
 import type { AskModel, CommanderDeps, ProposalBatch } from '@/lib/commander/types'
 import {
-  createLegacyMigration, currentPack, isDailyNote, isUndecided, legacyPackKey, legacyProgress, markLegacyNotes, nextBatch, packsToShow,
+  createLegacyMigration, currentPack, isDailyNote, isUndecided, legacyPackKey, legacyProgress, markLegacyNotes, nextBatch, packsToShow, unmarkedPaths,
   runLegacyBatch, selectLegacyNotes, unmarkedLegacyNotes, type LegacyPack, type LegacyPackItem,
 } from './legacy'
 
@@ -39,6 +39,14 @@ describe('selectLegacyNotes', () => {
     ], DAILY)
     expect(result.paths).toEqual(['10 Inbox/隨手記.md', '20 Journal/21 Daily/週記.md', '30 Notes/OEE 的定義.md', '30 Notes/有 frontmatter 但不是 V3.md'])
     expect(result.skipped).toEqual({ v3: 2, daily: 1, hidden: 1, nonMarkdown: 1 })
+  })
+
+  it('日誌筆記的新類型值 log 也算 V3 筆記，不會被當成舊筆記（ALMNC-69.4）', () => {
+    expect(selectLegacyNotes([note('30 日誌/週會.md', { type: 'log' })], DAILY).skipped.v3).toBe(1)
+  })
+
+  it('遷移成 S 編號的舊筆記資料源，以舊 id（legacyId）認出已標過（ALMNC-69.4）', () => {
+    expect(unmarkedPaths(['a.md', 'b.md'], [{ id: 'S-20261101-000000-AAAA', legacyId: legacySourceId('a.md') }])).toEqual(['b.md'])
   })
 
   it('每日筆記資料夾留空時，根目錄裡符合日期格式的檔案才算每日筆記', () => {

@@ -190,7 +190,7 @@ export function DomainsTab() {
   const notes = useVaultIndexStore(store => store.notes)
   const domainId = useDomainPage(store => store.domainId)
   const open = useDomainPage(store => store.open)
-  const byDomain = useMemo(() => knowledgeNotesByDomain(notes.values()), [notes])
+  const byDomain = useMemo(() => knowledgeNotesByDomain(notes.values(), domains), [notes, domains])
   const tree = useMemo(() => buildDomainTree(domains, byDomain), [domains, byDomain])
   const notePaths = useMemo(() => [...notes.keys()], [notes])
   const node = domainId ? findDomainNode(tree, domainId) : undefined

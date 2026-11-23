@@ -1,6 +1,8 @@
 // Fork（almanac ALMNC-54.1）：V3 領域表（note.db）。最多兩層的規則在 src/lib/v3-model/domain.ts 驗證後才寫入。
-// 筆記屬於哪些領域寫在筆記 frontmatter 的 domains（領域 id），這張表只存領域本身。
+// 筆記屬於哪些領域寫在筆記 frontmatter 的 domains（ALMNC-69.4 起存領域名稱，舊資料是領域 id），這張表只存領域本身。
+// 每個領域的 M 編號記在系統索引 id_index（kind M、name＝領域名稱）；這張表的 id 到 ALMNC-69.6 才換。
 import { getDb } from './index'
+import { initIdIndexDb } from './id-index'
 import { assertDomainPlacement, domainFromRow, type Domain, type DomainRow } from '@/lib/v3-model/domain'
 
 const COLUMNS = 'id, name, parent_id as parentId, overview, created_at as createdAt, updated_at as updatedAt'
@@ -74,5 +76,10 @@ export async function updateDomain(id: string, patch: { name?: string; parentId?
     'update domains set name = $2, parent_id = $3, overview = $4, updated_at = $5 where id = $1',
     [next.id, next.name, next.parentId ?? null, next.overview, next.updatedAt]
   )
+  // Fork（almanac ALMNC-69.4）：系統索引以名稱記「領域 ↔ M 編號」（遷移時登記，ALMNC-69.6 寫 MOC 檔時沿用），改名要跟著改。
+  if (next.name !== current.name) {
+    await initIdIndexDb()
+    await db.execute("update id_index set name = $2, updated_at = $3 where kind = 'M' and name = $1", [current.name, next.name, now])
+  }
   return next
 }

@@ -12,6 +12,7 @@
     "start": "next start --turbopack -p 3456",
     "lint": "next lint",
     "test": "vitest run",
+    "migrate:ids": "node scripts/migrate-ids.mjs",
     "tauri": "tauri",
     "tauri:dev": "tauri dev --config src-tauri/tauri.dev.conf.json",
     "docs:build": "npm --prefix ./docs run build",

@@ -49,6 +49,9 @@ describe('defaults and per-domain intervals', () => {
     expect(map.get('ie-lean')).toEqual({ amount: 3, unit: 'month', from: 'rules' })
     expect(map.get('cook')).toBe(GENERAL_INTERVAL)
     expect(map.get('de')).toBe(TECHNICAL_INTERVAL)
+    // Fork（almanac ALMNC-69.4）：筆記 domains 存名稱時也查得到。
+    expect(map.get('工業工程')).toEqual({ amount: 3, unit: 'month', from: 'rules' })
+    expect(intervalForNote(['精實生產'], map)).toEqual({ amount: 3, unit: 'month', from: 'rules' })
   })
 
   it('takes the shortest interval of a note in several domains, 1 year without a domain', () => {

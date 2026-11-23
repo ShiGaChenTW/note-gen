@@ -44,6 +44,16 @@ export interface Source {
    * 舊資料沒有這個欄位（false）。有標籤的資料源不會被轉成不採用，讀過沒有內容就停在已分析。
    */
   journal: boolean
+  /**
+   * Fork（almanac ALMNC-69.4）：換成 S 編號之前的 id（src_<uuid>、src_legacy:<路徑>、src_email:<Message-ID>…）。
+   * 只有遷移過的資料源有；匯入去重、舊筆記標記、還記著舊 id 的提案都靠它找回同一則資料源。
+   */
+  legacyId?: string
+}
+
+/** 資料源可以被認出來的 id：現在的 id，加上遷移前的舊 id。 */
+export function sourceKeys(source: Pick<Source, 'id' | 'legacyId'>): string[] {
+  return source.legacyId ? [source.id, source.legacyId] : [source.id]
 }
 
 /** 不採用的資料源保留多久後自動封存。 */
@@ -206,11 +216,14 @@ export function editSourceContent(source: Source, content: string, now: number, 
   if (source.archivedAt !== undefined) throw new Error('已封存的資料源不能修改')
   if (!isLocked(source)) return { kind: 'updated', source: { ...source, content, updatedAt: now } }
   if (newId === source.id) throw new Error('新版本需要新的 id')
+  // 新版是新的一列：舊 id（legacyId）只屬於遷移過的那一列，不往下傳。
+  const rest: Source = { ...source }
+  delete rest.legacyId
   return {
     kind: 'versioned',
     previous: source,
     source: {
-      ...source,
+      ...rest,
       id: newId,
       content,
       status: 'pending_analysis',
@@ -301,6 +314,8 @@ export interface SourceRow {
   updatedAt: number
   /** Fork（almanac ALMNC-69.3）：is_journal（0／1；舊資料庫還沒加欄位前讀不到就是沒有）。 */
   isJournal?: number | null
+  /** Fork（almanac ALMNC-69.4）：legacy_id（遷移前的舊 id）。 */
+  legacyId?: string | null
 }
 
 export function sourceFromRow(row: SourceRow): Source {
@@ -323,6 +338,7 @@ export function sourceFromRow(row: SourceRow): Source {
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     journal: Number(row.isJournal ?? 0) === 1,
+    ...(row.legacyId ? { legacyId: row.legacyId } : {}),
   }
 }
 
