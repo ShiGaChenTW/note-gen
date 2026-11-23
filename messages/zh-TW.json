@@ -9225,7 +9225,8 @@
       "resume": "繼續處理",
       "pause": "暫停",
       "packDone": "整理好了",
-      "acceptAll": "全部接受"
+      "acceptAll": "全部接受",
+      "cancelAll": "全部取消"
     },
     "listLabel": "等你處理的事",
     "more": "等 {count} 則",
@@ -9308,7 +9309,10 @@
       "batchAccepted": "已接受 {count} 則新筆記",
       "batchPartial": "{count} 則沒有接受成功：{titles}，其他則已接受",
       "batchFailed": "全部沒有接受成功：{titles}",
-      "domainRemoved": "已把「{title}」從「{domain}」拿掉"
+      "domainRemoved": "已把「{title}」從「{domain}」拿掉",
+      "mocBatchAccepted": "已套用 {applied} 處修改，取消 {cancelled} 處",
+      "mocBatchRestored": "已把 MOC 的收錄改回上次的狀態",
+      "mocBatchStale": "MOC 在確認前又被修改，卡片已更新，請再確認一次"
     },
     "sources": {
       "filterLabel": "依狀態篩選",
@@ -9567,6 +9571,29 @@
       "summary": "收錄在 {count} 個領域，超過上限 {limit} 個",
       "body": "一則筆記最多屬於 {limit} 個領域。選一個要拿掉的領域，會從那個 MOC 移除這則筆記的收錄；其他領域照舊。",
       "by": "系統"
+    },
+    "mocBatch": {
+      "title": "整批檢查：{mocs}",
+      "summary": "{count} 處變更 · {reasons}",
+      "reasons": {
+        "removals": "一次移除 {count} 條收錄",
+        "mocs": "同時改到 {count} 個 MOC",
+        "import": "整批匯入"
+      },
+      "body": "在 Obsidian 的這次修改先不生效。不要的那幾條按「取消這條」，再按「全部接受」套用其餘的；按「全部取消」會把 MOC 的收錄改回上次的狀態（其他段落的修改保留）。兩種都可以在 7 天內從活動紀錄復原。",
+      "by": "系統",
+      "cancel": "取消這條",
+      "restore": "恢復",
+      "cancelled": "已取消",
+      "unsorted": "尚未分章",
+      "diff": {
+        "remove": "移除「{note}」（{chapter}）",
+        "add": "加入「{note}」到「{chapter}」",
+        "move": "「{note}」從「{from}」搬到「{to}」",
+        "relation": "「{note}」的說明改成「{after}」",
+        "chapter-rename": "章節「{before}」改名為「{after}」"
+      },
+      "notices": "另有 {count} 則提醒（斷鏈或格式壞了），不影響歸屬"
     }
   },
   "cleanup": {
@@ -9693,5 +9720,12 @@
       "confirm": "仍要復原",
       "cancel": "取消"
     }
+  },
+  "mocReconcile": {
+    "broken": "「{moc}」有 {count} 條收錄連到不存在的筆記，已標成斷鏈，歸屬不變",
+    "malformed": "「{moc}」有 {count} 行收錄格式壞了（沒有 [[ ]] 或少了 ──），先當作沒改、原本的歸屬保留，請修正",
+    "repaired": "「{moc}」有 {count} 條斷掉的連結已依編號修回",
+    "batch": "在 Obsidian 的修改改到 {mocs} 個 MOC、共 {changes} 處（移除 {removals} 條），先不生效，請到工作台的「整批檢查」卡確認",
+    "applied": "已套用在 Obsidian 對 MOC 的 {count} 處修改，7 天內可在活動紀錄復原"
   }
 }

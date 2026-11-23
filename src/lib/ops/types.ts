@@ -78,6 +78,25 @@ export interface MocEntryMoveOp extends MocEntryRef {
   toChapterId?: string
 }
 
+/** Fork（almanac ALMNC-69.10）：改 N 在 M 裡的關係說明（Scott 在 Obsidian 改的）。反向＝改回 before。 */
+export interface MocEntryRelationOp extends MocEntryRef {
+  kind: 'moc.entry.relation'
+  chapterId?: string
+  before: string
+  after: string
+}
+
+/** Fork（almanac ALMNC-69.10）：章節改名（依 C 編號，不是刪章加章）。反向＝改回 before。 */
+export interface MocChapterRenameOp {
+  kind: 'moc.chapter.rename'
+  mocId?: string
+  mocName: string
+  mocPath: string
+  chapterId?: string
+  before: string
+  after: string
+}
+
 /** 成立領域：新建 MOC 檔。反向＝移除那個 MOC 檔。 */
 export interface DomainCreateOp {
   kind: 'domain.create'
@@ -98,14 +117,14 @@ export interface DomainRemoveOp {
 
 export type OpSpec =
   | NoteCreateOp | NoteDeleteOp | NoteEditOp | NoteMoveOp
-  | MocEntryAddOp | MocEntryRemoveOp | MocEntryMoveOp
+  | MocEntryAddOp | MocEntryRemoveOp | MocEntryMoveOp | MocEntryRelationOp | MocChapterRenameOp
   | DomainCreateOp | DomainRemoveOp
 
 export type OpKind = OpSpec['kind']
 
 export const OP_KINDS: readonly OpKind[] = [
   'note.create', 'note.delete', 'note.edit', 'note.move',
-  'moc.entry.add', 'moc.entry.remove', 'moc.entry.move',
+  'moc.entry.add', 'moc.entry.remove', 'moc.entry.move', 'moc.entry.relation', 'moc.chapter.rename',
   'domain.create', 'domain.remove',
 ]
 

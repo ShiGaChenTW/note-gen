@@ -80,6 +80,9 @@ export function useCardActions({ visible, commanderName }: { visible: readonly W
       toast.error(organize('conflict'))
     } else if (error instanceof SlotUnavailable) {
       toast.error(week('slotUnavailable'))
+    } else if (error instanceof Error && error.name === 'MocBatchStale') {
+      // Fork（almanac ALMNC-69.10）：整批檢查卡按下去前 MOC 又被改過：卡片已重新比對，請 Scott 再確認。
+      toast.error(t('toast.mocBatchStale'))
     } else {
       console.error('[workbench] action failed:', error)
       toast.error(t('toast.failed'))
@@ -87,7 +90,7 @@ export function useCardActions({ visible, commanderName }: { visible: readonly W
   }, [decideT, organize, t, week])
 
   /** 收起、做動作、記復原。失敗就把卡片放回來。 */
-  const settle = useCallback(async (card: WorkbenchCard, run: () => Promise<Undo>, message: string) => {
+  const settle = useCallback(async (card: WorkbenchCard, run: () => Promise<Undo>, message: string | (() => string)) => {
     const store = useWorkbenchStore.getState()
     const next = nextCursor(visible, card.key)
     store.setLeaving(card.key, true)
@@ -97,7 +100,7 @@ export function useCardActions({ visible, commanderName }: { visible: readonly W
       const state = useWorkbenchStore.getState()
       if (state.cursor === card.key || state.cursor === null) state.setCursor(next)
       if (state.expanded === card.key) state.setExpanded(next && state.expanded ? next : null)
-      record(message, undoFn, card.key)
+      record(typeof message === 'function' ? message() : message, undoFn, card.key)
     } catch (error) {
       fail(error)
     } finally {
@@ -161,6 +164,16 @@ export function useCardActions({ visible, commanderName }: { visible: readonly W
         : settle(member, () => dropCard(member), t('toast.dropped', { title: member.title }))
     }
     const title = card.title
+    // Fork（almanac ALMNC-69.10）：整批檢查卡：全部接受（卡上取消的那幾條不套用）／全部取消（MOC 收錄改回上次的狀態）。
+    if (card.kind === 'mocBatch' && (action === 'accept' || action === 'drop')) {
+      let message = ''
+      return settle(card, async () => {
+        const { settleMocBatch } = await import('@/lib/moc/reconcile-runtime')
+        const result = await settleMocBatch(action === 'accept' ? 'accept' : 'reject')
+        message = action === 'accept' ? t('toast.mocBatchAccepted', { applied: result.applied, cancelled: result.cancelled }) : t('toast.mocBatchRestored')
+        return result.undo
+      }, () => message)
+    }
     switch (action) {
       case 'accept':
         if (card.kind === 'batch') return settleBatch(card)

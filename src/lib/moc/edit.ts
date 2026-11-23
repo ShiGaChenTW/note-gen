@@ -175,6 +175,39 @@ export function replaceMocEntryTarget(raw: string, match: EntryMatch, newTarget:
   return { content: lines.filter((_, index) => !drop.has(index)).join('\n'), changed: true }
 }
 
+/** Fork（almanac ALMNC-69.10）：只改一條收錄的關係說明（同一行、同一章；連結與別名不變）。找不到 → not-found。 */
+export function setMocEntryRelation(raw: string, match: EntryMatch, relation: string, path?: string): MocEditResult {
+  const moc = parseMoc(raw, path)
+  const test = matcher(match)
+  const found = formalEntries(moc).find(({ entry }) => test(entry))
+  if (!found) return { content: raw, changed: false, reason: 'not-found' }
+  const { entry } = found
+  const lines = splitLines(raw)
+  const eol = lines[entry.line].endsWith('\r') ? '\r' : ''
+  const next = `${renderEntryLine({ target: entry.target, alias: entry.alias, relation })}${eol}`
+  if (next === lines[entry.line]) return { content: raw, changed: false }
+  lines[entry.line] = next
+  return { content: lines.join('\n'), changed: true }
+}
+
+/**
+ * Fork（almanac ALMNC-69.10）：章節改名（依 C 編號找，找不到再依舊名稱）；只換 `###` 標題文字，C 註解、收錄行、
+ * 「→ 已長成 [[X]] MOC」尾巴都不動。「尚未分章」不改名。
+ */
+export function renameMocChapter(raw: string, ref: { id?: string, title?: string }, title: string, path?: string): MocEditResult {
+  const moc = parseMoc(raw, path)
+  const chapter = (ref.id ? moc.chapters.find(item => item.id === ref.id) : undefined)
+    ?? (ref.title ? moc.chapters.find(item => item.title === ref.title?.trim()) : undefined)
+  const name = title.replace(/[\r\n]+/g, ' ').trim()
+  if (!chapter || !name) return { content: raw, changed: false, reason: 'no-chapter' }
+  if (chapter.title === name) return { content: raw, changed: false }
+  const lines = splitLines(raw)
+  const eol = lines[chapter.line].endsWith('\r') ? '\r' : ''
+  const tail = chapter.heading.startsWith(chapter.title) ? chapter.heading.slice(chapter.title.length) : ''
+  lines[chapter.line] = `### ${name}${tail}${eol}`
+  return { content: lines.join('\n'), changed: true }
+}
+
 /** 每週提案只描述核准的那一項；接受時可以保留其他已接受項目與無關的編輯。 */
 export type MocChange =
   | { kind: 'bullet', block: 'conclusions' | 'open', before?: string, after?: string }
