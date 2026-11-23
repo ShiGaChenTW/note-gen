@@ -12,6 +12,7 @@ import { ORGANIZE_TOOL } from '@/lib/organize/drafts'
 import type { Proposal, ProposalCardHint } from '@/lib/collect/types'
 import { threadKey } from '@/lib/threads/projects'
 import { replacedProposalKeys, statusOf, type ProposalDiscussion, type ProposalStatus, type ProposalTrail } from '@/lib/proposals/trail'
+import type { ContentChange } from '@/lib/workbench/risk'
 
 export type DecideSource = 'collect' | 'draft' | 'job'
 export type DecideKind = 'job' | 'note' | 'task' | 'event' | 'create' | 'update' | 'delete' | 'move' | 'copy' | 'folder'
@@ -66,6 +67,8 @@ export interface DecideItem {
   notePaths?: string[]
   /** Fork（almanac ALMNC-54.21）：誰提的（收集提案的撰寫者）；接受時記進活動紀錄。 */
   drafter?: Proposal['drafter']
+  /** Fork（almanac ALMNC-65.1）：接受後會改到的完整前後內容（風險判斷與差異檢視用）；新增筆記、任務、時段、搬移等沒有。 */
+  changes?: ContentChange[]
 }
 
 export type DecideRef =
@@ -173,6 +176,33 @@ export function sameThingKey(proposal: Proposal): string {
   return [proposal.kind, proposal.title.trim().replace(/\s+/g, ' ').toLowerCase(), proposal.due, proposal.time].join('|')
 }
 
+/** 檔案變更的前後內容：新增、修改有內容；刪除只有原文；搬移、複製、新增資料夾兩邊都是 null（沒有內容可比）。 */
+function fileChangeContents(change: Pick<DraftLike, 'kind' | 'baseContent' | 'content'>): Pick<ContentChange, 'before' | 'after'> {
+  if (change.kind === 'create' || change.kind === 'update') return { before: change.baseContent, after: change.content ?? '' }
+  if (change.kind === 'delete') return { before: change.baseContent, after: null }
+  return { before: null, after: null }
+}
+
+/**
+ * Fork（almanac ALMNC-65.1）：一則提案接受後會改到的所有內容（完整前後文）。
+ * 只收「改既有內容」的提案：筆記變更、檔案變更、領域總覽、角色記憶；新筆記、任務、時段由各自的預覽處理，回傳空陣列。
+ * 搬移、複製、新增資料夾沒有內容可比，前後都記 null（riskOf 會判成高風險）。
+ */
+export function proposalChanges(proposal: Proposal): ContentChange[] {
+  const out: ContentChange[] = []
+  for (const edit of proposal.edits ?? []) out.push({ target: 'note', path: edit.path, before: edit.baseContent, after: edit.content })
+  if (proposal.change) {
+    const change = proposal.change
+    out.push({ target: 'note', path: change.path, ...fileChangeContents(change) })
+  }
+  for (const edit of proposal.domainEdits ?? []) out.push({ target: 'domain', path: edit.domainId, before: edit.baseOverview, after: edit.overview })
+  for (const edit of proposal.memoryEdits ?? []) {
+    if (edit.target === 'context') out.push({ target: 'memory', path: 'context', before: JSON.stringify(edit.baseContext, null, 2), after: JSON.stringify(edit.context, null, 2) })
+    else out.push({ target: 'memory', path: `${edit.agent.name}/${edit.target === 'rules' ? 'rules' : 'work_notes'}.md`, before: edit.baseContent, after: edit.content })
+  }
+  return out
+}
+
 function itemOrigin(item: CollectItemLike): string {
   const first = item.input.text.trim().split('\n')[0] ?? ''
   return item.input.name || Array.from(first).slice(0, 48).join('')
@@ -228,6 +258,7 @@ function projectCollect(items: CollectItemLike[], journal: JournalSnapshot | nul
       } else {
         preview = { type: 'journal', section: '', fileMissing: false, diff: { context: [], removed: [], added: [], hidden: 0 } }
       }
+      const changes = proposalChanges(proposal)
       const entry: DecideItem = {
         key,
         source: 'collect',
@@ -246,6 +277,7 @@ function projectCollect(items: CollectItemLike[], journal: JournalSnapshot | nul
         ...(proposal.card ? { card: proposal.card } : {}),
         ...(proposal.drafter ? { drafter: proposal.drafter } : {}),
         ...(proposal.edits?.length ? { notePaths: Array.from(new Set(proposal.edits.map(item => item.path))) } : {}),
+        ...(changes.length ? { changes } : {}),
       }
       seen.set(identity, entry)
       out.push(entry)
@@ -280,6 +312,8 @@ function projectDrafts(tasks: TaskLike[], workspace: string | undefined): Decide
         preview: { type: 'file', path: draft.path, targetPath: draft.targetPath, diff },
         duplicates: [],
         ...(organizeMerge ? { organizeMerge } : {}),
+        // Fork（almanac ALMNC-65.1）：草稿只改一個檔案。
+        changes: [{ target: 'note', path: draft.path, ...fileChangeContents(draft) }],
         ref: { source: 'draft', taskId: task.id, draftId: draft.id },
         status: 'wait',
         ...(task.conversationId !== undefined ? { conversationId: task.conversationId } : {}),
