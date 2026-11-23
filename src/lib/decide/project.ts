@@ -73,6 +73,10 @@ export interface DecideItem {
   rationale?: Proposal['rationale']
   /** Fork（almanac ALMNC-69.3）：「判斷為日誌」（接受時一起貼標籤）。 */
   journalTag?: Proposal['journalTag']
+  /** Fork（almanac ALMNC-65.2）：來源資料源（同一資料源的新知識筆記在工作台合成一張批次卡）。 */
+  sourceIds?: string[]
+  /** Fork（almanac ALMNC-65.2）：新增筆記的筆記類型（只有知識筆記合批）。 */
+  noteType?: Proposal['noteType']
 }
 
 export type DecideRef =
@@ -285,6 +289,8 @@ function projectCollect(items: CollectItemLike[], journal: JournalSnapshot | nul
         ...(proposal.drafter ? { drafter: proposal.drafter } : {}),
         ...(proposal.rationale ? { rationale: proposal.rationale } : {}),
         ...(proposal.journalTag ? { journalTag: proposal.journalTag } : {}),
+        ...(proposal.sourceIds?.length ? { sourceIds: [...proposal.sourceIds] } : {}),
+        ...(proposal.noteType ? { noteType: proposal.noteType } : {}),
         ...(proposal.edits?.length ? { notePaths: Array.from(new Set(proposal.edits.map(item => item.path))) } : {}),
         ...(changes.length ? { changes } : {}),
       }

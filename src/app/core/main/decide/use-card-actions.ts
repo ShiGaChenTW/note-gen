@@ -12,9 +12,9 @@ import { useAgentTaskStore } from '@/lib/agent-tasks'
 import { discussProposal, openConversation } from '@/lib/proposals/actions'
 import { dateKey } from '@/lib/today/today-model'
 import type { CardAction, WorkbenchCard } from '@/lib/workbench/cards'
-import { nextCursor } from '@/lib/workbench/cards'
+import { memberCard, nextCursor } from '@/lib/workbench/cards'
 import {
-  acceptCard, completeTask, confirmStillValid, confirmToCommander, deleteFailedSource, dropCard, pauseLegacy, processSource, rejectSource,
+  acceptBatchCard, acceptCard, completeTask, confirmStillValid, confirmToCommander, deleteFailedSource, dropCard, pauseLegacy, processSource, rejectSource,
   resolveLegacyPack, retryCapture, scheduleCardTask, startLegacy, type Undo,
 } from '@/lib/workbench/actions'
 import { currentUnmarkedLegacy } from '@/lib/workbench/use-workbench'
@@ -105,6 +105,37 @@ export function useCardActions({ visible, commanderName }: { visible: readonly W
     }
   }, [fail, record, visible])
 
+  /**
+   * Fork（almanac ALMNC-65.2）：批次卡「全部接受」。逐則寫入，某一則失敗不影響其他則；成功的記一筆可以 Z 復原，
+   * 失敗的另外報錯並留在清單上（剩兩則以上仍是批次卡，剩一則就變回單卡）。
+   */
+  const settleBatch = useCallback(async (card: WorkbenchCard) => {
+    const store = useWorkbenchStore.getState()
+    const next = nextCursor(visible, card.key)
+    store.setLeaving(card.key, true)
+    try {
+      await new Promise(resolve => setTimeout(resolve, LEAVE_MS))
+      const result = await acceptBatchCard(card)
+      const titles = result.failed.map(entry => `「${entry.item.title}」`).join('、')
+      for (const entry of result.failed) console.error('[workbench] batch item failed:', entry.item.key, entry.error)
+      if (!result.accepted.length) {
+        toast.error(t('toast.batchFailed', { titles }))
+        return
+      }
+      const state = useWorkbenchStore.getState()
+      if (!result.failed.length) {
+        if (state.cursor === card.key || state.cursor === null) state.setCursor(next)
+        if (state.expanded === card.key) state.setExpanded(next && state.expanded ? next : null)
+      }
+      record(t('toast.batchAccepted', { count: result.accepted.length }), result.undo, card.key)
+      if (result.failed.length) toast.error(t('toast.batchPartial', { count: result.failed.length, titles }))
+    } catch (error) {
+      fail(error)
+    } finally {
+      useWorkbenchStore.getState().setLeaving(card.key, false)
+    }
+  }, [fail, record, t, visible])
+
   const putAside = useCallback((card: WorkbenchCard, until?: string) => {
     const store = useWorkbenchStore.getState()
     const next = nextCursor(visible, card.key)
@@ -120,10 +151,19 @@ export function useCardActions({ visible, commanderName }: { visible: readonly W
     useWorkbenchStore.getState().openDesk(materials, card.key)
   }, [])
 
-  const run = useCallback(async (card: WorkbenchCard, action: CardAction, payload?: { note?: string, time?: string, choice?: string }) => {
+  const run = useCallback(async (card: WorkbenchCard, action: CardAction, payload?: { note?: string, time?: string, choice?: string, itemKey?: string }): Promise<unknown> => {
+    // Fork（almanac ALMNC-65.2）：批次卡裡逐則接受／退回：組回那一則的單卡，走原本的動作（toast、復原都一樣）。
+    if (card.kind === 'batch' && payload?.itemKey) {
+      const member = memberCard(card, payload.itemKey, Date.now())
+      if (!member || (action !== 'accept' && action !== 'drop')) return
+      return action === 'accept'
+        ? settle(member, () => acceptCard(member), t('toast.accepted', { title: member.title }))
+        : settle(member, () => dropCard(member), t('toast.dropped', { title: member.title }))
+    }
     const title = card.title
     switch (action) {
       case 'accept':
+        if (card.kind === 'batch') return settleBatch(card)
         return settle(card, () => acceptCard(card), t('toast.accepted', { title }))
       case 'drop':
         return settle(card, () => dropCard(card), t('toast.dropped', { title }))
@@ -207,7 +247,7 @@ export function useCardActions({ visible, commanderName }: { visible: readonly W
         if (card.conversationId !== undefined) await openConversation(card.conversationId)
         return
     }
-  }, [commanderName, decideT, fail, openDesk, settle, t])
+  }, [commanderName, decideT, fail, openDesk, settle, settleBatch, t])
 
   return { run, putAside, undo, openDesk }
 }

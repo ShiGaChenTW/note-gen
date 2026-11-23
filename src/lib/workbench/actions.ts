@@ -5,7 +5,8 @@ import type { DecideItem } from '@/lib/decide/project'
 import { acceptedFromDecide, logAcceptedProposal } from '@/lib/proposals/accepted-activity'
 import { LEGACY_NOTE_KIND, latestVersions, sourceKeys, type NewSourceInput, type Source } from '@/lib/v3-model/source'
 import { legacyProgress, type LegacyRunSummary } from '@/lib/migration/legacy'
-import useCollectStore from '@/stores/collect'
+import useCollectStore, { applyJournalTag } from '@/stores/collect'
+import { acceptEach } from './batch'
 import { newNoteChanges, type NewNoteChanges } from './new-note'
 import useWorkbenchStore from '@/stores/workbench'
 import type { WorkbenchCard, TaskLike } from './cards'
@@ -167,6 +168,35 @@ export async function acceptCard(card: WorkbenchCard): Promise<Undo> {
     return undefined
   }
   return undefined
+}
+
+export interface BatchAcceptResult {
+  accepted: DecideItem[]
+  failed: Array<{ item: DecideItem, error: unknown }>
+  /** 把這次接受成功的全部復原（每一則都能復原時才有）。 */
+  undo: Undo
+}
+
+/**
+ * Fork（almanac ALMNC-65.2）：批次卡「全部接受」——逐則寫入、逐則記活動紀錄，某一則失敗不影響其他則。
+ * 日誌標籤（ALMNC-69.3）不在每一則接受時貼，而是至少一則成功後替這批的資料源貼一次。
+ */
+export async function acceptBatchCard(card: WorkbenchCard): Promise<BatchAcceptResult> {
+  const items = card.batch ?? []
+  const outcome = await acceptEach(items, async item => {
+    const changes = await retargetedChanges(item)
+    const result = await acceptDecision(item, { journalTag: false })
+    await logAcceptedProposal(acceptedFromDecide(item, result.path, changes))
+    return result
+  })
+  const accepted = outcome.accepted.map(entry => entry.item)
+  const journalSources = accepted.filter(item => item.journalTag).flatMap(item => item.sourceIds ?? [])
+  if (journalSources.length) await applyJournalTag(journalSources).catch(error => console.error('[workbench] journal tag failed:', error))
+  const undos = outcome.accepted.map(entry => entry.value.undo)
+  const undo: Undo = undos.length && undos.every(Boolean)
+    ? async () => { for (const fn of [...undos].reverse()) await fn!() }
+    : undefined
+  return { accepted, failed: outcome.failed, undo }
 }
 
 /** Fork（almanac ALMNC-69.2）：收集來的新增筆記被 Scott 改過標題或位置時的差異（接受前算，記進活動紀錄）。 */
