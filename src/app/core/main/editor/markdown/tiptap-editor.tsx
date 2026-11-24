@@ -116,7 +116,7 @@ import useSettingStore from '@/stores/setting'
 import { useEditorOutlineStore } from '@/stores/editor-outline'
 import useSyncStore from '@/stores/sync'
 import useChatStore, { type PendingQuote } from '@/stores/chat'
-import { ArrowUp, Eye, Loader2, Minimize2, X } from 'lucide-react'
+import { ArrowUp, Eye, Loader2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { buildMobileSelectionContext, getMobileContextPrimaryActions, isMobileSelectionContextStale } from './mobile-selection-context'
@@ -138,8 +138,7 @@ import {
   type EditorViewPresentation,
 } from '@/lib/editor-layout-styles'
 import { FocusBlockExtension, useEditorFocusMode } from './editor-focus-mode'
-import { MarkdownSplitPreview } from './markdown-split-preview'
-import { useEditorFocusStore } from '@/stores/editor-focus'
+import { FocusModeControls } from './focus-mode-controls'
 import { getCanvasDragId, hasCanvasDragData } from '@/lib/canvas/canvas-dnd'
 import { canvasDocumentToPngFile } from '@/lib/canvas/static-export'
 import { isRecordTabPath } from '@/app/core/main/mark/mark-record-tab'
@@ -2525,7 +2524,6 @@ export function TipTapEditor({
   const tMermaid = useTranslations('editor.mermaid.templates')
   const tImage = useTranslations('editor.image')
   const tSourceMode = useTranslations('settings.editor.sourceMode')
-  const tViewModes = useTranslations('editor.viewModes')
   const tAgentDiff = useTranslations('agentDiffNavigation')
   const pendingQuote = useChatStore((state) => state.pendingQuote)
   const pendingSearchKeyword = useArticleStore((state) => state.pendingSearchKeyword)
@@ -2648,8 +2646,6 @@ export function TipTapEditor({
   })
   const viewPresentations = extendedViewModes ? EDITOR_VIEW_PRESENTATIONS : CLASSIC_EDITOR_VIEW_PRESENTATIONS
   const isLivePreview = viewPresentation === 'live'
-  const isSplitView = viewPresentation === 'split'
-  const [splitScrollRatio, setSplitScrollRatio] = useState(0)
   const pendingVisualPresentationRef = useRef<EditorViewPresentation | null>(null)
   useEffect(() => {
     if (!developerMode || !developerPerformanceInfo) return
@@ -2666,7 +2662,6 @@ export function TipTapEditor({
     active: isActive && scrollable && !isMobile && applyLayoutPreferences && isV3,
     containerRef: editorContainerRef,
   })
-  const setFocusMode = useEditorFocusStore((state) => state.setFocusMode)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const scrollContainerId = useId()
 
@@ -8090,19 +8085,7 @@ export function TipTapEditor({
           disabled={readOnly || !editable || isInitializingVisualContent}
         />
       )}
-      {focusModeActive ? (
-        <Button
-          type="button"
-          variant="ghost"
-          size="xs"
-          className="editor-focus-exit absolute right-3 top-3 z-40 text-muted-foreground"
-          title={tViewModes('focusHint')}
-          onClick={() => setFocusMode(false)}
-        >
-          <Minimize2 />
-          <span>{tViewModes('focusExit')}</span>
-        </Button>
-      ) : null}
+      {focusModeActive ? <FocusModeControls /> : null}
       {/* Fork（almanac ALMNC-56.2 V10）：編輯區的浮層在 V3 改用陰影 token（v3:shadow-*）；classic 維持 Tailwind 的 shadow-sm／md。 */}
       {developerMode && developerPerformanceInfo ? (
         <div className="pointer-events-none absolute left-3 top-3 z-40 rounded-md border bg-background/90 px-2.5 py-2 font-mono text-[11px] v3:text-xs leading-5 text-muted-foreground shadow-sm v3:shadow-float backdrop-blur">
@@ -8195,6 +8178,7 @@ export function TipTapEditor({
                 outlineOpen: !!outlineOpen,
                 outlinePosition,
                 contentInset,
+                v3: isV3,
               }),
             scrollable && effectiveViewMode !== 'source' && 'h-full',
             effectiveViewMode === 'source' && 'h-full min-h-0'
@@ -8262,19 +8246,19 @@ export function TipTapEditor({
                 </Button>
               </div>
             ) : null}
-            <div className={cn('flex min-h-0 min-w-0 flex-1', isSplitView && 'divide-x divide-line')}>
             <SourceMarkdownEditor
               key={activeFilePath}
               value={sourceMarkdown}
               editable={editable}
-              showLineNumbers={showSourceLineNumbers && !isLivePreview}
+              showLineNumbers={showSourceLineNumbers}
               lineWrapping={editorSourceWrap || isLivePreview}
               fontSize={(14 * contentTextScale) / 100}
               lineHeight={EDITOR_LINE_HEIGHT_VALUES[editorLineHeight]}
               ariaLabel={tSourceMode('source')}
-              className={cn('min-w-0 flex-1 select-text', isSplitView && 'basis-1/2')}
+              className="min-w-0 flex-1 select-text"
               livePreview={isLivePreview}
-              onScrollRatioChange={isSplitView ? setSplitScrollRatio : undefined}
+              writerStyle={isV3 && applyLayoutPreferences}
+              contentWidth={editorContentWidth}
               onChange={handleSourceMarkdownChange}
               onControllerChange={handleSourceControllerChange}
               onSelectionChange={handleSourceSelectionChange}
@@ -8285,15 +8269,6 @@ export function TipTapEditor({
               selection={sourceSelectionRef.current}
               remoteCursors={selfHostedMarkdownCursors}
             />
-            {isSplitView ? (
-              <MarkdownSplitPreview
-                markdown={sourceMarkdown}
-                scrollRatio={splitScrollRatio}
-                ariaLabel={tViewModes('splitPreview')}
-                className="min-w-0 flex-1 basis-1/2"
-              />
-            ) : null}
-            </div>
           </div>
         ) : (
           <>

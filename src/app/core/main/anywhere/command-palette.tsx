@@ -9,7 +9,7 @@ import { useTranslations } from 'next-intl'
 import { useTheme } from 'next-themes'
 import { toast } from 'sonner'
 import {
-  FileText, FolderInput, Inbox, House, MessageSquarePlus, MessageCircleQuestion, Moon, PanelLeft, PanelRight, Search, Settings, TabletSmartphone, BookmarkPlus,
+  FileText, FolderInput, Inbox, House, MessageSquarePlus, MessageCircleQuestion, Moon, PanelLeft, PanelRight, Search, Settings, TabletSmartphone, BookmarkPlus, Focus,
 } from 'lucide-react'
 import {
   Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandShortcut,
@@ -32,12 +32,13 @@ import { useSettingsDialogStore } from '@/stores/settings-dialog'
 import { useUiV3 } from '@/lib/fork-ui'
 import { isPinned } from '@/lib/eink/pins'
 import useEinkStore from '@/stores/eink'
+import { useEditorFocusStore } from '@/stores/editor-focus'
 import { toggleEinkPin } from '@/components/fork/eink-pin'
 import { isRecordTabPath } from '../mark/mark-record-tab'
 import { isCanvasTabPath } from '../canvas/canvas-tab'
 
 type CoreCommandId = 'ask' | 'newChat' | 'home' | 'collect' | 'inbox' | 'searchSidebar' | 'leftSidebar' | 'rightSidebar' | 'theme' | 'settings'
-  | 'einkPin' | 'einkUnpin' | 'readLater'
+  | 'einkPin' | 'einkUnpin' | 'readLater' | 'focusMode'
 
 const CORE_COMMAND_ICONS: Record<CoreCommandId, typeof Search> = {
   ask: MessageCircleQuestion,
@@ -53,8 +54,9 @@ const CORE_COMMAND_ICONS: Record<CoreCommandId, typeof Search> = {
   einkPin: TabletSmartphone,
   einkUnpin: TabletSmartphone,
   readLater: BookmarkPlus,
+  focusMode: Focus,
 }
-const CORE_COMMAND_SHORTCUT: Partial<Record<CoreCommandId, string>> = { ask: '⌘⇧A', home: '⌘⇧H' }
+const CORE_COMMAND_SHORTCUT: Partial<Record<CoreCommandId, string>> = { ask: '⌘⇧A', home: '⌘⇧H', focusMode: '⌘⇧D' }
 const CORE_COMMAND_ORDER: CoreCommandId[] = ['ask', 'newChat', 'home', 'collect', 'inbox', 'searchSidebar', 'leftSidebar', 'rightSidebar', 'theme', 'settings']
 const CORE_PREFIX = 'core:'
 const PLUGIN_PREFIX = 'plugin:'
@@ -85,6 +87,8 @@ export function AnywhereCommandPalette() {
     if (einkPinTarget) coreIds.push(einkPinned ? 'einkUnpin' : 'einkPin')
     // Fork（almanac ALMNC-46）：開啟稍後讀清單（設定 > 電子紙）
     if (v3) coreIds.push('readLater')
+    // Fork（almanac ALMNC-63）：開著 Markdown 筆記時才有專注模式（同 ⌘⇧D）
+    if (v3 && activeFilePath?.toLowerCase().endsWith('.md')) coreIds.push('focusMode')
     const core: PaletteItem[] = coreIds.map(id => ({
       id: `${CORE_PREFIX}${id}`,
       kind: 'command',
@@ -112,7 +116,7 @@ export function AnywhereCommandPalette() {
       })
     }
     return [...core, ...plugins, ...noteItems]
-  }, [notes, pluginCommands, t, einkPinTarget, einkPinned, v3])
+  }, [notes, pluginCommands, t, einkPinTarget, einkPinned, v3, activeFilePath])
 
   const sections = useMemo(() => buildPaletteSections(items, query), [items, query])
   const byId = useMemo(() => new Map(pluginCommands.map(command => [`${PLUGIN_PREFIX}${command.id}`, command])), [pluginCommands])
@@ -138,6 +142,7 @@ export function AnywhereCommandPalette() {
         if (einkPinTarget) await toggleEinkPin(einkPinTarget, { pinned: tEink('pinned'), unpinned: tEink('unpinned') })
         break
       case 'readLater': useSettingsDialogStore.getState().openSettings('eink'); break
+      case 'focusMode': useEditorFocusStore.getState().toggleFocusMode(); break
     }
   }, [resolvedTheme, setTheme, einkPinTarget, tEink])
 

@@ -38,6 +38,35 @@
   src: url("/fonts/fira-code-latin-wght-normal.woff2") format("woff2-variations");
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
+/* 原始碼模式（iA Writer 風格）用；授權見 public/fonts/LICENSE-iAWriterDuo.md（OFL） */
+@font-face {
+  font-family: "iA Writer Duo S";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/ia-writer-duo-s-regular.woff2") format("woff2");
+}
+@font-face {
+  font-family: "iA Writer Duo S";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/ia-writer-duo-s-bold.woff2") format("woff2");
+}
+@font-face {
+  font-family: "iA Writer Duo S";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/ia-writer-duo-s-italic.woff2") format("woff2");
+}
+@font-face {
+  font-family: "iA Writer Duo S";
+  font-style: italic;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/ia-writer-duo-s-bolditalic.woff2") format("woff2");
+}
 @font-face {
   font-family: "Inter";
   font-weight: 100 449;

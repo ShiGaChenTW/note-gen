@@ -17,6 +17,7 @@ mod document_parser;
 // Fork（almanac ALMNC-50）：電子紙的區網服務（和本機 MCP 分開，預設關閉）
 mod eink_lan;
 mod file_open;
+mod focus_window;
 mod fonts;
 mod fuzzy_search;
 mod git_versions;
@@ -215,6 +216,7 @@ fn main() {
             open_developer_tools,
             close_developer_tools,
             is_developer_tools_open,
+            focus_window::focus_window_animate,
             screenshot::screenshot,
             screenshot::cleanup_screenshot_cache,
             screenshot::begin_desktop_screenshot,

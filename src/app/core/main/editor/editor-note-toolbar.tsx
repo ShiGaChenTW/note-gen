@@ -1,7 +1,7 @@
 'use client'
 
 // Fork（almanac）：V3 編輯區右上角的筆記工具列（原本只有復原／重做）。V3 沒有分頁列、一次只開一篇，classic 不掛這個元件。
-// 由左到右四組：[返回 前進] | [尋找 標籤 置頂 收藏] | [大綱 版本歷史 筆記資訊 命令面板] | [復原 重做]。
+// 由左到右四組：[返回 前進] | [尋找 標籤 置頂 收藏] | [編輯區寬度 專注模式 大綱 版本歷史 筆記資訊 命令面板] | [復原 重做]。
 // - 返回／前進：editor-layout 既有的瀏覽歷史（⌘[／⌘]、Alt+←／→ 同一套），由 props 傳入。
 // - 尋找：送 editor-search-trigger（同 ⌘F 與狀態列）。大綱：使用中編輯器登記的 toggleOutline（同狀態列「大綱」）。
 // - 版本歷史：送 editor-open-version-history，打開狀態列上同一個版本歷史面板。命令面板：同側欄「搜尋或下指令」。
@@ -15,7 +15,7 @@
 // 之後這篇回到一般筆記的「送給指揮官」。
 import { useEffect, useMemo, useRef, useState, type ReactNode, type Ref } from 'react'
 import {
-  ArrowLeft, ArrowRight, ArrowUpToLine, Check, Ellipsis, FileText, Hash, Heart, History, ListTree, Redo2, Send, SquareSlash,
+  ArrowLeft, ArrowRight, ArrowUpToLine, Check, Ellipsis, FileText, Focus, Hash, Heart, History, ListTree, MoveHorizontal, Redo2, Send, SquareSlash,
   TextSearch, Undo2, X,
 } from 'lucide-react'
 import { platform } from '@tauri-apps/plugin-os'
@@ -23,8 +23,8 @@ import { useEditorState, type Editor } from '@tiptap/react'
 import { useLocale, useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import {
-  DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
-  DropdownMenuShortcut, DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup,
+  DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -32,6 +32,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { ToolbarDivider, ToolbarIconButton, useRovingToolbar } from '@/components/v3/toolbar'
 import { useAnywhereStore } from '@/lib/anywhere/store'
 import { getEditorStatistics } from '@/lib/editor-statistics'
+import { normalizeEditorContentWidth, V3_EDITOR_CONTENT_WIDTHS, type EditorContentWidth } from '@/lib/editor-layout-styles'
 import emitter from '@/lib/emitter'
 import type { PropertyType } from '@/lib/markdown/frontmatter-edit'
 import { noteFolder } from '@/lib/note-list/note-list'
@@ -45,6 +46,8 @@ import { useActiveNoteEditorStore } from '@/stores/active-note-editor'
 import useEditorShortcutStore from '@/stores/editor-shortcut'
 import useNoteMarksStore, { selectWorkspaceMarks, type NoteMarkKind } from '@/stores/note-marks'
 import useSettingStore from '@/stores/setting'
+import { useEditorFocusStore } from '@/stores/editor-focus'
+import { focusModeShortcutLabel } from './markdown/editor-focus-mode'
 import { formatShortcutLabel } from './markdown/bottom-format-toolbar-items'
 import { WIKI_METADATA_NODE_NAME } from './markdown/wiki-metadata-tokenizer'
 import { useEditorUndoRedo } from './editor-undo-redo'
@@ -101,6 +104,48 @@ function ToolbarButton({ label, icon, onClick, disabled, pressed, buttonRef, wra
   )
 }
 
+const WIDTH_LABEL_KEYS: Record<EditorContentWidth, 'widthNarrow' | 'widthWide' | 'widthFull' | null> = {
+  narrow: 'widthNarrow',
+  standard: null,
+  wide: 'widthWide',
+  full: 'widthFull',
+}
+
+/** 編輯區寬度三選一（窄／較寬／最寬）；寫回設定裡的 editorContentWidth，視覺編輯器與原始碼模式都跟著變。 */
+function WidthRadioItems() {
+  const t = useTranslations('editor.noteToolbar')
+  const width = useSettingStore(state => state.editorContentWidth)
+  return (
+    <DropdownMenuRadioGroup
+      value={width}
+      onValueChange={(next) => {
+        const value = normalizeEditorContentWidth(next)
+        if (value !== width) void useSettingStore.getState().setEditorContentWidth(value)
+      }}
+    >
+      {V3_EDITOR_CONTENT_WIDTHS.map(option => (
+        <DropdownMenuRadioItem key={option} value={option}>{t(WIDTH_LABEL_KEYS[option] ?? 'widthNarrow')}</DropdownMenuRadioItem>
+      ))}
+    </DropdownMenuRadioGroup>
+  )
+}
+
+function WidthButton({ label }: { label: string }) {
+  return (
+    <DropdownMenu>
+      <ToolbarButton
+        label={label}
+        icon={<MoveHorizontal />}
+        wrap={button => <DropdownMenuTrigger asChild>{button}</DropdownMenuTrigger>}
+      />
+      <DropdownMenuContent align="end" collisionPadding={8} className="min-w-36">
+        <DropdownMenuLabel>{label}</DropdownMenuLabel>
+        <WidthRadioItems />
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
 /** 「完成」：帶字的按鈕（比圖示鈕顯眼，這篇寫完就按它）；仍是工具列的一員（roving tabindex）。 */
 function DoneButton({ label, hint, disabled, onClick }: { label: string, hint: string, disabled?: boolean, onClick: () => void }) {
   return (
@@ -129,6 +174,8 @@ export function EditorNoteToolbar({ activeTab, isActiveGroup, canGoBack, canGoFo
   const tTab = useTranslations('tabContext')
   const tOutline = useTranslations('editor.outline')
   const tHistory = useTranslations('versionHistory')
+  const tViewModes = useTranslations('editor.viewModes')
+  const focusMode = useEditorFocusStore(state => state.focusMode)
   const showEditorUndoRedo = useSettingStore(state => state.showEditorUndoRedo)
   const workspacePath = useSettingStore(state => state.workspacePath)
   const outlineShortcut = useEditorShortcutStore(state => state.shortcuts.find(item => item.id === 'toggleOutline')?.value ?? '')
@@ -171,6 +218,7 @@ export function EditorNoteToolbar({ activeTab, isActiveGroup, canGoBack, canGoFo
     favorite: favorite ? t('unfavorite') : t('favorite'),
     outline: withShortcut(noteEditor?.outlineOpen ? tOutline('close') : tOutline('open'), formatShortcutLabel(outlineShortcut, mac)),
     history: tHistory('title'),
+    focus: withShortcut(tViewModes('focus'), focusModeShortcutLabel(mac)),
     info: t('info'),
     command: withShortcut(t('command'), paletteShortcut),
     undo: `${tTab('undo')} (${mod}Z)`,
@@ -260,6 +308,12 @@ export function EditorNoteToolbar({ activeTab, isActiveGroup, canGoBack, canGoFo
               >
                 {isNote ? (
                   <>
+                    <DropdownMenuLabel>{t('width')}</DropdownMenuLabel>
+                    <WidthRadioItems />
+                    <DropdownMenuSeparator />
+                    <DropdownMenuCheckboxItem checked={focusMode} onSelect={() => useEditorFocusStore.getState().toggleFocusMode()}>
+                      <Focus />{tViewModes('focus')}<DropdownMenuShortcut>{focusModeShortcutLabel(mac)}</DropdownMenuShortcut>
+                    </DropdownMenuCheckboxItem>
                     <DropdownMenuCheckboxItem checked={Boolean(noteEditor?.outlineOpen)} disabled={!noteEditor} onSelect={toggleOutline}>
                       <ListTree />{tOutline('title')}
                       {formatShortcutLabel(outlineShortcut, mac) ? <DropdownMenuShortcut>{formatShortcutLabel(outlineShortcut, mac)}</DropdownMenuShortcut> : null}
@@ -282,6 +336,8 @@ export function EditorNoteToolbar({ activeTab, isActiveGroup, canGoBack, canGoFo
             <>
               {isNote ? (
                 <>
+                  <WidthButton label={t('width')} />
+                  <ToolbarButton label={labels.focus} icon={<Focus />} pressed={focusMode} onClick={() => useEditorFocusStore.getState().toggleFocusMode()} />
                   <ToolbarButton label={labels.outline} icon={<ListTree />} pressed={Boolean(noteEditor?.outlineOpen)} disabled={!noteEditor} onClick={toggleOutline} />
                   <ToolbarButton label={labels.history} icon={<History />} onClick={openHistory} />
                   <ToolbarButton label={labels.info} icon={<FileText />} wrap={button => <PopoverTrigger asChild>{button}</PopoverTrigger>} />

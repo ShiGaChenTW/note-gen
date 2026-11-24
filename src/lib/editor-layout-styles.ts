@@ -38,10 +38,11 @@ export function normalizeEditorViewMode(value: unknown): EditorViewMode {
 }
 
 // Fork（almanac ALMNC-63）：使用者看到的五種檢視。底層仍只有兩個引擎：
-// Tiptap（visual：wysiwyg、reading）與 CodeMirror（source：markup、live、split）。
-export type EditorViewPresentation = 'markup' | 'live' | 'split' | 'reading' | 'wysiwyg'
+// Tiptap（visual：wysiwyg、reading）與 CodeMirror（source：markup、live）。
+// 並排預覽（split）已拿掉：舊設定讀到 'split' 時改成 Live Preview。選單順序：預設的 WYSIWYG 在最前面。
+export type EditorViewPresentation = 'markup' | 'live' | 'reading' | 'wysiwyg'
 
-export const EDITOR_VIEW_PRESENTATIONS: readonly EditorViewPresentation[] = ['markup', 'live', 'split', 'reading', 'wysiwyg']
+export const EDITOR_VIEW_PRESENTATIONS: readonly EditorViewPresentation[] = ['wysiwyg', 'reading', 'live', 'markup']
 /** classic 介面只有原本的兩種。 */
 export const CLASSIC_EDITOR_VIEW_PRESENTATIONS: readonly EditorViewPresentation[] = ['markup', 'wysiwyg']
 
@@ -60,6 +61,7 @@ export function presentationForEngine(mode: EditorViewMode): EditorViewPresentat
 /** 沒存過檢視時，從舊的 editorViewMode 推出來。 */
 export function normalizeEditorViewPresentation(value: unknown, legacyMode?: unknown): EditorViewPresentation {
   if (isEditorViewPresentation(value)) return value
+  if (value === 'split') return 'live'
   return presentationForEngine(normalizeEditorViewMode(legacyMode))
 }
 
@@ -82,6 +84,8 @@ export function getEditorContentContainerClass(options: {
   outlineOpen?: boolean
   outlinePosition?: 'left' | 'right'
   contentInset?: boolean
+  /** Fork（almanac）：V3 的「最寬」兩邊只留 20px（classic 維持 px-10） */
+  v3?: boolean
 }) {
   if (options.contentInset === false) {
     return ''
@@ -91,5 +95,12 @@ export function getEditorContentContainerClass(options: {
     return ''
   }
 
+  if (options.v3 && options.contentWidth === 'full') {
+    return 'px-5'
+  }
+
   return EDITOR_CONTENT_WIDTH_CLASSES[options.contentWidth]
 }
+
+/** Fork（almanac）：V3 筆記工具列給的三種寬度（設定頁仍有四種，standard 只在那裡選得到）。 */
+export const V3_EDITOR_CONTENT_WIDTHS: readonly EditorContentWidth[] = ['narrow', 'wide', 'full']

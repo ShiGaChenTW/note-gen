@@ -62,6 +62,9 @@ importers:
       '@json-render/react':
         specifier: 0.21.3
         version: 0.21.3(react@19.2.3)(zod@4.3.6)
+      '@lezer/highlight':
+        specifier: ^1.2.1
+        version: 1.2.1
       '@mozilla/readability':
         specifier: ^0.6.0
         version: 0.6.0

@@ -11,6 +11,8 @@ import {
   WidgetType,
 } from '@codemirror/view'
 
+import { frontmatterEnd } from './source-writer-style'
+
 const hidden = Decoration.replace({})
 const strongMark = Decoration.mark({ class: 'cm-lp-strong' })
 const emphasisMark = Decoration.mark({ class: 'cm-lp-em' })
@@ -117,11 +119,14 @@ export function buildLivePreviewDecorations(
     }
   }
 
+  // frontmatter 原樣顯示（開頭的 --- 不畫成分隔線、結尾的 --- 不當標題底線）
+  const fmEnd = frontmatterEnd(state)
   for (const { from, to } of ranges) {
     syntaxTree(state).iterate({
       from,
       to,
       enter: (node) => {
+        if (node.from <= fmEnd) return node.to > fmEnd
         const name = node.name
         const heading = /^ATXHeading([1-6])$/.exec(name)
         if (heading) {
@@ -224,7 +229,7 @@ export function buildLivePreviewDecorations(
     for (const match of text.matchAll(WIKILINK_PATTERN)) {
       const start = from + (match.index ?? 0)
       const end = start + match[0].length
-      if (isActive(start)) continue
+      if (start <= fmEnd || isActive(start)) continue
       if (match[2]) {
         hide(start, start + 2 + match[1].length + 1)
         decorations.push(linkMark.range(end - 2 - match[2].length, end - 2))
@@ -237,6 +242,7 @@ export function buildLivePreviewDecorations(
     for (const match of text.matchAll(STRIKETHROUGH_PATTERN)) {
       const start = from + (match.index ?? 0)
       const end = start + match[0].length
+      if (start <= fmEnd) continue
       decorations.push(strikeMark.range(start, end))
       if (isActive(start)) continue
       hide(start, start + 2)
@@ -264,37 +270,32 @@ const livePreviewPlugin = ViewPlugin.fromClass(class {
   decorations: plugin => plugin.decorations,
 })
 
+// 字型、標題字級、符號顏色都沿用原始碼模式（V3 的 iA Writer 風格，source-writer-style.ts），
+// 切換 Markup ↔ Live Preview 時版面不跳；這裡只負責「藏起符號後」需要的樣式。
 const livePreviewTheme = EditorView.baseTheme({
-  '&.cm-editor.cm-lp .cm-content': { fontFamily: 'var(--font-sans, inherit)' },
-  '.cm-lp-heading': { fontWeight: '650', lineHeight: '1.35' },
-  '.cm-lp-h1': { fontSize: '1.75em' },
-  '.cm-lp-h2': { fontSize: '1.45em' },
-  '.cm-lp-h3': { fontSize: '1.25em' },
-  '.cm-lp-h4': { fontSize: '1.1em' },
-  '.cm-lp-h5, .cm-lp-h6': { fontSize: '1em' },
+  '.cm-lp-heading': { fontWeight: '700' },
   '.cm-lp-strong': { fontWeight: '700' },
   '.cm-lp-em': { fontStyle: 'italic' },
   '.cm-lp-strike': { textDecoration: 'line-through' },
   '.cm-lp-code': {
-    fontFamily: 'var(--font-mono, ui-monospace, monospace)',
-    fontSize: '0.92em',
-    backgroundColor: 'var(--color-sunken, rgba(127,127,127,0.12))',
+    backgroundColor: 'var(--hover, rgba(127,127,127,0.12))',
     borderRadius: '3px',
     padding: '0 2px',
   },
   '.cm-lp-link': { color: 'var(--brand-accent, var(--color-primary))', textDecoration: 'underline', textUnderlineOffset: '2px' },
   '.cm-lp-syntax': { opacity: '0.55' },
+  // 引言色條畫在懸掛區裡（> 的右邊），內文左緣不動
   '.cm-lp-quote': {
-    borderLeft: '3px solid var(--brand-accent, var(--color-border))',
-    paddingLeft: '12px !important',
-    color: 'var(--color-muted-foreground, inherit)',
+    backgroundImage: 'linear-gradient(var(--brand-accent, currentColor), var(--brand-accent, currentColor))',
+    backgroundSize: '2px 100%',
+    backgroundPosition: 'calc(3em - 0.6em) 0',
+    backgroundRepeat: 'no-repeat',
+    color: 'var(--muted-ink, inherit)',
   },
   '.cm-lp-codeblock': {
-    fontFamily: 'var(--font-mono, ui-monospace, monospace)',
-    fontSize: '0.92em',
-    backgroundColor: 'var(--color-sunken, rgba(127,127,127,0.08))',
+    backgroundColor: 'var(--hover, rgba(127,127,127,0.08))',
   },
-  '.cm-lp-bullet': { display: 'inline-block', width: '0.8em', color: 'var(--color-muted-foreground, inherit)' },
+  '.cm-lp-bullet': { display: 'inline-block', width: '0.8em', color: 'var(--faint, inherit)' },
   '.cm-lp-checkbox': { margin: '0 0.4em 0 0', verticalAlign: 'middle', cursor: 'pointer' },
   '.cm-lp-image': { display: 'block', maxWidth: '100%', maxHeight: '24em', margin: '4px 0', borderRadius: '4px' },
   '.cm-lp-rule': { display: 'inline-block', width: '100%', borderTop: '1px solid var(--color-border, currentColor)', verticalAlign: 'middle' },

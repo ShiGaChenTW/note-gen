@@ -7084,6 +7084,10 @@
       "more": "更多格式"
     },
     "noteToolbar": {
+      "width": "编辑区宽度",
+      "widthNarrow": "窄",
+      "widthWide": "较宽",
+      "widthFull": "最宽",
       "label": "笔记工具栏",
       "back": "返回",
       "forward": "前进",
@@ -7513,20 +7517,25 @@
       "menuTitle": "切换视图",
       "markup": "源码",
       "live": "实时预览",
-      "split": "并排预览",
       "reading": "阅读",
-      "wysiwyg": "所见即所得",
+      "wysiwyg": "WYSIWYG",
       "desc": {
         "markup": "直接编辑 Markdown 原文",
         "live": "光标所在行显示符号，其他行直接套用样式",
-        "split": "左边源码、右边实时预览",
         "reading": "只看不改的排版画面",
         "wysiwyg": "像文字处理软件一样编辑"
       },
       "focus": "专注模式",
       "focusExit": "退出专注模式",
-      "focusHint": "按 Esc 退出",
-      "splitPreview": "预览"
+      "focusWidth": "宽度",
+      "focusWidthNarrow": "窄",
+      "focusWidthWide": "较宽",
+      "focusWidthFull": "最宽",
+      "focusBlur": "模糊",
+      "focusBlurLight": "轻",
+      "focusBlurMedium": "中",
+      "focusBlurStrong": "重",
+      "focusHint": "按 Esc 或 {shortcut} 退出"
     }
   },
   "editorWindow": {
@@ -8581,6 +8590,10 @@
       "einkUnpin": {
         "title": "取消电子纸钉选",
         "keywords": "eink,unpin,电子纸,取消钉选"
+      },
+      "focusMode": {
+        "title": "专注模式",
+        "keywords": "专注,写作,全屏,focus,zen"
       },
       "readLater": {
         "title": "打开稍后读清单",

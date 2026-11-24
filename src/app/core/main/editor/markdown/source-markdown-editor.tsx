@@ -26,6 +26,7 @@ import {
   Compartment,
   EditorState,
   MapMode,
+  Prec,
   StateEffect,
   StateField,
   Transaction,
@@ -46,8 +47,10 @@ import {
 } from '@codemirror/view'
 import { useEffect, useRef } from 'react'
 import { cn } from '@/lib/utils'
+import type { EditorContentWidth } from '@/lib/editor-layout-styles'
 import { buildTextEdits } from '@/lib/agent/text-diff'
 import { livePreviewExtension } from './source-live-preview'
+import { writerStyleExtension } from './source-writer-style'
 import { sourceMarkdownLanguage } from './source-markdown-language'
 
 export interface SourceMarkdownRemoteCursor {
@@ -79,8 +82,10 @@ interface SourceMarkdownEditorProps {
   className?: string
   /** Fork（almanac ALMNC-63）：游標不在的行藏起 Markdown 符號 */
   livePreview?: boolean
-  /** Fork（almanac ALMNC-63）：Split 檢視用來同步右側預覽的捲動 */
-  onScrollRatioChange?: (ratio: number) => void
+  /** Fork（almanac）：V3 的 iA Writer 風格（只對 Markdown 生效） */
+  writerStyle?: boolean
+  /** Fork（almanac）：iA Writer 風格的內容寬度（跟視覺編輯器的編輯區寬度同一個設定） */
+  contentWidth?: EditorContentWidth
 }
 
 export interface SourceMarkdownEditorController {
@@ -392,7 +397,8 @@ export function SourceMarkdownEditor({
   ariaLabel,
   className,
   livePreview = false,
-  onScrollRatioChange,
+  writerStyle = false,
+  contentWidth = 'narrow',
 }: SourceMarkdownEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const viewRef = useRef<EditorView | null>(null)
@@ -412,8 +418,7 @@ export function SourceMarkdownEditor({
   const themeCompartmentRef = useRef(new Compartment())
   const attributesCompartmentRef = useRef(new Compartment())
   const livePreviewCompartmentRef = useRef(new Compartment())
-  const onScrollRatioChangeRef = useRef(onScrollRatioChange)
-  onScrollRatioChangeRef.current = onScrollRatioChange
+  const writerStyleCompartmentRef = useRef(new Compartment())
 
   useEffect(() => {
     onChangeRef.current = onChange
@@ -474,6 +479,9 @@ export function SourceMarkdownEditor({
           highlightActiveLine(),
           highlightSelectionMatches(),
           livePreviewCompartmentRef.current.of(livePreview && language === 'markdown' ? livePreviewExtension() : []),
+          writerStyleCompartmentRef.current.of(
+            writerStyle && language === 'markdown' ? Prec.highest(writerStyleExtension(contentWidth)) : []
+          ),
           keymap.of([indentWithTab, ...defaultKeymap, ...historyKeymap, ...searchKeymap]),
           editableCompartmentRef.current.of([
             EditorState.readOnly.of(!editable),
@@ -520,12 +528,6 @@ export function SourceMarkdownEditor({
     const handleBlur = () => onFocusChangeRef.current?.(false)
     view.contentDOM.addEventListener('focus', handleFocus)
     view.contentDOM.addEventListener('blur', handleBlur)
-    const handleScroll = () => {
-      const scroller = view.scrollDOM
-      const max = scroller.scrollHeight - scroller.clientHeight
-      onScrollRatioChangeRef.current?.(max > 0 ? scroller.scrollTop / max : 0)
-    }
-    view.scrollDOM.addEventListener('scroll', handleScroll, { passive: true })
     let restoreScrollFrame = window.requestAnimationFrame(() => {
       restoreScrollFrame = 0
       view.scrollDOM.scrollTop = initialScrollTop
@@ -634,7 +636,6 @@ export function SourceMarkdownEditor({
     return () => {
       view.contentDOM.removeEventListener('focus', handleFocus)
       view.contentDOM.removeEventListener('blur', handleBlur)
-      view.scrollDOM.removeEventListener('scroll', handleScroll)
       if (restoreScrollFrame) window.cancelAnimationFrame(restoreScrollFrame)
       const finalSelection = view.state.selection.main
       const finalSnapshot = view.state.field(sourceSnapshotField)
@@ -671,6 +672,16 @@ export function SourceMarkdownEditor({
       ),
     })
   }, [language, livePreview])
+
+  useEffect(() => {
+    const view = viewRef.current
+    if (!view) return
+    view.dispatch({
+      effects: writerStyleCompartmentRef.current.reconfigure(
+        writerStyle && language === 'markdown' ? Prec.highest(writerStyleExtension(contentWidth)) : []
+      ),
+    })
+  }, [contentWidth, language, writerStyle])
 
   useEffect(() => {
     const view = viewRef.current
