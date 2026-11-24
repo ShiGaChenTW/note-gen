@@ -1,0 +1,39 @@
+/* Spike（almanac ALMNC-77）：TipTap 對話輸入框。高度、字級沿用舊 Textarea 的 class，這裡只補 contenteditable 需要的部分。 */
+.chat-composer-tiptap {
+  overflow-y: auto;
+}
+
+.chat-composer-tiptap .chat-composer-tiptap-content {
+  outline: none;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.chat-composer-tiptap .chat-composer-tiptap-content p {
+  margin: 0;
+}
+
+.chat-composer-tiptap .chat-composer-tiptap-content p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: hsl(var(--muted-foreground));
+}
+
+:where([data-ui="v3"]) .chat-composer-tiptap .chat-composer-tiptap-content p.is-editor-empty:first-child::before {
+  color: var(--faint);
+}
+
+.chat-composer-tiptap .composer-mention {
+  display: inline-block;
+  line-height: 1.35;
+  white-space: nowrap;
+  user-select: all;
+}
+
+/* Backspace 第一下選取膠囊時的提示。 */
+.chat-composer-tiptap .composer-mention.ProseMirror-selectednode {
+  outline: 1px solid hsl(var(--ring));
+  outline-offset: 1px;
+}

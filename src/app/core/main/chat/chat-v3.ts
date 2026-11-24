@@ -12,3 +12,14 @@ export function isChatModeShortcut(
     && !menuOpen && !composing && !event.nativeEvent.isComposing && event.keyCode !== 229
     && !event.shiftKey && !event.altKey && !event.ctrlKey && !event.metaKey && !event.defaultPrevented
 }
+
+// Spike（almanac ALMNC-77）：TipTap 輸入框拿到的是原生 KeyboardEvent，條件與上面相同。
+export function isChatModeShortcutKey(
+  event: globalThis.KeyboardEvent,
+  menuOpen: boolean,
+  composing: boolean,
+) {
+  return event.key === 'Tab' && !event.repeat
+    && !menuOpen && !composing && !event.isComposing && event.keyCode !== 229
+    && !event.shiftKey && !event.altKey && !event.ctrlKey && !event.metaKey && !event.defaultPrevented
+}

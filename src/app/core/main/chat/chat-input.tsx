@@ -22,7 +22,15 @@ import { ImageAttachments, ImageAttachment } from "./image-attachments"
 import { ImageIcon, Sparkles } from "lucide-react"
 import { isMobileDevice } from '@/lib/check'
 import type { PendingQuote } from "@/stores/chat"
-import { isChatModeShortcut, useChatV3 } from "./chat-v3"
+import { isChatModeShortcut, isChatModeShortcutKey, useChatV3 } from "./chat-v3"
+import {
+  TiptapChatComposer,
+  type TiptapChatComposerHandle,
+  type TiptapComposerCaret,
+} from "./tiptap-composer/tiptap-chat-composer"
+import { TIPTAP_COMPOSER_FLAG } from "./tiptap-composer/flag"
+import { mentionAttrsFromContext } from "./tiptap-composer/mention-context"
+import type { SerializedComposer } from "./tiptap-composer/serialize"
 import { KbdHint } from '@/components/v3/kbd-hint'
 import { COMPOSER_FIELD, COMPOSER_FRAME } from '@/components/v3/composer-styles'
 import { AgentPermissionModeSelect, ChatModeSwitch } from "./agent-permission-mode"
@@ -120,6 +128,17 @@ function createImageAttachmentId(prefix: string) {
 
 export const ChatInput = React.memo(function ChatInput() {
   const [text, setText] = useState("")
+  // Spike（almanac ALMNC-77）：開了旗標時由 TipTap 輸入框管理內容，text 只是它序列化後的鏡像。
+  const tiptapComposerRef = useRef<TiptapChatComposerHandle>(null)
+  const mentionRegistryRef = useRef(new Map<string, MentionedContext>())
+  const setComposerText = useCallback((value: string) => {
+    setText(value)
+    tiptapComposerRef.current?.setText(value)
+  }, [])
+  const focusComposer = useCallback(() => {
+    textareaRef.current?.focus()
+    tiptapComposerRef.current?.focus()
+  }, [])
   const pluginDraftRef = useRef(text)
   pluginDraftRef.current = text
   useEffect(() => registerPluginChatComposer(options => {
@@ -128,9 +147,9 @@ export const ChatInput = React.memo(function ChatInput() {
     const next = options.mode === 'replace' ? options.text : current + options.text
     if (next.length > 20_000) throw new PluginError('QuotaExceeded', 'Chat draft exceeds its length limit')
     pluginDraftRef.current = next
-    setText(next)
-    requestAnimationFrame(() => textareaRef.current?.focus())
-  }), [])
+    setComposerText(next)
+    requestAnimationFrame(() => focusComposer())
+  }), [focusComposer, setComposerText])
 
   const v3 = useChatV3()
   const { primaryModel, agentPermissionMode, setAgentPermissionMode } = useSettingStore()
@@ -164,6 +183,9 @@ export const ChatInput = React.memo(function ChatInput() {
     openTabs,
   } = useArticleStore()
   const isMobile = useIsMobile()
+  // Spike（almanac ALMNC-77）：localStorage 旗標切換新舊輸入框；手機版維持 Textarea（理由見評估報告）。
+  const [tiptapComposerFlag] = useLocalStorage<boolean>(TIPTAP_COMPOSER_FLAG, false)
+  const tiptapComposerEnabled = Boolean(tiptapComposerFlag) && !isMobile
   const [lockedKeys, setLockedKeys] = useState<string[]>([])
   const [autoLinkRevision, setAutoLinkRevision] = useState(0)
   const lockedKeysRef = useRef(lockedKeys)
@@ -444,6 +466,7 @@ export const ChatInput = React.memo(function ChatInput() {
 
   const applyTypedText = useCallback((value: string) => {
     setText(value)
+    tiptapComposerRef.current?.setText(value)
 
     const textarea = textareaRef.current
     if (!textarea) {
@@ -494,6 +517,10 @@ export const ChatInput = React.memo(function ChatInput() {
   }
 
   function openComposerMenu(mode: 'resource' | 'skill') {
+    if (tiptapComposerRef.current) {
+      tiptapComposerRef.current.openMenu(mode)
+      return
+    }
     const textarea = textareaRef.current
     const start = textarea?.selectionEnd ?? text.length
     const prefix = start > 0 && !/\s/.test(text[start - 1]) ? ' ' : ''
@@ -510,11 +537,17 @@ export const ChatInput = React.memo(function ChatInput() {
 
   function closeComposerMenu() {
     setComposerMenu(null)
-    window.requestAnimationFrame(() => textareaRef.current?.focus())
+    tiptapComposerRef.current?.closeMenu()
+    window.requestAnimationFrame(() => focusComposer())
   }
 
   function replaceComposerMenuToken(replacement = '') {
     if (!composerMenu) return
+    if (tiptapComposerRef.current) {
+      tiptapComposerRef.current.replaceMenuToken(replacement)
+      setComposerMenu(null)
+      return
+    }
 
     const tokenEnd = composerMenu.start + composerMenu.query.length + 1
     const nextText = `${text.slice(0, composerMenu.start)}${replacement}${text.slice(tokenEnd)}`
@@ -533,6 +566,10 @@ export const ChatInput = React.memo(function ChatInput() {
   }
 
   function insertTextAtCursor(toInsert: string) {
+    if (tiptapComposerRef.current) {
+      tiptapComposerRef.current.insertText(toInsert)
+      return
+    }
     const textarea = textareaRef.current
     const start = textarea?.selectionStart ?? text.length
     const end = textarea?.selectionEnd ?? text.length
@@ -637,9 +674,9 @@ export const ChatInput = React.memo(function ChatInput() {
 
     if (newIndex === -1) {
       // 恢复到原本输入的内容
-      setText(tempInput)
+      setComposerText(tempInput)
     } else {
-      setText(inputHistory[newIndex])
+      setComposerText(inputHistory[newIndex])
     }
   }
 
@@ -812,7 +849,8 @@ export const ChatInput = React.memo(function ChatInput() {
       removeSkill(lastSkill.id)
       return true
     }
-    const lastMentionedContext = visibleMentionedContexts.at(-1)
+    // TipTap 版的 @ 提及是句中的膠囊，用 Backspace 直接刪，不在這裡移除。
+    const lastMentionedContext = tiptapComposerEnabled ? undefined : visibleMentionedContexts.at(-1)
     if (lastMentionedContext) {
       removeMentionedContext(getMentionedContextKey(lastMentionedContext))
       return true
@@ -1165,7 +1203,8 @@ export const ChatInput = React.memo(function ChatInput() {
     }
   }
 
-  async function handlePaste(e: React.ClipboardEvent) {
+  // Spike（almanac ALMNC-77）：TipTap 版傳原生 ClipboardEvent 進來，只用到 clipboardData 與 preventDefault。
+  async function handlePaste(e: { clipboardData: DataTransfer | null; preventDefault: () => void }) {
     const items = e.clipboardData?.items
     if (!items) return
 
@@ -1276,7 +1315,7 @@ export const ChatInput = React.memo(function ChatInput() {
       emitter.emit('onboarding-step-complete', { step: 'ai-polish' })
     }
     addToHistory(text)
-    setText('')
+    setComposerText('')
     setComposerMenu(null)
     setHistoryIndex(-1)
     setAttachedImages([])
@@ -1296,7 +1335,7 @@ export const ChatInput = React.memo(function ChatInput() {
 
   useEffect(() => {
     emitter.on('revertChat', (event: unknown) => {
-      setText(event as string)
+      setComposerText(event as string)
     })
     emitter.on('fileSelected', (event: unknown) => {
       setLockedKeys(current => current.filter(key => !key.startsWith('resource:')))
@@ -1313,12 +1352,12 @@ export const ChatInput = React.memo(function ChatInput() {
       setPendingQuote(data)
       // 延迟聚焦到输入框
       setTimeout(() => {
-        textareaRef.current?.focus()
+        focusComposer()
       }, 50)
     })
     emitter.on('quick-prompt-insert', (prompt: string) => {
-      setText(prompt)
-      textareaRef.current?.focus()
+      setComposerText(prompt)
+      focusComposer()
     })
     emitter.on('quick-prompt-send', (prompt: string) => {
       chatSendRef.current?.sendPrompt(prompt)
@@ -1333,7 +1372,7 @@ export const ChatInput = React.memo(function ChatInput() {
       emitter.off('quick-prompt-insert')
       emitter.off('quick-prompt-send')
     }
-  }, [setPendingQuote])
+  }, [focusComposer, setComposerText, setPendingQuote])
 
   useEffect(() => {
     if (!onboardingPromptDraft) {
@@ -1343,9 +1382,9 @@ export const ChatInput = React.memo(function ChatInput() {
     onboardingAgentPromptArmedRef.current = true
     onboardingTypingTimerRefs.current.forEach((timerId) => window.clearTimeout(timerId))
     onboardingTypingTimerRefs.current = []
-    setText('')
+    setComposerText('')
     setTimeout(() => {
-      textareaRef.current?.focus()
+      focusComposer()
     }, 50)
 
     const frames = buildTypingFrames(onboardingPromptDraft, 2)
@@ -1359,7 +1398,7 @@ export const ChatInput = React.memo(function ChatInput() {
       }, 160 + index * 42)
       onboardingTypingTimerRefs.current.push(timerId)
     })
-  }, [applyTypedText, onboardingPromptDraft, setOnboardingPromptDraft])
+  }, [applyTypedText, focusComposer, onboardingPromptDraft, setComposerText, setOnboardingPromptDraft])
 
   // 生成文件的行号预览（用于 AI 对话）
   async function generateFilePreview(filePath: string, isCustom: boolean, preferEditorContent: boolean = false): Promise<string> {
@@ -1551,6 +1590,68 @@ ${previewLines.join('\n')}
     }
   }, [activeContextPaths, autoLinkRevision, isMobile, setChatLinkedResource, setLinkedResourcePreview])
 
+  // Spike（almanac ALMNC-77）：TipTap 輸入框的接線。
+  // 文件裡的膠囊就是 @ 提及的唯一來源：每次內容變動都從膠囊推回 mentionedContexts，
+  // 後面的 visibleMentionedContexts、ChatSend、buildMentionedContext 照舊。
+  function handleTiptapChange({ text: nextText, mentions }: SerializedComposer) {
+    setText(nextText)
+    const nextContexts = mentions.flatMap(mention => {
+      const context = mentionRegistryRef.current.get(mention.id)
+      return context ? [context] : []
+    })
+    setMentionedContexts(current => (
+      current.length === nextContexts.length
+      && current.every((context, index) => getMentionedContextKey(context) === getMentionedContextKey(nextContexts[index]))
+        ? current
+        : nextContexts
+    ))
+  }
+
+  function insertMentionChip(context: MentionedContext) {
+    mentionRegistryRef.current.set(getMentionedContextKey(context), context)
+    tiptapComposerRef.current?.insertMention(mentionAttrsFromContext(context))
+  }
+
+  function handleTiptapKeyDown(event: KeyboardEvent, caret: TiptapComposerCaret) {
+    const noModifiers = !event.metaKey && !event.ctrlKey && !event.altKey && !event.shiftKey
+    if (event.key === 'Backspace' && caret.atStart && noModifiers) {
+      // 长按只移除一项，避免连续清空引用或附件。
+      if (event.repeat) return false
+      return removeLastComposerContext()
+    }
+    if (v3 && !loading && isChatModeShortcutKey(event, Boolean(composerMenu), false)) {
+      changeChatMode(!readOnly)
+      return true
+    }
+    if ((event.key === 'ArrowUp' || event.key === 'ArrowDown') && noModifiers) {
+      if (caret.atStart) {
+        navigateHistory(event.key === 'ArrowUp' ? 'up' : 'down', text)
+        return true
+      }
+      if (caret.atEnd) {
+        tiptapComposerRef.current?.moveCaretToStart()
+        return true
+      }
+    }
+    return false
+  }
+
+  function handleTiptapPaste(event: ClipboardEvent) {
+    const hasImage = Array.from(event.clipboardData?.items ?? []).some(item => item.type.startsWith('image/'))
+    if (!hasImage) return false
+    void handlePaste(event)
+    return true
+  }
+
+  function handleTiptapBlur() {
+    window.requestAnimationFrame(() => {
+      if (!tiptapComposerRef.current?.hasFocus()) {
+        setComposerMenu(null)
+        tiptapComposerRef.current?.closeMenu()
+      }
+    })
+  }
+
   const contextStrip = (
     <ChatContextStrip
       linkedResource={linkedResource}
@@ -1559,7 +1660,8 @@ ${previewLines.join('\n')}
       quoteData={activeQuote}
       canvasContext={canvasSelectionContext}
       selectedSkills={selectedSkills}
-      mentionedContexts={visibleMentionedContexts}
+      // TipTap 版的 @ 提及已經是句中的膠囊，不再重複列在上方。
+      mentionedContexts={tiptapComposerEnabled ? [] : visibleMentionedContexts}
       lockedKeys={lockedKeys}
       onToggleLock={toggleContextLock}
       onRemoveLinkedResource={removeLinkedFile}
@@ -1725,6 +1827,31 @@ ${previewLines.join('\n')}
         <PendingFileAttachments attachments={fileAttachments} onRemove={removeFileAttachment} />
         <div className={cn("relative w-full flex items-start", v3 && "items-end gap-1")}>
           {v3 && attachments}
+          {tiptapComposerEnabled ? (
+            <TiptapChatComposer
+              ref={tiptapComposerRef}
+              className={cn(
+                "relative min-h-[36px] max-h-[240px] w-full min-w-0 flex-1 p-2 text-xs md:text-sm",
+                v3 && COMPOSER_FIELD
+              )}
+              disabled={!primaryModel}
+              placeholder={agentState.pendingConfirmation
+                ? approvalPlaceholder
+                : loading ? pendingPlaceholder : defaultPlaceholder}
+              onChange={handleTiptapChange}
+              onMenuChange={setComposerMenu}
+              onMenuKey={action => {
+                if (action === 'up') composerMenuRef.current?.moveSelection(-1)
+                else if (action === 'down') composerMenuRef.current?.moveSelection(1)
+                else if (action === 'select') composerMenuRef.current?.selectCurrent()
+                else closeComposerMenu()
+              }}
+              onSubmit={() => chatSendRef.current?.sendChat()}
+              onKeyDown={handleTiptapKeyDown}
+              onPaste={handleTiptapPaste}
+              onBlur={handleTiptapBlur}
+            />
+          ) : (
           <Textarea
             ref={textareaRef}
             className={cn(
@@ -1832,6 +1959,7 @@ ${previewLines.join('\n')}
             }}
             onPaste={handlePaste}
           />
+          )}
           {v3 && send}
         </div>
         
@@ -1851,7 +1979,7 @@ ${previewLines.join('\n')}
             {contextUsage}
             {modelSuggestion}
             <AgentPermissionModeSelect />
-            {!isMobile && <BackgroundTaskControls text={text} onSent={() => setText('')} />}
+            {!isMobile && <BackgroundTaskControls text={text} onSent={() => setComposerText('')} />}
             {send}
           </div>
         </div>}
@@ -1861,7 +1989,7 @@ ${previewLines.join('\n')}
           ? <span className="px-1.5 text-ui-compact">{t('record.chat.v3.mode.readOnlyHint')}</span>
           // Fork（almanac ALMNC-54.7）：「處理」由指揮官執行，改動都變成提案（Scott 交代的任務和行程直接加上），不再選修改權限。
           : <span className="truncate px-1.5 text-ui-compact" data-slot="commander-hint">{t('record.chat.v3.mode.processHint')}</span>}
-        <ChatToolsPopover backgroundActions={isMobile ? undefined : <BackgroundTaskControls text={text} onSent={() => setText('')} inMenu readOnly={readOnly} />} />
+        <ChatToolsPopover backgroundActions={isMobile ? undefined : <BackgroundTaskControls text={text} onSent={() => setComposerText('')} inMenu readOnly={readOnly} />} />
         {modelSuggestion}
         <div className="ml-auto shrink-0">{contextUsage}</div>
       </div>}
@@ -1874,6 +2002,10 @@ ${previewLines.join('\n')}
         onCommandSelect={prompt => replaceComposerMenuToken(prompt)}
         onFolderSelect={relativePath => { void handleMentionFolder(relativePath) }}
         onFileSelect={file => {
+          if (tiptapComposerEnabled) {
+            insertMentionChip({ kind: 'file', file })
+            return
+          }
           const duplicatesLinkedFile = Boolean(
             linkedResource
             && !isLinkedFolder(linkedResource)
@@ -1892,6 +2024,10 @@ ${previewLines.join('\n')}
         }}
         onRecordSelect={mark => {
           const record = createRecordQuote(mark)
+          if (tiptapComposerEnabled) {
+            insertMentionChip({ kind: 'record', record })
+            return
+          }
           if (activeQuote?.articlePath !== record.articlePath) {
             const context: MentionedContext = { kind: 'record', record }
             const key = getMentionedContextKey(context)
@@ -1905,6 +2041,10 @@ ${previewLines.join('\n')}
         }}
         onCanvasSelect={project => {
           const canvas = createCanvasContext(project)
+          if (tiptapComposerEnabled) {
+            insertMentionChip({ kind: 'canvas', canvas })
+            return
+          }
           if (canvasSelectionContext?.canvasId !== canvas.canvasId) {
             const context: MentionedContext = { kind: 'canvas', canvas }
             const key = getMentionedContextKey(context)
