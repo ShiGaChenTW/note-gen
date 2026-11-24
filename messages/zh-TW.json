@@ -2693,6 +2693,7 @@
       "gitlabInstanceTypeDesc": "選擇要連線的 GitLab 實例類型",
       "gitlabInstanceTypePlaceholder": "選擇 GitLab 實例類型",
       "gitlabInstanceTypeOptions": {
+        "jihulab": "極狐 GitLab（中國）",
         "selfHosted": "自建實例",
         "selfHostedDesc": "輸入您的自建 GitLab 伺服器位址（如：https://gitlab.example.com）"
       },
@@ -2749,7 +2750,7 @@
       },
       "cloudFolder": {
         "title": "雲端硬碟同步",
-        "description": "透過 OneDrive、iCloud Drive 等雲端硬碟資料夾同步資料。",
+        "description": "透過 iCloud Drive 等雲端硬碟資料夾同步資料。",
         "androidDescription": "選擇系統檔案應用程式中的雲端硬碟資料夾。",
         "dialogTitle": "選擇雲端硬碟中的 Almanac Notes 資料夾",
         "workspaceWarningTitle": "工作區尚未遷移",

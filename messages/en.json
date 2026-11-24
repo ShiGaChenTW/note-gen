@@ -2627,6 +2627,7 @@
       "gitlabInstanceTypeDesc": "Select the type of GitLab instance to connect to",
       "gitlabInstanceTypePlaceholder": "Select GitLab Instance Type",
       "gitlabInstanceTypeOptions": {
+        "jihulab": "JiHu GitLab (China)",
         "selfHosted": "Self-hosted Instance",
         "selfHostedDesc": "Enter your self-hosted GitLab server address (e.g., https://gitlab.example.com)"
       },
@@ -2683,7 +2684,7 @@
       },
       "cloudFolder": {
         "title": "Cloud Drive",
-        "description": "Sync data through a OneDrive, iCloud Drive, or similar cloud folder.",
+        "description": "Sync data through an iCloud Drive or similar cloud folder.",
         "androidDescription": "Choose a cloud-drive folder from the system file picker.",
         "dialogTitle": "Choose a Almanac Notes folder in your cloud drive",
         "workspaceWarningTitle": "Workspace not migrated",

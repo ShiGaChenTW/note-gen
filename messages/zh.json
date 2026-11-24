@@ -2628,6 +2628,7 @@
       "gitlabInstanceTypeDesc": "选择要连接的 GitLab 实例类型",
       "gitlabInstanceTypePlaceholder": "选择 GitLab 实例类型",
       "gitlabInstanceTypeOptions": {
+        "jihulab": "极狐 GitLab",
         "selfHosted": "自建实例",
         "selfHostedDesc": "输入您的自建 GitLab 服务器地址（如：https://gitlab.example.com）"
       },
@@ -2684,7 +2685,7 @@
       },
       "cloudFolder": {
         "title": "网盘同步",
-        "description": "通过 OneDrive、iCloud Drive 等云盘文件夹同步数据。",
+        "description": "通过 iCloud Drive 等云盘文件夹同步数据。",
         "androidDescription": "选择系统文件应用中的网盘文件夹。",
         "dialogTitle": "选择云盘中的 Almanac Notes 文件夹",
         "workspaceWarningTitle": "工作区尚未迁移",
