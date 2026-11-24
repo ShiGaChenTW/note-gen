@@ -4,7 +4,7 @@ import { isId } from '@/lib/v3-model/identity'
 import { formalEntries, isUnsortedTitle, type MocChapter, type MocEntry, type ParsedMoc } from './parse'
 import type { ResolveTarget } from './membership'
 import type { MocPinPosition } from './positions'
-import { isSplitCountLine, withSplitStatus } from './split-status'
+import { isLegacySplitCountLine, isSplitCountLine, withSplitStatus } from './split-status'
 
 export type MocBranchRequest =
   | { kind: 'split', mocId: string, chapterId: string, expectedTitle?: string, expectedEntries?: string[] }
@@ -169,7 +169,7 @@ export function planMocBranch(request: MocBranchRequest, files: readonly BranchF
   lines[chapter.line] = `### ${chapter.title}`
   const rowNumbers = new Set(chapter.entries.map(entry => entry.line))
   for (let index = chapter.line + 1; index < chapter.endLine; index++) {
-    if (isSplitCountLine(lines[index])) rowNumbers.add(index)
+    if (isSplitCountLine(lines[index]) || isLegacySplitCountLine(lines[index])) rowNumbers.add(index)
   }
   const insertion = chapter.entries[0]?.line ?? (chapter.commentLine ?? chapter.line) + 1
   const restored = [...moved].flatMap(([path, entry]) => {

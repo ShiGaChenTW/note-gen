@@ -2,7 +2,7 @@ import { mocPageView } from '@/lib/domain-page/moc-view'
 import type { NoteLike } from '@/lib/domain-page/model'
 import type { ResolveTarget } from './membership'
 import type { ParsedMoc } from './parse'
-import { isSplitCountLine, splitCountLine, withSplitStatus } from './split-status'
+import { isLegacySplitCountLine, isSplitCountLine, splitCountLine, withSplitStatus } from './split-status'
 
 /** 只更新系統狀態片段。凍結清單中的連結、順序、說明與其餘內文原樣保留。 */
 export function refreshSplitDisplay(
@@ -26,7 +26,7 @@ export function refreshSplitDisplay(
       lines[entry.line] = withSplitStatus(lines[entry.line], status)
     }
     for (let line = chapter.endLine - 1; line > chapter.line; line--) {
-      if (isSplitCountLine(lines[line])) lines.splice(line, 1)
+      if (isSplitCountLine(lines[line]) || isLegacySplitCountLine(lines[line])) lines.splice(line, 1)
     }
     if (panel.newSinceSplit && child?.path) {
       const afterEntries = ((entries.at(-1)?.line ?? chapter.commentLine) ?? chapter.line) + 1

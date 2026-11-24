@@ -173,3 +173,31 @@ it('partitions a second-level chapter in page with the original C identifier and
   expect(membershipsFromMocs([revised], resolve).byNote).toEqual(membershipsFromMocs([lower.moc], resolve).byNote)
   expect(edit.after).toContain('keep this')
 })
+
+it('replaces hand-written legacy split markers and count lines instead of duplicating them (ALMNC-82)', async () => {
+  const { refreshSplitDisplay } = await import('./split-display')
+  const resolver = (target: string) => target === 'MOCs/Growing' ? childPath : resolve(target)
+  const [create, edit] = planMocBranch(split, [file(original, path)], { ...options, resolve: resolver })
+  if (create.kind !== 'domain.create' || edit.kind !== 'note.edit') throw new Error('Expected split ops')
+  // 模擬系統接手前的手寫版本：行尾 `X MOC` 標籤、一行手寫的「分家後新增」說明。
+  const legacy = edit.after
+    .split('\n')
+    .map(line => line.replace(/ <!-- moc-split-status -->.*$/, ''))
+    .map(line => line === '- [[Note 0]] ── why Note 0' ? line + '　`Growing MOC`' : line)
+    .map(line => line === '- [[Note 1]] ── why Note 1' ? line + '　`Other MOC` `Growing MOC`' : line)
+    .flatMap(line => line === '- [[Note 11]] ── why Note 11' ? [line, '- 分家後新增的 5 則不列在這裡，到 [[Growing]] MOC 看。'] : [line])
+    .join('\n')
+  expect(legacy).toContain('why Note 0　`Growing MOC`')
+  expect(legacy).toContain('- 分家後新增的 5 則')
+  const childNow = create.content.replace(/^- \[\[notes\/Note 0\]\].*$/m, row('New'))
+  const allMocs = [parseMoc(legacy, path), parseMoc(childNow, childPath)]
+  const notes = new Map(names.map(name => [resolve(name), { path: resolve(name), frontmatter: {} }]))
+  const updated = refreshSplitDisplay(legacy, parseMoc(legacy, path), notes, resolver, allMocs)
+  // Note 0 已不在任何 MOC：手寫的過時標籤要拿掉，不加系統標記。
+  expect(updated).toMatch(/^- \[\[Note 0\]\] ── why Note 0$/m)
+  expect(updated).toContain('- [[Note 1]] ── why Note 1 <!-- moc-split-status --> `Growing MOC`')
+  expect(updated.match(/`Growing MOC`/g)?.length).toBe(updated.match(/<!-- moc-split-status -->/g)?.length)
+  expect(updated).not.toContain('- 分家後新增的')
+  expect(updated.match(/分家後新增的/g)?.length).toBe(1)
+  expect(refreshSplitDisplay(updated, parseMoc(updated, path), notes, resolver, allMocs)).toBe(updated)
+})
