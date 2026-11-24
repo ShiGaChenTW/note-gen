@@ -21,6 +21,7 @@ const fx = vi.hoisted(() => {
   return {
     never,
     store,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     invoke: vi.fn(async (_command: string, _args?: unknown): Promise<unknown> => []),
   }
 })

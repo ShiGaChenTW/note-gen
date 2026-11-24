@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 // almanac ALMNC-83.3 驗收 #1：提示詞功能關閉時，手機「我的」頁不列「個人提示詞庫」入口。
 // 渲染真正的 MobileMePage，重的子元件與同步連線換掉；對照組把開關切成 true，證明 harness 看得到入口並會導向 /mobile/prompts。
-import React, { act, createElement as h } from 'react'
+import { act, createElement as h } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { NextIntlClientProvider } from 'next-intl'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'

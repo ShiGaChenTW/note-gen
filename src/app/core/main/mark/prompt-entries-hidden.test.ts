@@ -2,7 +2,7 @@
 // almanac ALMNC-83.3 驗收 #1：提示詞功能關閉時，記錄對話框的類型選單不列 Prompt 素材、⌘8（Windows Alt+8）不會選到它，
 // 從托盤或外部指定 prompt-draft 開啟時改用自動判斷。unified-record-input.test.ts 測的是類型清單函式本身；這裡實際渲染對話框。
 // 對照組把開關切成 true，證明同一套 harness 看得到 Prompt 素材、快捷鍵也選得到。
-import React, { act, createElement as h } from 'react'
+import { act, createElement as h } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { NextIntlClientProvider } from 'next-intl'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 // almanac ALMNC-83.3 驗收 #1：提示詞功能關閉時，Markdown 編輯器上方不顯示提示詞版本列（PromptVersionBanner）。
 // 渲染真正的 MdEditor，TipTap 編輯器與版本列換成標記元素；對照組把開關切成 true，證明 harness 看得到版本列。
-import React, { act, createElement as h } from 'react'
+import { act, createElement as h } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { NextIntlClientProvider } from 'next-intl'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'

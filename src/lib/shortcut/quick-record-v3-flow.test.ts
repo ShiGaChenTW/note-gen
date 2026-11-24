@@ -45,6 +45,7 @@ const fake = vi.hoisted(() => ({
   tags: [{ id: 7, name: 'Inbox', isLocked: false, isPin: false }],
   insertExternalMark: vi.fn(async () => 1),
   kick: vi.fn(async () => ({ analyzed: [], rejected: [], failed: [] })),
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   invoke: vi.fn(async (_command: string, _args?: unknown) => undefined as unknown),
   clipboard: '',
 }))

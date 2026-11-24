@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 // almanac ALMNC-83.3 驗收 #1：提示詞功能關閉時，收件匣勾選一筆 Prompt 素材也不提供「整理成提示詞」（記錄本身照列）。
 // 對照組把開關切成 true，證明同樣勾選後 harness 看得到「整理成提示詞」按鈕。
-import React, { act, createElement as h } from 'react'
+import { act, createElement as h } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { NextIntlClientProvider } from 'next-intl'
 import { create } from 'zustand'
