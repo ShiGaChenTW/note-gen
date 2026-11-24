@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState, type ComponentProps, type FormEvent } from 'react'
-import Image from 'next/image'
+import { AppLogo } from '@/components/app-logo'
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
 import { openUrl } from '@tauri-apps/plugin-opener'
@@ -635,7 +635,7 @@ export function BrowserPanel({ tabId, url, visible }: { tabId: string; url?: str
             <div className="mx-auto flex min-h-full w-full max-w-5xl min-w-0 flex-col px-5 pb-12 pt-12 md:px-8 md:pt-20">
               <div className="flex w-full min-w-0 flex-col items-center gap-6">
                 <div className="flex flex-col items-center gap-3">
-                  <Image src="/app-icon.png" alt="Almanac Notes" width={56} height={56} className="size-14 rounded-2xl dark:invert" />
+                  <AppLogo size={56} />
                   <h1 className="font-heading text-2xl font-semibold tracking-tight">{t('browserStartTitle')}</h1>
                 </div>
                 <form onSubmit={submitSearch} className="w-full min-w-0">

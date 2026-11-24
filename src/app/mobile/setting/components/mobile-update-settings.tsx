@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { AppLogo } from '@/components/app-logo'
 import { ArrowRight, ExternalLink } from 'lucide-react'
-import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 
 import {
@@ -34,13 +34,7 @@ export function MobileUpdateSettings() {
     <>
       <section className="mobile-dock-surface overflow-hidden rounded-[1.35rem] border border-primary/20">
         <div className="flex items-center gap-3 p-4">
-          <Image
-            src="/app-icon.png"
-            alt="NoteGen logo"
-            className="size-12 shrink-0 rounded-xl dark:invert"
-            width={48}
-            height={48}
-          />
+          <AppLogo size={48} />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-lg font-semibold leading-none">NoteGen</h2>

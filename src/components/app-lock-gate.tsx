@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, type ReactNode, type FormEvent } from 'react'
-import Image from 'next/image'
+import { AppLogo } from '@/components/app-logo'
 import { isTauri } from '@tauri-apps/api/core'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { useTranslations } from 'next-intl'
@@ -78,8 +78,7 @@ export function AppLockGate({ children }: { children: ReactNode }) {
       {isTauri() && getCurrentWindow().label === 'main' && <CloseBehaviorGuard />}
       <Card className="my-auto w-full max-w-md overflow-hidden border-foreground/10 shadow-xl shadow-foreground/5">
         <CardHeader className="items-center gap-4 px-8 pt-10 text-center sm:px-10 sm:pt-12">
-          <Image src="/app-icon.png" alt="Almanac Notes" width={64} height={64}
-            className="size-16 rounded-2xl shadow-sm dark:invert" priority />
+          <AppLogo size={64} className="shadow-sm" priority />
           <div className="flex flex-col items-center gap-2">
             <CardTitle className="text-2xl tracking-tight">{t('title')}</CardTitle>
             <CardDescription className="max-w-xs leading-relaxed">
