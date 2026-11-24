@@ -90,7 +90,8 @@ function useAgentRows(): AgentRow[] {
 }
 
 function openAgentSettings() {
-  useSettingsDialogStore.getState().openSettings('general')
+  // Fork（almanac ALMNC-83.5）：Agent 設定區搬到夥伴分頁
+  useSettingsDialogStore.getState().openSettings('partners')
 }
 
 /** 區段標題：整列是收合鈕（讀屏名稱「收合／展開＋標題」），動作常駐在右側；收合狀態存在 store.json。 */

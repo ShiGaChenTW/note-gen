@@ -4225,6 +4225,10 @@
     "searchPlaceholder": "搜索设置...",
     "noSearchResults": "没有找到相关设置",
     "title": "设置",
+    "partners": {
+      "title": "伙伴",
+      "desc": "指挥官、专家、秘书、研究员的名单与 Agent 设置区，以及调研与回顾、自动整理、自动接受。"
+    },
     "eink": {
       "title": "电子纸",
       "desc": "把今日简报与休眠画面送到电子纸（Xteink X4 Pro＋CrossPoint）。这些设置只存在这台 Mac，不会随设置同步。",

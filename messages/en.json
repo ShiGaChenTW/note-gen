@@ -4225,6 +4225,10 @@
     "searchPlaceholder": "Search settings...",
     "noSearchResults": "No matching settings found",
     "title": "Settings",
+    "partners": {
+      "title": "The Crew",
+      "desc": "Your commander, experts, secretary and researcher, the agent settings area, research and review, auto-organize and auto-accept."
+    },
     "eink": {
       "title": "E-paper",
       "desc": "Send the daily briefing and sleep screen to the e-paper reader (Xteink X4 Pro + CrossPoint). These settings stay on this Mac and are not synced.",

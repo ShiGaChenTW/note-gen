@@ -3,6 +3,7 @@ import { create } from 'zustand'
 export type BuiltinSettingSection =
   | 'about'
   | 'general'
+  | 'partners'
   | 'record'
   | 'daily'
   | 'editor'
@@ -42,6 +43,7 @@ export const settingSections: SettingSection[] = [
   'shortcuts',
   'imageMethod',
   'audio',
+  'partners',
   'ai',
   'webSearch',
   'rag',
@@ -59,7 +61,8 @@ export const settingSections: SettingSection[] = [
 ]
 
 // Fork（almanac ALMNC-45）：只在新介面（V3）出現的設定分頁；classic 下不列在選單、也不會停在這頁。
-export const v3OnlySettingSections: readonly BuiltinSettingSection[] = ['eink']
+// ALMNC-83.5：夥伴（夥伴名單、Agent 設定區、調研與回顧、自動整理、自動接受）從常規設定搬出來的獨立分頁。
+export const v3OnlySettingSections: readonly BuiltinSettingSection[] = ['eink', 'partners']
 
 export function isV3OnlySettingSection(section: string): boolean {
   return (v3OnlySettingSections as readonly string[]).includes(section)
@@ -76,6 +79,11 @@ export function isSettingSectionVisible(section: string, v3: boolean): boolean {
   if ((disabledSettingSections as readonly string[]).includes(section)) return false
   if (v3) return !(classicOnlySettingSections as readonly string[]).includes(section)
   return !isV3OnlySettingSection(section)
+}
+
+/** 目前介面看不到 section 時要改停的分頁（一律回一般）；section 本來就看得到時原樣回傳。 */
+export function fallbackSettingSection(section: BuiltinSettingSection, v3: boolean): BuiltinSettingSection {
+  return isSettingSectionVisible(section, v3) ? section : 'general'
 }
 
 interface SettingsDialogState {

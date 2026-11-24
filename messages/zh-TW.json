@@ -505,7 +505,7 @@
         "microphone": "麥克風",
         "microphoneDesc": "用於錄音記錄。"
       },
-      "title": "常規設定",
+      "title": "一般",
       "desc": "設定應用程式的基本選項，包括介面主題和語言。",
       "behavior": {
         "title": "應用程式行為",
@@ -4282,7 +4282,7 @@
       }
     },
     "navigationGroups": {
-      "extensions": "拓展",
+      "extensions": "擴充",
       "basic": "基礎設定",
       "ai": "AI",
       "data": "資料與儲存"
@@ -4290,6 +4290,10 @@
     "searchPlaceholder": "搜尋設定...",
     "noSearchResults": "找不到相關設定",
     "title": "設定",
+    "partners": {
+      "title": "夥伴",
+      "desc": "指揮官、專家、秘書、研究員的名單與 Agent 設定區，以及調研與回顧、自動整理、自動接受。"
+    },
     "eink": {
       "title": "電子紙",
       "desc": "把今日簡報與休眠畫面送到電子紙（Xteink X4 Pro＋CrossPoint）。這些設定只存在這台 Mac，不會跟著設定同步。",

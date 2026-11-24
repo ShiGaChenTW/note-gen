@@ -6,6 +6,7 @@
 // 另開全頁覆蓋層要動覆蓋層登記、側欄與互斥邏輯，而入口（Q17）還沒定案，先不擴大範圍。
 // ALMNC-50：區網服務的埠、狀態與要填進電子紙的網址（lan-section.tsx）。
 // ALMNC-52：安裝到電子紙與立即推送（reader-section.tsx）。
+// ALMNC-83.5：RSS 訂閱從常規設定搬來，接在稍後讀後面（兩者都是「之後要讀的外部來源」）。
 import { useEffect, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { ArrowDown, ArrowUp, CloudSun, Eye, EyeOff, FileText, KeyRound, MonitorSmartphone, Power, RefreshCw, Router, Trash2 } from 'lucide-react'
@@ -24,6 +25,7 @@ import useEinkStore from '@/stores/eink'
 import { LanServerDetails } from './lan-section'
 import { ReadLaterSection } from './read-later-section'
 import { ReaderSection } from './reader-section'
+import { RssSettings } from '../rss/rss-settings'
 
 export default function EinkSettingPage() {
   const v3 = useUiV3()
@@ -45,6 +47,7 @@ function EinkSettings() {
           <BriefingSection />
           <PinsSection />
           <ReadLaterSection />
+          <RssSettings />
         </>
       ) : null}
     </SettingType>
