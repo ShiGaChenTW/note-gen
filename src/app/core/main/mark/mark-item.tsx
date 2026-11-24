@@ -37,6 +37,7 @@ import { BaseDirectory, readFile } from "@tauri-apps/plugin-fs";
 import { useRouter } from "next/navigation";
 import { NO_TRANSCRIPTION_MESSAGE, transcribeRecording } from "@/lib/audio";
 import { cn, isHttpUrl } from "@/lib/utils";
+import { SELECTED_RAISED } from '../sidebar-row'
 import { getMarkTypeListBadgeClasses } from "./mark-type-meta";
 import { getMarkListItemContent } from "./mark-list-item-content";
 import { TodoEditTrigger } from "./todo-edit-button";
@@ -1010,7 +1011,8 @@ export const MarkItem = React.memo(({
         ),
         activeMarkId === mark.id && (
           variant === 'list'
-            ? 'border-l-2 border-l-ink bg-active'
+            // ALMNC-79.5：V3 選中列浮起、不用左側線條；classic 照舊
+            ? ['border-l-2 border-l-ink bg-active v3:border-l-transparent', SELECTED_RAISED]
             : grouped
               ? 'bg-active ring-1 ring-ink/40'
               : 'bg-active'

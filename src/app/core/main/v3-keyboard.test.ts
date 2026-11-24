@@ -106,49 +106,45 @@ it('maps the visible Plan entry to the week overlay and removes the V3 navigatio
   expect(host.querySelector('nav')?.textContent).not.toContain('Decide')
 })
 
-// Fork（almanac ALMNC-54.8、54.16、54.18、69.3）：側欄搜尋下方兩個只有圖示的起點按鈕（新增文件收進新增資料源對話框），主導覽沒有「收集」。
-it('shows the two icon-only quick buttons under search and no 收集 in the nav', async () => {
+// Fork（almanac ALMNC-54.8、54.16、54.18、69.3、79.3）：搜尋右側一顆「＋」，選單裡是新增資料源、新增對話；主導覽沒有「收集」。
+async function openQuickMenu() {
+  const trigger = host.querySelector<HTMLButtonElement>('[data-testid="sidebar-quick"]')!
+  await act(async () => { keyDown(trigger, 'Enter') })
+  return [...document.querySelectorAll<HTMLElement>('[role="menuitem"]')]
+}
+
+it('puts 新增資料源 and 新增對話 in the ＋ menu next to search and no 收集 in the nav', async () => {
   await render(React.createElement(LeftSidebar))
   const nav = host.querySelector('[data-sidebar-v3] nav')!
   expect([...nav.querySelectorAll('button')].map(button => button.textContent?.replace(/\d+$/, ''))).toEqual(['今天', '工作台', '對話', '整理', '計畫'])
-  const quick = host.querySelector('[data-testid="sidebar-quick"]')!
-  expect(quick.className).toContain('grid-cols-2')
-  const buttons = [...quick.querySelectorAll('button')]
-  expect(buttons.map(button => button.dataset.quick)).toEqual(['source', 'thread'])
-  expect(buttons.map(button => button.getAttribute('aria-label'))).toEqual(['新增資料源', '新增對話'])
+  const trigger = host.querySelector<HTMLButtonElement>('[data-testid="sidebar-quick"]')!
+  expect(trigger.getAttribute('aria-label')).toBe(zhTW.workbench.quick.label)
+  const items = await openQuickMenu()
+  expect(items.map(item => item.dataset.quick)).toEqual(['source', 'thread'])
+  expect(items.map(item => item.textContent)).toEqual(['新增資料源', '新增對話'])
   // ALMNC-56.4：工作台沒開時單鍵 N／T 不作用，就不標（見下一則測試）
-  expect(buttons.map(button => button.getAttribute('aria-keyshortcuts'))).toEqual([null, null])
-  expect(buttons.map(button => button.disabled)).toEqual([false, false])
-  expect([...quick.querySelectorAll('[role="tooltip"]')].map(tip => tip.textContent)).toEqual(['新增資料源', '新增對話'])
-  expect(quick.textContent).not.toContain('待確定')
-  expect(quick.querySelector('[data-quick="doc"]')).toBeNull()
-  // 手機版圖示下的小字（md 以上隱藏）
-  expect(buttons.map(button => button.querySelector('span')?.textContent)).toEqual(['資料源', '對話'])
+  expect(items.map(item => item.getAttribute('aria-keyshortcuts'))).toEqual([null, null])
   const opened = vi.fn()
   emitter.on('unified-record-open', opened)
-  await act(async () => buttons[0].click())
+  await act(async () => items[0].click())
   expect(opened).toHaveBeenCalledWith({ target: 'source' })
   emitter.off('unified-record-open', opened)
 })
 
-// Fork（almanac ALMNC-56.4，A02）：單鍵 N／T 只在工作台開著、設定沒關時有效，側欄也只在那時標快捷鍵。
-it('labels N / T on the quick buttons only while the workbench is open and the setting is on', async () => {
+// Fork（almanac ALMNC-56.4，A02）：單鍵 N／T 只在工作台開著、設定沒關時有效，選單也只在那時標快捷鍵。
+it('labels N / T in the ＋ menu only while the workbench is open and the setting is on', async () => {
   useSettingStore.setState({ workbenchSingleKeys: true })
-  await act(async () => useDecideStore.setState({ visible: false }))
-  await render(React.createElement(LeftSidebar))
-  const quick = () => host.querySelector('[data-testid="sidebar-quick"]')!
-  const shortcuts = () => [...quick().querySelectorAll('button')].map(button => button.getAttribute('aria-keyshortcuts'))
-  const tips = () => [...quick().querySelectorAll('[role="tooltip"]')].map(tip => tip.textContent)
-  expect(shortcuts()).toEqual([null, null])
-  expect(tips()).toEqual(['新增資料源', '新增對話'])
-
   await act(async () => useDecideStore.setState({ visible: true }))
-  expect(shortcuts()).toEqual(['N', 'T'])
-  expect(tips()).toEqual(['新增資料源　N', '新增對話　T'])
+  await render(React.createElement(LeftSidebar))
+  let items = await openQuickMenu()
+  expect(items.map(item => item.getAttribute('aria-keyshortcuts'))).toEqual(['N', 'T'])
+  expect(items.map(item => item.textContent)).toEqual(['新增資料源N', '新增對話T'])
+  await act(async () => { keyDown(items[0], 'Escape') })
 
   await act(async () => useSettingStore.setState({ workbenchSingleKeys: false }))
-  expect(shortcuts()).toEqual([null, null])
-  expect(tips()).toEqual(['新增資料源', '新增對話'])
+  items = await openQuickMenu()
+  expect(items.map(item => item.getAttribute('aria-keyshortcuts'))).toEqual([null, null])
+  await act(async () => { keyDown(items[0], 'Escape') })
 
   await act(async () => {
     useSettingStore.setState({ workbenchSingleKeys: true })
@@ -156,28 +152,34 @@ it('labels N / T on the quick buttons only while the workbench is open and the s
   })
 })
 
-// Fork（almanac ALMNC-56.2 A08、V03、A10）：「我的筆記」收合鈕和標題鈕讀起來不同名；底色在整列外層；新增代理人鈕 24 px。
-it('names the 我的筆記 collapse toggle apart from its title and paints the row as one piece', async () => {
+// Fork（almanac ALMNC-56.2 A08、ALMNC-79.3）：區段標題整列是收合鈕，「全部筆記」一列開清單；新增鈕 24 px 常駐。
+it('collapses 我的筆記 from its header and opens the list from 全部筆記', async () => {
   useSidebarCollapse.setState({ vault: false, agents: false })
   useNoteListStore.setState({ visible: true, folder: '' })
   await render(React.createElement(LeftSidebar))
+  await act(async () => useSidebarCollapse.setState({ vault: false, agents: false }))
   const vault = host.querySelector<HTMLElement>(`[data-sidebar-v3] section[aria-label="${zhTW.sidebarV3.vault}"]`)!
   const toggle = vault.querySelector<HTMLButtonElement>('button[aria-expanded]')!
   expect(toggle.getAttribute('aria-label')).toBe('收合我的筆記')
-  const title = vault.querySelector<HTMLButtonElement>('button[aria-current="page"]')!
-  expect(title.getAttribute('aria-label')).toBeNull()
-  expect(title.textContent).toBe('我的筆記')
-  expect(title.className).not.toContain('bg-')
-  const row = toggle.parentElement!
-  expect(row.className).toContain('hover:bg-hover')
-  expect(row.className).toContain('bg-active')
-  expect(row.querySelector('.bg-panel')).toBeNull()
-  // 掛載時會從 store.json 讀回收合狀態；之後再設定，代理人區才確定展開
+  expect(toggle.textContent).toBe('我的筆記')
+  const all = vault.querySelector<HTMLButtonElement>('button[aria-current="page"]')!
+  expect(all.textContent).toBe(zhTW.sidebarV3.allNotes)
+  expect(all.className).toContain('bg-active')
   await act(async () => useSidebarCollapse.setState({ vault: true, agents: false }))
   expect(toggle.getAttribute('aria-label')).toBe('展開我的筆記')
+  expect(vault.textContent).not.toContain(zhTW.sidebarV3.allNotes)
   const addAgent = host.querySelector<HTMLButtonElement>(`[data-sidebar-v3] button[title="${zhTW.sidebarV3.agents.add}"]`)!
   expect(addAgent.className).toContain('size-6')
   useNoteListStore.setState({ visible: false })
+})
+
+// Fork（almanac ALMNC-79.3）：底部是設定入口，不再常駐「規則」說明；品牌列 56px。
+it('ends with a settings row instead of the rules note', async () => {
+  await render(React.createElement(LeftSidebar))
+  const sidebar = host.querySelector<HTMLElement>('[data-sidebar-v3]')!
+  expect(sidebar.textContent).not.toContain(zhTW.sidebarV3.rules.text)
+  expect(sidebar.lastElementChild!.textContent).toContain(zhTW.sidebarV3.settings)
+  expect(sidebar.querySelector('[data-sidebar-brand]')!.className).toContain('h-14')
 })
 
 // Fork（almanac ALMNC-43.12）：檔案樹標題顯示筆記庫資料夾名稱，切換筆記庫時跟著變；讀屏名稱一起換。
@@ -189,7 +191,7 @@ it('titles the file tree with the vault folder name and follows workspace switch
   const section = () => host.querySelector<HTMLElement>('[data-sidebar-v3] section:last-of-type')!
   expect(section().getAttribute('aria-label')).toBe('Almanac')
   expect(section().querySelector('button[aria-expanded]')!.getAttribute('aria-label')).toBe('收合Almanac')
-  expect(section().querySelector('button:not([aria-expanded])')!.textContent).toBe('Almanac')
+  expect(section().querySelector('button[aria-expanded]')!.textContent).toBe('Almanac')
   await act(async () => useSettingStore.setState({ workspacePath: '/Users/scott/Personal/' }))
   expect(section().getAttribute('aria-label')).toBe('Personal')
   expect(section().querySelector('button[aria-expanded]')!.getAttribute('aria-label')).toBe('收合Personal')

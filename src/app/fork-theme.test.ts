@@ -115,4 +115,20 @@ describe('fork-theme v5 tokens', () => {
   it('respects prefers-reduced-motion', () => {
     expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\)/)
   })
+
+  // ALMNC-79.1：圓角收斂（控制項 4px、列 5px、卡片／浮層 6px），classic 維持 0.5rem
+  it('uses the tightened v3 radius scale', () => {
+    for (const selector of [':root', '.dark'] as const) expect(token(selector, 'radius')).toBe('0.25rem')
+    expect(token(':root', 'r-kbd')).toBe('3px')
+    expect(token(':root', 'r')).toBe('4px')
+    expect(token(':root', 'r-row')).toBe('5px')
+    expect(token(':root', 'r-md')).toBe('6px')
+    expect(css).toMatch(/:root \{[^}]*--radius: 0\.5rem;/)
+  })
+
+  // ALMNC-79.1：介面上的引言不再用色條；青綠的引用色條只留給筆記內文（和 Obsidian 一致）
+  it('limits the quote bar in the accent allow-list to note content', () => {
+    expect(css).not.toContain('caret、引言色條')
+    expect(css).toContain('筆記內文的引用色條')
+  })
 })

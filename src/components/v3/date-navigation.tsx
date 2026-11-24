@@ -36,7 +36,8 @@ export function DateCell({ day, weekday, today, selected, hasContent, className,
       className={cn(
         'flex cursor-pointer flex-col items-center justify-center rounded-(--r) tabular-nums transition-colors duration-100',
         FOCUS,
-        selected ? 'bg-active text-ink' : 'text-muted-ink hover:bg-hover',
+        // ALMNC-79.4：選中日浮起，和側欄選中列同一種樣式（sidebar-row.ts 的 SELECTED_RAISED）
+        selected ? 'bg-active text-ink v3:selected-raised' : 'text-muted-ink hover:bg-hover',
         className,
       )}
       {...props}

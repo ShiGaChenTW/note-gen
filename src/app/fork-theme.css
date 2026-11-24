@@ -7,10 +7,11 @@
    Tailwind 類別對應在 fork-tokens.css（bg-bg、bg-panel、text-ink、text-faint、border-line、text-brand…）。
 
    規則（P0-b／P0-c 照這裡做）：
-   - 元件裡禁止寫死色碼；彩色只有 --brand-accent（text-brand），只用在連結、已勾選任務、caret、引言色條。
+   - 元件裡禁止寫死色碼；彩色只有 --brand-accent（text-brand），只用在連結、已勾選任務、caret、筆記內文的引用色條；介面上的引言（日誌、報告引文）改用淡底區塊，不用色條（ALMNC-79.1）。
    - --primary 是「反白」（深底淺字），不是彩色；強調用途改用 text-brand。
    - hover／選取用 ink 疊透明（--hover、--active，shadcn 的 accent／third）。
-   - 陰影只給浮層：--sh-dialog、--sh-menu、--sh-toast、--sh-float。 */
+   - 陰影只給浮層：--sh-dialog、--sh-menu、--sh-toast、--sh-float。
+     例外（ALMNC-79.2）：清單與導覽的「選中浮起」用 --raised-bg、--raised-line、--sh-raised（Tailwind：selected-raised）。 */
 
 /* 字型：Inter、Fira Code 只收拉丁字集；中文用同名 font-face 指到 PingFang TC，達成「中文先用繁體」。 */
 @font-face {
@@ -198,13 +199,17 @@
   --invert-ink: #fbfbfa;
   --danger: #b3261e;
   --success-ink: #4d8660;
-  --brand-accent: #167a6e;   /* 唯一彩色，只給白名單：連結、已勾選任務、caret、引言色條 */
+  --brand-accent: #167a6e;   /* 唯一彩色，只給白名單：連結、已勾選任務、caret、筆記內文的引用色條 */
   --brand-accent-ink: #ffffff;
   --caret: var(--brand-accent);
   --sh-dialog: 0 24px 64px -12px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.02);
   --sh-menu: 0 10px 30px -6px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
   --sh-toast: 0 8px 24px -8px rgba(0, 0, 0, 0.18);
   --sh-float: 0 0 0 1px rgba(0, 0, 0, 0.045), 0 1px 2px -1px rgba(0, 0, 0, 0.05), 0 4px 12px -8px rgba(0, 0, 0, 0.12);
+  /* ALMNC-79.2：選中浮起（側欄、清單、週列日期）；浮層裡的選單不用 */
+  --raised-bg: linear-gradient(180deg, #ffffff, #f5f5f3);
+  --raised-line: rgba(0, 0, 0, 0.09);
+  --sh-raised: 0 1px 2px rgba(0, 0, 0, 0.06), 0 4px 10px -6px rgba(0, 0, 0, 0.12);
 
   /* shadcn 語意 token（HSL 三元組，給上游元件與 theme-utils 用）對到 v5 */
   --background: 240 9.1% 97.8%;  /* panel：側欄、tab 列等 chrome */
@@ -234,7 +239,7 @@
   --border: 60 5.1% 88.4%;
   --input: 60 5.1% 88.4%;
   --ring: 0 0% 9.8%;  /* focus 用 ink */
-  --radius: 0.375rem;  /* 6px 主力圓角 */
+  --radius: 0.25rem;  /* 4px 控制項圓角（ALMNC-79.1，原 6px）；rounded-xl 約 6px 給卡片 */
 
   --sidebar-background: 240 9.1% 97.8%;
   --sidebar-foreground: 0 0% 9.8%;
@@ -262,10 +267,11 @@
   --dur-fade: 150ms;
   --dur-exit: 120ms;
 
-  /* 形狀 */
-  --r-kbd: 4px;
-  --r: 6px;
-  --r-md: 8px;
+  /* 形狀（ALMNC-79.1 收斂：原 4／6／8px） */
+  --r-kbd: 3px;   /* kbd、核取方塊 */
+  --r: 4px;       /* 按鈕、輸入框等控制項 */
+  --r-row: 5px;   /* 側欄與清單的列 */
+  --r-md: 6px;    /* 卡片、浮層 */
 }
 
 .dark:where([data-ui="v3"]) {
@@ -287,13 +293,16 @@
   --invert-ink: #131313;
   --danger: #e5484d;
   --success-ink: #72b588;
-  --brand-accent: #4cc3b0;   /* 唯一彩色，只給白名單：連結、已勾選任務、caret、引言色條 */
+  --brand-accent: #4cc3b0;   /* 唯一彩色，只給白名單：連結、已勾選任務、caret、筆記內文的引用色條 */
   --brand-accent-ink: #131313;
   --caret: var(--brand-accent);
   --sh-dialog: 0 24px 64px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.04);
   --sh-menu: 0 10px 30px -6px rgba(0, 0, 0, 0.4);
   --sh-toast: 0 8px 24px -8px rgba(0, 0, 0, 0.5);
   --sh-float: 0 0 0 1px rgba(255, 255, 255, 0.05), 0 4px 12px -8px rgba(0, 0, 0, 0.5);
+  --raised-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.035));
+  --raised-line: rgba(255, 255, 255, 0.09);
+  --sh-raised: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 6px 14px -8px rgba(0, 0, 0, 0.7);
 
   /* shadcn 語意 token（HSL 三元組，給上游元件與 theme-utils 用）對到 v5 */
   --background: 220 11.5% 10.2%;  /* panel：側欄、tab 列等 chrome */
@@ -323,7 +332,7 @@
   --border: 60 2.5% 15.7%;
   --input: 60 2.5% 15.7%;
   --ring: 60 7% 91.6%;  /* focus 用 ink */
-  --radius: 0.375rem;  /* 6px 主力圓角 */
+  --radius: 0.25rem;  /* 4px 控制項圓角（ALMNC-79.1，原 6px）；rounded-xl 約 6px 給卡片 */
 
   --sidebar-background: 220 11.5% 10.2%;
   --sidebar-foreground: 60 7% 91.6%;
@@ -389,7 +398,8 @@ code, kbd, pre, samp {
   color: var(--ink);
 }
 :where([data-ui="v3"]) .file-manager-item.active::before {
-  background: var(--ink);
+  /* ALMNC-79.3：不用左側線條標示目前那篇，只留選中底 */
+  content: none;
 }
 
 /* ALMNC-26：MyVault 與導覽列使用相同字級和未選中色。 */
@@ -404,4 +414,16 @@ code, kbd, pre, samp {
 
 :where([data-ui="v3"]) [data-sidebar-v3] [data-file-manager-item-name] {
   font-size: inherit;
+}
+
+/* ALMNC-79.3：檔案樹階層——資料夾深色、較粗，檔案淡色；列圓角 5px。縮排（每層 16px）與箭頭位置在 file-tree-row.tsx。 */
+:where([data-ui="v3"]) [data-sidebar-v3] .file-manager-item {
+  border-radius: var(--r-row);
+}
+:where([data-ui="v3"]) [data-sidebar-v3] .file-manager-item[data-file-manager-item-kind="folder"] {
+  color: var(--ink);
+  font-weight: 500;
+}
+:where([data-ui="v3"]) [data-sidebar-v3] .file-manager-item [data-file-manager-toggle] {
+  color: var(--faint);
 }

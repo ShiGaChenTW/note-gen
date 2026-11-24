@@ -14,6 +14,8 @@ import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { toast } from "@/hooks/use-toast";
 import { cloneDeep } from "lodash-es";
 import { computedParentPath, getCurrentFolder, joinRelativePath } from "@/lib/path";
+import useVaultIndexStore from "@/stores/vault-index"
+import { folderNoteCount } from "@/lib/note-list/note-list"
 import { cn } from '@/lib/utils'
 import useSettingStore from '@/stores/setting'
 import { isWritingAssetsFolder } from '@/lib/writing-assets-path'
@@ -165,6 +167,7 @@ export function FolderItem({
   const { setClipboardItem, clipboardItem, clipboardItems, clipboardOperation } = useClipboardStore()
 
   const path = computedParentPath(item)
+  const noteCount = useVaultIndexStore(state => folderNoteCount(state, path))
   const isWikiFolder = isWikiFolderPath(path)
   const isAssetsFolder = isWritingAssetsFolder(path, assetsPath)
   const FolderIdentityIcon = isWikiFolder ? WikiFolderIcon : isAssetsFolder ? PackageOpen : Folder
@@ -999,6 +1002,8 @@ export function FolderItem({
                       <Folder className={`${iconSize} shrink-0`} />
                     )} />}
                     <span data-file-manager-item-name className={`text-${fileManagerTextSize} min-w-0 flex-1 truncate ${item.loading ? 'text-muted-foreground' : ''}`}>{item.name}</span>
+                    {/* Fork（almanac ALMNC-79.3）：V3 資料夾右邊標筆記數（全庫索引），滑過時讓位給狀態圖示；classic 不顯示 */}
+                    {noteCount > 0 && <span data-folder-count className="hidden shrink-0 pr-1 text-xs font-normal tabular-nums text-faint v3:inline v3:group-hover:hidden">{noteCount}</span>}
                   </div>
                   <FileTreeDecorations
                     path={path}

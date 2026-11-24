@@ -64,7 +64,7 @@ function ReportView() {
               <button
                 key={item.quote}
                 type="button"
-                className="mt-1 block w-full border-l-2 border-line pl-2 text-left text-xs italic text-muted-foreground hover:text-foreground"
+                className="mt-1 block w-full border-l-2 border-line pl-2 text-left text-xs italic text-muted-foreground hover:text-foreground v3:rounded-(--r-kbd) v3:border-l-0 v3:bg-hover v3:px-2 v3:py-1"
                 onClick={() => openNote(item.path)}
               >
                 「{item.quote}」— [[{linkName(item.path)}]]

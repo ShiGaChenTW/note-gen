@@ -18,6 +18,7 @@ import { FileTreeExpansionMenu } from './file-tree-expansion-menu'
 import { FolderItem } from "./folder-item"
 import { writeDroppedFileToRoot } from "./root-drop"
 import { cn } from "@/lib/utils"
+import { useUiV3 } from "@/lib/fork-ui"
 import { toast } from "@/hooks/use-toast"
 import { useTranslations } from "next-intl"
 import useClipboardStore from "@/stores/clipboard"
@@ -153,6 +154,7 @@ export function FileManager({
   const primaryBackupMethod = useSettingStore(state => state.primaryBackupMethod)
   const assetsFolderName = getWritingAssetsFolderName(assetsPath)
   const t = useTranslations('article.file')
+  const isV3 = useUiV3()
   const tRecordToolbar = useTranslations('record.mark.toolbar')
   const {
     configurationRevision: syncConfigurationRevision,
@@ -1131,7 +1133,20 @@ export function FileManager({
                 clearSelectedFilePaths()
               }}
             >
-              {showEmptyState ? (
+              {showEmptyState && isV3 ? (
+                // Fork（almanac ALMNC-79.3）：V3 側欄的空筆記庫只留一行字與兩個文字連結，不放大圖示與實心按鈕。
+                <p className="pt-1 pr-2 pl-3.5 text-xs leading-5 text-faint" data-file-empty-line>
+                  {t('empty.title')}
+                  {' · '}
+                  <button type="button" className="cursor-pointer text-ink underline decoration-line underline-offset-3 outline-none hover:decoration-ink focus-visible:ring-1 focus-visible:ring-ink/60" onClick={(event) => { event.stopPropagation(); createRootFile() }}>
+                    {t('toolbar.newArticle')}
+                  </button>
+                  {' / '}
+                  <button type="button" disabled={isImporting} className="cursor-pointer text-ink underline decoration-line underline-offset-3 outline-none hover:decoration-ink focus-visible:ring-1 focus-visible:ring-ink/60 disabled:cursor-wait disabled:opacity-60" onClick={(event) => { event.stopPropagation(); void importMarkdown() }}>
+                    {isImporting ? t('toolbar.importing') : t('toolbar.importMarkdown')}
+                  </button>
+                </p>
+              ) : showEmptyState ? (
                 <Empty className="min-h-48 justify-start pt-10">
                   <EmptyHeader>
                     <EmptyMedia variant="icon">

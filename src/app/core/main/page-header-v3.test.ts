@@ -52,3 +52,26 @@ describe('PageHeader back button', () => {
     expect(onBack).toHaveBeenCalled()
   })
 })
+
+// ALMNC-79.2：V3 頁首單行 56px，標題、副標、動作同一列；頁籤另起一列
+describe('PageHeader V3 layout', () => {
+  it('keeps title, subtitle and actions on one 56px row, tabs below', () => {
+    act(() => {
+      useUiModeStore.setState({ mode: 'v3' })
+      root.render(createElement(PageHeader, {
+        title: '今天', subtitle: '11 月 24 日', onBack: vi.fn(),
+        actions: createElement('button', null, '動作'),
+        tabs: createElement('div', { 'data-tabs': '' }, '頁籤'),
+      }))
+    })
+    const header = container.querySelector('[data-page-header]')!
+    const row = header.firstElementChild as HTMLElement
+    expect(row.className).toContain('h-14')
+    expect(row.querySelector('h1')?.textContent).toBe('今天')
+    expect(row.textContent).toContain('11 月 24 日')
+    expect(row.textContent).toContain('動作')
+    expect(row.querySelector('[data-tabs]')).toBeNull()
+    expect(header.querySelector('[data-tabs]')).toBeTruthy()
+  })
+})
+

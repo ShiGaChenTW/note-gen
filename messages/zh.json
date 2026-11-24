@@ -8836,6 +8836,7 @@
   "sidebarV3": {
     "navLabel": "主导航",
     "search": "搜索或下指令",
+    "mainSection": "主要",
     "count": "{count} 件",
     "nav": {
       "today": "今天",
@@ -8852,6 +8853,8 @@
       "addFirst": "新增第一位伙伴"
     },
     "vault": "我的笔记",
+    "allNotes": "全部笔记",
+    "settings": "设置",
     "collapseSection": "收起{title}",
     "expandSection": "展开{title}",
     "noteList": {

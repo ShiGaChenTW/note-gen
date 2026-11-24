@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { useUiModeStore } from '@/lib/fork-ui'
 import {
-  applyNoteListChange, buildNoteList, folderName, nextNoteList, noteFolder, noteTitle, relativeTimeFormat, relativeTimeLabel,
+  applyNoteListChange, buildNoteList, countNotesByFolder, folderName, folderNoteCount, nextNoteList, noteFolder, noteTitle, relativeTimeFormat, relativeTimeLabel,
   useNoteListStore, type NoteListSnapshot, type NoteListSource,
 } from './note-list'
 
@@ -179,5 +179,27 @@ describe('relativeTimeFormat', () => {
     } finally {
       intl.RelativeTimeFormat = Original
     }
+  })
+})
+
+// ALMNC-79.3：側欄檔案樹的資料夾筆記數，算整個子樹、根目錄的筆記不算進任何資料夾
+describe('countNotesByFolder', () => {
+  it('counts notes in each folder including subfolders', () => {
+    const counts = countNotesByFolder(['工作/Q4 預算/欄位.md', '工作/Q4 預算/規格.md', '工作/週會.md', '閱讀/書.md', '根.md', '/工作/尾斜線.md'])
+    expect(counts.get('工作')).toBe(4)
+    expect(counts.get('工作/Q4 預算')).toBe(2)
+    expect(counts.get('閱讀')).toBe(1)
+    expect(counts.has('')).toBe(false)
+    expect(counts.has('根.md')).toBe(false)
+  })
+
+  it('reads the vault index and recounts only when the revision changes', () => {
+    const notes = new Map<string, unknown>([['a/x.md', {}], ['a/b/y.md', {}]])
+    expect(folderNoteCount({ notes, revision: 1 }, 'a')).toBe(2)
+    expect(folderNoteCount({ notes, revision: 1 }, '/a/b/')).toBe(1)
+    notes.set('a/z.md', {})
+    expect(folderNoteCount({ notes, revision: 1 }, 'a')).toBe(2)
+    expect(folderNoteCount({ notes, revision: 2 }, 'a')).toBe(3)
+    expect(folderNoteCount({ notes, revision: 2 }, 'missing')).toBe(0)
   })
 })

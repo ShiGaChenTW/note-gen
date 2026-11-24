@@ -36,6 +36,29 @@ export function noteFolder(path: string): string {
   return parts.slice(0, -1).join('/')
 }
 
+/** ALMNC-79.3：每個資料夾（含子資料夾）裡的筆記數；key 是資料夾路徑（不含頭尾斜線），根目錄不算。 */
+export function countNotesByFolder(paths: Iterable<string>): Map<string, number> {
+  const counts = new Map<string, number>()
+  for (const path of paths) {
+    const parts = trimSlashes(path).split('/')
+    for (let depth = 1; depth < parts.length; depth++) {
+      const folder = parts.slice(0, depth).join('/')
+      counts.set(folder, (counts.get(folder) ?? 0) + 1)
+    }
+  }
+  return counts
+}
+
+let folderCountCache: { revision: number, counts: Map<string, number> } | null = null
+
+/** 側欄檔案樹用：從筆記庫索引（全庫、不受資料夾是否展開影響）查資料夾的筆記數，同一個 revision 只算一次。 */
+export function folderNoteCount(state: { notes: ReadonlyMap<string, unknown>, revision: number }, folder: string): number {
+  if (!folderCountCache || folderCountCache.revision !== state.revision) {
+    folderCountCache = { revision: state.revision, counts: countNotesByFolder(state.notes.keys()) }
+  }
+  return folderCountCache.counts.get(trimSlashes(folder)) ?? 0
+}
+
 /** 資料夾顯示名稱：路徑最後一段；根目錄（空字串）交給畫面端顯示筆記庫名稱（ALMNC-43.12）。 */
 export function folderName(folder: string): string {
   return trimSlashes(folder).split('/').pop() ?? ''

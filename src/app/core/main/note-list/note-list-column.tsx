@@ -22,7 +22,7 @@ import useArticleStore from '@/stores/article'
 import useNoteMarksStore, { selectWorkspaceMarks } from '@/stores/note-marks'
 import useSettingStore from '@/stores/setting'
 import useVaultIndexStore from '@/stores/vault-index'
-import { SIDEBAR_ROW } from '../sidebar-row'
+import { SELECTED_RAISED, SIDEBAR_ROW } from '../sidebar-row'
 import { useDragWidth } from '@/hooks/use-drag-width'
 
 const NOTE_LIST_MIN_WIDTH = 220
@@ -285,7 +285,7 @@ const NoteListRow = memo(function NoteListRow({ item, selected, meta, checked, t
       type="button"
       aria-current={selected ? 'true' : undefined}
       onClick={() => { if (!selected) void useArticleStore.getState().setActiveFilePath(item.path) }}
-      className={cn(SIDEBAR_ROW, 'flex w-full flex-col items-stretch gap-0.5 px-3 py-2 text-left text-ink', selected && 'bg-active')}
+      className={cn(SIDEBAR_ROW, 'flex w-full flex-col items-stretch gap-0.5 px-3 py-2 text-left text-ink', selected && ['bg-active', SELECTED_RAISED])}
     >
       <span className="truncate text-sm leading-5 font-semibold" title={item.title}>{item.title}</span>
       <span className="truncate text-xs leading-4 text-muted-ink" title={item.folder || undefined}>{meta}</span>

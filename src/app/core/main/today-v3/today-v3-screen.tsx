@@ -6,7 +6,7 @@
 // 資料組裝在 lib/today-v3/layout.ts（純函式）；寫回（勾選任務）沿用今日頁的 use-today-actions。
 import { useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { Check } from 'lucide-react'
+import { AlignLeft, Check, ChevronRight, Clock, Copy, FilePen, FilePlus, FileText, FolderInput, FolderPlus, ImageIcon, Link2, ListChecks, Paperclip, Sparkles, Trash2, type LucideIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { TodayV3Layout, TodoItem } from '@/lib/today-v3/layout'
@@ -33,6 +33,14 @@ import { useTodayV3Data } from './use-today-v3-data'
 import { WorkbenchLine } from './workbench-line'
 import { useWorkbenchCount } from '@/lib/workbench/use-workbench'
 
+
+// ALMNC-79.4：右側清單「圖示＋標題＋類型」；圖示不加方塊底。
+const DECIDE_ICONS: Record<string, LucideIcon> = {
+  note: FileText, task: ListChecks, event: Clock, create: FilePlus, update: FilePen, delete: Trash2,
+  move: FolderInput, copy: Copy, folder: FolderPlus, job: Sparkles,
+}
+const CAPTURE_ICONS: Record<string, LucideIcon> = { text: AlignLeft, link: Link2, image: ImageIcon, file: Paperclip }
+
 function Journal({ layout, dateLabel, viewingToday, exists, onOpen }: { layout: TodayV3Layout, dateLabel: string, viewingToday: boolean, exists: boolean, onOpen: () => void }) {
   const t = useTranslations('todayV3.journal')
   const [focus, setFocus] = useState(false)
@@ -56,7 +64,7 @@ function Journal({ layout, dateLabel, viewingToday, exists, onOpen }: { layout: 
         return (
           <p
             key={`${index}:${text}`}
-            className={cn('text-ui-emphasis leading-[1.8] text-note-ink transition-opacity duration-150', active && 'border-l-2 border-line pl-3.5', focus && !active && 'opacity-35')}
+            className={cn('text-ui-emphasis leading-[1.8] text-note-ink transition-opacity duration-150', active && '-mx-3.5 rounded-(--r-md) bg-hover px-3.5 py-2' /* ALMNC-79.4：目前段落用淡底，不用左側線條 */, focus && !active && 'opacity-35')}
           >{text}</p>
         )
       })}
@@ -98,7 +106,12 @@ function Todo({ layout, busy, viewingToday, shortDate, onToggle }: { layout: Tod
       </SectionLabel>
       {items.length === 0
         ? <EmptyState className="py-3" text={t(viewingToday ? 'empty' : 'emptyDay')} />
-        : <ul>{items.map(item => <TodoRow key={item.key} item={item} busy={busy.has(item.key)} onToggle={onToggle} />)}</ul>}
+        : (
+          // ALMNC-79.4：「今天要完成」是卡片，任務之間細線分隔
+          <ul className="mt-2 divide-y divide-line-soft rounded-(--r-md) border border-line bg-bg px-3 shadow-float">
+            {items.map(item => <TodoRow key={item.key} item={item} busy={busy.has(item.key)} onToggle={onToggle} />)}
+          </ul>
+        )}
     </div>
   )
 }
@@ -114,17 +127,24 @@ function DecideRail({ layout }: { layout: TodayV3Layout }) {
     <section data-testid="today-v3-decide">
       <SectionLabel as="h2" underline trailing={<Count value={count} emphasis />}>{t('label')}</SectionLabel>
       {items.length === 0 && <EmptyState className="py-3" text={t('empty')} />}
-      {items.map(item => (
-        <button
-          key={item.key}
-          type="button"
-          onClick={() => { show(); select(item.key) }}
-          className="-mx-1.5 block w-[calc(100%+12px)] cursor-pointer rounded-(--r-kbd) px-1.5 py-2 text-left transition-colors duration-100 outline-none hover:bg-hover focus-visible:ring-1 focus-visible:ring-ring/65"
-        >
-          <div className="text-ui-compact leading-5 font-medium">{item.title}</div>
-          <div className="text-ui-compact text-muted-ink">{[item.origin, item.kind === 'job' ? jobT('result') : decideT(`kind.${item.kind}`)].filter(Boolean).join(' · ')}</div>
-        </button>
-      ))}
+      {items.map(item => {
+        const Icon = DECIDE_ICONS[item.kind] ?? FileText
+        return (
+          <button
+            key={item.key}
+            type="button"
+            onClick={() => { show(); select(item.key) }}
+            className="group/rail -mx-1.5 flex w-[calc(100%+12px)] cursor-pointer items-center gap-2.5 rounded-(--r-row) px-1.5 py-2 text-left transition-colors duration-100 outline-none hover:bg-hover focus-visible:ring-1 focus-visible:ring-ring/65"
+          >
+            <Icon className="size-4 shrink-0 text-muted-ink" aria-hidden />
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-ui-compact leading-5 font-medium">{item.title}</span>
+              <span className="block truncate text-xs text-muted-ink">{[item.origin, item.kind === 'job' ? jobT('result') : decideT(`kind.${item.kind}`)].filter(Boolean).join(' · ')}</span>
+            </span>
+            <ChevronRight className="size-3.5 shrink-0 text-faint group-hover/rail:text-muted-ink" aria-hidden />
+          </button>
+        )
+      })}
       {count > items.length && (
         <button type="button" onClick={show} className="mt-1 cursor-pointer text-ui-compact font-medium text-brand outline-none hover:underline focus-visible:ring-1 focus-visible:ring-ring/65">{t('all')}</button>
       )}
@@ -145,14 +165,22 @@ function CaptureRail({ layout }: { layout: TodayV3Layout }) {
         </div>
       }>{t('label')}</SectionLabel>
       {items.length === 0 && <EmptyState className="py-3" text={t('empty')} />}
-      {items.map(item => (
-        <div key={item.key} className="flex items-baseline gap-2.5 py-1.5">
-          <SectionLabel as="span" className="w-10 shrink-0">{t(`kind.${item.kind}`)}</SectionLabel>
-          {item.loading
-            ? <span className="flex flex-1 flex-col gap-2" role="status" aria-label={t('reading')}><i className="block h-2 motion-safe:animate-pulse rounded-(--r) bg-sunken" /><i className="block h-2 w-3/5 motion-safe:animate-pulse rounded-(--r) bg-sunken" /></span>
-            : <span className="min-w-0 flex-1 truncate text-ui-compact leading-5" title={item.title}>{item.title}</span>}
-        </div>
-      ))}
+      {items.map(item => {
+        const Icon = CAPTURE_ICONS[item.kind] ?? AlignLeft
+        return (
+          <div key={item.key} className="flex items-center gap-2.5 py-2">
+            <Icon className="size-4 shrink-0 text-muted-ink" aria-hidden />
+            {item.loading
+              ? <span className="flex flex-1 flex-col gap-2" role="status" aria-label={t('reading')}><i className="block h-2 motion-safe:animate-pulse rounded-(--r) bg-sunken" /><i className="block h-2 w-3/5 motion-safe:animate-pulse rounded-(--r) bg-sunken" /></span>
+              : (
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-ui-compact leading-5" title={item.title}>{item.title}</span>
+                  <span className="block text-xs text-muted-ink">{t(`kind.${item.kind}`)}</span>
+                </span>
+              )}
+          </div>
+        )
+      })}
     </section>
   )
 }
@@ -193,7 +221,7 @@ export function TodayV3Screen() {
       <PageHeader
         title={viewingToday ? t('title') : t('titleDay', { date: monthDay })}
         subtitle={
-          <span className="flex flex-wrap items-baseline gap-x-3">
+          <span className="flex items-baseline gap-x-3 whitespace-nowrap">
             <span className="tabular-nums" data-testid="today-v3-summary">
               {[
                 !viewingToday && t('viewing'),
