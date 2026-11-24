@@ -1,6 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useUiV3 } from '@/lib/fork-ui'
+import { isSettingSectionVisible } from '@/stores/settings-dialog'
 import baseConfig, { type SettingNavigationGroup } from '@/app/core/setting/config'
 import { useMessages, useTranslations } from 'next-intl'
 import { ChevronRight, Search } from "lucide-react";
@@ -62,6 +64,8 @@ export function SettingTab({
   const [query, setQuery] = useState(() => mobileSettingQueryCache)
   // Fork（almanac ALMNC-45）：電子紙只做 macOS 桌面版
   const notMobilePages = ['about', 'backup', 'shortcuts', 'plugins', 'eink']
+  // Fork（almanac ALMNC-83）：與桌面共用分頁可見規則
+  const v3 = useUiV3()
   
   const config = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase()
@@ -74,7 +78,7 @@ export function SettingTab({
     const visibleConfig = baseConfig.reduce<MobileSettingNavigationItem[]>((items, item) => {
       if ('group' in item) {
         items.push({ separator: item.group })
-      } else if (!notMobilePages.includes(item.anchor)) {
+      } else if (!notMobilePages.includes(item.anchor) && isSettingSectionVisible(item.anchor, v3)) {
         const title = t(item.anchor === 'ai' ? 'ai.menuTitle' : `${item.anchor}.title`)
         const searchTerms = [
           item.anchor,
@@ -97,7 +101,7 @@ export function SettingTab({
         && !('separator' in items[index + 1])
         && items.slice(index + 1).some(next => !('separator' in next))
     })
-  }, [messages, query, t])
+  }, [messages, query, t, v3])
 
   function handleNavigation(anchor: string) {
     const mePage = document.getElementById('mobile-me')

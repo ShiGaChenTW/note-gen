@@ -65,6 +65,19 @@ export function isV3OnlySettingSection(section: string): boolean {
   return (v3OnlySettingSections as readonly string[]).includes(section)
 }
 
+/** Fork（almanac ALMNC-83）：新介面（V3）下不列出的分頁；classic 照舊顯示。 */
+export const classicOnlySettingSections: readonly BuiltinSettingSection[] = []
+
+/** Fork（almanac ALMNC-83）：功能關閉、兩種介面都不列出的分頁（資料保留）。 */
+export const disabledSettingSections: readonly BuiltinSettingSection[] = []
+
+/** 這個分頁在目前介面（v3 = 新介面）是否顯示。外掛分頁另外判斷，這裡一律回 true。 */
+export function isSettingSectionVisible(section: string, v3: boolean): boolean {
+  if ((disabledSettingSections as readonly string[]).includes(section)) return false
+  if (v3) return !(classicOnlySettingSections as readonly string[]).includes(section)
+  return !isV3OnlySettingSection(section)
+}
+
 interface SettingsDialogState {
   open: boolean
   activeSection: SettingSection

@@ -18,7 +18,7 @@ import { useShallow } from 'zustand/react/shallow'
 import { usePluginStore } from '@/stores/plugins'
 import { usePluginLocalization } from '@/lib/plugins/localization'
 import { getInstalledPluginText, resolvePluginText } from '../plugins/plugin-display'
-import type { PluginSettingSection } from '@/stores/settings-dialog'
+import { isSettingSectionVisible, type PluginSettingSection } from '@/stores/settings-dialog'
 import { useUiV3 } from '@/lib/fork-ui'
 
 function collectSearchTerms(value: unknown): string[] {
@@ -44,8 +44,8 @@ export function SettingTab() {
   const config = useMemo(() => {
     const settingMessages = messages.settings as Record<string, unknown> | undefined
 
-    // Fork（almanac ALMNC-45）：V3 專屬的分頁（電子紙）在 classic 不列出
-    const builtins = baseConfig.filter(item => v3 || 'group' in item || !item.v3Only).map(item => {
+    // Fork（almanac ALMNC-45、ALMNC-83）：依介面隱藏分頁（V3 專屬、classic 專屬、已關閉）
+    const builtins = baseConfig.filter(item => 'group' in item || isSettingSectionVisible(item.anchor, v3)).map(item => {
       if ('group' in item) {
         return {
           ...item,

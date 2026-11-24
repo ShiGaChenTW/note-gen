@@ -13,7 +13,7 @@ import useSettingStore from '@/stores/setting'
 import {
   settingSections,
   isPluginSettingSection,
-  isV3OnlySettingSection,
+  isSettingSectionVisible,
   type BuiltinSettingSection,
   type SettingSection,
   useSettingsDialogStore,
@@ -93,9 +93,9 @@ export function SettingsDialog() {
   const v3 = useUiV3()
   // Fork（almanac ALMNC-45）：classic 下不停在 V3 專屬分頁（例如上次停在電子紙後切回 classic）
   const selectedSection = isPluginSettingSection(activeSection) && initialized && !pluginSectionAvailable(activeSection)
-    ? 'plugins' : !v3 && isV3OnlySettingSection(activeSection) ? 'general' : activeSection
+    ? 'plugins' : !isPluginSettingSection(activeSection) && !isSettingSectionVisible(activeSection, v3) ? 'general' : activeSection
   const sectionsToRender = [...new Set([...mountedSections, selectedSection])].filter(section =>
-    (!isPluginSettingSection(section) || pluginSectionAvailable(section)) && (v3 || !isV3OnlySettingSection(section)))
+    (!isPluginSettingSection(section) || pluginSectionAvailable(section)) && (isPluginSettingSection(section) || isSettingSectionVisible(section, v3)))
 
   useEffect(() => {
     if (initialized && isPluginSettingSection(activeSection) && !pluginSectionAvailable(activeSection)) {
