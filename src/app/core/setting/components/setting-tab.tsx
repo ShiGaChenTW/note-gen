@@ -18,7 +18,7 @@ import { useShallow } from 'zustand/react/shallow'
 import { usePluginStore } from '@/stores/plugins'
 import { usePluginLocalization } from '@/lib/plugins/localization'
 import { getInstalledPluginText, resolvePluginText } from '../plugins/plugin-display'
-import { isSettingSectionVisible, type PluginSettingSection } from '@/stores/settings-dialog'
+import { isSettingSectionVisible, settingSectionTitleKey, type PluginSettingSection } from '@/stores/settings-dialog'
 import { useUiV3 } from '@/lib/fork-ui'
 
 function collectSearchTerms(value: unknown): string[] {
@@ -54,7 +54,7 @@ export function SettingTab() {
       }
       return {
         ...item,
-        title: t(item.anchor === 'ai' ? 'ai.menuTitle' : `${item.anchor}.title`),
+        title: t(settingSectionTitleKey(item.anchor, v3)),
         searchTerms: collectSearchTerms(settingMessages?.[item.anchor]),
       }
     })

@@ -12,6 +12,7 @@ import { SkillsListView } from './skills-list'
 import { SkillDetailView } from './skill-detail'
 import { WikiFolderView } from './wiki-folder-view'
 import { isWikiFolderPath } from '@/lib/wiki/path'
+import { useUiV3 } from '@/lib/fork-ui'
 
 interface FolderViewProps {
   folderPath: string
@@ -74,7 +75,9 @@ export function FolderView({ folderPath }: FolderViewProps) {
   const { getSkillsByScope, initSkills, initialized: skillsStoreInitialized } = useSkillsStore()
 
   // 检查是否是 Skills 文件夹
-  const isWikiView = isWikiFolderPath(folderPath)
+  // Fork（almanac ALMNC-83.1）：V3 下 LLM Wiki 入口隱藏，Wiki 資料夾當一般資料夾看（檔案保留）
+  const v3 = useUiV3()
+  const isWikiView = !v3 && isWikiFolderPath(folderPath)
   const isSkillsView = !isWikiView && isSkillsFolder(folderPath.split('/').pop() || '')
 
   // 检查是否是 Skill 子文件夹（单个 skill）

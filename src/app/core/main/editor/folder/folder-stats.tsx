@@ -28,6 +28,7 @@ import { assertWikiContextCurrent, captureWikiWorkspaceGuard } from '@/lib/wiki/
 import { collectWikiArticleSourceDocuments } from '@/lib/wiki/sources'
 import emitter from '@/lib/emitter'
 import { useWikiActionScope } from '@/components/wiki/use-wiki-action-scope'
+import { useUiV3 } from '@/lib/fork-ui'
 
 interface FolderStatsViewProps { folderPath: string; folderFiles: string[] }
 interface FolderIndexStats { documentCount: number; chunkCount: number; lastUpdatedAt: number | null }
@@ -42,6 +43,7 @@ export function FolderStatsView({ folderPath, folderFiles }: FolderStatsViewProp
   const wiki = useTranslations('wiki')
   const rag = useTranslations('settings.rag')
   const locale = useLocale()
+  const v3 = useUiV3()
   const errorMessage = useWikiErrorMessage()
   const { data, error, loading, refresh } = useWikiData()
   const workspacePath = useSettingStore(state => state.workspacePath)
@@ -243,7 +245,8 @@ export function FolderStatsView({ folderPath, folderFiles }: FolderStatsViewProp
       </header>
 
       {error ? <Alert variant="destructive"><AlertDescription>{errorMessage(error)}</AlertDescription></Alert> : null}
-      <KnowledgeSettingCard title={wiki('wikiTitle')} description={t('wikiSourceDescription')} icon={BookOpen} label={wiki('defaultMode')} enabled={data?.settings.enabled && selection?.included}>
+      {/* Fork（almanac ALMNC-83.1）：V3 下 LLM Wiki 入口隱藏，只留語意檢索 */}
+      {v3 ? null : <KnowledgeSettingCard title={wiki('wikiTitle')} description={t('wikiSourceDescription')} icon={BookOpen} label={wiki('defaultMode')} enabled={data?.settings.enabled && selection?.included}>
         {loading || !data || !selection ? <p className="text-sm text-muted-foreground">{t('loadingFolder')}</p>
           : !data.settings.enabled ? <div className="flex flex-col items-start gap-3"><p className="text-sm text-muted-foreground">{t('wikiGlobalDisabled')}</p>{openSettingsButton}</div>
             : <>
@@ -254,7 +257,7 @@ export function FolderStatsView({ folderPath, folderFiles }: FolderStatsViewProp
                 <div className="flex flex-wrap items-center gap-3"><Button disabled={busy || !selection.included || !knownFiles.length || runningWikiJobs} onClick={() => void runWiki(() => startWikiFolderCompilation(path, data.context.id), t('organizeQueued'))}>{busy || runningWikiJobs ? <Loader2 data-icon="inline-start" className="animate-spin" /> : <Sparkles data-icon="inline-start" />}{wikiReady ? t('updateFolder') : t('organizeFolder')}</Button><span className="text-xs text-muted-foreground">{data.settings.started ? wiki('foregroundNotice') : t('startMaintenanceHint')}</span></div>
               </> : null}
             </>}
-      </KnowledgeSettingCard>
+      </KnowledgeSettingCard>}
 
       <KnowledgeSettingCard title={rag('ragTitle')} description={t('ragFolderDescription')} icon={Layers} label={wiki('optionalMode')} enabled={semanticEnabled}>
         {loading || !data ? <p className="text-sm text-muted-foreground">{t('loadingFolder')}</p>

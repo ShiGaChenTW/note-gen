@@ -936,6 +936,10 @@
       "deleteVectorHint": "清空向量和 BM25 索引後，本機模糊檢索仍可使用；需要語意檢索時請重新建立。",
       "ragTitle": "RAG 語意檢索",
       "ragDescription": "為原始資料建立向量索引，適合資料較多且需要依語意搜尋時使用。可獨立於 LLM Wiki 使用。",
+      "semanticTitle": "語意檢索",
+      "semanticDesc": "用向量、BM25 與模糊比對混合搜尋筆記庫，可另外加上重排模型改善結果順序。",
+      "semanticCardDescription": "為原始資料建立向量索引，適合資料較多、需要依語意搜尋時使用。",
+      "semanticChatDescription": "資料類型與排除項目會影響語意檢索的範圍；對話是否自動引用資料可以另外設定。",
       "optionalEnhancement": "需要時再啟用",
       "disabledDescription": "停用時無須設定向量模型，仍可整理及閱讀 LLM Wiki。",
       "ragAdvanced": "RAG 進階設定、檢索測試與維護"

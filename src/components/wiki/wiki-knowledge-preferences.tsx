@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { useUiV3 } from '@/lib/fork-ui'
 import { BookOpen, BrainCircuit, ChevronDown, MessageSquare, Palette, Sparkles, StickyNote } from 'lucide-react'
 import { toast } from 'sonner'
 import useRagSettingsStore, { DEFAULT_RAG_SETTINGS } from '@/stores/ragSettings'
@@ -25,6 +26,8 @@ function parsePaths(value: string) {
 export function WikiKnowledgePreferences() {
   const t = useTranslations('settings.rag')
   const wiki = useTranslations('wiki')
+  // Fork（almanac ALMNC-83.1）：V3 下 LLM Wiki 隱藏，說明只講語意檢索，不標「共用設定」
+  const v3 = useUiV3()
   const errorMessage = useWikiErrorMessage()
   const fieldId = useId()
   const { enabledSourceTypes, automaticSearchEnabled, agentStrategy, excludedPaths, initSettings, updateSetting } = useRagSettingsStore()
@@ -51,7 +54,7 @@ export function WikiKnowledgePreferences() {
       : enabledSourceTypes.filter(type => type !== sourceType))
   }
 
-  return <KnowledgeSettingCard title={wiki('chatSettingsTitle')} description={wiki('chatSettingsDescription')} icon={MessageSquare} label={wiki('sharedMode')}>
+  return <KnowledgeSettingCard title={wiki('chatSettingsTitle')} description={v3 ? t('semanticChatDescription') : wiki('chatSettingsDescription')} icon={MessageSquare} label={v3 ? undefined : wiki('sharedMode')}>
     <ItemGroup>
       <Item variant="muted">
         <ItemMedia variant="icon"><Sparkles /></ItemMedia>

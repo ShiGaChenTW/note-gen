@@ -15,6 +15,7 @@ import { updateWikiSettings } from '@/lib/wiki/settings'
 import { Switch } from '@/components/ui/switch'
 import { assertWikiContextCurrent } from '@/lib/wiki/context'
 import { useWikiActionScope } from '@/components/wiki/use-wiki-action-scope'
+import { useUiV3 } from '@/lib/fork-ui'
 
 export default function KnowledgeSetting() {
   const t = useTranslations('settings.rag')
@@ -23,6 +24,8 @@ export default function KnowledgeSetting() {
   const { data, refresh } = useWikiData()
   const { busy, beginAction } = useWikiActionScope(data?.context.id ?? 'loading')
   const semanticEnabled = data?.settings.semanticSearchEnabled ?? false
+  // Fork（almanac ALMNC-83.1）：V3 下只留語意檢索；LLM Wiki 直接寫 Markdown、不經提案，入口隱藏（wiki 資料與設定保留）。
+  const v3 = useUiV3()
 
   async function toggleSemantic(semanticSearchEnabled: boolean) {
     if (!data) return
@@ -37,9 +40,9 @@ export default function KnowledgeSetting() {
     } finally { operation.finish() }
   }
 
-  return <SettingType id="rag" title={wiki('title')} desc={wiki('description')} icon={<BookOpen />}>
-    <WikiSettingsPanel />
-    <KnowledgeSettingCard title={t('ragTitle')} description={t('ragDescription')} icon={Layers} label={wiki('optionalMode')} enabled={semanticEnabled} actions={<Switch aria-label={t('ragTitle')} checked={semanticEnabled} disabled={busy || !data} onCheckedChange={enabled => void toggleSemantic(enabled)} />}>
+  return <SettingType id="rag" title={v3 ? t('semanticTitle') : wiki('title')} desc={v3 ? t('semanticDesc') : wiki('description')} icon={<BookOpen />}>
+    {v3 ? null : <WikiSettingsPanel />}
+    <KnowledgeSettingCard title={t('ragTitle')} description={t(v3 ? 'semanticCardDescription' : 'ragDescription')} icon={Layers} label={wiki('optionalMode')} enabled={semanticEnabled} actions={<Switch aria-label={t('ragTitle')} checked={semanticEnabled} disabled={busy || !data} onCheckedChange={enabled => void toggleSemantic(enabled)} />}>
       {semanticEnabled ? <>
         <ModelSetting kind="embedding" />
         <Settings />

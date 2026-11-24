@@ -163,10 +163,11 @@ export function TitleBar() {
         {/* 右侧按钮 */}
         <div className="flex items-center gap-0.5 px-2 shrink-0" data-tauri-drag-region="false">
           <PluginTitleBar location="title-bar-right" />
-          <Tooltip>
+          {/* Fork（almanac ALMNC-83.1）：V3 下 LLM Wiki 入口隱藏 */}
+          {!v3 && <Tooltip>
             <TooltipTrigger asChild><Button variant="ghost" size="icon" className="size-8" aria-label={t('wiki.open')} onClick={() => void openWikiFolder()}><BookOpen /></Button></TooltipTrigger>
             <TooltipContent side="bottom">{t('wiki.title')}</TooltipContent>
-          </Tooltip>
+          </Tooltip>}
           {!shellButtonsInSidebar && <LeftSidebarToggleButton />}
 
           {/* 中间面板切换按钮 */}

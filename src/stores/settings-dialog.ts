@@ -78,6 +78,16 @@ export function isSettingSectionVisible(section: string, v3: boolean): boolean {
   return !isV3OnlySettingSection(section)
 }
 
+/**
+ * Fork（almanac ALMNC-83.1）：設定選單上分頁名稱的翻譯 key（相對 settings 命名空間）。
+ * V3 下 rag 頁只留語意檢索，叫「語意檢索」；「知識庫」是 GLOSSARY 避用詞。
+ */
+export function settingSectionTitleKey(section: BuiltinSettingSection, v3: boolean): string {
+  if (section === 'ai') return 'ai.menuTitle'
+  if (section === 'rag' && v3) return 'rag.semanticTitle'
+  return `${section}.title`
+}
+
 interface SettingsDialogState {
   open: boolean
   activeSection: SettingSection
