@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useUiV3 } from '@/lib/fork-ui'
-import { isSettingSectionVisible } from '@/stores/settings-dialog'
+import { isSettingSectionVisible, settingSectionTitleKey } from '@/stores/settings-dialog'
 import baseConfig, { type SettingNavigationGroup } from '@/app/core/setting/config'
 import { useMessages, useTranslations } from 'next-intl'
 import { ChevronRight, Search } from "lucide-react";
@@ -79,7 +79,7 @@ export function SettingTab({
       if ('group' in item) {
         items.push({ separator: item.group })
       } else if (!notMobilePages.includes(item.anchor) && isSettingSectionVisible(item.anchor, v3)) {
-        const title = t(item.anchor === 'ai' ? 'ai.menuTitle' : `${item.anchor}.title`)
+        const title = t(settingSectionTitleKey(item.anchor, v3))
         const searchTerms = [
           item.anchor,
           title,

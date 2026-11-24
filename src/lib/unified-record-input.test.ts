@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  availableUnifiedRecordTypes,
   classifyUnifiedRecordInput,
   resolveUnifiedRecordType,
   resolveUnifiedRecordShortcut,
@@ -26,8 +27,15 @@ describe('resolveUnifiedRecordShortcut', () => {
       'link', 'text', 'image', 'file', 'recording', 'scan', 'todo', 'prompt-draft',
     ])
     expect(resolveUnifiedRecordShortcut({ key: '1', metaKey: true }, 'macos')).toBe('link')
-    expect(resolveUnifiedRecordShortcut({ key: '8', metaKey: true }, 'macos')).toBe('prompt-draft')
+    expect(resolveUnifiedRecordShortcut({ key: '8', metaKey: true }, 'macos', availableUnifiedRecordTypes(true))).toBe('prompt-draft')
     expect(resolveUnifiedRecordShortcut({ key: '0', metaKey: true }, 'macos')).toBe('auto')
+  })
+
+  it('drops the prompt-draft type and its shortcut while the prompt library is off (ALMNC-83.3)', () => {
+    expect(availableUnifiedRecordTypes(false)).not.toContain('prompt-draft')
+    expect(availableUnifiedRecordTypes(true)).toEqual(unifiedRecordTypes)
+    expect(resolveUnifiedRecordShortcut({ key: '8', metaKey: true }, 'macos', availableUnifiedRecordTypes(false))).toBeNull()
+    expect(resolveUnifiedRecordShortcut({ key: '7', metaKey: true }, 'macos', availableUnifiedRecordTypes(false))).toBe('todo')
   })
 
   it('matches the physical digit key when an input method changes the key value', () => {

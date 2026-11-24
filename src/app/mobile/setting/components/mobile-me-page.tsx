@@ -26,6 +26,7 @@ import { buildActivityDaySummaryText, buildProfileCardData, getBackupMethodStatu
 import { MobileMeProfileCard } from './mobile-me-profile-card'
 import { MobileUpdateSettings } from './mobile-update-settings'
 import { SettingTab } from './setting-tab'
+import { PROMPT_LIBRARY_ENABLED } from '@/lib/prompt-library/feature'
 
 const MOBILE_HEATMAP_WEEKS = 16
 const MOBILE_ME_SCROLL_KEY = 'mobile-me-scroll-top'
@@ -572,7 +573,8 @@ export function MobileMePage({
           </div>
         </motion.section>
 
-        <motion.section variants={embeddedItemVariants} className="px-1">
+        {/* Fork（almanac ALMNC-83.3）：提示詞功能關閉時不列提示詞庫入口 */}
+        {PROMPT_LIBRARY_ENABLED && <motion.section variants={embeddedItemVariants} className="px-1">
           <button
             type="button"
             className="mobile-dock-surface flex w-full items-center gap-3 rounded-[1.35rem] p-4 text-left active:opacity-80"
@@ -585,7 +587,7 @@ export function MobileMePage({
             <span className="min-w-0 flex-1 text-sm font-semibold">{tPromptLibrary('title')}</span>
             <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
           </button>
-        </motion.section>
+        </motion.section>}
 
         <motion.section variants={embeddedItemVariants} className="flex flex-col gap-3 px-1">
           <div className="px-1">

@@ -3,6 +3,7 @@ import { invoke } from '@tauri-apps/api/core'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import type { CustomThemeColors } from '@/types/theme'
 import type { Tag } from '@/db/tags'
+import type { QuickRecordTarget } from '@/lib/shortcut/quick-record-source'
 
 export const QUICK_RECORD_WINDOW = 'quick-record'
 
@@ -17,6 +18,8 @@ export interface QuickRecordContext {
   uiScale: number
   appFontFamily: string
   customThemeColors: CustomThemeColors
+  /** Fork（almanac ALMNC-83.4）：V3 存成資料源（不選記錄標籤），classic 存成記錄。舊主視窗沒給就當 record。 */
+  target?: QuickRecordTarget
 }
 
 export interface QuickRecordRequest {
@@ -25,6 +28,10 @@ export interface QuickRecordRequest {
   tagName?: string
   text?: string
   tagId?: number
+  /** ALMNC-83.4：這次存檔照哪個目標（視窗準備時拿到的 target）。 */
+  target?: QuickRecordTarget
+  /** ALMNC-83.4：存成資料源時，貼上與自動讀剪貼簿帶進來的字數。 */
+  pastedChars?: number
 }
 
 export interface QuickRecordResponse {

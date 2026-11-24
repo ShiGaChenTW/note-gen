@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { PROMPT_LIBRARY_ENABLED } from '@/lib/prompt-library/feature'
 
 export type BuiltinSettingSection =
   | 'about'
@@ -71,11 +72,17 @@ export function isV3OnlySettingSection(section: string): boolean {
 /**
  * Fork（almanac ALMNC-83）：新介面（V3）下不列出的分頁；classic 照舊顯示。
  * ALMNC-83.2：記憶管理（對話 agent 的記憶）在新介面併進夥伴分頁的 Agent 設定區。
+ * record、template（ALMNC-83.4）：舊版記錄與「記錄整理成筆記」範本，V3 改走新增資料源。
  */
-export const classicOnlySettingSections: readonly BuiltinSettingSection[] = ['memories']
+export const classicOnlySettingSections: readonly BuiltinSettingSection[] = ['memories', 'record', 'template']
 
-/** Fork（almanac ALMNC-83）：功能關閉、兩種介面都不列出的分頁（資料保留）。 */
-export const disabledSettingSections: readonly BuiltinSettingSection[] = []
+/**
+ * Fork（almanac ALMNC-83）：功能關閉、兩種介面都不列出的分頁（資料保留）。
+ * prompt（ALMNC-83.3）：對話角色與 Agent 自訂指引跟著提示詞開關（ALMNC-81）關閉。
+ */
+export const disabledSettingSections: readonly BuiltinSettingSection[] = [
+  ...(PROMPT_LIBRARY_ENABLED ? [] : ['prompt' as const]),
+]
 
 /** 這個分頁在目前介面（v3 = 新介面）是否顯示。外掛分頁另外判斷，這裡一律回 true。 */
 export function isSettingSectionVisible(section: string, v3: boolean): boolean {
@@ -97,6 +104,16 @@ export function fallbackSettingSection(section: BuiltinSettingSection, v3: boole
 /** 對話 agent 的記憶在哪個分頁：新介面是夥伴分頁的 Agent 設定區，classic 是記憶管理（ALMNC-83.2）。 */
 export function memorySettingSection(v3: boolean): BuiltinSettingSection {
   return fallbackSettingSection('memories', v3)
+}
+
+/**
+ * Fork（almanac ALMNC-83.1）：設定選單上分頁名稱的翻譯 key（相對 settings 命名空間）。
+ * V3 下 rag 頁只留語意檢索，叫「語意檢索」；「知識庫」是 GLOSSARY 避用詞。
+ */
+export function settingSectionTitleKey(section: BuiltinSettingSection, v3: boolean): string {
+  if (section === 'ai') return 'ai.menuTitle'
+  if (section === 'rag' && v3) return 'rag.semanticTitle'
+  return `${section}.title`
 }
 
 interface SettingsDialogState {

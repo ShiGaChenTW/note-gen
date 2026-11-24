@@ -13,7 +13,7 @@ import { insertMark } from '@/db/marks'
 import { captureLink } from '@/lib/link-capture'
 import { localizeCapturedImages, removeLinkAssetGroup } from '@/lib/web-capture/images'
 import { getRecordSaveTagIdFromTags } from '@/lib/record-save-target'
-import { normalizeUnifiedLinkUrl, resolveUnifiedRecordShortcut, resolveUnifiedRecordType, resolveUnifiedTodoDraft, type UnifiedRecordSelection, type UnifiedRecordType, unifiedRecordTypes } from '@/lib/unified-record-input'
+import { normalizeUnifiedLinkUrl, resolveUnifiedRecordShortcut, resolveUnifiedRecordType, resolveUnifiedTodoDraft, type UnifiedRecordSelection, type UnifiedRecordType, availableUnifiedRecordTypes } from '@/lib/unified-record-input'
 import emitter from '@/lib/emitter'
 import { toast } from '@/hooks/use-toast'
 import useMarkStore from '@/stores/mark'
@@ -161,7 +161,9 @@ export function UnifiedRecordDialog() {
 
     const openDialog = (payload?: { type?: UnifiedRecordSelection; prefillText?: string; target?: 'source' }) => {
       setTarget(payload?.target ?? 'record')
-      setSelection(payload?.type ?? 'auto')
+      // ALMNC-83.3：關閉的類型（提示詞關閉時的 Prompt 素材）改用自動判斷
+      const type = payload?.type
+      setSelection(type && type !== 'auto' && !availableUnifiedRecordTypes().includes(type) ? 'auto' : type ?? 'auto')
       setJournal(false)
       const prefillText = payload?.prefillText ?? onboardingPrefillRef.current
       if (prefillText) setText(prefillText)
@@ -507,7 +509,7 @@ export function UnifiedRecordDialog() {
               onChange={setSelection}
               options={[
                 { value: 'auto' as UnifiedRecordSelection, label: t('record.mark.unified.autoDetect'), shortcut: `${modifierLabel}0` },
-                ...unifiedRecordTypes.map((type, index) => ({ value: type as UnifiedRecordSelection, label: t(`record.mark.type.${typeTranslationKey(type)}`), shortcut: `${modifierLabel}${index + 1}` })),
+                ...availableUnifiedRecordTypes().map((type, index) => ({ value: type as UnifiedRecordSelection, label: t(`record.mark.type.${typeTranslationKey(type)}`), shortcut: `${modifierLabel}${index + 1}` })),
               ]}
             />
           ) : (
@@ -521,7 +523,7 @@ export function UnifiedRecordDialog() {
                 onChange={event => setSelection(event.target.value as UnifiedRecordSelection)}
               >
                 <option value="auto">{t('record.mark.unified.autoDetect')} · {modifierLabel}0</option>
-                {unifiedRecordTypes.map((type, index) => <option key={type} value={type}>{t(`record.mark.type.${typeTranslationKey(type)}`)} · {modifierLabel}{index + 1}</option>)}
+                {availableUnifiedRecordTypes().map((type, index) => <option key={type} value={type}>{t(`record.mark.type.${typeTranslationKey(type)}`)} · {modifierLabel}{index + 1}</option>)}
               </select>
             </div>
           )}

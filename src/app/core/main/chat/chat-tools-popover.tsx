@@ -19,6 +19,7 @@ import { ClipboardMonitor } from "./clipboard-monitor"
 import { McpServerList } from "./mcp-button"
 import { ModelSelect } from "./model-select"
 import { PromptSelect } from "./prompt-select"
+import { PROMPT_LIBRARY_ENABLED } from "@/lib/prompt-library/feature"
 import { useChatV3 } from './chat-v3'
 import useSettingStore from '@/stores/setting'
 import { noteGenModelDisplayName } from '@/components/notegen-model-label'
@@ -58,7 +59,8 @@ export function ChatToolsPopover({ backgroundActions }: { backgroundActions?: Re
         <div className="flex min-w-0 max-h-[min(28rem,calc(var(--radix-popover-content-available-height)-4rem))] flex-col overflow-x-hidden overflow-y-auto">
           <p className={heading}>{tTools('groups.conversation')}</p>
           <ModelSelect display="panel" />
-          <PromptSelect display="panel" />
+          {/* Fork（almanac ALMNC-83.3）：對話角色跟著提示詞開關關閉 */}
+          {PROMPT_LIBRARY_ENABLED && <PromptSelect display="panel" />}
           <ReasoningSelect />
           <Separator className="my-1.5" />
           <p className={heading}>{tTools('groups.extensions')}</p>

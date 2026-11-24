@@ -24,6 +24,7 @@ import { WEEKDAY_KEYS, type WeekdayKey } from '@/lib/daily/template'
 import { openDailyNote } from '@/lib/daily/open-daily-note'
 import { ensureNotificationPermission, notify } from '@/lib/reminders/service'
 import useDailySettingsStore, { type DailySettings } from '@/stores/daily-settings'
+import { PROMPT_LIBRARY_ENABLED } from '@/lib/prompt-library/feature'
 
 // Monday first, like the vault's week view.
 const WEEKDAY_ORDER: WeekdayKey[] = [...WEEKDAY_KEYS.slice(1), WEEKDAY_KEYS[0]]
@@ -198,7 +199,8 @@ export default function DailySettingPage() {
           <TextSetting settingKey="dailyFolder" icon={<FolderOpen />} />
           <TextSetting settingKey="dailyPattern" icon={<CalendarDays />} validate={isValidDailyPattern} />
           <TextSetting settingKey="inboxFolder" icon={<Inbox />} />
-          <TextSetting settingKey="promptFolder" icon={<ScrollText />} />
+          {/* Fork（almanac ALMNC-83.3）：提示詞功能關閉時不顯示提示詞資料夾（設定值保留） */}
+          {PROMPT_LIBRARY_ENABLED && <TextSetting settingKey="promptFolder" icon={<ScrollText />} />}
         </ItemGroup>
       </SettingSection>
 

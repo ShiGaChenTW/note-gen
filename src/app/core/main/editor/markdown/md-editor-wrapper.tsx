@@ -27,6 +27,7 @@ import {
 } from '@/lib/editor-deactivation'
 import { writeSelfHostedWorkspaceText } from '@/lib/self-hosted-sync/files'
 import { DocTitleField, focusEditorBodyStart } from './doc-title-field'
+import { PROMPT_LIBRARY_ENABLED } from '@/lib/prompt-library/feature'
 
 interface MdEditorProps {
   tabContentsRef: RefObject<Record<string, string>>
@@ -529,7 +530,8 @@ export const MdEditor = memo(function MdEditor({ tabContentsRef, filePath, isAct
       {showOutline && outlinePosition === 'left' ? renderOutline() : null}
 
       <div className="relative flex h-full min-w-0 flex-1 flex-col">
-      {filePath ? <PromptVersionBanner filePath={filePath} content={initialContent ?? ''} /> : null}
+      {/* Fork（almanac ALMNC-83.3）：提示詞功能關閉時不顯示提示詞版本列 */}
+      {filePath && PROMPT_LIBRARY_ENABLED ? <PromptVersionBanner filePath={filePath} content={initialContent ?? ''} /> : null}
       {/* Editor - initialContent only set once on mount */}
       <div className="relative min-h-0 flex-1">
       <TipTapEditor

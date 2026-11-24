@@ -37,6 +37,7 @@ import { EmptyState } from '@/components/v3/empty-state'
 import { SectionLabel } from '@/components/v3/section-label'
 import { Count as ClassicCount, EmptyState as ClassicEmptyState, PageHeader, PageSurface } from '../page-ui'
 import { CollectTabs } from '../sidebar-v3/section-tabs'
+import { PROMPT_LIBRARY_ENABLED } from '@/lib/prompt-library/feature'
 
 /** 記錄有變動（新增、編輯、刪除）時重新載入 Inbox。 */
 function useInboxSync() {
@@ -291,7 +292,8 @@ export function InboxScreen() {
                   <Button variant="ghost" size="sm" className="h-7 gap-1 px-2" disabled={busy || selected.size === 0} onClick={organize} title={t('organize')}>
                     <Sparkles className="size-3.5" aria-hidden />{t('organize')}
                   </Button>
-                  {selectedRecords.length === 1 && selectedRecords[0].type === 'prompt-draft' && (
+                  {/* Fork（almanac ALMNC-83.3）：提示詞功能關閉時不提供「整理成提示詞」 */}
+                  {PROMPT_LIBRARY_ENABLED && selectedRecords.length === 1 && selectedRecords[0].type === 'prompt-draft' && (
                     <Button variant="ghost" size="sm" className="h-7 gap-1 px-2" disabled={busy} onClick={organizeIntoPrompt} title={t('organizeIntoPrompt')}>
                       <Lightbulb className="size-3.5" aria-hidden />{t('organizeIntoPrompt')}
                     </Button>

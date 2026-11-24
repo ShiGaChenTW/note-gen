@@ -20,6 +20,7 @@ import type { WikiPage, WikiScopeKind } from '@/types/wiki'
 import { useSettingsDialogStore } from '@/stores/settings-dialog'
 import { useWikiNavigation } from './use-wiki-navigation'
 import { useWikiActionScope } from './use-wiki-action-scope'
+import { useUiV3 } from '@/lib/fork-ui'
 
 interface WikiMenuState {
   contextId: string
@@ -29,14 +30,22 @@ interface WikiMenuState {
   generatedPage: WikiPage | null
 }
 
-export function WikiMenuItems({ kind, id, label, sourceKey, variant = 'context', disabled = false }: {
+interface WikiMenuItemsProps {
   kind: WikiScopeKind
   id: string
   label: string
   sourceKey?: string
   variant?: 'context' | 'dropdown'
   disabled?: boolean
-}) {
+}
+
+/** Fork（almanac ALMNC-83.1）：V3 下 LLM Wiki 入口隱藏（右鍵選單不列），wiki 資料保留；classic 照舊。 */
+export function WikiMenuItems(props: WikiMenuItemsProps) {
+  const v3 = useUiV3()
+  return v3 ? null : <WikiMenuItemsContent {...props} />
+}
+
+function WikiMenuItemsContent({ kind, id, label, sourceKey, variant = 'context', disabled = false }: WikiMenuItemsProps) {
   const t = useTranslations('wiki')
   const errorMessage = useWikiErrorMessage()
   const router = useRouter()

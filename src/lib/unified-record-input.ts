@@ -1,4 +1,5 @@
 import type { Mark } from '@/db/marks'
+import { PROMPT_LIBRARY_ENABLED } from '@/lib/prompt-library/feature'
 
 export const unifiedRecordTypes = [
   'link',
@@ -12,6 +13,11 @@ export const unifiedRecordTypes = [
 ] as const satisfies readonly Mark['type'][]
 
 export type UnifiedRecordType = typeof unifiedRecordTypes[number]
+
+/** Fork（almanac ALMNC-83.3）：記錄對話框可選的類型；提示詞功能關閉時不列 Prompt 素材（prompt-draft，既有記錄保留）。 */
+export function availableUnifiedRecordTypes(promptLibraryEnabled = PROMPT_LIBRARY_ENABLED): readonly UnifiedRecordType[] {
+  return promptLibraryEnabled ? unifiedRecordTypes : unifiedRecordTypes.filter(type => type !== 'prompt-draft')
+}
 export type UnifiedRecordSelection = UnifiedRecordType | 'auto'
 type Platform = 'macos' | 'windows' | 'linux' | 'unknown'
 
@@ -81,6 +87,7 @@ export function normalizeUnifiedLinkUrl(value: string): string {
 export function resolveUnifiedRecordShortcut(
   event: UnifiedShortcutEvent,
   platform: Platform,
+  types: readonly UnifiedRecordType[] = availableUnifiedRecordTypes(),
 ): UnifiedRecordSelection | null {
   if (platform === 'unknown' || event.repeat || event.isComposing || event.shiftKey) return null
 
@@ -93,7 +100,7 @@ export function resolveUnifiedRecordShortcut(
   const digit = /^Digit(\d)$/.exec(event.code ?? '')?.[1] ?? event.key
   if (digit === '0') return 'auto'
   const index = Number.parseInt(digit, 10) - 1
-  return Number.isInteger(index) && index >= 0 && index < unifiedRecordTypes.length
-    ? unifiedRecordTypes[index]
+  return Number.isInteger(index) && index >= 0 && index < types.length
+    ? types[index]
     : null
 }
