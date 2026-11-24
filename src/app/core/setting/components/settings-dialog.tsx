@@ -94,7 +94,8 @@ export function SettingsDialog() {
   const pluginSectionAvailable = useCallback((section: string) => settingsPlugins.some(plugin =>
     `plugin:${plugin.manifest.id}` === section), [settingsPlugins])
   const v3 = useUiV3()
-  // Fork（almanac ALMNC-45）：classic 下不停在 V3 專屬分頁（例如上次停在電子紙後切回 classic）
+  // Fork（almanac ALMNC-45）：classic 下不停在 V3 專屬分頁（例如上次停在電子紙後切回 classic）；
+  // ALMNC-83.2：新介面下停在記憶管理（舊的深連結或上次停的頁）改停夥伴分頁。
   const selectedSection = isPluginSettingSection(activeSection) && initialized && !pluginSectionAvailable(activeSection)
     ? 'plugins' : !isPluginSettingSection(activeSection) ? fallbackSettingSection(activeSection, v3) : activeSection
   const sectionsToRender = [...new Set([...mountedSections, selectedSection])].filter(section =>

@@ -34,6 +34,10 @@
     },
     "roleTaken": "Only one agent can have this role, and it is already taken.",
     "domainRequired": "Experts need a domain.",
+    "chatMemory": {
+      "title": "Chat memories",
+      "desc": "Preferences, facts and decisions the chat agent remembers and brings into relevant conversations. Stored separately from each crew member's memory above; add, edit, archive or delete them here."
+    },
     "memory": {
       "title": "Agent memory",
       "description": "Each role's own memory, the shared working memory and your preferences. Stored inside the app, not in the vault.",
@@ -4227,7 +4231,7 @@
     "title": "Settings",
     "partners": {
       "title": "The Crew",
-      "desc": "Your commander, experts, secretary and researcher, the agent settings area, research and review, auto-organize and auto-accept."
+      "desc": "Your commander, experts, secretary and researcher, the agent settings area (crew and chat memories), research and review, auto-organize and auto-accept."
     },
     "eink": {
       "title": "E-paper",
