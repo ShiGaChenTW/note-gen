@@ -1,6 +1,8 @@
 // almanac ALMNC-83.1、83.3、83.4：設定頁隱藏清單與選單名稱。
 import { describe, expect, it } from 'vitest'
+import { PROMPT_LIBRARY_ENABLED } from '@/lib/prompt-library/feature'
 import {
+  disabledSettingSections,
   isSettingSectionVisible,
   settingSectionTitleKey,
 } from './settings-dialog'
@@ -8,7 +10,14 @@ import en from '../../messages/en.json'
 import zh from '../../messages/zh.json'
 import zhTW from '../../messages/zh-TW.json'
 
-describe('settings pages hidden by ALMNC-83 (83.1)', () => {
+describe('settings pages hidden by ALMNC-83 (83.1 / 83.3)', () => {
+  it('hides the prompt page in both UIs while the prompt library is off (ALMNC-83.3)', () => {
+    expect(PROMPT_LIBRARY_ENABLED).toBe(false)
+    expect(disabledSettingSections).toContain('prompt')
+    expect(isSettingSectionVisible('prompt', true)).toBe(false)
+    expect(isSettingSectionVisible('prompt', false)).toBe(false)
+  })
+
   it('keeps the rag page in both UIs but names it 語意檢索 in the new UI (ALMNC-83.1)', () => {
     expect(isSettingSectionVisible('rag', true)).toBe(true)
     expect(isSettingSectionVisible('rag', false)).toBe(true)

@@ -13,8 +13,18 @@ import useArticleStore from '@/stores/article'
 import useDailySettingsStore from '@/stores/daily-settings'
 import useVaultIndexStore from '@/stores/vault-index'
 import { PromptDetailPanel } from '@/app/core/main/prompt-library/prompt-detail-panel'
+import { PROMPT_LIBRARY_ENABLED } from '@/lib/prompt-library/feature'
 
+// Fork（almanac ALMNC-83.3）：提示詞功能關閉時這頁不提供（入口已隱藏；直接進來就退回上一頁），提示詞檔案保留。
 export default function MobilePromptsPage() {
+  const router = useRouter()
+  useEffect(() => {
+    if (!PROMPT_LIBRARY_ENABLED) router.back()
+  }, [router])
+  return PROMPT_LIBRARY_ENABLED ? <MobilePromptLibrary /> : null
+}
+
+function MobilePromptLibrary() {
   const t = useTranslations('promptLibrary')
   const router = useRouter()
   const promptFolder = useDailySettingsStore(state => state.promptFolder)

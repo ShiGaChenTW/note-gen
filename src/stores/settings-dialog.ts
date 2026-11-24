@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { PROMPT_LIBRARY_ENABLED } from '@/lib/prompt-library/feature'
 
 export type BuiltinSettingSection =
   | 'about'
@@ -68,8 +69,13 @@ export function isV3OnlySettingSection(section: string): boolean {
 /** Fork（almanac ALMNC-83）：新介面（V3）下不列出的分頁；classic 照舊顯示。 */
 export const classicOnlySettingSections: readonly BuiltinSettingSection[] = []
 
-/** Fork（almanac ALMNC-83）：功能關閉、兩種介面都不列出的分頁（資料保留）。 */
-export const disabledSettingSections: readonly BuiltinSettingSection[] = []
+/**
+ * Fork（almanac ALMNC-83）：功能關閉、兩種介面都不列出的分頁（資料保留）。
+ * prompt（ALMNC-83.3）：對話角色與 Agent 自訂指引跟著提示詞開關（ALMNC-81）關閉。
+ */
+export const disabledSettingSections: readonly BuiltinSettingSection[] = [
+  ...(PROMPT_LIBRARY_ENABLED ? [] : ['prompt' as const]),
+]
 
 /** 這個分頁在目前介面（v3 = 新介面）是否顯示。外掛分頁另外判斷，這裡一律回 true。 */
 export function isSettingSectionVisible(section: string, v3: boolean): boolean {

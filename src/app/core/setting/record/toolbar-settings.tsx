@@ -40,6 +40,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { SettingSection } from '../components/setting-base'
+import { PROMPT_LIBRARY_ENABLED } from '@/lib/prompt-library/feature'
 
 // 工具配置：图标和描述键
 const TOOL_CONFIGS = {
@@ -180,6 +181,8 @@ export function ToolbarSettings() {
   // 按排序展示工具（过滤掉不在 TOOL_CONFIGS 中的项）
   const sortedConfig = [...recordToolbarConfig]
     .filter(item => item.id in TOOL_CONFIGS)
+    // Fork（almanac ALMNC-83.3）：提示詞功能關閉時不列 Prompt 素材（設定值保留）
+    .filter(item => PROMPT_LIBRARY_ENABLED || item.id !== 'prompt-draft')
     .sort((a, b) => a.order - b.order)
 
   return (

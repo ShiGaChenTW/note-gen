@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/drawer"
 import { ModelSelector } from "./model-selector"
 import { PromptSelector } from "./prompt-selector"
+import { PROMPT_LIBRARY_ENABLED } from "@/lib/prompt-library/feature"
 import { ClipboardToggle } from "./clipboard-toggle"
 import { useTranslations } from "next-intl"
 
@@ -37,9 +38,10 @@ export function ChatSettingsDrawer() {
             <div className="h-16 flex items-center w-full">
               <ModelSelector />
             </div>
-            <div className="h-16 flex items-center w-full">
+            {/* Fork（almanac ALMNC-83.3）：對話角色跟著提示詞開關關閉 */}
+            {PROMPT_LIBRARY_ENABLED && <div className="h-16 flex items-center w-full">
               <PromptSelector />
-            </div>
+            </div>}
             <div className="h-16 flex items-center w-full">
               <ClipboardToggle />
             </div>
