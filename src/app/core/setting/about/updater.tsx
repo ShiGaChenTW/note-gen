@@ -1,12 +1,12 @@
 'use client';
 
 import { relaunch } from '@tauri-apps/plugin-process';
+import { AppLogo } from '@/components/app-logo'
 import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useLocale, useTranslations } from 'next-intl';
 import useSettingStore from '@/stores/setting';
 import useUpdateStore from '@/stores/update';
-import Image from 'next/image';
 import { toast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { AlertCircle, ArrowRight, Info, Loader2, RefreshCw, RotateCcw } from 'lucide-react';
@@ -310,7 +310,7 @@ export default function Updater() {
         <CardHeader className="p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex min-w-0 items-center gap-3">
-              <Image src="/app-icon.png" alt="NoteGen logo" className="size-14 shrink-0 dark:invert" width={56} height={56} />
+              <AppLogo size={56} />
               <div className="flex min-w-0 flex-col gap-2">
                 <div className="flex flex-wrap items-center gap-2">
                   <CardTitle className="text-xl font-semibold leading-none">NoteGen</CardTitle>

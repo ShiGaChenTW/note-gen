@@ -1,12 +1,12 @@
 'use client'
 
 import { PluginEmbeddedView, useEmbeddedPluginViews } from '@/components/plugins/plugin-embedded-views'
+import { AppLogo } from '@/components/app-logo'
 import { FileText, MessageSquareText, Search, FolderOpen, GripVertical, SlidersHorizontal } from 'lucide-react'
 import useArticleStore from '@/stores/article'
 import { useTranslations } from 'next-intl'
 import { open } from '@tauri-apps/plugin-dialog'
 import { Store } from '@tauri-apps/plugin-store'
-import Image from 'next/image'
 import emitter from '@/lib/emitter'
 import { useEffect, useState } from 'react'
 import {
@@ -487,14 +487,7 @@ export function EmptyState({
       <Empty className="h-full overflow-y-auto rounded-none bg-muted/20 px-6 py-10">
         <EmptyHeader className="max-w-xl flex-row gap-5 text-left">
           <EmptyMedia className="mb-0">
-            <Image
-              src="/app-icon.png"
-              alt="NoteGen logo"
-              width={96}
-              height={96}
-              priority
-              className="size-24 shrink-0 rounded-3xl shadow-sm dark:invert"
-            />
+            <AppLogo size={96} className="shadow-sm" priority />
           </EmptyMedia>
           <div className="flex min-w-0 flex-col items-start gap-2">
             <EmptyTitle className="text-4xl font-semibold">NoteGen</EmptyTitle>
@@ -514,14 +507,7 @@ export function EmptyState({
           <header className="flex flex-col items-start gap-4 @md/new-tab:flex-row @md/new-tab:justify-between @md/new-tab:gap-6">
             <div className="flex max-w-xl flex-col gap-2">
               <div className="flex min-w-0 items-center gap-2.5">
-                <Image
-                  src="/app-icon.png"
-                  alt="NoteGen logo"
-                  width={36}
-                  height={36}
-                  priority
-                  className="size-9 shrink-0 rounded-lg dark:invert"
-                />
+                <AppLogo size={36} priority />
                 <div className="flex min-w-0 flex-col gap-1">
                   <h1 className="font-heading text-xl leading-none font-semibold tracking-tight">NoteGen</h1>
                   <p className="text-sm leading-none font-medium">{t('title')}</p>
