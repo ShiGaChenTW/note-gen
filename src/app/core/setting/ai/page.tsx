@@ -220,7 +220,7 @@ export default function AiPage({ mobile = false }: { mobile?: boolean }) {
   const deleteModel = async (modelId: string) => {
     if (!currentConfig) return
     
-    const confirmed = await confirm('确定要删除这个模型吗？')
+    const confirmed = await confirm(t('deleteModelConfirm'))
     if (!confirmed) return
     
     const updatedConfig = {

@@ -71,7 +71,8 @@ const SEARCH_PROVIDERS: Array<{
 }> = [
   {
     id: 'zhipu',
-    name: '智谱 Web Search',
+    // Fork（almanac ALMNC-83.8）：顯示名稱走 i18n（settings.webSearch.zhipuName），這裡只是後備
+    name: 'Zhipu Web Search',
     avatar: '智',
     apiKeyUrl: 'https://open.bigmodel.cn/apikey/platform',
   },
@@ -420,7 +421,7 @@ export default function WebSearchSettingPage({ mobile = false }: { mobile?: bool
     || SEARCH_PROVIDERS.map(provider => provider.id)
   const orderedProviders = providerOrder.flatMap(providerId => (
     SEARCH_PROVIDERS.filter(provider => provider.id === providerId)
-  ))
+  )).map(provider => (provider.id === 'zhipu' ? { ...provider, name: t('zhipuName') } : provider))
 
   return (
     <SettingType id="webSearch" title={t('title')} desc={t('desc')} icon={<Globe2 />}>

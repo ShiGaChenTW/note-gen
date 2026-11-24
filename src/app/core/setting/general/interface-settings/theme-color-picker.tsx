@@ -64,6 +64,8 @@ export function ThemeColorPicker({ colors, onColorChange, t }: ThemeColorPickerP
             value={colors[config.key as keyof typeof colors]}
             defaultColor={config.defaultColor}
             onChange={(value) => onColorChange(config.key, value)}
+            pickTitle={t('pickColor')}
+            resetTitle={t('resetColor')}
           />
         ))}
       </div>
@@ -75,6 +77,8 @@ export function ThemeColorPicker({ colors, onColorChange, t }: ThemeColorPickerP
             value={colors[config.key as keyof typeof colors]}
             defaultColor={config.defaultColor}
             onChange={(value) => onColorChange(config.key, value)}
+            pickTitle={t('pickColor')}
+            resetTitle={t('resetColor')}
           />
         ))}
       </div>
@@ -87,9 +91,11 @@ interface ColorInputProps {
   value: [number, number, number] | null
   defaultColor: string
   onChange: (value: HSLValue | null) => void
+  pickTitle: string
+  resetTitle: string
 }
 
-function ColorInput({ label, value, defaultColor, onChange }: ColorInputProps) {
+function ColorInput({ label, value, defaultColor, onChange, pickTitle, resetTitle }: ColorInputProps) {
   const hexValue = value ? hslToHex(value) : defaultColor
   const hasCustomValue = value !== null
 
@@ -119,7 +125,7 @@ function ColorInput({ label, value, defaultColor, onChange }: ColorInputProps) {
         value={hexValue}
         onChange={handleColorChange}
         className="w-8 h-8 rounded cursor-pointer border-2 border-border hover:border-line transition-colors shrink-0"
-        title="点击选择颜色"
+        title={pickTitle}
       />
 
       {/* 标签 */}
@@ -141,7 +147,7 @@ function ColorInput({ label, value, defaultColor, onChange }: ColorInputProps) {
             size="sm"
             className="h-6 w-6 p-0"
             onClick={handleReset}
-            title="恢复默认值"
+            title={resetTitle}
           >
             <RotateCcw className="h-3 w-3" />
           </Button>

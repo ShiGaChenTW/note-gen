@@ -63,7 +63,8 @@ export function SettingTab({
   const messages = useMessages()
   const [query, setQuery] = useState(() => mobileSettingQueryCache)
   // Fork（almanac ALMNC-45）：電子紙只做 macOS 桌面版
-  const notMobilePages = ['about', 'backup', 'shortcuts', 'plugins', 'eink']
+  // Fork（almanac ALMNC-83.8）：每日筆記只有桌面版，手機沒有這頁也沒有日記功能
+  const notMobilePages = ['about', 'backup', 'shortcuts', 'plugins', 'eink', 'daily']
   // Fork（almanac ALMNC-83）：與桌面共用分頁可見規則
   const v3 = useUiV3()
   

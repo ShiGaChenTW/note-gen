@@ -146,12 +146,12 @@ export default function ModelCard({
             }
           }, signal)
           if (!rerankData || !rerankData.results) {
-            throw new Error('重排序结果格式不正确')
+            throw new Error(t('testInvalidRerank'))
           }
           return true
 
         case 'embedding':
-          const testText = '测试文本'
+          const testText = 'Almanac connection test'
           const embeddingDataJson = await invokeAiJson<EmbeddingCheckResponse>({
             config: requestConfig,
             path: '/embeddings',
@@ -163,12 +163,12 @@ export default function ModelCard({
             }
           }, signal)
           if (!embeddingDataJson || !embeddingDataJson.data || !embeddingDataJson.data[0] || !embeddingDataJson.data[0].embedding) {
-            throw new Error('嵌入结果格式不正确')
+            throw new Error(t('testInvalidEmbedding'))
           }
           return true
 
         case 'tts':
-          const testAudioText = '测试音频生成'
+          const testAudioText = 'Almanac audio test'
           const ttsBuffer = await invokeAiBinary({
             config: requestConfig,
             path: '/audio/speech',
@@ -180,7 +180,7 @@ export default function ModelCard({
             }
           }, signal)
           if (!ttsBuffer.byteLength) {
-            throw new Error('TTS模型返回格式不正确')
+            throw new Error(t('testInvalidTts'))
           }
           return true
 

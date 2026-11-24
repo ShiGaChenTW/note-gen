@@ -609,6 +609,8 @@
           "saveError": "Could not save custom CSS"
         },
         "customTheme": {
+          "resetColor": "Restore default",
+          "pickColor": "Click to choose a color",
           "title": "Custom Theme Colors",
           "desc": "Customize application theme colors including background, foreground, border, etc.",
           "button": "Edit Colors",
@@ -710,7 +712,7 @@
         },
         "uiMode": {
           "title": "New interface (V3)",
-          "desc": "Use the almanac V3 monochrome look and new pages. Turn off to return to the previous look and hide the new pages."
+          "desc": "Use the Almanac V3 monochrome look and new pages. Turn off to return to the previous look and hide the new pages."
         }
       },
       "tools": {
@@ -784,6 +786,7 @@
       "savedDescription": "“{title}” was saved to records"
     },
     "webSearch": {
+      "zhipuName": "Zhipu Web Search",
       "title": "Web Search",
       "desc": "Configure Almanac Notes's three-layer web search strategy. AI decides when a search is needed.",
       "nativeEnabled": "Enable native model search",
@@ -2683,6 +2686,7 @@
         "testing": "Testing"
       },
       "cloudFolder": {
+        "rollbackSaveFailed": "Couldn't save your current edits before restoring the workspace",
         "title": "Cloud Drive",
         "description": "Sync data through an iCloud Drive or similar cloud folder.",
         "androidDescription": "Choose a cloud-drive folder from the system file picker.",
@@ -3569,6 +3573,7 @@
       "selectTheme": "Select Theme"
     },
     "dev": {
+      "importConfigFailed": "Import failed",
       "title": "Advanced",
       "desc": "Configure advanced options such as network proxy, data management, and configuration files. Some actions may affect existing data, so make changes carefully.",
       "developerTitle": "Developer",
@@ -3737,7 +3742,11 @@
       }
     },
     "ai": {
-      "title": "Model Platforms",
+      "testInvalidTts": "The text-to-speech model returned an unexpected format",
+      "testInvalidEmbedding": "The embedding result has an unexpected format",
+      "testInvalidRerank": "The rerank result has an unexpected format",
+      "deleteModelConfirm": "Delete this model?",
+      "title": "Model Services",
       "menuTitle": "Model Services",
       "desc": "Manage AI model platforms, credentials, and models for chat, organization, knowledge base, and voice features in one place.",
       "providersTitle": "Model platforms",

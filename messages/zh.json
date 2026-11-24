@@ -609,6 +609,8 @@
           "saveError": "自定义 CSS 保存失败"
         },
         "customTheme": {
+          "resetColor": "恢复默认值",
+          "pickColor": "点击选择颜色",
           "title": "自定义主题颜色",
           "desc": "自定义应用的主题颜色，包括背景色、前景色、边框色等",
           "button": "编辑颜色",
@@ -710,7 +712,7 @@
         },
         "uiMode": {
           "title": "新界面（V3）",
-          "desc": "开启时使用 almanac V3 的单色外观与新页面；关闭则回到原本的外观，新页面隐藏。"
+          "desc": "开启时使用 Almanac V3 的单色外观与新页面；关闭则回到原本的外观，新页面隐藏。"
         }
       },
       "tools": {
@@ -784,6 +786,7 @@
       "savedDescription": "“{title}”已保存到记录"
     },
     "webSearch": {
+      "zhipuName": "智谱 Web Search",
       "title": "网络搜索",
       "desc": "配置 Almanac Notes 的三层联网搜索方案，AI 会自行判断何时需要搜索。",
       "nativeEnabled": "启用模型原生搜索",
@@ -2684,6 +2687,7 @@
         "testing": "测试中"
       },
       "cloudFolder": {
+        "rollbackSaveFailed": "无法在回滚工作区前保存当前编辑内容",
         "title": "网盘同步",
         "description": "通过 iCloud Drive 等云盘文件夹同步数据。",
         "androidDescription": "选择系统文件应用中的网盘文件夹。",
@@ -3546,6 +3550,7 @@
       "selectTheme": "选择主题"
     },
     "dev": {
+      "importConfigFailed": "导入失败",
       "title": "高级设置",
       "desc": "配置网络代理、数据管理和配置文件等高级选项。部分操作可能影响现有数据，请谨慎修改。",
       "developerTitle": "开发者",
@@ -3714,7 +3719,11 @@
       }
     },
     "ai": {
-      "title": "模型平台",
+      "testInvalidTts": "TTS 模型返回格式不正确",
+      "testInvalidEmbedding": "嵌入结果格式不正确",
+      "testInvalidRerank": "重排序结果格式不正确",
+      "deleteModelConfirm": "确定要删除这个模型吗？",
+      "title": "模型服务",
       "menuTitle": "模型服务",
       "desc": "集中管理 AI 模型平台、连接凭据和不同能力的模型，可用于对话、整理、知识库和语音等功能。",
       "providersTitle": "模型平台",
