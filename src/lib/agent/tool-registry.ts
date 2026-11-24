@@ -73,6 +73,7 @@ import type {
 } from './types'
 import type { EditorTransactionInput } from './editor-adapter'
 import { buildEditorChange, prepareEditorLineTransaction, preserveEditorLineStructure } from './editor-adapter'
+import { findEditPreviewConflict } from './hunk-review'
 import {
   ensureSafeWorkspaceRelativePath,
   getWorkspacePath,
@@ -405,26 +406,18 @@ export async function validateEditApprovalPreview(preview: EditorApprovalPreview
     message: '内容或编辑位置已变化，本次改动未应用。请基于当前内容重新生成差异。' })
   if (preview.kind === 'file') {
     if (getSkillWorkspaceIdentity(await getWorkspacePath()) !== preview.previewParams.workspaceIdentity) return stale('WORKSPACE_CHANGED')
-    const current = await readNoteFileSnapshot(preview.filePath)
-    if (current !== preview.baseContent) return stale('FILE_CONTENT_CHANGED')
-    if (preview.operation === 'create' && current !== undefined) return stale('FILE_ALREADY_EXISTS')
-    return undefined
+    // Fork（almanac ALMNC-76）：比對抽成純函式 findEditPreviewConflict，逐處套用與整份套用共用。
+    const conflict = findEditPreviewConflict(preview, { content: await readNoteFileSnapshot(preview.filePath) })
+    return conflict ? stale(conflict) : undefined
   }
   if (!targetsActiveEditor(preview.filePath)) return stale('EDITOR_TARGET_CHANGED')
   const result = await getEditorContentTool.execute({})
   const state = asObject(result.data)
-  if (!targetsActiveEditor(preview.filePath) || state.markdown !== preview.baseContent || state.version !== preview.version) {
-    return stale('EDITOR_VERSION_MISMATCH')
-  }
-  if (preview.from !== undefined && preview.to !== undefined) {
-    const selection = asObject(state.selection)
-    if (typeof preview.previewParams.position === 'number') {
-      if (selection.to !== preview.from) return stale('EDITOR_SELECTION_CHANGED')
-    } else if (selection.from !== preview.from || selection.to !== preview.to || selection.text !== preview.originalContent) {
-      return stale('EDITOR_SELECTION_CHANGED')
-    }
-  }
-  return undefined
+  if (!targetsActiveEditor(preview.filePath)) return stale('EDITOR_VERSION_MISMATCH')
+  const conflict = findEditPreviewConflict(preview, {
+    content: state.markdown, version: state.version, selection: asObject(state.selection),
+  })
+  return conflict ? stale(conflict) : undefined
 }
 
 function unverifiedEditorWrite(filePath: string, before: string | undefined): AgentToolResult {

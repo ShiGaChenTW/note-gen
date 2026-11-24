@@ -296,6 +296,17 @@ export interface AgentSteeringPayload {
 
 export type AgentApprovalDecision = 'approved' | 'denied' | 'steered'
 
+/**
+ * Fork（almanac ALMNC-76）：使用者只接受了部分改動。acceptedHunks 是被接受的處（0 起算），
+ * 切段與核准面板相同（hunk-review 的 buildDiffHunks）。全部接受仍回 'approved'，全部拒絕回 'denied'。
+ */
+export interface AgentPartialApproval {
+  decision: 'partial'
+  acceptedHunks: number[]
+}
+
+export type AgentApprovalResponse = AgentApprovalDecision | AgentPartialApproval
+
 export interface AgentUserQuestion {
   question: string
   options: Array<{ label: string; description?: string }>
@@ -331,7 +342,7 @@ export interface AgentRuntimeCallbacks {
       from?: number
       to?: number
     }
-  ) => Promise<AgentApprovalDecision>
+  ) => Promise<AgentApprovalResponse>
 }
 
 export interface AgentRuntimeResult {
@@ -396,6 +407,8 @@ export interface ConfirmationRecord {
   scope?: 'once' | 'conversation'
   sessionApprovalType?: 'runtime-script'
   sessionApprovalKey?: string
+  /** Fork（almanac ALMNC-76）：部分接受時被接受的處（0 起算）；沒有代表整份接受。 */
+  acceptedHunks?: number[]
 }
 
 export interface AgentState {

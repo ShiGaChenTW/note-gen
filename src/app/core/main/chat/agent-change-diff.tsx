@@ -7,21 +7,22 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { buildLineDiff } from "@/lib/agent/text-diff"
+import { buildDiffSegments } from "@/lib/agent/hunk-review"
 import { cn } from "@/lib/utils"
 
-const CONTEXT_LINES = 3
 const REVEAL_LINES = 40
 const CHANGE_PAGE_LINES = 200
 
-type DiffSegment = { from: number; to: number; hidden: boolean }
-
-export function EditorChangeDiff({ before, after, defaultOpen = false, hideTrigger = false, proposed = false, showLineEndings = true }: {
+export function EditorChangeDiff({ before, after, defaultOpen = false, hideTrigger = false, proposed = false, showLineEndings = true, rejectedHunks, onHunkDecision }: {
   before: string
   after: string
   defaultOpen?: boolean
   hideTrigger?: boolean
   proposed?: boolean
   showLineEndings?: boolean
+  /** Fork（almanac ALMNC-76）：逐處審核。給了 onHunkDecision 才顯示每處的接受／拒絕。 */
+  rejectedHunks?: ReadonlySet<number>
+  onHunkDecision?: (index: number, accepted: boolean) => void
 }) {
   const t = useTranslations("record.chat.input.agent.changes")
   const [open, setOpen] = React.useState(defaultOpen || hideTrigger)
@@ -46,22 +47,8 @@ export function EditorChangeDiff({ before, after, defaultOpen = false, hideTrigg
     }
     return endings
   }, [lines])
-  const segments = React.useMemo(() => {
-    if (!lines) return []
-    const visible = new Uint8Array(lines.length)
-    lines.forEach((line, index) => {
-      if (line.type === "equal") return
-      visible.fill(1, Math.max(0, index - CONTEXT_LINES), Math.min(lines.length, index + CONTEXT_LINES + 1))
-    })
-    const result: DiffSegment[] = []
-    for (let index = 0; index < lines.length; index += 1) {
-      const hidden = visible[index] === 0
-      const previous = result.at(-1)
-      if (previous && previous.hidden === hidden) previous.to = index + 1
-      else result.push({ from: index, to: index + 1, hidden })
-    }
-    return result
-  }, [lines])
+  // 切段與套用共用 hunk-review：面板上的第 N 處就是套用時的第 N 處。
+  const segments = React.useMemo(() => lines ? buildDiffSegments(lines) : [], [lines])
   const hunks = segments.filter(segment => !segment.hidden)
 
   React.useEffect(() => {
@@ -152,11 +139,26 @@ export function EditorChangeDiff({ before, after, defaultOpen = false, hideTrigg
             {segments.map(segment => {
               if (!segment.hidden) {
                 const end = Math.min(segment.to, segment.from + (shownChanges[segment.from] ?? CHANGE_PAGE_LINES))
+                const hunkIndex = hunks.indexOf(segment)
+                const rejected = rejectedHunks?.has(hunkIndex) ?? false
                 return <div key={segment.from} tabIndex={-1} ref={element => {
                   if (element) hunkRefs.current.set(segment.from, element)
                   else hunkRefs.current.delete(segment.from)
                 }} className="focus:outline-none">
-                  {renderLines(segment.from, end)}
+                  {onHunkDecision && <div className="flex min-w-0 items-center gap-1 border-y bg-muted/40 px-1 py-0.5">
+                    <span className="mr-auto min-w-0 truncate px-1 text-xs text-muted-foreground">
+                      {t("hunkTitle", { index: hunkIndex + 1 })}{rejected && ` · ${t("hunkRejected")}`}
+                    </span>
+                    <Button type="button" size="xs" variant={rejected ? "ghost" : "secondary"} aria-pressed={!rejected}
+                      aria-label={t("acceptHunkLabel", { index: hunkIndex + 1 })} onClick={() => onHunkDecision(hunkIndex, true)}>
+                      {t("acceptHunk")}
+                    </Button>
+                    <Button type="button" size="xs" variant={rejected ? "secondary" : "ghost"} aria-pressed={rejected}
+                      aria-label={t("rejectHunkLabel", { index: hunkIndex + 1 })} onClick={() => onHunkDecision(hunkIndex, false)}>
+                      {t("rejectHunk")}
+                    </Button>
+                  </div>}
+                  <div className={cn(rejected && "opacity-50")}>{renderLines(segment.from, end)}</div>
                   {end < segment.to && <div className="flex justify-center p-1">
                     <Button type="button" variant="outline" size="sm" onClick={() => setShownChanges(current => ({ ...current, [segment.from]: end - segment.from + CHANGE_PAGE_LINES }))}>
                       {t("showMoreChanges", { count: segment.to - end })}
