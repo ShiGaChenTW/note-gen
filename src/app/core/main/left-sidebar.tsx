@@ -27,6 +27,7 @@ import { useDecisions } from '@/lib/decide/use-decisions'
 import useInboxStore from '@/stores/inbox'
 import useThreadsStore from '@/stores/threads'
 import usePromptLibraryStore from '@/stores/prompt-library'
+import { PROMPT_LIBRARY_ENABLED } from '@/lib/prompt-library/feature'
 import { openDailyNoteFromSidebar, SidebarCalendar } from './daily/sidebar-calendar'
 import { SIDEBAR_ROW, SIDEBAR_ROW_ACTIVE, SIDEBAR_ROW_ACTIVE_SECONDARY } from './sidebar-row'
 import { Count } from './page-ui'
@@ -261,7 +262,8 @@ function ClassicLeftSidebar() {
           {isV3 && <LauncherButton icon={Download} title="Collect" active={collectVisible} onClick={showCollect} />}
           {isV3 && <LauncherButton icon={MessagesSquare} title="Threads" active={threadsVisible} onClick={showThreads} />}
           <LauncherButton icon={Inbox} title="Inbox" active={inboxVisible} badge={inboxCount} badgeLabel={t('inbox.pending', { count: inboxCount })} onClick={() => showInbox()} />
-          <LauncherButton icon={ScrollText} title="Prompts" active={promptLibraryVisible} onClick={() => showPromptLibrary()} />
+          {/* Fork（almanac ALMNC-81）：提示詞功能先關閉 */}
+          {PROMPT_LIBRARY_ENABLED && <LauncherButton icon={ScrollText} title="Prompts" active={promptLibraryVisible} onClick={() => showPromptLibrary()} />}
           <div className="mx-2 my-1.5 border-t border-line-soft" role="separator" />
           {builtInTabs.map(renderTab)}
           {visiblePluginTabs.map(renderTab)}
