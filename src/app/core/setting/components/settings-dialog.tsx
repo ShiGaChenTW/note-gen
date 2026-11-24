@@ -14,6 +14,7 @@ import {
   settingSections,
   isPluginSettingSection,
   isSettingSectionVisible,
+  fallbackSettingSection,
   type BuiltinSettingSection,
   type SettingSection,
   useSettingsDialogStore,
@@ -41,6 +42,7 @@ import BackupPage from '../backup/page'
 import TemplatePage from '../template/page'
 import WebSearchSettingPage from '../webSearch/page'
 import EinkSettingPage from '../eink/page'
+import PartnersSettingPage from '../partners/page'
 import { useUiV3 } from '@/lib/fork-ui'
 import { SettingTab } from './setting-tab'
 import { hasPluginSettingsContent } from '@/lib/plugins/display-preferences'
@@ -51,6 +53,7 @@ import { PluginSettingsPage } from '../plugins/plugin-settings-page'
 const settingPages: Record<BuiltinSettingSection, ComponentType> = {
   about: AboutPage,
   general: GeneralSettingsPage,
+  partners: PartnersSettingPage,
   record: RecordSettingPage,
   daily: DailySettingPage,
   editor: EditorSettingPage,
@@ -91,9 +94,10 @@ export function SettingsDialog() {
   const pluginSectionAvailable = useCallback((section: string) => settingsPlugins.some(plugin =>
     `plugin:${plugin.manifest.id}` === section), [settingsPlugins])
   const v3 = useUiV3()
-  // Fork（almanac ALMNC-45）：classic 下不停在 V3 專屬分頁（例如上次停在電子紙後切回 classic）
+  // Fork（almanac ALMNC-45）：classic 下不停在 V3 專屬分頁（例如上次停在電子紙後切回 classic）；
+  // ALMNC-83.2：新介面下停在記憶管理（舊的深連結或上次停的頁）改停夥伴分頁。
   const selectedSection = isPluginSettingSection(activeSection) && initialized && !pluginSectionAvailable(activeSection)
-    ? 'plugins' : !isPluginSettingSection(activeSection) && !isSettingSectionVisible(activeSection, v3) ? 'general' : activeSection
+    ? 'plugins' : !isPluginSettingSection(activeSection) ? fallbackSettingSection(activeSection, v3) : activeSection
   const sectionsToRender = [...new Set([...mountedSections, selectedSection])].filter(section =>
     (!isPluginSettingSection(section) || pluginSectionAvailable(section)) && (isPluginSettingSection(section) || isSettingSectionVisible(section, v3)))
 

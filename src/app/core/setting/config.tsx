@@ -22,6 +22,7 @@ import {
   Blocks,
   CalendarDays,
   TabletSmartphone,
+  Users,
 } from "lucide-react"
 import type { ReactNode } from 'react'
 import type { BuiltinSettingSection } from '@/stores/settings-dialog'
@@ -85,6 +86,12 @@ const baseConfig: SettingNavigationItem[] = [
   },
   {
     group: 'ai',
+  },
+  {
+    // Fork（almanac ALMNC-83.5）：夥伴名單、Agent 設定區、調研與回顧、自動整理、自動接受（只在 V3）
+    icon: <Users className="size-4" />,
+    anchor: 'partners',
+    v3Only: true,
   },
   {
     icon: <BotMessageSquare className="size-4" />,

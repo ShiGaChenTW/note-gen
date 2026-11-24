@@ -22,6 +22,8 @@ vi.mock('@/db/agents', () => ({
 vi.mock('./agent-memory-settings', () => ({ AgentMemorySettings: () => null }))
 // Fork（almanac ALMNC-54.13）：調研與回顧的設定有自己的測試（review-settings.test.ts）。
 vi.mock('./review-settings', () => ({ ReviewSettings: () => null }))
+// Fork（almanac ALMNC-83.2）：對話記憶有自己的測試（chat-memory-settings.test.ts），這裡只確認有放進 Agent 設定區。
+vi.mock('./chat-memory-settings', () => ({ ChatMemorySettings: () => React.createElement('p', null, 'stub:chat-memory') }))
 
 vi.mock('next-intl', async importOriginal => {
   const intl = await importOriginal<typeof import('next-intl')>()
@@ -74,6 +76,7 @@ it('shows settings only in V3 and can create, edit and disable an agent', async 
 
     await act(async () => useUiModeStore.setState({ mode: 'v3' }))
     expect(container.textContent).toContain(en.agents.empty)
+    expect(container.textContent).toContain('stub:chat-memory')
     await act(async () => button(en.agents.add).click())
     expect(seed).toHaveBeenCalled()
     await changeName('Alex')

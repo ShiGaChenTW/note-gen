@@ -86,6 +86,10 @@ describe('電子紙入口只在 V3', () => {
     expect(container.textContent).toContain(en.settings.eink.title)
     expect(container.textContent).toContain(en.settings.eink.weatherCity.title)
     expect(container.textContent).toContain(en.settings.eink.briefingSections.articles)
+    // ALMNC-83.5：RSS 訂閱搬到這頁，接在稍後讀後面
+    const text = container.textContent!
+    expect(text.indexOf(en.settings.rss.title)).toBeGreaterThan(text.indexOf(en.settings.eink.readLater.title))
+    expect(text.indexOf(en.settings.eink.readLater.title)).toBeGreaterThan(-1)
     const token = useEinkStore.getState().token
     const shown = container.querySelector('[data-testid="eink-token"]')!.textContent!
     expect(shown).not.toContain(token)

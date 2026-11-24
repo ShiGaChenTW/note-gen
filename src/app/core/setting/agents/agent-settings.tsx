@@ -17,6 +17,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { SettingSection } from '../components/setting-base'
 import { AgentMemorySettings } from './agent-memory-settings'
+import { ChatMemorySettings } from './chat-memory-settings'
 import { ReviewSettings } from './review-settings'
 
 const field = 'w-full rounded-md border border-line bg-bg px-3 py-2 text-ink'
@@ -198,6 +199,8 @@ function AgentSettingsPanel() {
       </SettingSection>
       {/* Fork（almanac ALMNC-54.3）：Agent 設定區接在代理人名單下面。 */}
       {!!agents?.length && <AgentMemorySettings agents={agents} onAgentsChanged={() => void listAgentSettings().then(setAgents).catch(error => console.error('[agents] reload failed', error))} />}
+      {/* Fork（almanac ALMNC-83.2）：對話 agent 的記憶（原設定 > 記憶管理）併進 Agent 設定區。 */}
+      <ChatMemorySettings />
       {/* Fork（almanac ALMNC-54.13）：調研與回顧的頻率也在 Agent 設定區。 */}
       {agents !== null && <ReviewSettings />}
     </>

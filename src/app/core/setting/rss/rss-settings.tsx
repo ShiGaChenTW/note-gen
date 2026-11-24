@@ -1,6 +1,7 @@
 'use client'
 
 // Fork（almanac ALMNC-57.2）：設定裡的「RSS 訂閱」（只在 V3）：新增、命名、暫停、刪除、立即更新；每個訂閱顯示上次更新或上次錯誤與時間。
+// ALMNC-83.5：搬到設定 > 電子紙（稍後讀後面）；只用 V3 token（ink、muted-ink、line、panel、danger），按鈕一律 32 px。
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
@@ -18,13 +19,13 @@ function FeedStatus({ feed }: { feed: RssFeed }) {
   const t = useTranslations('settings.rss')
   if (feed.lastError && feed.lastErrorAt !== undefined) {
     return (
-      <p className="text-xs text-destructive">
+      <p className="text-xs text-danger">
         {t('lastError', { time: formatDateTime(feed.lastErrorAt), message: rssErrorText(t, { code: feed.lastError, detail: feed.lastErrorDetail }) })}
       </p>
     )
   }
   return (
-    <p className="text-xs text-muted-foreground">
+    <p className="text-xs text-muted-ink">
       {feed.lastSuccessAt !== undefined ? t('lastFetched', { time: formatDateTime(feed.lastSuccessAt), count: feed.lastAdded ?? 0 }) : t('never')}
     </p>
   )
@@ -107,18 +108,17 @@ function FeedRow({ feed, index, disabled }: { feed: RssFeed, index: number, disa
           onBlur={() => void commitName()}
           onKeyDown={event => { if (event.key === 'Enter' && !event.nativeEvent.isComposing) void commitName() }}
         />
-        <p className="break-all text-xs text-muted-foreground">
+        <p className="break-all text-xs text-muted-ink">
           {feed.url}{feed.paused && <> · {t('paused')}</>}
         </p>
         <FeedStatus feed={feed} />
       </div>
       <div className="flex shrink-0 gap-2">
-        <Button type="button" size="sm" variant="outline" disabled={disabled || pending} onClick={() => void togglePaused()}>
+        <Button type="button" variant="outline" disabled={disabled || pending} onClick={() => void togglePaused()}>
           {t(feed.paused ? 'resume' : 'pause')}<span className="sr-only"> {feed.name}</span>
         </Button>
         <Button
           type="button"
-          size="sm"
           variant="outline"
           disabled={disabled || pending}
           data-feed-delete
@@ -182,7 +182,7 @@ function RssSettingsPanel() {
   return (
     <SettingSection title={t('title')} desc={t('desc')}>
       <div className="space-y-3 text-sm text-ink" data-rss-settings>
-        {loadError && <p role="alert">{t('loadError')}</p>}
+        {loadError && <p role="alert" className="text-danger">{t('loadError')}</p>}
         {!ready && !loadError && <p role="status">{t('loading')}</p>}
         <form onSubmit={event => void subscribe(event)} className="flex flex-wrap items-end gap-2">
           <label className="min-w-56 flex-[2] space-y-1">
@@ -195,7 +195,7 @@ function RssSettingsPanel() {
           </label>
           <Button type="submit" disabled={!ready || subscribing || !url.trim()}>{t(subscribing ? 'subscribing' : 'subscribe')}</Button>
         </form>
-        {ready && feeds.length === 0 && <p className="text-muted-foreground">{t('empty')}</p>}
+        {ready && feeds.length === 0 && <p className="text-muted-ink">{t('empty')}</p>}
         {feeds.length > 0 && (
           <>
             <ul className="divide-y divide-line rounded-md border border-line bg-panel">
