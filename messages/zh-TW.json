@@ -2760,7 +2760,7 @@
         "testing": "測試中"
       },
       "cloudFolder": {
-        "rollbackSaveFailed": "無法在還原工作區前儲存目前的編輯內容",
+        "rollbackSaveFailed": "無法在還原筆記庫前儲存目前的編輯內容",
         "title": "雲端硬碟同步",
         "description": "透過 iCloud Drive 等雲端硬碟資料夾同步資料。",
         "androidDescription": "選擇系統檔案應用程式中的雲端硬碟資料夾。",
