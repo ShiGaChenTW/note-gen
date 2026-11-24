@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { GITLAB_INSTANCES, GitlabInstanceType } from '@/lib/sync/gitlab.types'
+import { listedGitlabInstanceTypes } from '@/lib/sync/listed-platforms'
 import useSettingStore from '@/stores/setting'
 
 export function GitlabSync() {
@@ -72,11 +73,19 @@ export function GitlabSync() {
               value={gitlabInstanceType}
               onValueChange={(value) => void setGitlabInstanceType(value as GitlabInstanceType)}
               placeholder={t('settings.sync.gitlabInstanceTypePlaceholder')}
-              options={[
-                { value: GitlabInstanceType.OFFICIAL, label: <span className="flex items-center gap-2"><Globe />GitLab.com</span> },
-                { value: GitlabInstanceType.JIHULAB, label: <span className="flex items-center gap-2"><Globe />极狐</span> },
-                { value: GitlabInstanceType.SELF_HOSTED, label: <span className="flex items-center gap-2"><Server />{t('settings.sync.gitlabInstanceTypeOptions.selfHosted')}</span> },
-              ]}
+              options={listedGitlabInstanceTypes(gitlabInstanceType).map(instanceType => ({
+                value: instanceType,
+                label: (
+                  <span className="flex items-center gap-2">
+                    {instanceType === GitlabInstanceType.SELF_HOSTED ? <Server /> : <Globe />}
+                    {instanceType === GitlabInstanceType.OFFICIAL
+                      ? 'GitLab.com'
+                      : instanceType === GitlabInstanceType.JIHULAB
+                        ? t('settings.sync.gitlabInstanceTypeOptions.jihulab')
+                        : t('settings.sync.gitlabInstanceTypeOptions.selfHosted')}
+                  </span>
+                ),
+              }))}
             />
             <FieldDescription>{t('settings.sync.gitlabInstanceTypeDesc')}</FieldDescription>
           </Field>

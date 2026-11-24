@@ -133,7 +133,7 @@ export function CloudFolderSync() {
         await refreshWorkspaceContent()
       } catch (error) {
         if (!await prepareWorkspaceSwitch()) {
-          throw new Error('无法在回滚工作区前保存当前编辑内容')
+          throw new Error(t('rollbackSaveFailed'))
         }
         await setWorkspacePath(previousWorkspacePath)
         await refreshWorkspaceContent()
@@ -168,7 +168,7 @@ export function CloudFolderSync() {
       console.error('Cloud workspace switch failed:', error)
       try {
         if (!await prepareWorkspaceSwitch()) {
-          throw new Error('无法在回滚工作区前保存当前编辑内容')
+          throw new Error(t('rollbackSaveFailed'))
         }
         await setWorkspacePath(previousWorkspacePath)
         await refreshWorkspaceContent()

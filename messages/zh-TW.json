@@ -613,6 +613,8 @@
           "saveError": "自訂 CSS 儲存失敗"
         },
         "customTheme": {
+          "resetColor": "恢復預設值",
+          "pickColor": "點選以選擇顏色",
           "title": "自訂主題顏色",
           "desc": "自訂應用程式的主題顏色，包括背景色、前景色、邊框色等",
           "button": "編輯顏色",
@@ -714,7 +716,7 @@
         },
         "uiMode": {
           "title": "新介面（V3）",
-          "desc": "開啟時使用 almanac V3 的單色外觀與新頁面；關閉則回到原本的外觀，新頁面隱藏。"
+          "desc": "開啟時使用 Almanac V3 的單色外觀與新頁面；關閉則回到原本的外觀，新頁面隱藏。"
         }
       },
       "tools": {
@@ -788,6 +790,7 @@
       "savedDescription": "「{title}」已儲存到記錄"
     },
     "webSearch": {
+      "zhipuName": "智譜 Web Search",
       "title": "網路搜尋",
       "desc": "設定 Almanac Notes 的三層網路搜尋方案，AI 會自行判斷何時需要搜尋。",
       "nativeEnabled": "啟用模型原生搜尋",
@@ -1952,13 +1955,13 @@
       "desc": "在這裡，你可以新增和管理提示詞，幫助 AI 更好地理解你的需求。",
       "addPrompt": "新增提示詞",
       "promptLibrary": "提示詞資源庫",
-      "selectPrompt": "選擇 對話角色",
-      "configPrompt": "設定 對話角色",
+      "selectPrompt": "選擇對話角色",
+      "configPrompt": "設定對話角色",
       "noContent": "目前沒有內容",
-      "addPromptDesc": "請輸入 對話角色 名稱和內容，幫助AI更好地理解你的需求。",
-      "promptTitlePlaceholder": "請輸入 對話角色 名稱",
-      "promptContentPlaceholder": "請輸入 對話角色 內容",
-      "promptContent": "對話角色 內容",
+      "addPromptDesc": "請輸入對話角色名稱和內容，幫助 AI 更好地理解你的需求。",
+      "promptTitlePlaceholder": "請輸入對話角色名稱",
+      "promptContentPlaceholder": "請輸入對話角色內容",
+      "promptContent": "對話角色內容",
       "optimizePrompt": "最佳化提示詞",
       "optimizing": "最佳化中...",
       "optimizeSuccess": "提示詞最佳化成功",
@@ -2701,6 +2704,7 @@
       "gitlabInstanceTypeDesc": "選擇要連線的 GitLab 實例類型",
       "gitlabInstanceTypePlaceholder": "選擇 GitLab 實例類型",
       "gitlabInstanceTypeOptions": {
+        "jihulab": "極狐 GitLab（中國）",
         "selfHosted": "自建實例",
         "selfHostedDesc": "輸入您的自建 GitLab 伺服器位址（如：https://gitlab.example.com）"
       },
@@ -2756,8 +2760,9 @@
         "testing": "測試中"
       },
       "cloudFolder": {
+        "rollbackSaveFailed": "無法在還原工作區前儲存目前的編輯內容",
         "title": "雲端硬碟同步",
-        "description": "透過 OneDrive、iCloud Drive 等雲端硬碟資料夾同步資料。",
+        "description": "透過 iCloud Drive 等雲端硬碟資料夾同步資料。",
         "androidDescription": "選擇系統檔案應用程式中的雲端硬碟資料夾。",
         "dialogTitle": "選擇雲端硬碟中的 Almanac Notes 資料夾",
         "workspaceWarningTitle": "筆記庫尚未遷移",
@@ -3618,6 +3623,7 @@
       "selectTheme": "選擇主題"
     },
     "dev": {
+      "importConfigFailed": "匯入失敗",
       "title": "進階設定",
       "desc": "設定網路代理、資料管理和設定檔等進階選項。部分操作可能影響現有資料，請謹慎修改。",
       "developerTitle": "開發者",
@@ -3786,7 +3792,11 @@
       }
     },
     "ai": {
-      "title": "模型平台",
+      "testInvalidTts": "語音合成模型回傳的格式不正確",
+      "testInvalidEmbedding": "嵌入結果的格式不正確",
+      "testInvalidRerank": "重新排序結果的格式不正確",
+      "deleteModelConfirm": "確定要刪除這個模型嗎？",
+      "title": "模型服務",
       "menuTitle": "模型服務",
       "desc": "集中管理 AI 模型平台、連線憑證和不同能力的模型，可用於對話、整理、知識庫和語音等功能。",
       "providersTitle": "模型平台",
@@ -3892,13 +3902,13 @@
       "voicePlaceholder": "請輸入語音類型，如：alloy",
       "enableStream": "串流回應",
       "enableStreamDesc": "啟用串流回應可以即時顯示產生內容，但某些模型可能不支援此功能。",
-      "maxTokens": "最大輸出 詞元",
-      "maxTokensDesc": "限制單次產生的最大 詞元 數；留空時使用模型或平台的預設限制。",
+      "maxTokens": "最大輸出詞元",
+      "maxTokensDesc": "限制單次產生的最大詞元數；留空時使用模型或平台的預設限制。",
       "maxTokensPlaceholder": "由模型決定",
       "contextWindow": "上下文視窗",
-      "contextWindowDesc": "模型可接受的輸入與輸出 詞元 總量；留空時自動推測，並在上下文溢位後學習。",
+      "contextWindowDesc": "模型可接受的輸入與輸出詞元總量；留空時自動推測，並在上下文溢位後學習。",
       "contextWindowPlaceholder": "自動偵測（預設 16K）",
-      "tokenLimitParam": "詞元 限制參數",
+      "tokenLimitParam": "詞元限制參數",
       "tokenLimitParamDesc": "預設使用 max_completion_tokens；舊版相容介面可切換為 max_tokens。",
       "reasoningEffort": {
         "title": "推理等級",
@@ -4809,8 +4819,8 @@
           "header": {
             "configApiKey": "設定 API KEY",
             "clearChat": "清空對話",
-            "configPrompt": "設定 對話角色",
-            "selectPrompt": "選擇 對話角色"
+            "configPrompt": "設定對話角色",
+            "selectPrompt": "選擇對話角色"
           },
           "clipboard": {
             "image": {
@@ -4845,9 +4855,9 @@
             "title": "開始與 AI 對話",
             "subtitle": "使用 Chat 或 Agent 模式與 AI 互動",
             "currentModel": "目前模型",
-            "currentPrompt": "目前 對話角色",
+            "currentPrompt": "目前對話角色",
             "noModel": "未設定模型",
-            "noPrompt": "未設定 對話角色",
+            "noPrompt": "未設定對話角色",
             "modeHint": "點選輸入框左側的",
             "modeHintSuffix": "按鈕可切換對話模式"
           },
@@ -5151,10 +5161,10 @@
           "description": "離開後，本次對話內容將自動清除"
         },
         "currentModel": "目前模型",
-        "currentPrompt": "目前 對話角色",
+        "currentPrompt": "目前對話角色",
         "currentMode": "對話模式",
         "noModel": "未設定模型",
-        "noPrompt": "未設定 對話角色",
+        "noPrompt": "未設定對話角色",
         "configureModel": "設定模型",
         "recentConversations": "最近對話",
         "deleteConversation": "刪除對話",
@@ -5752,8 +5762,8 @@
       "header": {
         "configApiKey": "設定 API KEY",
         "clearChat": "清空聊天",
-        "configPrompt": "設定 對話角色",
-        "selectPrompt": "選擇 對話角色",
+        "configPrompt": "設定對話角色",
+        "selectPrompt": "選擇對話角色",
         "noModel": "未選擇 AI 模型"
       },
       "clipboard": {
@@ -8142,7 +8152,7 @@
       "handed": "已交給 Agent",
       "done": "已處理",
       "baselineTitle": "建立基準",
-      "baselineDescription": "整理主題清單、確認後估算 詞元，再開始第一期報告"
+      "baselineDescription": "整理主題清單、確認後估算詞元，再開始第一期報告"
     },
     "baseline": {
       "loading": "正在整理標籤與 MOC…",

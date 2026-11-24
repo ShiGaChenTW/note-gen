@@ -102,5 +102,5 @@ export function getEditorContentContainerClass(options: {
   return EDITOR_CONTENT_WIDTH_CLASSES[options.contentWidth]
 }
 
-/** Fork（almanac）：V3 筆記工具列給的三種寬度（設定頁仍有四種，standard 只在那裡選得到）。 */
+/** Fork（almanac）：V3 筆記工具列與 V3 設定頁給的三種寬度；舊介面設定頁仍有四種，standard 只在那裡選得到。 */
 export const V3_EDITOR_CONTENT_WIDTHS: readonly EditorContentWidth[] = ['narrow', 'wide', 'full']

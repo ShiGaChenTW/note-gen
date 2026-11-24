@@ -12,13 +12,15 @@ import {
   ItemTitle,
 } from '@/components/ui/item'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import type {
-  EditorContentWidth,
-  EditorLineHeight,
+import {
+  V3_EDITOR_CONTENT_WIDTHS,
+  type EditorContentWidth,
+  type EditorLineHeight,
 } from '@/lib/editor-layout-styles'
+import { useUiV3 } from '@/lib/fork-ui'
 import useSettingStore from '@/stores/setting'
 
-const contentWidthOptions: EditorContentWidth[] = ['narrow', 'standard', 'wide', 'full']
+const classicContentWidthOptions: readonly EditorContentWidth[] = ['narrow', 'standard', 'wide', 'full']
 const lineHeightOptions: EditorLineHeight[] = ['compact', 'comfortable', 'relaxed']
 
 export default function LayoutSettings({
@@ -27,6 +29,8 @@ export default function LayoutSettings({
   showContentWidth?: boolean
 }) {
   const t = useTranslations('settings.editor.layout')
+  // Fork（almanac ALMNC-83.8）：新介面只列筆記工具列那三種寬度，舊介面照舊四種。
+  const contentWidthOptions = useUiV3() ? V3_EDITOR_CONTENT_WIDTHS : classicContentWidthOptions
   const {
     editorContentWidth,
     editorLineHeight,
