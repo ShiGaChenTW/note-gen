@@ -1,7 +1,7 @@
 'use client'
 
-// Fork（almanac ALMNC-63）：狀態列的檢視選單——五種檢視加上可疊加的專注模式。
-import { BookOpen, Code2, Columns2, Eye, Focus, PenLine, type LucideIcon } from 'lucide-react'
+// Fork（almanac ALMNC-63）：狀態列的檢視選單——四種檢視加上可疊加的專注模式。
+import { BookOpen, Code2, Eye, Focus, PenLine, type LucideIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
@@ -21,7 +21,6 @@ import { useEditorFocusStore } from '@/stores/editor-focus'
 export const VIEW_PRESENTATION_ICONS: Record<EditorViewPresentation, LucideIcon> = {
   markup: Code2,
   live: PenLine,
-  split: Columns2,
   reading: BookOpen,
   wysiwyg: Eye,
 }

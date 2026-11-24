@@ -103,6 +103,7 @@
     "core:window:allow-start-dragging",
     "core:window:allow-toggle-maximize",
     "core:window:allow-set-always-on-top",
+    "core:window:allow-set-fullscreen",
     {
       "identifier": "http:allow-fetch",
       "allow": [

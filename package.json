@@ -42,6 +42,7 @@
     "@jitl/quickjs-singlefile-browser-release-sync": "0.32.0",
     "@json-render/core": "0.21.3",
     "@json-render/react": "0.21.3",
+    "@lezer/highlight": "^1.2.1",
     "@mozilla/readability": "^0.6.0",
     "@notegen/plugin-api": "0.1.14",
     "@sereneinserenade/tiptap-search-and-replace": "^0.1.1",

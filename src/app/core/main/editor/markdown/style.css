@@ -2384,13 +2384,47 @@
   background: var(--success-ink);
 }
 
-/* Fork（almanac ALMNC-63）：專注模式。<html data-editor-focus> 由 editor-focus-mode.ts 設定。 */
-:where([data-ui="v3"])[data-editor-focus] [data-focus-hide] {
-  display: none !important;
+/* Fork（almanac ALMNC-63）：專注模式。<html data-editor-focus> 由 editor-focus-mode.ts 設定。
+   視窗切成簡單全螢幕；作用中的編輯器（[data-focus-editor="true"]）變成正中間的閱讀卡片，
+   四周的介面留在原位，由 focus-transition.ts 蓋一層模糊背景（z-index 39，卡片在 40）。
+   卡片寬度：<html data-editor-focus-width> 窄／較寬／最寬。 */
+:where([data-ui="v3"])[data-editor-focus] {
+  --focus-card-width: 46rem;
+}
+
+:where([data-ui="v3"])[data-editor-focus][data-editor-focus-width="wide"] {
+  --focus-card-width: 64rem;
+}
+
+:where([data-ui="v3"])[data-editor-focus][data-editor-focus-width="full"] {
+  --focus-card-width: 100vw;
+}
+
+:where([data-ui="v3"])[data-editor-focus] [data-focus-editor="true"] {
+  position: fixed;
+  top: 24px;
+  bottom: 24px;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  width: min(var(--focus-card-width), calc(100vw - 48px));
+  height: auto;
+  margin-inline: auto;
+  overflow: hidden;
+  border-radius: 14px;
+  /* 上方留給卡片右上角的寬度、模糊與退出按鈕 */
+  padding-top: 2.75rem;
+  background-color: var(--bg);
+  box-shadow: var(--sh-dialog);
+}
+
+:where([data-ui="v3"]) [data-focus-editor="true"][data-focus-phase] .editor-focus-exit {
+  opacity: 0;
+  pointer-events: none;
 }
 
 :where([data-ui="v3"]) [data-focus-editor="true"] .editor-focus-exit {
-  opacity: 0.25;
+  opacity: 0.55;
   transition: opacity 150ms ease-out;
 }
 
@@ -2420,21 +2454,17 @@
   background-color: transparent !important;
 }
 
-/* 打字機捲動：前後留半個畫面，第一行與最後一行也能捲到中間 */
+/* 底部留白：寫到文件最後時，游標也能停在畫面中段（上方不留白） */
 :where([data-ui="v3"]) [data-focus-editor="true"] .ProseMirror {
-  padding-top: 40vh;
-  padding-bottom: 50vh;
+  padding-bottom: 40vh;
 }
 
 :where([data-ui="v3"]) [data-focus-editor="true"] .cm-content {
-  max-width: 46rem !important;
-  margin: 0 auto !important;
-  padding-top: 40vh !important;
-  padding-bottom: 50vh !important;
+  padding-bottom: 40vh !important;
 }
 
-/* Split 檢視右側預覽 */
-:where([data-ui="v3"]) [data-editor-split-preview] {
-  font-size: var(--editor-font-size, 16px);
-  line-height: var(--editor-line-height, 1.7);
+/* iA Writer 風格（.cm-writer）自己會限寬置中；其他原始碼編輯器在專注模式才限寬 */
+:where([data-ui="v3"]) [data-focus-editor="true"] .cm-editor:not(.cm-writer) .cm-content {
+  max-width: 46rem !important;
+  margin: 0 auto !important;
 }

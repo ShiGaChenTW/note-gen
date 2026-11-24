@@ -45,7 +45,7 @@ it('leaves prompts out of the / menu while the prompt feature is off', async () 
   act(() => useVaultIndexStore.getState().replaceAll(new Map([[prompt.path, prompt]])))
   const noop = vi.fn()
   await act(async () => root.render(h(NextIntlClientProvider, { locale: 'zh-TW', messages: zhTW, timeZone: 'Asia/Taipei', children: h(ChatComposerMenu, {
-    mode: 'command', query: '', excludedItemKeys: new Set(), onClose: noop, onCommandSelect: noop, onFileSelect: noop, onFolderSelect: noop,
+    mode: 'command', query: '', excludedItemKeys: new Set<string>(), onClose: noop, onCommandSelect: noop, onFileSelect: noop, onFolderSelect: noop,
     onRecordSelect: noop, onCanvasSelect: noop, onSkillSelect: noop, onPromptSelect: noop,
   }) })))
   const text = document.body.textContent ?? ''

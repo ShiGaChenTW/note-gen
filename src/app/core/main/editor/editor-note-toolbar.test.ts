@@ -143,7 +143,7 @@ it('shows the four groups for a markdown note, in order, with shortcuts in the l
   expect(labels()).toEqual([
     '返回 (⌘[)', '前進 (⌘])',
     '在筆記中尋找 (⌘F)', '標籤', '置頂', '收藏', '送給指揮官',
-    '開啟大綱 (⇧⌘O)', '版本歷史', '筆記資訊', '命令面板 (⌘⇧P)',
+    '編輯區寬度', '專注模式 (⌘⇧D)', '開啟大綱 (⇧⌘O)', '版本歷史', '筆記資訊', '命令面板 (⌘⇧P)',
     '復原 (⌘Z)', '重做 (⌘Shift+Z)',
   ])
   expect(host.querySelectorAll('[data-testid="editor-note-toolbar"] > span[aria-hidden]')).toHaveLength(3)
@@ -318,7 +318,7 @@ it('hides only undo/redo when the undo/redo setting is off', async () => {
   useSettingStore.setState({ showEditorUndoRedo: false })
   await render()
   expect(labels().at(-1)).toBe('命令面板 (⌘⇧P)')
-  expect(labels()).toHaveLength(11)
+  expect(labels()).toHaveLength(13)
 })
 
 // ALMNC-54.20 AC#2：右上筆記工具列的「送給指揮官」——送目前這篇筆記，結果用 toast 告訴 Scott。
@@ -379,4 +379,18 @@ it('flushes the pending save before sending, so a just-typed change is included'
 it('does not offer 送給指揮官 for canvas tabs', async () => {
   await render({ activeTab: { id: 'c', path: 'canvas://1', name: 'Board', isFolder: false, kind: 'canvas', canvasId: '1' } })
   expect(labels()).not.toContain('送給指揮官')
+})
+
+it('switches the editor width between narrow, wider and widest from the toolbar', async () => {
+  useSettingStore.setState({ editorContentWidth: 'full' })
+  await render()
+  const trigger = toolbarButtons().find(button => button.getAttribute('aria-label') === '編輯區寬度')!
+  await act(async () => {
+    trigger.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerType: 'mouse' }))
+  })
+  const items = Array.from(document.querySelectorAll<HTMLElement>('[role="menuitemradio"]'))
+  expect(items.map(item => item.textContent)).toEqual(['窄', '較寬', '最寬'])
+  expect(items.find(item => item.getAttribute('aria-checked') === 'true')?.textContent).toBe('最寬')
+  await act(async () => { items[1].click() })
+  expect(useSettingStore.getState().editorContentWidth).toBe('wide')
 })

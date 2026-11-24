@@ -7084,6 +7084,10 @@
       "more": "More formatting"
     },
     "noteToolbar": {
+      "width": "Editor width",
+      "widthNarrow": "Narrow",
+      "widthWide": "Wider",
+      "widthFull": "Widest",
       "label": "Note toolbar",
       "back": "Back",
       "forward": "Forward",
@@ -7513,20 +7517,25 @@
       "menuTitle": "Switch view",
       "markup": "Markup",
       "live": "Live Preview",
-      "split": "Live Preview (Split)",
       "reading": "Reading",
       "wysiwyg": "WYSIWYG",
       "desc": {
         "markup": "Edit the raw Markdown",
         "live": "Show syntax only on the line you are editing",
-        "split": "Source on the left, live preview on the right",
         "reading": "Read-only formatted view",
         "wysiwyg": "Edit like a word processor"
       },
       "focus": "Focus mode",
       "focusExit": "Exit focus mode",
-      "focusHint": "Press Esc to exit",
-      "splitPreview": "Preview"
+      "focusWidth": "Width",
+      "focusWidthNarrow": "Narrow",
+      "focusWidthWide": "Wider",
+      "focusWidthFull": "Widest",
+      "focusBlur": "Blur",
+      "focusBlurLight": "Light",
+      "focusBlurMedium": "Medium",
+      "focusBlurStrong": "Strong",
+      "focusHint": "Press Esc or {shortcut} to exit"
     }
   },
   "editorWindow": {
@@ -8581,6 +8590,10 @@
       "einkUnpin": {
         "title": "Unpin from e-paper",
         "keywords": "eink,e-paper,unpin"
+      },
+      "focusMode": {
+        "title": "Focus mode",
+        "keywords": "focus,zen,writing,fullscreen"
       },
       "readLater": {
         "title": "Open read-later list",
