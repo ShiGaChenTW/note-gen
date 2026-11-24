@@ -11,7 +11,8 @@ import { memoryContextService } from '@/lib/context/loader'
 import { AgentRecoveryManager } from './recovery-manager'
 import { PendingMessageQueue } from './pending-message-queue'
 import { createAgentId, AgentTraceRecorder } from './trace-recorder'
-import { agentToolRegistry, buildEditorApprovalPreview, hasFileEditPreview, validateEditApprovalPreview, LOADED_SKILL_TOOL_NAMES } from './tool-registry'
+import { agentToolRegistry, buildEditorApprovalPreview, hasFileEditPreview, validateEditApprovalPreview, LOADED_SKILL_TOOL_NAMES, type EditorApprovalPreview } from './tool-registry'
+import { describeHunkReview, hunkReviewData, narrowEditPreviewToHunks, type HunkReviewResult } from './hunk-review'
 import { skillManager } from '@/lib/skills'
 import { getSkillWorkspaceIdentity } from '@/lib/skills/runtime'
 import { getWorkspacePath } from '@/lib/workspace'
@@ -2116,6 +2117,7 @@ export class AgentRuntime {
 
           let approvalPreview: Awaited<ReturnType<typeof buildEditorApprovalPreview>>
           let previewFailure: AgentToolResult | undefined
+          let hunkReview: HunkReviewResult<EditorApprovalPreview> | undefined
           if (hasFileEditPreview(tool.name)) {
             try {
               approvalPreview = await buildEditorApprovalPreview(tool.name, args)
@@ -2175,19 +2177,28 @@ export class AgentRuntime {
             if (this.stopped) {
               throw new Error('USER_STOPPED')
             }
-            let approvalDecision = this.steeringRequested
+            const approvalResponse = this.steeringRequested
               ? 'steered'
               : await callbacks.requestConfirmation?.(
                   tool.name,
                   args,
                   approvalPreview ?? { previewParams: args }
                 )
+            // Fork（almanac ALMNC-76）：部分接受時把工具參數改成只含被接受的處；改不了（不支援的預覽）就當拒絕，不寫入未核准的內容。
+            const partialApproval = typeof approvalResponse === 'object' ? approvalResponse : undefined
+            hunkReview = partialApproval && approvalPreview
+              ? narrowEditPreviewToHunks(tool.name, approvalPreview, partialApproval.acceptedHunks)
+              : undefined
+            let approvalDecision = typeof approvalResponse === 'object'
+              ? (hunkReview ? 'approved' as const : 'denied' as const)
+              : approvalResponse
 
             agentDebugLog('approval_result', {
               runId,
               toolName,
               approved: approvalDecision === 'approved',
               decision: approvalDecision,
+              acceptedHunks: partialApproval?.acceptedHunks,
             })
 
             if (this.stopped) {
@@ -2272,6 +2283,12 @@ export class AgentRuntime {
             })
             if (updatedApprovalTrace) callbacks.onTrace?.(updatedApprovalTrace)
           }
+          if (hunkReview) {
+            // 之後的衝突檢查、執行與結果核對都以部分內容為準。
+            approvalPreview = hunkReview.preview
+            args = approvalPreview.previewParams
+            toolCall.params = args
+          }
 
           // Approval can remain open while the user switches workspaces.
           // Recheck its original workspace immediately before any tool executes.
@@ -2355,6 +2372,13 @@ export class AgentRuntime {
             result.ok = false
             result.error = 'EDITOR_RESULT_DIFFERS'
             result.message = '内容已更新，实际结果与拟议差异不同，请核对已应用的改动。'
+          }
+          if (hunkReview && result.ok) {
+            result.message = [result.message, describeHunkReview(hunkReview.hunks, hunkReview.accepted)].filter(Boolean).join('\n\n')
+            result.data = {
+              ...(result.data && typeof result.data === 'object' && !Array.isArray(result.data) ? result.data : result.data === undefined ? {} : { result: result.data }),
+              hunkReview: hunkReviewData(hunkReview.hunks, hunkReview.accepted),
+            }
           }
           const folderAttachmentProgress = getFolderAttachmentProgress(tool.name, args, result)
           const duration = Date.now() - startedAt

@@ -14,7 +14,7 @@ export function PendingAgentReview() {
       {approval && (
         <AgentApprovalPanel key={approval.id ?? approval.traceEventId ?? approval.toolName} docked
           pendingConfirmation={approval}
-          onConfirm={scope => confirmPendingAgentAction(scope, approval.id)}
+          onConfirm={(scope, acceptedHunks) => confirmPendingAgentAction(scope, approval.id, acceptedHunks)}
           onCancel={() => cancelPendingAgentAction(approval.id)}
         />
       )}

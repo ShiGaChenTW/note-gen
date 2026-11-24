@@ -635,7 +635,7 @@ export function AgentRunTimeline({
               showProposedDiff={!activeApproval && approvalStatus === 'input.agent.confirmation.cancelled'}
               outcome={event.editOutcome}
               embedded
-              onConfirm={scope => confirmPendingAgentAction(scope, activeApproval?.id)}
+              onConfirm={(scope, acceptedHunks) => confirmPendingAgentAction(scope, activeApproval?.id, acceptedHunks)}
               onCancel={() => cancelPendingAgentAction(activeApproval?.id)}
             />
           </div>
@@ -803,7 +803,7 @@ export function AgentRunTimeline({
       {liveApproval && !v3 && <AgentApprovalPanel
         key={liveApproval.id ?? liveApproval.traceEventId ?? liveApproval.toolName}
         pendingConfirmation={liveApproval}
-        onConfirm={scope => confirmPendingAgentAction(scope, liveApproval.id)}
+        onConfirm={(scope, acceptedHunks) => confirmPendingAgentAction(scope, liveApproval.id, acceptedHunks)}
         onCancel={() => cancelPendingAgentAction(liveApproval.id)}
       />}
       {reviewEvents.map(event => (

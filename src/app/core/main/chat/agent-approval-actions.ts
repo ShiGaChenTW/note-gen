@@ -24,12 +24,16 @@ export function getActionableConfirmation(
   return { latestState, pendingConfirmation }
 }
 
-export function confirmPendingAgentAction(scope: AgentApprovalScope = "once", expectedId?: string) {
+/**
+ * acceptedHunks（Fork almanac ALMNC-76）：逐處審核只接受部分時，被接受的處（0 起算）。
+ * 不給代表整份接受；部分接受只對這一次有效。
+ */
+export function confirmPendingAgentAction(scope: AgentApprovalScope = "once", expectedId?: string, acceptedHunks?: number[]) {
   const actionable = getActionableConfirmation(useChatStore.getState(), useSettingStore.getState().workspacePath, expectedId)
   if (!actionable) return
   const { latestState, pendingConfirmation } = actionable
 
-  const effectiveScope = scope === "conversation" && pendingConfirmation.canApproveForSession
+  const effectiveScope = scope === "conversation" && pendingConfirmation.canApproveForSession && !acceptedHunks
     ? "conversation"
     : "once"
   const confirmationRecord: ConfirmationRecord = {
@@ -46,6 +50,7 @@ export function confirmPendingAgentAction(scope: AgentApprovalScope = "once", ex
     scope: effectiveScope,
     sessionApprovalType: pendingConfirmation.sessionApprovalType,
     sessionApprovalKey: pendingConfirmation.sessionApprovalKey,
+    ...(acceptedHunks ? { acceptedHunks: [...acceptedHunks] } : {}),
   }
 
   if (effectiveScope === "conversation" && latestState.currentConversationId !== null) {

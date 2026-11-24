@@ -35,7 +35,7 @@ import { getSessionApprovalScope, matchesSessionApproval } from "@/lib/agent/ses
 import { ImageAttachment } from "./image-attachments"
 import { cn } from "@/lib/utils"
 import type { AgentEditPreview, AgentTraceEvent, ConfirmationRecord } from "@/lib/agent/types"
-import type { AgentApprovalDecision, AgentSteeringPayload } from "@/lib/agent/types"
+import type { AgentApprovalResponse, AgentSteeringPayload } from "@/lib/agent/types"
 import { serializeChatAttachments, type RuntimeChatAttachment } from '@/lib/chat-attachments'
 import { retainCompletedAgentTraceEvents } from '@/lib/agent/trace-retention'
 import { noteGenModelDisplayName } from '@/components/notegen-model-label'
@@ -343,7 +343,7 @@ export const ChatSend = forwardRef<ChatSendHandle, ChatSendProps>(({
     params: Record<string, any>,
     context?: AgentEditPreview,
     target?: { chatId: number; conversationId?: number; workspacePath: string },
-  ): Promise<AgentApprovalDecision> => {
+  ): Promise<AgentApprovalResponse> => {
     const tool = getToolByName(toolName)
     const sessionApprovalScope = getSessionApprovalScope(toolName, tool, params)
     const canApproveForSession = !!sessionApprovalScope
@@ -394,7 +394,7 @@ export const ChatSend = forwardRef<ChatSendHandle, ChatSendProps>(({
       let settled = false
       let unsubscribeChat = () => {}
       let unsubscribeSettings = () => {}
-      const finish = (decision: AgentApprovalDecision) => {
+      const finish = (decision: AgentApprovalResponse) => {
         if (settled) return
         settled = true
         unsubscribeChat()
@@ -420,7 +420,10 @@ export const ChatSend = forwardRef<ChatSendHandle, ChatSendProps>(({
       unsubscribeChat = useChatStore.subscribe(state => {
         if (state.agentState.pendingConfirmation?.id !== id) {
           const record = state.agentState.confirmationHistory.findLast(item => item.id === id)
-          finish(record?.status === 'confirmed' ? 'approved' : record?.status === 'superseded' ? 'steered' : 'denied')
+          // Fork（almanac ALMNC-76）：逐處審核只接受部分時，把被接受的處交給 runtime。
+          finish(record?.status === 'confirmed'
+            ? record.acceptedHunks ? { decision: 'partial', acceptedHunks: record.acceptedHunks } : 'approved'
+            : record?.status === 'superseded' ? 'steered' : 'denied')
         } else if (state.agentState.runId !== runId || state.agentState.activeChatId !== chatId
           || !state.agentState.isRunning
           || (chatId !== undefined && chatId < 0 && (!state.isTemporaryConversation || !state.chats.some(chat => chat.id === chatId)))) {

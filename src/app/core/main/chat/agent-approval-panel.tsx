@@ -13,7 +13,7 @@ import type { AgentEditPreview } from "@/lib/agent/types"
 import emitter from "@/lib/emitter"
 import { formatAgentToolName } from "./agent-display-utils"
 import { EditorChangeDiff } from "./agent-change-diff"
-import { buildLineDiff } from "@/lib/agent/text-diff"
+import { buildDiffHunks, resolveHunkReview, supportsHunkReview } from "@/lib/agent/hunk-review"
 
 export { EditorChangeDiff } from "./agent-change-diff"
 
@@ -33,7 +33,8 @@ export interface PendingAgentConfirmation extends AgentEditPreview {
 
 interface AgentApprovalPanelProps {
   pendingConfirmation?: PendingAgentConfirmation
-  onConfirm?: (scope?: "once" | "conversation") => void
+  /** acceptedHunks（Fork almanac ALMNC-76）：只接受部分處時被接受的處（0 起算）；整份接受時不給。 */
+  onConfirm?: (scope?: "once" | "conversation", acceptedHunks?: number[]) => void
   onCancel?: () => void
   readOnly?: boolean
   embedded?: boolean
@@ -88,14 +89,41 @@ export function AgentApprovalPanel({
   const tReview = useTranslations('record.chat.v3.review')
   const [diffOpen, setDiffOpen] = React.useState(false)
   const { originalContent, modifiedContent } = pendingConfirmation ?? {}
+  // Fork（almanac ALMNC-76）：待核准、整份內容的預覽才能逐處接受或拒絕；切段與 EditorChangeDiff、runtime 套用相同。
+  const hunkReviewEnabled = !readOnly && Boolean(onConfirm) && supportsHunkReview(pendingConfirmation ?? {})
+  const diff = React.useMemo(() => (docked || hunkReviewEnabled) && originalContent !== undefined && modifiedContent !== undefined
+    ? buildDiffHunks(originalContent, modifiedContent) : undefined, [docked, hunkReviewEnabled, originalContent, modifiedContent])
   const counts = React.useMemo(() => {
-    if (!docked || originalContent === undefined || modifiedContent === undefined) return null
+    if (!docked || !diff) return null
     const result = { add: 0, remove: 0 }
-    for (const line of buildLineDiff(originalContent, modifiedContent)) {
+    for (const line of diff.lines) {
       if (line.type !== 'equal') result[line.type]++
     }
     return result
-  }, [docked, originalContent, modifiedContent])
+  }, [docked, diff])
+  const hunkTotal = hunkReviewEnabled ? diff?.hunks.length ?? 0 : 0
+  const [rejectedHunks, setRejectedHunks] = React.useState<ReadonlySet<number>>(() => new Set())
+  const hunkOutcome = resolveHunkReview(hunkTotal, rejectedHunks)
+  const acceptedHunkCount = hunkOutcome.kind === 'partial' ? hunkOutcome.accepted.length : hunkOutcome.kind === 'all' ? hunkTotal : 0
+  const decideHunk = React.useCallback((index: number, accepted: boolean) => {
+    setRejectedHunks(current => {
+      const next = new Set(current)
+      if (accepted) next.delete(index)
+      else next.add(index)
+      return next
+    })
+  }, [])
+  // 全部接受照原本整份套用；全部拒絕等同放棄；其餘只送出被接受的處。
+  const confirmReview = (scope: "once" | "conversation") => {
+    if (hunkOutcome.kind === 'none') onCancel?.()
+    else if (hunkOutcome.kind === 'partial') onConfirm?.('once', hunkOutcome.accepted)
+    else onConfirm?.(scope)
+  }
+  const hunkStatus = hunkOutcome.kind === 'none'
+    ? t("record.chat.input.agent.changes.hunkAllRejected", { total: hunkTotal })
+    : hunkOutcome.kind === 'partial'
+      ? t("record.chat.input.agent.changes.hunkSelection", { accepted: acceptedHunkCount, total: hunkTotal })
+      : undefined
   const [expanded, setExpanded] = React.useState(false)
   const [previewSkipped, setPreviewSkipped] = React.useState(false)
   const [previewStale, setPreviewStale] = React.useState(false)
@@ -114,6 +142,7 @@ export function AgentApprovalPanel({
   React.useEffect(() => {
     setExpanded(false)
     setDiffOpen(false)
+    setRejectedHunks(new Set())
   }, [pendingConfirmation?.id, pendingConfirmation?.toolName, pendingConfirmation?.params])
 
   React.useEffect(() => {
@@ -306,16 +335,17 @@ export function AgentApprovalPanel({
         </div>
         {previewStale && <p role="status" className="px-3 pb-2 text-xs text-danger">{t("record.chat.input.agent.changes.stalePreview")}</p>}
         {previewSkipped && !previewStale && <p role="status" className="px-3 pb-2 text-xs text-muted-ink">{t("record.chat.input.agent.changes.inlineUnavailable")}</p>}
+        {hunkStatus && <p role="status" className="px-3 pb-2 text-xs text-muted-ink">{hunkStatus}</p>}
         {model.warnings.length > 0 && <div className="px-3 pb-2"><ApprovalUi model={{ ...model, fields: [] }} /></div>}
         <div className="flex flex-wrap items-center gap-1 px-2.5 pb-2">
-          <Button type="button" size="xs" disabled={!onConfirm || previewStale} onClick={() => onConfirm?.('once')}>
+          <Button type="button" size="xs" disabled={!onConfirm || previewStale} onClick={() => confirmReview('once')}>
             {confirmLabel}
           </Button>
           <Button type="button" size="xs" variant="ghost" disabled={!onCancel} onClick={onCancel}>
             {tReview('deny')}
           </Button>
           {pendingConfirmation.canApproveForSession && <Button type="button" size="xs" variant="secondary"
-            disabled={!onConfirm || previewStale} onClick={() => onConfirm?.('conversation')}>
+            disabled={!onConfirm || previewStale} onClick={() => confirmReview('conversation')}>
             {t("record.chat.input.agent.confirmation.session")}
           </Button>}
           <span className="flex-1" />
@@ -331,7 +361,9 @@ export function AgentApprovalPanel({
         {diffOpen && originalContent !== undefined && modifiedContent !== undefined && (
           <div className="px-2.5 pb-2">
             <EditorChangeDiff before={originalContent} after={modifiedContent} defaultOpen hideTrigger proposed
-              showLineEndings={pendingConfirmation.from === undefined && pendingConfirmation.to === undefined} />
+              showLineEndings={pendingConfirmation.from === undefined && pendingConfirmation.to === undefined}
+              rejectedHunks={hunkReviewEnabled ? rejectedHunks : undefined}
+              onHunkDecision={hunkReviewEnabled ? decideHunk : undefined} />
           </div>
         )}
         {expanded && canShowDetails && <div className="min-w-0 space-y-2 px-2.5 pb-2">
@@ -374,11 +406,11 @@ export function AgentApprovalPanel({
                 size="sm"
                 variant="secondary"
                 disabled={!onConfirm || previewStale}
-                onClick={() => onConfirm?.("conversation")}
+                onClick={() => confirmReview("conversation")}
               >
                 {t("record.chat.input.agent.confirmation.session")}
               </Button>}
-              <Button type="button" size="sm" disabled={!onConfirm || previewStale} onClick={() => onConfirm?.("once")}>
+              <Button type="button" size="sm" disabled={!onConfirm || previewStale} onClick={() => confirmReview("once")}>
                 <CheckCircle2 data-icon="inline-start" />
                 {isRemoteSkillInstall
                   ? riskWarnings.length > 0
@@ -401,12 +433,15 @@ export function AgentApprovalPanel({
             {outcome && <p role="status" className="text-sm text-muted-foreground">{t(`record.chat.input.agent.changes.${outcome}`)}</p>}
             {previewStale && !outcome && <p role="status" className="text-sm text-muted-foreground">{t("record.chat.input.agent.changes.stalePreview")}</p>}
             {previewSkipped && !previewStale && !outcome && <p role="status" className="text-sm text-muted-foreground">{t("record.chat.input.agent.changes.inlineUnavailable")}</p>}
+            {hunkStatus && <p role="status" className="text-sm text-muted-foreground">{hunkStatus}</p>}
             <EditorChangeDiff
               before={pendingConfirmation.originalContent}
               after={pendingConfirmation.modifiedContent}
               defaultOpen={!readOnly || showProposedDiff}
               proposed={outcome !== "applied"}
               showLineEndings={pendingConfirmation.from === undefined && pendingConfirmation.to === undefined}
+              rejectedHunks={hunkReviewEnabled ? rejectedHunks : undefined}
+              onHunkDecision={hunkReviewEnabled ? decideHunk : undefined}
             />
           </CardContent>
         )}
