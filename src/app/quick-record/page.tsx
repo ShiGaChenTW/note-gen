@@ -32,6 +32,8 @@ export default function QuickRecordPage() {
   const [error, setError] = useState('')
   const textRef = useRef('')
   const tagRef = useRef(0)
+  // Fork（almanac ALMNC-83.4）：貼上與自動讀剪貼簿帶進來的字數，存成資料源時判斷是不是外部擷取
+  const pastedRef = useRef(0)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const savingRef = useRef(false)
   const preparingRef = useRef(false)
@@ -41,11 +43,13 @@ export default function QuickRecordPage() {
     localStorage.setItem(DRAFT_KEY, JSON.stringify({
       text: textRef.current,
       tagId: tagRef.current,
+      pastedChars: pastedRef.current,
       pending: pendingRef.current,
     }))
   }, [])
 
   const changeText = useCallback((value: string) => {
+    if (!value) pastedRef.current = 0
     textRef.current = value
     setText(value)
     persistDraft()
@@ -57,7 +61,10 @@ export default function QuickRecordPage() {
     try {
       if (await hasText()) {
         const value = await readText()
-        if (!textRef.current && !pendingRef.current && value) changeText(value)
+        if (!textRef.current && !pendingRef.current && value) {
+          pastedRef.current = Array.from(value).length
+          changeText(value)
+        }
       }
     } catch (error) {
       console.debug('Quick record clipboard unavailable:', error)
@@ -101,6 +108,7 @@ export default function QuickRecordPage() {
       if (draft && typeof draft.text === 'string' && typeof draft.tagId === 'number') {
         textRef.current = draft.text
         tagRef.current = draft.tagId
+        pastedRef.current = typeof draft.pastedChars === 'number' ? draft.pastedChars : 0
         setText(draft.text)
         setTagId(draft.tagId)
         if (draft.pending?.action === 'save' && typeof draft.pending.id === 'string'
@@ -138,13 +146,17 @@ export default function QuickRecordPage() {
     }
   }, [prepare, t])
 
+  // V3 存成資料源，不需要選記錄標籤；classic 照舊（舊主視窗沒給 target 也當 record）
+  const sourceMode = context?.target === 'source'
+
   const save = async () => {
-    if (savingRef.current || loading || creatingTag || !textRef.current.trim() || !tagRef.current) return
+    if (savingRef.current || loading || creatingTag || !textRef.current.trim() || (!sourceMode && !tagRef.current)) return
     savingRef.current = true
     setSaving(true)
     setError('')
     const request = pendingRef.current ?? {
       id: crypto.randomUUID(), action: 'save' as const, text: textRef.current, tagId: tagRef.current,
+      ...(sourceMode ? { target: 'source' as const, pastedChars: pastedRef.current } : {}),
     }
     pendingRef.current = request
     persistDraft()
@@ -194,9 +206,13 @@ export default function QuickRecordPage() {
           <Field className="min-h-24 flex-1">
             <FieldLabel htmlFor="quick-record-text" className="sr-only">{t('record.mark.text.title')}</FieldLabel>
             <Textarea ref={inputRef} id="quick-record-text" className="h-full min-h-24 flex-1 resize-none [field-sizing:fixed]"
-              value={text} disabled={saving || uncertain} onChange={event => changeText(event.target.value)} />
+              value={text} disabled={saving || uncertain} onChange={event => changeText(event.target.value)}
+              onPaste={event => {
+                pastedRef.current += Array.from(event.clipboardData.getData('text')).length
+                persistDraft()
+              }} />
           </Field>
-          {context && <RecordSaveTarget
+          {context && !sourceMode && <RecordSaveTarget
             selectedTagId={tagId}
             tags={context.tags}
             disabled={loading || saving || uncertain}
@@ -239,7 +255,7 @@ export default function QuickRecordPage() {
               <span className="text-xs text-muted-foreground">{t('record.mark.text.characterCount', { count: text.length })}</span>
               {!context && !loading
                 ? <Button type="button" onClick={() => void prepare()}>{t('quickRecordWindow.retry')}</Button>
-                : <Button type="submit" disabled={loading || saving || creatingTag || !text.trim() || !tagId}>
+                : <Button type="submit" disabled={loading || saving || creatingTag || !text.trim() || (!sourceMode && !tagId)}>
                   {(loading || saving) && <Spinner data-icon="inline-start" />}
                   {uncertain ? t('quickRecordWindow.retry') : t('record.mark.text.save')}
                 </Button>}

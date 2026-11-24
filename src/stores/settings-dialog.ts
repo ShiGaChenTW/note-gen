@@ -66,8 +66,11 @@ export function isV3OnlySettingSection(section: string): boolean {
   return (v3OnlySettingSections as readonly string[]).includes(section)
 }
 
-/** Fork（almanac ALMNC-83）：新介面（V3）下不列出的分頁；classic 照舊顯示。 */
-export const classicOnlySettingSections: readonly BuiltinSettingSection[] = []
+/**
+ * Fork（almanac ALMNC-83）：新介面（V3）下不列出的分頁；classic 照舊顯示。
+ * record、template（ALMNC-83.4）：舊版記錄與「記錄整理成筆記」範本，V3 改走新增資料源。
+ */
+export const classicOnlySettingSections: readonly BuiltinSettingSection[] = ['record', 'template']
 
 /**
  * Fork（almanac ALMNC-83）：功能關閉、兩種介面都不列出的分頁（資料保留）。

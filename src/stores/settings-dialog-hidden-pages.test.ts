@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest'
 import { PROMPT_LIBRARY_ENABLED } from '@/lib/prompt-library/feature'
 import {
+  classicOnlySettingSections,
   disabledSettingSections,
   isSettingSectionVisible,
   settingSectionTitleKey,
@@ -10,7 +11,15 @@ import en from '../../messages/en.json'
 import zh from '../../messages/zh.json'
 import zhTW from '../../messages/zh-TW.json'
 
-describe('settings pages hidden by ALMNC-83 (83.1 / 83.3)', () => {
+describe('settings pages hidden by ALMNC-83 (83.1 / 83.3 / 83.4)', () => {
+  it('hides record and template in the new UI only (ALMNC-83.4)', () => {
+    expect(classicOnlySettingSections).toEqual(expect.arrayContaining(['record', 'template']))
+    for (const section of ['record', 'template']) {
+      expect(isSettingSectionVisible(section, true)).toBe(false)
+      expect(isSettingSectionVisible(section, false)).toBe(true)
+    }
+  })
+
   it('hides the prompt page in both UIs while the prompt library is off (ALMNC-83.3)', () => {
     expect(PROMPT_LIBRARY_ENABLED).toBe(false)
     expect(disabledSettingSections).toContain('prompt')

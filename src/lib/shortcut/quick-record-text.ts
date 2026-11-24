@@ -14,6 +14,14 @@ import { handleRecordComplete } from '@/lib/record-navigation'
 import { createRecordTag, getRecordSaveTagIdFromTags } from '@/lib/record-save-target'
 import { EmitterRecordEvents } from '@/config/emitters'
 import { QUICK_RECORD_WINDOW, type QuickRecordRequest, type QuickRecordResponse } from '@/lib/quick-record-window'
+import { isUiV3 } from '@/lib/fork-ui'
+import { createQuickSourceSaver, quickRecordTarget } from './quick-record-source'
+
+// Fork（almanac ALMNC-83.4）：V3 下存成資料源，走新增資料源同一條路；同一個請求 id 只登錄一次。
+const saveQuickSource = createQuickSourceSaver(async request => {
+  const { addNewSource } = await import('@/lib/workbench/actions')
+  return addNewSource(request)
+})
 
 let opening: Promise<void> | undefined
 
@@ -73,6 +81,7 @@ export default async function initQuickRecordText() {
             uiScale: settings.uiScale,
             appFontFamily: settings.appFontFamily,
             customThemeColors: settings.customThemeColors,
+            target: quickRecordTarget(isUiV3()),
           },
         })
         return
@@ -88,6 +97,15 @@ export default async function initQuickRecordText() {
       }
 
       const content = request.text?.trim()
+      if (request.action === 'save' && request.target === 'source') {
+        if (!content) {
+          await respond({ error: 'invalid' })
+          return
+        }
+        await saveQuickSource({ id: request.id, text: content, pastedChars: request.pastedChars })
+        await respond({ saved: true })
+        return
+      }
       const tagId = request.tagId
       if (request.action !== 'save' || !content || typeof tagId !== 'number' || !tags.some(tag => tag.id === tagId)) {
         await respond({ error: 'invalid' })
