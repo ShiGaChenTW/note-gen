@@ -54,6 +54,7 @@ import useCanvasStore from '@/stores/canvas'
 import type { CanvasProject, CanvasProjectType } from '@/types/canvas'
 import useArticleStore from '@/stores/article'
 import useSettingStore from '@/stores/setting'
+import { useSettingsDialogStore } from '@/stores/settings-dialog'
 import type {
   CanvasManagerSortMode,
   CanvasManagerViewMode,
@@ -265,7 +266,7 @@ export function CanvasActions() {
           {!trashMode && (<>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem onSelect={() => setTrashMode(true)}>
+              <DropdownMenuItem onSelect={() => useSettingsDialogStore.getState().openSettings('trash')}>
                 <Trash2 />
                 {t('trash')}
               </DropdownMenuItem>

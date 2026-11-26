@@ -4268,6 +4268,87 @@
         }
       }
     },
+    "trash": {
+      "title": "最近刪除",
+      "desc": "所有刪除的筆記庫檔案、畫布、記錄、對話與記憶都會先移到這裡，保留 30 天後自動清除。",
+      "retentionNotice": "項目會在保留 30 天後自動永久清除。桌機與手機刪除都會進入這裡。",
+      "emptyTitle": "最近刪除是空的",
+      "emptyDescription": "目前沒有可還原的已刪除項目。",
+      "emptyFiltered": "這個分類下沒有已刪除項目。",
+      "loading": "載入中…",
+      "tabsLabel": "最近刪除分類",
+      "tabs": {
+        "all": "全部",
+        "notes": "筆記與資料夾",
+        "canvas": "畫布",
+        "records": "記錄",
+        "conversations": "對話",
+        "memories": "記憶"
+      },
+      "types": {
+        "file": "檔案",
+        "folder": "資料夾",
+        "canvas": "畫布",
+        "mark": "記錄",
+        "conversation": "對話",
+        "memory": "記憶",
+        "tag": "標籤",
+        "source": "資料源"
+      },
+      "actors": {
+        "scott": "Scott",
+        "partner": "夥伴",
+        "advisor": "顧問 / MCP",
+        "system": "系統",
+        "sync": "同步"
+      },
+      "sources": {
+        "file-tree": "檔案樹",
+        "workbench-proposal": "工作台提案",
+        "agent-tool": "Agent 工具",
+        "mcp": "本機 MCP",
+        "canvas-sidebar": "畫布側欄",
+        "mark-list": "記錄清單",
+        "chat-header": "對話標題列",
+        "memory-settings": "記憶管理",
+        "tag-delete": "刪除標籤",
+        "source-delete": "刪除資料源",
+        "organize": "自動整理",
+        "sync": "同步",
+        "other": "其他"
+      },
+      "remainingDays": "剩餘 {days} 天",
+      "deletedBy": "刪除者：{actor}",
+      "sourceLabel": "來源：{source}",
+      "pathLabel": "原路徑：{path}",
+      "actions": {
+        "restore": "還原",
+        "deletePermanently": "永久刪除",
+        "emptyTrash": "清空最近刪除"
+      },
+      "toasts": {
+        "restored": "已還原「{title}」",
+        "restoredRenamed": "原位置已有同名項目，已還原為 {path}",
+        "restoreMissing": "找不到備份檔案，無法還原「{title}」",
+        "restoreFailed": "還原失敗，請稍後再試",
+        "deletedPermanently": "已永久刪除「{title}」",
+        "deleteFailed": "永久刪除失敗，請稍後再試",
+        "emptied": "已清空 {count} 個最近刪除項目",
+        "emptyFailed": "清空失敗，部分項目仍保留"
+      },
+      "deleteDialog": {
+        "title": "要永久刪除這個項目嗎？",
+        "description": "「{title}」將立刻被永久清除，無法再還原。",
+        "cancel": "取消",
+        "confirm": "永久刪除"
+      },
+      "emptyDialog": {
+        "title": "要清空最近刪除嗎？",
+        "description": "這會立即永久清除所有 {count} 個最近刪除項目，無法再還原。",
+        "cancel": "取消",
+        "confirm": "清空最近刪除"
+      }
+    },
     "navigationGroups": {
       "extensions": "拓展",
       "basic": "基礎設定",

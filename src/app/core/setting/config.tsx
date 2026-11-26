@@ -22,6 +22,7 @@ import {
   Blocks,
   CalendarDays,
   TabletSmartphone,
+  Trash2,
 } from "lucide-react"
 import type { ReactNode } from 'react'
 import type { BuiltinSettingSection } from '@/stores/settings-dialog'
@@ -128,6 +129,10 @@ const baseConfig: SettingNavigationItem[] = [
   {
     icon: <ArchiveRestore className="size-4" />,
     anchor: 'backup',
+  },
+  {
+    icon: <Trash2 className="size-4" />,
+    anchor: 'trash',
   },
   {
     icon: <ImageUp className="size-4" />,

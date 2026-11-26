@@ -8,7 +8,7 @@ import { AlmanacWordmark } from '@/components/almanac-wordmark'
 import { LeftSidebarToggleButton } from '@/components/shell-buttons'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuShortcut, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { ArrowDownToLine, CalendarCheck, CalendarDays, ChevronDown, ChevronRight, ListChecks, Library, MessageSquarePlus, MessagesSquare, MoreHorizontal, Plus, Search, Settings } from 'lucide-react'
+import { ArrowDownToLine, CalendarCheck, CalendarDays, ChevronDown, ChevronRight, ListChecks, Library, MessageSquarePlus, MessagesSquare, MoreHorizontal, Plus, Search, Settings, Trash2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { Kbd } from '@/components/ui/kbd'
 import { Count } from '@/components/v3/count'
@@ -246,18 +246,30 @@ function QuickActions() {
   )
 }
 
-/** 底部設定入口（ALMNC-79.3：取代原本常駐的「規則」說明；設定鈕從品牌列移下來）。 */
+/** 底部設定與最近刪除入口（ALMNC-79.3、84.6）。 */
 function SettingsRow() {
   const t = useTranslations('sidebarV3')
-  const { open, openSettings, closeSettings } = useSettingsDialogStore()
+  const tTrash = useTranslations('settings.trash')
+  const { open, activeSection, openSettings, closeSettings } = useSettingsDialogStore()
   const hasUpdate = useUpdateStore(state => state.hasUpdate)
+  const trashOpen = open && activeSection === 'trash'
+  const generalOpen = open && activeSection !== 'trash'
   return (
     <div className="mt-auto shrink-0 border-t border-line px-2.5 py-2">
       <button
         type="button"
-        onClick={() => open ? closeSettings() : openSettings()}
-        aria-pressed={open}
-        className={cn(ROW, SIDEBAR_ROW, 'relative', open && SIDEBAR_ROW_ACTIVE)}
+        onClick={() => trashOpen ? closeSettings() : openSettings('trash')}
+        aria-pressed={trashOpen}
+        className={cn(ROW, SIDEBAR_ROW, 'mb-0.5', trashOpen && SIDEBAR_ROW_ACTIVE)}
+      >
+        <Trash2 className="size-4 shrink-0" aria-hidden />
+        <span className="min-w-0 flex-1 truncate">{tTrash('title')}</span>
+      </button>
+      <button
+        type="button"
+        onClick={() => generalOpen ? closeSettings() : openSettings(activeSection === 'trash' ? 'general' : undefined)}
+        aria-pressed={generalOpen}
+        className={cn(ROW, SIDEBAR_ROW, 'relative', generalOpen && SIDEBAR_ROW_ACTIVE)}
       >
         <Settings className="size-4 shrink-0" aria-hidden />
         <span className="min-w-0 flex-1 truncate">{t('settings')}</span>

@@ -4202,6 +4202,87 @@
         }
       }
     },
+    "trash": {
+      "title": "Recently Deleted",
+      "desc": "Deleted vault files, folders, canvases, records, conversations, and memories stay here for 30 days before automatic purge.",
+      "retentionNotice": "Items are automatically purged after 30 days. Deletions from both desktop and mobile appear here.",
+      "emptyTitle": "Recently Deleted is empty",
+      "emptyDescription": "No recoverable deleted items.",
+      "emptyFiltered": "No deleted items in this category.",
+      "loading": "Loading…",
+      "tabsLabel": "Recently Deleted categories",
+      "tabs": {
+        "all": "All",
+        "notes": "Notes & Folders",
+        "canvas": "Canvases",
+        "records": "Records",
+        "conversations": "Conversations",
+        "memories": "Memories"
+      },
+      "types": {
+        "file": "File",
+        "folder": "Folder",
+        "canvas": "Canvas",
+        "mark": "Record",
+        "conversation": "Conversation",
+        "memory": "Memory",
+        "tag": "Tag",
+        "source": "Source"
+      },
+      "actors": {
+        "scott": "Scott",
+        "partner": "Partner",
+        "advisor": "Advisor / MCP",
+        "system": "System",
+        "sync": "Sync"
+      },
+      "sources": {
+        "file-tree": "File Tree",
+        "workbench-proposal": "Workbench Proposal",
+        "agent-tool": "Agent Tool",
+        "mcp": "Local MCP",
+        "canvas-sidebar": "Canvas Sidebar",
+        "mark-list": "Records List",
+        "chat-header": "Chat Header",
+        "memory-settings": "Memory Management",
+        "tag-delete": "Tag Deletion",
+        "source-delete": "Source Deletion",
+        "organize": "Auto Organize",
+        "sync": "Sync",
+        "other": "Other"
+      },
+      "remainingDays": "{days} days left",
+      "deletedBy": "Deleted by: {actor}",
+      "sourceLabel": "Source: {source}",
+      "pathLabel": "Original path: {path}",
+      "actions": {
+        "restore": "Restore",
+        "deletePermanently": "Delete Permanently",
+        "emptyTrash": "Empty Recently Deleted"
+      },
+      "toasts": {
+        "restored": "Restored “{title}”",
+        "restoredRenamed": "An item already existed there; restored to {path}",
+        "restoreMissing": "Backup content is missing; cannot restore “{title}”",
+        "restoreFailed": "Restore failed, please try again later",
+        "deletedPermanently": "Permanently deleted “{title}”",
+        "deleteFailed": "Permanent deletion failed, please try again later",
+        "emptied": "Cleared {count} items from Recently Deleted",
+        "emptyFailed": "Failed to empty all items; remaining items were kept"
+      },
+      "deleteDialog": {
+        "title": "Permanently delete this item?",
+        "description": "“{title}” will be erased immediately and cannot be restored.",
+        "cancel": "Cancel",
+        "confirm": "Delete Permanently"
+      },
+      "emptyDialog": {
+        "title": "Empty Recently Deleted?",
+        "description": "This will permanently erase all {count} items and cannot be undone.",
+        "cancel": "Cancel",
+        "confirm": "Empty Recently Deleted"
+      }
+    },
     "navigationGroups": {
       "extensions": "Extensions",
       "basic": "Basic",

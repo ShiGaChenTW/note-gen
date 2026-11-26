@@ -9,6 +9,7 @@ export type BuiltinSettingSection =
   | 'canvas'
   | 'sync'
   | 'backup'
+  | 'trash'
   | 'imageHosting'
   | 'ai'
   | 'webSearch'
@@ -53,6 +54,7 @@ export const settingSections: SettingSection[] = [
   'template',
   'sync',
   'backup',
+  'trash',
   'imageHosting',
   'file',
   'eink',
