@@ -250,7 +250,13 @@ export function RecentlyDeletedView({ mobile = false }: { mobile?: boolean }) {
             <ul className="flex flex-col gap-2">
               {filteredItems.map(item => {
                 const days = getTrashRemainingDays(item)
-                const actorLabel = t(`actors.${item.actorRole}`)
+                const roleLabel = t(`actors.${item.actorRole}`)
+                const actorLabel = item.actorRole === 'advisor'
+                  && item.deletedBy
+                  && item.deletedBy !== 'mcp'
+                  && item.deletedBy !== 'advisor'
+                  ? `${item.deletedBy} · ${roleLabel}`
+                  : roleLabel
                 const sourceLabel = t(`sources.${item.source}`)
                 const typeLabel = t(`types.${item.entityType}`)
 

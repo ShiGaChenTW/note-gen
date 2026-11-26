@@ -139,7 +139,14 @@ interface ChatState {
   createConversation: (title?: string) => Promise<number> // 创建新会话
   switchConversation: (id: number) => Promise<void> // 切换会话
   updateConversationTitle: (id: number, title: string) => Promise<void> // 更新会话标题
-  deleteConversation: (id: number) => Promise<void> // 删除会话
+  deleteConversation: (
+    id: number,
+    trashMeta?: {
+      deletedBy?: string
+      actorRole?: import('@/lib/trash/types').TrashActor
+      source?: import('@/lib/trash/types').TrashSource
+    },
+  ) => Promise<void> // 删除会话
   toggleConversationPin: (id: number) => Promise<boolean> // 切换会话置顶状态
   startNewConversation: () => Promise<void> // 开始新对话（保存当前会话后创建新会话）
   startTemporaryConversation: () => void // 开始不保存记录的临时会话
@@ -619,7 +626,7 @@ const useChatStore = create<ChatState>((set, get) => ({
     await get().initConversations()
   },
 
-  deleteConversation: async (id: number) => {
+  deleteConversation: async (id: number, trashMeta) => {
     const { agentSessionManager } = await import('@/lib/agent/agent-session-manager')
     const sessionId = `conversation:${id}`
     const session = agentSessionManager.get(sessionId)
@@ -633,7 +640,7 @@ const useChatStore = create<ChatState>((set, get) => ({
       ...(state.pendingUiInteraction?.conversationId === id ? { pendingUiInteraction: undefined } : {}),
     })
     const { deleteConversation: deleteConv } = await import('@/db/conversations')
-    await deleteConv(id)
+    await deleteConv(id, trashMeta)
 
     const { currentConversationId, conversations, switchConversation } = get()
 

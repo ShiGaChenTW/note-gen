@@ -145,6 +145,15 @@ describe('ALMNC-71 activity_log 放寬限制', () => {
     await memory.appendActivity('system', { actorId: 'leo', actorRole: 'secretary', action: 'corrected', correctsId: 1, targetLink: 'task:1', source: { kind: 'conversation', ref: 'c1' } }, NOW)
     expect(all('pragma foreign_key_check')).toEqual([])
 
+    // ALMNC-84.7：外部 MCP 顧問（actor=advisor, source=mcp, action=deleted）亦可直接寫入且可篩選
+    await memory.appendActivity('system', {
+      actorId: 'mcp:Claude Code',
+      actorRole: 'advisor',
+      action: 'deleted',
+      targetLink: `note:${encodeURI('知識/草稿.md')}`,
+      source: { kind: 'mcp', ref: 'note_delete' },
+    }, NOW)
+
     // 重新載入（重開 App）：模組重新初始化，不再重建，紀錄都在
     vi.resetModules()
     const reloaded = await import('@/db/agent-memory')
@@ -153,12 +162,50 @@ describe('ALMNC-71 activity_log 放寬限制', () => {
       .toEqual(['assign', 'clock', 'held', 'relink', 'rename', 'renumber', 'restore'])
     expect(repairs.every(entry => entry.actorRole === 'system' && entry.action === 'repaired')).toBe(true)
     expect((await reloaded.listActivity({ now: NOW, actorId: 'mia' })).map(entry => entry.id)).toEqual([3, 2])
-    expect((await reloaded.listActivity({ now: NOW, limit: 500 })).length).toBe(LEGACY_ROWS.length - 1 + actions.length + 1)
-    expect((await reloaded.listActivityActors()).map(actor => actor.actorId)).toEqual(expect.arrayContaining(['system', 'leo', 'mia', 'scott']))
-    expect((await reloaded.listActivityActors())[0]).toMatchObject({ actorId: 'leo' })
+    const advisorLogs = await reloaded.listActivity({ now: NOW, actorId: 'mcp:Claude Code' })
+    expect(advisorLogs).toHaveLength(1)
+    expect(advisorLogs[0]).toMatchObject({ actorRole: 'advisor', action: 'deleted', source: { kind: 'mcp', ref: 'note_delete' } })
+    expect((await reloaded.listActivity({ now: NOW, limit: 500 })).length).toBe(LEGACY_ROWS.length - 1 + actions.length + 2)
+    expect((await reloaded.listActivityActors()).map(actor => actor.actorId)).toEqual(expect.arrayContaining(['system', 'mcp:Claude Code', 'leo', 'mia', 'scott']))
+    expect((await reloaded.listActivityActors())[0]).toMatchObject({ actorId: 'mcp:Claude Code', actorRole: 'advisor' })
   })
 
-  it('does nothing on a table that already allows system entries', async () => {
+  it('upgrades an ALMNC-71 table (system-only) to also allow advisor and mcp entries', async () => {
+    sqlite.exec('drop table if exists activity_log')
+    sqlite.exec(`create table activity_log (
+      id integer primary key,
+      at integer not null,
+      actor_id text not null check (length(trim(actor_id)) > 0),
+      actor_role text not null check (actor_role in ('scott', 'commander', 'expert', 'secretary', 'researcher', 'system')),
+      action text not null,
+      target_link text not null check (length(trim(target_link)) > 0),
+      source_kind text not null check (source_kind in ('conversation', 'proposal', 'system')),
+      source_ref text not null check (length(trim(source_ref)) > 0),
+      note text not null default '' check (length(note) <= 60),
+      corrects_id integer references activity_log(id),
+      archived_at integer,
+      op_id text default null
+    )`)
+    run(`insert into activity_log (id, at, actor_id, actor_role, action, target_link, source_kind, source_ref)
+      values ($1, $2, $3, $4, $5, $6, $7, $8)`, [1, NOW, 'system', 'system', 'repaired', 'note:a.md', 'system', 'id-scan:assign'])
+    expect(needsActivityRebuild(tableSql())).toBe(true)
+
+    vi.resetModules()
+    const memory = await import('@/db/agent-memory')
+    await memory.appendActivity('system', {
+      actorId: 'mcp:Cursor',
+      actorRole: 'advisor',
+      action: 'created',
+      targetLink: 'note:b.md',
+      source: { kind: 'mcp', ref: 'note_create' },
+    }, NOW)
+    expect(needsActivityRebuild(tableSql())).toBe(false)
+    const rows = await memory.listActivity({ now: NOW, actorId: 'mcp:Cursor' })
+    expect(rows).toHaveLength(1)
+    expect(rows[0]).toMatchObject({ actorRole: 'advisor', action: 'created', source: { kind: 'mcp', ref: 'note_create' } })
+  })
+
+  it('does nothing on a table that already allows system and advisor/mcp entries', async () => {
     const calls: unknown[] = []
     expect(await migrateActivityLog({ select: async <T>(sql: string) => all<T>(sql) }, async statements => { calls.push(statements) })).toBe(false)
     expect(calls).toEqual([])

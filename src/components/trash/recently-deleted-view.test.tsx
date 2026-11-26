@@ -292,6 +292,34 @@ describe('RecentlyDeletedView (ALMNC-84.6)', () => {
     expect(screen.queryByRole('listitem', { name: '系統架構圖' })).not.toBeInTheDocument()
   })
 
+  it('外部 MCP 顧問刪除的項目顯示客戶端名稱與顧問身分', async () => {
+    const now = Date.now()
+    itemsState = [
+      {
+        id: 't-advisor',
+        workspace: '/vault',
+        entityType: 'file',
+        entityId: 't-advisor',
+        title: '顧問刪的筆記.md',
+        originalPath: 'Projects/顧問刪的筆記.md',
+        trashPath: '.almanac-trash/t-advisor/顧問刪的筆記.md',
+        deletedBy: 'Claude Code',
+        actorRole: 'advisor',
+        source: 'mcp',
+        sizeBytes: 64,
+        metadata: null,
+        deletedAt: now - DAY_MS,
+        expiresAt: now - DAY_MS + TRASH_RETENTION_MS,
+      },
+    ]
+
+    renderV3(<RecentlyDeletedView />)
+
+    const row = await screen.findByRole('listitem', { name: '顧問刪的筆記.md' })
+    expect(within(row).getByText('刪除者：Claude Code · 顧問 / MCP')).toBeInTheDocument()
+    expect(within(row).getByText('來源：本機 MCP')).toBeInTheDocument()
+  })
+
   it('點擊清空最近刪除並確認後呼叫 emptyAppTrash 並顯示空狀態', async () => {
     const { user } = renderV3(<RecentlyDeletedView mobile />)
     await screen.findByRole('listitem', { name: '過時筆記.md' })

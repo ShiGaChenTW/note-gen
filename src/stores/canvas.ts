@@ -108,7 +108,15 @@ interface CanvasState {
   setTrashMode: (open: boolean) => void
   togglePin: (id: string) => Promise<void>
   renameProject: (id: string, title: string) => Promise<void>
-  deleteProject: (id: string, syncConfigured?: boolean) => Promise<CanvasDeleteResult>
+  deleteProject: (
+    id: string,
+    syncConfigured?: boolean,
+    trashMeta?: {
+      deletedBy?: string
+      actorRole?: 'scott' | 'partner' | 'advisor' | 'system' | 'sync'
+      source?: 'canvas-sidebar' | 'mcp' | 'other'
+    },
+  ) => Promise<CanvasDeleteResult>
   permanentlyDeleteProject: (id: string, syncConfigured?: boolean) => Promise<boolean>
   restoreProject: (id: string) => Promise<CanvasProject | null>
 }
@@ -371,7 +379,7 @@ const useCanvasStore = create<CanvasState>((set, get) => ({
     }
   },
 
-  deleteProject: async (id, configured) => {
+  deleteProject: async (id, configured, trashMeta) => {
     const timer = saveTimers.get(id)
     if (timer) clearTimeout(timer)
     saveTimers.delete(id)
@@ -387,7 +395,12 @@ const useCanvasStore = create<CanvasState>((set, get) => ({
       const { closeCanvasCollaboration } = await import('@/lib/self-hosted-sync/canvas-collaboration')
       await closeCanvasCollaboration(id)
     }
-    const deletedAt = await softDeleteCanvasProject(id, { enqueueSync: false })
+    const deletedAt = await softDeleteCanvasProject(id, {
+      enqueueSync: false,
+      deletedBy: trashMeta?.deletedBy,
+      actorRole: trashMeta?.actorRole,
+      source: trashMeta?.source,
+    })
     if (selfHosted) {
       const { enqueueCanvasSnapshot } = await import('@/lib/self-hosted-sync/outbox')
       await enqueueCanvasSnapshot(id, 'delete')

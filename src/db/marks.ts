@@ -341,7 +341,14 @@ export async function restoreMark(id: number) {
   return result
 }
 
-export async function delMark(id: number) {
+export async function delMark(
+  id: number,
+  trashMeta?: {
+    deletedBy?: string
+    actorRole?: import('@/lib/trash/types').TrashActor
+    source?: import('@/lib/trash/types').TrashSource
+  },
+) {
   const db = await getDb();
   // 判断有没有 deleted 列，没有就添加
   const res = await db.select<Mark[]>(`select ${MARK_COLUMNS} from marks where id = $1`, [id])
@@ -362,9 +369,9 @@ export async function delMark(id: number) {
     entityType: 'mark',
     entityId: String(id),
     title,
-    deletedBy: 'scott',
-    actorRole: 'scott',
-    source: 'mark-list',
+    deletedBy: trashMeta?.deletedBy ?? 'scott',
+    actorRole: trashMeta?.actorRole ?? 'scott',
+    source: trashMeta?.source ?? 'mark-list',
     deletedAt: createdAt,
   })
   return result

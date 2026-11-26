@@ -16,22 +16,35 @@ export const ACTIVITY_ACTIONS = [
   'reported', // 例如非指揮官發現目前脈絡有誤時回報
   'corrected', // 更正先前的紀錄，一定要有 correctsId
   'undone', // Fork（almanac ALMNC-69.9）：復原了一筆操作（opId 指向被復原的操作）；原本那筆紀錄不改
+  'deleted', // Fork（almanac ALMNC-84.7）：外部 MCP 顧問刪除項目（已進最近刪除，30 天內可救回）
   'repaired', // Fork（almanac ALMNC-71）：系統修復（掃描補號、修連結、時鐘提醒），只能由 system 角色寫
 ] as const
 export type ActivityAction = typeof ACTIVITY_ACTIONS[number]
 
-/** Fork（almanac ALMNC-71）：system＝系統自動修復，ref 是修復種類（例如 id-scan:assign）。 */
-export const ACTIVITY_SOURCE_KINDS = ['conversation', 'proposal', 'system'] as const
+/** Fork（almanac ALMNC-71／84.7）：system＝系統自動修復；mcp＝外部 MCP 顧問工具呼叫（ref 是工具名稱）。 */
+export const ACTIVITY_SOURCE_KINDS = ['conversation', 'proposal', 'system', 'mcp'] as const
 export type ActivitySourceKind = typeof ACTIVITY_SOURCE_KINDS[number]
 
 export const ACTIVITY_NOTE_MAX = 60
 export const ACTIVITY_ARCHIVE_DAYS = 90
 const DAY_MS = 24 * 60 * 60 * 1000
 
-/** Fork（almanac ALMNC-71）：'system' 是系統自動修復（actorId 也是 'system'）。 */
-export type ActivityActorRole = AgentRole | 'scott' | 'system'
+/** Fork（almanac ALMNC-71／84.7）：'system' 是系統自動修復；'advisor' 是外部 MCP 顧問（非夥伴名單）。 */
+export type ActivityActorRole = AgentRole | 'scott' | 'system' | 'advisor'
 
 export const SYSTEM_ACTOR_ID = 'system'
+export const ADVISOR_ACTOR_PREFIX = 'mcp:'
+
+export function formatAdvisorActorId(clientName?: string): string {
+  const cleaned = clientName?.trim()
+  return `${ADVISOR_ACTOR_PREFIX}${cleaned || 'External MCP'}`
+}
+
+export function advisorClientName(actorId: string): string {
+  return actorId.startsWith(ADVISOR_ACTOR_PREFIX)
+    ? actorId.slice(ADVISOR_ACTOR_PREFIX.length) || 'External MCP'
+    : actorId
+}
 
 export interface ActivityEntryInput {
   /** agent 的固定編號；Scott 交代的事寫 'scott'；系統修復寫 'system'。 */
@@ -112,13 +125,16 @@ export function validateActivityEntry(input: ActivityEntryInput):
   const reserved = actorId === 'scott' || actorId === SYSTEM_ACTOR_ID
   if (input.actorRole === 'scott' ? actorId !== 'scott'
     : input.actorRole === 'system' ? actorId !== SYSTEM_ACTOR_ID
-      : !isAgentRole(input.actorRole) || reserved) {
+      : input.actorRole === 'advisor' ? reserved
+        : !isAgentRole(input.actorRole) || reserved) {
     return fail('ACTOR_ROLE_INVALID')
   }
   if (!isActivityAction(input.action)) return fail('ACTION_INVALID')
   // 系統修復三者一起出現：system 角色只寫 repaired、來源 system；repaired 和來源 system 也只給 system 角色。
   const system = input.actorRole === 'system'
   if (system !== (input.action === 'repaired') || system !== (input.source?.kind === 'system')) return fail('SYSTEM_ENTRY_INVALID')
+  // 外部 MCP 顧問與來源 mcp 成對出現，不與 Crew 夥伴混淆。
+  if ((input.actorRole === 'advisor') !== (input.source?.kind === 'mcp')) return fail('ACTOR_ROLE_INVALID')
   const targetLink = typeof input.targetLink === 'string' ? input.targetLink.trim() : ''
   if (!targetLink) return fail('TARGET_LINK_REQUIRED')
   if (!isTargetLink(targetLink)) return fail('TARGET_LINK_INVALID')

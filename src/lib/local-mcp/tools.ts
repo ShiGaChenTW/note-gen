@@ -26,6 +26,42 @@ import { isKnowledgeSourceType, type KnowledgeSourceType } from '@/types/knowled
 import type { LocalMcpToolResult } from './types'
 import { beginLocalMcpWorkspaceWrite } from './workspace-guard'
 
+export interface LocalMcpExecutionContext {
+  clientName?: string
+  connectionId?: string
+  requestId?: string
+}
+
+function advisorDeletedBy(context?: LocalMcpExecutionContext): string {
+  return context?.clientName?.trim() || 'advisor'
+}
+
+async function logAdvisorActivity(
+  action: 'created' | 'updated' | 'deleted',
+  targetLink: string,
+  toolName: string,
+  context?: LocalMcpExecutionContext,
+  note?: string,
+): Promise<void> {
+  try {
+    const [{ appendActivity }, { ACTIVITY_NOTE_MAX, formatAdvisorActorId }] = await Promise.all([
+      import('@/db/agent-memory'),
+      import('@/lib/agent-memory'),
+    ])
+    const trimmedNote = note ? [...note.trim()].slice(0, ACTIVITY_NOTE_MAX).join('') : ''
+    await appendActivity('system', {
+      actorId: formatAdvisorActorId(context?.clientName),
+      actorRole: 'advisor',
+      action,
+      targetLink,
+      source: { kind: 'mcp', ref: toolName },
+      ...(trimmedNote ? { note: trimmedNote } : {}),
+    })
+  } catch (error) {
+    console.warn('[local-mcp] Failed to append advisor activity:', error)
+  }
+}
+
 type Input = Record<string, unknown>
 
 interface NoteSnapshot {
@@ -220,7 +256,11 @@ function serializeNote(snapshot: NoteSnapshot): Record<string, unknown> {
   return { ...snapshot }
 }
 
-async function updateWithRevision(input: Input, contentBuilder: (current: string) => string) {
+async function updateWithRevision(
+  input: Input,
+  contentBuilder: (current: string) => string,
+  meta?: { toolName: string; context?: LocalMcpExecutionContext },
+) {
   const workspace = await workspaceKey()
   const filePath = await safeMarkdownPath(requiredString(input, 'filePath'))
   const expectedRevision = requiredString(input, 'expectedRevision')
@@ -238,6 +278,9 @@ async function updateWithRevision(input: Input, contentBuilder: (current: string
     await runAgentTool('note_update_file', { filePath, content: nextContent })
     await assertWorkspaceUnchanged(workspace)
     const after = await readNote(filePath, workspace)
+    if (meta) {
+      await logAdvisorActivity('updated', `note:${encodeURI(after.filePath)}`, meta.toolName, meta.context)
+    }
     return textResult(`已更新 ${filePath}`, serializeNote(after))
   })
 }
@@ -265,7 +308,11 @@ function buildDocumentMap(content: string) {
   return { frontmatter, headings, totalLines: lines.length }
 }
 
-export async function executeLocalMcpTool(toolName: string, rawArguments: unknown): Promise<LocalMcpToolResult> {
+export async function executeLocalMcpTool(
+  toolName: string,
+  rawArguments: unknown,
+  context?: LocalMcpExecutionContext,
+): Promise<LocalMcpToolResult> {
   const input = inputRecord(rawArguments)
   try {
     const workspace = await workspaceKey()
@@ -356,32 +403,34 @@ export async function executeLocalMcpTool(toolName: string, rawArguments: unknow
           await runAgentTool('note_create_file', { fileName, folderPath: parts.join('/') || undefined, content })
           await assertWorkspaceUnchanged(workspace)
           const note = await readNote(filePath, workspace)
+          await logAdvisorActivity('created', `note:${encodeURI(filePath)}`, toolName, context)
           return textResult(`已创建 ${filePath}`, serializeNote(note))
         })
       }
       case 'note_update':
-        return updateWithRevision(input, () => requiredContent(input))
+        return updateWithRevision(input, () => requiredContent(input), { toolName, context })
       case 'note_append':
-        return updateWithRevision(input, current => current + requiredContent(input))
+        return updateWithRevision(input, current => current + requiredContent(input), { toolName, context })
       case 'note_patch':
         return updateWithRevision(input, current => {
           if (!Array.isArray(input.operations)) throw new Error('operations 必须是数组')
           const prepared = prepareEditorLineTransaction(current, input.operations)
           if (!prepared.ok) throw new Error(prepared.error)
           return prepared.markdown
-        })
+        }, { toolName, context })
       case 'note_copy':
       case 'note_move':
       case 'note_rename': {
         const filePath = await safeMarkdownPath(requiredString(input, 'filePath'))
         const mapping = { note_copy: 'note_copy_file', note_move: 'note_move_file', note_rename: 'note_rename_file' } as const
         const operationInput: Input = { ...input, filePath }
+        let targetPath: string
         if (toolName === 'note_rename') {
           const requestedName = requiredString(input, 'newName')
           if (requestedName.includes('/') || requestedName.includes('\\')) throw new Error('newName 只能是文件名，不能包含路径')
           const newName = requestedName.endsWith('.md') ? requestedName : `${requestedName}.md`
           const folder = filePath.split('/').slice(0, -1).join('/')
-          await safeMarkdownPath(folder ? `${folder}/${newName}` : newName, true)
+          targetPath = await safeMarkdownPath(folder ? `${folder}/${newName}` : newName, true)
           operationInput.newName = newName
         } else {
           const targetFolderPath = optionalString(input, 'targetFolderPath')?.trim() || ''
@@ -391,7 +440,7 @@ export async function executeLocalMcpTool(toolName: string, rawArguments: unknow
           const targetName = requestedName
             ? (requestedName.endsWith('.md') ? requestedName : `${requestedName}.md`)
             : filePath.split('/').pop() || filePath
-          await safeMarkdownPath(normalizedFolder ? `${normalizedFolder}/${targetName}` : targetName, true)
+          targetPath = await safeMarkdownPath(normalizedFolder ? `${normalizedFolder}/${targetName}` : targetName, true)
           operationInput.targetFolderPath = normalizedFolder
           if (requestedName) operationInput.newName = targetName
         }
@@ -405,6 +454,12 @@ export async function executeLocalMcpTool(toolName: string, rawArguments: unknow
           }
           const result = await runAgentTool(mapping[toolName], operationInput)
           await assertWorkspaceUnchanged(workspace)
+          await logAdvisorActivity(
+            toolName === 'note_copy' ? 'created' : 'updated',
+            `note:${encodeURI(targetPath)}`,
+            toolName,
+            context,
+          )
           return textResult(result.message, { result: result.data ?? null })
         })
       }
@@ -419,7 +474,7 @@ export async function executeLocalMcpTool(toolName: string, rawArguments: unknow
           const moved = await moveEntryToSystemTrash(filePath, undefined, {
             source: 'mcp',
             actorRole: 'advisor',
-            deletedBy: 'mcp',
+            deletedBy: advisorDeletedBy(context),
           })
           if (!moved) return errorResult('not_found', `文件不存在: ${filePath}`)
           await article.cleanTabsByDeletedFile(filePath)
@@ -428,6 +483,7 @@ export async function executeLocalMcpTool(toolName: string, rawArguments: unknow
           const legacyName = filePath.split('/').pop() || filePath
           if (legacyName !== filePath) await deleteVectorDocumentsByFilename(legacyName)
           await assertWorkspaceUnchanged(workspace)
+          await logAdvisorActivity('deleted', `note:${encodeURI(filePath)}`, toolName, context)
           return textResult(`已将 ${filePath} 移入系统回收站`, { filePath, trashed: true })
         })
       }
@@ -464,6 +520,7 @@ export async function executeLocalMcpTool(toolName: string, rawArguments: unknow
         if (!id) throw new Error('记录创建失败')
         await refreshRecordState()
         await assertWorkspaceUnchanged(workspace)
+        await logAdvisorActivity('created', `record:${id}`, toolName, context)
         return textResult('已创建记录', { record: await getMarkById(id) })
       }
       case 'record_update': {
@@ -479,6 +536,7 @@ export async function executeLocalMcpTool(toolName: string, rawArguments: unknow
         })
         await refreshRecordState()
         await assertWorkspaceUnchanged(workspace)
+        await logAdvisorActivity('updated', `record:${id}`, toolName, context)
         return textResult('已更新记录', { record: await getMarkById(id) })
       }
       case 'record_delete':
@@ -486,10 +544,23 @@ export async function executeLocalMcpTool(toolName: string, rawArguments: unknow
         const id = requiredInteger(input, 'id')
         const current = await getMarkById(id)
         if (!current) throw new Error(`记录不存在: ${id}`)
-        if (toolName === 'record_delete') await delMark(id)
-        else await restoreMark(id)
+        if (toolName === 'record_delete') {
+          await delMark(id, {
+            source: 'mcp',
+            actorRole: 'advisor',
+            deletedBy: advisorDeletedBy(context),
+          })
+        } else {
+          await restoreMark(id)
+        }
         await refreshRecordState()
         await assertWorkspaceUnchanged(workspace)
+        await logAdvisorActivity(
+          toolName === 'record_delete' ? 'deleted' : 'updated',
+          `record:${id}`,
+          toolName,
+          context,
+        )
         return textResult(toolName === 'record_delete' ? '已将记录移入回收站' : '已恢复记录', {
           record: await getMarkById(id),
         })
@@ -518,6 +589,7 @@ export async function executeLocalMcpTool(toolName: string, rawArguments: unknow
       case 'conversation_create': {
         const id = await useChatStore.getState().createConversation(requiredString(input, 'title'))
         await assertWorkspaceUnchanged(workspace)
+        await logAdvisorActivity('created', `conversation:${id}`, toolName, context)
         return textResult('已创建对话', { conversation: await getConversation(id) })
       }
       case 'conversation_append': {
@@ -539,12 +611,15 @@ export async function executeLocalMcpTool(toolName: string, rawArguments: unknow
         })
         if (!message) throw new Error('消息写入失败')
         await assertWorkspaceUnchanged(workspace)
+        await logAdvisorActivity('updated', `conversation:${id}`, toolName, context)
         return textResult('已追加对话消息', { message })
       }
       case 'conversation_rename': {
         const id = requiredInteger(input, 'id')
-        await useChatStore.getState().updateConversationTitle(id, requiredString(input, 'title'))
+        const nextTitle = requiredString(input, 'title')
+        await useChatStore.getState().updateConversationTitle(id, nextTitle)
         await assertWorkspaceUnchanged(workspace)
+        await logAdvisorActivity('updated', `conversation:${id}`, toolName, context, nextTitle)
         return textResult('已重命名对话', { conversation: await getConversation(id) })
       }
       case 'conversation_open': {
@@ -555,8 +630,13 @@ export async function executeLocalMcpTool(toolName: string, rawArguments: unknow
       }
       case 'conversation_delete': {
         const id = requiredInteger(input, 'id')
-        await useChatStore.getState().deleteConversation(id)
+        await useChatStore.getState().deleteConversation(id, {
+          source: 'mcp',
+          actorRole: 'advisor',
+          deletedBy: advisorDeletedBy(context),
+        })
         await assertWorkspaceUnchanged(workspace)
+        await logAdvisorActivity('deleted', `conversation:${id}`, toolName, context)
         return textResult('已删除对话', { id, deleted: true })
       }
       case 'canvas_list': {
@@ -571,9 +651,11 @@ export async function executeLocalMcpTool(toolName: string, rawArguments: unknow
         const requestedType = optionalString(input, 'canvasType') || 'blank'
         const allowedTypes: CanvasProjectType[] = ['blank', 'flowchart', 'mindmap', 'timeline', 'quadrant', 'kanban', 'swot']
         if (!allowedTypes.includes(requestedType as CanvasProjectType)) throw new Error('参数 canvasType 不是支持的画布类型')
-        const project = await useCanvasStore.getState().createProject(requestedType as CanvasProjectType, requiredString(input, 'title'))
+        const title = requiredString(input, 'title')
+        const project = await useCanvasStore.getState().createProject(requestedType as CanvasProjectType, title)
         if (!project) throw new Error('画布创建失败')
         await assertWorkspaceUnchanged(workspace)
+        await logAdvisorActivity('created', `canvas:${encodeURI(project.id)}`, toolName, context, title)
         return textResult('已创建画布', { project })
       }
       case 'canvas_read': {
@@ -600,20 +682,36 @@ export async function executeLocalMcpTool(toolName: string, rawArguments: unknow
         const result = await runAgentTool(internalName, input, { activeCanvasId: canvasId })
         await useCanvasStore.getState().saveProject(canvasId)
         await assertWorkspaceUnchanged(workspace)
+        await logAdvisorActivity('updated', `canvas:${encodeURI(canvasId)}`, toolName, context)
         return textResult(result.message, { canvas: result.data ?? null })
       }
       case 'canvas_rename': {
         const canvasId = requiredString(input, 'canvasId')
-        await useCanvasStore.getState().renameProject(canvasId, requiredString(input, 'title'))
+        const title = requiredString(input, 'title')
+        await useCanvasStore.getState().renameProject(canvasId, title)
         await assertWorkspaceUnchanged(workspace)
+        await logAdvisorActivity('updated', `canvas:${encodeURI(canvasId)}`, toolName, context, title)
         return textResult('已重命名画布', { canvasId, title: input.title })
       }
       case 'canvas_delete':
       case 'canvas_restore': {
         const canvasId = requiredString(input, 'canvasId')
-        if (toolName === 'canvas_delete') await useCanvasStore.getState().deleteProject(canvasId)
-        else if (!await useCanvasStore.getState().restoreProject(canvasId)) throw new Error(`画布不存在: ${canvasId}`)
+        if (toolName === 'canvas_delete') {
+          await useCanvasStore.getState().deleteProject(canvasId, undefined, {
+            source: 'mcp',
+            actorRole: 'advisor',
+            deletedBy: advisorDeletedBy(context),
+          })
+        } else if (!await useCanvasStore.getState().restoreProject(canvasId)) {
+          throw new Error(`画布不存在: ${canvasId}`)
+        }
         await assertWorkspaceUnchanged(workspace)
+        await logAdvisorActivity(
+          toolName === 'canvas_delete' ? 'deleted' : 'updated',
+          `canvas:${encodeURI(canvasId)}`,
+          toolName,
+          context,
+        )
         return textResult(toolName === 'canvas_delete' ? '已将画布移入回收站' : '已恢复画布', { canvasId })
       }
       case 'tag_list': {
