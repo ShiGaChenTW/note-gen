@@ -1,7 +1,9 @@
 import { invoke } from '@tauri-apps/api/core'
+import { appDataDir, join } from '@tauri-apps/api/path'
 import { Store } from '@tauri-apps/plugin-store'
 
 export type ManagedBackupSchedule = 'disabled' | 'daily' | 'weekly'
+export const DEFAULT_MANAGED_BACKUP_SCHEDULE: ManagedBackupSchedule = 'weekly'
 
 export interface ManagedBackupSettings {
   directory: string
@@ -46,11 +48,25 @@ function normalizeRetention(value: unknown): number {
   return Math.min(100, Math.max(1, retention))
 }
 
+export async function resolveDefaultManagedBackupDirectory(): Promise<string> {
+  try {
+    return await join(await appDataDir(), 'backups')
+  } catch {
+    return ''
+  }
+}
+
 export async function loadManagedBackupSettings(): Promise<ManagedBackupSettings> {
   const store = await Store.load('store.json')
+  const storedDirectory = await store.get<string>('managedBackupDirectory')
+  const storedSchedule = await store.get<ManagedBackupSchedule>('managedBackupSchedule')
+  const directory =
+    storedDirectory !== undefined && storedDirectory !== null
+      ? storedDirectory
+      : await resolveDefaultManagedBackupDirectory()
   return {
-    directory: (await store.get<string>('managedBackupDirectory')) ?? '',
-    schedule: (await store.get<ManagedBackupSchedule>('managedBackupSchedule')) ?? 'disabled',
+    directory,
+    schedule: storedSchedule ?? DEFAULT_MANAGED_BACKUP_SCHEDULE,
     retention: normalizeRetention(await store.get<number>('managedBackupRetention')),
     lastSuccessAt: (await store.get<number>('managedBackupLastSuccessAt')) ?? null,
     lastError: (await store.get<string>('managedBackupLastError')) ?? null,
@@ -140,7 +156,7 @@ function scheduleInterval(schedule: ManagedBackupSchedule): number | null {
   return null
 }
 
-async function runScheduledBackupIfDue(): Promise<void> {
+export async function runScheduledBackupIfDue(): Promise<void> {
   const settings = await loadManagedBackupSettings()
   const interval = scheduleInterval(settings.schedule)
   if (!settings.directory || interval === null || backupInProgress) return
