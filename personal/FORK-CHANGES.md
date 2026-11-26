@@ -247,6 +247,7 @@ npx pnpm@9 install --frozen-lockfile
 | 2026-11-19 | `src/app/core/main/{page,main-status-bar,today-v3/composer,unified-sync-status,file/file-footer,chat/model-select}.tsx`、`src/components/plugins/plugin-status-bar-center.tsx` | v3 右欄對話可見時今天頁只留「記」；全頁覆蓋時隱藏編輯器狀態列項目；同步及模型錯誤可開啟設定 | ALMNC-30 |
 
 | 2026-11-19 | `messages/{zh-TW,zh,en}.json`、`src/app/core/main/main-status-bar.tsx`；fork 日期導覽與知識頁籤 | V3 共用日期格式、月曆與日期列的選中／今天／有內容樣式，以及 28px 導覽。狀態列日期直達今天，計畫頁名與導覽一致，內建知識頁籤取應用程式翻譯。 | ALMNC-34/35 |
+| 2026-11-26 | `src/app/core/setting/general/advanced-settings.tsx`、`messages/{zh-TW,zh,en}.json` | 移除桌面與手機共用設定頁的「清理資料／清理檔案」及直接刪除 AppData 的函式，清除專用文案 | ALMNC-84.1：改由可復原的刪除流程取代危險入口 |
 
 ## 刻意不改的東西
 
