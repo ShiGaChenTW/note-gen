@@ -2,6 +2,16 @@
 
 import { useState, useMemo } from 'react'
 import { ChevronDown, Search, Trash2 } from 'lucide-react'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -35,6 +45,7 @@ export function HistoryDropdown({
 }: HistoryDropdownProps) {
   const t = useTranslations('record.chat.empty')
   const [searchQuery, setSearchQuery] = useState('')
+  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null)
 
   // 过滤并排序会话（排除当前会话、已显示会话和空会话）
   const filteredConversations = useMemo(() => {
@@ -51,7 +62,8 @@ export function HistoryDropdown({
   }, [conversations, currentConversationId, excludeConversationIds, searchQuery])
 
   return (
-    <DropdownMenu open={open} onOpenChange={onOpenChange}>
+    <>
+      <DropdownMenu open={open} onOpenChange={onOpenChange}>
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
@@ -110,11 +122,15 @@ export function HistoryDropdown({
                     <div className="shrink-0 ml-auto flex items-center gap-2">
                       {/* 删除按钮 - 悬停时显示 */}
                       <button
+                        type="button"
                         onClick={(e) => {
                           e.stopPropagation()
-                          onDelete(conv.id)
+                          e.preventDefault()
+                          onOpenChange(false)
+                          setPendingDeleteId(conv.id)
                         }}
                         className="flex items-center justify-center rounded-md text-muted-foreground opacity-0 group-hover:opacity-100 transition-all duration-200 ease-out hover:text-destructive hover:bg-destructive/10 active:scale-95"
+                        aria-label={t('deleteConversation')}
                         title={t('deleteConversation')}
                       >
                         <Trash2 className="w-3.5 h-3.5 transition-transform duration-150 group-hover/button:scale-110" />
@@ -127,6 +143,30 @@ export function HistoryDropdown({
           </div>
         )}
       </DropdownMenuContent>
-    </DropdownMenu>
+      </DropdownMenu>
+
+      <AlertDialog open={pendingDeleteId !== null} onOpenChange={(nextOpen) => { if (!nextOpen) setPendingDeleteId(null) }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('deleteConfirm.title')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('deleteConfirm.description')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('deleteConfirm.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => {
+                if (pendingDeleteId !== null) {
+                  onDelete(pendingDeleteId)
+                  setPendingDeleteId(null)
+                }
+              }}
+            >
+              {t('deleteConfirm.confirm')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   )
 }

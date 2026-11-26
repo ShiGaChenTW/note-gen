@@ -5,6 +5,8 @@ import { getDefaultArticleAbsolutePath, getWorkspacePath } from '@/lib/workspace
 import { enqueueAssetSnapshot, enqueueFileSnapshot, enqueueFolderSnapshot } from './outbox'
 import { getSelfHostedSyncRuntime } from './runtime'
 import { withSelfHostedPrepareLock } from './prepare-lock'
+import { moveToAppTrash } from '@/lib/trash/runtime'
+import type { TrashActor, TrashSource } from '@/lib/trash/types'
 
 function normalizeSlashes(path: string) {
   return path.normalize('NFC').replaceAll('\\', '/').replace(/\/{2,}/g, '/').replace(/\/$/, '')
@@ -73,9 +75,16 @@ export async function writeSelfHostedWorkspaceText(relativePath: string, content
   return true
 }
 
+export interface SelfHostedTrashOptions {
+  deletedBy?: string
+  actorRole?: TrashActor
+  source?: TrashSource
+}
+
 export async function deleteSelfHostedWorkspacePath(
   relativePath: string,
   pathKind?: 'file' | 'folder',
+  trashOptions?: SelfHostedTrashOptions,
 ) {
   const binding = await activeBinding()
   if (!binding) return false
@@ -97,23 +106,14 @@ export async function deleteSelfHostedWorkspacePath(
     [binding.workspaceId, normalizedPath, `${escapeLike(normalizedPath)}/%`]
   )
   const mapping = mappings.find(item => item.relativePath === normalizedPath)
-  if (mapping?.kind === 'folder' || (!mapping && pathKind === 'folder')) {
-    await invoke('self_hosted_delete_directory', {
-      workspaceId: binding.workspaceId,
-      objectId: mapping?.objectId ?? null,
-      workspaceRoot: binding.workspaceRoot,
-      relativePath: normalizedPath,
-      allowNonEmpty: true,
-    })
-  } else {
-    await invoke('self_hosted_delete_file', {
-      workspaceId: binding.workspaceId,
-      objectId: mapping?.objectId ?? null,
-      workspaceRoot: binding.workspaceRoot,
-      relativePath: normalizedPath,
-      expectedHash: null,
-    })
-  }
+  const isFolder = mapping?.kind === 'folder' || (!mapping && pathKind === 'folder')
+  await moveToAppTrash(normalizedPath, {
+    workspaceRoot: binding.workspaceRoot,
+    isDirectory: isFolder ? true : undefined,
+    deletedBy: trashOptions?.deletedBy ?? 'scott',
+    actorRole: trashOptions?.actorRole ?? 'scott',
+    source: trashOptions?.source ?? 'file-tree',
+  })
   for (const item of mappings) {
     if (item.kind === 'folder') {
       await enqueueFolderSnapshot(item.relativePath, 'delete', binding.workspaceId)

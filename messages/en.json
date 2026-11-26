@@ -2154,9 +2154,10 @@
         "failed": "Index failed"
       },
       "deleteConfirm": {
-        "title": "Permanently delete this memory?",
-        "description": "This cannot be undone.",
-        "cancel": "Cancel"
+        "title": "Move this memory to Recently Deleted?",
+        "description": "It will move to Recently Deleted and can be restored within 30 days.",
+        "cancel": "Cancel",
+        "confirm": "Move to Recently Deleted"
       },
       "autoCreated": "Generated {count} memories in the background",
       "pendingConfirmation": "This memory needs confirmation",
@@ -5066,6 +5067,12 @@
         "configureModel": "Configure Model",
         "recentConversations": "Recent Conversations",
         "deleteConversation": "Delete Conversation",
+        "deleteConfirm": {
+          "title": "Delete this conversation?",
+          "description": "It will move to Recently Deleted and can be restored within 30 days.",
+          "cancel": "Cancel",
+          "confirm": "Move to Recently Deleted"
+        },
         "conversationHistory": "History",
         "viewMore": "View More",
         "messages": "messages",
@@ -6645,9 +6652,9 @@
         "deleteSuccess": "Deleted successfully",
         "deleteRemoteSuccess": "Remote folder deleted",
         "deleteSelected": "Delete {count} items",
-        "confirmDeleteEntries": "Delete the {count} selected items, including all folder contents? Local content will be moved to the system trash.",
+        "confirmDeleteEntries": "Delete the {count} selected items, including all folder contents? Local content will move to Recently Deleted and can be restored within 30 days.",
         "confirmDeleteEntriesPermanently": "Delete the {count} selected items, including all folder contents? This action cannot be undone.",
-        "confirmDeleteEntriesWithRemote": "Delete the {count} selected items, including all folder contents? Both local and remote content will be deleted. Remote deletion may be irreversible.",
+        "confirmDeleteEntriesWithRemote": "Delete the {count} selected items, including all folder contents? Local content will move to Recently Deleted (recoverable for 30 days), and remote synced content will be removed.",
         "deleting": "Deleting…",
         "deletingProgress": "Deleting {completed}/{total} items…",
         "deleteEntriesSuccess": "Deleted {count} items",

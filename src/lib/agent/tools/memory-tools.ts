@@ -1,14 +1,15 @@
 import { Tool, ToolResult } from '../types'
 import {
-  clearAllMemories,
   deleteMemory,
   getAllMemories,
   getMemoriesByCategory,
   permanentlyDeleteMemory,
+  softDeleteMemory,
   updateMemory,
   upsertMemory,
   type Memory,
 } from '@/db/memories'
+import { recordDbTrash } from '@/lib/trash/runtime'
 import { getCurrentMemoryWorkspaceId } from '@/lib/context/loader'
 import { decideMemoryConsolidation } from '@/lib/memory/consolidation'
 import { containsPotentialSecret } from '@/lib/memory/safety'
@@ -277,7 +278,7 @@ WARNING: This operation is irreversible, use with caution`,
   parameters: [],
   execute: async (): Promise<ToolResult> => {
     try {
-      const memories = await getAllMemories()
+      const memories = await getAllMemories({ includeInactive: true })
       if (memories.length === 0) {
         return {
           success: true,
@@ -285,11 +286,25 @@ WARNING: This operation is irreversible, use with caution`,
           message: `All memories are already cleared`,
         }
       }
-      await clearAllMemories()
+      for (const memory of memories) {
+        const trashed = await softDeleteMemory(memory.id)
+        if (trashed) {
+          await recordDbTrash({
+            entityType: 'memory',
+            entityId: memory.id,
+            title: memory.content.trim().slice(0, 80) || memory.id,
+            deletedBy: 'partner',
+            actorRole: 'partner',
+            source: 'agent-tool',
+            metadata: { previousStatus: memory.status },
+            deletedAt: trashed.deletedAt ?? undefined,
+          })
+        }
+      }
       return {
         success: true,
-        data: { scope: 'all', alreadyAbsent: false },
-        message: `All memories cleared`,
+        data: { scope: 'all', alreadyAbsent: false, trashedCount: memories.length },
+        message: `Moved ${memories.length} memories to Recently Deleted`,
       }
     } catch {
       return {

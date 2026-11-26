@@ -229,9 +229,15 @@ export async function setCanvasPinnedAt(id: string, pinnedAt: number | null) {
 
 export async function softDeleteCanvasProject(
   id: string,
-  options: { enqueueSync?: boolean } = {}
+  options: {
+    enqueueSync?: boolean
+    deletedBy?: string
+    actorRole?: 'scott' | 'partner' | 'advisor' | 'system' | 'sync'
+    source?: 'canvas-sidebar' | 'mcp' | 'other'
+  } = {}
 ) {
   const db = await getDb()
+  const project = await getCanvasProject(id)
   const deletedAt = Date.now()
   await db.execute(
     'update canvases set deletedAt = $1, updatedAt = $1 where id = $2',
@@ -239,6 +245,16 @@ export async function softDeleteCanvasProject(
   )
   if (options.enqueueSync !== false) enqueueCanvasSync('canvas-deleted')
   await removeCanvasKnowledgeIndex(id)
+  const { recordDbTrash } = await import('@/lib/trash/runtime')
+  await recordDbTrash({
+    entityType: 'canvas',
+    entityId: id,
+    title: project?.title || id,
+    deletedBy: options.deletedBy ?? 'scott',
+    actorRole: options.actorRole ?? 'scott',
+    source: options.source ?? 'canvas-sidebar',
+    deletedAt,
+  })
   return deletedAt
 }
 
@@ -251,6 +267,8 @@ export async function restoreCanvasProject(id: string) {
   )
   enqueueCanvasSync('canvas-restored')
   enqueueCanvasKnowledgeIndex(id)
+  const { removeDbTrashEntry } = await import('@/lib/trash/runtime')
+  await removeDbTrashEntry('canvas', id).catch(() => undefined)
   return getCanvasProject(id)
 }
 
@@ -258,6 +276,8 @@ export async function permanentlyDeleteCanvasProject(id: string) {
   const db = await getDb()
   await db.execute('delete from canvases where id = $1', [id])
   await removeCanvasKnowledgeIndex(id)
+  const { removeDbTrashEntry } = await import('@/lib/trash/runtime')
+  await removeDbTrashEntry('canvas', id).catch(() => undefined)
 }
 
 export async function clearCanvasProjects() {

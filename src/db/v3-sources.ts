@@ -375,6 +375,16 @@ export async function deleteUnsentSource(id: string): Promise<void> {
   const source = await requireSource(id)
   const outputs = await listOutputsOfSource(source.id)
   if (!canDeleteUnsent(source, outputs.length)) throw new Error('只有還沒送出、沒有產出的外部擷取可以刪除')
+  const { recordDbTrash } = await import('@/lib/trash/runtime')
+  await recordDbTrash({
+    entityType: 'source',
+    entityId: source.id,
+    title: source.content.trim().slice(0, 80) || source.origin || source.id,
+    deletedBy: 'scott',
+    actorRole: 'scott',
+    source: 'source-delete',
+    metadata: { source },
+  })
   const db = await getDb()
   await db.execute('delete from sources where id = $1', [source.id])
 }

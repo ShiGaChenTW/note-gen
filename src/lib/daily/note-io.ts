@@ -3,9 +3,10 @@
  * 工作區可能是自訂路徑或預設的 AppData/article，自架同步啟用時改走它的原子寫入。
  */
 
-import { exists, mkdir, readTextFile, remove, writeTextFile } from '@tauri-apps/plugin-fs'
+import { exists, mkdir, readTextFile, writeTextFile } from '@tauri-apps/plugin-fs'
 import { getFilePathOptions, getWorkspacePath } from '@/lib/workspace'
 import { deleteSelfHostedWorkspacePath, writeSelfHostedWorkspaceText } from '@/lib/self-hosted-sync/files'
+import { moveToAppTrash } from '@/lib/trash/runtime'
 import useArticleStore from '@/stores/article'
 import { noteAppWrite } from '@/lib/moc/app-writes'
 
@@ -48,11 +49,18 @@ export async function writeNote(relativePath: string, content: string, options?:
   noteAppWrite(relativePath, createNew ? null : undefined, content)
 }
 
-/** 刪除這次操作新建而需要還原的筆記。 */
+/** 刪除這次操作新建而需要還原的筆記（移入最近刪除）。 */
 export async function removeNote(relativePath: string): Promise<void> {
-  if (await deleteSelfHostedWorkspacePath(relativePath, 'file')) return
-  const file = await getFilePathOptions(relativePath)
-  await remove(file.path, { baseDir: file.baseDir })
+  if (await deleteSelfHostedWorkspacePath(relativePath, 'file', {
+    deletedBy: 'scott',
+    actorRole: 'scott',
+    source: 'other',
+  })) return
+  await moveToAppTrash(relativePath, {
+    deletedBy: 'scott',
+    actorRole: 'scott',
+    source: 'other',
+  })
 }
 
 /** 讓新建的檔案出現在檔案樹並展開到它。 */

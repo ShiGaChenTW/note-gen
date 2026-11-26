@@ -320,9 +320,20 @@ export async function permanentlyDeleteConversation(id: number): Promise<void> {
   enqueueConversationAutoSync('conversation-deleted')
 }
 
-// 删除会话及其相关聊天记录（Step 2 將改由最近刪除流程接管）
+// 删除会话：軟刪除並寫入「最近刪除」，30 天內可還原；僅在清除過期項目或清理空對話殼時永久刪除
 export async function deleteConversation(id: number): Promise<void> {
-  await permanentlyDeleteConversation(id)
+  const trashed = await softDeleteConversation(id)
+  if (!trashed) return
+  const { recordDbTrash } = await import('@/lib/trash/runtime')
+  await recordDbTrash({
+    entityType: 'conversation',
+    entityId: String(id),
+    title: trashed.title,
+    deletedBy: 'scott',
+    actorRole: 'scott',
+    source: 'chat-header',
+    deletedAt: trashed.deletedAt ?? undefined,
+  })
 }
 
 // 切换会话置顶状态

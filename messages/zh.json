@@ -2075,9 +2075,10 @@
         "failed": "索引失败"
       },
       "deleteConfirm": {
-        "title": "永久删除这条记忆？",
-        "description": "永久删除后无法恢复。",
-        "cancel": "取消"
+        "title": "要将这条记忆移到最近删除吗？",
+        "description": "记忆会移到「最近删除」，30 天内可以恢复。",
+        "cancel": "取消",
+        "confirm": "移到最近删除"
       },
       "autoCreated": "后台生成了 {count} 条记忆",
       "pendingConfirmation": "这条记忆需要确认",
@@ -5066,6 +5067,12 @@
         "configureModel": "配置模型",
         "recentConversations": "最近对话",
         "deleteConversation": "删除对话",
+        "deleteConfirm": {
+          "title": "确定要删除这段对话吗？",
+          "description": "对话会移到「最近删除」，30 天内可以恢复。",
+          "cancel": "取消",
+          "confirm": "移到最近删除"
+        },
         "conversationHistory": "历史对话",
         "viewMore": "查看更多",
         "messages": "条消息",
@@ -6645,9 +6652,9 @@
         "deleteSuccess": "删除成功",
         "deleteRemoteSuccess": "远程文件夹已删除",
         "deleteSelected": "删除 {count} 项",
-        "confirmDeleteEntries": "确定要删除选中的 {count} 项及文件夹内的所有内容吗？本地内容将移到系统废纸篓。",
+        "confirmDeleteEntries": "确定要删除选中的 {count} 项及文件夹内的所有内容吗？本地内容将移到「最近删除」，30 天内可以恢复。",
         "confirmDeleteEntriesPermanently": "确定要删除选中的 {count} 项及文件夹内的所有内容吗？此操作无法撤销。",
-        "confirmDeleteEntriesWithRemote": "确定要删除选中的 {count} 项及文件夹内的所有内容吗？本地和远程内容都会删除，远程删除可能无法恢复。",
+        "confirmDeleteEntriesWithRemote": "确定要删除选中的 {count} 项及文件夹内的所有内容吗？本地内容将移到「最近删除」（30 天内可恢复），远程同步内容也会一并删除。",
         "deleting": "正在删除…",
         "deletingProgress": "正在删除 {completed}/{total} 项…",
         "deleteEntriesSuccess": "已删除 {count} 项",

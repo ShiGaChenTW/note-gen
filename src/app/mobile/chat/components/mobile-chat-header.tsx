@@ -13,6 +13,16 @@ import "dayjs/locale/pt-br"
 import "dayjs/locale/de"
 import useChatStore from "@/stores/chat"
 import useSettingStore from "@/stores/setting"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -63,6 +73,7 @@ export function MobileChatHeader() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
+  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null)
   const hasCurrentMessages = isTemporaryConversation
     ? chats.length > 0
     : conversations.some(
@@ -153,7 +164,10 @@ export function MobileChatHeader() {
                           variant="ghost"
                           size="icon"
                           className="my-auto shrink-0 text-muted-foreground active:text-destructive"
-                          onClick={() => deleteConversation(conversation.id)}
+                          onClick={() => {
+                            setDrawerOpen(false)
+                            setPendingDeleteId(conversation.id)
+                          }}
                           aria-label={tEmpty("deleteConversation")}
                         >
                           <Trash2 className="size-4" />
@@ -189,6 +203,28 @@ export function MobileChatHeader() {
         </div>
       </header>
       {searchOpen ? <SearchDialog open mobile onOpenChange={setSearchOpen} /> : null}
+      <AlertDialog open={pendingDeleteId !== null} onOpenChange={(open) => { if (!open) setPendingDeleteId(null) }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{tEmpty("deleteConfirm.title")}</AlertDialogTitle>
+            <AlertDialogDescription>{tEmpty("deleteConfirm.description")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{tEmpty("deleteConfirm.cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => {
+                if (pendingDeleteId !== null) {
+                  void deleteConversation(pendingDeleteId)
+                  setPendingDeleteId(null)
+                }
+              }}
+            >
+              {tEmpty("deleteConfirm.confirm")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }

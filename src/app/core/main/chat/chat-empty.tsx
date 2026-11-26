@@ -2,8 +2,18 @@
 
 import { useTranslations } from 'next-intl'
 import useChatStore from '@/stores/chat'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Trash2, FileEdit, FileText, Lightbulb, ArrowRight, MessageCircle, MessageSquareDashed } from 'lucide-react'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/v3/empty-state'
 import {
@@ -48,6 +58,7 @@ export default function ChatEmpty() {
   const t = useTranslations('record.chat.empty')
   const { language } = useSettingStore()
 
+  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null)
   const {
     conversations,
     currentConversationId,
@@ -117,7 +128,8 @@ export default function ChatEmpty() {
   }
 
   return (
-    <div className="relative flex h-full w-full flex-col items-center justify-center overflow-hidden">
+    <>
+      <div className="relative flex h-full w-full flex-col items-center justify-center overflow-hidden">
       {/* Dashed background pattern - only visible when empty */}
       <div
         className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none"
@@ -210,7 +222,7 @@ export default function ChatEmpty() {
                       size="icon"
                       onClick={(e) => {
                         e.stopPropagation()
-                        void handleDelete(conv.id)
+                        setPendingDeleteId(conv.id)
                       }}
                       className="z-50 size-8 opacity-100 transition-all duration-200 ease-out hover:text-destructive md:size-6 md:opacity-0 md:group-hover:opacity-100"
                       aria-label={t('deleteConversation')}
@@ -224,6 +236,30 @@ export default function ChatEmpty() {
           </div>
         )}
       </div>
-    </div>
+      </div>
+
+      <AlertDialog open={pendingDeleteId !== null} onOpenChange={(open) => { if (!open) setPendingDeleteId(null) }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('deleteConfirm.title')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('deleteConfirm.description')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('deleteConfirm.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => {
+                if (pendingDeleteId !== null) {
+                  void handleDelete(pendingDeleteId)
+                  setPendingDeleteId(null)
+                }
+              }}
+            >
+              {t('deleteConfirm.confirm')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   )
 }

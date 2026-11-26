@@ -1,9 +1,7 @@
-import { exists, remove } from "@tauri-apps/plugin-fs";
 import { Store } from "@tauri-apps/plugin-store";
 import type { DirTree } from "@/stores/article";
 import type { CloudFolderConfig, S3Config, SyncPlatform, WebDAVConfig } from "@/types/sync";
 import { computedParentPath, getCurrentFolder } from "@/lib/path";
-import { getFilePathOptions, getWorkspacePath } from "@/lib/workspace";
 import { getSyncRepoName } from "@/lib/sync/repo-utils";
 import { getDirectoryFiles as getGithubDirectoryFiles } from "@/lib/sync/github";
 import { getDirectoryFiles as getGiteeDirectoryFiles } from "@/lib/sync/gitee";
@@ -129,23 +127,14 @@ export async function deleteVectorDocumentsByPaths(paths: string[], folderPath?:
 }
 
 export async function deleteLocalFolderIfExists(folderPath: string) {
-  const workspace = await getWorkspacePath();
-  const pathOptions = await getFilePathOptions(folderPath);
-  const localExists = workspace.isCustom
-    ? await exists(pathOptions.path)
-    : await exists(pathOptions.path, { baseDir: pathOptions.baseDir });
-
-  if (!localExists) {
-    return false;
-  }
-
-  if (workspace.isCustom) {
-    await remove(pathOptions.path, { recursive: true });
-  } else {
-    await remove(pathOptions.path, { baseDir: pathOptions.baseDir, recursive: true });
-  }
-
-  return true;
+  const { moveToAppTrash } = await import('@/lib/trash/runtime');
+  const trashed = await moveToAppTrash(folderPath, {
+    isDirectory: true,
+    deletedBy: 'scott',
+    actorRole: 'scott',
+    source: 'file-tree',
+  });
+  return Boolean(trashed);
 }
 
 export function removeFolderFromTree(tree: DirTree[], folderPath: string) {

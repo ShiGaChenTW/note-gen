@@ -416,7 +416,11 @@ export async function executeLocalMcpTool(toolName: string, rawArguments: unknow
           if (!await prepareActiveEditorPathMutationDurably(article.activeFilePath, [filePath])) {
             return errorResult('editor_busy', '当前编辑器正在处理异步内容，删除已取消')
           }
-          const moved = await moveEntryToSystemTrash(filePath)
+          const moved = await moveEntryToSystemTrash(filePath, undefined, {
+            source: 'mcp',
+            actorRole: 'advisor',
+            deletedBy: 'mcp',
+          })
           if (!moved) return errorResult('not_found', `文件不存在: ${filePath}`)
           await article.cleanTabsByDeletedFile(filePath)
           if (!article.removeLocalEntry(filePath)) await article.loadFileTree()

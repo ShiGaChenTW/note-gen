@@ -1,5 +1,7 @@
 import { Tool, ToolResult } from '../types'
-import { BaseDirectory, readTextFile, writeTextFile, remove, rename, copyFile, stat, exists } from '@tauri-apps/plugin-fs'
+import { BaseDirectory, readTextFile, writeTextFile, rename, copyFile, stat, exists } from '@tauri-apps/plugin-fs'
+import { moveToAppTrash, restoreTrashItem } from '@/lib/trash/runtime'
+import type { TrashActor, TrashSource } from '@/lib/trash/types'
 import { appDataDir } from '@tauri-apps/api/path'
 import { getAllMarkdownFiles, MarkdownFile } from '@/lib/files'
 import {
@@ -735,12 +737,20 @@ export const deleteMarkdownFileTool: Tool = {
           const latest = baseDir ? await readTextFile(path, { baseDir }) : await readTextFile(path)
           if (latest !== beforeDelete || hasQueuedSave()) return false
           await assertEditWorkspace(params)
-          if (baseDir) await remove(path, { baseDir })
-          else await remove(path)
+          const deletedBy = typeof params.deletedBy === 'string' && params.deletedBy.trim() ? params.deletedBy : 'partner'
+          const actorRole: TrashActor = params.actorRole === 'scott' || params.actorRole === 'advisor' || params.actorRole === 'system' || params.actorRole === 'sync'
+            ? params.actorRole : 'partner'
+          const source: TrashSource = params.source === 'workbench-proposal' || params.source === 'file-tree' || params.source === 'mcp' || params.source === 'organize' || params.source === 'other'
+            ? params.source : 'agent-tool'
+          const trashed = await moveToAppTrash(normalizedFilePath, { deletedBy, actorRole, source })
           appliedChange = { filePath: normalizedFilePath, before: beforeDelete }
           if ((useArticleStore.getState().activeFilePath === normalizedFilePath && !prepareActiveEditorDeactivation()) || hasQueuedSave()) {
-            if (baseDir) await writeTextFile(path, beforeDelete, { baseDir })
-            else await writeTextFile(path, beforeDelete)
+            if (trashed) {
+              await restoreTrashItem(trashed.id, { conflictStrategy: 'overwrite' }).catch(() => undefined)
+            } else {
+              if (baseDir) await writeTextFile(path, beforeDelete, { baseDir })
+              else await writeTextFile(path, beforeDelete)
+            }
             appliedChange = undefined
             return false
           }
@@ -1123,14 +1133,11 @@ export const deleteMarkdownFilesBatchTool: Tool = {
 
       for (const normalizedFilePath of normalizedFilePaths) {
         try {
-          // 统一使用 getFilePathOptions 来处理路径
-          const { path, baseDir } = await getFilePathOptions(normalizedFilePath)
-
-          if (baseDir) {
-            await remove(path, { baseDir })
-          } else {
-            await remove(path)
-          }
+          await moveToAppTrash(normalizedFilePath, {
+            deletedBy: 'partner',
+            actorRole: 'partner',
+            source: 'agent-tool',
+          })
 
           await articleStore.cleanTabsByDeletedFile(normalizedFilePath)
 

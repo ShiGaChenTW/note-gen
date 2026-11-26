@@ -52,7 +52,7 @@ export function MemoryItem({ memory }: MemoryItemProps) {
     approveMemory,
     archiveMemory,
     restoreMemory,
-    permanentlyDeleteMemory,
+    trashMemory,
     updateMemory,
   } = useMemoriesStore()
   const { systemPrompt, setSystemPrompt } = useSettingStore()
@@ -157,7 +157,7 @@ export function MemoryItem({ memory }: MemoryItemProps) {
                 : { key: 'archive', label: t('actions.archive'), icon: <Archive />, onSelect: archive },
               ...(memory.status === 'archived' ? [{
                 key: 'delete',
-                label: t('actions.deletePermanently'),
+                label: t('deleteConfirm.confirm'),
                 icon: <Trash2 />,
                 destructive: true,
                 separatorBefore: true,
@@ -190,9 +190,9 @@ export function MemoryItem({ memory }: MemoryItemProps) {
             <AlertDialogCancel>{t('deleteConfirm.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
-              onClick={() => void permanentlyDeleteMemory(memory.id)}
+              onClick={() => void trashMemory(memory.id)}
             >
-              {t('actions.deletePermanently')}
+              {t('deleteConfirm.confirm')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
