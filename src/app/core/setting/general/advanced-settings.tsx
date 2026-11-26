@@ -1,23 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { getCurrentWindow } from '@tauri-apps/api/window'
-import { message } from '@tauri-apps/plugin-dialog'
-import { BaseDirectory, exists, remove } from '@tauri-apps/plugin-fs'
 import { Store } from '@tauri-apps/plugin-store'
 import { useTranslations } from 'next-intl'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogMedia,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import {
   Item,
@@ -34,7 +19,7 @@ import { useToast } from '@/hooks/use-toast'
 import { openDeveloperTools, supportsNativeDeveloperTools } from '@/lib/developer-tools'
 import useSettingStore from '@/stores/setting'
 import { ConfigFileActions } from './config-file-actions'
-import { AlertTriangle, Code2, Database, FolderX, Gauge, MonitorCog, Network } from 'lucide-react'
+import { Code2, Gauge, MonitorCog, Network } from 'lucide-react'
 import { SettingSection } from '../components/setting-base'
 import { DeveloperDiagnostics } from './developer-diagnostics'
 import { SystemPermissions } from './system-permissions'
@@ -46,7 +31,6 @@ export function AdvancedSettings({ showConfigFileActions = true }: { showConfigF
   const [systemProxy, setSystemProxy] = useState(false)
   const [proxyLoaded, setProxyLoaded] = useState(false)
   const proxySaveQueue = useRef<Promise<void>>(Promise.resolve())
-  const [pendingAction, setPendingAction] = useState<'data' | 'files' | null>(null)
   const developerMode = useSettingStore(state => state.developerMode)
   const setDeveloperMode = useSettingStore(state => state.setDeveloperMode)
   const developerPerformanceInfo = useSettingStore(state => state.developerPerformanceInfo)
@@ -63,38 +47,6 @@ export function AdvancedSettings({ showConfigFileActions = true }: { showConfigF
         description: error instanceof Error ? error.message : String(error),
         variant: 'destructive',
       })
-    }
-  }
-
-  async function handleClearData() {
-    setPendingAction('data')
-    try {
-      const store = await Store.load('store.json')
-      await store.clear()
-      await remove('store.json', { baseDir: BaseDirectory.AppData })
-      await remove('note.db', { baseDir: BaseDirectory.AppData })
-      await message(t('dataClearedRestartDesc'), {
-        title: t('dataClearedRestartTitle'),
-        kind: 'info',
-      })
-      await getCurrentWindow().close()
-    } finally {
-      setPendingAction(null)
-    }
-  }
-
-  async function handleClearFile() {
-    setPendingAction('files')
-    try {
-      const folders = ['screenshot', 'article', 'clipboard', 'image']
-      for (const folder of folders) {
-        if (await exists(folder, { baseDir: BaseDirectory.AppData })) {
-          await remove(folder, { baseDir: BaseDirectory.AppData, recursive: true })
-        }
-      }
-      toast({ title: t('filesCleared') })
-    } finally {
-      setPendingAction(null)
     }
   }
 
@@ -231,70 +183,6 @@ export function AdvancedSettings({ showConfigFileActions = true }: { showConfigF
               <DeveloperDiagnostics />
             </div>
           ) : null}
-        </ItemGroup>
-      </SettingSection>
-
-      <SettingSection title={t('dangerZoneTitle')} desc={t('dangerZoneDesc')}>
-        <ItemGroup className="gap-3">
-          <Item variant="outline">
-            <ItemMedia variant="icon"><Database /></ItemMedia>
-            <ItemContent>
-              <ItemTitle>{t('clearDataTitle')}</ItemTitle>
-              <ItemDescription>{t('clearDataDesc')}</ItemDescription>
-            </ItemContent>
-            <ItemActions className="ml-auto">
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive" disabled={pendingAction !== null}>
-                    {t('clearButton')}
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogMedia><AlertTriangle /></AlertDialogMedia>
-                    <AlertDialogTitle>{t('clearDataTitle')}</AlertDialogTitle>
-                    <AlertDialogDescription>{t('clearDataConfirm')}</AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>{t('cancelButton')}</AlertDialogCancel>
-                    <AlertDialogAction variant="destructive" onClick={() => void handleClearData()}>
-                      {t('confirmClearButton')}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </ItemActions>
-          </Item>
-
-          <Item variant="outline">
-            <ItemMedia variant="icon"><FolderX /></ItemMedia>
-            <ItemContent>
-              <ItemTitle>{t('clearFileTitle')}</ItemTitle>
-              <ItemDescription>{t('clearFileDesc')}</ItemDescription>
-            </ItemContent>
-            <ItemActions className="ml-auto">
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive" disabled={pendingAction !== null}>
-                    {t('clearButton')}
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogMedia><AlertTriangle /></AlertDialogMedia>
-                    <AlertDialogTitle>{t('clearFileTitle')}</AlertDialogTitle>
-                    <AlertDialogDescription>{t('clearFilesConfirm')}</AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>{t('cancelButton')}</AlertDialogCancel>
-                    <AlertDialogAction variant="destructive" onClick={() => void handleClearFile()}>
-                      {t('confirmClearButton')}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </ItemActions>
-          </Item>
         </ItemGroup>
       </SettingSection>
     </>
