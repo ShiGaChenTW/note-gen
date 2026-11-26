@@ -57,6 +57,8 @@ src-tauri/native-ocr/ios-vision/.tauri/
 
 # testing
 /coverage
+/playwright-report
+/test-results
 *.test.*
 # Fork: keep vitest suites (upstream ignores *.test.*)
 !src/**/*.test.ts

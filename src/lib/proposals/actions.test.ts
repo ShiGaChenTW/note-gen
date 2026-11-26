@@ -105,6 +105,8 @@ describe('discussProposal', () => {
     }])
     ask.mockResolvedValueOnce('{"due":"yesterday"}')
     await expect(discussProposal({ key: 'collect:c1:p1', conversationId: 7 }, '改日期', format)).rejects.toThrow()
+    expect(useDecideStore.getState().visible).toBe(true)
+    expect(useThreadsStore.getState().visible).toBe(false)
     expect(chat.insert).toHaveBeenCalledOnce()
     expect(submitProposals).not.toHaveBeenCalled()
     const trail = useProposalTrailStore.getState().trail
