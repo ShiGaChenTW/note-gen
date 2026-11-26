@@ -38,6 +38,7 @@ import SkillsSettingPage from '../skills/page'
 import PluginsSettingPage from '../plugins/page'
 import SyncPage from '../sync/page'
 import BackupPage from '../backup/page'
+import TrashSettingPage from '../trash/page'
 import TemplatePage from '../template/page'
 import WebSearchSettingPage from '../webSearch/page'
 import EinkSettingPage from '../eink/page'
@@ -57,6 +58,7 @@ const settingPages: Record<BuiltinSettingSection, ComponentType> = {
   canvas: CanvasSettingPage,
   sync: SyncPage,
   backup: BackupPage,
+  trash: TrashSettingPage,
   imageHosting: ImageHostingPage,
   ai: AiPage,
   webSearch: WebSearchSettingPage,

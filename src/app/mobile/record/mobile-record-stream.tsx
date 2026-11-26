@@ -607,7 +607,7 @@ export function MobileRecordStream({ preview = false }: MobileRecordStreamProps 
               <Button variant="ghost" size="icon" onClick={() => setMultiMode(true)} title={t('record.mark.toolbar.multiSelect')}>
                 <CheckSquare />
               </Button>
-              <Button variant="ghost" size="icon" onClick={() => void setTrashState(true, { deferFetch: true })} title={t('record.mark.toolbar.trash')}>
+              <Button variant="ghost" size="icon" onClick={() => router.push('/mobile/setting/pages/trash')} title={t('record.mark.toolbar.trash')}>
                 <Trash2 />
               </Button>
             </>

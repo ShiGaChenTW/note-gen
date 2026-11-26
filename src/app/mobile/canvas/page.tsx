@@ -247,6 +247,13 @@ export function MobileCanvasPage({ preview = false }: MobileCanvasPageProps = {}
                 selected: sortMode === 'name',
                 onSelect: () => setSortMode('name'),
               },
+              {
+                key: 'trash',
+                label: t('trash'),
+                icon: <Trash2 />,
+                separatorBefore: true,
+                onSelect: () => router.push('/mobile/setting/pages/trash'),
+              },
             ]}
           />
         </div>

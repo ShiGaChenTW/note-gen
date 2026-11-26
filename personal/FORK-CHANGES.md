@@ -575,9 +575,10 @@ npx pnpm@9 tauri dev
 1. 用 Obsidian 手機版打開 `報告/主題清單.md`，改一個主題的標籤或刪掉「狀態：待確認」：下次報告依新清單計算。
 2. 權重校準：用真實 vault 跑一次，看各主題的等級是否符合自己的感覺，再調 `DEFAULT_MASTERY_CONFIG`。
 
-### 最近刪除與統一刪除（ALMNC-84.4、ALMNC-84.5）
+### 最近刪除與統一刪除（ALMNC-84.4、ALMNC-84.5、ALMNC-84.6）
 
 1. **App 內「最近刪除」核心（ALMNC-84.4）**：`src/lib/trash/` + `src/db/trash.ts` 在 vault 內 `.almanac-trash/<id>/<basename>` 與 `note.db` `trash_items` 管理 30 天保留；`conversations`／`memories` 補 `deletedAt` / `deleted_at` 軟刪除；`ops` 保留期統一為 30 天（`UNDO_WINDOW_MS`）；同步與受管備份排除 `.almanac-trash`。
 2. **所有刪除入口改走「最近刪除」（ALMNC-84.5）**：
    - 檔案樹（`use-file-deletion.ts`、`system-trash.ts`、`delete-folder-utils.ts`）、自架同步本機刪除（`self-hosted-sync/files.ts`）、本機 MCP `note_delete`（`local-mcp/tools.ts`）、Agent 工具（`note-tools.ts`、`folder-tools.ts`，`folder_delete` 改為 `reversible: true`）、工作台刪除提案（`collect/write.ts` 標記 `source: 'workbench-proposal'`、`actorRole: 'partner'`）與日常筆記回滾刪除（`daily/note-io.ts`）全面改走 App 內「最近刪除」（不再依賴系統垃圾桶或手機端永久 `remove`）。
    - `conversations`、`canvases`、`marks`、`tags`、`v3-sources`（未送出外部擷取）、`memories`（封存記憶刪除改呼叫 `trashMemory`，`memory_clear_all` 改軟刪除）全數寫入 `trash_items`；桌機／手機對話歷史與空頁、手機畫布加上 `AlertDialog` 刪除確認。
+3. **「最近刪除」頁：桌面與手機（ALMNC-84.6）**：新增 `RecentlyDeletedView`（`src/components/trash/recently-deleted-view.tsx`），支援依類型分頁篩選、顯示刪除者／來源／原路徑／剩餘天數、還原（含衝突自動改名通知與 store 同步）、單項永久刪除與清空確認；接上設定頁 `trash` 分頁（`/core/setting/trash`、`/mobile/setting/pages/trash`）與 V3 側欄底部按鈕，並將記錄與畫布舊有獨立垃圾桶切換改導向統一「最近刪除」頁。

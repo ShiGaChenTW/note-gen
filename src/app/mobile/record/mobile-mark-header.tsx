@@ -1,6 +1,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
+import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { clearTrash, initMarksDb, restoreMarks } from '@/db/marks'
 import { Button } from '@/components/ui/button'
@@ -9,6 +10,7 @@ import useMarkStore from '@/stores/mark'
 import { confirm } from '@tauri-apps/plugin-dialog'
 
 export function MobileMarkHeader() {
+  const router = useRouter()
   const markT = useTranslations('record.mark')
   const recordT = useTranslations('record')
   const { trashState, setTrashState, fetchAllTrashMarks, fetchAllMarks, marks, allMarks, setMarks } = useMarkStore()
@@ -73,7 +75,7 @@ export function MobileMarkHeader() {
             </Button>
           </>
         ) : (
-          <Button variant="outline" size="sm" className="h-8 px-2.5 text-xs" onClick={() => setTrashState(true)}>
+          <Button variant="outline" size="sm" className="h-8 px-2.5 text-xs" onClick={() => router.push('/mobile/setting/pages/trash')}>
             <Trash2 className="mr-1 size-4" />
             {markT('toolbar.trash')}
           </Button>

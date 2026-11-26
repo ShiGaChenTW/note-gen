@@ -4202,6 +4202,87 @@
         }
       }
     },
+    "trash": {
+      "title": "最近删除",
+      "desc": "所有删除的笔记库文件、画布、记录、对话与记忆都会先移到这里，保留 30 天后自动清除。",
+      "retentionNotice": "项目会在保留 30 天后自动永久清除。桌面与手机删除都会进入这里。",
+      "emptyTitle": "最近删除是空的",
+      "emptyDescription": "目前没有可恢复的已删除项目。",
+      "emptyFiltered": "这个分类下没有已删除项目。",
+      "loading": "加载中…",
+      "tabsLabel": "最近删除分类",
+      "tabs": {
+        "all": "全部",
+        "notes": "笔记与文件夹",
+        "canvas": "画布",
+        "records": "记录",
+        "conversations": "对话",
+        "memories": "记忆"
+      },
+      "types": {
+        "file": "文件",
+        "folder": "文件夹",
+        "canvas": "画布",
+        "mark": "记录",
+        "conversation": "对话",
+        "memory": "记忆",
+        "tag": "标签",
+        "source": "数据源"
+      },
+      "actors": {
+        "scott": "Scott",
+        "partner": "伙伴",
+        "advisor": "顾问 / MCP",
+        "system": "系统",
+        "sync": "同步"
+      },
+      "sources": {
+        "file-tree": "文件树",
+        "workbench-proposal": "工作台提案",
+        "agent-tool": "Agent 工具",
+        "mcp": "本地 MCP",
+        "canvas-sidebar": "画布侧栏",
+        "mark-list": "记录列表",
+        "chat-header": "对话标题栏",
+        "memory-settings": "记忆管理",
+        "tag-delete": "删除标签",
+        "source-delete": "删除数据源",
+        "organize": "自动整理",
+        "sync": "同步",
+        "other": "其他"
+      },
+      "remainingDays": "剩余 {days} 天",
+      "deletedBy": "删除者：{actor}",
+      "sourceLabel": "来源：{source}",
+      "pathLabel": "原路径：{path}",
+      "actions": {
+        "restore": "恢复",
+        "deletePermanently": "永久删除",
+        "emptyTrash": "清空最近删除"
+      },
+      "toasts": {
+        "restored": "已恢复“{title}”",
+        "restoredRenamed": "原位置已有同名项目，已恢复为 {path}",
+        "restoreMissing": "找不到备份文件，无法恢复“{title}”",
+        "restoreFailed": "恢复失败，请稍后再试",
+        "deletedPermanently": "已永久删除“{title}”",
+        "deleteFailed": "永久删除失败，请稍后再试",
+        "emptied": "已清空 {count} 个最近删除项目",
+        "emptyFailed": "清空失败，部分项目仍保留"
+      },
+      "deleteDialog": {
+        "title": "要永久删除这个项目吗？",
+        "description": "“{title}”将立即被永久清除，无法再恢复。",
+        "cancel": "取消",
+        "confirm": "永久删除"
+      },
+      "emptyDialog": {
+        "title": "要清空最近删除吗？",
+        "description": "这会立即永久清除所有 {count} 个最近删除项目，无法再恢复。",
+        "cancel": "取消",
+        "confirm": "清空最近删除"
+      }
+    },
     "navigationGroups": {
       "extensions": "拓展",
       "basic": "基础设置",

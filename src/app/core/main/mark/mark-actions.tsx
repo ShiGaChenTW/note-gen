@@ -4,6 +4,7 @@ import { TooltipButton } from "@/components/tooltip-button"
 import { Sparkles, TagPlus } from "lucide-react"
 import { useTranslations } from "next-intl"
 import useMarkStore from "@/stores/mark"
+import { useSettingsDialogStore } from "@/stores/settings-dialog"
 import { OrganizeNotes } from "./organize-notes"
 import { useEffect, useRef } from "react"
 import { MarkFilterPopover } from "./mark-filter-popover"
@@ -13,7 +14,7 @@ import { EmitterRecordEvents } from "@/config/emitters"
 
 export function MarkActions() {
   const t = useTranslations('record.mark')
-  const { trashState, setTrashState, initRecordFilters } = useMarkStore()
+  const { initRecordFilters } = useMarkStore()
   const organizeRef = useRef<{ openOrganize: () => void }>(null)
 
   useEffect(() => {
@@ -21,7 +22,7 @@ export function MarkActions() {
   }, [initRecordFilters])
 
   const handleToggleTrash = () => {
-    setTrashState(!trashState)
+    useSettingsDialogStore.getState().openSettings('trash')
   }
 
   const handleNewTag = () => {
@@ -34,27 +35,23 @@ export function MarkActions() {
 
   return (
     <div className="flex items-center justify-end gap-1">
-      {!trashState && (
-        <TooltipButton
-          icon={<TagPlus className="h-4 w-4" />}
-          tooltipText={t('tag.newTag')}
-          onClick={handleNewTag}
-          variant="ghost"
-          side="bottom"
-        />
-      )}
+      <TooltipButton
+        icon={<TagPlus className="h-4 w-4" />}
+        tooltipText={t('tag.newTag')}
+        onClick={handleNewTag}
+        variant="ghost"
+        side="bottom"
+      />
       <MarkFilterPopover />
-      {!trashState && (
-        <TooltipButton
-          buttonId="onboarding-target-organize-notes"
-          icon={<Sparkles className="h-4 w-4" />}
-          tooltipText={t('toolbar.organizeNotes')}
-          onClick={handleOrganize}
-          variant="ghost"
-          side="bottom"
-        />
-      )}
-      <MarkMoreMenu trashState={trashState} onToggleTrash={handleToggleTrash} />
+      <TooltipButton
+        buttonId="onboarding-target-organize-notes"
+        icon={<Sparkles className="h-4 w-4" />}
+        tooltipText={t('toolbar.organizeNotes')}
+        onClick={handleOrganize}
+        variant="ghost"
+        side="bottom"
+      />
+      <MarkMoreMenu trashState={false} onToggleTrash={handleToggleTrash} />
       <OrganizeNotes ref={organizeRef} />
     </div>
   )
