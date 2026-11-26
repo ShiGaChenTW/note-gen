@@ -36,6 +36,10 @@ vi.mock('@/lib/trash/runtime', () => ({
   emptyAppTrash: mocks.emptyAppTrash,
 }))
 
+vi.mock('@/db/sync-deletions', () => ({
+  listPendingSyncDeletions: vi.fn(async () => []),
+}))
+
 vi.mock('sonner', () => ({
   toast: mocks.toast,
 }))

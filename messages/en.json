@@ -4284,6 +4284,20 @@
         "description": "This will permanently erase all {count} items and cannot be undone.",
         "cancel": "Cancel",
         "confirm": "Empty Recently Deleted"
+      },
+      "syncDeletions": {
+        "title": "Pending remote deletions",
+        "description": "Another device deleted these items. Moving them to Recently Deleted keeps a 30-day copy; keeping local preserves your files. Nothing will push back until you decide.",
+        "fileBadge": "File",
+        "folderBadge": "Folder",
+        "confirm": "Move to Recently Deleted",
+        "reject": "Keep local",
+        "confirmAll": "Move all to Trash",
+        "rejectAll": "Keep all local",
+        "later": "Decide later",
+        "confirmedToast": "Moved “{path}” to Recently Deleted",
+        "rejectedToast": "Kept local item “{path}”",
+        "actionFailed": "Failed to process remote deletion, please try again"
       }
     },
     "navigationGroups": {

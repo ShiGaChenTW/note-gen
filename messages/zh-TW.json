@@ -4350,6 +4350,20 @@
         "description": "這會立即永久清除所有 {count} 個最近刪除項目，無法再還原。",
         "cancel": "取消",
         "confirm": "清空最近刪除"
+      },
+      "syncDeletions": {
+        "title": "遠端同步刪除確認",
+        "description": "其他裝置刪除了以下項目。確認後會移至最近刪除（保留 30 天），拒絕則保留本機檔案；在您決定前不會回推覆蓋遠端。",
+        "fileBadge": "檔案",
+        "folderBadge": "資料夾",
+        "confirm": "移至最近刪除",
+        "reject": "保留本機檔案",
+        "confirmAll": "全部移至最近刪除",
+        "rejectAll": "全部保留本機",
+        "later": "稍後決定",
+        "confirmedToast": "已將「{path}」移至最近刪除",
+        "rejectedToast": "已保留本機項目「{path}」",
+        "actionFailed": "處理遠端刪除失敗，請稍後再試"
       }
     },
     "navigationGroups": {

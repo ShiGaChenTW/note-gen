@@ -17,6 +17,7 @@ import {
 } from '@/lib/editor-deactivation'
 import { deleteSelfHostedWorkspacePath } from '@/lib/self-hosted-sync/files'
 import { supportsCloudFolderWorkspace } from '@/lib/sync/cloud-folder'
+import { recordRemoteDeletionTombstones } from '@/lib/sync/deletion-tombstones'
 import { deleteRemoteFile, getRemoteFileMetadata } from '@/lib/sync/remote-library'
 import { getCurrentSyncContext } from '@/lib/sync/sync-context'
 import { getWorkspacePathMoveContext } from '@/lib/sync/workspace-path-moves'
@@ -60,6 +61,7 @@ export function useFileDeletion() {
     let remoteFailed = false
     const failedEntries: FileSelectionEntry[] = []
     const deletedPaths: string[] = []
+    const remoteDeletedTombstones: Array<{ path: string; kind: 'file' | 'folder' }> = []
 
     try {
       const store = await Store.load('store.json')
@@ -201,6 +203,10 @@ export function useFileDeletion() {
                 }
               }
               remoteCompleted = true
+              remoteDeletedTombstones.push({
+                path: entry.path,
+                kind: entry.isDirectory ? 'folder' : 'file',
+              })
               // If removing the local entry fails, keep an accurate local-only row for retry.
               await assertContext()
               const tree = cloneDeep(useArticleStore.getState().fileTree)
@@ -248,6 +254,11 @@ export function useFileDeletion() {
       }
 
       await assertContext()
+      if (remoteDeletedTombstones.length > 0) {
+        await recordRemoteDeletionTombstones(remoteDeletedTombstones, platform).catch(error => {
+          console.warn('Failed to update remote deletion tombstones:', error)
+        })
+      }
       // Clear old sync identities in one write so recreating the same path starts as a new file.
       try {
         if (deletedPaths.length > 0) {

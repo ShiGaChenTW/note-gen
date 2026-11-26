@@ -4,6 +4,7 @@ import { Store } from '@tauri-apps/plugin-store'
 import { getFilePathOptions } from '@/lib/workspace'
 import { readFile } from '@tauri-apps/plugin-fs'
 import emitter from '@/lib/emitter'
+import { isPathBlockedByPendingSyncDeletion } from './deletion-tombstones'
 import { setLocalRecordedSha, getLocalRecordedSha } from './auto-sync'
 import { isSyncConfigured } from './sync-manager'
 import useSettingStore from '@/stores/setting'
@@ -323,6 +324,7 @@ class SyncPushQueue {
       if (task.generation !== this.generation) continue
       if (task.workspacePath !== useSettingStore.getState().workspacePath) continue
       if (isFileDeletionPending(task.path, task.workspacePath)) continue
+      if (await isPathBlockedByPendingSyncDeletion(task.path, task.workspacePath || undefined)) continue
       this.isProcessing = true
       this.activePath = task.path
 
@@ -379,6 +381,10 @@ class SyncPushQueue {
     if (!await isSyncConfigured()) {
       logPerf('skipped', { reason: 'sync-not-configured' })
       return { success: false }
+    }
+    if (await isPathBlockedByPendingSyncDeletion(path, task.workspacePath || undefined)) {
+      logPerf('skipped', { reason: 'pending-sync-deletion' })
+      return { success: true }
     }
     await prepareWorkspacePathUpload(path)
     const taskSyncMetadataKey = await getSyncMetadataKey(path)

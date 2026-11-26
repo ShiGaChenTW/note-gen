@@ -25,6 +25,9 @@ import { bytesToBase64Url, downloadAsset, hashBytes } from './blob'
 import type { SyncBootstrapPage, SyncEvent, SyncObjectKind, SyncSession } from './protocol'
 import { applyConversationTombstones, type SelfHostedSnapshotObject } from './snapshot'
 import emitter from '@/lib/emitter'
+import { upsertPendingSyncDeletion } from '@/db/sync-deletions'
+import { isPathBlockedByPendingSyncDeletion } from '@/lib/sync/deletion-tombstones'
+import { moveToAppTrash } from '@/lib/trash/runtime'
 import useSyncStore from '@/stores/sync'
 import { withSelfHostedPrepareLock } from './prepare-lock'
 import { ensureWorkspaceDirectory } from '@/lib/managed-workspace'
@@ -1902,7 +1905,7 @@ async function hasUnsentPortableUpsert(
   return rows.length > 0
 }
 
-async function applyRemoteDelete(binding: Binding, objectId: string) {
+export async function applyRemoteDelete(binding: Binding, objectId: string) {
   const database = await getDb()
   const mappings = await database.select<Array<{
     relativePath: string | null
@@ -1957,21 +1960,23 @@ async function applyRemoteDelete(binding: Binding, objectId: string) {
         return
       }
     }
-    if (mapping.kind === 'note') {
-      await deleteRemoteEditorFile(
-        binding,
-        objectId,
-        mapping.relativePath,
-        mapping.contentHash,
-      )
-    } else if (mapping.kind === 'asset' && fileExists && mapping.contentHash) {
-      await invoke<boolean>('self_hosted_delete_file', {
-        workspaceId: binding.workspaceId,
-        objectId,
+    if (pathExists) {
+      const { createdOrReopened } = await upsertPendingSyncDeletion({
         workspaceRoot: binding.localRoot,
-        relativePath: mapping.relativePath,
-        expectedHash: mapping.contentHash,
+        platform: 'selfHosted',
+        path: mapping.relativePath,
+        kind: mapping.kind === 'folder' ? 'folder' : 'file',
+        deletedAt: Date.now(),
+        deviceId: '',
+        remoteRef: JSON.stringify({
+          workspaceId: binding.workspaceId,
+          objectId,
+          kind: mapping.kind,
+          contentHash: mapping.contentHash,
+        }),
       })
+      if (createdOrReopened) emitter.emit('pending-sync-deletions-changed')
+      return
     }
   }
   if (!mapping?.relativePath) await deleteStructuredObject(binding.workspaceId, objectId)
@@ -1982,14 +1987,30 @@ async function applyRemoteDelete(binding: Binding, objectId: string) {
   )
 }
 
+export async function preserveRejectedSelfHostedDelete(
+  workspaceId: string,
+  objectId: string,
+  kind: string,
+  relativePath: string,
+) {
+  await preserveRemoteDeleteLocalFile(
+    { workspaceId } as Binding,
+    objectId,
+    kind,
+    relativePath,
+  )
+}
+
 async function preserveRemoteDeleteLocalFile(
   binding: Binding,
   objectId: string,
   kind: string,
   relativePath: string,
 ) {
+  // Server already received object.deleted; clear content_hash so fileSnapshotMatchesMapping
+  // does not skip re-uploading Scott's kept local file.
   await (await getDb()).execute(
-    `update self_hosted_object_mappings set deleted_at = null, updated_at = $1
+    `update self_hosted_object_mappings set deleted_at = null, content_hash = null, updated_at = $1
      where workspace_id = $2 and object_id = $3`,
     [Date.now(), binding.workspaceId, objectId],
   )
@@ -2015,6 +2036,9 @@ async function cleanupDeletedFolders(binding: Binding) {
   const { default: useArticleStore } = await import('@/stores/article')
   for (const folder of folders) {
     try {
+      if (await isPathBlockedByPendingSyncDeletion(folder.relativePath, binding.localRoot)) {
+        continue
+      }
       await assertNoPendingPathMove(binding, folder.relativePath)
       const articleState = useArticleStore.getState()
       if (!await prepareActiveEditorPathMutationDurably(
@@ -2024,11 +2048,12 @@ async function cleanupDeletedFolders(binding: Binding) {
         throw new Error('remote_folder_editor_busy')
       }
       await articleState.cleanTabsByDeletedFolder(folder.relativePath, binding.localRoot)
-      await invoke<boolean>('self_hosted_delete_directory', {
-        workspaceId: binding.workspaceId,
-        objectId: folder.objectId,
+      await moveToAppTrash(folder.relativePath, {
         workspaceRoot: binding.localRoot,
-        relativePath: folder.relativePath,
+        isDirectory: true,
+        deletedBy: 'sync',
+        actorRole: 'sync',
+        source: 'sync',
       })
     } catch (error) {
       if (error instanceof PendingPathMove) continue
@@ -2592,91 +2617,6 @@ export async function writeResolvedSelfHostedNoteSnapshot(input: {
     if (current !== input.expectedContent) throw new Error('SELF_HOSTED_NOTE_CONFLICT_CHANGED')
     return { content: input.content, merged: false, conflict: null }
   })
-}
-
-async function deleteRemoteEditorFile(
-  binding: Binding,
-  objectId: string,
-  relativePath: string,
-  expectedHash: string | null,
-) {
-  const localRoot = binding.localRoot
-  if (!localRoot) throw new Error('remote_delete_workspace_root_missing')
-
-  const { default: useArticleStore } = await import('@/stores/article')
-  const activePath = useArticleStore.getState().activeFilePath
-  if (editorPathsReferToSameFile(activePath, relativePath) && !prepareActiveEditorDeactivation()) {
-    throw new Error('remote_delete_editor_busy')
-  }
-  const initialMutationRevision = getEditorPathMutationRevision(relativePath)
-  const accepted = await runEditorPathWriteTransaction(
-    relativePath,
-    async ({ hasQueuedSave }) => {
-      if (getEditorPathMutationRevision(relativePath) !== initialMutationRevision) return false
-      const absolutePath = await join(localRoot, relativePath)
-      const fileExists = await exists(absolutePath)
-      const previousContent = fileExists ? await readTextFile(absolutePath) : null
-      if (hasQueuedSave()) return false
-
-      if (fileExists && expectedHash) {
-        const deleted = await invoke<boolean>('self_hosted_delete_file', {
-          workspaceId: binding.workspaceId,
-          objectId,
-          workspaceRoot: binding.localRoot,
-          relativePath,
-          expectedHash,
-        })
-        if (!deleted && await exists(absolutePath)) return false
-      }
-
-      const targetIsActive = editorPathsReferToSameFile(
-        useArticleStore.getState().activeFilePath,
-        relativePath,
-      )
-      const editorIsStable = !targetIsActive || prepareActiveEditorDeactivation()
-      if (
-        !editorIsStable
-        || hasQueuedSave()
-        || getEditorPathMutationRevision(relativePath) !== initialMutationRevision
-      ) {
-        if (previousContent !== null) {
-          await writeJournaled(binding, objectId, relativePath, previousContent)
-        }
-        return false
-      }
-
-      try {
-        await useArticleStore.getState().cleanTabsByDeletedFile(relativePath, localRoot)
-      } catch (error) {
-        await rollbackRemoteEditorSnapshot(
-          binding,
-          objectId,
-          relativePath,
-          previousContent,
-          '',
-        )
-        throw error
-      }
-      if (
-        hasQueuedSave()
-        || getEditorPathMutationRevision(relativePath) !== initialMutationRevision
-      ) {
-        await rollbackRemoteEditorSnapshot(
-          binding,
-          objectId,
-          relativePath,
-          previousContent,
-          '',
-        )
-        return false
-      }
-
-      markEditorPathMutation(relativePath)
-      emitter.emit('editor-file-close', { path: relativePath })
-      return true
-    },
-  )
-  if (!accepted) throw new Error('remote_delete_local_activity')
 }
 
 async function writeBytesJournaled(binding: Binding, objectId: string, relativePath: string, content: Uint8Array) {

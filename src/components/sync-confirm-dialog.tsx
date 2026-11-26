@@ -35,6 +35,7 @@ import { isMobileDevice as checkIsMobileDevice } from '@/lib/check'
 import emitter from '@/lib/emitter'
 import { getSyncPushQueue } from '@/lib/sync/sync-push-queue'
 import { normalizeRemoteVersion } from '@/lib/sync/remote-content-cache'
+import { PendingSyncDeletionsPrompt } from '@/components/trash/pending-sync-deletions'
 import { useEffect } from 'react'
 
 // 初始化 dayjs 插件
@@ -543,6 +544,7 @@ export function SyncConfirmDialog() {
           </DialogContent>
         </Dialog>
       )}
+      <PendingSyncDeletionsPrompt />
     </>
   )
 }
