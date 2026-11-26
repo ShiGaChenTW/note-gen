@@ -7,8 +7,28 @@ export default defineConfig({
       '@': path.resolve(__dirname, 'src'),
     },
   },
+  esbuild: {
+    jsx: 'automatic',
+  },
   test: {
-    include: ['src/**/*.test.ts', 'tests/**/*.test.ts'],
-    environment: 'node',
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'unit',
+          include: ['src/**/*.test.ts', 'tests/**/*.test.ts'],
+          environment: 'node',
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'ui',
+          include: ['src/**/*.test.tsx', 'tests/**/*.test.tsx'],
+          environment: 'jsdom',
+          setupFiles: ['src/test/setup-ui.ts'],
+        },
+      },
+    ],
   },
 })
