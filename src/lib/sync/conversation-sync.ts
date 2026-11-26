@@ -780,7 +780,9 @@ export async function replacePlatformSwitchConversations(items: ConversationSync
   if (parsed.some(item => !item)) throw new Error('Invalid conversation snapshot')
   const { executeRecordTransaction, getDb } = await import('@/db')
   const db = await getDb()
-  const current = await db.select<Array<{ id: number; syncId: string }>>('select id, syncId from conversations')
+  const current = await db.select<Array<{ id: number; syncId: string }>>(
+    'select id, syncId from conversations where deletedAt is null'
+  )
   const kept = new Set(items.map(item => item.syncId))
   const { getOptionalConversationCleanupTables } = await import('@/db/conversations')
   const optionalMemoryTables = (await getOptionalConversationCleanupTables())
@@ -1363,7 +1365,8 @@ export async function getLocalConversationSyncFingerprint() {
          conversations.updatedAt,
          (select count(*) from chats where chats.conversationId = conversations.id) as messageCount,
          conversations.isPinned
-       from conversations`,
+       from conversations
+       where deletedAt is null`,
       []
     ),
     import('@/db/conversation-sync-state').then(module => module.getConversationSyncTombstones()),

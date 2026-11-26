@@ -38,7 +38,7 @@ const tables = [
 ] as const
 const options = { baseDir: BaseDirectory.AppData }
 const encoder = new TextEncoder()
-const excluded = (name: string) => name === '.notegen' || name === '.DS_Store' || name.endsWith('.tmp')
+const excluded = (name: string) => name === '.notegen' || name === '.almanac-trash' || name === '.DS_Store' || name.endsWith('.tmp')
 const record = (value: unknown): value is Record<string, unknown> => Boolean(value) && typeof value === 'object' && !Array.isArray(value)
 
 async function localPersonalAssets(assertActive: () => void) {

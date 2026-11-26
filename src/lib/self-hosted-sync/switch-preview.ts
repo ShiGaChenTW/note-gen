@@ -185,7 +185,7 @@ export async function inspectSelfHostedSwitch(
     if (!prefix) await ensureWorkspaceDirectory(directory)
     for (const entry of await readDir(directory)) {
       assertActive()
-      if (entry.isSymlink || entry.name === '.notegen' || entry.name === '.DS_Store' || entry.name.endsWith('.tmp')) continue
+      if (entry.isSymlink || entry.name === '.notegen' || entry.name === '.almanac-trash' || entry.name === '.DS_Store' || entry.name.endsWith('.tmp')) continue
       const path = prefix ? `${prefix}/${entry.name}` : entry.name
       const absolute = await join(directory, entry.name)
       if (!entry.isDirectory && !entry.isFile) continue

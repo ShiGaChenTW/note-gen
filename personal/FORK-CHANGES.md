@@ -252,6 +252,8 @@ npx pnpm@9 install --frozen-lockfile
 | 2026-11-26 | `src/lib/backup/managed-backup.ts`、`src/app/core/setting/backup/backup-settings.tsx` | 受管備份（自動備份）對未設定過的使用者預設開啟每週備份並指向 `<appDataDir>/backups`，保留使用者手動關閉或既有的自訂設定 | ALMNC-84.3：避免未手動開啟而無備份可還原 |
 | 2026-11-26 | `vitest.config.ts`、`.gitignore`、`package.json`、`pnpm-lock.yaml`、`src/test/{setup-ui.ts,render-v3.tsx,render-v3.test.tsx}` | Vitest 透過 `projects` 支援 `.test.tsx`（預設 jsdom）並保留既有 `.test.ts`（node），`.gitignore` 納入 `*.test.tsx`；安裝 Testing Library 與 user-event，新增 `setup-ui.ts` 與 `renderV3()`，並改寫兩個元件測試為示範 | ALMNC-94.1：建立 UI 元件測試基礎設施 |
 | 2026-11-26 | `src/app/core/main/sidebar-v3/{v3-entry-inventory.ts,v3-entry-inventory.test.tsx}` | 新增 V3 入口清單 `V3_ENTRY_INVENTORY` 與元件層回歸測試（`mainNav`、整理分頁含「畫布」、`+` 選單與命令面板），使用真實元件與 ARIA role 查詢，並含待實作的「新增畫布」`skip` 規格 | ALMNC-94.2：鎖定 V3 入口清單避免重構遺漏 |
+| 2026-11-26 | `AGENTS.md` | 補齊 `### UI 元件測試與 TDD 規則（ALMNC-94）`，規範適用 TDD 的 UI 驗收條件、例外、ARIA role 查詢與不 mock Radix 限制、送審證據與示範寫法 | ALMNC-94.3：UI 驗收條件先寫成測試的規則 |
+| 2026-11-26 | `src/db/trash.ts`、`src/db/{index,conversations,memories,v3-sources}.ts`、`src/lib/trash/{types,service,runtime}.ts`、`src/lib/ops/types.ts`、`src/config/sync-exclusions.ts`、`src/lib/self-hosted-sync/*.ts`、`src-tauri/src/{cloud_folder_sync,backup_manager,plugins}.rs`、`src/app/{core,mobile}/layout.tsx`、`messages/{zh-TW,zh,en}.json` | 建立 App 內「最近刪除」核心（`.almanac-trash/` 與 SQLite `trash_items` 索引）、對話／記憶軟刪除欄位、檔案與 DB 物件還原／永久刪除與啟動／每日 30 天自動清除排程，統一 `UNDO_WINDOW_MS` 與文案為 30 天，並在同步、備份與外掛掃描排除 `.almanac-trash/` | ALMNC-84.4：建立跨平台可復原「最近刪除」核心 |
 
 ## 刻意不改的東西
 

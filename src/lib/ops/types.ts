@@ -158,8 +158,8 @@ export interface OpRecord {
   undoneAt: number | null
 }
 
-/** 7 天內、未復原過才能復原。 */
-export const UNDO_WINDOW_MS = 7 * 24 * 60 * 60 * 1000
+/** 30 天內、未復原過才能復原（與最近刪除一致）。 */
+export const UNDO_WINDOW_MS = 30 * 24 * 60 * 60 * 1000
 
 export type UndoState = 'undoable' | 'expired' | 'undone'
 

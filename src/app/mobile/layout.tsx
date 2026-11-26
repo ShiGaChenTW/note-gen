@@ -155,6 +155,7 @@ export default function RootLayout({
   useEffect(() => {
     let cancelled = false
     let stopWiki: (() => void) | undefined
+    let stopTrashAutoPurge: (() => void) | undefined
 
     void import('@/lib/event-report').then(({ reportAppStart }) => reportAppStart())
 
@@ -206,6 +207,9 @@ export default function RootLayout({
         const cleanupWiki = await initWikiRuntime()
         if (cancelled) { cleanupWiki(); return }
         stopWiki = cleanupWiki
+        const { initTrashAutoPurgeRuntime } = await import('@/lib/trash/runtime')
+        if (cancelled) return
+        stopTrashAutoPurge = initTrashAutoPurgeRuntime()
         await initVectorDb()
         if (cancelled) return
         await useArticleStore.getState().initVectorIndexedFiles()
@@ -221,6 +225,7 @@ export default function RootLayout({
     return () => {
       cancelled = true
       stopWiki?.()
+      stopTrashAutoPurge?.()
     }
   }, [])
 

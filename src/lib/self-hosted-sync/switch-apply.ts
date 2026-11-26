@@ -437,5 +437,5 @@ function contentHash(entry: SelfHostedReplacementObject) {
     ? invoke<string>('self_hosted_sha256', { value: new TextDecoder().decode(entry.bytes!) })
     : hashBytes(entry.bytes!)
 }
-function excluded(name: string) { return name === '.notegen' || name === '.DS_Store' || name.endsWith('.tmp') }
+function excluded(name: string) { return name === '.notegen' || name === '.almanac-trash' || name === '.DS_Store' || name.endsWith('.tmp') }
 function stale(path: string) { return syncStaleError({ stage: 'apply', source: 'local', path, check: 'content' }) }
