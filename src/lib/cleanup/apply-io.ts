@@ -23,12 +23,7 @@ export async function defaultEditIo(): Promise<EditIo> {
         throw error
       }
     },
-    removeNote: async path => {
-      const [{ remove }, { getFilePathOptions }] = await Promise.all([import('@tauri-apps/plugin-fs'), import('@/lib/workspace')])
-      const options = await getFilePathOptions(path)
-      if (options.baseDir) await remove(options.path, { baseDir: options.baseDir })
-      else await remove(options.path)
-    },
+    removeNote: noteIo.removeNote,
     getDomainOverview: async id => (await domains.listDomains()).find(domain => domain.id === id)?.overview,
     setDomainOverview: async (id, overview) => { await domains.updateDomain(id, { overview }) },
     getWorkNotes: async agent => (await memory.getAgentMemory(agent)).workNotes.content,

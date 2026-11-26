@@ -683,9 +683,9 @@ const useChatStore = create<ChatState>((set, get) => ({
       const { getConversation } = await import('@/db/conversations')
       const currentConv = await getConversation(currentConversationId)
       if (currentConv && currentConv.messageCount === 0) {
-        // 空会话，直接删除
-        const { deleteConversation: deleteConv } = await import('@/db/conversations')
-        await deleteConv(currentConversationId)
+        // 空会话壳，直接清理不進最近刪除
+        const { permanentlyDeleteConversation } = await import('@/db/conversations')
+        await permanentlyDeleteConversation(currentConversationId)
       }
       // 刷新会话列表
       await get().initConversations()

@@ -12,6 +12,16 @@ import { ThreadTagPrefix, useCurrentThreadTag } from '../threads/thread-status' 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -67,6 +77,7 @@ export function ChatHeader() {
 
   const [showHistoryDropdown, setShowHistoryDropdown] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null)
 
   // 没有消息或正在加载时禁用新对话按钮
   const hasCurrentMessages = isTemporaryConversation
@@ -95,7 +106,8 @@ export function ChatHeader() {
     : v3 && !inThreads ? tV3('newChat') : tEmpty('conversationHistory')
 
   return (
-    <header className={cn("h-12 w-full flex items-center justify-between border-b px-4 gap-2", v3 && "h-11 shrink-0 border-line-soft px-2 pl-3")}>
+    <>
+      <header className={cn("h-12 w-full flex items-center justify-between border-b px-4 gap-2", v3 && "h-11 shrink-0 border-line-soft px-2 pl-3")}>
       {/* 左侧：历史对话下拉 */}
       <div className={cn("flex items-center gap-2", v3 && "min-w-0 flex-1")}>
         {isTemporaryConversation && !v3 ? (
@@ -171,13 +183,16 @@ export function ChatHeader() {
                                 : formatRelativeTime(conv.updatedAt, v3 ? locale : language)}
                             </span>
                             <button
+                              type="button"
                               onClick={(e) => {
                                 e.stopPropagation()
-                                if (v3) e.preventDefault()
-                                deleteConversation(conv.id)
+                                e.preventDefault()
+                                setShowHistoryDropdown(false)
+                                setPendingDeleteId(conv.id)
                               }}
                               className={cn("flex items-center justify-center rounded-md text-muted-foreground opacity-0 group-hover:opacity-100 transition-all duration-200 ease-out hover:text-destructive hover:bg-destructive/10 active:scale-95",
                                 v3 && "size-7 opacity-100 hover:bg-hover hover:text-danger")}
+                              aria-label={tEmpty('deleteConversation')}
                               title={tEmpty('deleteConversation')}
                             >
                               <Trash2 className="w-3.5 h-3.5 transition-transform duration-150 group-hover/button:scale-110" />
@@ -234,6 +249,30 @@ export function ChatHeader() {
           </DropdownMenuContent>
         </DropdownMenu>}
       </div>
-    </header>
+      </header>
+
+      <AlertDialog open={pendingDeleteId !== null} onOpenChange={(open) => { if (!open) setPendingDeleteId(null) }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{tEmpty('deleteConfirm.title')}</AlertDialogTitle>
+            <AlertDialogDescription>{tEmpty('deleteConfirm.description')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{tEmpty('deleteConfirm.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => {
+                if (pendingDeleteId !== null) {
+                  void deleteConversation(pendingDeleteId)
+                  setPendingDeleteId(null)
+                }
+              }}
+            >
+              {tEmpty('deleteConfirm.confirm')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   )
 }

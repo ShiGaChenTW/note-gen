@@ -182,12 +182,38 @@ export async function delTag(id: number, options: { sync?: boolean } = {}) {
     throw new Error('Cannot delete a tag that has child tags')
   }
   const fallback = tags.find(tag => tag.id !== id)!
+  const affectedRows = await db.select<Array<{ id: number }>>(
+    `select distinct marks.id from marks
+     where marks.deleted = 0 and (
+       marks.tagId = $1 or exists (
+         select 1 from record_tag_metadata metadata, json_each(metadata.tagIds) related
+         where metadata.markId = marks.id and related.value = $1
+       )
+     )`,
+    [id]
+  )
+  const affectedMarkIds = affectedRows.map(row => row.id)
   await invalidateLocalTagSyncIdentity([id])
   const result = await db.execute(
     'delete from tags where id = $1 and isLocked = false and exists (select 1 from tags where id = $2)',
     [id, fallback.id]
   )
   if (result.rowsAffected !== 1) throw new Error('Tag could not be deleted; refresh and try again')
+  const { recordDbTrash } = await import('@/lib/trash/runtime')
+  await recordDbTrash({
+    entityType: 'tag',
+    entityId: String(target.id),
+    title: target.name,
+    deletedBy: 'scott',
+    actorRole: 'scott',
+    source: 'tag-delete',
+    metadata: {
+      name: target.name,
+      isPin: Boolean(target.isPin),
+      sortOrder: Number(target.sortOrder) || 0,
+      affectedMarkIds,
+    },
+  })
   const store = await Store.load('store.json')
   if (await store.get<number>('currentTagId') === id) {
     await store.set('currentTagId', fallback.id)

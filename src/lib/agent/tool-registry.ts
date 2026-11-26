@@ -1011,7 +1011,7 @@ async function executeFolderDeleteWithChange(input: Record<string, unknown>): Pr
         type: 'folder',
         target,
         summary: `删除文件夹 ${target}`,
-        reversible: false,
+        reversible: true,
       }),
     ],
   }

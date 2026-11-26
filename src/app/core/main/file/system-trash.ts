@@ -1,47 +1,45 @@
-import { invoke } from '@tauri-apps/api/core'
-import { join } from '@tauri-apps/api/path'
-import { exists, remove } from '@tauri-apps/plugin-fs'
-
-import { getDefaultArticleAbsolutePath, getFilePathOptions } from '@/lib/workspace'
 import { deleteSelfHostedWorkspacePath } from '@/lib/self-hosted-sync/files'
-import { isMobileDevice } from '@/lib/check'
+import { moveToAppTrash } from '@/lib/trash/runtime'
+import type { TrashActor, TrashSource } from '@/lib/trash/types'
 
-async function resolveExistingAbsolutePath(relativePath: string, workspaceRoot?: string) {
-  if (workspaceRoot) {
-    const absolutePath = await join(workspaceRoot, relativePath)
-    return await exists(absolutePath) ? absolutePath : null
-  }
-  const options = await getFilePathOptions(relativePath)
-  const pathExists = options.baseDir
-    ? await exists(options.path, { baseDir: options.baseDir })
-    : await exists(options.path)
-
-  if (!pathExists) return null
-  return options.baseDir
-    ? getDefaultArticleAbsolutePath(relativePath)
-    : options.path
+export interface TrashMoveOptions {
+  deletedBy?: string
+  actorRole?: TrashActor
+  source?: TrashSource
+  isDirectory?: boolean
 }
 
-export async function moveEntriesToSystemTrash(relativePaths: string[], workspaceRoot?: string) {
-  let journaled = 0
-  const remaining: string[] = []
+export async function moveEntriesToSystemTrash(
+  relativePaths: string[],
+  workspaceRoot?: string,
+  options: TrashMoveOptions = {},
+) {
+  let moved = 0
   for (const relativePath of relativePaths) {
-    if (!workspaceRoot && await deleteSelfHostedWorkspacePath(relativePath)) journaled++
-    else remaining.push(relativePath)
-  }
-  const resolvedPaths = await Promise.all(remaining.map(path => resolveExistingAbsolutePath(path, workspaceRoot)))
-  const paths = resolvedPaths.filter((path): path is string => Boolean(path))
-
-  if (paths.length > 0) {
-    if (isMobileDevice()) {
-      for (const path of paths) await remove(path, { recursive: true })
-    } else {
-      await invoke('move_paths_to_trash', { paths })
+    if (!workspaceRoot && await deleteSelfHostedWorkspacePath(
+      relativePath,
+      options.isDirectory ? 'folder' : undefined,
+      options,
+    )) {
+      moved += 1
+      continue
     }
+    const item = await moveToAppTrash(relativePath, {
+      workspaceRoot,
+      isDirectory: options.isDirectory,
+      deletedBy: options.deletedBy ?? 'scott',
+      actorRole: options.actorRole ?? 'scott',
+      source: options.source ?? 'file-tree',
+    })
+    if (item) moved += 1
   }
-  return journaled + paths.length
+  return moved
 }
 
-export async function moveEntryToSystemTrash(relativePath: string, workspaceRoot?: string) {
-  return (await moveEntriesToSystemTrash([relativePath], workspaceRoot)) > 0
+export async function moveEntryToSystemTrash(
+  relativePath: string,
+  workspaceRoot?: string,
+  options: TrashMoveOptions = {},
+) {
+  return (await moveEntriesToSystemTrash([relativePath], workspaceRoot, options)) > 0
 }

@@ -1,10 +1,11 @@
 import { Tool, ToolResult } from '../types'
-import { mkdir, remove, exists, readDir } from '@tauri-apps/plugin-fs'
+import { mkdir, exists, readDir } from '@tauri-apps/plugin-fs'
 import { ensureSafeWorkspaceRelativePath, getWorkspacePath, getFilePathOptions } from '@/lib/workspace'
 import { join } from '@tauri-apps/api/path'
 import useArticleStore from '@/stores/article'
 import { getVectorDocumentKey } from '@/lib/vector-document-key'
 import { prepareActiveEditorPathMutationDurably } from '@/lib/editor-deactivation'
+import { moveToAppTrash } from '@/lib/trash/runtime'
 
 function activeEditorMutationBlockedResult(): ToolResult {
   return {
@@ -222,25 +223,21 @@ export const deleteFolderTool: Tool = {
       if (workspace.isCustom) {
         // 自定义工作区：使用绝对路径
         const fullPath = await join(workspace.path, normalizedFolderPath)
-        
-        // 检查文件夹是否存在
         folderExists = await exists(fullPath)
-
-        if (folderExists) {
-          filePathsInFolder = await getMarkdownFilesForFolder(normalizedFolderPath)
-          await remove(fullPath, { recursive: true })
-        }
       } else {
         // 默认工作区：使用 baseDir
         const { path, baseDir } = await getFilePathOptions(normalizedFolderPath)
-        
-        // 检查文件夹是否存在
         folderExists = await exists(path, { baseDir })
+      }
 
-        if (folderExists) {
-          filePathsInFolder = await getMarkdownFilesForFolder(normalizedFolderPath)
-          await remove(path, { baseDir, recursive: true })
-        }
+      if (folderExists) {
+        filePathsInFolder = await getMarkdownFilesForFolder(normalizedFolderPath)
+        await moveToAppTrash(normalizedFolderPath, {
+          isDirectory: true,
+          deletedBy: 'partner',
+          actorRole: 'partner',
+          source: 'agent-tool',
+        })
       }
 
       await articleStore.cleanTabsByDeletedFolder(normalizedFolderPath)
@@ -494,7 +491,12 @@ export const deleteFoldersBatchTool: Tool = {
               errors.push({ path: normalizedFolderPath, error: '文件夹不存在' })
               continue
             }
-            await remove(fullPath, { recursive: true })
+            await moveToAppTrash(normalizedFolderPath, {
+              isDirectory: true,
+              deletedBy: 'partner',
+              actorRole: 'partner',
+              source: 'agent-tool',
+            })
           } else {
             const { path, baseDir } = await getFilePathOptions(normalizedFolderPath)
             const folderExists = await exists(path, { baseDir })
@@ -502,7 +504,12 @@ export const deleteFoldersBatchTool: Tool = {
               errors.push({ path: normalizedFolderPath, error: '文件夹不存在' })
               continue
             }
-            await remove(path, { baseDir, recursive: true })
+            await moveToAppTrash(normalizedFolderPath, {
+              isDirectory: true,
+              deletedBy: 'partner',
+              actorRole: 'partner',
+              source: 'agent-tool',
+            })
           }
           await articleStore.cleanTabsByDeletedFolder(normalizedFolderPath)
           results.push(normalizedFolderPath)

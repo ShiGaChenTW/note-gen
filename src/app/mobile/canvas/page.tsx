@@ -23,6 +23,16 @@ import {
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { MobileMeSheet } from '@/app/mobile/components/mobile-me-sheet'
 import { MobileActionDrawer } from '@/app/mobile/components/mobile-action-drawer'
@@ -121,6 +131,7 @@ export function MobileCanvasPage({ preview = false }: MobileCanvasPageProps = {}
   const [templateOpen, setTemplateOpen] = useState(false)
   const [editingProject, setEditingProject] = useState<CanvasProject | null>(null)
   const [editingTitle, setEditingTitle] = useState('')
+  const [pendingDelete, setPendingDelete] = useState<CanvasProject | null>(null)
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -330,7 +341,7 @@ export function MobileCanvasPage({ preview = false }: MobileCanvasPageProps = {}
                           key: 'delete',
                           label: t('delete'),
                           icon: <Trash2 />,
-                          onSelect: () => handleDelete(project.id),
+                          onSelect: () => setPendingDelete(project),
                           destructive: true,
                           separatorBefore: true,
                         },
@@ -362,6 +373,31 @@ export function MobileCanvasPage({ preview = false }: MobileCanvasPageProps = {}
           </Button>
         </ResponsiveDialogContent>
       </ResponsiveDialog>
+
+      <AlertDialog open={Boolean(pendingDelete)} onOpenChange={open => { if (!open) setPendingDelete(null) }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('deleteDialog.title')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingDelete ? t('deleteDialog.description', { title: pendingDelete.title }) : ''}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('deleteDialog.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => {
+                if (pendingDelete) {
+                  void handleDelete(pendingDelete.id)
+                  setPendingDelete(null)
+                }
+              }}
+            >
+              {t('deleteDialog.confirm')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

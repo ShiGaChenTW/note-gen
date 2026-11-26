@@ -6,6 +6,7 @@ import {
   getMemoryStats,
   permanentlyDeleteMemory as permanentlyDeleteMemoryDb,
   restoreMemory as restoreMemoryDb,
+  softDeleteMemory as softDeleteMemoryDb,
   undoMemoryChange as undoMemoryChangeDb,
   updateMemory as updateMemoryDb,
   upsertMemory,
@@ -48,6 +49,7 @@ interface MemoriesState {
   archiveMemory: (id: string) => Promise<void>
   restoreMemory: (id: string) => Promise<void>
   undoMemoryChange: (id: string) => Promise<void>
+  trashMemory: (id: string) => Promise<void>
   permanentlyDeleteMemory: (id: string) => Promise<void>
   clearAllMemories: () => Promise<void>
   updatePolicy: (updates: Partial<MemoryPolicy>) => Promise<void>
@@ -131,8 +133,28 @@ const useMemoriesStore = create<MemoriesState>((set) => ({
     await refresh(set)
   },
 
+  trashMemory: async (id) => {
+    const trashed = await softDeleteMemoryDb(id)
+    if (trashed) {
+      const { recordDbTrash } = await import('@/lib/trash/runtime')
+      await recordDbTrash({
+        entityType: 'memory',
+        entityId: id,
+        title: trashed.content.trim().slice(0, 80) || id,
+        deletedBy: 'scott',
+        actorRole: 'scott',
+        source: 'memory-settings',
+        metadata: { previousStatus: trashed.status },
+        deletedAt: trashed.deletedAt ?? undefined,
+      })
+    }
+    await refresh(set)
+  },
+
   permanentlyDeleteMemory: async (id) => {
     await permanentlyDeleteMemoryDb(id)
+    const { removeDbTrashEntry } = await import('@/lib/trash/runtime')
+    await removeDbTrashEntry('memory', id).catch(() => undefined)
     await refresh(set)
   },
 

@@ -336,6 +336,8 @@ export async function restoreMark(id: number) {
   )
   enqueueRecordsAutoSync('mark:restore')
   enqueueMarkKnowledgeIndex(id)
+  const { removeDbTrashEntry } = await import('@/lib/trash/runtime')
+  await removeDbTrashEntry('mark', String(id)).catch(() => undefined)
   return result
 }
 
@@ -353,16 +355,28 @@ export async function delMark(id: number) {
   )
   enqueueRecordsAutoSync('mark:delete')
   await removeMarkKnowledgeIndex(id)
+  const mark = res[0]
+  const title = mark?.desc?.trim() || mark?.content?.trim().slice(0, 80) || mark?.url?.trim() || `#${id}`
+  const { recordDbTrash } = await import('@/lib/trash/runtime')
+  await recordDbTrash({
+    entityType: 'mark',
+    entityId: String(id),
+    title,
+    deletedBy: 'scott',
+    actorRole: 'scott',
+    source: 'mark-list',
+    deletedAt: createdAt,
+  })
   return result
 }
 
 export async function deleteAllMarks() {
-  const db = await getDb();
   const marks = await getAllMarks()
-  const result = await db.execute("delete from marks")
-  enqueueRecordsAutoSync('mark:delete-all')
-  await Promise.all(marks.map(mark => removeMarkKnowledgeIndex(mark.id)))
-  return result
+  const activeIds = marks.filter(mark => !mark.deleted).map(mark => mark.id)
+  if (activeIds.length > 0) {
+    await deleteMarks(activeIds)
+  }
+  return { rowsAffected: activeIds.length }
 }
 
 export async function insertMarks(marks: Partial<Mark>[]) {
@@ -413,6 +427,8 @@ export async function delMarkForever(id: number) {
   const result = await db.execute("delete from marks where id = $1", [id])
   enqueueRecordsAutoSync('mark:delete-forever')
   await removeMarkKnowledgeIndex(id)
+  const { removeDbTrashEntry } = await import('@/lib/trash/runtime')
+  await removeDbTrashEntry('mark', String(id)).catch(() => undefined)
   return result
 }
 
@@ -424,6 +440,8 @@ export async function clearTrash() {
   const result = await db.execute("delete from marks where deleted = $1", [1])
   enqueueRecordsAutoSync('mark:clear-trash')
   await Promise.all(marks.map(mark => removeMarkKnowledgeIndex(mark.id)))
+  const { removeDbTrashEntry } = await import('@/lib/trash/runtime')
+  await Promise.all(marks.map(mark => removeDbTrashEntry('mark', String(mark.id)).catch(() => undefined)))
   return result
 }
 
@@ -449,6 +467,12 @@ export async function deleteMarks(ids: number[]) {
   const db = await getDb();
   const createdAt = Date.now();
   try {
+    const snapshots = await Promise.all(
+      ids.map(async id => {
+        const rows = await db.select<Mark[]>(`select ${MARK_COLUMNS} from marks where id = $1`, [id])
+        return rows[0] ?? null
+      })
+    )
     for (const id of ids) {
       await db.execute(
         "update marks set deleted = $1, createdAt = $2 where id = $3",
@@ -457,6 +481,20 @@ export async function deleteMarks(ids: number[]) {
     }
     enqueueRecordsAutoSync('mark:bulk-delete')
     await Promise.all(ids.map(removeMarkKnowledgeIndex))
+    const { recordDbTrash } = await import('@/lib/trash/runtime')
+    await Promise.all(ids.map((id, index) => {
+      const mark = snapshots[index]
+      const title = mark?.desc?.trim() || mark?.content?.trim().slice(0, 80) || mark?.url?.trim() || `#${id}`
+      return recordDbTrash({
+        entityType: 'mark',
+        entityId: String(id),
+        title,
+        deletedBy: 'scott',
+        actorRole: 'scott',
+        source: 'mark-list',
+        deletedAt: createdAt,
+      })
+    }))
   } catch (error) {
     console.error('Error deleting marks:', error);
     throw error;
@@ -475,6 +513,8 @@ export async function restoreMarks(ids: number[]) {
     }
     enqueueRecordsAutoSync('mark:bulk-restore')
     ids.forEach(enqueueMarkKnowledgeIndex)
+    const { removeDbTrashEntry } = await import('@/lib/trash/runtime')
+    await Promise.all(ids.map(id => removeDbTrashEntry('mark', String(id)).catch(() => undefined)))
   } catch (error) {
     console.error('Error restoring marks:', error);
     throw error;

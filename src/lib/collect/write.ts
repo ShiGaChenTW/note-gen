@@ -38,13 +38,25 @@ export type ApplyChange = (change: FileChange) => Promise<void>
  * 預設的檔案變更寫入：同背景任務草稿的審核（agent-tasks/review.ts applyDraft），用原本的工具照 args 寫入，
  * 寫入前比對提案當下的內容，被改過就不寫。動態載入工具表，收集頁的其他路徑不必連帶載入 agent。
  */
-const defaultApplyChange: ApplyChange = async change => {
+const defaultApplyChange = async (change: FileChange, ops?: OpContext): Promise<void> => {
   const [{ applyDraft }, { agentToolRegistry }] = await Promise.all([
     import('@/lib/agent-tasks/review'),
     import('@/lib/agent/tool-registry'),
   ])
+  const isDeleteTool = change.toolName === 'note_delete_file' || change.toolName === 'delete_markdown_file'
+  const prepared = isDeleteTool
+    ? {
+        ...change,
+        args: {
+          ...change.args,
+          source: 'workbench-proposal',
+          actorRole: 'partner',
+          deletedBy: ops?.actorId ?? ops?.actor ?? 'partner',
+        },
+      }
+    : change
   const result = await applyDraft(
-    { ...change, id: `proposal-${Date.now().toString(36)}`, state: 'pending' },
+    { ...prepared, id: `proposal-${Date.now().toString(36)}`, state: 'pending' },
     { readFile: readNote, getTool: name => agentToolRegistry.getTool(name) },
   )
   if (result.state !== 'applied') throw new ChangeNotApplied(result.error === 'CONFLICT', result.error)
@@ -147,7 +159,7 @@ export async function acceptProposal(proposal: Proposal, options: { noteFolder: 
     const paths = [...new Set([change.path, ...(change.targetPath ? [change.targetPath] : [])])].filter(path => /\.md$/i.test(path))
     const read = (path: string) => readNote(path).catch(() => null)
     const before = ops ? await Promise.all(paths.map(read)) : []
-    await (options.applyChange ?? defaultApplyChange)(change)
+    await (options.applyChange ? options.applyChange(change) : defaultApplyChange(change, ops))
     if (ops) {
       const after = await Promise.all(paths.map(read))
       await record(snapshotInputs(paths.map((path, index) => ({ path, before: before[index], after: after[index] }))))

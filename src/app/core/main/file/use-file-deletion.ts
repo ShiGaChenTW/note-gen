@@ -7,7 +7,6 @@ import { Store } from '@tauri-apps/plugin-store'
 import { cloneDeep } from 'lodash-es'
 
 import { toast } from '@/hooks/use-toast'
-import { isMobileDevice } from '@/lib/check'
 import {
   activeEditorPathIsAffected,
   getCurrentEditorWorkspaceRoot,
@@ -104,8 +103,7 @@ export function useFileDeletion() {
         toast({ title: t('deleteEntriesBusy'), variant: 'destructive' })
         return
       }
-      const confirmed = await ask(t(hasRemote ? 'confirmDeleteEntriesWithRemote'
-        : isMobileDevice() ? 'confirmDeleteEntriesPermanently' : 'confirmDeleteEntries', { count: entries.length }), {
+      const confirmed = await ask(t(hasRemote ? 'confirmDeleteEntriesWithRemote' : 'confirmDeleteEntries', { count: entries.length }), {
         title: entries.length === 1 ? entries[0].name : t('deleteSelected', { count: entries.length }),
         kind: 'warning',
       })
@@ -165,12 +163,21 @@ export function useFileDeletion() {
           if (platform === 'selfHosted') {
             await runEditorPathWriteTransaction(entry.path, async () => {
               await assertContext()
-              if (await deleteSelfHostedWorkspacePath(entry.path, entry.isDirectory ? 'folder' : 'file')) {
+              if (await deleteSelfHostedWorkspacePath(entry.path, entry.isDirectory ? 'folder' : 'file', {
+                deletedBy: 'scott',
+                actorRole: 'scott',
+                source: 'file-tree',
+              })) {
                 queued += 1
               } else if (hasRemote) {
                 throw new Error('The self-hosted workspace deletion could not be queued')
               } else {
-                await moveEntryToSystemTrash(entry.path, workspaceRoot)
+                await moveEntryToSystemTrash(entry.path, workspaceRoot, {
+                  deletedBy: 'scott',
+                  actorRole: 'scott',
+                  source: 'file-tree',
+                  isDirectory: entry.isDirectory,
+                })
               }
               return true
             }, workspaceRoot)
@@ -203,7 +210,12 @@ export function useFileDeletion() {
             await assertContext()
             await runEditorPathWriteTransaction(entry.path, async () => {
               await assertContext()
-              await moveEntryToSystemTrash(entry.path, workspaceRoot)
+              await moveEntryToSystemTrash(entry.path, workspaceRoot, {
+                deletedBy: 'scott',
+                actorRole: 'scott',
+                source: 'file-tree',
+                isDirectory: entry.isDirectory,
+              })
               return true
             }, workspaceRoot)
           }

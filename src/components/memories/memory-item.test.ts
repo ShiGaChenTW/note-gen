@@ -12,6 +12,7 @@ import type { Memory } from '@/db/memories'
 const mocks = vi.hoisted(() => ({
   archiveMemory: vi.fn(async () => {}),
   restoreMemory: vi.fn(async () => {}),
+  trashMemory: vi.fn(async () => {}),
   permanentlyDeleteMemory: vi.fn(async () => {}),
   approveMemory: vi.fn(async () => {}),
   updateMemory: vi.fn(async () => {}),
@@ -27,6 +28,7 @@ vi.mock('@/stores/memories', async () => {
       approveMemory: mocks.approveMemory,
       archiveMemory: mocks.archiveMemory,
       restoreMemory: mocks.restoreMemory,
+      trashMemory: mocks.trashMemory,
       permanentlyDeleteMemory: mocks.permanentlyDeleteMemory,
       updateMemory: mocks.updateMemory,
     })),
@@ -135,5 +137,19 @@ describe('MemoryItem & tag copy (ALMNC-84.2)', () => {
     expect(en.record.tagging.deleteTagHelp).not.toContain('Records will be kept')
     expect(zh.record.tagging.deleteTagHelp).toContain('移入回收站')
     expect(zh.record.tagging.deleteTagHelp).not.toContain('记录不会删除')
+  })
+
+  it('封存記憶確認刪除後會呼叫 trashMemory 而非永久刪除 (ALMNC-84.5)', async () => {
+    await renderMemory(memory({ status: 'archived' }), 'zh-TW', zhTW)
+    const deleteBtn = container.querySelector<HTMLButtonElement>('[data-action="delete"]')!
+    expect(deleteBtn.textContent).toBe('移到最近刪除')
+
+    await act(async () => deleteBtn.click())
+    const confirmAction = document.body.querySelector<HTMLButtonElement>('[data-slot="alert-dialog-action"]')!
+    expect(confirmAction.textContent).toBe('移到最近刪除')
+
+    await act(async () => confirmAction.click())
+    expect(mocks.trashMemory).toHaveBeenCalledWith('m1')
+    expect(mocks.permanentlyDeleteMemory).not.toHaveBeenCalled()
   })
 })
