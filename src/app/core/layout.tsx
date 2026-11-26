@@ -346,6 +346,7 @@ export default function RootLayout({
   useEffect(() => {
     let cancelled = false
     let stopManagedBackup: (() => void) | undefined
+    let stopTrashAutoPurge: (() => void) | undefined
     let stopGitVersionAutoSnapshot: (() => void) | undefined
     let stopQuickRecord: (() => void) | undefined
     let stopWiki: (() => void) | undefined
@@ -396,6 +397,9 @@ export default function RootLayout({
         // Fork（almanac ALMNC-49）：開發模式提供 window.__almanacSleepPreview() 下載今天的休眠畫面 sleep.bmp（只讀）
         if (process.env.NODE_ENV !== 'production') void import('@/lib/eink/sleep').then(m => m.registerSleepPreview())
         stopManagedBackup = initManagedBackupRuntime()
+        const { initTrashAutoPurgeRuntime } = await import('@/lib/trash/runtime')
+        if (cancelled) return
+        stopTrashAutoPurge = initTrashAutoPurgeRuntime()
         stopGitVersionAutoSnapshot = initGitVersionAutoSnapshotRuntime()
 
         void initShortcut().catch((error) => console.error('Failed to initialize global shortcuts:', error))
@@ -427,6 +431,7 @@ export default function RootLayout({
     return () => {
       cancelled = true
       stopManagedBackup?.()
+      stopTrashAutoPurge?.()
       stopGitVersionAutoSnapshot?.()
       stopQuickRecord?.()
       stopWiki?.()

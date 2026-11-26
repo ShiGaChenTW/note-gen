@@ -21,6 +21,7 @@ export interface Conversation {
   updatedAt: number
   messageCount: number
   isPinned: boolean
+  deletedAt?: number | null
 }
 
 // Associated features can initialize their tables lazily. Only clean up tables
@@ -80,6 +81,11 @@ export async function initConversationsDb() {
   }
   try {
     await db.execute(`alter table conversations add column syncUpdatedAt integer default null`)
+  } catch {
+    // Idempotent migration.
+  }
+  try {
+    await db.execute(`alter table conversations add column deletedAt integer default null`)
   } catch {
     // Idempotent migration.
   }
@@ -187,10 +193,11 @@ export async function createConversation(title: string): Promise<number> {
 }
 
 // 获取所有会话
-export async function getAllConversations(): Promise<Conversation[]> {
+export async function getAllConversations(options?: { includeDeleted?: boolean }): Promise<Conversation[]> {
   const db = await getDb()
+  const where = options?.includeDeleted ? '' : 'where deletedAt is null'
   const result = await db.select<Conversation[]>(
-    "select * from conversations order by isPinned desc, updatedAt desc",
+    `select * from conversations ${where} order by isPinned desc, updatedAt desc`,
     []
   )
   return result
@@ -248,8 +255,33 @@ export async function updateConversationTime(id: number): Promise<void> {
   enqueueConversationAutoSync('conversation-updated')
 }
 
-// 删除会话及其相关聊天记录
-export async function deleteConversation(id: number): Promise<void> {
+export async function softDeleteConversation(id: number): Promise<Conversation | null> {
+  const db = await getDb()
+  const conversation = await getConversation(id)
+  if (!conversation) return null
+  const deletedAt = Date.now()
+  await db.execute(
+    'update conversations set deletedAt = $1 where id = $2',
+    [deletedAt, id]
+  )
+  return { ...conversation, deletedAt }
+}
+
+export async function restoreConversation(id: number): Promise<Conversation | null> {
+  const db = await getDb()
+  const conversation = await getConversation(id)
+  if (!conversation) return null
+  const syncUpdatedAt = await nextConversationSyncTimestamp()
+  await db.execute(
+    'update conversations set deletedAt = null, updatedAt = $1, syncUpdatedAt = $1 where id = $2',
+    [syncUpdatedAt, id]
+  )
+  enqueueConversationAutoSync('conversation-restored')
+  return getConversation(id)
+}
+
+// 永久删除会话及其相关聊天记录并写入同步墓碑
+export async function permanentlyDeleteConversation(id: number): Promise<void> {
   const db = await getDb()
   const conversation = await getConversation(id)
   if (!conversation) return
@@ -286,6 +318,11 @@ export async function deleteConversation(id: number): Promise<void> {
     [id]
   )
   enqueueConversationAutoSync('conversation-deleted')
+}
+
+// 删除会话及其相关聊天记录（Step 2 將改由最近刪除流程接管）
+export async function deleteConversation(id: number): Promise<void> {
+  await permanentlyDeleteConversation(id)
 }
 
 // 切换会话置顶状态

@@ -90,14 +90,14 @@
         "undone": "undid",
         "repaired": "System repair"
       },
-      "undoWindowHint": "Changes from the last 7 days can be undone.",
+      "undoWindowHint": "Changes from the last 30 days can be undone.",
       "sourceDirect": "Direct action",
       "undo": "Undo",
       "undoBatch": "Undo this whole round",
       "undoing": "Undoing…",
       "undoneMark": "Undone",
       "undoDone": "Undone.",
-      "undoExpired": "More than 7 days ago; it can no longer be undone.",
+      "undoExpired": "More than 30 days ago; it can no longer be undone.",
       "undoFailed": "Could not undo. Nothing was overwritten.",
       "repair": {
         "assign": "Added an ID",
@@ -8969,7 +8969,7 @@
   },
   "autoAcceptLinks": {
     "title": "Automatically accept link additions",
-    "description": "When a proposal only adds one link, the change is applied automatically. Undo it within 7 days in the activity log.",
+    "description": "When a proposal only adds one link, the change is applied automatically. Undo it within 30 days in the activity log.",
     "settingsError": "Could not save the auto-accept setting."
   },
   "organize": {
@@ -9550,7 +9550,7 @@
         "mocs": "{count} MOCs changed together",
         "import": "Bulk import"
       },
-      "body": "These Obsidian edits are on hold. Use “Cancel this” on the ones you don’t want, then “Accept all” to apply the rest; “Cancel all” puts the MOC entries back to their last known state (edits elsewhere are kept). Either way you can undo from the activity log for 7 days.",
+      "body": "These Obsidian edits are on hold. Use “Cancel this” on the ones you don’t want, then “Accept all” to apply the rest; “Cancel all” puts the MOC entries back to their last known state (edits elsewhere are kept). Either way you can undo from the activity log for 30 days.",
       "by": "System",
       "cancel": "Cancel this",
       "restore": "Restore",
@@ -9734,6 +9734,6 @@
     "malformed": "{count} entry lines in “{moc}” are malformed (no [[ ]] or missing ──). Treated as unchanged and the original memberships kept. Please fix them",
     "repaired": "{count} broken links in “{moc}” were repaired by ID",
     "batch": "Your Obsidian edits touch {mocs} MOCs with {changes} changes ({removals} removals). They are on hold — confirm them on the “Batch check” card in the workbench",
-    "applied": "Applied {count} MOC changes made in Obsidian. You can undo them from the activity log for 7 days"
+    "applied": "Applied {count} MOC changes made in Obsidian. You can undo them from the activity log for 30 days"
   }
 }

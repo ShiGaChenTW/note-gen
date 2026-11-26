@@ -240,6 +240,7 @@ fn write_managed_archive(
     if let Some(workspace) = workspace_dir.filter(|path| path.exists()) {
         let mut workspace_exclusions = vec![backup_dir.to_path_buf()];
         workspace_exclusions.push(workspace.join(".notegen"));
+        workspace_exclusions.push(workspace.join(".almanac-trash"));
         add_directory_to_zip(
             &mut zip,
             workspace,

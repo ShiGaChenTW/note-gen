@@ -1088,7 +1088,7 @@ fn validate_package_path(raw: &str, directory: bool) -> PluginResult<String> {
         let lower = segment.to_lowercase();
         if matches!(
             lower.as_str(),
-            ".notegen" | "node_modules" | ".git" | ".hg" | ".svn" | ".cache"
+            ".notegen" | ".almanac-trash" | "node_modules" | ".git" | ".hg" | ".svn" | ".cache"
         ) || lower == ".env"
             || lower.starts_with(".env.")
         {

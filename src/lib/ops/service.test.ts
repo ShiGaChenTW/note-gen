@@ -132,7 +132,7 @@ describe('apply and undo are inverse for each kind', () => {
   })
 })
 
-describe('undo after reopening the App, the 7-day window', () => {
+describe('undo after reopening the App, the 30-day window', () => {
   it('a new service over the same stored rows can still undo', async () => {
     const files = vault()
     const first = setup(files)
@@ -145,7 +145,7 @@ describe('undo after reopening the App, the 7-day window', () => {
     expect((await reopened.service.undoOp(op.id)).status).toBe('already-undone')
   })
 
-  it('exactly 7 days later it is expired and nothing is written', async () => {
+  it('exactly 30 days later it is expired and nothing is written', async () => {
     const { service, files, clock } = setup()
     const [op] = await service.applyOps([{ kind: 'moc.entry.add', ...newRef }], scott)
     const added = files[MOC_PATH]
@@ -154,7 +154,7 @@ describe('undo after reopening the App, the 7-day window', () => {
     expect(files[MOC_PATH]).toBe(added)
   })
 
-  it('prune drops ops older than 7 days', async () => {
+  it('prune drops ops older than 30 days', async () => {
     const { service, store, clock } = setup()
     await service.applyOps([{ kind: 'moc.entry.add', ...newRef }], scott)
     clock.now += UNDO_WINDOW_MS - 1

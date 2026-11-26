@@ -223,7 +223,9 @@ fn collect_workspace_copy_plan(
         let relative = source_path
             .strip_prefix(source_root)
             .map_err(|error| format!("Failed to resolve workspace entry: {error}"))?;
-        if relative.components().count() == 1 && entry.file_name() == ".notegen" {
+        if relative.components().count() == 1
+            && (entry.file_name() == ".notegen" || entry.file_name() == ".almanac-trash")
+        {
             continue;
         }
 
@@ -391,7 +393,7 @@ fn collect_files(
         let path = entry.path();
         let metadata = fs::symlink_metadata(&path)
             .map_err(|error| format!("Failed to inspect cloud sync entry: {error}"))?;
-        if metadata.file_type().is_symlink() {
+        if metadata.file_type().is_symlink() || entry.file_name() == ".almanac-trash" {
             continue;
         }
         if metadata.is_dir() {

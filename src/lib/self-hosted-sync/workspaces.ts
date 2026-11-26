@@ -692,7 +692,7 @@ async function scanPortableEntries(root: string, workspaceId: string) {
         await recordIgnoredSymlink(workspaceId, relative)
         continue
       }
-      if (entry.name === '.notegen' || entry.name === '.DS_Store' || entry.name.endsWith('.tmp')) continue
+      if (entry.name === '.notegen' || entry.name === '.almanac-trash' || entry.name === '.DS_Store' || entry.name.endsWith('.tmp')) continue
       if (entry.isDirectory) {
         const portable = await portablePath(relative, caseFoldedPaths)
         result.push({ relativePath: portable, kind: 'folder' })

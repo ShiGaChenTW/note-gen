@@ -37,6 +37,7 @@ export interface Memory {
   lastAccessedAt: number
   lastRecallReason?: string
   archivedAt?: number
+  deletedAt?: number | null
   createdAt: number
   updatedAt: number
 }
@@ -130,6 +131,7 @@ const MEMORY_SELECT = `
     coalesce(last_accessed_at, 0) as lastAccessedAt,
     last_recall_reason as lastRecallReason,
     archived_at as archivedAt,
+    deleted_at as deletedAt,
     created_at as createdAt,
     updated_at as updatedAt
   from memories
@@ -205,6 +207,7 @@ export async function initMemoriesDb() {
   await addColumn("sensitivity text default 'normal'")
   await addColumn('last_recall_reason text default null')
   await addColumn('archived_at integer default null')
+  await addColumn('deleted_at integer default null')
 
   await db.execute(`
     update memories
@@ -385,15 +388,25 @@ export async function upsertMemory(
 
 export async function getAllMemories(options?: {
   includeInactive?: boolean
+  includeTrashed?: boolean
   status?: MemoryStatus
 }): Promise<Memory[]> {
   const db = await getDb()
-  const where = options?.status
-    ? 'where status = $1'
-    : options?.includeInactive
-      ? ''
-      : "where status in ('active', 'pending')"
-  const params = options?.status ? [options.status] : []
+  const conditions: string[] = []
+  const params: unknown[] = []
+
+  if (!options?.includeTrashed) {
+    conditions.push('deleted_at is null')
+  }
+
+  if (options?.status) {
+    params.push(options.status)
+    conditions.push(`status = $${params.length}`)
+  } else if (!options?.includeInactive) {
+    conditions.push("status in ('active', 'pending')")
+  }
+
+  const where = conditions.length > 0 ? `where ${conditions.join(' and ')}` : ''
   return await db.select<Memory[]>(
     `${MEMORY_SELECT} ${where} order by updated_at desc`,
     params
@@ -403,7 +416,7 @@ export async function getAllMemories(options?: {
 export async function getMemoriesByCategory(category: MemoryCategory): Promise<Memory[]> {
   const db = await getDb()
   return await db.select<Memory[]>(
-    `${MEMORY_SELECT} where category = $1 and status in ('active', 'pending') order by updated_at desc`,
+    `${MEMORY_SELECT} where category = $1 and deleted_at is null and status in ('active', 'pending') order by updated_at desc`,
     [category]
   )
 }
@@ -571,6 +584,43 @@ export async function approveMemory(id: string): Promise<void> {
 
 export async function deleteMemory(id: string): Promise<void> {
   await archiveMemory(id)
+}
+
+export async function softDeleteMemory(id: string): Promise<Memory | null> {
+  const memory = await getMemoryById(id)
+  if (!memory) return null
+  const db = await getDb()
+  const now = Date.now()
+  await db.execute(
+    'update memories set deleted_at = $1, updated_at = $1 where id = $2',
+    [now, id]
+  )
+  invalidateMemoryCache()
+  return { ...memory, deletedAt: now, updatedAt: now }
+}
+
+export async function restoreTrashedMemory(
+  id: string,
+  previousStatus?: MemoryStatus,
+): Promise<Memory | null> {
+  const memory = await getMemoryById(id)
+  if (!memory) return null
+  const db = await getDb()
+  const now = Date.now()
+  const nextStatus = previousStatus ?? memory.status
+  await db.execute(
+    `update memories
+     set deleted_at = null,
+         status = $1,
+         archived_at = case when $1 = 'archived' then coalesce(archived_at, $2) else null end,
+         updated_at = $2
+     where id = $3`,
+    [nextStatus, now, id]
+  )
+  invalidateMemoryCache()
+  if (memory.indexingStatus !== 'ready') void reindexPendingMemories()
+  enqueueMemorySync('restore')
+  return getMemoryById(id)
 }
 
 export async function permanentlyDeleteMemory(id: string): Promise<void> {
@@ -756,6 +806,7 @@ export async function reindexPendingMemories(limit = 20): Promise<number> {
     const memories = await db.select<Memory[]>(
       `${MEMORY_SELECT}
        where status in ('active', 'pending')
+         and deleted_at is null
          and sensitivity = 'normal'
          and indexing_status <> 'ready'
        order by updated_at desc limit $1`,

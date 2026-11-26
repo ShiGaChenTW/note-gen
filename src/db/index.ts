@@ -170,6 +170,7 @@ async function initializeAllDatabases() {
   const { initMemoriesDb } = await import('./memories');
   const { initActivityDb } = await import('./activity');
   const { initCanvasesDb } = await import('./canvases');
+  const { initTrashDb } = await import('./trash');
   const { initConversationCompactionsDb } = await import('./conversation-compactions');
   const { initConversationSyncStateDb } = await import('./conversation-sync-state');
   const { initImageAnalysisCacheDb } = await import('./image-analysis-cache');
@@ -189,6 +190,7 @@ async function initializeAllDatabases() {
   await initVectorDb();
   await initMemoriesDb();
   await initCanvasesDb();
+  await initTrashDb();
   await initActivityDb();
   await initKnowledgeDb();
   await initWikiDb();

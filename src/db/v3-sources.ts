@@ -378,3 +378,17 @@ export async function deleteUnsentSource(id: string): Promise<void> {
   const db = await getDb()
   await db.execute('delete from sources where id = $1', [source.id])
 }
+
+/** Restore a soft-trashed unsent source from its stored snapshot if absent. */
+export async function restoreDeletedSource(source: Source): Promise<void> {
+  await initV3SourceDb()
+  const db = await getDb()
+  await db.execute(
+    `insert into sources
+       (id, source_type, kind, content, origin, collected_at, collector, status, status_changed_at,
+        version, previous_id, locked_at, archived_at, created_at, updated_at, is_journal)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+     on conflict(id) do nothing`,
+    sourceToValues(source)
+  )
+}

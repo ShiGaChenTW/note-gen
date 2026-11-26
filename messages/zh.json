@@ -90,14 +90,14 @@
         "undone": "复原",
         "repaired": "系统修复"
       },
-      "undoWindowHint": "7 天内的变更可以复原。",
+      "undoWindowHint": "30 天内的变更可以复原。",
       "sourceDirect": "直接操作",
       "undo": "复原",
       "undoBatch": "撤回这次整理",
       "undoing": "复原中…",
       "undoneMark": "已复原",
       "undoDone": "已复原。",
-      "undoExpired": "已超过 7 天，不能复原。",
+      "undoExpired": "已超过 30 天，不能复原。",
       "undoFailed": "复原失败，没有覆盖任何内容。",
       "repair": {
         "assign": "补上身份编号",
@@ -8969,7 +8969,7 @@
   },
   "autoAcceptLinks": {
     "title": "自动接受补链接提案",
-    "description": "只补一条普通链接的提案会自动生效，7 天内可在活动记录中撤销。",
+    "description": "只补一条普通链接的提案会自动生效，30 天内可在活动记录中撤销。",
     "settingsError": "无法保存自动接受设置。"
   },
   "organize": {
@@ -9550,7 +9550,7 @@
         "mocs": "同时改到 {count} 个 MOC",
         "import": "整批导入"
       },
-      "body": "在 Obsidian 的这次修改先不生效。不要的那几条点“取消这条”，再点“全部接受”应用其余的；点“全部取消”会把 MOC 的收录改回上次的状态（其他段落的修改保留）。两种都可以在 7 天内从活动记录撤销。",
+      "body": "在 Obsidian 的这次修改先不生效。不要的那几条点“取消这条”，再点“全部接受”应用其余的；点“全部取消”会把 MOC 的收录改回上次的状态（其他段落的修改保留）。两种都可以在 30 天内从活动记录撤销。",
       "by": "系统",
       "cancel": "取消这条",
       "restore": "恢复",
@@ -9734,6 +9734,6 @@
     "malformed": "“{moc}”有 {count} 行收录格式坏了（没有 [[ ]] 或少了 ──），先当作没改、原本的归属保留，请修正",
     "repaired": "“{moc}”有 {count} 条断掉的链接已按编号修回",
     "batch": "在 Obsidian 的修改改到 {mocs} 个 MOC、共 {changes} 处（移除 {removals} 条），先不生效，请到工作台的“整批检查”卡确认",
-    "applied": "已应用在 Obsidian 对 MOC 的 {count} 处修改，7 天内可在活动记录撤销"
+    "applied": "已应用在 Obsidian 对 MOC 的 {count} 处修改，30 天内可在活动记录撤销"
   }
 }
