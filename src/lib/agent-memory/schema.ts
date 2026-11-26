@@ -2,18 +2,18 @@
 // 和 agent_settings 一樣用 create table if not exists，可以重複執行。
 
 /**
- * activity_log 的建表語法。Fork（almanac ALMNC-71）：actor_role 加 'system'、source_kind 加 'system'（系統修復），
- * op_id（ALMNC-69.9）直接放進表裡；舊資料庫靠 ACTIVITY_OP_COLUMN 補欄位、migrateActivityLog 放寬限制。
+ * activity_log 的建表語法。Fork（almanac ALMNC-71／84.7）：actor_role 加 'system' 與 'advisor'、
+ * source_kind 加 'system' 與 'mcp'，op_id（ALMNC-69.9）直接放進表裡；舊資料庫靠 migrateActivityLog 放寬限制。
  * corrects_id 指向自己這張表：重建時先用 activity_log_v2 的名字建，改名時 SQLite 會一起改掉這個參照。
  */
 export const ACTIVITY_LOG_TABLE_SQL = (name: string) => `create table if not exists ${name} (
     id integer primary key,
     at integer not null,
     actor_id text not null check (length(trim(actor_id)) > 0),
-    actor_role text not null check (actor_role in ('scott', 'commander', 'expert', 'secretary', 'researcher', 'system')),
+    actor_role text not null check (actor_role in ('scott', 'commander', 'expert', 'secretary', 'researcher', 'system', 'advisor')),
     action text not null,
     target_link text not null check (length(trim(target_link)) > 0),
-    source_kind text not null check (source_kind in ('conversation', 'proposal', 'system')),
+    source_kind text not null check (source_kind in ('conversation', 'proposal', 'system', 'mcp')),
     source_ref text not null check (length(trim(source_ref)) > 0),
     note text not null default '' check (length(note) <= 60),
     corrects_id integer references ${name}(id),
@@ -79,12 +79,15 @@ export interface ActivityMigrationDb {
 
 const ACTIVITY_COLUMNS = 'id, at, actor_id, actor_role, action, target_link, source_kind, source_ref, note, corrects_id, archived_at, op_id'
 
-/** 舊表的 source_kind 限制還沒有 'system'（ALMNC-71 之前建的）才需要重建。 */
+/** 舊表的限制還沒有 'system'（ALMNC-71）或 'advisor'/'mcp'（ALMNC-84.7）才需要重建。 */
 export function needsActivityRebuild(tableSql: string | undefined): boolean {
   if (!tableSql) return false
   const sourceCheck = /source_kind\s+text[^,]*check\s*\(([^)]*)\)/i.exec(tableSql)?.[1] ?? ''
   const roleCheck = /actor_role\s+text[^,]*check\s*\(([^)]*)\)/i.exec(tableSql)?.[1] ?? ''
-  return !sourceCheck.includes("'system'") || !roleCheck.includes("'system'")
+  return !sourceCheck.includes("'system'")
+    || !roleCheck.includes("'system'")
+    || !sourceCheck.includes("'mcp'")
+    || !roleCheck.includes("'advisor'")
 }
 
 /**

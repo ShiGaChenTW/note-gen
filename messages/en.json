@@ -23,6 +23,7 @@
       "expert": "Expert",
       "secretary": "Secretary",
       "researcher": "Researcher",
+      "advisor": "Advisor",
       "expertOf": "{domain} expert"
     },
     "tools": {
@@ -71,6 +72,7 @@
       "correctsEntry": "corrects #{id}",
       "sourceConversation": "conversation {ref}",
       "sourceProposal": "proposal {ref}",
+      "sourceMcp": "External MCP {ref}",
       "scott": "Scott",
       "system": "System",
       "preferences": "Scott's preferences",
@@ -88,6 +90,7 @@
         "reported": "reported",
         "corrected": "corrected",
         "undone": "undid",
+        "deleted": "deleted",
         "repaired": "System repair"
       },
       "undoWindowHint": "Changes from the last 30 days can be undone.",

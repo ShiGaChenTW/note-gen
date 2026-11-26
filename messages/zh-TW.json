@@ -23,6 +23,7 @@
       "expert": "專家",
       "secretary": "秘書",
       "researcher": "研究員",
+      "advisor": "顧問",
       "expertOf": "{domain}專家"
     },
     "tools": {
@@ -71,6 +72,7 @@
       "correctsEntry": "更正 #{id}",
       "sourceConversation": "對話 {ref}",
       "sourceProposal": "提案 {ref}",
+      "sourceMcp": "外部 MCP {ref}",
       "scott": "Scott",
       "system": "系統",
       "preferences": "Scott 的偏好",
@@ -88,6 +90,7 @@
         "reported": "回報",
         "corrected": "更正",
         "undone": "復原",
+        "deleted": "刪除",
         "repaired": "系統修復"
       },
       "undoWindowHint": "30 天內的變更可以復原。",

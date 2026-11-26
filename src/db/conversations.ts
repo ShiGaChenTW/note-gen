@@ -321,7 +321,14 @@ export async function permanentlyDeleteConversation(id: number): Promise<void> {
 }
 
 // 删除会话：軟刪除並寫入「最近刪除」，30 天內可還原；僅在清除過期項目或清理空對話殼時永久刪除
-export async function deleteConversation(id: number): Promise<void> {
+export async function deleteConversation(
+  id: number,
+  trashMeta?: {
+    deletedBy?: string
+    actorRole?: import('@/lib/trash/types').TrashActor
+    source?: import('@/lib/trash/types').TrashSource
+  },
+): Promise<void> {
   const trashed = await softDeleteConversation(id)
   if (!trashed) return
   const { recordDbTrash } = await import('@/lib/trash/runtime')
@@ -329,9 +336,9 @@ export async function deleteConversation(id: number): Promise<void> {
     entityType: 'conversation',
     entityId: String(id),
     title: trashed.title,
-    deletedBy: 'scott',
-    actorRole: 'scott',
-    source: 'chat-header',
+    deletedBy: trashMeta?.deletedBy ?? 'scott',
+    actorRole: trashMeta?.actorRole ?? 'scott',
+    source: trashMeta?.source ?? 'chat-header',
     deletedAt: trashed.deletedAt ?? undefined,
   })
 }

@@ -23,6 +23,7 @@
       "expert": "专家",
       "secretary": "秘书",
       "researcher": "研究员",
+      "advisor": "顾问",
       "expertOf": "{domain}专家"
     },
     "tools": {
@@ -71,6 +72,7 @@
       "correctsEntry": "更正 #{id}",
       "sourceConversation": "对话 {ref}",
       "sourceProposal": "提案 {ref}",
+      "sourceMcp": "外部 MCP {ref}",
       "scott": "Scott",
       "system": "系统",
       "preferences": "Scott 的偏好",
@@ -88,6 +90,7 @@
         "reported": "回报",
         "corrected": "更正",
         "undone": "复原",
+        "deleted": "删除",
         "repaired": "系统修复"
       },
       "undoWindowHint": "30 天内的变更可以复原。",

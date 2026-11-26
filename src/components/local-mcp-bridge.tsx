@@ -17,7 +17,11 @@ export function LocalMcpBridge() {
         const request = event.payload
         void (async () => {
           try {
-            const result = await executeLocalMcpTool(request.toolName, request.arguments)
+            const result = await executeLocalMcpTool(request.toolName, request.arguments, {
+              clientName: request.connection?.name,
+              connectionId: request.connection?.id,
+              requestId: request.requestId,
+            })
             await invoke('resolve_local_mcp_request', {
               body: { requestId: request.requestId, result },
             })

@@ -45,7 +45,42 @@ describe('activity log format (AC3)', () => {
     expect(validateActivityEntry({ ...valid, actorId: ' ' })).toEqual({ ok: false, error: 'ACTOR_REQUIRED' })
     expect(validateActivityEntry({ ...valid, actorRole: 'scott' })).toEqual({ ok: false, error: 'ACTOR_ROLE_INVALID' })
     expect(validateActivityEntry({ ...valid, actorRole: 'boss' as never })).toEqual({ ok: false, error: 'ACTOR_ROLE_INVALID' })
-    expect(validateActivityEntry({ ...valid, action: 'deleted' as never })).toEqual({ ok: false, error: 'ACTION_INVALID' })
+    expect(validateActivityEntry({ ...valid, action: 'purged' as never })).toEqual({ ok: false, error: 'ACTION_INVALID' })
+    expect(validateActivityEntry({
+      actorId: 'mcp:Claude Code',
+      actorRole: 'advisor',
+      action: 'deleted',
+      targetLink: 'note:Projects/draft.md',
+      source: { kind: 'mcp', ref: 'note_delete' },
+    })).toEqual({
+      ok: true,
+      entry: {
+        actorId: 'mcp:Claude Code',
+        actorRole: 'advisor',
+        action: 'deleted',
+        targetLink: 'note:Projects/draft.md',
+        sourceKind: 'mcp',
+        sourceRef: 'note_delete',
+        note: '',
+        correctsId: null,
+        opId: null,
+      },
+    })
+    expect(validateActivityEntry({
+      actorId: 'mcp:Claude Code',
+      actorRole: 'advisor',
+      action: 'updated',
+      targetLink: 'note:a.md',
+      source: { kind: 'conversation', ref: 'c1' },
+    })).toEqual({ ok: false, error: 'ACTOR_ROLE_INVALID' })
+    expect(validateActivityEntry({ ...valid, source: { kind: 'mcp', ref: 'note_update' } })).toEqual({ ok: false, error: 'ACTOR_ROLE_INVALID' })
+    expect(validateActivityEntry({
+      actorId: 'scott',
+      actorRole: 'advisor',
+      action: 'updated',
+      targetLink: 'note:a.md',
+      source: { kind: 'mcp', ref: 'note_update' },
+    })).toEqual({ ok: false, error: 'ACTOR_ROLE_INVALID' })
     expect(validateActivityEntry({ ...valid, source: { kind: 'conversation', ref: '' } })).toEqual({ ok: false, error: 'SOURCE_REQUIRED' })
     expect(validateActivityEntry({ ...valid, source: { kind: 'memory' as never, ref: 'x' } })).toEqual({ ok: false, error: 'SOURCE_REQUIRED' })
     expect(validateActivityEntry({ ...valid, at: 1 } as never)).toEqual({ ok: false, error: 'UNKNOWN_FIELD' })

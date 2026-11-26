@@ -9,7 +9,7 @@ import {
   writeAgentMemory, type AgentMemoryView,
 } from '@/db/agent-memory'
 import {
-  activityActors, filterActivityByActor, formatContextLines, parseContextLines, SYSTEM_ACTOR_ID, validateSharedContext,
+  activityActors, advisorClientName, filterActivityByActor, formatContextLines, parseContextLines, SYSTEM_ACTOR_ID, validateSharedContext,
   type ActivityActor, type ActivityEntry, type ContextValidationError, type MemoryKind,
 } from '@/lib/agent-memory'
 import { agentRoleLabel } from '@/lib/agents/display'
@@ -28,9 +28,9 @@ const field = 'w-full rounded-md border border-line bg-bg px-3 py-2 text-ink'
 const textarea = `${field} min-h-32 font-mono text-xs`
 const ACTIVITY_LIMIT = 50
 
-/** Fork（almanac ALMNC-71）：note:／task: 連結裡的路徑是 encodeURI 過的，顯示時還原成看得懂的路徑。 */
+/** Fork（almanac ALMNC-71／84.7）：note:／task:／canvas: 連結裡的路徑可能經 encodeURI，顯示時還原。 */
 function displayTarget(link: string): string {
-  const match = /^(note|task):(.+)$/.exec(link)
+  const match = /^(note|task|canvas):(.+)$/.exec(link)
   if (!match) return link
   try {
     return `${match[1]}:${decodeURI(match[2])}`
@@ -239,11 +239,13 @@ export function AgentMemorySettings({ agents, onAgentsChanged }: { agents: Saved
   const actorName = (entry: Pick<ActivityEntry, 'actorId' | 'actorRole'>) => {
     if (entry.actorRole === 'scott') return t('scott')
     if (entry.actorRole === 'system') return t('system')
+    if (entry.actorRole === 'advisor') return advisorClientName(entry.actorId)
     return agents.find(item => item.id === entry.actorId)?.name ?? entry.actorId
   }
 
   const roleLabel = (entry: Pick<ActivityEntry, 'actorId' | 'actorRole'>) => {
     if (entry.actorRole === 'scott' || entry.actorRole === 'system') return null
+    if (entry.actorRole === 'advisor') return tRoles('advisor')
     const known = agents.find(item => item.id === entry.actorId)
     return agentRoleLabel(known ?? { role: entry.actorRole }, tRoles)
   }
@@ -373,7 +375,14 @@ export function AgentMemorySettings({ agents, onAgentsChanged }: { agents: Saved
                               <>
                                 {entry.source.ref.startsWith('op:')
                                   ? t('sourceDirect')
-                                  : t(entry.source.kind === 'proposal' ? 'sourceProposal' : 'sourceConversation', { ref: entry.source.ref })}
+                                  : t(
+                                    entry.source.kind === 'proposal'
+                                      ? 'sourceProposal'
+                                      : entry.source.kind === 'mcp'
+                                        ? 'sourceMcp'
+                                        : 'sourceConversation',
+                                    { ref: entry.source.ref },
+                                  )}
                                 {entry.note && ` · ${entry.note}`}
                               </>
                             )}
