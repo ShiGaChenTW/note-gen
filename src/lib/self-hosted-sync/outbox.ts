@@ -46,6 +46,10 @@ export async function enqueueFileSnapshot(
   if (!resolvedWorkspaceId) return
   const now = Date.now()
   if (await hasUnsentChange(database, resolvedWorkspaceId, 'file', relativePath, operation)) return
+  if (operation === 'upsert') {
+    const { isPathBlockedByPendingSyncDeletion } = await import('@/lib/sync/deletion-tombstones')
+    if (await isPathBlockedByPendingSyncDeletion(relativePath)) return
+  }
   if (operation === 'upsert' && await fileSnapshotMatchesMapping(
     database, resolvedWorkspaceId, relativePath,
   )) return
@@ -97,6 +101,10 @@ export async function enqueueAssetSnapshot(
   const now = Date.now()
   if (await hasUnsentChange(database, resolvedWorkspaceId, 'asset', relativePath, operation)) return
   if (operation === 'upsert') {
+    const { isPathBlockedByPendingSyncDeletion } = await import('@/lib/sync/deletion-tombstones')
+    if (await isPathBlockedByPendingSyncDeletion(relativePath)) return
+  }
+  if (operation === 'upsert') {
     await enqueueParentFolderChanges(database, resolvedWorkspaceId, relativePath, now, identityMode)
   }
   await database.execute(
@@ -117,6 +125,10 @@ export async function enqueueFolderSnapshot(
   const database = await getDb()
   const now = Date.now()
   if (await hasUnsentChange(database, resolvedWorkspaceId, 'folder', relativePath, operation)) return
+  if (operation === 'upsert') {
+    const { isPathBlockedByPendingSyncDeletion } = await import('@/lib/sync/deletion-tombstones')
+    if (await isPathBlockedByPendingSyncDeletion(relativePath)) return
+  }
   await database.execute(
     `insert into self_hosted_local_changes(workspace_id, domain, local_key, operation, reason, created_at, updated_at)
      values ($1, 'folder', $2, $3, $4, $5, $5)`,

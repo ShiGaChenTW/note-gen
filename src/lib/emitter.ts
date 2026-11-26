@@ -25,6 +25,8 @@ interface Events {
   'plugin-records-changed': undefined;
   /** Fork（almanac ALMNC-84.4）：最近刪除項目變動（移入、還原、永久刪除、過期清理）。 */
   'trash-changed': undefined;
+  /** Fork（almanac ALMNC-84.8）：待 Scott 確認的遠端同步刪除項目變動。 */
+  'pending-sync-deletions-changed': undefined;
   /** Fork（almanac ALMNC-69.3）：收起所有蓋在編輯器上的全頁畫面（從新增資料源對話框開新文件時）。 */
   'show-editor': undefined;
   'searchAndScroll': string;

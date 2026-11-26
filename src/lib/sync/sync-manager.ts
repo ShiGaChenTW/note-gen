@@ -5,6 +5,7 @@ import { getWorkspaceOverwriteVersion, readVersionedWorkspaceFile, uploadGuarded
 import { prepareWorkspacePathUpload, retryWorkspacePathMoves } from './workspace-path-moves'
 import { captureWorkspaceRemoteWriteGuard } from './workspace-remote-write-guard'
 import { calculateFileSha, getLocalFileMetadata, getRemoteFileInfo, compareFileVersions, pullRemoteFile, setLocalRecordedSha, getLocalRecordedSha } from './auto-sync'
+import { isPathBlockedByPendingSyncDeletion, recordRemoteDeletionTombstones } from './deletion-tombstones'
 import { hasInvalidFileNameChars, sanitizeFilePath } from './filename-utils'
 import { updateFileSyncTime } from './conflict-resolution'
 import { getOptionalSyncRepoName } from './repo-utils'
@@ -198,6 +199,9 @@ export class SyncManager {
     // 检查是否应该排除
     if (shouldExclude(path)) {
       return { success: true, action: 'none', message: '文件被排除在同步之外' }
+    }
+    if (await isPathBlockedByPendingSyncDeletion(path)) {
+      return { success: true, action: 'none', message: '遠端刪除待確認，暫不回推' }
     }
 
     try {
@@ -445,6 +449,9 @@ export class SyncManager {
         await setLocalRecordedSha(path, '', metadataKey)
         if (platform === 's3') useSyncStore.getState().removeS3FileEtag(path)
         if (platform === 'webdav') useSyncStore.getState().removeWebDAVFileEtag(path)
+        if (platform !== 'cloudFolder' || config?.provider === 'oneDrive') {
+          await recordRemoteDeletionTombstones([{ path, kind: 'file' }], platform).catch(() => undefined)
+        }
       }
 
       if (success) {

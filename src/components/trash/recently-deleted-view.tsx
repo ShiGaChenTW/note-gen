@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import emitter from '@/lib/emitter'
+import { PendingSyncDeletionsPanel } from './pending-sync-deletions'
 import {
   emptyAppTrash,
   listTrashItems,
@@ -202,6 +203,8 @@ export function RecentlyDeletedView({ mobile = false }: { mobile?: boolean }) {
 
   return (
     <div className={cn('flex flex-col gap-4', mobile && 'gap-3')}>
+      <PendingSyncDeletionsPanel onTrashUpdated={() => void refreshItems()} />
+
       <div className={cn(
         'flex flex-col gap-3 rounded-lg border bg-card p-3 sm:flex-row sm:items-center sm:justify-between',
         mobile && 'p-3',

@@ -351,6 +351,10 @@ export async function pullAllRemoteLibraryFiles(
   onProgress?.({ phase: 'listing', current: 0, total: 0 })
   const files = await listRemoteLibraryFiles(options)
   const result = await pullRemoteLibraryFiles(files, onProgress)
+  if (!options.scope || options.scope === 'workspace') {
+    const { reconcileRemoteDeletionTombstones } = await import('./deletion-tombstones')
+    await reconcileRemoteDeletionTombstones({ bypassCache: true, platform: options.platform }).catch(() => 0)
+  }
   recordSyncTiming('workspacePullAll', startedAt, {
     total: result.total,
     downloaded: result.downloaded,
@@ -490,7 +494,12 @@ async function uploadLocalLibraryFiles(
   let started = 0
   let completed = 0
 
+  const { isPathBlockedByPendingSyncDeletion } = await import('./deletion-tombstones')
   await runWithConcurrency(files, concurrency, async file => {
+    if (await isPathBlockedByPendingSyncDeletion(file.path)) {
+      completed += 1
+      return
+    }
     started += 1
     onProgress?.({ phase: 'uploading', current: started, total: files.length, path: file.path })
 

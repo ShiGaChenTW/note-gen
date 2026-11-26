@@ -11,6 +11,7 @@ import { webdavHeadObject, webdavDownloadBytes } from './webdav'
 import { decodeBase64ToBytes } from './remote-file'
 import { decodeSyncText, isBinaryFilePath, syncContentBytes } from './file-content'
 import { CloudFolderConfig, S3Config, WebDAVConfig } from '@/types/sync'
+import { enqueueTombstoneIfRemoteDeleted } from './deletion-tombstones'
 import {
   androidCloudFolderWorkspaceDownloadBytes,
   androidCloudFolderWorkspaceHead,
@@ -375,6 +376,13 @@ export async function compareFileVersions(path: string): Promise<SyncResult> {
   // 如果远程文件不存在，但本地文件存在
   if (!remoteInfo.sha) {
     if (localMeta.localSha) {
+      if (await enqueueTombstoneIfRemoteDeleted(path, platform || 'github')) {
+        return {
+          shouldUpdate: false,
+          action: 'none',
+          reason: '遠端已刪除，等待確認，暫不回推',
+        }
+      }
       return {
         shouldUpdate: true,
         action: 'push',
@@ -1124,6 +1132,13 @@ export async function compareS3FileVersions(path: string): Promise<SyncResult> {
   // 如果远程不存在
   if (!remoteInfo) {
     if (localMeta.localSha) {
+      if (await enqueueTombstoneIfRemoteDeleted(path, 's3')) {
+        return {
+          shouldUpdate: false,
+          action: 'none',
+          reason: '遠端已刪除，等待確認，暫不回推',
+        }
+      }
       return {
         shouldUpdate: true,
         action: 'push',
@@ -1209,6 +1224,13 @@ export async function compareWebDAVFileVersions(path: string): Promise<SyncResul
   // 如果远程不存在
   if (!remoteInfo) {
     if (localMeta.localSha) {
+      if (await enqueueTombstoneIfRemoteDeleted(path, 'webdav')) {
+        return {
+          shouldUpdate: false,
+          action: 'none',
+          reason: '遠端已刪除，等待確認，暫不回推',
+        }
+      }
       return {
         shouldUpdate: true,
         action: 'push',

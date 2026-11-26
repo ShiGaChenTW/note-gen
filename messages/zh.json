@@ -4284,6 +4284,20 @@
         "description": "这会立即永久清除所有 {count} 个最近删除项目，无法再恢复。",
         "cancel": "取消",
         "confirm": "清空最近删除"
+      },
+      "syncDeletions": {
+        "title": "远程同步删除确认",
+        "description": "其他设备删除了以下项目。确认后会移至最近删除（保留 30 天），拒绝则保留本地文件；在您决定前不会回推覆盖远程。",
+        "fileBadge": "文件",
+        "folderBadge": "文件夹",
+        "confirm": "移至最近删除",
+        "reject": "保留本地文件",
+        "confirmAll": "全部移至最近删除",
+        "rejectAll": "全部保留本地",
+        "later": "稍后决定",
+        "confirmedToast": "已将“{path}”移至最近删除",
+        "rejectedToast": "已保留本地项目“{path}”",
+        "actionFailed": "处理远程删除失败，请稍后再试"
       }
     },
     "navigationGroups": {
