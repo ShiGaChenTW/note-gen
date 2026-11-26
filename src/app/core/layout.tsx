@@ -51,6 +51,7 @@ import { PluginDialogHost } from "@/components/plugins/plugin-dialog-host"
 import { DesktopScreenshotBridge } from "@/components/desktop-screenshot-bridge"
 import { DesktopRecordControls } from './main/mark/desktop-record-controls'
 import { UnifiedRecordDialog } from './main/mark/unified-record-dialog'
+import { PROMPT_LIBRARY_ENABLED } from '@/lib/prompt-library/feature'
 
 export default function RootLayout({
   children,
@@ -167,7 +168,8 @@ export default function RootLayout({
     void invoke('update_tray_record_toolbar_config', {
       screenshotShortcut: shortcutsInitialized ? screenshotShortcut : undefined,
       shortcutRecording: Boolean(recordingShortcut),
-      config: recordToolbarConfig.map((item) => ({
+      // Fork（almanac ALMNC-83.3）：提示詞功能關閉時托盤選單不列 Prompt 素材
+      config: recordToolbarConfig.filter(item => PROMPT_LIBRARY_ENABLED || item.id !== 'prompt-draft').map((item) => ({
         ...item,
         label: recordToolLabels[item.id] || item.id,
       })),

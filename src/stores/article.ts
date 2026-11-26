@@ -2627,8 +2627,8 @@ const useArticleStore = create<NoteState>((set, get) => ({
       if (requestGeneration === undefined || requestGeneration === fileTreeLoadGeneration) {
         set({ fileTreeLoading: false, fileTreeInitialized: true })
         toast({
-          title: '無法讀取工作區',
-          description: '請確認 NoteGen 有權限存取工作區資料夾（系統設定 > 隱私權與安全性 > 檔案與資料夾），再按檔案樹的重新整理。',
+          title: '無法讀取筆記庫',
+          description: '請確認 NoteGen 有權限存取筆記庫資料夾（系統設定 > 隱私權與安全性 > 檔案與資料夾），再按檔案樹的重新整理。',
           variant: 'destructive',
         })
       }

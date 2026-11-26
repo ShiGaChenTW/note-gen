@@ -13,6 +13,7 @@ import {
 import { McpSelector } from "./mcp-selector"
 import { ModelSelector } from "./model-selector"
 import { PromptSelector } from "./prompt-selector"
+import { PROMPT_LIBRARY_ENABLED } from "@/lib/prompt-library/feature"
 import { ReasoningSelect } from '@/app/core/main/chat/reasoning-select'
 import { useTranslations } from "next-intl"
 
@@ -34,7 +35,8 @@ export function ChatToolsDrawer() {
         <div className="flex min-w-0 flex-col gap-1 overflow-x-hidden px-3 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
           <p className="px-2 py-2 text-xs font-medium text-muted-foreground">{tTools('groups.conversation')}</p>
           <ModelSelector />
-          <PromptSelector />
+          {/* Fork（almanac ALMNC-83.3）：對話角色跟著提示詞開關關閉 */}
+          {PROMPT_LIBRARY_ENABLED && <PromptSelector />}
           <ReasoningSelect />
           <Separator className="my-2" />
           <p className="px-2 py-2 text-xs font-medium text-muted-foreground">{tTools('groups.extensions')}</p>

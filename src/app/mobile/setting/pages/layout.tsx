@@ -6,6 +6,8 @@ import { MobileSettingActionOutlet, SettingLayoutProvider } from "@/app/core/set
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef } from "react";
 import { MobileBackButton } from "@/components/mobile-back-button";
+import { useUiV3 } from "@/lib/fork-ui";
+import { settingSectionTitleKey, settingSections, type BuiltinSettingSection } from "@/stores/settings-dialog";
 
 export default function RootLayout({
   children,
@@ -17,11 +19,13 @@ export default function RootLayout({
   const t = useTranslations('common')
   const settingsT = useTranslations('settings')
   const swipeBackRef = useRef<SwipeBackHandle>(null)
+  const v3 = useUiV3()
   const anchor = pathname.split('/').filter(Boolean).at(-1) ?? ''
+  // Fork（almanac ALMNC-83.1）：頁標題與設定選單同一套命名（V3 的 rag 叫「語意檢索」）
   const title = anchor === 'pages'
     ? settingsT('title')
-    : anchor === 'ai'
-    ? settingsT('ai.menuTitle')
+    : (settingSections as string[]).includes(anchor)
+    ? settingsT(settingSectionTitleKey(anchor as BuiltinSettingSection, v3))
     : settingsT(`${anchor}.title`)
 
   const handleSwipeBack = useCallback(() => {

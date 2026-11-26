@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/drawer"
 import { MobileMeSheet } from "@/app/mobile/components/mobile-me-sheet"
 import { useWikiNavigation } from '@/components/wiki/use-wiki-navigation'
+import { useUiV3 } from '@/lib/fork-ui'
 
 const SearchDialog = dynamic(
   () => import('@/components/search-dialog').then(module => module.SearchDialog),
@@ -44,6 +45,8 @@ function formatRelativeTime(timestamp: number, locale: string): string {
 export function MobileChatHeader() {
   const { openFolder: openWikiFolder } = useWikiNavigation()
   const tWiki = useTranslations('wiki')
+  // Fork（almanac ALMNC-83.1）：V3 下 LLM Wiki 入口隱藏
+  const v3 = useUiV3()
   const {
     startNewConversation,
     startTemporaryConversation,
@@ -90,7 +93,7 @@ export function MobileChatHeader() {
         <MobileMeSheet />
 
         <div className="ml-auto flex shrink-0 items-center">
-          <Button variant="ghost" size="icon" aria-label={tWiki('open')} onClick={() => void openWikiFolder()}><BookOpen /></Button>
+          {!v3 && <Button variant="ghost" size="icon" aria-label={tWiki('open')} onClick={() => void openWikiFolder()}><BookOpen /></Button>}
           <Button
             variant="ghost"
             size="icon"

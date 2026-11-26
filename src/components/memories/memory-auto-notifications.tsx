@@ -5,7 +5,8 @@ import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import emitter from "@/lib/emitter"
 import useMemoriesStore from "@/stores/memories"
-import { useSettingsDialogStore } from "@/stores/settings-dialog"
+import { memorySettingSection, useSettingsDialogStore } from "@/stores/settings-dialog"
+import { isUiV3 } from "@/lib/fork-ui"
 
 export function MemoryAutoNotifications() {
   const t = useTranslations("settings.memories")
@@ -23,7 +24,8 @@ export function MemoryAutoNotifications() {
           description: pending.content,
           action: {
             label: t("actions.review"),
-            onClick: () => openSettings("memories"),
+            // Fork（almanac ALMNC-83.2）：新介面的記憶在夥伴分頁的 Agent 設定區
+            onClick: () => openSettings(memorySettingSection(isUiV3())),
           },
         })
         return

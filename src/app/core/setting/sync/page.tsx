@@ -78,6 +78,7 @@ import useSettingStore, { useSettingsHydrationStore } from '@/stores/setting'
 import useSyncStore from '@/stores/sync'
 import { useSettingsDialogStore } from '@/stores/settings-dialog'
 import { SYNC_PLATFORMS, SYNC_PLATFORM_INFO, type SyncPlatform } from '@/types/sync'
+import { isSyncPlatformListed } from '@/lib/sync/listed-platforms'
 
 const PLATFORM_ICONS: Record<SyncPlatform, LucideIcon> = {
   local: HardDrive,
@@ -148,10 +149,11 @@ export default function SyncPage() {
   const [hasSelfHostedConfiguration, setHasSelfHostedConfiguration] = useState(false)
 
   const visiblePlatforms = useMemo(
-    () => SYNC_PLATFORMS.filter(itemPlatform => itemPlatform !== 'selfHosted'
-      || developerMode
-      || primaryBackupMethod === 'selfHosted'
-      || hasSelfHostedConfiguration),
+    () => SYNC_PLATFORMS.filter(itemPlatform => isSyncPlatformListed(itemPlatform, primaryBackupMethod)
+      && (itemPlatform !== 'selfHosted'
+        || developerMode
+        || primaryBackupMethod === 'selfHosted'
+        || hasSelfHostedConfiguration)),
     [developerMode, hasSelfHostedConfiguration, primaryBackupMethod],
   )
 

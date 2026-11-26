@@ -95,3 +95,17 @@ it('puts them back in the title bar when the V3 sidebar is hidden', async () => 
   useSidebarStore.setState({ leftSidebarVisible: false, centerPanelVisible: true, rightSidebarVisible: true })
   expect(await renderTitleBar()).toEqual({ hasLeftToggle: true, hasSettings: true })
 })
+
+// Fork（almanac ALMNC-83.1）：V3 下 LLM Wiki 入口隱藏；classic 照舊有「開啟 Wiki 資料夾」。
+async function hasWikiButton() {
+  const providerProps = { locale: 'zh-TW', messages: zhTW, timeZone: 'Asia/Taipei', children: React.createElement(TitleBar) }
+  await act(async () => root.render(React.createElement(NextIntlClientProvider, providerProps)))
+  return [...host.querySelectorAll('button')].some(button => button.getAttribute('aria-label') === zhTW.wiki.open)
+}
+
+it('hides the LLM Wiki button in V3 and keeps it in classic', async () => {
+  useUiModeStore.setState({ mode: 'v3' })
+  expect(await hasWikiButton()).toBe(false)
+  useUiModeStore.setState({ mode: 'classic' })
+  expect(await hasWikiButton()).toBe(true)
+})

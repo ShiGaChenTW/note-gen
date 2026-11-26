@@ -51,7 +51,8 @@ import { getTemplateRangeLabel, getTemplateRangeOptions } from "@/lib/template-r
 import { ArrowLeft, ArrowRight, Check, ChevronDown, FileText, FolderOpen, Home, ListChecks, Pencil, Settings2, X, Zap } from "lucide-react"
 import { getMarkLocalAssetPath, type Mark } from "@/db/marks"
 import { MarkItem } from "./mark-item"
-import { useSettingsDialogStore } from "@/stores/settings-dialog"
+import { isSettingSectionVisible, useSettingsDialogStore } from "@/stores/settings-dialog"
+import { useUiV3 } from "@/lib/fork-ui"
 import { saveImageToWorkspace } from "@/lib/image-handler"
 import {
   Empty,
@@ -366,6 +367,8 @@ export const OrganizeNotes = forwardRef<{ openOrganize: (options?: OpenOrganizeO
   ])
   const activeStepItem = stepItems[organizeStepIndex] ?? stepItems[0]
   const { openSettings } = useSettingsDialogStore()
+  // Fork（almanac ALMNC-83.4）：整理範本頁在 V3 隱藏，「管理範本」按鈕跟著不顯示
+  const templatePageVisible = isSettingSectionVisible('template', useUiV3())
 
   const handleManageTemplate = useCallback(() => {
     setOpen(false)
@@ -1100,10 +1103,10 @@ export const OrganizeNotes = forwardRef<{ openOrganize: (options?: OpenOrganizeO
                 <div className={cn("flex min-w-0 flex-col gap-2", isMobile && "rounded-2xl border bg-background p-3")}>
                   <div className="flex min-w-0 items-center justify-between gap-2">
                     <Label>{t('selectTemplate')}</Label>
-                    <Button className={cn("h-8 gap-1 px-2", isMobile && "rounded-full text-xs")} variant="outline" disabled={loading} onClick={handleManageTemplate}>
+                    {templatePageVisible && <Button className={cn("h-8 gap-1 px-2", isMobile && "rounded-full text-xs")} variant="outline" disabled={loading} onClick={handleManageTemplate}>
                       <Pencil className="size-4" />
                       {t('manageTemplate')}
-                    </Button>
+                    </Button>}
                   </div>
                   <Select value={tab} onValueChange={handleTemplateChange}>
                     <SelectTrigger id="organize-template" className={cn("w-full", isMobile && "rounded-xl")}>

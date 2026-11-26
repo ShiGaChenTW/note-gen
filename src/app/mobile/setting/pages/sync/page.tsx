@@ -33,6 +33,7 @@ import type { SyncRepoPlatform, WorkspaceSyncRepos } from '@/lib/sync/workspace-
 import useSettingStore, { useSettingsHydrationStore } from '@/stores/setting'
 import useSyncStore from '@/stores/sync'
 import { SYNC_PLATFORMS, SYNC_PLATFORM_INFO, SyncPlatform, type CloudFolderConfig } from '@/types/sync'
+import { isOneDriveListed, isSyncPlatformListed } from '@/lib/sync/listed-platforms'
 
 type MobileSyncPlatform = SyncPlatform | 'iCloud' | 'oneDrive'
 
@@ -97,15 +98,18 @@ export default function SyncPage() {
 
   const standardPlatforms = useMemo(
     () => SYNC_PLATFORMS.filter(platformName => platformName !== 'cloudFolder'
+      && isSyncPlatformListed(platformName, primaryBackupMethod)
       && (platformName !== 'selfHosted'
         || developerMode
         || primaryBackupMethod === 'selfHosted'
         || hasSelfHostedConfiguration)),
     [developerMode, hasSelfHostedConfiguration, primaryBackupMethod],
   )
+  // Fork（almanac ALMNC-83.6）：OneDrive 不再列出，只有正在用它的裝置照樣顯示，設定保留。
+  const oneDriveListed = isOneDriveListed(primaryBackupMethod, activeCloudFolderProvider)
   const availablePlatforms: MobileSyncPlatform[] = isIOS
-    ? [...standardPlatforms, 'iCloud', 'oneDrive']
-    : isAndroid
+    ? [...standardPlatforms, 'iCloud', ...(oneDriveListed ? ['oneDrive' as const] : [])]
+    : isAndroid && oneDriveListed
       ? [...standardPlatforms, 'oneDrive']
       : standardPlatforms
 

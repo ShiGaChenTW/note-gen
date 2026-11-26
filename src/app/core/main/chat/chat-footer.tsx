@@ -2,6 +2,7 @@
 
 import { ModelSelect } from "./model-select"
 import { PromptSelect } from "./prompt-select"
+import { PROMPT_LIBRARY_ENABLED } from "@/lib/prompt-library/feature"
 import { cn } from '@/lib/utils'
 import { StatusBarItem } from '../status-bar-order'
 
@@ -13,10 +14,11 @@ export function ChatFooter({ embedded = false }: { embedded?: boolean }) {
     )}>
       {embedded ? <>
         <StatusBarItem id="system:model" rank={90}><ModelSelect display="status" /></StatusBarItem>
-        <StatusBarItem id="system:prompt" rank={91}><PromptSelect display="status" /></StatusBarItem>
+        {/* Fork（almanac ALMNC-83.3）：對話角色跟著提示詞開關關閉 */}
+        {PROMPT_LIBRARY_ENABLED && <StatusBarItem id="system:prompt" rank={91}><PromptSelect display="status" /></StatusBarItem>}
       </> : <>
         <ModelSelect display="status" />
-        <PromptSelect display="status" />
+        {PROMPT_LIBRARY_ENABLED && <PromptSelect display="status" />}
       </>}
     </div>
   )

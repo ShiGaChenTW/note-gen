@@ -12,7 +12,8 @@ export function KnowledgeSettingCard({
   title: string
   description: string
   icon: LucideIcon
-  label: string
+  /** 沒給就不顯示標籤（ALMNC-83.1：V3 語意檢索頁） */
+  label?: string
   enabled?: boolean
   actions?: ReactNode
   children?: ReactNode
@@ -28,7 +29,7 @@ export function KnowledgeSettingCard({
         <div className="flex min-w-0 flex-col gap-2">
           <div className="flex flex-wrap items-center gap-2">
             <CardTitle id={titleId} role="heading" aria-level={3}>{title}</CardTitle>
-            <Badge variant="secondary">{label}</Badge>
+            {label ? <Badge variant="secondary">{label}</Badge> : null}
           </div>
           <CardDescription>{description}</CardDescription>
         </div>

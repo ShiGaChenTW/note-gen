@@ -6,10 +6,6 @@ import { Settings } from 'lucide-react'
 import { InterfaceSettings } from './interface-settings'
 import { AdvancedSettings } from './advanced-settings'
 import { SystemBehaviorSettings } from './system-behavior-settings'
-import { OrganizeSettings } from '../../main/organize/organize-settings'
-import { AutoAcceptSettings } from './auto-accept-settings'
-import { AgentSettings } from '../agents/agent-settings'
-import { RssSettings } from '../rss/rss-settings'
 
 export default function GeneralSettingsPage() {
   const t = useTranslations('settings.general')
@@ -23,11 +19,7 @@ export default function GeneralSettingsPage() {
     >
       <SystemBehaviorSettings />
       <InterfaceSettings />
-      <AgentSettings />
-      <OrganizeSettings />
-      <AutoAcceptSettings />
-      {/* Fork（almanac ALMNC-57.2）：RSS 訂閱（只在 V3），接在其他 V3 設定後面。 */}
-      <RssSettings />
+      {/* Fork（almanac ALMNC-83.5）：夥伴、Agent 設定區、調研與回顧、自動整理、自動接受搬到夥伴分頁，RSS 搬到電子紙頁。 */}
       <AdvancedSettings />
     </SettingType>
   )
