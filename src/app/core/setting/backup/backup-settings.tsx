@@ -33,6 +33,7 @@ import { Item, ItemActions, ItemContent, ItemDescription, ItemMedia, ItemTitle }
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   createManagedBackup,
+  DEFAULT_MANAGED_BACKUP_SCHEDULE,
   listManagedBackups,
   loadManagedBackupSettings,
   restoreManagedBackup,
@@ -44,7 +45,7 @@ import {
 
 const DEFAULT_SETTINGS: ManagedBackupSettings = {
   directory: '',
-  schedule: 'disabled',
+  schedule: DEFAULT_MANAGED_BACKUP_SCHEDULE,
   retention: 10,
   lastSuccessAt: null,
   lastError: null,
