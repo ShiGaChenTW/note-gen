@@ -226,6 +226,40 @@ describe('審核 tab', () => {
     expect(card('白板照片').querySelector('[data-testid="card-kind"]')!.textContent).toBe('資料源判斷')
   })
 
+  it('ALMNC-84.2: delete proposal uses verb 刪除 and explains 30-day 最近刪除 recovery', () => {
+    act(() => {
+      useCollectStore.setState(state => ({
+        items: [
+          ...state.items,
+          {
+            id: 'del-item',
+            input: { kind: 'text', text: '清理舊筆記' },
+            createdAt: NOW - 1000,
+            state: 'ready',
+            proposals: [
+              proposal('d1', {
+                change: {
+                  toolName: 'note_delete_file',
+                  args: { path: '30 Notes/舊筆記.md' },
+                  kind: 'delete',
+                  path: '30 Notes/舊筆記.md',
+                  baseContent: '# 舊筆記',
+                  summary: '清理過時內容',
+                },
+              }),
+            ],
+          },
+        ],
+      }))
+    })
+    const deleteCard = card('舊筆記')
+    expect(deleteCard.querySelector('[data-testid="card-kind"]')!.textContent).toBe('筆記刪除')
+    act(() => (deleteCard.firstElementChild as HTMLElement).click())
+    const panel = deleteCard.querySelector('[data-testid="card-panel"]')!
+    expect(panel.textContent).toContain('刪除 30 Notes/舊筆記.md')
+    expect(panel.querySelector('[data-testid="card-delete-notice"]')?.textContent).toBe(messages.workbench.deleteNotice)
+  })
+
   it('AC#2: decides in place — expand, buttons by card type, collapse when done, Z undoes', async () => {
     act(() => (card('提案 a').firstElementChild as HTMLElement).click())
     const panel = card('提案 a').querySelector('[data-testid="card-panel"]')!

@@ -1976,7 +1976,7 @@
         "memories": "記憶",
         "active": "使用中",
         "pending": "待確認",
-        "archived": "已刪除"
+        "archived": "已封存"
       },
       "form": {
         "title": "新增記憶",
@@ -2027,7 +2027,7 @@
           "promote": "提升為穩定指引",
           "demote": "取消穩定指引",
           "restore": "恢復",
-          "archive": "刪除",
+          "archive": "封存",
           "deletePermanently": "永久刪除"
         },
         "kinds": {
@@ -2043,7 +2043,7 @@
         "statuses": {
           "active": "使用中",
           "pending": "待確認",
-          "archived": "已刪除"
+          "archived": "已封存"
         },
         "filters": {
           "search": "搜尋記憶",
@@ -2070,7 +2070,7 @@
         "approvedAll": "已確認全部候選",
         "savedPendingIndex": "記憶已儲存並等待索引",
         "savedPendingReview": "記憶已進入待確認佇列",
-        "archived": "記憶已刪除",
+        "archived": "記憶已封存",
         "promoted": "已加入 Agent 自訂指引",
         "demoted": "已取消穩定指引",
         "always": "一律套用",
@@ -2106,7 +2106,7 @@
         "promote": "提升為固定指引",
         "demote": "取消固定指引",
         "restore": "還原",
-        "archive": "刪除",
+        "archive": "封存",
         "deletePermanently": "永久刪除"
       },
       "kinds": {
@@ -2122,7 +2122,7 @@
       "statuses": {
         "active": "使用中",
         "pending": "待確認",
-        "archived": "已刪除"
+        "archived": "已封存"
       },
       "filters": {
         "search": "搜尋記憶",
@@ -2149,7 +2149,7 @@
       "approvedAll": "已確認所有候選記憶",
       "savedPendingIndex": "已儲存記憶，將在背景建立索引",
       "savedPendingReview": "已將記憶加入待確認清單",
-      "archived": "已刪除記憶",
+      "archived": "已封存記憶",
       "promoted": "已加入 Agent 自訂指引",
       "demoted": "已取消固定指引",
       "always": "一律套用",
@@ -4510,7 +4510,7 @@
       "includesChildren": "包含此標籤及其子標籤的記錄",
       "saveDestination": "新記錄儲存至 {name}",
       "retry": "重試",
-      "deleteTagHelp": "刪除標籤「{name}」？記錄不會刪除，子標籤仍保留在原有路徑下。",
+      "deleteTagHelp": "刪除標籤「{name}」？此標籤下的記錄會移入垃圾桶（可在垃圾桶還原）；有子標籤的標籤無法刪除。",
       "underParent": "在「{name}」下建立或編輯子標籤。",
       "rootTagHelp": "建立頂層標籤，也可以使用 / 建立多層路徑。",
       "tagName": "標籤名稱",
@@ -9224,6 +9224,7 @@
       "replace": "取代",
       "verify": "待查證",
       "archive": "封存",
+      "delete": "刪除",
       "reschedule": "改時間",
       "judge": "判斷",
       "confirm": "確認",
@@ -9273,6 +9274,8 @@
     "confirmSince": "上次確認是 {date}",
     "reconfirmRequest": "請重新確認這則筆記是否仍然成立：{path}",
     "writesTo": "接受後寫入：{dest}",
+    "deletesTarget": "刪除 {dest}",
+    "deleteNotice": "接受後會移入「最近刪除」，30 天內可救回。",
     "risk": {
       "low": "低風險",
       "high": "高風險",

@@ -16,8 +16,8 @@ export const CARD_LABELS = ['schedule', 'note', 'knowledge', 'source', 'review']
 export type CardLabel = typeof CARD_LABELS[number]
 export type LabelFilter = 'all' | CardLabel
 
-/** 十一個動詞（卡片右上角）：新增、補充、修改、合併、取代、待查證、封存、改時間、判斷、確認、整理。 */
-export const CARD_VERBS = ['add', 'supplement', 'modify', 'merge', 'replace', 'verify', 'archive', 'reschedule', 'judge', 'confirm', 'organize'] as const
+/** 十二個動詞（卡片右上角）：新增、補充、修改、合併、取代、待查證、封存、刪除、改時間、判斷、確認、整理。 */
+export const CARD_VERBS = ['add', 'supplement', 'modify', 'merge', 'replace', 'verify', 'archive', 'delete', 'reschedule', 'judge', 'confirm', 'organize'] as const
 export type CardVerb = typeof CARD_VERBS[number]
 
 /** v14 的四個分組，加上排在最後、沒有標題的「其他任務」。 */
@@ -291,7 +291,7 @@ export function proposalVerb(item: DecideItem): CardVerb {
       // 排進今日日誌既有任務的時段提案（scheduler）是檔案差異預覽：改時間；其餘是新任務。
       return item.preview.type === 'file' ? 'reschedule' : 'add'
     case 'update': return 'modify'
-    case 'delete': return 'archive'
+    case 'delete': return 'delete'
     case 'move': return 'organize'
     case 'job': return 'confirm'
     default: return 'add'

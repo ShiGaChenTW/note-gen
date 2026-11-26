@@ -82,8 +82,8 @@ describe('schedule lists every unfinished task (ALMNC-54.21 AC#1)', () => {
 })
 
 describe('labels and verbs', () => {
-  it('has exactly the eleven verbs and five labels of the spec', () => {
-    expect(CARD_VERBS).toEqual(['add', 'supplement', 'modify', 'merge', 'replace', 'verify', 'archive', 'reschedule', 'judge', 'confirm', 'organize'])
+  it('has the twelve verbs and five labels of the spec', () => {
+    expect(CARD_VERBS).toEqual(['add', 'supplement', 'modify', 'merge', 'replace', 'verify', 'archive', 'delete', 'reschedule', 'judge', 'confirm', 'organize'])
     expect(CARD_LABELS).toEqual(['schedule', 'note', 'knowledge', 'source', 'review'])
   })
 
@@ -99,7 +99,8 @@ describe('labels and verbs', () => {
     expect(proposalLabel(proposal('a', NOW, { kind: 'task' }), NOW)).toBe('schedule')
     expect(proposalLabel(proposal('a', NOW), NOW)).toBe('note')
     expect(proposalLabel(proposal('a', NOW - 15 * DAY, { kind: 'task' }), NOW)).toBe('review')
-    expect(proposalVerb(proposal('a', NOW, { kind: 'delete' }))).toBe('archive')
+    expect(proposalVerb(proposal('a', NOW, { kind: 'delete' }))).toBe('delete')
+    expect(proposalVerb(proposal('a', NOW, { card: { label: 'note', verb: 'archive' } }))).toBe('archive')
     expect(proposalVerb(proposal('a', NOW, { kind: 'move' }))).toBe('organize')
     expect(proposalVerb(proposal('a', NOW, { organizeMerge: { removed: 'a', keeper: 'b' } }))).toBe('merge')
     expect(proposalVerb(proposal('a', NOW, { kind: 'event', preview: { type: 'file', path: 'daily.md', diff: null } }))).toBe('reschedule')

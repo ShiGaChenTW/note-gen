@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import {
+  Archive,
   Check,
   Ellipsis,
   Pencil,
@@ -153,7 +154,7 @@ export function MemoryItem({ memory }: MemoryItemProps) {
                 : { key: 'promote', label: t('actions.promote'), icon: <Pin />, onSelect: promoteToGuidance },
               memory.status === 'archived'
                 ? { key: 'restore', label: t('actions.restore'), icon: <RotateCcw />, onSelect: () => restoreMemory(memory.id) }
-                : { key: 'archive', label: t('actions.archive'), icon: <Trash2 />, onSelect: archive },
+                : { key: 'archive', label: t('actions.archive'), icon: <Archive />, onSelect: archive },
               ...(memory.status === 'archived' ? [{
                 key: 'delete',
                 label: t('actions.deletePermanently'),

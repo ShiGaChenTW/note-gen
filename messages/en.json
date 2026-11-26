@@ -2055,7 +2055,7 @@
         "memories": "Memories",
         "active": "Active",
         "pending": "Needs review",
-        "archived": "Deleted"
+        "archived": "Archived"
       },
       "form": {
         "title": "Add New Memory",
@@ -2120,7 +2120,7 @@
         "promote": "Promote to stable guidance",
         "demote": "Remove from stable guidance",
         "restore": "Restore",
-        "archive": "Delete",
+        "archive": "Archive",
         "deletePermanently": "Delete permanently"
       },
       "kinds": {
@@ -2136,7 +2136,7 @@
       "statuses": {
         "active": "Active",
         "pending": "Needs review",
-        "archived": "Deleted"
+        "archived": "Archived"
       },
       "filters": {
         "search": "Search memories",
@@ -2163,7 +2163,7 @@
       "approvedAll": "All candidates approved",
       "savedPendingIndex": "Memory saved and queued for indexing",
       "savedPendingReview": "Memory added to the review queue",
-      "archived": "Memory deleted",
+      "archived": "Memory archived",
       "promoted": "Added to Agent custom guidance",
       "demoted": "Removed from Agent custom guidance",
       "always": "Always apply",
@@ -4445,7 +4445,7 @@
       "includesChildren": "Includes records in this tag and its children",
       "saveDestination": "New records saved to {name}",
       "retry": "Retry",
-      "deleteTagHelp": "Delete “{name}”? Records will be kept, and child tags will remain at their existing paths.",
+      "deleteTagHelp": "Delete “{name}”? Records under this tag will be moved to Trash and can be restored there. Tags with child tags cannot be deleted.",
       "underParent": "Create or edit a child tag under “{name}”.",
       "rootTagHelp": "Create a top-level tag, or use / to create a nested path.",
       "tagName": "Tag name",
@@ -9159,6 +9159,7 @@
       "replace": "Replace",
       "verify": "Verify",
       "archive": "Archive",
+      "delete": "Delete",
       "reschedule": "Reschedule",
       "judge": "Judge",
       "confirm": "Confirm",
@@ -9208,6 +9209,8 @@
     "confirmSince": "Last confirmed {date}",
     "reconfirmRequest": "Please re-check whether this note still holds: {path}",
     "writesTo": "Writes to: {dest}",
+    "deletesTarget": "Delete {dest}",
+    "deleteNotice": "Accepting moves this to Recently Deleted, where it can be restored within 30 days.",
     "risk": {
       "low": "Low risk",
       "high": "High risk",

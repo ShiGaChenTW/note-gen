@@ -1976,7 +1976,7 @@
         "memories": "记忆",
         "active": "活跃",
         "pending": "待确认",
-        "archived": "已删除"
+        "archived": "已封存"
       },
       "form": {
         "title": "添加新记忆",
@@ -2041,7 +2041,7 @@
         "promote": "提升为稳定指引",
         "demote": "取消稳定指引",
         "restore": "恢复",
-        "archive": "删除",
+        "archive": "封存",
         "deletePermanently": "永久删除"
       },
       "kinds": {
@@ -2057,7 +2057,7 @@
       "statuses": {
         "active": "活跃",
         "pending": "待确认",
-        "archived": "已删除"
+        "archived": "已封存"
       },
       "filters": {
         "search": "搜索记忆",
@@ -2084,7 +2084,7 @@
       "approvedAll": "已确认全部候选",
       "savedPendingIndex": "记忆已保存，将在后台生成索引",
       "savedPendingReview": "记忆已进入待确认队列",
-      "archived": "记忆已删除",
+      "archived": "记忆已封存",
       "promoted": "已加入 Agent 自定义指引",
       "demoted": "已取消稳定指引",
       "always": "始终应用",
@@ -4445,7 +4445,7 @@
       "includesChildren": "包含此标签及其子标签的记录",
       "saveDestination": "新记录保存到 {name}",
       "retry": "重试",
-      "deleteTagHelp": "删除标签“{name}”？记录不会删除，子标签仍保留在原有路径下。",
+      "deleteTagHelp": "删除标签“{name}”？此标签下的记录会移入回收站（可在回收站恢复）；包含子标签的标签无法删除。",
       "underParent": "在“{name}”下创建或编辑子标签。",
       "rootTagHelp": "创建顶层标签，也可以使用 / 创建多级路径。",
       "tagName": "标签名称",
@@ -9159,6 +9159,7 @@
       "replace": "取代",
       "verify": "待查证",
       "archive": "封存",
+      "delete": "删除",
       "reschedule": "改时间",
       "judge": "判断",
       "confirm": "确认",
@@ -9208,6 +9209,8 @@
     "confirmSince": "上次确认是 {date}",
     "reconfirmRequest": "请重新确认这则笔记是否仍然成立：{path}",
     "writesTo": "接受后写入：{dest}",
+    "deletesTarget": "删除 {dest}",
+    "deleteNotice": "接受后会移入「最近删除」，30 天内可找回。",
     "risk": {
       "low": "低风险",
       "high": "高风险",
