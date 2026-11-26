@@ -251,6 +251,7 @@ npx pnpm@9 install --frozen-lockfile
 | 2026-11-26 | `src/components/memories/memory-item.tsx`、`src/lib/workbench/cards.ts`、`src/lib/collect/types.ts`、`src/app/core/main/decide/review-card.tsx`、`messages/{zh-TW,zh,en}.json` | 記憶的「刪除／已刪除」改名為「封存／已封存」並改用 Archive 圖示；工作台刪除提案卡改用 `delete` 動詞（保留 `archive` 供清理提案用）並提示會進「最近刪除」30 天內可救回；修正刪標籤確認說明與 trigger 行為一致 | ALMNC-84.2：名稱與實際行為對齊 |
 | 2026-11-26 | `src/lib/backup/managed-backup.ts`、`src/app/core/setting/backup/backup-settings.tsx` | 受管備份（自動備份）對未設定過的使用者預設開啟每週備份並指向 `<appDataDir>/backups`，保留使用者手動關閉或既有的自訂設定 | ALMNC-84.3：避免未手動開啟而無備份可還原 |
 | 2026-11-26 | `vitest.config.ts`、`.gitignore`、`package.json`、`pnpm-lock.yaml`、`src/test/{setup-ui.ts,render-v3.tsx,render-v3.test.tsx}` | Vitest 透過 `projects` 支援 `.test.tsx`（預設 jsdom）並保留既有 `.test.ts`（node），`.gitignore` 納入 `*.test.tsx`；安裝 Testing Library 與 user-event，新增 `setup-ui.ts` 與 `renderV3()`，並改寫兩個元件測試為示範 | ALMNC-94.1：建立 UI 元件測試基礎設施 |
+| 2026-11-26 | `src/app/core/main/sidebar-v3/{v3-entry-inventory.ts,v3-entry-inventory.test.tsx}` | 新增 V3 入口清單 `V3_ENTRY_INVENTORY` 與元件層回歸測試（`mainNav`、整理分頁含「畫布」、`+` 選單與命令面板），使用真實元件與 ARIA role 查詢，並含待實作的「新增畫布」`skip` 規格 | ALMNC-94.2：鎖定 V3 入口清單避免重構遺漏 |
 
 ## 刻意不改的東西
 
