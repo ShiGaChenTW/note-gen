@@ -98,7 +98,7 @@ export type CleanupActionName = 'modify' | 'replace' | 'verify' | 'supplement' |
 /** Fork（almanac ALMNC-54.12）：卡片標籤與動詞（值同 lib/workbench/cards.ts 的 CardLabel／CardVerb）。 */
 export interface ProposalCardHint {
   label: 'schedule' | 'note' | 'knowledge' | 'source' | 'review'
-  verb: 'add' | 'supplement' | 'modify' | 'merge' | 'replace' | 'verify' | 'archive' | 'reschedule' | 'judge' | 'confirm' | 'organize'
+  verb: 'add' | 'supplement' | 'modify' | 'merge' | 'replace' | 'verify' | 'archive' | 'delete' | 'reschedule' | 'judge' | 'confirm' | 'organize'
 }
 
 /** Fork（almanac ALMNC-54.12）：一則筆記的完整新內容。baseContent 是提案當下的原文；null＝新增的筆記（當時不存在）。 */

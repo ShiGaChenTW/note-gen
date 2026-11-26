@@ -177,10 +177,17 @@ function CardBody({ card, onAction }: { card: WorkbenchCard, onAction: (action: 
         <VerdictLines item={item} />
         {item.preview.type === 'job'
           ? <JobReviewPreview criterion={item.preview.criterion} result={item.preview.result} />
-          : item.ref.source === 'collect' && (item.preview.type === 'newNote' || item.kind === 'create')
+          : item.kind === 'delete'
+            ? (
+                <>
+                  <p>{t('deletesTarget', { dest: destinationText(decideT, item.preview) })}</p>
+                  <p className="mt-1 text-xs text-muted-ink" data-testid="card-delete-notice">{t('deleteNotice')}</p>
+                </>
+              )
+            : item.ref.source === 'collect' && (item.preview.type === 'newNote' || item.kind === 'create')
             // Fork（almanac ALMNC-54.21）：新增筆記可以先改標題和存放位置再接受。
-            ? <NewNoteFields itemId={item.ref.itemId} proposalId={item.ref.proposalId} fallback={<p>{t('writesTo', { dest: destinationText(decideT, item.preview) })}</p>} />
-            : <p>{t('writesTo', { dest: destinationText(decideT, item.preview) })}</p>}
+              ? <NewNoteFields itemId={item.ref.itemId} proposalId={item.ref.proposalId} fallback={<p>{t('writesTo', { dest: destinationText(decideT, item.preview) })}</p>} />
+              : <p>{t('writesTo', { dest: destinationText(decideT, item.preview) })}</p>}
         {item.organizeMerge && <p className="mt-2 text-ink">{organizeT('mergeEffect', item.organizeMerge)}</p>}
         {/* Fork（almanac ALMNC-65.1）：風險等級＋完整差異（沒有完整前後文時退回原本的 DiffBlock）。 */}
         <ProposalChanges card={card} item={item} />
