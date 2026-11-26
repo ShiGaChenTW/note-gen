@@ -16,12 +16,16 @@ export interface DiscussTarget {
   conversationId?: number
 }
 
+async function loadConversation(conversationId: number): Promise<void> {
+  const chat = useChatStore.getState()
+  if (chat.currentConversationId !== conversationId || chat.isTemporaryConversation || chat.chats.length === 0) await chat.switchConversation(conversationId)
+}
+
 /** 打開對話頁並切到那段對話（工作台頁會收起來）。 */
 export async function openConversation(conversationId: number): Promise<void> {
   useDecideStore.getState().hide()
   useThreadsStore.getState().show()
-  const chat = useChatStore.getState()
-  if (chat.currentConversationId !== conversationId || chat.isTemporaryConversation || chat.chats.length === 0) await chat.switchConversation(conversationId)
+  await loadConversation(conversationId)
 }
 
 /** 找到來源對話；不在了（被刪掉）或本來就沒有時開一段新的，標成「處理」（有指揮官參與）。 */
@@ -72,7 +76,7 @@ export async function discussProposal(
     const original = findPendingProposal(key)
     if (!original && key.startsWith('collect:')) throw new Error('Pending proposal not found')
     const conversationId = await ensureConversation(trail?.conversationId ?? original?.proposal.conversationId ?? target.conversationId)
-    await openConversation(conversationId)
+    await loadConversation(conversationId)
     const history = useChatStore.getState().chats
       .filter(chat => chat.conversationId === conversationId && chat.type === 'chat' && chat.content?.trim())
       .slice(-12)
@@ -82,7 +86,10 @@ export async function discussProposal(
     })
     if (!posted) throw new Error('Could not post proposal feedback')
     discussing = trails.discuss(key, conversationId, text)
-    if (!original) return conversationId
+    if (!original) {
+      await openConversation(conversationId)
+      return conversationId
+    }
 
     const { createDefaultCommanderDeps } = await import('@/lib/commander/default-deps')
     const deps = await createDefaultCommanderDeps()
@@ -104,6 +111,7 @@ export async function discussProposal(
       type: 'proposal', id: `${id}:${proposal.id}`, kind: proposal.kind, title: proposal.title,
       due: proposal.due, time: proposal.time, status: 'wait', source: { itemId: id, proposalId: proposal.id },
     })
+    await openConversation(conversationId)
     return conversationId
   } catch (error) {
     if (discussing) trails.clearDiscussion(key)

@@ -12,6 +12,7 @@
     "start": "next start --turbopack -p 3456",
     "lint": "next lint",
     "test": "vitest run",
+    "test:e2e": "playwright test",
     "migrate:ids": "node scripts/migrate-ids.mjs",
     "migrate:domains": "node scripts/migrate-domains.mjs",
     "tauri": "tauri",
@@ -154,6 +155,7 @@
     "zustand": "^5.0.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.1",
     "@tailwindcss/postcss": "^4.3.3",
     "@tauri-apps/cli": "2.11.3",
     "@testing-library/jest-dom": "^8.0.0",

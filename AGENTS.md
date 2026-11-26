@@ -81,3 +81,18 @@ Do not edit Backlog task, draft, document, decision, or milestone markdown files
    })
    ```
 
+### E2E 測試（Playwright + Tauri mockIPC）
+
+- 執行全部 E2E 測試（連接本機 Next dev，不需啟動 Rust / Tauri Desktop）：
+  ```bash
+  pnpm test:e2e
+  ```
+- 首次在本機安裝 Chromium 執行檔：
+  ```bash
+  pnpm exec playwright install chromium
+  ```
+- 測試規格位置：`tests/e2e/*.spec.ts`，由 `playwright.config.ts` 自動啟動 `next dev`（`http://localhost:3456`），不會與 `vitest run`（僅掃描 `*.test.ts(x)`）衝突。
+- `tests/e2e/tauri-mock.ts` 在 Node 端使用真實 `node:sqlite`（記憶體資料庫）與暫存目錄隔離每個測試的檔案系統、Store、Tauri Event 匯流排、AI 請求模擬、虛擬時鐘與本機 MCP 橋接。
+- 寫 E2E 測試時同樣遵守 ARIA role 與可見文字／無障礙名稱定位原則（不寫 CSS selector、`querySelector` 或 `data-testid`），且每支測試必須確保零未捕獲 `pageerror`。
+
+
