@@ -164,6 +164,23 @@ export async function getLatestVersion(rootId: string): Promise<Source | undefin
   }
 }
 
+/** Fork（almanac ALMNC-90）：從第一版的 id 列出整條版本鏈（舊到新）；還沒登錄過回空陣列。 */
+export async function listVersionChain(rootId: string): Promise<Source[]> {
+  const first = await getSource(rootId)
+  if (!first) return []
+  const chain: Source[] = [first]
+  const db = await getDb()
+  const seen = new Set([first.id])
+  for (;;) {
+    const current = chain[chain.length - 1]
+    const rows: SourceRow[] = await db.select<SourceRow[]>(`select ${SOURCE_COLUMNS} from sources where previous_id = $1 order by version desc limit 1`, [current.id])
+    const next: Source | undefined = rows[0] ? sourceFromRow(rows[0]) : undefined
+    if (!next || seen.has(next.id)) return chain
+    seen.add(next.id)
+    chain.push(next)
+  }
+}
+
 export async function listSources(options: { status?: SourceStatus; includeArchived?: boolean; limit?: number; excludeKind?: string } = {}): Promise<Source[]> {
   await initV3SourceDb()
   const db = await getDb()

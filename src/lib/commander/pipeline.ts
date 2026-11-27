@@ -3,7 +3,8 @@
 // 只分析「待分析」的資料源：外部擷取的（A5）要等 Scott 在工作台選「處理」才會變成待分析（路由 R1），
 // 自己寫的、系統產生的一進來就是待分析（R2）。所以 A5 進來時不會被轉文字。
 // 分析中途出錯就退回待分析，等下一輪重試；提案批次 id 以資料源為準，重跑不會重複送。
-import { finalStatusAfterAnalysis, isLegacyNote, type Source } from '@/lib/v3-model/source'
+import { finalStatusAfterAnalysis, isLegacyNote, isRecordExtract, type Source } from '@/lib/v3-model/source'
+import { recordNoteLink } from '@/lib/workbench/record-extract'
 import { assign } from './assign'
 import { consolidate } from './consolidate'
 import { draft } from './draft'
@@ -43,6 +44,7 @@ export async function analyzeSource(sourceId: string, deps: CommanderDeps, optio
   const source = await deps.sources.setStatus(sourceId, 'analyzing')
   try {
     const now = deps.now?.() ?? new Date()
+    const extracting = isRecordExtract(source)
     const conversion = await toText(source, deps.converters)
     const unconverted = (reason?: string) =>
       [fallbackFragment(deps.labels.unconverted({ origin: source.origin ?? source.kind, reason }), source.origin)]
@@ -59,6 +61,8 @@ export async function analyzeSource(sourceId: string, deps: CommanderDeps, optio
           previousText: await previousText(source, deps),
           hint: await hintOf(source, deps),
           journalTagged: source.journal,
+          // Fork（almanac ALMNC-90）：紀錄筆記送來萃取：只萃取知識筆記。
+          ...(extracting ? { extractKnowledge: true } : {}),
         })
       : { fragments: unconverted() }
     const fragments: Fragment[] = split.fragments
@@ -75,6 +79,8 @@ export async function analyzeSource(sourceId: string, deps: CommanderDeps, optio
       origin: deps.labels.origin({ agent: commander?.name ?? '', source: sourceLabel(source) }),
       conversationId: options.conversationId,
       ...(split.journal ? { journal: split.journal, sourceLabel: sourceLabel(source) } : {}),
+      // Fork（almanac ALMNC-90）：萃取出的知識筆記連回那篇紀錄筆記。
+      ...(extracting && source.origin ? { related: [recordNoteLink(source.origin)] } : {}),
     })
     if (batch) await deps.submitProposals(batch)
 

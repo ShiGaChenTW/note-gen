@@ -38,6 +38,7 @@ function v3NoteContent(proposal: Proposal, content: string): string {
     type: proposal.noteType,
     sources: proposal.sourceIds,
     tags: proposal.tags.length ? proposal.tags : undefined,
+    related: proposal.related?.length ? proposal.related : undefined,
     status: 'valid' as const,
   }
   if (!Object.keys(context).length) return createV3Note(fields, content)

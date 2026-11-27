@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { createSource, editSourceContent, submitSource, transitionSource, type Source, type SourceStatus } from '@/lib/v3-model/source'
+import { createSource, editSourceContent, submitSource, transitionSource, RECORD_EXTRACT_KIND, type Source, type SourceStatus } from '@/lib/v3-model/source'
+import { proposalNoteContent } from '@/lib/collect/builders'
 import type { Domain } from '@/lib/v3-model/domain'
 import { analyzeSource, createAnalysisQueue, requeueInterrupted, runAnalysisQueue } from './pipeline'
 import { createFileTextReader } from './file-route'
@@ -389,5 +390,58 @@ describe('ALMNC-69.3 日誌標籤', () => {
     expect(result.status).toBe('analyzed')
     expect(batches[0].proposals).toEqual([expect.objectContaining({ title: '我今天下午被打斷三次', journalTag: { confidence: 'high', reason: '整篇是自己的經驗', only: true } })])
     expect(sources.rows.get('s')!.journal).toBe(false)
+  })
+})
+
+describe('ALMNC-90 紀錄筆記送去萃取', () => {
+  const RECORD_PATH = '30 日誌/2026-11-10 週會.md'
+  const extract = (partial: Partial<Parameters<typeof createSource>[0]> = {}) =>
+    src('x', { kind: RECORD_EXTRACT_KIND, origin: RECORD_PATH, content: '---\ntype: log\n---\n# 11/10 週會\n決定留緩衝；切換工作的代價比想像中高。', ...partial })
+
+  it('只萃取知識筆記：提示只要知識片段、不判斷日誌；任務、行程、日誌片段都不出提案', async () => {
+    const sources = memorySources([extract()])
+    const ask = fakeModel({ journal: { verdict: true, confidence: 'high' }, fragments: [
+      { kind: 'note', noteType: 'log', title: '11/10 週會決定留緩衝', date: '2026-11-10' },
+      { kind: 'task', title: '寄報價單' },
+      { kind: 'event', title: '和 Amy 開會', date: '2026-11-25', time: '10:00' },
+      { kind: 'note', noteType: 'project', title: '新官網', project: '新官網' },
+      { kind: 'note', noteType: 'knowledge', title: '切換工作的代價比想像中高', domainHint: '工業工程' },
+    ] })
+    const { deps: d, batches } = deps(sources, ask)
+    const result = await analyzeSource('x', d)
+    expect(ask.calls[0]).toContain('萃取')
+    expect(ask.calls[0]).not.toContain('另外判斷整則資料源是不是日誌')
+    expect(result.status).toBe('analyzed')
+    expect(batches).toHaveLength(1)
+    expect(batches[0].proposals).toHaveLength(1)
+    expect(batches[0].proposals[0]).toMatchObject({ kind: 'note', noteType: 'knowledge', sourceIds: ['x'], related: ['[[2026-11-10 週會]]'] })
+    expect(batches[0].proposals[0].journalTag).toBeUndefined()
+  })
+
+  it('萃取出的知識筆記寫入時：sources 是萃取資料源、related 連回紀錄筆記', async () => {
+    const sources = memorySources([extract()])
+    const { deps: d, batches } = deps(sources, fakeModel({ fragments: [{ kind: 'note', noteType: 'knowledge', title: '切換工作的代價比想像中高', domainHint: '工業工程' }] }))
+    await analyzeSource('x', d)
+    const content = proposalNoteContent(batches[0].proposals[0])
+    expect(content).toContain('type: knowledge')
+    expect(content).toContain('sources: [ x ]')
+    expect(content).toContain('related: [ "[[2026-11-10 週會]]" ]')
+  })
+
+  it('沒有知識可萃取：不送提案、停在已分析（不是不採用）', async () => {
+    const sources = memorySources([extract()])
+    const { deps: d, batches } = deps(sources, fakeModel({ fragments: [{ kind: 'task', title: '寄報價單' }] }))
+    const result = await analyzeSource('x', d)
+    expect(result.status).toBe('analyzed')
+    expect(batches).toHaveLength(0)
+    expect(sources.rows.get('x')?.status).toBe('analyzed')
+  })
+
+  it('模型輸出壞掉：不把整篇當成保底提案（避免複製一份紀錄筆記），退回待分析等下一輪重試', async () => {
+    const sources = memorySources([extract()])
+    const { deps: d, batches } = deps(sources, fakeModel('不是 JSON'))
+    await expect(analyzeSource('x', d)).rejects.toThrow()
+    expect(batches).toHaveLength(0)
+    expect(sources.rows.get('x')?.status).toBe('pending_analysis')
   })
 })

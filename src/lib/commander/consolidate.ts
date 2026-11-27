@@ -47,6 +47,8 @@ export interface ConsolidateInput {
   journal?: JournalVerdict
   /** 只貼標籤那張卡的標題（資料源的第一行）。 */
   sourceLabel?: string
+  /** Fork（almanac ALMNC-90）：每則筆記提案都連到的筆記（紀錄筆記萃取時連回那篇紀錄筆記）。 */
+  related?: string[]
 }
 
 /**
@@ -92,7 +94,11 @@ export function consolidate(input: ConsolidateInput): ProposalBatch | undefined 
   if (!drafts.length && !journal) return undefined
   const journalTag = journal ? { confidence: journal.confidence, ...(journal.reason ? { reason: journal.reason } : {}) } : undefined
   const proposals = drafts.length
-    ? drafts.map(draft => ({ ...draftToProposal(draft, [input.source.id], input.conversationId), ...(journalTag ? { journalTag } : {}) }))
+    ? drafts.map(draft => ({
+      ...draftToProposal(draft, [input.source.id], input.conversationId),
+      ...(journalTag ? { journalTag } : {}),
+      ...(input.related?.length && draft.kind === 'note' ? { related: [...input.related] } : {}),
+    }))
     : [journalOnlyProposal(input.source.id, input.sourceLabel || input.origin, journal!, input.conversationId)]
   return {
     id: `commander:${input.source.id}`,

@@ -111,6 +111,8 @@ export function captureSourceId(captureId: string): string {
 const SOURCE_KIND: Record<string, SourceDisplayKind> = {
   text: 'text', link: 'web', image: 'shot', screenshot: 'shot', inserted_image: 'img', file: 'file', transcript: 'audio', voice: 'audio', email: 'email', todo: 'todo', prompt: 'prompt',
   rss: 'rss', meeting: 'meeting',
+  // Fork（almanac ALMNC-90）：紀錄筆記送去萃取的資料源，內容就是那篇筆記的文字。
+  record_extract: 'text',
 }
 
 /** V3 資料源的形式 → 顯示用的類型字（不認得的當檔案）。 */

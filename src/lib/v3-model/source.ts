@@ -181,9 +181,23 @@ export function transitionSource(source: Source, to: SourceStatus, now: number):
   }
 }
 
-/** Fork（almanac ALMNC-69.3）：日誌資料源讀過沒有產出時的終點：已分析，不是不採用。 */
-export function finalStatusAfterAnalysis(source: Pick<Source, 'journal'>, hasProposals: boolean): 'analyzed' | 'rejected' {
-  return hasProposals || source.journal ? 'analyzed' : 'rejected'
+/**
+ * Fork（almanac ALMNC-69.3）：日誌資料源讀過沒有產出時的終點：已分析，不是不採用。
+ * Fork（almanac ALMNC-90）：紀錄筆記送去萃取、讀過沒有知識可萃取，也停在已分析。
+ */
+export function finalStatusAfterAnalysis(source: Pick<Source, 'journal'> & Partial<Pick<Source, 'kind'>>, hasProposals: boolean): 'analyzed' | 'rejected' {
+  return hasProposals || source.journal || (source.kind !== undefined && isRecordExtract({ kind: source.kind })) ? 'analyzed' : 'rejected'
+}
+
+// Fork（almanac ALMNC-90）：紀錄筆記（日誌筆記：會議紀錄、日誌）按「送給指揮官萃取」送出的資料源。
+// 形式另外標成 record_extract：指揮官只從裡面萃取知識筆記（不拆日誌、任務、行程），提案連回這篇紀錄筆記。
+// 改版時形式跟著新版走（editSourceContent 沿用整列），所以每一版都照萃取處理。
+
+/** 紀錄筆記萃取資料源的形式。 */
+export const RECORD_EXTRACT_KIND = 'record_extract'
+
+export function isRecordExtract(source: Pick<Source, 'kind'>): boolean {
+  return source.kind === RECORD_EXTRACT_KIND
 }
 
 /**
