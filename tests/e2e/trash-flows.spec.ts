@@ -1,13 +1,8 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
-import { setupTauriMock, type TauriMockController } from './tauri-mock'
+import { setupTauriMock, waitForMainBoot, type TauriMockController } from './tauri-mock'
 
 let mock: TauriMockController
 let pageErrors: Error[] = []
-
-async function waitForMainBoot(page: Page) {
-  await expect(page.getByRole('navigation', { name: '主要導覽' })).toBeVisible()
-  await expect(page.getByRole('button', { name: '新增', exact: true }).first()).toBeVisible()
-}
 
 async function waitForDbReady() {
   await expect.poll(() =>
