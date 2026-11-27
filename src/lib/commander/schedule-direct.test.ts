@@ -22,12 +22,13 @@ vi.mock('@/lib/daily/open-daily-note', () => ({
 }))
 
 const { acceptProposal, undoAccepted } = await import('@/lib/collect/write')
-const { buildScheduleTools, describeDirectEdit, isVagueSchedule, looksLikeScheduleInstruction, quotedFromScott, suggestSlots } = await import('./schedule-direct')
+const { draftToProposal } = await import('./consolidate')
+const { buildScheduleTools, describeDirectEdit, resolveTaskProject, isVagueSchedule, looksLikeScheduleInstruction, quotedFromScott, suggestSlots } = await import('./schedule-direct')
 
 const NOW = new Date(2026, 10, 19, 9, 0) // 週四
 const context = { runId: 'test', context: { userInput: '' } }
 
-function setup(messages: string[], answered = false) {
+function setup(messages: string[], answered = false, projectOptions: { projects?: string[], conversationProject?: string } = {}) {
   const edits: DirectEdit[] = []
   const proposed: Proposal[] = []
   let choice = answered
@@ -42,6 +43,8 @@ function setup(messages: string[], answered = false) {
     onDirectEdit: edit => { edits.push(edit) },
     propose: proposal => { proposed.push(proposal) },
     choiceAnswered: () => choice,
+    ...(projectOptions.projects ? { projects: () => projectOptions.projects ?? [] } : {}),
+    ...(projectOptions.conversationProject !== undefined ? { conversationProject: () => projectOptions.conversationProject ?? '' } : {}),
   }
   const [task, event] = buildScheduleTools(deps)
   return { task, event, edits, proposed, answer: () => { choice = true } }
@@ -133,5 +136,76 @@ describe('schedule tools', () => {
     expect(files.has(DAILY)).toBe(false)
     expect(edits).toEqual([])
     expect(proposed).toEqual([expect.objectContaining({ kind: 'task', title: '安排休假', due: '2026-11-21', drafter: { role: 'secretary' } })])
+  })
+})
+
+// Fork（almanac ALMNC-87）：秘書新增任務時掛到相關專案——Scott 提到的或對話所屬的現有專案；方式同指揮官的任務；對不到就不掛。
+describe('schedule_add_task project', () => {
+  beforeEach(() => files.clear())
+  const PROJECTS = ['Almanac 改版', '搬家']
+
+  it('offers an optional project parameter on schedule_add_task only', () => {
+    const { task, event } = setup([])
+    const schema = task.inputSchema as { properties: Record<string, { type: string }>, required: string[] }
+    expect(schema.properties.project).toMatchObject({ type: 'string' })
+    expect(schema.required).not.toContain('project')
+    expect((event.inputSchema as { properties: Record<string, unknown> }).properties.project).toBeUndefined()
+  })
+
+  it('attaches the project Scott named, using the existing name, the same way as commander tasks', async () => {
+    const { task, edits } = setup(['新增任務：週五前交 almanac 改版的報告'], false, { projects: PROJECTS })
+    const result = await task.execute({ title: '交報告', date: '2026-11-21', project: 'almanac-改版', quote: '新增任務：週五前交 almanac 改版的報告' }, context)
+    expect(result).toMatchObject({ ok: true, data: { direct: true, project: 'Almanac 改版' } })
+    expect(edits[0].proposal).toMatchObject({ project: 'Almanac 改版', tags: ['Almanac-改版'] })
+    expect(files.get(DAILY)).toContain('- [ ] 交報告 📅 2026-11-21 #Almanac-改版')
+
+    // 與指揮官分析資料源產生的任務一致：同樣的 project 欄位與專案標籤
+    const commander = draftToProposal({
+      role: 'commander', kind: 'task', title: '交報告', body: '', date: '2026-11-21', tags: [], people: [], domainIds: [], project: 'Almanac 改版',
+      fragment: { index: 0, kind: 'task', title: '交報告', body: '', people: [], tags: [] },
+    } as unknown as Parameters<typeof draftToProposal>[0], [])
+    expect({ project: edits[0].proposal.project, tags: edits[0].proposal.tags }).toEqual({ project: commander.project, tags: commander.tags })
+  })
+
+  it('defaults to the conversation\'s project when none is named', async () => {
+    const { task, edits } = setup(['新增任務：明天打給房東'], false, { projects: PROJECTS, conversationProject: '搬家' })
+    await task.execute({ title: '打給房東', date: '2026-11-20', quote: '新增任務：明天打給房東' }, context)
+    expect(edits[0].proposal).toMatchObject({ project: '搬家', tags: ['搬家'] })
+    expect(files.get(DAILY)).toContain('- [ ] 打給房東 📅 2026-11-20 #搬家')
+  })
+
+  it('also carries the project on a secretary proposal', async () => {
+    const { task, proposed } = setup(['這週好累'], false, { projects: PROJECTS, conversationProject: '搬家' })
+    await task.execute({ title: '整理紙箱', quote: '整理紙箱' }, context)
+    expect(proposed).toEqual([expect.objectContaining({ project: '搬家', tags: ['搬家'] })])
+  })
+
+  it('does not attach a project that does not exist, and does not fall back to a guess', async () => {
+    const { task, edits } = setup(['新增任務：週五前交報告'], false, { projects: PROJECTS, conversationProject: '搬家' })
+    const result = await task.execute({ title: '交報告', date: '2026-11-21', project: '新創計畫', quote: '新增任務：週五前交報告' }, context)
+    expect(result.ok).toBe(true)
+    expect(result.message).toContain('No existing project is named "新創計畫"')
+    expect(edits[0].proposal.project).toBeUndefined()
+    expect(edits[0].proposal.tags).toEqual([])
+    expect(files.get(DAILY)).toContain('- [ ] 交報告 📅 2026-11-21\n')
+  })
+
+  it('attaches nothing when there is no related project', async () => {
+    const { task, edits } = setup(['新增任務：週五前交報告'], false, { projects: PROJECTS, conversationProject: '' })
+    await task.execute({ title: '交報告', date: '2026-11-21', quote: '新增任務：週五前交報告' }, context)
+    expect(edits[0].proposal).toMatchObject({ tags: [] })
+    expect(edits[0].proposal.project).toBeUndefined()
+
+    const noProjects = setup(['新增任務：週五前交報告'], false, { conversationProject: '搬家' })
+    await noProjects.task.execute({ title: '交報告', date: '2026-11-21', project: '搬家', quote: '新增任務：週五前交報告' }, context)
+    expect(noProjects.edits[0].proposal.project).toBeUndefined()
+  })
+
+  it('resolveTaskProject matches existing names only', () => {
+    expect(resolveTaskProject('  almanac   改版 ', PROJECTS)).toEqual({ project: 'Almanac 改版' })
+    expect(resolveTaskProject('', PROJECTS, '搬家')).toEqual({ project: '搬家' })
+    expect(resolveTaskProject('', PROJECTS, '已刪除的專案')).toEqual({})
+    expect(resolveTaskProject('別的', PROJECTS, '搬家')).toEqual({ unmatched: '別的' })
+    expect(resolveTaskProject('', [], '')).toEqual({})
   })
 })

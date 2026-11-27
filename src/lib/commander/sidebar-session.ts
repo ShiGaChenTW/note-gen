@@ -66,6 +66,17 @@ export function commanderDisplayName(roster: readonly SidebarRosterAgent[], role
 
 let batchCounter = 0
 
+/** Fork（almanac ALMNC-87）：告訴模型有哪些現有專案、這段對話屬於哪個（新增任務掛專案用）。沒有專案就不提。 */
+export function projectPrompt(projects: readonly string[], conversationProject: string): string {
+  if (!projects.length) return ''
+  const current = conversationProject && projects.includes(conversationProject) ? conversationProject : ''
+  return [
+    `Existing projects: ${projects.map(name => JSON.stringify(name)).join(', ')}.`,
+    current ? `This conversation belongs to the project ${JSON.stringify(current)}; tasks added with schedule_add_task go there unless Scott names another existing project.` : '',
+    'When Scott names one of these projects for a task, pass it as project in schedule_add_task. Never invent a project or attach one Scott did not mention.',
+  ].filter(Boolean).join(' ')
+}
+
 export async function prepareSidebarCommanderRun(
   input: {
     conversationId?: number
@@ -80,6 +91,10 @@ export async function prepareSidebarCommanderRun(
     deskContext?: DeskContext
     expertToolTitle?: string
     askExpert?: (system: string, question: string, signal?: AbortSignal) => Promise<string>
+    /** Fork（almanac ALMNC-87）：現有的專案名稱（對話頁的專案分組）；秘書新增任務只掛這裡面的專案。 */
+    projects?: readonly string[]
+    /** Fork（almanac ALMNC-87）：這段對話所屬的專案（沒有為空）；新增任務沒指定專案時預設帶入。 */
+    conversationProject?: string
   },
   deps: SidebarRunDeps,
 ): Promise<SidebarCommanderRun> {
@@ -142,6 +157,7 @@ export async function prepareSidebarCommanderRun(
     buildCommanderSidebarPrompt({ instructions: ROLE_INSTRUCTIONS[speaker?.role ?? 'commander'], memory, displayName, readOnly: input.readOnly, role: speaker?.role }),
     input.routeNote?.trim() ?? '',
     materials,
+    input.readOnly ? '' : projectPrompt(input.projects ?? [], input.conversationProject ?? ''),
     expertTool ? 'When Scott asks for a domain expert or the question needs domain judgment, consult the relevant expert with desk_consult_expert and attribute their assessment in your reply.' : '',
   ].filter(Boolean).join('\n\n')
 
@@ -195,6 +211,8 @@ export async function prepareSidebarCommanderRun(
         }
       },
       propose: proposal => { secretaryProposals.push(proposal) },
+      projects: () => input.projects ?? [],
+      conversationProject: () => input.conversationProject ?? '',
     },
   })
 
