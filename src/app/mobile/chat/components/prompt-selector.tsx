@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 import { useTranslations } from "next-intl"
 import { Check, Drama } from "lucide-react"
 import usePromptStore from "@/stores/prompt"
+import { isPromptLibraryEnabled, resolveEffectivePrompt } from "@/lib/prompt-library/effective"
 import { displayPromptTitle } from "@/lib/prompt-title"
 import { ChatToolItem } from "@/app/core/main/chat/chat-tool-item"
 import {
@@ -63,7 +64,10 @@ export function PromptSelector() {
   const [open, setOpen] = useState(false)
   const t = useTranslations('record.chat.input.promptSelect')
   const tTools = useTranslations('record.chat.input.toolsMenu')
-  const currentTitle = displayPromptTitle(currentPrompt, t('defaultTitle'))
+  // ALMNC-86：提示詞功能關閉時一律顯示並使用預設角色，不能切換；已選的角色仍留在 store
+  const libraryEnabled = isPromptLibraryEnabled()
+  const effectivePrompt = resolveEffectivePrompt(promptList, currentPrompt)
+  const currentTitle = displayPromptTitle(effectivePrompt, t('defaultTitle'))
 
   useEffect(() => {
     initPromptData()
@@ -82,10 +86,11 @@ export function PromptSelector() {
         title={tTools('prompt.title')}
         description={tTools('prompt.description')}
         value={<span title={currentTitle}>{currentTitle || '-'}</span>}
+        disabled={!libraryEnabled}
         onClick={() => setOpen(true)}
       />
 
-      <Drawer open={open} onOpenChange={setOpen}>
+      <Drawer open={libraryEnabled && open} onOpenChange={setOpen}>
         <DrawerContent className="max-h-[70vh]">
           <DrawerHeader>
             <DrawerTitle>{t('tooltip')}</DrawerTitle>
@@ -93,7 +98,7 @@ export function PromptSelector() {
           <div className="p-4">
             <PromptListContent
               promptList={promptList.map(prompt => ({ id: prompt.id, title: displayPromptTitle(prompt, t('defaultTitle')) }))}
-              currentPromptId={currentPrompt?.id}
+              currentPromptId={effectivePrompt?.id}
               onSelect={async (id) => {
                 await promptSelectChangeHandler(id)
                 setOpen(false)

@@ -14,6 +14,7 @@ import { isBuiltInOpenAIProvider, isMainlandChinaAppStore } from './storefront-p
 import { createTranslator, type AbstractIntlMessages } from 'next-intl';
 import { DEFAULT_LOCALE, LANGUAGE_STORAGE_KEY, loadMessagesWithFallback, normalizeLocale } from '@/i18n/config';
 import fallbackCommonMessages from '../../../messages/common/zh.json';
+import { isPromptLibraryEnabled, resolveEffectivePrompt } from '@/lib/prompt-library/effective';
 
 /**
  * 获取当前的prompt内容
@@ -23,13 +24,13 @@ export async function getPromptContent(): Promise<string> {
   const currentPromptId = await store.get<string>('currentPromptId')
   let promptContent = ''
   
-  if (currentPromptId) {
-    const promptList = await store.get<Array<{id: string, content: string}>>('promptList')
-    if (promptList) {
-      const currentPrompt = promptList.find(prompt => prompt.id === currentPromptId)
-      if (currentPrompt && currentPrompt.content) {
-        promptContent = currentPrompt.content
-      }
+  const promptList = await store.get<Array<{id: string, content: string, isDefault?: boolean}>>('promptList')
+  if (promptList) {
+    // ALMNC-86：提示詞功能關閉時一律用預設角色，已選的自訂角色不生效（currentPromptId 不動）
+    const selectedPrompt = currentPromptId ? promptList.find(prompt => prompt.id === currentPromptId) : undefined
+    const currentPrompt = resolveEffectivePrompt(promptList, selectedPrompt)
+    if (currentPrompt && currentPrompt.content) {
+      promptContent = currentPrompt.content
     }
   }
   
@@ -40,6 +41,8 @@ export async function getPromptContent(): Promise<string> {
  * 获取 Agent 系统提示词
  */
 export async function getSystemPromptContent(): Promise<string> {
+  // ALMNC-86：提示詞功能關閉時，Agent 自訂指引不進入系統提示；store 裡的原值不讀也不改，開關打開後恢復
+  if (!isPromptLibraryEnabled()) return ''
   const store = await Store.load('store.json')
   const extension = await store.get<string>('agentSystemPromptExtension')
   if (typeof extension === 'string') {
