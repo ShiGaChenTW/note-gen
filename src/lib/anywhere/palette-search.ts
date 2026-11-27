@@ -1,7 +1,8 @@
 // Fork（almanac ALMNC-9）：⌘K 命令面板的搜尋合併與排序。純函式、無 I/O。
 // 同一個輸入框同時查筆記與指令（含外掛命令）：先算每一項的分數，再依分數分組排序。
 
-export type PaletteKind = 'command' | 'plugin' | 'note'
+// Fork（almanac ALMNC-93）：canvas＝既有畫布（「開啟畫布：<名稱>」）。
+export type PaletteKind = 'command' | 'plugin' | 'canvas' | 'note'
 
 export interface PaletteItem {
   id: string
@@ -11,7 +12,7 @@ export interface PaletteItem {
   subtitle?: string
   /** 額外可搜尋的字：別名、標籤、描述 */
   keywords?: string[]
-  /** 毫秒；筆記用來在分數相同時排新的在前，空查詢時當「最近」 */
+  /** 毫秒；筆記與畫布用來在分數相同時排新的在前，空查詢時當「最近」 */
   mtime?: number
 }
 
@@ -25,10 +26,13 @@ export interface PaletteOptions {
   limits?: Partial<Record<PaletteKind, number>>
 }
 
-const DEFAULT_LIMITS: Record<PaletteKind, number> = { command: 7, plugin: 6, note: 8 }
+const DEFAULT_LIMITS: Record<PaletteKind, number> = { command: 7, plugin: 6, canvas: 6, note: 8 }
 /** 空查詢時筆記只列最近幾則 */
 const RECENT_NOTE_LIMIT = 5
-const KIND_ORDER: PaletteKind[] = ['command', 'plugin', 'note']
+/** 空查詢時畫布只列最近幾張 */
+const RECENT_CANVAS_LIMIT = 3
+const KIND_ORDER: PaletteKind[] = ['command', 'plugin', 'canvas', 'note']
+const RECENT_LIMITS: Partial<Record<PaletteKind, number>> = { canvas: RECENT_CANVAS_LIMIT, note: RECENT_NOTE_LIMIT }
 
 function norm(value: string): string {
   return value.normalize('NFKC').toLocaleLowerCase()
@@ -96,8 +100,9 @@ export function buildPaletteSections(items: PaletteItem[], query: string, option
     const sections: PaletteSection[] = []
     for (const kind of KIND_ORDER) {
       const own = items.filter(item => item.kind === kind)
-      const picked = kind === 'note'
-        ? [...own].sort((a, b) => (b.mtime ?? 0) - (a.mtime ?? 0)).slice(0, RECENT_NOTE_LIMIT)
+      const recent = RECENT_LIMITS[kind]
+      const picked = recent !== undefined
+        ? [...own].sort((a, b) => (b.mtime ?? 0) - (a.mtime ?? 0)).slice(0, recent)
         : own.slice(0, limits[kind])
       if (picked.length > 0) sections.push({ kind, items: picked })
     }
@@ -119,7 +124,7 @@ export function buildPaletteSections(items: PaletteItem[], query: string, option
       const ranked = grouped.get(kind)!.sort(byScoreThenRecency)
       return { kind, top: ranked[0].score, items: ranked.slice(0, limits[kind]).map(entry => entry.item) }
     })
-  // 最相符的區塊排最前；同分時維持 指令 > 外掛 > 筆記
+  // 最相符的區塊排最前；同分時維持 指令 > 外掛 > 畫布 > 筆記
   sections.sort((a, b) => b.top - a.top || KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind))
   return sections.map(({ kind, items: picked }) => ({ kind, items: picked }))
 }

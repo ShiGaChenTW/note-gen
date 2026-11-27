@@ -113,17 +113,18 @@ async function openQuickMenu() {
   return [...document.querySelectorAll<HTMLElement>('[role="menuitem"]')]
 }
 
-it('puts 新增資料源 and 新增對話 in the ＋ menu next to search and no 收集 in the nav', async () => {
+it('puts 新增資料源, 新增對話 and 新增畫布 in the ＋ menu next to search and no 收集 in the nav', async () => {
   await render(React.createElement(LeftSidebar))
   const nav = host.querySelector('[data-sidebar-v3] nav')!
   expect([...nav.querySelectorAll('button')].map(button => button.textContent?.replace(/\d+$/, ''))).toEqual(['今天', '工作台', '對話', '整理', '計畫'])
   const trigger = host.querySelector<HTMLButtonElement>('[data-testid="sidebar-quick"]')!
   expect(trigger.getAttribute('aria-label')).toBe(zhTW.workbench.quick.label)
   const items = await openQuickMenu()
-  expect(items.map(item => item.dataset.quick)).toEqual(['source', 'thread'])
-  expect(items.map(item => item.textContent)).toEqual(['新增資料源', '新增對話'])
+  // ALMNC-93：加「新增畫布」
+  expect(items.map(item => item.dataset.quick)).toEqual(['source', 'thread', 'canvas'])
+  expect(items.map(item => item.textContent)).toEqual(['新增資料源', '新增對話', '新增畫布'])
   // ALMNC-56.4：工作台沒開時單鍵 N／T 不作用，就不標（見下一則測試）
-  expect(items.map(item => item.getAttribute('aria-keyshortcuts'))).toEqual([null, null])
+  expect(items.map(item => item.getAttribute('aria-keyshortcuts'))).toEqual([null, null, null])
   const opened = vi.fn()
   emitter.on('unified-record-open', opened)
   await act(async () => items[0].click())
@@ -137,13 +138,14 @@ it('labels N / T in the ＋ menu only while the workbench is open and the settin
   await act(async () => useDecideStore.setState({ visible: true }))
   await render(React.createElement(LeftSidebar))
   let items = await openQuickMenu()
-  expect(items.map(item => item.getAttribute('aria-keyshortcuts'))).toEqual(['N', 'T'])
-  expect(items.map(item => item.textContent)).toEqual(['新增資料源N', '新增對話T'])
+  // 新增畫布沒有單鍵快捷鍵
+  expect(items.map(item => item.getAttribute('aria-keyshortcuts'))).toEqual(['N', 'T', null])
+  expect(items.map(item => item.textContent)).toEqual(['新增資料源N', '新增對話T', '新增畫布'])
   await act(async () => { keyDown(items[0], 'Escape') })
 
   await act(async () => useSettingStore.setState({ workbenchSingleKeys: false }))
   items = await openQuickMenu()
-  expect(items.map(item => item.getAttribute('aria-keyshortcuts'))).toEqual([null, null])
+  expect(items.map(item => item.getAttribute('aria-keyshortcuts'))).toEqual([null, null, null])
   await act(async () => { keyDown(items[0], 'Escape') })
 
   await act(async () => {

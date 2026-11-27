@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { screen, within } from '@testing-library/react'
+import { act, screen, within } from '@testing-library/react'
 import { renderV3 } from '@/test/render-v3'
 import { useKnowledgeOverlay } from '@/lib/sidebar-v3/knowledge'
 import { useAnywhereStore } from '@/lib/anywhere/store'
@@ -42,6 +42,11 @@ vi.mock('@/lib/workbench/use-workbench', async (importOriginal) => {
     useWorkbenchCount: () => 0,
   }
 })
+
+vi.mock('@/db/canvases', async (importOriginal) => ({
+  ...await importOriginal<typeof import('@/db/canvases')>(),
+  getCanvasProjects: vi.fn(async () => []),
+}))
 
 vi.mock('@/db/agents', () => ({
   ensureDefaultRoster: vi.fn(async () => []),
@@ -169,7 +174,7 @@ describe('V3 entry inventory', () => {
     const seen = new Set(initialActual)
     const searchInput = screen.getByRole('combobox')
 
-    for (const query of ['切換', '開啟']) {
+    for (const query of ['切換', '開啟', '畫布']) {
       await user.clear(searchInput)
       await user.type(searchInput, query)
 
@@ -191,8 +196,7 @@ describe('V3 entry inventory', () => {
     expect(seen).toEqual(new Set(V3_ENTRY_INVENTORY.commandPalette))
   })
 
-  const [plannedCanvas] = V3_ENTRY_INVENTORY.planned
-  it.skip(`${plannedCanvas.label}出現在＋選單與命令面板（${plannedCanvas.task}）`, async () => {
+  it('新增畫布同時出現在＋選單與命令面板（ALMNC-93）', async () => {
     const { user } = renderV3(
       <>
         <SidebarV3 />
@@ -202,15 +206,15 @@ describe('V3 entry inventory', () => {
 
     await user.click(screen.getByRole('button', { name: '新增' }))
     expect(
-      await screen.findByRole('menuitem', { name: plannedCanvas.label }),
+      await screen.findByRole('menuitem', { name: '新增畫布' }),
     ).toBeInTheDocument()
+    await user.keyboard('{Escape}')
 
-    useAnywhereStore.setState({ paletteOpen: true })
-    await user.type(screen.getByRole('combobox'), plannedCanvas.label)
+    act(() => useAnywhereStore.setState({ paletteOpen: true }))
+    await user.type(await screen.findByRole('combobox'), '新增畫布')
     expect(
       await screen.findByRole('option', {
-        name: (accessibleName) =>
-          stripShortcutSuffix(accessibleName) === plannedCanvas.label,
+        name: (accessibleName) => stripShortcutSuffix(accessibleName) === '新增畫布',
       }),
     ).toBeInTheDocument()
   })

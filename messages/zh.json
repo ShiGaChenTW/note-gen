@@ -8626,9 +8626,12 @@
       "description": "搜索笔记与命令",
       "placeholder": "搜索笔记或输入命令",
       "empty": "没有找到匹配的笔记或命令",
+      "openCanvas": "打开画布：{title}",
+      "canvasKeywords": "画布,canvas,白板",
       "group": {
         "command": "命令",
         "plugin": "插件命令",
+        "canvas": "画布",
         "note": "笔记"
       }
     },
@@ -8688,6 +8691,10 @@
       "readLater": {
         "title": "打开稍后读清单",
         "keywords": "read later,article,稍后读,文章,电子纸"
+      },
+      "newCanvas": {
+        "title": "新建画布",
+        "keywords": "canvas,new canvas,画布,白板,思维导图,流程图"
       }
     },
     "chat": {
@@ -9568,7 +9575,8 @@
       "addSource": "新增资料源",
       "addSourceShort": "资料源",
       "newThread": "新增对话",
-      "newThreadShort": "对话"
+      "newThreadShort": "对话",
+      "newCanvas": "新建画布"
     },
     "legacy": {
       "title": "旧笔记 {count, number} 则",

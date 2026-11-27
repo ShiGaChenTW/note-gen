@@ -3,13 +3,14 @@
 // Fork（almanac ALMNC-9）：⌘K 命令面板。同一個輸入框搜尋筆記與指令（含外掛命令）。
 // 外觀沿用 ui/command.tsx 在 v3 下的 Dialog 樣式（560px、距頂 16vh、輸入列 48px、清單 320px）；
 // 搜尋合併與排序在 src/lib/anywhere/palette-search.ts（純函式、有單元測試），這裡只負責取資料與執行。
+// Fork（almanac ALMNC-93）：加「新增畫布」指令與「開啟畫布：<名稱>」（空查詢列最近 3 張），不經過整理頁就能開畫布。
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useTheme } from 'next-themes'
 import { toast } from 'sonner'
 import {
-  FileText, FolderInput, Inbox, House, MessageSquarePlus, MessageCircleQuestion, Moon, PanelLeft, PanelRight, Search, Settings, TabletSmartphone, BookmarkPlus, Focus,
+  FileText, FolderInput, Inbox, House, MessageSquarePlus, MessageCircleQuestion, Moon, PanelLeft, PanelRight, Search, Settings, Shapes, TabletSmartphone, BookmarkPlus, Focus,
 } from 'lucide-react'
 import {
   Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandShortcut,
@@ -23,6 +24,7 @@ import { buildPaletteSections, noteTitleParts, type PaletteItem, type PaletteKin
 import { useAnywhereStore } from '@/lib/anywhere/store'
 import useVaultIndexStore from '@/stores/vault-index'
 import useArticleStore from '@/stores/article'
+import useCanvasStore from '@/stores/canvas'
 import useChatStore from '@/stores/chat'
 import useCollectStore from '@/stores/collect'
 import useHomeStore from '@/stores/home'
@@ -36,9 +38,10 @@ import { useEditorFocusStore } from '@/stores/editor-focus'
 import { toggleEinkPin } from '@/components/fork/eink-pin'
 import { isRecordTabPath } from '../mark/mark-record-tab'
 import { isCanvasTabPath } from '../canvas/canvas-tab'
+import { createAndOpenCanvas, openCanvas } from '../canvas/open-canvas'
 
 type CoreCommandId = 'ask' | 'newChat' | 'home' | 'collect' | 'inbox' | 'searchSidebar' | 'leftSidebar' | 'rightSidebar' | 'theme' | 'settings'
-  | 'einkPin' | 'einkUnpin' | 'readLater' | 'focusMode'
+  | 'einkPin' | 'einkUnpin' | 'readLater' | 'focusMode' | 'newCanvas'
 
 const CORE_COMMAND_ICONS: Record<CoreCommandId, typeof Search> = {
   ask: MessageCircleQuestion,
@@ -55,12 +58,14 @@ const CORE_COMMAND_ICONS: Record<CoreCommandId, typeof Search> = {
   einkUnpin: TabletSmartphone,
   readLater: BookmarkPlus,
   focusMode: Focus,
+  newCanvas: Shapes,
 }
 const CORE_COMMAND_SHORTCUT: Partial<Record<CoreCommandId, string>> = { ask: '⌘⇧A', home: '⌘⇧H', focusMode: '⌘⇧D' }
-const CORE_COMMAND_ORDER: CoreCommandId[] = ['ask', 'newChat', 'home', 'collect', 'inbox', 'searchSidebar', 'leftSidebar', 'rightSidebar', 'theme', 'settings']
+const CORE_COMMAND_ORDER: CoreCommandId[] = ['ask', 'newChat', 'home', 'collect', 'inbox', 'searchSidebar', 'leftSidebar', 'rightSidebar', 'theme', 'settings', 'newCanvas']
 const CORE_PREFIX = 'core:'
 const PLUGIN_PREFIX = 'plugin:'
 const NOTE_PREFIX = 'note:'
+const CANVAS_PREFIX = 'canvas:'
 
 export function AnywhereCommandPalette() {
   const t = useTranslations('anywhere')
@@ -69,6 +74,8 @@ export function AnywhereCommandPalette() {
   const open = useAnywhereStore(state => state.paletteOpen)
   const setOpen = useAnywhereStore(state => state.setPaletteOpen)
   const notes = useVaultIndexStore(state => state.notes)
+  const canvases = useCanvasStore(state => state.projects)
+  const tCanvas = useTranslations('canvas')
   const [query, setQuery] = useState('')
   const [pluginCommands, setPluginCommands] = useState<RegisteredPluginCommand[]>(() => getPluginCommands())
   // Fork（almanac ALMNC-45）：V3 才有的電子紙指令；目前開著的是檔案才能釘選
@@ -81,6 +88,11 @@ export function AnywhereCommandPalette() {
 
   useEffect(() => subscribePluginCommands(() => setPluginCommands(getPluginCommands())), [])
   useEffect(() => { if (open) setQuery('') }, [open])
+  // 畫布清單平常由整理頁的畫布分頁載入；沒進過整理頁時，打開面板再讀一次（讀不到就維持空清單）。
+  useEffect(() => {
+    if (!open || useCanvasStore.getState().projects.length > 0) return
+    void useCanvasStore.getState().loadProjects().catch(() => undefined)
+  }, [open])
 
   const items = useMemo<PaletteItem[]>(() => {
     const coreIds: CoreCommandId[] = [...CORE_COMMAND_ORDER]
@@ -115,8 +127,16 @@ export function AnywhereCommandPalette() {
         mtime: note.mtime,
       })
     }
-    return [...core, ...plugins, ...noteItems]
-  }, [notes, pluginCommands, t, einkPinTarget, einkPinned, v3, activeFilePath])
+    const canvasKeywords = t('palette.canvasKeywords').split(/[,，]/).map(word => word.trim()).filter(Boolean)
+    const canvasItems: PaletteItem[] = canvases.filter(project => !project.deletedAt).map(project => ({
+      id: `${CANVAS_PREFIX}${project.id}`,
+      kind: 'canvas',
+      title: t('palette.openCanvas', { title: project.title }),
+      keywords: canvasKeywords,
+      mtime: project.updatedAt,
+    }))
+    return [...core, ...plugins, ...canvasItems, ...noteItems]
+  }, [notes, pluginCommands, canvases, t, einkPinTarget, einkPinned, v3, activeFilePath])
 
   const sections = useMemo(() => buildPaletteSections(items, query), [items, query])
   const byId = useMemo(() => new Map(pluginCommands.map(command => [`${PLUGIN_PREFIX}${command.id}`, command])), [pluginCommands])
@@ -143,8 +163,9 @@ export function AnywhereCommandPalette() {
         break
       case 'readLater': useSettingsDialogStore.getState().openSettings('eink'); break
       case 'focusMode': useEditorFocusStore.getState().toggleFocusMode(); break
+      case 'newCanvas': await createAndOpenCanvas(tCanvas('templates.blank')); break
     }
-  }, [resolvedTheme, setTheme, einkPinTarget, tEink])
+  }, [resolvedTheme, setTheme, einkPinTarget, tEink, tCanvas])
 
   const openNote = useCallback(async (path: string) => {
     const sidebar = useSidebarStore.getState()
@@ -160,6 +181,7 @@ export function AnywhereCommandPalette() {
     try {
       if (item.id.startsWith(CORE_PREFIX)) await runCore(item.id.slice(CORE_PREFIX.length) as CoreCommandId)
       else if (item.id.startsWith(PLUGIN_PREFIX)) await executePluginUserCommand(item.id.slice(PLUGIN_PREFIX.length))
+      else if (item.id.startsWith(CANVAS_PREFIX)) await openCanvas(item.id.slice(CANVAS_PREFIX.length))
       else if (item.id.startsWith(NOTE_PREFIX)) await openNote(item.id.slice(NOTE_PREFIX.length))
     } catch (error) {
       toast.error(item.title, { description: error instanceof Error ? error.message : String(error) })
@@ -179,7 +201,7 @@ export function AnywhereCommandPalette() {
               {section.items.map(item => {
                 const coreId = item.id.startsWith(CORE_PREFIX) ? item.id.slice(CORE_PREFIX.length) as CoreCommandId : null
                 const pluginCommand = byId.get(item.id)
-                const Icon = coreId ? CORE_COMMAND_ICONS[coreId] : pluginCommand ? getPluginIcon(pluginCommand.icon) : FileText
+                const Icon = coreId ? CORE_COMMAND_ICONS[coreId] : pluginCommand ? getPluginIcon(pluginCommand.icon) : item.kind === 'canvas' ? Shapes : FileText
                 const shortcut = coreId ? CORE_COMMAND_SHORTCUT[coreId] : undefined
                 return (
                   <CommandItem key={item.id} value={item.id} onSelect={() => void run(item)}>
