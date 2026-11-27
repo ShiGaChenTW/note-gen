@@ -5,13 +5,31 @@ import { reconcileRecency, touchRecency } from '@/app/core/main/editor/doc-switc
 
 // Fork（almanac ALMNC-97.1）：V3 文件切換的最近使用順序。
 // 跟 openTabs 一樣是這台電腦的狀態，存在 localStorage、不同步到其他裝置（讀寫失敗就只在這次啟動有效）。
+// 切換樣式也是這台電腦的偏好（螢幕大小不同，適合的樣式不同），一樣存 localStorage。
 // 跟著 article store 的 activeTabId／openTabs 自動更新，呼叫端不用自己記。
+/** 文件切換樣式（ALMNC-97.2）：stack＝A 上方疊列、folder＝B 資料夾標籤（預設）、fan＝C 斜向錯開。 */
+export const DOC_SWITCHER_STYLES = ['folder', 'stack', 'fan'] as const
+export type DocSwitcherStyle = typeof DOC_SWITCHER_STYLES[number]
+export const DEFAULT_DOC_SWITCHER_STYLE: DocSwitcherStyle = 'folder'
+
 interface DocSwitcherState {
   recency: readonly string[]
   touch: (id: string) => void
+  style: DocSwitcherStyle
+  setStyle: (style: DocSwitcherStyle) => void
 }
 
 const RECENCY_KEY = 'almanac:doc-switcher-recency'
+const STYLE_KEY = 'almanac:doc-switcher-style'
+
+function readStyle(): DocSwitcherStyle {
+  try {
+    const value = globalThis.localStorage?.getItem(STYLE_KEY)
+    return DOC_SWITCHER_STYLES.includes(value as DocSwitcherStyle) ? value as DocSwitcherStyle : DEFAULT_DOC_SWITCHER_STYLE
+  } catch {
+    return DEFAULT_DOC_SWITCHER_STYLE
+  }
+}
 
 function readRecency(): string[] {
   try {
@@ -22,9 +40,9 @@ function readRecency(): string[] {
   }
 }
 
-function writeRecency(recency: readonly string[]) {
+function write(key: string, value: string) {
   try {
-    globalThis.localStorage?.setItem(RECENCY_KEY, JSON.stringify(recency))
+    globalThis.localStorage?.setItem(key, value)
   } catch {
     // 私密模式或被擋：只在這次啟動有效
   }
@@ -33,10 +51,13 @@ function writeRecency(recency: readonly string[]) {
 export const useDocSwitcherStore = create<DocSwitcherState>(set => ({
   recency: readRecency(),
   touch: (id) => set(state => ({ recency: touchRecency(state.recency, id) })),
+  style: readStyle(),
+  setStyle: (style) => set({ style }),
 }))
 
 useDocSwitcherStore.subscribe((state, prev) => {
-  if (state.recency !== prev.recency) writeRecency(state.recency)
+  if (state.recency !== prev.recency) write(RECENCY_KEY, JSON.stringify(state.recency))
+  if (state.style !== prev.style) write(STYLE_KEY, state.style)
 })
 
 function syncFromArticleStore() {

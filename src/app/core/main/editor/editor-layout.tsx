@@ -48,6 +48,7 @@ import { EditorNoteToolbar } from './editor-note-toolbar'
 import { collapseToSingleGroup } from './single-document'
 import { pickFallbackAfterClose, pickMountedTabIds } from './doc-switcher/recency'
 import { useDocSwitcherStore } from '@/stores/doc-switcher'
+import { DocSwitcher } from './doc-switcher/doc-switcher'
 import { BrowserPanel } from './browser-panel'
 import { ImageEditor } from './image/image-editor'
 import { EmptyState } from './empty-state'
@@ -267,69 +268,89 @@ function EditorGroupPane({
     [activeTab?.id, groupTabs, isV3, recency],
   )
 
+  const content = (
+    <div className="relative flex min-h-0 flex-1" onPointerDownCapture={() => onActivateGroup(group.id, group.activeTabId)}>
+      {groupTabs.map(tab => (
+        <div
+          key={`${tab.id}:${tab.path}`}
+          className="min-h-0 min-w-0 w-full flex-1 overflow-hidden"
+          style={{ display: tab.id === activeTab?.id ? 'flex' : 'none' }}
+        >
+          {tab.kind !== 'blank'
+            && (!mountedTabIds || mountedTabIds.has(tab.id))
+            && renderActiveContent(tab, isActiveGroup && tab.id === activeTab?.id, group.id)}
+          {tab.kind === 'blank' && tab.id === activeTab?.id
+            && (isTodayTab(tab) ? <TodayMovedNotice /> : renderEmpty('new-tab', isActiveGroup))}
+        </div>
+      ))}
+      {!activeTab && renderEmpty(groupTabs.length > 0 ? 'new-tab' : 'empty-group', isActiveGroup)}
+      <EditorDropZone groupId={group.id} direction="left" visible={dragging} className="inset-y-0 left-0 z-20 w-1/4" />
+      <EditorDropZone groupId={group.id} direction="right" visible={dragging} className="inset-y-0 right-0 z-20 w-1/4" />
+      <EditorDropZone groupId={group.id} direction="up" visible={dragging} className="inset-x-1/4 top-0 z-20 h-1/4" />
+      <EditorDropZone groupId={group.id} direction="down" visible={dragging} className="inset-x-1/4 bottom-0 z-20 h-1/4" />
+      <EditorDropZone groupId={group.id} direction="center" visible={dragging} className="inset-1/4 z-10" />
+    </div>
+  )
+
   return (
     <section
       className={cn('relative flex h-full w-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background', isActiveGroup && 'editor-group-active')}
     >
-      {isV3 ? <EditorNoteToolbar
-        activeTab={activeTab}
-        isActiveGroup={isActiveGroup}
-        canGoBack={Boolean(getEditorBackNavigationTarget(activeLayout))}
-        canGoForward={Boolean(getEditorForwardNavigationTarget(activeLayout))}
-        onNavigate={onNavigateHistory}
-      /> : <TabBar
-        groupId={group.id}
-        tabs={groupTabs}
-        activeTabId={group.activeTabId}
-        isActiveGroup={isActiveGroup}
-        isMaximized={activeLayout.maximizedGroupId === group.id}
-        onTabSwitch={tabId => onActivateGroup(group.id, tabId)}
-        onNewTab={() => onNewTab(group.id)}
-        onNewBrowser={() => onNewBrowser(group.id)}
-        onNewNote={() => { void setLeftSidebarTab('files').then(() => newFile()) }}
-        onNewRecord={() => emitter.emit('quickRecordTextHandler')}
-        onNewCanvas={() => { void createProject('blank', tCanvas('templates.blank')).then(project => { if (project) void addTab(createCanvasTab(project)) }) }}
-        onCloseTab={tabId => onCloseTab(group.id, tabId)}
-        onCloseOtherTabs={tabId => onKeepTabs(group.id, [tabId])}
-        onCloseAllTabs={() => onKeepTabs(group.id, [])}
-        onCloseLeftTabs={tabId => {
-          const index = group.tabIds.indexOf(tabId)
-          onKeepTabs(group.id, group.tabIds.slice(index))
-        }}
-        onCloseRightTabs={tabId => {
-          const index = group.tabIds.indexOf(tabId)
-          onKeepTabs(group.id, group.tabIds.slice(0, index + 1))
-        }}
-        onSplitTab={(tabId, direction) => onSplitTab(group.id, tabId, direction)}
-        onMoveToNewWindow={tabId => onMoveToNewWindow(group.id, tabId)}
-        onPinTab={onPinTab}
-        onUnpinTab={onUnpinTab}
-        onRestartPluginTab={onRestartPluginTab}
-        onToggleMaximize={() => onToggleMaximize(group.id)}
-        canCloseGroup={!groupTabs.some(tab => tab.pinned)}
-        onCloseGroup={() => onCloseGroup(group.id)}
-      />}
-      <div className="relative flex min-h-0 flex-1" onPointerDownCapture={() => onActivateGroup(group.id, group.activeTabId)}>
-        {groupTabs.map(tab => (
-          <div
-            key={`${tab.id}:${tab.path}`}
-            className="min-h-0 min-w-0 w-full flex-1 overflow-hidden"
-            style={{ display: tab.id === activeTab?.id ? 'flex' : 'none' }}
-          >
-            {tab.kind !== 'blank'
-              && (!mountedTabIds || mountedTabIds.has(tab.id))
-              && renderActiveContent(tab, isActiveGroup && tab.id === activeTab?.id, group.id)}
-            {tab.kind === 'blank' && tab.id === activeTab?.id
-              && (isTodayTab(tab) ? <TodayMovedNotice /> : renderEmpty('new-tab', isActiveGroup))}
-          </div>
-        ))}
-        {!activeTab && renderEmpty(groupTabs.length > 0 ? 'new-tab' : 'empty-group', isActiveGroup)}
-        <EditorDropZone groupId={group.id} direction="left" visible={dragging} className="inset-y-0 left-0 z-20 w-1/4" />
-        <EditorDropZone groupId={group.id} direction="right" visible={dragging} className="inset-y-0 right-0 z-20 w-1/4" />
-        <EditorDropZone groupId={group.id} direction="up" visible={dragging} className="inset-x-1/4 top-0 z-20 h-1/4" />
-        <EditorDropZone groupId={group.id} direction="down" visible={dragging} className="inset-x-1/4 bottom-0 z-20 h-1/4" />
-        <EditorDropZone groupId={group.id} direction="center" visible={dragging} className="inset-1/4 z-10" />
-      </div>
+      {isV3 ? (
+        <DocSwitcher
+          tabs={groupTabs}
+          activeTabId={activeTab?.id ?? ''}
+          onSwitch={tabId => onActivateGroup(group.id, tabId)}
+          onClose={tabId => onCloseTab(group.id, tabId)}
+          onPin={onPinTab}
+          onUnpin={onUnpinTab}
+        >
+          <EditorNoteToolbar
+            activeTab={activeTab}
+            isActiveGroup={isActiveGroup}
+            canGoBack={Boolean(getEditorBackNavigationTarget(activeLayout))}
+            canGoForward={Boolean(getEditorForwardNavigationTarget(activeLayout))}
+            onNavigate={onNavigateHistory}
+          />
+          {content}
+        </DocSwitcher>
+      ) : (
+        <>
+          <TabBar
+            groupId={group.id}
+            tabs={groupTabs}
+            activeTabId={group.activeTabId}
+            isActiveGroup={isActiveGroup}
+            isMaximized={activeLayout.maximizedGroupId === group.id}
+            onTabSwitch={tabId => onActivateGroup(group.id, tabId)}
+            onNewTab={() => onNewTab(group.id)}
+            onNewBrowser={() => onNewBrowser(group.id)}
+            onNewNote={() => { void setLeftSidebarTab('files').then(() => newFile()) }}
+            onNewRecord={() => emitter.emit('quickRecordTextHandler')}
+            onNewCanvas={() => { void createProject('blank', tCanvas('templates.blank')).then(project => { if (project) void addTab(createCanvasTab(project)) }) }}
+            onCloseTab={tabId => onCloseTab(group.id, tabId)}
+            onCloseOtherTabs={tabId => onKeepTabs(group.id, [tabId])}
+            onCloseAllTabs={() => onKeepTabs(group.id, [])}
+            onCloseLeftTabs={tabId => {
+              const index = group.tabIds.indexOf(tabId)
+              onKeepTabs(group.id, group.tabIds.slice(index))
+            }}
+            onCloseRightTabs={tabId => {
+              const index = group.tabIds.indexOf(tabId)
+              onKeepTabs(group.id, group.tabIds.slice(0, index + 1))
+            }}
+            onSplitTab={(tabId, direction) => onSplitTab(group.id, tabId, direction)}
+            onMoveToNewWindow={tabId => onMoveToNewWindow(group.id, tabId)}
+            onPinTab={onPinTab}
+            onUnpinTab={onUnpinTab}
+            onRestartPluginTab={onRestartPluginTab}
+            onToggleMaximize={() => onToggleMaximize(group.id)}
+            canCloseGroup={!groupTabs.some(tab => tab.pinned)}
+            onCloseGroup={() => onCloseGroup(group.id)}
+          />
+          {content}
+        </>
+      )}
     </section>
   )
 }
