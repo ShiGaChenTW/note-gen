@@ -5,6 +5,7 @@ import { trashDbStore } from '@/db/trash'
 import emitter from '@/lib/emitter'
 import { getDefaultArticleAbsolutePath, getFilePathOptions, getWorkspacePath } from '@/lib/workspace'
 import type { Source } from '@/lib/v3-model/source'
+import type { RssFeed } from '@/lib/source-import/rss-feeds'
 import {
   createTrashService,
   type DbTrashEntityType,
@@ -263,6 +264,19 @@ function createAppEntityHandlers(): TrashEntityHandlers {
     },
     async purgeSource() {
       // Source row was deleted after snapshotting into trash_items.metadata.
+    },
+
+    // Fork（almanac ALMNC-85.2）：RSS 訂閱放回原本的位置（救回算一次修改，V3 同步不會被刪除墓碑擋下）。
+    async restoreRssFeed(_entityId, item) {
+      const feed = item.metadata?.feed as RssFeed | undefined
+      if (!feed?.id || typeof feed.url !== 'string') return
+      const index = typeof item.metadata?.index === 'number' ? item.metadata.index : Number.MAX_SAFE_INTEGER
+      const { default: useRssStore } = await import('@/lib/source-import/rss-store')
+      await useRssStore.getState().load()
+      await useRssStore.getState().restore(feed, index)
+    },
+    async purgeRssFeed() {
+      // 訂閱確認刪除時已從清單移除，快照只在 trash_items.metadata。
     },
   }
 }

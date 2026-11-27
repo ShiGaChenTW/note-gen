@@ -4241,7 +4241,8 @@
         "conversation": "对话",
         "memory": "记忆",
         "tag": "标签",
-        "source": "数据源"
+        "source": "数据源",
+        "rss-feed": "RSS 订阅"
       },
       "actors": {
         "scott": "Scott",
@@ -4308,7 +4309,11 @@
         "later": "稍后决定",
         "confirmedToast": "已将“{path}”移至最近删除",
         "rejectedToast": "已保留本地项目“{path}”",
-        "actionFailed": "处理远程删除失败，请稍后再试"
+        "actionFailed": "处理远程删除失败，请稍后再试",
+        "recordGroup": "设置与伙伴",
+        "rssFeedBadge": "RSS 订阅",
+        "keepRecord": "保留",
+        "keptToast": "已保留“{title}”"
       }
     },
     "navigationGroups": {

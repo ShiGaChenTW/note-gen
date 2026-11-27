@@ -89,6 +89,9 @@ export async function runAlmanacSyncTask(reason: string): Promise<AlmanacSyncTas
   await initAlmanacSyncTables(db)
   const firstSync = !await store.get<number>(ALMANAC_V3_SYNC_FIRST_COMPLETED_KEY)
   const primaryRequest = await store.get<PrimaryDeviceRequest>(ALMANAC_PRIMARY_REQUEST_KEY) ?? null
+  // 85.2：資料源、RSS 訂閱、提案三張表（依序：先資料源、再 feeds.json、再 proposals.json）。
+  const { registerAlmanacAppTables } = await import('./tables/app')
+  registerAlmanacAppTables()
   const tables = getAlmanacSyncTables()
 
   const report: AlmanacSyncReport = await runAlmanacSync({

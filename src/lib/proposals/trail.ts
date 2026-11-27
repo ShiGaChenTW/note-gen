@@ -25,6 +25,8 @@ export interface ProposalDiscussion {
 
 export interface ProposalTrailEntry {
   conversationId?: number
+  /** Fork（almanac ALMNC-85.2）：V3 同步帶來的跨裝置對話編號（M2）；本機查不到這段對話時只有它。 */
+  conversationSyncId?: string
   discussion?: ProposalDiscussion
   supersededBy?: string
 }
@@ -75,6 +77,7 @@ export function sanitizeTrail(value: unknown): ProposalTrail {
     const entry = raw as Record<string, unknown>
     const next: ProposalTrailEntry = {}
     if (typeof entry.conversationId === 'number' && Number.isInteger(entry.conversationId)) next.conversationId = entry.conversationId
+    if (typeof entry.conversationSyncId === 'string' && entry.conversationSyncId) next.conversationSyncId = entry.conversationSyncId
     if (typeof entry.supersededBy === 'string' && entry.supersededBy) next.supersededBy = entry.supersededBy
     const discussion = entry.discussion as Record<string, unknown> | undefined
     // 舊版留下或重開時中斷的修訂可以重送；原說明已寫在對話裡。

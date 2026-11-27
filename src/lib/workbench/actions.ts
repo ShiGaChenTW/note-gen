@@ -25,8 +25,25 @@ export type Undo = (() => Promise<unknown>) | undefined
 /** Fork（almanac ALMNC-69.9）：Scott 親自觸發的操作。 */
 const SCOTT = { actor: 'scott', actorId: 'scott' } as const
 
-/** 叫指揮官的分析佇列跑一輪（R2：自己寫的、系統產生的；R1：Scott 選「處理」後）。 */
-export async function kickCommander(): Promise<void> {
+/** Fork（almanac ALMNC-85.2）：Scott 手動交給指揮官（不受主力裝置限制）。 */
+const MANUAL = { manual: true } as const
+const kickManually = () => kickCommander(MANUAL)
+
+/**
+ * 叫指揮官的分析佇列跑一輪（R2：自己寫的、系統產生的；R1：Scott 選「處理」後）。
+ * Fork（almanac ALMNC-85.2，第 8 節 1A）：自動分析（新資料源一進來就交給指揮官）只在主力裝置跑；
+ * Scott 手動按的（處理、交給指揮官、送給指揮官）帶 manual，每台都照跑。其他裝置新增的待分析資料源同步到主力裝置後由它分析。
+ */
+export async function kickCommander(options: { manual?: boolean } = {}): Promise<void> {
+  if (!options.manual) {
+    try {
+      const { isThisDeviceAlmanacPrimary } = await import('@/lib/almanac-sync/runtime')
+      if (!await isThisDeviceAlmanacPrimary()) return
+    } catch (error) {
+      // 讀不到 V3 同步設定（例如沒有 Tauri）：只有這一台，照舊分析。
+      console.debug('[workbench] primary device check skipped:', error)
+    }
+  }
   try {
     const { commanderQueue } = await import('@/lib/commander/default-deps')
     void (await commanderQueue()).kick().catch(error => console.error('[workbench] commander queue failed:', error))
@@ -401,7 +418,7 @@ export async function processSource(sourceId: string, options: { followSuggestio
   }
   await db.setSourceStatus(sourceId, 'pending_analysis')
   await refreshSources()
-  await kickCommander()
+  await kickCommander(MANUAL)
 }
 
 /** Fork（almanac ALMNC-54.10）：擷取失敗的卡片「重試」：再抓一次、再判斷一次。 */
@@ -462,7 +479,7 @@ export async function handToCommander(rows: readonly SourceListRow[]): Promise<{
     }
   }
   await refreshSources()
-  if (count) await kickCommander()
+  if (count) await kickCommander(MANUAL)
   return { count, reorganise }
 }
 
@@ -499,7 +516,7 @@ export async function saveSourceEdit(row: SourceListRow, content: string): Promi
 /** 「送給 Mia 更新」／「送給 Mia 分析」：叫佇列跑。 */
 export async function sendToCommander(sourceId: string): Promise<void> {
   useWorkbenchStore.getState().markEdited(sourceId, false)
-  await kickCommander()
+  await kickCommander(MANUAL)
   await refreshSources()
 }
 
@@ -618,13 +635,13 @@ export function registerTranscribedAudio(memo: { from: 'live' | 'file', markId: 
 }
 
 /** 用固定 id 的資料源：內容沒變不重複建立，改了照版本規則接新版（見 routeVersionedSource）。 */
-export async function submitVersionedSource(input: AutoSourceInput): Promise<VersionedRouteResult> {
+export async function submitVersionedSource(input: AutoSourceInput, options: { manual?: boolean } = {}): Promise<VersionedRouteResult> {
   const db = await import('@/db/v3-sources')
   const result = await routeVersionedSource(input, {
     latest: id => db.getLatestVersion(id),
     addIfAbsent: ({ sourceType, ...rest }) => db.addSourceIfAbsent({ ...rest, sourceType }),
     edit: (id, content) => db.editSource(id, content),
-    kick: kickCommander,
+    kick: () => kickCommander(options),
   })
   if (result.source) await refreshSources()
   return result
@@ -637,7 +654,7 @@ export async function submitVersionedSource(input: AutoSourceInput): Promise<Ver
 export async function sendNoteToCommander(note: { path: string, content: string, journal?: boolean }): Promise<VersionedRouteResult['outcome']> {
   const input = noteSource(note)
   if (!input) return 'empty'
-  const result = await submitVersionedSource(input)
+  const result = await submitVersionedSource(input, MANUAL)
   // Fork（almanac ALMNC-69.3）：「完成」時勾了日誌，但這篇以前送過（接新版或內容沒變）：Scott 的標籤直接生效。
   if (note.journal && result.outcome !== 'added') {
     const db = await import('@/db/v3-sources')
@@ -665,7 +682,7 @@ export async function sendRecordForExtraction(note: { path: string, content: str
     },
     addIfAbsent: ({ sourceType, ...rest }) => db.addSourceIfAbsent({ ...rest, sourceType }),
     edit: (id, content) => db.editSource(id, content),
-    kick: kickCommander,
+    kick: kickManually,
   })
   if (result.source) await refreshSources()
   return result.outcome

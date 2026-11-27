@@ -55,6 +55,8 @@ export function serializeItems(items: readonly ItemLike[]): PersistedItem[] {
       due: proposal.due, time: proposal.time, tags: [...proposal.tags],
       ...(proposal.slot ? { slot: proposal.slot } : {}),
       ...(proposal.conversationId !== undefined ? { conversationId: proposal.conversationId } : {}),
+      // Fork（almanac ALMNC-85.2）：V3 同步帶來的跨裝置對話編號（本機還沒有這段對話時只有它，M2）。
+      ...(typeof proposal.conversationSyncId === 'string' ? { conversationSyncId: proposal.conversationSyncId } : {}),
       ...(proposal.previousProposalId ? { previousProposalId: proposal.previousProposalId } : {}),
       ...(proposal.folder !== undefined ? { folder: proposal.folder } : {}),
       ...(proposal.suggested ? { suggested: { ...proposal.suggested } } : {}),

@@ -4241,7 +4241,8 @@
         "conversation": "Conversation",
         "memory": "Memory",
         "tag": "Tag",
-        "source": "Source"
+        "source": "Source",
+        "rss-feed": "RSS feed"
       },
       "actors": {
         "scott": "Scott",
@@ -4308,7 +4309,11 @@
         "later": "Decide later",
         "confirmedToast": "Moved “{path}” to Recently Deleted",
         "rejectedToast": "Kept local item “{path}”",
-        "actionFailed": "Failed to process remote deletion, please try again"
+        "actionFailed": "Failed to process remote deletion, please try again",
+        "recordGroup": "Settings & partners",
+        "rssFeedBadge": "RSS feed",
+        "keepRecord": "Keep",
+        "keptToast": "Kept \"{title}\""
       }
     },
     "navigationGroups": {

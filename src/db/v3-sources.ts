@@ -36,6 +36,11 @@ const OUTPUT_SELECT = `select o.source_id as sourceId, o.target_type as targetTy
 
 let initialized: Promise<void> | null = null
 
+/** Fork（almanac ALMNC-85.2）：資料源群組寫入後，開了 V3 同步就排一次 almanac 同步。 */
+function changed(): void {
+  void import('@/lib/almanac-sync/notify').then(({ notifyAlmanacLocalChange }) => notifyAlmanacLocalChange('sources')).catch(() => undefined)
+}
+
 async function addSourcesColumn(db: Awaited<ReturnType<typeof getDb>>, columnSql: string): Promise<void> {
   try {
     await db.execute(`alter table sources add column ${columnSql}`)
@@ -108,6 +113,7 @@ async function insertSource(source: Source): Promise<void> {
      values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`,
     sourceToValues(source)
   )
+  changed()
 }
 
 /** 寫回可變欄位；id、來源類型、收集資訊、版本鏈不會被改。 */
@@ -119,6 +125,7 @@ async function updateSource(source: Source): Promise<void> {
      where id = $1`,
     [source.id, source.content, source.status, source.statusChangedAt, source.lockedAt ?? null, source.archivedAt ?? null, source.updatedAt, source.journal ? 1 : 0]
   )
+  changed()
 }
 
 /**
@@ -129,7 +136,25 @@ export async function getSource(id: string): Promise<Source | undefined> {
   await initV3SourceDb()
   const db = await getDb()
   const rows = await db.select<SourceRow[]>(`select ${SOURCE_COLUMNS} from sources where id = $1 or legacy_id = $1 order by (id = $1) desc limit 1`, [id])
-  return rows[0] ? sourceFromRow(rows[0]) : undefined
+  if (rows[0]) return sourceFromRow(rows[0])
+  // Fork（almanac ALMNC-85.2）：兩台各自遷移出不同 S 編號、V3 同步合併後，舊編號記在別名表；照樣找得到（身分編號一經產生不改）。
+  const canonical = await canonicalSourceAlias(db, id)
+  if (!canonical || canonical === id) return undefined
+  const aliased = await db.select<SourceRow[]>(`select ${SOURCE_COLUMNS} from sources where id = $1 limit 1`, [canonical])
+  return aliased[0] ? sourceFromRow(aliased[0]) : undefined
+}
+
+async function canonicalSourceAlias(db: Awaited<ReturnType<typeof getDb>>, id: string): Promise<string | null> {
+  try {
+    const rows = await db.select<Array<{ canonicalId: string }>>(
+      "select canonical_id as canonicalId from almanac_sync_aliases where table_name = 'sources' and alias_id = $1 limit 1",
+      [id],
+    )
+    return rows[0]?.canonicalId ?? null
+  } catch {
+    // 還沒開過 V3 同步：沒有別名表。
+    return null
+  }
 }
 
 /** 舊 id → 現在的 id（沒遷移過或找不到就回傳原值）。 */
@@ -238,6 +263,7 @@ export async function insertLegacyNoteSources(sources: readonly Source[]): Promi
     )
     added += Number(result.rowsAffected ?? 0)
   }
+  if (added) changed()
   return added
 }
 
@@ -266,7 +292,9 @@ export async function addSourceIfAbsent(input: NewSourceInput, now = Date.now())
      on conflict(id) do nothing`,
     sourceToValues(source)
   )
-  return Number(result.rowsAffected ?? 0) > 0 ? source : undefined
+  if (Number(result.rowsAffected ?? 0) <= 0) return undefined
+  changed()
+  return source
 }
 
 async function requireSource(id: string): Promise<Source> {
@@ -330,6 +358,7 @@ export async function addSourceOutput(sourceId: string, targetType: OutputTarget
      on conflict(source_id, target_type, target_ref) do nothing`,
     [id, targetType, targetRef, now]
   )
+  changed()
 }
 
 /**
@@ -404,6 +433,7 @@ export async function deleteUnsentSource(id: string): Promise<void> {
   })
   const db = await getDb()
   await db.execute('delete from sources where id = $1', [source.id])
+  changed()
 }
 
 /** Restore a soft-trashed unsent source from its stored snapshot if absent. */
@@ -418,4 +448,5 @@ export async function restoreDeletedSource(source: Source): Promise<void> {
      on conflict(id) do nothing`,
     sourceToValues(source)
   )
+  changed()
 }
