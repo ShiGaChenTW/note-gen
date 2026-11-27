@@ -52,6 +52,7 @@ import { ChatUiMessages } from '@/components/chat-ui/chat-ui-messages'
 import { ChatResponse } from '@/components/chat-ui/chat-response'
 import { JobMessages } from '../jobs/job-result'
 import { ThreadMessageCards } from '../threads/thread-cards'
+import { ExpertHandoffPrompt } from '../threads/expert-handoff'
 import { CommanderSpeaker } from './commander-name' // Fork（almanac ALMNC-54.7）
 
 interface DisplayedConversationCompaction {
@@ -664,6 +665,8 @@ const Message = React.memo(function Message({ chat }: { chat: Chat }) {
             />
             {!chat.agentHistory && !isLiveAgentVisible && <ChatUiMessages chat={chat} />}
             <ThreadMessageCards chatId={chat.id} />
+            {/* Fork（almanac ALMNC-91）：專家判斷需要外部資料時，在回答下面問要不要轉給指揮官 */}
+            {!isGeneratingMessage && <ExpertHandoffPrompt chatId={chat.id} />}
             {!isGeneratingMessage && (
               <MessageControl chat={chat}>
                 <MarkText chat={chat} />

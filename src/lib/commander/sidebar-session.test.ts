@@ -9,6 +9,7 @@ import { buildDeskContext, readDeskContext } from '@/lib/workbench/desk-context'
 import type { Proposal } from '@/lib/collect/types'
 import { commanderDisplayName, prepareSidebarCommanderRun, type SidebarRunDeps } from './sidebar-session'
 import { SIDEBAR_ASK_RULES, SIDEBAR_COMMANDER_RULES } from './sidebar'
+import { EXPERT_HANDOFF_RULE, EXPERT_HANDOFF_TOOL_NAME } from '@/lib/threads/expert-handoff'
 
 const roles = createTranslator({ locale: 'zh-TW', messages, namespace: 'agents.roles' })
 const roleLabel = (key: string, values?: Record<string, string>) => roles(key as 'commander', values)
@@ -97,6 +98,37 @@ describe('ALMNC-54.11 routed runs', () => {
     expect(rememberWork).toHaveBeenCalledWith(ROSTER[1], expect.objectContaining({
       reference: 'conversation:7#70', request: '提前提醒我', fromScott: true,
     }))
+  })
+
+  // Fork（almanac ALMNC-91）：專家只讀回答時才有 expert_suggest_commander；AI 呼叫它（固定回應）就記下這則回答。
+  it('gives a read-only expert expert_suggest_commander, which flags this answer for a handoff prompt', async () => {
+    const suggestCommander = vi.fn()
+    const { deps } = fakeDeps({ suggestCommander })
+    const run = await prepareSidebarCommanderRun({ chatId: 42, scottMessages: ['今天匯率多少？'], readOnly: true, answerAs: expert }, deps)
+    expect(run.rolePrompt).toContain(EXPERT_HANDOFF_RULE)
+    const result = await tool(run, EXPERT_HANDOFF_TOOL_NAME).execute({ reason: '需要即時匯率' }, context)
+    expect(result.ok).toBe(true)
+    expect(suggestCommander).toHaveBeenCalledWith(42)
+  })
+
+  it('does not offer expert_suggest_commander to the commander or outside read-only expert answers', async () => {
+    const { deps } = fakeDeps({ suggestCommander: vi.fn() })
+    const names = async (input: Parameters<typeof prepareSidebarCommanderRun>[0]) => {
+      const run = await prepareSidebarCommanderRun(input, deps)
+      return { prompt: run.rolePrompt, tools: run.transformTools(agentToolRegistry.listTools()).map(entry => entry.name) }
+    }
+    for (const input of [
+      { chatId: 1, scottMessages: [], readOnly: true },
+      { chatId: 1, scottMessages: [], answerAs: expert },
+      { chatId: 1, scottMessages: [] },
+    ]) {
+      const { prompt, tools } = await names(input)
+      expect(tools).not.toContain(EXPERT_HANDOFF_TOOL_NAME)
+      expect(prompt).not.toContain(EXPERT_HANDOFF_RULE)
+    }
+    const { deps: withoutHook } = fakeDeps()
+    const run = await prepareSidebarCommanderRun({ chatId: 1, scottMessages: [], readOnly: true, answerAs: expert }, withoutHook)
+    expect(run.transformTools(agentToolRegistry.listTools()).map(entry => entry.name)).not.toContain(EXPERT_HANDOFF_TOOL_NAME)
   })
 
   it('answerAs is ignored outside read-only runs（只讀才由專家回答）', async () => {

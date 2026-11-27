@@ -8701,7 +8701,9 @@
       "handoffHint": "標籤改成處理，這段對話直接延續",
       "transferAsk": "秘書：這像是筆記或知識的問題，要不要轉給指揮官？",
       "transfer": "轉給指揮官",
-      "keep": "不用"
+      "keep": "不用",
+      "expertAsk": "專家：這題需要外部資料，筆記庫裡查不到。要不要轉給指揮官？",
+      "expertMessage": "專家說這題需要外部資料，請指揮官接手：\n\n{question}"
     },
     "pending": "還有 {count} 則提案待決定"
   },

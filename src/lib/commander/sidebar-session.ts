@@ -11,6 +11,7 @@ import type { AgentRole } from '@/lib/agents/settings'
 import type { Proposal } from '@/lib/collect/types'
 import type { AwaitingReply } from '@/lib/threads/awaiting'
 import type { DirectEditCardData, ProposalCardData } from '@/lib/threads/cards'
+import { buildExpertHandoffTool, EXPERT_HANDOFF_RULE } from '@/lib/threads/expert-handoff'
 import { deskMaterialPrompt, type DeskContext } from '@/lib/workbench/desk-context'
 import { describeDirectEdit, type DirectEdit } from './schedule-direct'
 import { buildCommanderSidebarPrompt, buildSidebarCommanderTools, changesToProposals, createChangeCollector } from './sidebar'
@@ -45,6 +46,8 @@ export interface SidebarRunDeps {
   /** 工作台上這批提案的來源名稱，例如「Mia · 指揮官（對話）」。 */
   originLabel: (agent: string) => string
   rememberWork?: (agent: SidebarRosterAgent, work: CompletedRoleWork) => Promise<void>
+  /** Fork（almanac ALMNC-91）：專家判斷需要外部資料時記下這則回答（chatId），對話裡問 Scott 要不要轉給指揮官。沒給就不提供工具。 */
+  suggestCommander?: (chatId: number) => void
   now: () => Date
 }
 
@@ -153,11 +156,17 @@ export async function prepareSidebarCommanderRun(
       return { ok: true, message: `${expert.name} (${expert.domain}): ${answer}` }
     },
   } : undefined
+  // Fork（almanac ALMNC-91）：專家只讀回答時，需要外部資料就用 expert_suggest_commander 提議轉給指揮官（Scott 同意才轉）。
+  const suggestCommander = deps.suggestCommander
+  const handoffTool = input.readOnly && speaker?.role === 'expert' && suggestCommander
+    ? buildExpertHandoffTool(() => suggestCommander(input.chatId))
+    : undefined
   const rolePrompt = [
     buildCommanderSidebarPrompt({ instructions: ROLE_INSTRUCTIONS[speaker?.role ?? 'commander'], memory, displayName, readOnly: input.readOnly, role: speaker?.role }),
     input.routeNote?.trim() ?? '',
     materials,
     input.readOnly ? '' : projectPrompt(input.projects ?? [], input.conversationProject ?? ''),
+    handoffTool ? EXPERT_HANDOFF_RULE : '',
     expertTool ? 'When Scott asks for a domain expert or the question needs domain judgment, consult the relevant expert with desk_consult_expert and attribute their assessment in your reply.' : '',
   ].filter(Boolean).join('\n\n')
 
@@ -221,7 +230,7 @@ export async function prepareSidebarCommanderRun(
     rolePrompt,
     transformTools: tools => {
       const selected = input.readOnly ? tools : transformTools(tools)
-      return expertTool ? [...selected, expertTool] : selected
+      return [...selected, ...(expertTool ? [expertTool] : []), ...(handoffTool ? [handoffTool] : [])]
     },
     remember: async completedAnswer => {
       const rememberWork = deps.rememberWork
@@ -303,6 +312,7 @@ export async function createDefaultSidebarDeps(labels: { roleLabel: RoleTranslat
     },
     attachCard: (chatId, card) => useThreadsStore.getState().attachCard(chatId, card),
     attachDirectEdit: (chatId, card, undo) => useThreadsStore.getState().attachDirectEdit(chatId, card, undo),
+    suggestCommander: chatId => useThreadsStore.getState().flagExpertHandoff(chatId),
     markAwaiting: entry => useAwaitingRepliesStore.getState().mark(entry),
     clearAwaiting: (conversationId, via) => useAwaitingRepliesStore.getState().clear(conversationId, via),
     logActivity: async entry => {
