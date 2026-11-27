@@ -3,7 +3,7 @@ import { exists, mkdir, readDir, remove, rename, stat, type BaseDirectory } from
 
 import { trashDbStore } from '@/db/trash'
 import emitter from '@/lib/emitter'
-import { getFilePathOptions, getWorkspacePath } from '@/lib/workspace'
+import { getDefaultArticleAbsolutePath, getFilePathOptions, getWorkspacePath } from '@/lib/workspace'
 import type { Source } from '@/lib/v3-model/source'
 import {
   createTrashService,
@@ -110,10 +110,34 @@ function createAppTrashFs(workspaceRoot?: string): TrashFs {
   }
 }
 
-async function currentWorkspaceScope(workspaceRoot?: string): Promise<string> {
-  if (workspaceRoot) return workspaceRoot
+function normalizeComparablePath(input: string): string {
+  return input.trim().replace(/\\/g, '/').replace(/\/+$/, '')
+}
+
+/**
+ * Canonicalize a workspace root into the persisted `trash_items.workspace` key
+ * so default-workspace callers passing `<appDataDir>/article` match callers using `'article'`.
+ */
+export async function resolveTrashWorkspaceScope(workspaceRoot?: string): Promise<string> {
   const workspace = await getWorkspacePath()
-  return workspace.path
+  if (!workspaceRoot) return workspace.path
+
+  const normalized = normalizeComparablePath(workspaceRoot)
+  if (!workspace.isCustom) {
+    let defaultRoot = ''
+    try {
+      defaultRoot = normalizeComparablePath(await getDefaultArticleAbsolutePath(''))
+    } catch {
+      defaultRoot = ''
+    }
+    if (normalized === 'article' || (defaultRoot && normalized === defaultRoot)) {
+      return workspace.path
+    }
+  } else if (normalized === normalizeComparablePath(workspace.path)) {
+    return workspace.path
+  }
+
+  return normalized
 }
 
 function createAppEntityHandlers(): TrashEntityHandlers {
@@ -248,7 +272,7 @@ export function getAppTrashService(workspaceRoot?: string): TrashService {
     fs: createAppTrashFs(workspaceRoot),
     store: trashDbStore,
     entities: createAppEntityHandlers(),
-    getWorkspaceScope: () => currentWorkspaceScope(workspaceRoot),
+    getWorkspaceScope: () => resolveTrashWorkspaceScope(workspaceRoot),
     onChange: () => {
       emitter.emit('trash-changed')
     },
@@ -275,7 +299,7 @@ export async function removeDbTrashEntry(entityType: DbTrashEntityType, entityId
 }
 
 export async function listTrashItems(workspace?: string): Promise<TrashItem[]> {
-  const scope = workspace ?? await currentWorkspaceScope()
+  const scope = await resolveTrashWorkspaceScope(workspace)
   return getAppTrashService().list(scope)
 }
 
@@ -296,7 +320,7 @@ export async function permanentlyDeleteTrashItem(
 }
 
 export async function emptyAppTrash(workspace?: string): Promise<{ deletedCount: number; failedIds: string[] }> {
-  const scope = workspace ?? await currentWorkspaceScope()
+  const scope = await resolveTrashWorkspaceScope(workspace)
   return getAppTrashService().emptyTrash(scope)
 }
 

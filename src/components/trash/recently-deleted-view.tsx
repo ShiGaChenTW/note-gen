@@ -91,6 +91,11 @@ async function syncStoresAfterRestore(entityType: TrashEntityType): Promise<void
       await useChatStore.getState().initConversations?.()
       return
     }
+    if (entityType === 'source') {
+      const { refreshSources } = await import('@/lib/workbench/actions')
+      await refreshSources()
+      return
+    }
     if (entityType === 'memory') {
       const { default: useMemoriesStore } = await import('@/stores/memories')
       const state = useMemoriesStore.getState()
