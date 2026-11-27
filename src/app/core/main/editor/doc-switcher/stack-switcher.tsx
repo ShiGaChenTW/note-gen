@@ -21,7 +21,7 @@ import {
 import { useDocSwitcherStore } from '@/stores/doc-switcher'
 import type { TabInfo } from '../tab-bar'
 import type { DocSwitcherViewProps } from './doc-switcher'
-import { splitStackTabs } from './recency'
+import { ensureShown, splitStackTabs } from './recency'
 import { tabIcon, tabTitle } from './tab-meta'
 import { prefersReducedMotion, SWITCH_MS } from './motion'
 
@@ -29,7 +29,7 @@ import { prefersReducedMotion, SWITCH_MS } from './motion'
 const STEP_Y = 24
 const STEP_X = 28
 
-export function StackSwitcher({ tabs, activeTabId, onSwitch, onClose, children, variant }: DocSwitcherViewProps & { variant: 'stack' | 'fan' }) {
+export function StackSwitcher({ tabs, activeTabId, cycleTargetId, onWheel, onSwitch, onClose, children, variant }: DocSwitcherViewProps & { variant: 'stack' | 'fan' }) {
   const t = useTranslations('editor.docSwitcher')
   const recency = useDocSwitcherStore(state => state.recency)
   const expanded = useDocSwitcherStore(state => state.expanded)
@@ -43,8 +43,12 @@ export function StackSwitcher({ tabs, activeTabId, onSwitch, onClose, children, 
   const { back, hidden } = useMemo(() => {
     const rank = new Map(recency.map((id, index) => [id, index]))
     const byRecency = [...tabs].sort((a, b) => (rank.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (rank.get(b.id) ?? Number.MAX_SAFE_INTEGER))
-    return splitStackTabs(byRecency, active.id)
-  }, [active.id, recency, tabs])
+    const split = splitStackTabs(byRecency, active.id)
+    // 按住 ⌃ 選卡時，選到的那張即使在「更多」裡也先換進來標出
+    const others = byRecency.filter(tab => tab.id !== active.id)
+    const shown = ensureShown(split.back, others, cycleTargetId)
+    return { back: shown, hidden: others.filter(tab => !shown.includes(tab)) }
+  }, [active.id, cycleTargetId, recency, tabs])
 
   const open = expanded && back.length > 0
   const depth = open ? back.length : 0
@@ -89,7 +93,7 @@ export function StackSwitcher({ tabs, activeTabId, onSwitch, onClose, children, 
   const activeTitle = tabTitle(active)
 
   return (
-    <div className="relative flex min-h-0 min-w-0 flex-1 flex-col" data-doc-switcher={variant}>
+    <div className="relative flex min-h-0 min-w-0 flex-1 flex-col" data-doc-switcher={variant} onWheel={(event) => { if ((event.target as HTMLElement).closest('[data-doc-switcher-head]')) onWheel(event) }}>
       {back.map((tab, index) => {
         const d = index + 1
         const lift = hovered === tab.id ? 4 : 0
@@ -103,7 +107,9 @@ export function StackSwitcher({ tabs, activeTabId, onSwitch, onClose, children, 
             key={tab.id}
             tab={tab}
             depth={d}
+            total={tabs.length}
             open={open}
+            targeted={tab.id === cycleTargetId}
             style={{ top: offsetY, left: offsetX, transform, transition, zIndex: 10 - d }}
             onHover={(on) => setHovered(on ? tab.id : null)}
             onChoose={() => choose(tab.id)}
@@ -114,7 +120,7 @@ export function StackSwitcher({ tabs, activeTabId, onSwitch, onClose, children, 
         className={cn('absolute bottom-0 right-0 z-10 flex min-h-0 min-w-0 flex-col overflow-hidden bg-card', open && 'rounded-t-[10px] border border-b-0 border-border shadow-lg')}
         style={{ top: offsetY, left: offsetX, transition }}
       >
-        <div className="flex h-8 shrink-0 items-center gap-1.5 border-b border-border px-3 text-xs text-foreground">
+        <div className="flex h-8 shrink-0 items-center gap-1.5 border-b border-border px-3 text-xs text-foreground" data-doc-switcher-head>
           <ActiveIcon className="size-3.5 shrink-0" aria-hidden />
           <span className={cn('min-w-0 flex-1 truncate', active.preview && 'italic')} title={active.path || activeTitle}>{activeTitle}</span>
           {open && hidden.length > 0 && (
@@ -173,14 +179,17 @@ export function StackSwitcher({ tabs, activeTabId, onSwitch, onClose, children, 
   )
 }
 
-function BackCard({ tab, depth, open, style, onHover, onChoose }: {
+function BackCard({ tab, depth, total, open, targeted, style, onHover, onChoose }: {
   tab: TabInfo
   depth: number
+  total: number
   open: boolean
+  targeted: boolean
   style: CSSProperties
   onHover: (on: boolean) => void
   onChoose: () => void
 }) {
+  const t = useTranslations('editor.docSwitcher')
   const Icon = tabIcon(tab)
   const title = tabTitle(tab)
   return (
@@ -188,9 +197,11 @@ function BackCard({ tab, depth, open, style, onHover, onChoose }: {
       type="button"
       tabIndex={open ? 0 : -1}
       aria-hidden={!open}
-      aria-label={title}
+      aria-label={`${title}，${t('position', { index: depth + 1, total })}`}
       title={tab.path || title}
       data-depth={depth}
+      data-doc-switcher-head
+      data-cycle-target={targeted || undefined}
       onMouseEnter={() => onHover(true)}
       onMouseLeave={() => onHover(false)}
       onFocus={() => onHover(true)}
@@ -199,6 +210,7 @@ function BackCard({ tab, depth, open, style, onHover, onChoose }: {
       className={cn(
         'absolute bottom-0 right-0 flex flex-col overflow-hidden rounded-t-[10px] border border-b-0 border-border bg-muted text-left',
         'hover:border-primary focus-visible:border-primary focus-visible:outline-none',
+        'data-[cycle-target=true]:border-primary data-[cycle-target=true]:bg-card data-[cycle-target=true]:ring-1 data-[cycle-target=true]:ring-primary',
         open ? 'opacity-100' : 'pointer-events-none opacity-0',
       )}
       style={style}

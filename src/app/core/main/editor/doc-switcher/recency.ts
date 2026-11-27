@@ -118,6 +118,24 @@ export function splitVisibleTabs<T extends RecencyTab>(
   return { visible, hidden: ordered.filter(tab => !shown.has(tab.id)) }
 }
 
+/** 確保 id 在看得到的清單裡：不在的話換掉最後一張（不換掉 keepId）。用在選卡時把選到的那張換進來。 */
+export function ensureShown<T extends RecencyTab>(
+  shown: readonly T[],
+  all: readonly T[],
+  id: string | null | undefined,
+  keepId?: string,
+): T[] {
+  if (!id || shown.some(tab => tab.id === id)) return [...shown]
+  const target = all.find(tab => tab.id === id)
+  if (!target) return [...shown]
+  const next = [...shown]
+  let slot = next.length - 1
+  while (slot > 0 && next[slot].id === keepId) slot -= 1
+  if (slot < 0) return [...next, target]
+  next[slot] = target
+  return next
+}
+
 /** 樣式 A、C 展開時最多顯示幾張後面的卡（加上前面那張共 5 張）。 */
 export const STACK_BACK_LIMIT = 4
 

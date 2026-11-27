@@ -17,13 +17,13 @@ import {
 } from '@/components/ui/dropdown-menu'
 import type { TabInfo } from '../tab-bar'
 import type { DocSwitcherViewProps } from './doc-switcher'
-import { folderTabCapacity, splitVisibleTabs } from './recency'
+import { ensureShown, folderTabCapacity, splitVisibleTabs } from './recency'
 import { tabIcon, tabTitle } from './tab-meta'
 import { prefersReducedMotion, SWITCH_MS } from './motion'
 
 const LIFT = 'translateY(-6px) scale(1.04)'
 
-export function FolderTabsSwitcher({ tabs, activeTabId, onSwitch, onClose, children }: DocSwitcherViewProps) {
+export function FolderTabsSwitcher({ tabs, activeTabId, cycleTargetId, onWheel, onSwitch, onClose, children }: DocSwitcherViewProps) {
   const t = useTranslations('editor.docSwitcher')
   const rowRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
@@ -43,7 +43,10 @@ export function FolderTabsSwitcher({ tabs, activeTabId, onSwitch, onClose, child
 
   // 量整列（含「更多」按鈕的位置）的寬度；還沒量到（第一次渲染）時先全部顯示，量到後再收。
   const capacity = rowWidth > 0 ? folderTabCapacity(rowWidth, tabs.length) : tabs.length
-  const { visible, hidden } = splitVisibleTabs(tabs, activeTabId, capacity)
+  const split = splitVisibleTabs(tabs, activeTabId, capacity)
+  // 按住 ⌃ 選卡時，選到的那張即使在「更多」裡也先換進來標出
+  const visible = ensureShown(split.visible, tabs, cycleTargetId, activeTabId)
+  const hidden = tabs.filter(tab => !visible.includes(tab))
   const order = visible.map(tab => tab.id).join('\n')
 
   // FLIP：記下每張標籤上一次的位置，順序變了就從舊位置滑到新位置。
@@ -86,7 +89,7 @@ export function FolderTabsSwitcher({ tabs, activeTabId, onSwitch, onClose, child
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-      <div ref={rowRef} className="relative z-10 flex h-[34px] shrink-0 items-end pr-2" data-doc-switcher-row>
+      <div ref={rowRef} className="relative z-10 flex h-[34px] shrink-0 items-end pr-2" data-doc-switcher-row onWheel={onWheel}>
         <div
           role="tablist"
           aria-label={t('label')}
@@ -100,6 +103,7 @@ export function FolderTabsSwitcher({ tabs, activeTabId, onSwitch, onClose, child
               index={index}
               total={tabs.length}
               active={tab.id === activeTabId}
+              targeted={tab.id === cycleTargetId}
               register={(el) => { if (el) tabRefs.current.set(tab.id, el); else tabRefs.current.delete(tab.id) }}
               onSwitch={onSwitch}
               onClose={onClose}
@@ -140,11 +144,12 @@ export function FolderTabsSwitcher({ tabs, activeTabId, onSwitch, onClose, child
   )
 }
 
-function FolderTab({ tab, index, total, active, register, onSwitch, onClose }: {
+function FolderTab({ tab, index, total, active, targeted, register, onSwitch, onClose }: {
   tab: TabInfo
   index: number
   total: number
   active: boolean
+  targeted: boolean
   register: (el: HTMLDivElement | null) => void
   onSwitch: (tabId: string) => void
   onClose: (tabId: string) => void
@@ -160,6 +165,7 @@ function FolderTab({ tab, index, total, active, register, onSwitch, onClose }: {
       aria-label={`${title}，${t('position', { index: index + 1, total })}`}
       tabIndex={active ? 0 : -1}
       title={tab.path || title}
+      data-cycle-target={targeted || undefined}
       onClick={() => { if (!active) onSwitch(tab.id) }}
       onKeyDown={(event) => {
         if (event.key === 'Enter' || event.key === ' ') {
@@ -171,6 +177,7 @@ function FolderTab({ tab, index, total, active, register, onSwitch, onClose }: {
         'relative -ml-2 flex h-[29px] w-[150px] min-w-0 shrink-0 cursor-pointer select-none items-center gap-1.5 rounded-t-[9px] border border-b-0 border-border px-3 text-xs first:ml-0',
         'transition-[transform,translate,background-color,color,box-shadow] duration-300 ease-out motion-reduce:transition-none',
         'data-[lifted=true]:z-30 data-[lifted=true]:rounded-[9px] data-[lifted=true]:border-b data-[lifted=true]:shadow-lg',
+        'data-[cycle-target=true]:z-30 data-[cycle-target=true]:border-primary data-[cycle-target=true]:text-foreground data-[cycle-target=true]:ring-1 data-[cycle-target=true]:ring-primary',
         active
           ? 'z-20 h-[30px] bg-card text-foreground'
           : 'translate-y-[3px] bg-muted text-muted-foreground hover:text-foreground',

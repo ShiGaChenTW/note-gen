@@ -1132,6 +1132,8 @@ export const EditorLayout = memo(function EditorLayout() {
   // Fork（almanac ALMNC-97.1，取代 ALMNC-54.17 的單篇模式）：V3 可以同時開多篇，用文件切換器切換，
   // 但仍然只有一個編輯群組：剛切到 V3 時留下的分割窗格收成一個，分頁全部留下。
   const isV3 = useUiV3()
+  const isV3Ref = useRef(isV3)
+  isV3Ref.current = isV3
   useEffect(() => {
     if (!isV3 || !layoutReady) return
     const current = layoutRef.current
@@ -1813,7 +1815,8 @@ export const EditorLayout = memo(function EditorLayout() {
         void handleNavigateHistory(navigationDirection)
         return
       }
-      if (event.ctrlKey && event.key === 'Tab') {
+      // Fork（almanac ALMNC-97.5）：V3 的 ⌃Tab 交給文件切換器（按住 ⌃ 選卡、依最近使用），這裡不處理。
+      if (event.ctrlKey && event.key === 'Tab' && !isV3Ref.current) {
         const group = layoutRef.current.groups[layoutRef.current.activeGroupId]
         if (!group || group.tabIds.length < 2) return
         const currentIndex = group.tabIds.indexOf(group.activeTabId)

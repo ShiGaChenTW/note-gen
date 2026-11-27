@@ -20,6 +20,8 @@ interface DocSwitcherState {
   /** 樣式 A、C 的疊卡是否展開（ALMNC-97.4）。只在這次啟動有效，不存檔。 */
   expanded: boolean
   setExpanded: (expanded: boolean) => void
+  /** 按住 ⌃ 選卡時目前選到的分頁（ALMNC-97.5），沒有在選卡時是 null。 */
+  cycleTargetId: string | null
 }
 
 const RECENCY_KEY = 'almanac:doc-switcher-recency'
@@ -58,6 +60,7 @@ export const useDocSwitcherStore = create<DocSwitcherState>(set => ({
   setStyle: (style) => set({ style, expanded: false }),
   expanded: false,
   setExpanded: (expanded) => set({ expanded }),
+  cycleTargetId: null,
 }))
 
 useDocSwitcherStore.subscribe((state, prev) => {

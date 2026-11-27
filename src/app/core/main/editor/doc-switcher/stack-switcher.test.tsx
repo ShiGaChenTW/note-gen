@@ -33,7 +33,7 @@ afterEach(async () => {
 async function render(tabs: TabInfo[], activeTabId: string, variant: 'stack' | 'fan' = 'stack', onSwitch = vi.fn()) {
   await act(async () => root.render(
     <NextIntlClientProvider locale="zh-TW" messages={zhTW} timeZone="Asia/Taipei">
-      <StackSwitcher variant={variant} tabs={tabs} activeTabId={activeTabId} onSwitch={onSwitch} onClose={vi.fn()} onPin={vi.fn()} onUnpin={vi.fn()}>
+      <StackSwitcher variant={variant} tabs={tabs} activeTabId={activeTabId} onSwitch={onSwitch} onClose={vi.fn()} onPin={vi.fn()} onUnpin={vi.fn()} cycleTargetId={null} onWheel={vi.fn()}>
         <div>content</div>
       </StackSwitcher>
     </NextIntlClientProvider>,
@@ -56,7 +56,7 @@ it('按疊卡鈕展開；點後面的卡切換，動畫結束後自動收合', a
   await act(async () => toggle().click())
   expect(useDocSwitcherStore.getState().expanded).toBe(true)
   const cards = backCards()
-  expect(cards.map(card => card.getAttribute('aria-label'))).toEqual(['b', 'c'])
+  expect(cards.map(card => card.getAttribute('aria-label'))).toEqual(['b，第 2 張，共 3 張', 'c，第 3 張，共 3 張'])
   expect(cards[0].style.transform).toBe('translateY(-24px) scaleX(0.98)')
   await act(async () => cards[1].click())
   expect(onSwitch).toHaveBeenCalledWith('c')

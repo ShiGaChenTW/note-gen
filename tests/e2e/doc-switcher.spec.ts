@@ -86,12 +86,12 @@ for (const [style, label] of [['stack', 'A 上方疊列'], ['fan', 'C 斜向錯�
 
     const toggle = page.getByRole('button', { name: '展開疊卡' })
     await expect(toggle).toBeVisible()
-    await expect(page.getByRole('button', { name: '番茄鐘', exact: true })).toBeHidden()
+    await expect(page.getByRole('button', { name: /^番茄鐘，第 \d+ 張/ })).toBeHidden()
     await page.screenshot({ path: test.info().outputPath(`${style}-collapsed.png`) })
 
     await toggle.click()
     await expect(page.getByRole('button', { name: '收合疊卡' })).toHaveAttribute('aria-expanded', 'true')
-    const back = page.getByRole('button', { name: '番茄鐘', exact: true })
+    const back = page.getByRole('button', { name: /^番茄鐘，第 \d+ 張/ })
     await expect(back).toBeVisible()
     await page.waitForTimeout(350)
     await page.screenshot({ path: test.info().outputPath(`${style}-expanded.png`) })
@@ -105,3 +105,25 @@ for (const [style, label] of [['stack', 'A 上方疊列'], ['fan', 'C 斜向錯�
     await expect(page.getByRole('button', { name: '展開疊卡' })).toHaveAttribute('aria-expanded', 'false')
   })
 }
+
+test('按住 ⌃ 連按 Tab 選卡，放開才切換；途中 Esc 取消', async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 900 })
+  for (const name of ['原子習慣', '番茄鐘', '卡片盒']) await openNote(page, name)
+  const title = page.getByRole('textbox', { name: '標題', exact: true })
+  const tabs = page.getByRole('tablist', { name: '已開啟的文件' })
+
+  // 最近使用：卡片盒 → 番茄鐘 → 原子習慣。按兩下 Tab 選到原子習慣，放開前不切換。
+  await page.keyboard.down('Control')
+  await page.keyboard.press('Tab')
+  await page.keyboard.press('Tab')
+  await expect(title).toHaveValue('卡片盒')
+  await page.keyboard.up('Control')
+  await expect(title).toHaveValue('原子習慣')
+  await expect(tabs.getByRole('tab', { name: /原子習慣/ })).toHaveAttribute('aria-selected', 'true')
+
+  await page.keyboard.down('Control')
+  await page.keyboard.press('Tab')
+  await page.keyboard.press('Escape')
+  await page.keyboard.up('Control')
+  await expect(title).toHaveValue('原子習慣')
+})

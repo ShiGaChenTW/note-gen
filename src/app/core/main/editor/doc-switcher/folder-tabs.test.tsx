@@ -32,7 +32,7 @@ afterEach(async () => {
 async function render(tabs: TabInfo[], activeTabId: string, onSwitch = vi.fn()) {
   await act(async () => root.render(
     <NextIntlClientProvider locale="zh-TW" messages={zhTW} timeZone="Asia/Taipei">
-      <FolderTabsSwitcher tabs={tabs} activeTabId={activeTabId} onSwitch={onSwitch} onClose={vi.fn()} onPin={vi.fn()} onUnpin={vi.fn()}>
+      <FolderTabsSwitcher tabs={tabs} activeTabId={activeTabId} onSwitch={onSwitch} onClose={vi.fn()} onPin={vi.fn()} onUnpin={vi.fn()} cycleTargetId={null} onWheel={vi.fn()}>
         <div>content</div>
       </FolderTabsSwitcher>
     </NextIntlClientProvider>,
