@@ -8626,9 +8626,12 @@
       "description": "Search notes and commands",
       "placeholder": "Search notes or run a command",
       "empty": "No matching notes or commands",
+      "openCanvas": "Open canvas: {title}",
+      "canvasKeywords": "canvas,whiteboard",
       "group": {
         "command": "Commands",
         "plugin": "Plugin commands",
+        "canvas": "Canvases",
         "note": "Notes"
       }
     },
@@ -8688,6 +8691,10 @@
       "readLater": {
         "title": "Open read-later list",
         "keywords": "read later,article,e-paper,briefing"
+      },
+      "newCanvas": {
+        "title": "New canvas",
+        "keywords": "canvas,new canvas,whiteboard,mind map,flowchart"
       }
     },
     "chat": {
@@ -9568,7 +9575,8 @@
       "addSource": "Add source",
       "addSourceShort": "Source",
       "newThread": "New conversation",
-      "newThreadShort": "Chat"
+      "newThreadShort": "Chat",
+      "newCanvas": "New canvas"
     },
     "legacy": {
       "title": "Old notes: {count, number}",

@@ -8692,9 +8692,12 @@
       "description": "搜尋筆記與指令",
       "placeholder": "搜尋筆記或下指令",
       "empty": "找不到符合的筆記或指令",
+      "openCanvas": "開啟畫布：{title}",
+      "canvasKeywords": "畫布,canvas,白板",
       "group": {
         "command": "指令",
         "plugin": "外掛命令",
+        "canvas": "畫布",
         "note": "筆記"
       }
     },
@@ -8754,6 +8757,10 @@
       "readLater": {
         "title": "開啟稍後讀清單",
         "keywords": "read later,article,稍後讀,文章,電子紙"
+      },
+      "newCanvas": {
+        "title": "新增畫布",
+        "keywords": "canvas,new canvas,畫布,白板,心智圖,流程圖"
       }
     },
     "chat": {
@@ -9634,7 +9641,8 @@
       "addSource": "新增資料源",
       "addSourceShort": "資料源",
       "newThread": "新增對話",
-      "newThreadShort": "對話"
+      "newThreadShort": "對話",
+      "newCanvas": "新增畫布"
     },
     "legacy": {
       "title": "舊筆記 {count, number} 則",

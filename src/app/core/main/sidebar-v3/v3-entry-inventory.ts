@@ -9,7 +9,7 @@
 export const V3_ENTRY_INVENTORY = {
   mainNav: ['今天', '工作台', '對話', '整理', '計畫'],
   knowledgeTabs: ['筆記時間軸', '畫布', '標籤', '領域'],
-  quickMenu: ['新增資料源', '新增對話'],
+  quickMenu: ['新增資料源', '新增對話', '新增畫布'],
   commandPalette: [
     '問 AI（隨處對話）',
     '開始新對話',
@@ -21,13 +21,7 @@ export const V3_ENTRY_INVENTORY = {
     '切換右側欄',
     '切換亮色／深色',
     '開啟設定',
+    '新增畫布',
     '開啟稍後讀清單',
-  ],
-  planned: [
-    {
-      label: '新增畫布',
-      surfaces: ['quickMenu', 'commandPalette'],
-      task: 'ALMNC-93',
-    },
   ],
 } as const

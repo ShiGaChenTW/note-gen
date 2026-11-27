@@ -103,6 +103,61 @@ test('V3 流程三：整理 → 畫布 → 新建空白畫布並開啟', async (
   await expect.poll(() => mock.querySql<{ id: string }>('select id from canvases').length).toBe(1)
 })
 
+// ALMNC-93：不經過整理頁的畫布入口。
+test('V3 流程三之二：側欄＋ → 新增畫布 → 直接開啟 → 返回今天 → 再開回畫布', async ({ page }) => {
+  // 從「今天」出發，確認建立畫布後覆蓋層收起、畫布開在編輯區
+  await page.getByRole('button', { name: '今天', exact: true }).click()
+  const today = page.getByRole('region', { name: '今天' })
+  await expect(today).toBeVisible()
+
+  // 今天頁自己也有一顆「新增」；側欄在 DOM 前面，取第一顆就是側欄的「＋」
+  await page.getByRole('button', { name: '新增', exact: true, disabled: false }).first().click()
+  await page.getByRole('menuitem', { name: '新增畫布', exact: true }).click()
+
+  const canvasToolbar = page.getByRole('toolbar', { name: '畫布工具', exact: true })
+  await expect(canvasToolbar).toBeVisible({ timeout: 15_000 })
+  await expect(today).toBeHidden()
+  await expect.poll(() => mock.querySql<{ title: string }>('select title from canvases').map(row => row.title)).toEqual(['空白畫布'])
+
+  // 返回：回到剛才的「今天」，再從命令面板的最近畫布回到同一張畫布
+  await page.getByRole('button', { name: '今天', exact: true }).click()
+  await expect(today).toBeVisible()
+  await page.keyboard.press('ControlOrMeta+k')
+  const palette = page.getByRole('dialog', { name: '命令面板' })
+  await palette.getByRole('option', { name: '開啟畫布：空白畫布' }).click()
+  await expect(palette).toBeHidden()
+  await expect(today).toBeHidden()
+  await expect(canvasToolbar).toBeVisible()
+})
+
+test('V3 流程三之三：⌘K 命令面板列出既有畫布並直接開啟', async ({ page }) => {
+  await expect.poll(() =>
+    mock.querySql<{ name: string }>("select name from sqlite_master where type='table' and name='canvases'").length
+  ).toBe(1)
+  const now = Date.now()
+  mock.execSql(
+    `insert into canvases (id, title, canvasType, schemaVersion, content, createdAt, updatedAt)
+     values (?, ?, 'blank', 1, ?, ?, ?)`,
+    ['e2e-roadmap', 'E2E 產品路線圖', JSON.stringify({ nodes: [], edges: [] }), now, now]
+  )
+
+  // 沒進過整理頁：面板打開時才讀畫布清單
+  await page.getByRole('button', { name: '今天', exact: true }).click()
+  await page.keyboard.press('ControlOrMeta+k')
+  const palette = page.getByRole('dialog', { name: '命令面板' })
+  await expect(palette).toBeVisible()
+  await expect(palette.getByRole('group', { name: '畫布' }).getByRole('option', { name: '開啟畫布：E2E 產品路線圖' })).toBeVisible()
+
+  // 也能用名稱搜尋
+  await palette.getByRole('combobox').fill('路線圖')
+  await palette.getByRole('option', { name: '開啟畫布：E2E 產品路線圖' }).click()
+
+  await expect(palette).toBeHidden()
+  await expect(page.getByRole('toolbar', { name: '畫布工具', exact: true })).toBeVisible({ timeout: 15_000 })
+  await expect(page.getByRole('region', { name: '今天' })).toBeHidden()
+  await expect(page.getByRole('region', { name: '整理' })).toBeHidden()
+})
+
 test('V3 流程四：開啟設定視窗並切換多個設定分頁', async ({ page }) => {
   await page.getByRole('button', { name: '設定', exact: true }).click()
 

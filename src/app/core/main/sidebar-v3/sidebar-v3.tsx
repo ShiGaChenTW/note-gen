@@ -8,7 +8,7 @@ import { AlmanacWordmark } from '@/components/almanac-wordmark'
 import { LeftSidebarToggleButton } from '@/components/shell-buttons'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuShortcut, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { ArrowDownToLine, CalendarCheck, CalendarDays, ChevronDown, ChevronRight, ListChecks, Library, MessageSquarePlus, MessagesSquare, MoreHorizontal, Plus, Search, Settings, Trash2 } from 'lucide-react'
+import { ArrowDownToLine, CalendarCheck, CalendarDays, ChevronDown, ChevronRight, ListChecks, Library, MessageSquarePlus, MessagesSquare, MoreHorizontal, Plus, Search, Settings, Shapes, Trash2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { Kbd } from '@/components/ui/kbd'
 import { Count } from '@/components/v3/count'
@@ -35,6 +35,7 @@ import useSettingStore from '@/stores/setting'
 import useThreadsStore from '@/stores/threads'
 import useUpdateStore from '@/stores/update'
 import useVaultIndexStore from '@/stores/vault-index'
+import { createAndOpenCanvas } from '../canvas/open-canvas'
 import { FileSidebar } from '../file'
 import { FileActions } from '../file/file-actions'
 import { SELECTED_RAISED, SIDEBAR_ROW, SIDEBAR_ROW_ACTIVE } from '../sidebar-row'
@@ -207,9 +208,11 @@ function VaultSection() {
 /**
  * Fork（almanac ALMNC-54.8、54.16、54.18、69.3、79.3）：搜尋右側一顆「＋」，選單裡是新增資料源（N）、新增對話（T）。
  * ALMNC-79.3：原本兩顆只有圖示的方塊看不出意思，收進有文字的選單。
+ * ALMNC-93：加「新增畫布」（舊介面頁籤列的入口隨頁籤列拿掉），建立空白畫布後直接開啟。
  */
 function QuickActions() {
   const t = useTranslations('workbench.quick')
+  const tCanvas = useTranslations('canvas')
   // Fork（almanac ALMNC-56.4，A02）：單鍵 N／T 只在工作台開著、設定沒關時有效；只在那時標快捷鍵。
   const singleKeys = useSettingStore(state => state.workbenchSingleKeys !== false)
   const workbenchOpen = useDecideStore(state => state.visible)
@@ -217,6 +220,7 @@ function QuickActions() {
   const items: Array<{ key: string, icon: ComponentType<{ className?: string }>, label: string, shortcut?: string, onSelect: () => void }> = [
     { key: 'source', icon: ArrowDownToLine, label: t('addSource'), shortcut: keys ? 'N' : undefined, onSelect: openAddSource },
     { key: 'thread', icon: MessageSquarePlus, label: t('newThread'), shortcut: keys ? 'T' : undefined, onSelect: () => void openNewConversation() },
+    { key: 'canvas', icon: Shapes, label: t('newCanvas'), onSelect: () => void createAndOpenCanvas(tCanvas('templates.blank')) },
   ]
   return (
     <DropdownMenu>

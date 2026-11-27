@@ -74,6 +74,15 @@ describe('buildPaletteSections', () => {
     expect(sections[0].items).toHaveLength(3)
   })
 
+  it('lists the three most recently edited canvases between plugins and notes for an empty query (ALMNC-93)', () => {
+    const canvas = (id: string, title: string, mtime: number): PaletteItem => ({ id: `canvas:${id}`, kind: 'canvas', title: `開啟畫布：${title}`, mtime })
+    const canvases = [canvas('a', '甲', 1), canvas('b', '乙', 4), canvas('c', '丙', 3), canvas('d', '丁', 2)]
+    const sections = buildPaletteSections([...items, ...canvases], '')
+    expect(sections.map(s => s.kind)).toEqual(['command', 'plugin', 'canvas', 'note'])
+    expect(sections[2].items.map(i => i.id)).toEqual(['canvas:b', 'canvas:c', 'canvas:d'])
+    expect(buildPaletteSections(canvases, '甲')[0].items.map(i => i.id)).toEqual(['canvas:a'])
+  })
+
   it('returns nothing when nothing matches', () => {
     expect(buildPaletteSections(items, 'zzzz-no-match')).toEqual([])
   })
