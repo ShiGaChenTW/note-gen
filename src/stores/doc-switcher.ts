@@ -2,6 +2,7 @@ import { create } from 'zustand'
 
 import useArticleStore from '@/stores/article'
 import { reconcileRecency, touchRecency } from '@/app/core/main/editor/doc-switcher/recency'
+import { prefersReducedMotion, SWITCH_MS } from '@/app/core/main/editor/doc-switcher/motion'
 
 // Fork（almanac ALMNC-97.1）：V3 文件切換的最近使用順序。
 // 跟 openTabs 一樣是這台電腦的狀態，存在 localStorage、不同步到其他裝置（讀寫失敗就只在這次啟動有效）。
@@ -22,7 +23,18 @@ interface DocSwitcherState {
   setExpanded: (expanded: boolean) => void
   /** 按住 ⌃ 選卡時目前選到的分頁（ALMNC-97.5），沒有在選卡時是 null。 */
   cycleTargetId: string | null
+  /**
+   * 切換或展開疊卡的動畫進行中（ALMNC-97.6）。瀏覽器分頁的原生 webview 疊在畫面最上層、不能跟著動畫，
+   * 這段時間先藏起來，結束後重新量大小再顯示。
+   */
+  animating: boolean
+  /** 開始一段切換動畫；減少動態效果時不做事。 */
+  beginAnimation: () => void
 }
+
+/** 動畫結束後多等一點再讓 webview 回來，避免量到動畫最後一格的位置。 */
+const WEBVIEW_SETTLE_MS = 60
+let animationTimer: ReturnType<typeof setTimeout> | undefined
 
 const RECENCY_KEY = 'almanac:doc-switcher-recency'
 const STYLE_KEY = 'almanac:doc-switcher-style'
@@ -61,6 +73,13 @@ export const useDocSwitcherStore = create<DocSwitcherState>(set => ({
   expanded: false,
   setExpanded: (expanded) => set({ expanded }),
   cycleTargetId: null,
+  animating: false,
+  beginAnimation: () => {
+    if (prefersReducedMotion()) return
+    clearTimeout(animationTimer)
+    set({ animating: true })
+    animationTimer = setTimeout(() => set({ animating: false }), SWITCH_MS + WEBVIEW_SETTLE_MS)
+  },
 }))
 
 useDocSwitcherStore.subscribe((state, prev) => {

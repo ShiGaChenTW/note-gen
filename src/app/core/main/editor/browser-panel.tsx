@@ -22,6 +22,7 @@ import { cn } from '@/lib/utils'
 import { ControlLink } from '@/app/core/main/mark/control-link'
 import useArticleStore from '@/stores/article'
 import useBrowserLibraryStore, { type BrowserEntry, type BrowserSearchEngine } from '@/stores/browser'
+import { useDocSwitcherStore } from '@/stores/doc-switcher'
 
 type BrowserLocation = { tabId: string; url: string; complete: boolean; title?: string }
 type BrowserHistoryState = { canGoBack: boolean; canGoForward: boolean }
@@ -203,7 +204,9 @@ export function BrowserPanel({ tabId, url, visible }: { tabId: string; url?: str
     }).catch(() => {})
   }, [tabId])
 
-  const shown = visible && !overlayOpen && libraryView === null && !homeVisible
+  // Fork（almanac ALMNC-97.6）：V3 文件切換動畫期間先藏起原生 webview，結束後重新量大小再顯示。
+  const docSwitcherAnimating = useDocSwitcherStore(state => state.animating)
+  const shown = visible && !overlayOpen && libraryView === null && !homeVisible && !docSwitcherAnimating
   const canNavigateBack = nativeReady && !homeVisible && (historyState.canGoBack || !!url)
   const canNavigateForward = nativeReady && (homeVisible ? !!url : historyState.canGoForward)
   const isBookmarked = !homeVisible && bookmarks.some(entry => entry.url === url)

@@ -36,6 +36,7 @@ export function FolderTabsSwitcher({ tabs, activeTabId, cycleTargetId, onWheel, 
     const row = rowRef.current
     if (!row) return
     setRowWidth(row.clientWidth)
+    if (typeof ResizeObserver === 'undefined') return
     const observer = new ResizeObserver(() => setRowWidth(row.clientWidth))
     observer.observe(row)
     return () => observer.disconnect()
