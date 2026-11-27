@@ -2,7 +2,8 @@
 //   1. 接受提案、新筆記寫入之後（written）
 //   2. Scott 在檯面存了親手寫的筆記（handwritten）
 //   3. 定期檢查：最後確認日期超過領域期限的筆記（periodic，由回顧排程呼叫）
-// 加上確認卡「交給指揮官」的重新確認（recheck：必要時查外部資料；沒發現問題就提案「仍然有效」）。
+// 加上確認卡「交給指揮官」的重新確認（recheck：必要時查外部資料；沒發現問題就提案「仍然有效」），
+// 以及指揮官在處理對話中查到新的外部資料（fetched，ALMNC-92：沒寫成筆記也和相關領域的既有筆記比對）。
 // 專家比對（只讀），觀察進佇列等每週整理。
 import { contentVersion } from '@/lib/ops/version'
 import type { ProposalBatch, SimilarNote } from '@/lib/commander/types'
@@ -10,6 +11,7 @@ import { noteTitle, parseV3Note } from '@/lib/v3-model/note'
 import { canonicalDomainIds, domainLookup } from '@/lib/v3-model/domain'
 import { ymd } from './interval'
 import { confirmProposal, type CleanupLabels, type DomainInfo, type NoteWords } from './plan'
+import { evidenceKey, FETCHED_EVIDENCE_LIMIT, type FetchedSeen } from './fetched'
 import { queuedKey, type CleanupQueue } from './queue'
 import type { ConflictDetector, ConflictObservation, ConflictTrigger, ExternalEvidence, NoteText } from './types'
 
@@ -35,7 +37,7 @@ export interface CheckDeps {
 
 export interface CheckResult {
   status: 'skipped' | 'checked'
-  reason?: 'not_found' | 'inactive'
+  reason?: 'not_found' | 'inactive' | 'seen' | 'no_evidence'
   observations: ConflictObservation[]
   deferred: ConflictObservation[]
   batch?: ProposalBatch
@@ -110,7 +112,7 @@ async function domainMap(deps: Pick<CheckDeps, 'domains'>): Promise<Map<string, 
 }
 
 /** 比對一則筆記；所有觀察等每週整理時一起審核。 */
-export async function checkNote(path: string, trigger: Exclude<ConflictTrigger, 'recheck' | 'review'>, deps: CheckDeps): Promise<CheckResult> {
+export async function checkNote(path: string, trigger: Exclude<ConflictTrigger, 'recheck' | 'review' | 'fetched'>, deps: CheckDeps): Promise<CheckResult> {
   const raw = await deps.readNote(path)
   if (raw === null) return SKIPPED('not_found')
   const note = toNoteText(path, raw)
@@ -163,4 +165,51 @@ export async function periodicCheck(paths: readonly string[], deps: CheckDeps, o
     }
   }
   return results
+}
+
+/** 一次查到的資料最多和幾則最相關的既有筆記比對（每則一次模型呼叫，依領域數可能更多）。 */
+export const FETCHED_ANCHOR_LIMIT = 2
+
+/**
+ * Fork（almanac ALMNC-92）：時機「指揮官在處理對話中查到新資料」。
+ * 用 Scott 的問題與查到的資料找相關領域裡最類似的既有筆記，各自和它的同領域筆記、查到的資料一起比對；
+ * 觀察和其他時機一樣進佇列，等每週整理卡（同一張衝突確認卡）。
+ * 同一份資料（同網址）只比對一次；比對中途出錯就放回，下次查到再比。
+ */
+export async function checkFetched(
+  evidence: readonly ExternalEvidence[],
+  query: string,
+  deps: CheckDeps & { seen: FetchedSeen },
+  options: { anchors?: number } = {},
+): Promise<CheckResult> {
+  const usable = evidence.filter(item => item.url.trim())
+  if (!usable.length) return SKIPPED('no_evidence')
+  const fresh = new Set(await deps.seen.claim(usable.map(evidenceKey)))
+  const external = usable.filter(item => fresh.has(evidenceKey(item))).slice(0, FETCHED_EVIDENCE_LIMIT)
+  if (!external.length) return SKIPPED('seen')
+  const claimed = [...fresh]
+  try {
+    const similar = await deps.similar(undefined, {
+      title: query.trim() || external[0].title,
+      body: external.map(item => [item.title, item.snippet].filter(Boolean).join('\n')).join('\n\n'),
+    }, [], { allDomains: true }).catch(() => [])
+    const notes = (await readTexts(similar.map(entry => entry.path), deps))
+      .filter(note => note.fields.status !== 'superseded' && note.fields.status !== 'archived')
+      .slice(0, options.anchors ?? FETCHED_ANCHOR_LIMIT)
+    const observations: ConflictObservation[] = []
+    const seen = new Set<string>()
+    for (const note of notes) {
+      for (const observation of await compare(note, 'fetched', deps, external)) {
+        const key = queuedKey(observation)
+        if (seen.has(key)) continue
+        seen.add(key)
+        observations.push(observation)
+      }
+    }
+    if (observations.length) await deps.queue.add(observations)
+    return { status: 'checked', observations, deferred: observations }
+  } catch (error) {
+    await deps.seen.release(claimed).catch(() => undefined)
+    throw error
+  }
 }

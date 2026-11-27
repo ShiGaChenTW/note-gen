@@ -160,6 +160,21 @@ export async function checkAfterWrite(path: string, trigger: 'written' | 'handwr
   }
 }
 
+/**
+ * Fork（almanac ALMNC-92）：指揮官在處理對話中查到新資料後在背景比對；失敗只記錄，不影響對話。
+ * 比對過的資料記在 store.json（同一份不重複比對）。
+ */
+export async function checkFetchedEvidence(evidence: readonly ExternalEvidence[], query: string): Promise<void> {
+  try {
+    const { isUiV3 } = await import('@/lib/fork-ui')
+    if (!isUiV3() || !evidence.length) return
+    const [{ checkFetched }, { storeSeen }, store, deps] = await Promise.all([import('./check'), import('./fetched'), appStore(), createDefaultCheckDeps()])
+    await checkFetched(evidence, query, { ...deps, seen: storeSeen(store) })
+  } catch (error) {
+    console.warn('[cleanup] fetched-data conflict check skipped:', error)
+  }
+}
+
 /** 確認卡「交給指揮官」：重新確認（比對＋查外部資料），有發現就納入每週整理。 */
 export async function recheckFromCard(path: string): Promise<void> {
   const { recheckNote } = await import('./check')

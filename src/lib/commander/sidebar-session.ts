@@ -9,6 +9,8 @@ import { ROLE_INSTRUCTIONS } from '@/lib/agents/instructions'
 import { agentDisplayName } from '@/lib/agents/display'
 import type { AgentRole } from '@/lib/agents/settings'
 import type { Proposal } from '@/lib/collect/types'
+import { collectFetchedEvidence, mergeEvidence, type FetchedItem } from '@/lib/cleanup/fetched'
+import type { ExternalEvidence } from '@/lib/cleanup/types'
 import type { AwaitingReply } from '@/lib/threads/awaiting'
 import type { DirectEditCardData, ProposalCardData } from '@/lib/threads/cards'
 import { buildExpertHandoffTool, EXPERT_HANDOFF_RULE } from '@/lib/threads/expert-handoff'
@@ -48,6 +50,11 @@ export interface SidebarRunDeps {
   rememberWork?: (agent: SidebarRosterAgent, work: CompletedRoleWork) => Promise<void>
   /** Fork（almanac ALMNC-91）：專家判斷需要外部資料時記下這則回答（chatId），對話裡問 Scott 要不要轉給指揮官。沒給就不提供工具。 */
   suggestCommander?: (chatId: number) => void
+  /**
+   * Fork（almanac ALMNC-92）：指揮官在處理對話這一輪用網路工具查到新資料時，執行結束後交給衝突比對（背景，不等）。
+   * 沒給就不收集。只讀回答、專家、秘書的回合不觸發。
+   */
+  checkFetched?: (evidence: ExternalEvidence[], query: string) => Promise<void>
   now: () => Date
 }
 
@@ -171,6 +178,10 @@ export async function prepareSidebarCommanderRun(
   ].filter(Boolean).join('\n\n')
 
   const collector = createChangeCollector()
+  // Fork（almanac ALMNC-92）：只有指揮官在處理對話（非只讀）查到的外部資料才比對。
+  const checkFetched = deps.checkFetched
+  const fetchedItems: FetchedItem[] = []
+  const collectsFetched = Boolean(checkFetched) && !input.readOnly && (!speaker || speaker.role === 'commander')
   const secretaryProposals: Proposal[] = []
   let choiceAnswered = false
   let directCount = 0
@@ -229,7 +240,8 @@ export async function prepareSidebarCommanderRun(
     displayName,
     rolePrompt,
     transformTools: tools => {
-      const selected = input.readOnly ? tools : transformTools(tools)
+      const transformed = input.readOnly ? tools : transformTools(tools)
+      const selected = collectsFetched ? collectFetchedEvidence(transformed, items => { fetchedItems.push(...items) }) : transformed
       return [...selected, ...(expertTool ? [expertTool] : []), ...(handoffTool ? [handoffTool] : [])]
     },
     remember: async completedAnswer => {
@@ -246,6 +258,11 @@ export async function prepareSidebarCommanderRun(
       await Promise.all(participants.map(agent => rememberWork(agent, work)))
     },
     finish: async () => {
+      const fetched = mergeEvidence(fetchedItems.splice(0))
+      if (fetched.length && checkFetched) {
+        // 背景比對：不擋提案卡，失敗只記錄（不影響對話）。
+        void Promise.resolve().then(() => checkFetched(fetched, input.scottMessages[0] ?? '')).catch(error => console.warn('[commander] fetched-data conflict check failed:', error))
+      }
       if (awaitedQuestion && conversationId !== undefined) {
         markAwaiting?.({ conversationId, chatId: input.chatId, question: awaitedQuestion, by: secretaryName, at: deps.now().getTime(), via: 'turn' })
       }
@@ -313,6 +330,7 @@ export async function createDefaultSidebarDeps(labels: { roleLabel: RoleTranslat
     attachCard: (chatId, card) => useThreadsStore.getState().attachCard(chatId, card),
     attachDirectEdit: (chatId, card, undo) => useThreadsStore.getState().attachDirectEdit(chatId, card, undo),
     suggestCommander: chatId => useThreadsStore.getState().flagExpertHandoff(chatId),
+    checkFetched: async (evidence, query) => (await import('@/lib/cleanup/runtime')).checkFetchedEvidence(evidence, query),
     markAwaiting: entry => useAwaitingRepliesStore.getState().mark(entry),
     clearAwaiting: (conversationId, via) => useAwaitingRepliesStore.getState().clear(conversationId, via),
     logActivity: async entry => {

@@ -231,6 +231,19 @@ describe('weekly MOC cards', () => {
     expect(queue.items()).toEqual([])
   })
 
+  // Fork（almanac ALMNC-92）：處理對話中查到新資料的觀察，和其他時機一樣出在同一張衝突確認卡（每週整理卡）。
+  it('turns an observation from data fetched in a process conversation into the same conflict card', async () => {
+    const fetched: ConflictObservation = { ...contradiction, trigger: 'fetched', by: { role: 'commander' }, externalUrls: ['https://example.com/std'] }
+    const { deps, persisted, queue, files } = setup({}, [fetched])
+    const [proposal] = await runWeeklyMocs(NOW, deps)
+    expect(proposal.cleanup?.actions).toEqual(['verify'])
+    expect(proposal.edits?.map(edit => edit.path)).toEqual(expect.arrayContaining([notePath(0), notePath(1)]))
+    const cards = buildReviewCards({ proposals: projectProposals({ items: [...persisted.values()], tasks: [], journal: null, jobs: [] }), now: NOW.getTime() })
+    expect(cards).toMatchObject([{ label: 'knowledge', verb: 'organize', title: '時間管理' }])
+    expect(queue.items()).toEqual([])
+    expect(parseV3Note(files.get(notePath(0))!).fields.status).toBe('valid')
+  })
+
   it('leaves queued conflicts for retry when submitting the card fails', async () => {
     const { deps, queue } = setup({}, [contradiction])
     const errors: string[] = []

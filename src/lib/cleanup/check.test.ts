@@ -3,7 +3,9 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { ProposalBatch } from '@/lib/commander/types'
 import { createV3Note, parseV3Note } from '@/lib/v3-model/note'
-import { checkNote, periodicCheck, recheckNote, type CheckDeps } from './check'
+import { checkFetched, checkNote, periodicCheck, recheckNote, type CheckDeps } from './check'
+import { createConflictDetector } from './detect'
+import { memorySeen } from './fetched'
 import type { CleanupLabels } from './plan'
 import { memoryQueue } from './queue'
 import type { ConflictDetector, ConflictObservation } from './types'
@@ -106,5 +108,53 @@ describe('recheckNote（確認卡「交給指揮官」）', () => {
     const result = await recheckNote('k/old.md', deps)
     expect(result.batch?.proposals[0]).toMatchObject({ title: '仍然有效：節拍 60 秒', card: { verb: 'confirm' } })
     expect(parseV3Note(submitted[0].proposals[0].edits![0].content).fields.lastConfirmed).toBe('2026-11-21')
+  })
+})
+
+// Fork（almanac ALMNC-92）：指揮官在處理對話中查到新資料（fetched）。AI 用固定回應。
+describe('checkFetched（處理對話中查到新資料）', () => {
+  const evidence = [{ title: '新版標準', url: 'https://example.com/std', snippet: '節拍時間已改為 45 秒' }]
+
+  it('compares the fetched data with the most related existing notes in their domain and queues the conflict', async () => {
+    const ask = vi.fn<(prompt: string) => Promise<string>>(async () => JSON.stringify({ observations: [{ type: 'outdated', notes: [0], evidence: '新版標準改為 45 秒', conclusionChanged: false, external: [0] }] }))
+    const { deps, similar, queue, submitted } = setup(() => [], { detect: createConflictDetector(ask) })
+    const seen = memorySeen()
+    const result = await checkFetched(evidence, '現在的節拍時間是多少？', { ...deps, seen }, { anchors: 1 })
+    expect(similar.mock.calls[0]).toEqual([undefined, { title: '現在的節拍時間是多少？', body: '新版標準\n節拍時間已改為 45 秒' }, [], { allDomains: true }])
+    expect(ask).toHaveBeenCalledTimes(1)
+    expect(ask.mock.calls[0][0]).toContain('# 工業工程專家')
+    expect(ask.mock.calls[0][0]).toContain('<https://example.com/std>')
+    expect(result.status).toBe('checked')
+    expect(queue.items()).toEqual([expect.objectContaining({
+      type: 'outdated', notePaths: ['k/old.md'], trigger: 'fetched', domainId: 'ie', externalUrls: ['https://example.com/std'],
+      by: { role: 'expert', agentId: 'exp_ie' },
+    })])
+    expect(submitted).toEqual([])
+  })
+
+  it('does not compare the same data twice', async () => {
+    const { deps, detect } = setup(() => [contradiction])
+    const seen = memorySeen()
+    await checkFetched(evidence, '節拍', { ...deps, seen })
+    const calls = detect.mock.calls.length
+    expect(calls).toBeGreaterThan(0)
+    expect(await checkFetched([{ ...evidence[0], url: 'https://example.com/std/' }], '節拍', { ...deps, seen })).toMatchObject({ status: 'skipped', reason: 'seen' })
+    expect(detect).toHaveBeenCalledTimes(calls)
+  })
+
+  it('skips inactive notes, limits the anchors, and does nothing without evidence', async () => {
+    const { deps, detect, similar } = setup(() => [])
+    similar.mockResolvedValueOnce(['k/gone.md', 'k/old.md', 'k/dup.md', 'k/new.md'].map(path => ({ path, title: path })))
+    await checkFetched(evidence, '節拍', { ...deps, seen: memorySeen() })
+    expect(detect.mock.calls.map(call => [call[0].path, call[2].trigger])).toEqual([['k/old.md', 'fetched'], ['k/dup.md', 'fetched']])
+    expect(await checkFetched([], '節拍', { ...deps, seen: memorySeen() })).toMatchObject({ status: 'skipped', reason: 'no_evidence' })
+  })
+
+  it('a failed comparison releases the data so it is compared next time', async () => {
+    const { deps } = setup(() => [], { queue: { ...memoryQueue(), add: async () => { throw new Error('store busy') } } })
+    const failing: CheckDeps = { ...deps, detect: async () => [contradiction] }
+    const seen = memorySeen()
+    await expect(checkFetched(evidence, '節拍', { ...failing, seen })).rejects.toThrow('store busy')
+    expect(seen.keys()).toEqual([])
   })
 })

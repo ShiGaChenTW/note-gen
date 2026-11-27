@@ -6,6 +6,7 @@ import messages from '../../../messages/zh-TW.json'
 import { agentToolRegistry } from '@/lib/agent/tool-registry'
 import { ROLE_INSTRUCTIONS } from '@/lib/agents/instructions'
 import { buildDeskContext, readDeskContext } from '@/lib/workbench/desk-context'
+import type { AgentTool } from '@/lib/agent/types'
 import type { Proposal } from '@/lib/collect/types'
 import { commanderDisplayName, prepareSidebarCommanderRun, type SidebarRunDeps } from './sidebar-session'
 import { SIDEBAR_ASK_RULES, SIDEBAR_COMMANDER_RULES } from './sidebar'
@@ -286,5 +287,70 @@ describe('ALMNC-54.22 desk consultation', () => {
     expect(await consult.execute({ expertId: 'e-1', question: '看這些筆記' }, context)).toMatchObject({ ok: true, message: 'Alex (工業工程): 第三站需要更多數據' })
     expect(askExpert).toHaveBeenCalledWith(expect.stringContaining('Memory for Alex'), '看這些筆記', undefined)
     expect(askExpert).toHaveBeenCalledWith(expect.stringContaining('現場觀察'), '看這些筆記', undefined)
+  })
+})
+
+// Fork（almanac ALMNC-92）：指揮官在處理對話中用網路工具查到新資料，執行結束後交給衝突比對（背景）。AI 與網路搜尋用固定回應。
+describe('ALMNC-92 fetched-data conflict check', () => {
+  const expert = { id: 'e-1', name: 'Alex', role: 'expert' as const, domain: '工業工程', enabled: true }
+  const secretary = ROSTER[1]
+  const searchResult = {
+    ok: true,
+    message: '找到 1 個來源',
+    data: { query: '節拍', provider: 'native', sources: [{ title: '新版標準', url: 'https://example.com/std', snippet: '節拍時間改為 45 秒' }] },
+  }
+  const webSearch = (result: unknown = searchResult): AgentTool => ({
+    name: 'web_search', title: 'web', description: '', category: 'web', risk: 'read', inputSchema: { type: 'object' }, execute: vi.fn(async () => result as never),
+  })
+  const flush = () => new Promise(resolve => setTimeout(resolve, 0))
+
+  it('the commander\'s process turn hands the fetched sources and Scott\'s question to the conflict check once the run ends', async () => {
+    const checkFetched = vi.fn(async () => {})
+    const { deps } = fakeDeps({ checkFetched })
+    const run = await prepareSidebarCommanderRun({ conversationId: 7, chatId: 70, scottMessages: ['現在的節拍時間是多少？', '更早的問題'] }, deps)
+    const search = run.transformTools([webSearch()]).find(entry => entry.name === 'web_search')!
+    expect(await search.execute({ query: '節拍時間 標準' }, context)).toBe(searchResult)
+    expect(checkFetched).not.toHaveBeenCalled()
+    await run.finish()
+    await flush()
+    expect(checkFetched).toHaveBeenCalledWith([{ title: '新版標準', url: 'https://example.com/std', snippet: '節拍時間改為 45 秒' }], '現在的節拍時間是多少？')
+    await run.finish()
+    await flush()
+    expect(checkFetched).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not check turns without fetched data, failed searches, read-only answers or secretary turns', async () => {
+    const checkFetched = vi.fn(async () => {})
+    const { deps } = fakeDeps({ checkFetched })
+    const quiet = await prepareSidebarCommanderRun({ chatId: 1, scottMessages: ['整理一下'] }, deps)
+    await quiet.finish()
+    const failed = await prepareSidebarCommanderRun({ chatId: 2, scottMessages: ['查一下'] }, deps)
+    await failed.transformTools([webSearch({ ok: false, message: 'off', error: 'WEB_SEARCH_FAILED' })])[0].execute({ query: 'x' }, context)
+    await failed.finish()
+    for (const input of [
+      { chatId: 3, scottMessages: ['查一下'], readOnly: true },
+      { chatId: 4, scottMessages: ['查一下'], readOnly: true, answerAs: expert },
+      { chatId: 5, scottMessages: ['明天三點開會'], answerAs: secretary },
+    ]) {
+      const run = await prepareSidebarCommanderRun(input, deps)
+      const search = run.transformTools([webSearch()]).find(entry => entry.name === 'web_search')
+      await search?.execute({ query: 'x' }, context)
+      await run.finish()
+    }
+    await flush()
+    expect(checkFetched).not.toHaveBeenCalled()
+  })
+
+  it('a failing conflict check does not affect the turn', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const checkFetched = vi.fn(async () => { throw new Error('model down') })
+    const { deps } = fakeDeps({ checkFetched })
+    const run = await prepareSidebarCommanderRun({ chatId: 70, scottMessages: ['節拍'] }, deps)
+    await run.transformTools([webSearch()])[0].execute({ query: '節拍' }, context)
+    await expect(run.finish()).resolves.toEqual([])
+    await flush()
+    expect(checkFetched).toHaveBeenCalledTimes(1)
+    expect(warn).toHaveBeenCalledWith('[commander] fetched-data conflict check failed:', expect.any(Error))
+    warn.mockRestore()
   })
 })
