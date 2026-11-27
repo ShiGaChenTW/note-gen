@@ -4,6 +4,7 @@
 // key 用 threadKey（syncId，沒有就 `id:<id>`）。對照表裡沒有的舊對話一律當「處理」：右側欄的 AI 就是指揮官，
 // 舊對話都是和它談的，而且「處理」只會透過提案改資料，不會因為猜錯標籤而直接改到東西。
 import type { AgentRole } from '@/lib/agents/settings'
+import { notifyStoreKeyWritten } from '@/lib/almanac-sync/notify'
 import type { Conversation } from '@/db/conversations'
 import { threadKey } from './projects'
 
@@ -162,6 +163,8 @@ export async function saveTagMap(map: ThreadTagMap, storage?: TagStorage): Promi
     const store = storage ?? await defaultStorage()
     await store.set(THREAD_TAGS_KEY, map)
     await store.save()
+    // Fork（almanac ALMNC-85.4）：帳號層級，寫入後排設定同步（設計 2.16）。
+    if (!storage) notifyStoreKeyWritten(THREAD_TAGS_KEY)
     return true
   } catch {
     return false

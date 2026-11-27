@@ -16,11 +16,12 @@ export function resolveStoreKeySyncDomain(key: string, options: { excludeSensiti
   return 'settings'
 }
 
-export async function writeSyncedStoreKey(key: string, value: unknown): Promise<AutoDataSyncDomain | null> {
+/**
+ * Fork（almanac ALMNC-85.4）：key 已經寫進 store.json（呼叫端自己 set＋save）之後，依 key 屬於哪個同步領域排上傳。
+ * 給已經有自己存檔流程的模組用（工作台設定、對話分組、先放著、等你回話…），不必改成經 writeSyncedStoreKey 再讀一次 store。
+ */
+export async function enqueueStoreKeySync(key: string): Promise<AutoDataSyncDomain | null> {
   const store = await Store.load('store.json')
-  if (value === undefined) await store.delete(key)
-  else await store.set(key, value)
-  await store.save()
   const excludeSensitiveConfig = await store.get<boolean>('excludeSensitiveConfig') !== false
   const domain = resolveStoreKeySyncDomain(key, { excludeSensitiveConfig })
   if (domain) {
@@ -28,4 +29,12 @@ export async function writeSyncedStoreKey(key: string, value: unknown): Promise<
     enqueueAutoDataSync(domain, `store:${key}`)
   }
   return domain
+}
+
+export async function writeSyncedStoreKey(key: string, value: unknown): Promise<AutoDataSyncDomain | null> {
+  const store = await Store.load('store.json')
+  if (value === undefined) await store.delete(key)
+  else await store.set(key, value)
+  await store.save()
+  return enqueueStoreKeySync(key)
 }

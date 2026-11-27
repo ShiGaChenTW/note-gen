@@ -20,6 +20,7 @@ import {
 import { getSyncRepoName } from '@/lib/sync/repo-utils'
 import { getCurrentSyncContext, getSyncMetadataKey } from '@/lib/sync/sync-context'
 import { toast } from '@/hooks/use-toast'
+import { noteSyncWrite } from '@/lib/moc/app-writes'
 import { readFile, writeTextFile, stat, mkdir, exists, remove } from '@tauri-apps/plugin-fs'
 import { getFilePathOptions, getWorkspacePath } from '@/lib/workspace'
 import {
@@ -918,6 +919,8 @@ async function performSync(path: string, enableConflictResolution: boolean): Pro
         return true
       })
       if (!didSave) return null
+      // Fork（almanac ALMNC-85.4）：遠端原樣寫進來的 MOC 記成 App 寫入（合併過的不算，本機那部分仍要比對）。
+      if (finalContent === remoteContent) noteSyncWrite(actualPath, finalContent)
 
       // Apply the accepted snapshot before metadata awaits create another
       // window for user input. Subsequent edits then naturally queue after it.
@@ -957,6 +960,8 @@ async function performSync(path: string, enableConflictResolution: boolean): Pro
         return true
       })
       if (!didSave) return null
+      // Fork（almanac ALMNC-85.4）：同步來的 MOC 記成 App 寫入，不當成 Obsidian 手動編輯。
+      noteSyncWrite(actualPath, remoteContent)
 
       // Keep the editor commit adjacent to the serialized file write.
       emitter.emit('sync-content-updated', { path: actualPath, content: remoteContent })

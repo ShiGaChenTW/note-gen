@@ -16,8 +16,10 @@ vi.mock('@tauri-apps/plugin-store', () => ({
 }))
 vi.mock('@/lib/sync/auto-data-sync-queue', () => ({ enqueueAutoDataSync: (...args: unknown[]) => enqueue(...args) }))
 
-import { resolveStoreKeySyncDomain, writeSyncedStoreKey } from './store-keys'
-import { setAlmanacLaneExcludedFields, shouldExcludeFromSync } from '@/config/sync-exclusions'
+import { enqueueStoreKeySync, resolveStoreKeySyncDomain, writeSyncedStoreKey } from './store-keys'
+import { notifyStoreKeyWritten } from './notify'
+import { filterSyncData, mergeSyncData, setAlmanacLaneExcludedFields, shouldExcludeFromSync } from '@/config/sync-exclusions'
+import { PROPOSAL_STORE_KEYS } from './tables/proposals'
 import { isPrimaryDevice, isPrimaryStale, mergeDevicesDoc, emptyDevicesDoc, PRIMARY_STALE_MS } from './devices'
 
 afterEach(() => {
@@ -42,6 +44,61 @@ describe('writeSyncedStoreKey', () => {
     expect(shouldExcludeFromSync('almanacRssFeeds')).toBe(true)
     setAlmanacLaneExcludedFields([])
     expect(shouldExcludeFromSync('almanacRssFeeds')).toBe(false)
+  })
+})
+
+// Fork（almanac ALMNC-85.4，設計 2.16、第 8 節 4A）
+const DEVICE_KEYS = [
+  'almanacUiMode',
+  'almanacSidebarVaultCollapsed',
+  'almanacSidebarAgentsCollapsed',
+  'almanacJobCardsV1',
+  'almanacReviewLastRun',
+  'almanacExplorationResearchUsage',
+  'almanacAwaitingRemote',
+]
+const ACCOUNT_KEYS = ['almanacAutoAcceptLinks', 'almanacAutoOrganize', 'almanacReviewSettings', 'threadProjects', 'threadTags']
+
+describe('V3 設定 key 的分類（85.4 #3）', () => {
+  it.each(DEVICE_KEYS)('裝置層級 %s：設定同步排除、寫入不排上傳', async key => {
+    expect(shouldExcludeFromSync(key)).toBe(true)
+    expect(shouldExcludeFromSync(key, { excludeSensitiveConfig: false })).toBe(true)
+    expect(resolveStoreKeySyncDomain(key)).toBeNull()
+    expect(await enqueueStoreKeySync(key)).toBeNull()
+    expect(enqueue).not.toHaveBeenCalled()
+  })
+
+  it.each(ACCOUNT_KEYS)('帳號層級 %s：留在設定同步，寫入後排 settings', async key => {
+    expect(shouldExcludeFromSync(key)).toBe(false)
+    expect(await enqueueStoreKeySync(key)).toBe('settings')
+    expect(enqueue).toHaveBeenCalledWith('settings', `store:${key}`)
+  })
+
+  it('先放著、等你回話：V3 同步接手後排 almanac（逐筆合併），沒接手前照舊走 settings', async () => {
+    expect(PROPOSAL_STORE_KEYS).toEqual(expect.arrayContaining(['workbenchAside', 'awaitingReplies']))
+    expect(await enqueueStoreKeySync('workbenchAside')).toBe('settings')
+    setAlmanacLaneExcludedFields(PROPOSAL_STORE_KEYS)
+    expect(await enqueueStoreKeySync('workbenchAside')).toBe('almanac')
+    expect(await enqueueStoreKeySync('awaitingReplies')).toBe('almanac')
+    expect(shouldExcludeFromSync('awaitingReplies')).toBe(true)
+  })
+
+  it('notifyStoreKeyWritten：fork 程式自己存檔後呼叫，照 key 排上傳', async () => {
+    notifyStoreKeyWritten('threadTags')
+    notifyStoreKeyWritten('almanacUiMode')
+    await vi.waitFor(() => expect(enqueue).toHaveBeenCalledWith('settings', 'store:threadTags'))
+    expect(enqueue).toHaveBeenCalledTimes(1)
+  })
+
+  it('A 切到舊介面、收合側欄 → 設定同步到 B 後，B 的介面模式與側欄不變；帳號層級設定照常跟過去', () => {
+    const deviceA = { almanacUiMode: 'v2', almanacSidebarVaultCollapsed: true, almanacReviewLastRun: 200, almanacAutoOrganize: false, threadTags: { 'sync-1': 'work' } }
+    const deviceB = { almanacUiMode: 'v3', almanacSidebarVaultCollapsed: false, almanacReviewLastRun: 100, almanacAutoOrganize: true, threadTags: {} }
+    const uploaded = filterSyncData(deviceA)
+    expect(Object.keys(uploaded).sort()).toEqual(['almanacAutoOrganize', 'threadTags'])
+    const merged = mergeSyncData(deviceB, uploaded)
+    expect(merged).toEqual({ almanacUiMode: 'v3', almanacSidebarVaultCollapsed: false, almanacReviewLastRun: 100, almanacAutoOrganize: false, threadTags: { 'sync-1': 'work' } })
+    // 就算遠端的設定檔裡還留著舊版寫進去的 almanacUiMode，B 收到也忽略。
+    expect(mergeSyncData(deviceB, { almanacUiMode: 'v2' } as Partial<typeof deviceB>).almanacUiMode).toBe('v3')
   })
 })
 

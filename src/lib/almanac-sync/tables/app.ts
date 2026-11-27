@@ -7,12 +7,15 @@ import emitter from '@/lib/emitter'
 import { registerAlmanacSyncTable } from './registry'
 import { createSourcesTable, SOURCES_SYNC_TABLE } from './sources'
 import { createFeedsTable, type FeedsAccess } from './feeds'
-import { createProposalsTable, type ProposalsAccess, type SyncCollectItem } from './proposals'
+import { createProposalsTable, type PortableAwaiting, type ProposalsAccess, type SyncAsideEntry, type SyncAwaitingEntry, type SyncCollectItem } from './proposals'
 import { createCrewTable } from './crew'
 import { createActivityTable } from './activity'
 import { createOpsTable } from './ops'
+import { createMocTables, SCOTT_PINS_SYNC_TABLE } from './moc'
 
 const WEEKLY_MOC_KEY = 'almanacWeeklyMocCards'
+/** 85.4：另一台的等你回話、這台還沒有那段對話時先記在這裡（裝置層級，不經設定同步）。 */
+export const AWAITING_REMOTE_KEY = 'almanacAwaitingRemote'
 
 async function appStore() {
   const { Store } = await import('@tauri-apps/plugin-store')
@@ -49,10 +52,23 @@ export const appProposalsAccess: ProposalsAccess = {
       import('@/lib/collect/persist'),
       import('@/lib/cleanup/queue'),
     ])
-    await Promise.all([useCollectStore.getState().hydrate(), useProposalTrailStore.getState().hydrate()])
+    const [{ default: useWorkbenchStore }, { default: useAwaitingRepliesStore }] = await Promise.all([
+      import('@/stores/workbench'),
+      import('@/stores/awaiting-replies'),
+    ])
+    await Promise.all([
+      useCollectStore.getState().hydrate(),
+      useProposalTrailStore.getState().hydrate(),
+      useWorkbenchStore.getState().hydrateAside(),
+      useAwaitingRepliesStore.getState().hydrate(),
+    ])
     const store = await appStore()
     const weekly = await store.get(WEEKLY_MOC_KEY)
+    const awaitingRemote = await store.get(AWAITING_REMOTE_KEY)
     return {
+      aside: { ...useWorkbenchStore.getState().aside } as Record<string, SyncAsideEntry>,
+      awaiting: { ...useAwaitingRepliesStore.getState().map } as Record<string, SyncAwaitingEntry>,
+      awaitingRemote: awaitingRemote && typeof awaitingRemote === 'object' ? awaitingRemote as Record<string, PortableAwaiting> : {},
       items: serializeItems(useCollectStore.getState().items) as unknown as SyncCollectItem[],
       trail: { ...useProposalTrailStore.getState().trail },
       weeklySent: Array.isArray(weekly) ? weekly.filter((key): key is string => typeof key === 'string') : [],
@@ -70,7 +86,40 @@ export const appProposalsAccess: ProposalsAccess = {
     ])
     await useCollectStore.getState().applySync({ upserts: change.items.upserts as never, deletes: change.items.deletes })
     await useProposalTrailStore.getState().applySync(change.trail)
+    // 85.4：先放著、等你回話也經記憶體 store 寫（它們的訂閱負責存檔），之後本機存檔不會把同步來的蓋回去（設計 6 風險 6）。
+    const [{ default: useWorkbenchStore }, { default: useAwaitingRepliesStore }] = await Promise.all([
+      import('@/stores/workbench'),
+      import('@/stores/awaiting-replies'),
+    ])
+    const aside = change.aside ?? { upserts: {}, deletes: [] }
+    const awaiting = change.awaiting ?? { upserts: [], deletes: [], remote: {} }
+    if (Object.keys(aside.upserts).length || aside.deletes.length) {
+      await useWorkbenchStore.getState().hydrateAside()
+      useWorkbenchStore.setState(state => {
+        const next = { ...state.aside, ...aside.upserts }
+        for (const key of aside.deletes) delete next[key]
+        return { aside: next }
+      })
+    }
+    if (awaiting.upserts.length || awaiting.deletes.length) {
+      await useAwaitingRepliesStore.getState().hydrate()
+      useAwaitingRepliesStore.setState(state => {
+        const map = { ...state.map }
+        for (const entry of awaiting.upserts) map[String(entry.conversationId)] = entry
+        for (const id of awaiting.deletes) delete map[String(id)]
+        return { map }
+      })
+    }
     const store = await appStore()
+    if (Object.keys(awaiting.remote).length) {
+      const current = await store.get(AWAITING_REMOTE_KEY)
+      const remote: Record<string, PortableAwaiting> = current && typeof current === 'object' ? { ...current as Record<string, PortableAwaiting> } : {}
+      for (const [syncId, value] of Object.entries(awaiting.remote)) {
+        if (value) remote[syncId] = value
+        else delete remote[syncId]
+      }
+      await store.set(AWAITING_REMOTE_KEY, remote)
+    }
     if (change.weekly.add.length) {
       const current = await store.get(WEEKLY_MOC_KEY)
       const sent = new Set(Array.isArray(current) ? current.filter((key): key is string => typeof key === 'string') : [])
@@ -126,18 +175,23 @@ export function registerAlmanacAppTables(): void {
   }))
   registerAlmanacSyncTable(createActivityTable({ ensureSchema: ensureAppCrewSchema, runTransaction: runAppTransaction }))
   registerAlmanacSyncTable(createOpsTable())
+  // 85.4：MOC 上次已知狀態、版面位置、Scott 指定、提案建立的專家（筆記庫層）。放在 ops 後面：Scott 指定與專家指向的操作先到。
+  for (const table of createMocTables()) registerAlmanacSyncTable(table)
 }
 
 export interface AlmanacReloadDeps {
   refreshSources(): Promise<void>
   isPrimary(): Promise<boolean>
   kickCommander(): Promise<void>
+  /** 85.4：Scott 指定同步進來後，畫面用的快取重讀 */
+  reloadScottPins?(): Promise<void>
 }
 
 const defaultReloadDeps: AlmanacReloadDeps = {
   refreshSources: async () => (await import('@/lib/workbench/actions')).refreshSources(),
   isPrimary: async () => (await import('../runtime')).isThisDeviceAlmanacPrimary(),
   kickCommander: async () => (await import('@/lib/workbench/actions')).kickCommander({ manual: true }),
+  reloadScottPins: async () => { await (await import('@/lib/moc/scott-pins-runtime')).loadScottPins() },
 }
 
 /**
@@ -147,6 +201,9 @@ const defaultReloadDeps: AlmanacReloadDeps = {
  */
 export function installAlmanacSyncReloaders(deps: AlmanacReloadDeps = defaultReloadDeps): () => void {
   const handler = (payload: { tables: string[] }) => {
+    if (payload.tables.includes(SCOTT_PINS_SYNC_TABLE) && deps.reloadScottPins) {
+      void deps.reloadScottPins().catch(error => console.warn('[almanac-sync] reload scott pins failed:', error))
+    }
     if (!payload.tables.includes(SOURCES_SYNC_TABLE)) return
     void (async () => {
       await deps.refreshSources()

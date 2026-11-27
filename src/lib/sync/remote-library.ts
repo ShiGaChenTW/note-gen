@@ -1,4 +1,5 @@
 import type { RemoteWriteCondition } from './write-condition'
+import { noteSyncWrite } from '@/lib/moc/app-writes'
 import { mutateFileConditionally as mutateGitlabFileConditionally } from './gitlab'
 import { exists, mkdir, readDir, readFile, writeFile } from '@tauri-apps/plugin-fs'
 import { dirname } from '@tauri-apps/api/path'
@@ -598,6 +599,8 @@ export async function saveLocalBytes(
       await writeFile(pathOptions.path, content)
     }
     rememberStaticAssetSyncMarker(marker)
+    // Fork（almanac ALMNC-85.4）：同步來的 MOC 記成 App 寫入，不當成 Obsidian 手動編輯（設計 2.11 第一層）。
+    noteSyncWrite(path, content)
     return true
   }, workspaceRoot)
 }

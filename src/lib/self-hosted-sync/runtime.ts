@@ -1,4 +1,5 @@
 import { invoke } from '@tauri-apps/api/core'
+import { noteSyncWrite } from '@/lib/moc/app-writes'
 import { BaseDirectory, exists, mkdir, readFile, readTextFile, writeFile } from '@tauri-apps/plugin-fs'
 import { join } from '@tauri-apps/api/path'
 import { Store } from '@tauri-apps/plugin-store'
@@ -2203,6 +2204,9 @@ async function applyRemoteFile(binding: Binding, event: SyncEvent, payload: Reco
     // Keep the remote hash as the merge base until this local merge is
     // accepted by the server. Updating it early would hide a later conflict.
     await enqueueFileSnapshot(portable.normalized, 'upsert', binding.workspaceId)
+  } else if (!appliedSnapshot.conflict) {
+    // Fork（almanac ALMNC-85.4）：遠端原樣寫進來的 MOC 記成 App 寫入，不當成 Obsidian 手動編輯（設計 2.11 第一層）。
+    noteSyncWrite(portable.normalized, content)
   }
 }
 
