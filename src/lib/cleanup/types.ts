@@ -13,9 +13,10 @@ export const CLEANUP_ACTIONS: readonly CleanupAction[] = ['modify', 'replace', '
 
 /**
  * 發現時機：written＝接受提案、新筆記寫入後；handwritten＝Scott 在檯面存了親手寫的筆記；
- * periodic＝定期檢查（最後確認日期超過領域的期限）；review＝專家回顧領域（G2）；recheck＝確認卡「交給指揮官」。
+ * periodic＝定期檢查（最後確認日期超過領域的期限）；review＝專家回顧領域（G2）；recheck＝確認卡「交給指揮官」；
+ * fetched＝指揮官在處理對話中查到新的外部資料（沒寫成筆記也比對，ALMNC-92）。
  */
-export type ConflictTrigger = 'written' | 'handwritten' | 'periodic' | 'review' | 'recheck'
+export type ConflictTrigger = 'written' | 'handwritten' | 'periodic' | 'review' | 'recheck' | 'fetched'
 
 /** 比對用的筆記：路徑、標題、V3 欄位、原文與內文。 */
 export interface NoteText {
