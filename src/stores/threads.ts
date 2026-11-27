@@ -12,6 +12,7 @@ import { threadKey as keyOf } from '@/lib/threads/projects'
 import { archiveProject, findArchivedProject, restoreProject, type ArchivedProjectMap } from '@/lib/projects/archive'
 import { createProjectArchiveDeps, loadArchivedProjects, saveArchivedProjects } from '@/lib/projects/archive-io'
 import type { Conversation } from '@/db/conversations'
+import emitter from '@/lib/emitter'
 import useCollectStore from './collect'
 import useHomeStore from './home'
 import useInboxStore from './inbox'
@@ -52,6 +53,11 @@ interface ThreadsState {
   /** Scott 對「要不要轉給指揮官？」回答「不用」的訊息 id；只放記憶體。 */
   transferDismissed: number[]
   dismissTransfer: (chatId: number) => void
+  /** Fork（almanac ALMNC-91）：專家判斷需要外部資料的回答 id（expert_suggest_commander）；只放記憶體。不用時也記在 transferDismissed。 */
+  expertHandoffs: number[]
+  flagExpertHandoff: (chatId: number) => void
+  /** Scott 同意把專家答不了的問題轉給指揮官：標籤改成處理，再把帶著原問題的訊息（message）送給指揮官。 */
+  handExpertQuestionToCommander: (conversation: ConversationRef, chatId: number, message: string) => Promise<void>
 
   mode: ThreadGroupMode
   setMode: (mode: ThreadGroupMode) => void
@@ -155,6 +161,14 @@ const useThreadsStore = create<ThreadsState>((set, get) => {
     },
     transferDismissed: [],
     dismissTransfer: chatId => set(state => ({ transferDismissed: [...state.transferDismissed, chatId] })),
+    expertHandoffs: [],
+    flagExpertHandoff: chatId => set(state => state.expertHandoffs.includes(chatId) ? state : { expertHandoffs: [...state.expertHandoffs, chatId] }),
+    handExpertQuestionToCommander: async (conversation, chatId, message) => {
+      // 先收起這則提示（同一則訊息不再問），標籤改成處理後送出：右側欄照標籤找指揮官回答（lib/router/sidebar.ts restoreSidebarRoute）。
+      get().dismissTransfer(chatId)
+      await get().commanderJoins(conversation)
+      emitter.emit('quick-prompt-send', message)
+    },
 
     mode: 'project',
     setMode: mode => set({ mode }),

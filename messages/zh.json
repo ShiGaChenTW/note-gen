@@ -8635,7 +8635,9 @@
       "handoffHint": "标签改成处理，这段对话直接延续",
       "transferAsk": "秘书：这像是笔记或知识的问题，要不要转给指挥官？",
       "transfer": "转给指挥官",
-      "keep": "不用"
+      "keep": "不用",
+      "expertAsk": "专家：这题需要外部资料，笔记库里查不到。要不要转给指挥官？",
+      "expertMessage": "专家说这题需要外部资料，请指挥官接手：\n\n{question}"
     },
     "pending": "还有 {count} 则提案待决定"
   },

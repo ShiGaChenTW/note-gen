@@ -8635,7 +8635,9 @@
       "handoffHint": "The tag becomes Process and this conversation continues",
       "transferAsk": "Secretary: this sounds like a notes or knowledge question. Hand it to the commander?",
       "transfer": "Hand to commander",
-      "keep": "No thanks"
+      "keep": "No thanks",
+      "expertAsk": "Expert: this needs external sources that are not in your notes. Hand it to the commander?",
+      "expertMessage": "The expert says this needs external sources. Commander, please take over:\n\n{question}"
     },
     "pending": "{count, plural, one {# proposal} other {# proposals}} still to decide"
   },
