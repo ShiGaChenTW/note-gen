@@ -1,6 +1,6 @@
 // Fork（almanac ALMNC-89）：對話頁結束專案 → 專案筆記封存、知識筆記不動 → 搜尋得到 → 取消封存還原。
-import { expect, test, type Page } from '@playwright/test'
-import { setupTauriMock, type TauriMockController } from './tauri-mock'
+import { expect, test } from '@playwright/test'
+import { setupTauriMock, waitForMainBoot, type TauriMockController } from './tauri-mock'
 
 let mock: TauriMockController
 let pageErrors: Error[] = []
@@ -11,11 +11,6 @@ const KNOWLEDGE_PATH = '知識/墨水屏刷新.md'
 // 斷言整份內容是否原封不動時就會看時序。
 const PROJECT_NOTE = '---\nid: N-20261101-090000-EP01\ntype: project\ntitle: 電子紙\n---\n# 電子紙\n\n目標：做出電子紙簡報。\n'
 const KNOWLEDGE_NOTE = '---\nid: N-20261101-090000-KN01\ntype: knowledge\ntitle: 墨水屏刷新\ndomains: [D-hardware]\nproject: 電子紙\n---\n局部刷新會殘影。參考 [[電子紙]]。\n'
-
-async function waitForMainBoot(page: Page) {
-  await expect(page.getByRole('navigation', { name: '主要導覽' })).toBeVisible()
-  await expect(page.getByRole('button', { name: '新增', exact: true }).first()).toBeVisible()
-}
 
 test.beforeEach(async ({ page }) => {
   pageErrors = []

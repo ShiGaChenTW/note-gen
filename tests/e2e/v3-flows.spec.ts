@@ -1,5 +1,11 @@
-import { expect, test } from '@playwright/test'
-import { setupTauriMock, type TauriMockController } from './tauri-mock'
+import { expect, test, type Page } from '@playwright/test'
+import { setupTauriMock, waitForMainBoot, type TauriMockController } from './tauri-mock'
+
+// 側欄頂端的「新增」（＋）選單。右側 AI 對話輸入框也有一顆同名的「新增」（附加）按鈕，
+// 它稍晚才啟用，所以不能用 disabled 篩選來區分；側欄在 DOM 順序上排第一，和其他 spec 一樣取 first()。
+function sidebarAddButton(page: Page) {
+  return page.getByRole('button', { name: '新增', exact: true }).first()
+}
 
 let mock: TauriMockController
 let pageErrors: Error[] = []
@@ -11,8 +17,7 @@ test.beforeEach(async ({ page }) => {
   })
   mock = await setupTauriMock(page)
   await page.goto('/core/main')
-  // Wait for primary V3 sidebar navigation to mount
-  await expect(page.getByRole('button', { name: '新增', exact: true, disabled: false })).toBeVisible()
+  await waitForMainBoot(page)
 })
 
 test.afterEach(() => {
@@ -22,7 +27,7 @@ test.afterEach(() => {
 
 test('V3 流程一：新增資料源 → 工作台卡片 → 接受並寫入筆記檔', async ({ page }) => {
   // 1. 透過側欄「＋」選單開啟「新增資料源」
-  await page.getByRole('button', { name: '新增', exact: true, disabled: false }).click()
+  await sidebarAddButton(page).click()
   await page.getByRole('menuitem', { name: /新增資料源/ }).click()
 
   const dialog = page.getByRole('dialog', { name: '新增資料源' })
@@ -57,7 +62,7 @@ test('V3 流程一：新增資料源 → 工作台卡片 → 接受並寫入筆�
 
 test('V3 流程二：工作台再次討論失敗時顯示錯誤並留住已輸入文字', async ({ page }) => {
   // 先透過真實新增資料源讓指揮官產生一張待決定卡片
-  await page.getByRole('button', { name: '新增', exact: true, disabled: false }).click()
+  await sidebarAddButton(page).click()
   await page.getByRole('menuitem', { name: /新增資料源/ }).click()
 
   const dialog = page.getByRole('dialog', { name: '新增資料源' })
@@ -111,7 +116,7 @@ test('V3 流程三之二：側欄＋ → 新增畫布 → 直接開啟 → 返�
   await expect(today).toBeVisible()
 
   // 今天頁自己也有一顆「新增」；側欄在 DOM 前面，取第一顆就是側欄的「＋」
-  await page.getByRole('button', { name: '新增', exact: true, disabled: false }).first().click()
+  await sidebarAddButton(page).click()
   await page.getByRole('menuitem', { name: '新增畫布', exact: true }).click()
 
   const canvasToolbar = page.getByRole('toolbar', { name: '畫布工具', exact: true })

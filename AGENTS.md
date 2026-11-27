@@ -83,15 +83,24 @@ Do not edit Backlog task, draft, document, decision, or milestone markdown files
 
 ### E2E 測試（Playwright + Tauri mockIPC）
 
-- 執行全部 E2E 測試（連接本機 Next dev，不需啟動 Rust / Tauri Desktop）：
+- 執行全部 E2E 測試（不需啟動 Rust / Tauri Desktop）：
   ```bash
   pnpm test:e2e
   ```
+- 預設跑**打包好的靜態版**（`out/`），不跑 dev server：
+  1. `tests/e2e/build-if-stale.mjs`：`out/` 比原始碼（`src/`、`messages/`、`public/`、`config/`、`next.config.ts`、`package.json`、`pnpm-lock.yaml` 等；測試檔不算）舊才跑 `pnpm build`，約 1～2 分鐘；沒改原始碼就直接跳過。
+  2. `tests/e2e/static-server.mjs`：不需額外依賴的小 Node 伺服器，在 `http://localhost:3456` 提供 `out/`（`/core/main` → `core/main.html`；找不到的路徑回 `404.html`）。
+  原因：Turbopack dev server 的 HMR 與即時編譯會讓整套連跑時隨機失敗（連不到 server、`Failed to load chunk …hmr-client…`、冷編譯時元素找不到），靜態版沒有這些問題。
+- 環境變數：
+  - `E2E_SKIP_BUILD=1`：不檢查也不建置，直接用現有的 `out/`。只在你確定 `out/` 是最新的（例如剛跑完 `pnpm build`）時用。
+  - `E2E_DEV=1`：改用原本的 `next dev --turbopack`，並先跑 `tests/e2e/global-setup.ts` 暖機。給本機邊改邊跑單一測試用（不用等建置）；dev 版本來就會偶發失敗，**驗收、交 PR 前一律用預設的靜態版跑完整套件**。
+  - `E2E_PORT=<埠>`：換埠（預設 3456）。靜態版不沿用已在該埠的伺服器，3456 被 `pnpm dev` 或其他 worktree 的 E2E 佔用時會直接報錯，此時換一個埠，例如 `E2E_PORT=3466 pnpm test:e2e`。
 - 首次在本機安裝 Chromium 執行檔：
   ```bash
   pnpm exec playwright install chromium
   ```
-- 測試規格位置：`tests/e2e/*.spec.ts`，由 `playwright.config.ts` 自動啟動 `next dev`（`http://localhost:3456`），不會與 `vitest run`（僅掃描 `*.test.ts(x)`）衝突。
+- 測試規格位置：`tests/e2e/*.spec.ts`，伺服器由 `playwright.config.ts` 自動啟動，不會與 `vitest run`（僅掃描 `*.test.ts(x)`）衝突。
+- 測試不能依賴 dev server 的慢速掩蓋時序：靜態版載入快，啟動時的非同步動作（例如自動打開今天的日記會收起覆蓋層）可能在測試第一步之後才發生。每支測試 `page.goto('/core/main')` 之後先 `await waitForMainBoot(page)`（`tests/e2e/tauri-mock.ts`），等啟動落定再操作。
 - `tests/e2e/tauri-mock.ts` 在 Node 端使用真實 `node:sqlite`（記憶體資料庫）與暫存目錄隔離每個測試的檔案系統、Store、Tauri Event 匯流排、AI 請求模擬、虛擬時鐘與本機 MCP 橋接。
 - 寫 E2E 測試時同樣遵守 ARIA role 與可見文字／無障礙名稱定位原則（不寫 CSS selector、`querySelector` 或 `data-testid`），且每支測試必須確保零未捕獲 `pageerror`。
 

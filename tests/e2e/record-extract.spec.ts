@@ -1,7 +1,7 @@
 // Fork（almanac ALMNC-90）：紀錄筆記「送給指揮官萃取」→ 工作台出現新增知識筆記提案 → 重複送出被擋下 → 接受後知識筆記連回紀錄筆記。
 // AI 回應用 mockIPC 固定內容：萃取提示回傳一個知識片段（外加一個任務，應被濾掉），撰寫提示回傳固定草稿。
 import { expect, test, type Page } from '@playwright/test'
-import { setupTauriMock, type TauriMockController } from './tauri-mock'
+import { setupTauriMock, waitForMainBoot, type TauriMockController } from './tauri-mock'
 
 let mock: TauriMockController
 let pageErrors: Error[] = []
@@ -19,11 +19,6 @@ function completion(content: string) {
 function promptOf(body: unknown): string {
   const messages = (body as { messages?: Array<{ content?: unknown }> } | undefined)?.messages ?? []
   return messages.map(message => typeof message.content === 'string' ? message.content : JSON.stringify(message.content)).join('\n')
-}
-
-async function waitForMainBoot(page: Page) {
-  await expect(page.getByRole('navigation', { name: '主要導覽' })).toBeVisible()
-  await expect(page.getByRole('button', { name: '新增', exact: true }).first()).toBeVisible()
 }
 
 async function openNote(page: Page, name: RegExp) {

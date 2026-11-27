@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { DatabaseSync, type SQLInputValue } from 'node:sqlite'
-import type { Page } from '@playwright/test'
+import { expect, type Page } from '@playwright/test'
 
 export interface AiRequestInput {
   config: unknown
@@ -325,6 +325,17 @@ function toFileInfo(stats: fs.Stats) {
     blksize: stats.blksize,
     blocks: stats.blocks,
   }
+}
+
+/**
+ * 等主視窗啟動落定：側欄出現，且啟動時自動打開的今天日記（daily-note-auto-open.tsx）已經開好。
+ * 自動打開日記會收起「整理」等覆蓋層；不等它，測試剛點開的覆蓋層可能隨即被收掉。
+ * dev server 載入慢剛好掩蓋了這個時序，靜態版載入快就會撞到，所以每支測試 goto 之後都先呼叫這個。
+ */
+export async function waitForMainBoot(page: Page) {
+  await expect(page.getByRole('navigation', { name: '主要導覽' })).toBeVisible()
+  await expect(page.getByRole('button', { name: '新增', exact: true }).first()).toBeVisible()
+  await expect(page.getByRole('textbox', { name: '標題', exact: true })).not.toHaveValue('')
 }
 
 export async function setupTauriMock(page: Page): Promise<TauriMockController> {
