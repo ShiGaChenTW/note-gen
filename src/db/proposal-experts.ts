@@ -108,4 +108,6 @@ export async function deleteExpertAndMemory(agentId: string, updatedAt: number):
     { sql: 'delete from agent_settings where id = $1 and updated_at = $2', values: [agentId, updatedAt], expectedRows: 1 },
     { sql: 'delete from agent_memory where agent_id = $1', values: [agentId] },
   ])
+  // Fork（almanac ALMNC-85.3）：刪專家也要同步（另一台會先問 Scott，第 8 節 2A）。
+  void import('@/lib/almanac-sync/notify').then(({ notifyAlmanacLocalChange }) => notifyAlmanacLocalChange('agent-removed')).catch(() => undefined)
 }

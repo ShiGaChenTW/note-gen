@@ -204,6 +204,21 @@ describe('PendingSyncDeletions UI：設定與夥伴分組（ALMNC-85.2）', () =
     expect(screen.queryByRole('group', { name: '設定與夥伴' })).not.toBeInTheDocument()
   })
 
+  // Fork（almanac ALMNC-85.3，第 8 節 2A）：別台刪的專家也在同一個分組，標「夥伴」。
+  it('別台刪的專家列在「設定與夥伴」分組、標「夥伴」；保留＝推回另一台', async () => {
+    records = [{
+      tableName: 'crew', syncKey: 'agent:exp-1', title: 'Iris（工業工程）', snapshot: { agent: { id: 'exp-1' } },
+      deletedAt: 1_700_000_000_000, deviceId: 'remote-mac', status: 'pending', resolvedAt: null, createdAt: 1_700_000_001_000,
+    }]
+    const { user } = renderV3(<PendingSyncDeletionsPanel />)
+    const group = await screen.findByRole('group', { name: '設定與夥伴' })
+    const row = within(group).getByRole('listitem', { name: 'Iris（工業工程）' })
+    expect(within(row).getByText('夥伴')).toBeInTheDocument()
+    expect(within(row).queryByText('RSS 訂閱')).not.toBeInTheDocument()
+    await user.click(within(row).getByRole('button', { name: '保留' }))
+    expect(mocks.rejectPendingRecordDeletion).toHaveBeenCalledWith('crew', 'agent:exp-1')
+  })
+
   it('選「保留」：保留這台的訂閱（之後推回另一台）', async () => {
     const { user } = renderV3(<PendingSyncDeletionsPanel />)
     const row = await screen.findByRole('listitem', { name: 'Example Blog' })

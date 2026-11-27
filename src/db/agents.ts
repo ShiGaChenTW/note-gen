@@ -7,6 +7,7 @@ import {
   type AgentSettings, type AgentSettingsInput,
 } from '@/lib/agents/settings'
 import type { AgentToolRefusal } from '@/lib/agents/permissions'
+import { notifyAlmanacLocalChange } from '@/lib/almanac-sync/notify'
 
 interface SettingsRow extends Omit<AgentSettings, 'allowedTools' | 'enabled' | 'domain'> {
   allowedTools: string
@@ -85,6 +86,8 @@ export async function createAgentSettings(input: AgentSettingsInput): Promise<st
      values ($1, $2, $3, $4, $5, $6, $7, $7)`,
     [id, ...values, now],
   )
+  // Fork（almanac ALMNC-85.3）：夥伴名單跟著 V3 同步（crew.json）；同步關著時不做事。
+  notifyAlmanacLocalChange('agent-settings')
   return id
 }
 
@@ -98,6 +101,7 @@ export async function updateAgentSettings(id: string, input: AgentSettingsInput)
     [id, ...values, Date.now()],
   )
   if (result.rowsAffected !== 1) throw new Error('AGENT_NOT_FOUND')
+  notifyAlmanacLocalChange('agent-settings')
 }
 
 let seeding: Promise<boolean> | undefined

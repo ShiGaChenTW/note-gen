@@ -31,6 +31,7 @@ import useInboxStore from '@/stores/inbox'
 import useProposalTrailStore from '@/stores/proposals'
 import useSettingStore from '@/stores/setting'
 import useWorkbenchStore, { type WorkbenchTab } from '@/stores/workbench'
+import { SyncConflictCards } from '@/components/sync/sync-conflict-card'
 import { PageHeader, PageSurface } from '../page-ui'
 import { Desk } from './desk'
 import { currentOf, ReviewTab } from './review-tab'
@@ -211,6 +212,8 @@ function WorkbenchPage() {
               )}
             />
           </div>
+          {/* Fork（almanac ALMNC-85.3，第 8 節 3A）：V3 同步的確認卡（Scott 的偏好、soul、rules 兩台改到同一段），沒有就不佔位置。 */}
+          <SyncConflictCards />
           {tab === 'review'
             ? <ReviewTab data={data} actions={actions} commanderName={commanderName} />
             : <SourcesTab rows={rows} commanderName={commanderName} onDesk={onDesk} />}

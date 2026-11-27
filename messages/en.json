@@ -110,7 +110,11 @@
         "relink": "Updated {links} links to the new file name",
         "clock": "The system clock may be wrong; please check it",
         "held": "{count} notes have no ID; too many to add automatically. Preview and apply with the migration tool"
-      }
+      },
+      "fromDevice": "From {name}",
+      "otherDevice": "another device",
+      "pendingConversation": "Conversation on another device (not synced yet)",
+      "waitSync": "Done on another device; undo after sync finishes"
     }
   },
   "agentDiffNavigation": {
@@ -4242,7 +4246,8 @@
         "memory": "Memory",
         "tag": "Tag",
         "source": "Source",
-        "rss-feed": "RSS feed"
+        "rss-feed": "RSS feed",
+        "agent": "Partner"
       },
       "actors": {
         "scott": "Scott",
@@ -4313,7 +4318,8 @@
         "recordGroup": "Settings & partners",
         "rssFeedBadge": "RSS feed",
         "keepRecord": "Keep",
-        "keptToast": "Kept \"{title}\""
+        "keptToast": "Kept \"{title}\"",
+        "agentBadge": "Partner"
       }
     },
     "navigationGroups": {
@@ -9736,6 +9742,25 @@
       "toast": {
         "done": "Marked “{title}” as organized"
       }
+    },
+    "syncConflict": {
+      "title": "Sync check: {subject}",
+      "subject": {
+        "preferences": "Scott's preferences",
+        "soul": "{name}'s soul.md",
+        "rules": "{name}'s rules.md"
+      },
+      "unknownAgent": "Partner",
+      "hint": "Both devices changed the same part. This device's version is kept for now and the other version is saved. Pick one:",
+      "local": "This device's version",
+      "remote": "Other device's version",
+      "useLocal": "Use this device's",
+      "useRemote": "Use the other device's",
+      "merge": "Merge myself",
+      "mergedLabel": "Merged content",
+      "saveMerged": "Save this version",
+      "cancel": "Cancel",
+      "failed": "Could not resolve. Both versions are still kept; try again."
     }
   },
   "cleanup": {

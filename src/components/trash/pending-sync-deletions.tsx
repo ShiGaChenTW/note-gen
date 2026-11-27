@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { Folder, FileText, Rss, Trash2, ShieldCheck } from 'lucide-react'
+import { Folder, FileText, Rss, Trash2, ShieldCheck, UserRound } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { listPendingSyncDeletions, type PendingSyncDeletion } from '@/db/sync-deletions'
@@ -105,7 +105,7 @@ function PendingSyncDeletionList({
 }
 
 /**
- * Fork（almanac ALMNC-85.2，第 8 節 2A）：別台刪掉的資料庫列（RSS 訂閱）。跟檔案刪除放在同一份清單，多一個「設定與夥伴」分組。
+ * Fork（almanac ALMNC-85.2／85.3，第 8 節 2A）：別台刪掉的資料庫列（RSS 訂閱、專家）。跟檔案刪除放在同一份清單，多一個「設定與夥伴」分組。
  */
 function PendingRecordDeletionGroup({
   items,
@@ -136,9 +136,12 @@ function PendingRecordDeletionGroup({
             className="flex flex-col gap-2.5 rounded-md border bg-background/80 p-2.5 sm:flex-row sm:items-center sm:justify-between"
           >
             <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-              <Rss className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+              {item.tableName === 'crew'
+                ? <UserRound className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+                : <Rss className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />}
               <span className="truncate text-sm font-medium">{item.title}</span>
-              <Badge variant="outline" className="text-[11px]">{t('rssFeedBadge')}</Badge>
+              {/* Fork（almanac ALMNC-85.3）：別台刪的專家標「夥伴」。 */}
+              <Badge variant="outline" className="text-[11px]">{t(item.tableName === 'crew' ? 'agentBadge' : 'rssFeedBadge')}</Badge>
             </div>
             <div className="flex shrink-0 items-center justify-end gap-2">
               <Button type="button" variant="outline" size="sm" disabled={disabled} onClick={() => onReject(item)}>

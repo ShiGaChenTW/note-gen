@@ -78,3 +78,51 @@ describe('別台刪的 RSS 訂閱：確認與保留', () => {
     expect((await listPendingRecordDeletionsForUi()).map(item => item.syncKey)).toEqual(['rss_1'])
   })
 })
+
+// Fork（almanac ALMNC-85.3，第 8 節 2A）：別台刪的專家——確認＝專家與記憶寫進最近刪除再移除；保留＝記成現在改過（推回去）；救回＝寫回本機。
+const { AGENT_SCHEMA } = await import('@/lib/agents/schema')
+const { AGENT_MEMORY_SCHEMA } = await import('@/lib/agent-memory/schema')
+const { restoreCrewAgentSnapshot } = await import('./pending-record-actions')
+
+describe('別台刪的專家：確認、保留與從最近刪除救回', () => {
+  beforeEach(async () => {
+    const db = fake.db as AlmanacSqlDb
+    for (const sql of [...AGENT_SCHEMA, ...AGENT_MEMORY_SCHEMA]) await db.execute(sql)
+    await db.execute(`insert into agent_settings (id, name, role, domain, enabled, allowed_tools, created_at, updated_at)
+      values ('exp-1', 'Iris', 'expert', '工業工程', 1, '[]', 10, 20)`)
+    await db.execute(`insert into agent_memory (agent_id, kind, content, updated_at, updated_by) values ('exp-1', 'soul', 'Iris 的 soul', 30, 'scott')`)
+    await upsertPendingRecordDeletion(db, {
+      tableName: 'crew', syncKey: 'agent:exp-1', title: 'Iris（工業工程）', snapshot: null, deletedAt: 100, deviceId: 'dev-b', now: 200,
+    })
+  })
+
+  const agents = async () => (fake.db as AlmanacSqlDb).select<Array<{ id: string; updatedAt: number }>>('select id, updated_at as updatedAt from agent_settings')
+  const memory = async () => (fake.db as AlmanacSqlDb).select<Array<{ content: string; updatedAt: number }>>('select content, updated_at as updatedAt from agent_memory')
+
+  it('確認：專家與記憶的快照寫進最近刪除，再從本機移除', async () => {
+    expect(await confirmPendingRecordDeletion('crew', 'agent:exp-1')).toBe(true)
+    expect(fake.recordDbTrash).toHaveBeenCalledWith(expect.objectContaining({
+      entityType: 'agent', entityId: 'exp-1', title: 'Iris（工業工程）', deletedBy: 'sync', source: 'sync',
+      metadata: { agent: expect.objectContaining({ id: 'exp-1', name: 'Iris' }), memory: [expect.objectContaining({ kind: 'soul', content: 'Iris 的 soul' })] },
+    }))
+    expect(await agents()).toEqual([])
+    expect(await memory()).toEqual([])
+  })
+
+  it('保留：專家與記憶記成現在改過（晚於刪除），下一輪同步推回', async () => {
+    expect(await rejectPendingRecordDeletion('crew', 'agent:exp-1')).toBe(true)
+    const [agent] = await agents()
+    expect(agent.updatedAt).toBeGreaterThan(100)
+    expect((await memory())[0].updatedAt).toBeGreaterThan(100)
+  })
+
+  it('從最近刪除救回：設定與記憶寫回本機；已經存在就不重複寫', async () => {
+    const trashed = (fake.recordDbTrash.mock.calls as unknown[][])
+    expect(await confirmPendingRecordDeletion('crew', 'agent:exp-1')).toBe(true)
+    const metadata = (trashed.at(-1)?.[0] as { metadata: Record<string, unknown> }).metadata
+    await restoreCrewAgentSnapshot(metadata)
+    await restoreCrewAgentSnapshot(metadata)
+    expect((await agents()).map(agent => agent.id)).toEqual(['exp-1'])
+    expect((await memory()).map(row => row.content)).toEqual(['Iris 的 soul'])
+  })
+})

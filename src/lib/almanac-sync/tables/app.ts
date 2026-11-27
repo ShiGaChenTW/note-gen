@@ -8,6 +8,9 @@ import { registerAlmanacSyncTable } from './registry'
 import { createSourcesTable, SOURCES_SYNC_TABLE } from './sources'
 import { createFeedsTable, type FeedsAccess } from './feeds'
 import { createProposalsTable, type ProposalsAccess, type SyncCollectItem } from './proposals'
+import { createCrewTable } from './crew'
+import { createActivityTable } from './activity'
+import { createOpsTable } from './ops'
 
 const WEEKLY_MOC_KEY = 'almanacWeeklyMocCards'
 
@@ -92,15 +95,37 @@ async function ensureAppSourceSchema(): Promise<void> {
   await initLegacyPackDb()
 }
 
+/** Fork（almanac ALMNC-85.3）：夥伴、記憶、脈絡、偏好與活動紀錄的表——經各自模組的初始化建立（含舊表升級）。 */
+async function ensureAppCrewSchema(): Promise<void> {
+  const [{ listAgentSettings }, { getSharedContext }] = await Promise.all([import('@/db/agents'), import('@/db/agent-memory')])
+  await listAgentSettings()
+  await getSharedContext()
+}
+
+async function runAppTransaction(statements: Array<{ sql: string; values: Array<string | number | null>; expectedRows?: number }>): Promise<void> {
+  const { executeRecordTransaction } = await import('@/db/index')
+  await executeRecordTransaction(statements)
+}
+
 let registered = false
 
-/** 註冊 85.2 的三張表（重複呼叫沒事）。runtime 每輪同步前呼叫。 */
+/**
+ * 註冊 85.2 的三張表與 85.3 的三張表（重複呼叫沒事）。runtime 每輪同步前呼叫。
+ * 85.3 的順序：夥伴（crew.json）→ 活動紀錄 → ops。活動紀錄的發起者 id 靠夥伴的別名換算；ops 跟著活動紀錄到，畫面才找得到能復原的操作。
+ */
 export function registerAlmanacAppTables(): void {
   if (registered) return
   registered = true
   registerAlmanacSyncTable(createSourcesTable({ ensureSchema: ensureAppSourceSchema }))
   registerAlmanacSyncTable(createFeedsTable(appFeedsAccess))
   registerAlmanacSyncTable(createProposalsTable(appProposalsAccess))
+  registerAlmanacSyncTable(createCrewTable({
+    ensureSchema: ensureAppCrewSchema,
+    onPendingChanged: () => emitter.emit('pending-sync-deletions-changed'),
+    onConflictsChanged: () => emitter.emit('almanac-sync-conflicts-changed', undefined),
+  }))
+  registerAlmanacSyncTable(createActivityTable({ ensureSchema: ensureAppCrewSchema, runTransaction: runAppTransaction }))
+  registerAlmanacSyncTable(createOpsTable())
 }
 
 export interface AlmanacReloadDeps {
