@@ -90,6 +90,11 @@ export function beginDeferredFileActivation() {
   return ++fileActivationIntentSequence
 }
 
+/** Reads the latest activation intent without starting a new one, so later file opens can be detected. */
+export function currentFileActivationIntent() {
+  return fileActivationIntentSequence
+}
+
 export function isDeferredFileActivationCurrent(intentId: number) {
   return intentId === fileActivationIntentSequence
 }
