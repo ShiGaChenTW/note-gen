@@ -101,11 +101,27 @@ Do not edit Backlog task, draft, document, decision, or milestone markdown files
   ```
 - 測試規格位置：`tests/e2e/*.spec.ts`，伺服器由 `playwright.config.ts` 自動啟動，不會與 `vitest run`（僅掃描 `*.test.ts(x)`）衝突。
 - 測試不能依賴 dev server 的慢速掩蓋時序：靜態版載入快，啟動時的非同步動作（例如自動打開今天的日記會收起覆蓋層）可能在測試第一步之後才發生。每支測試 `page.goto('/core/main')` 之後先 `await waitForMainBoot(page)`（`tests/e2e/tauri-mock.ts`），等啟動落定再操作。
-- 測試規格分兩個 Playwright project：`e2e`（`tests/e2e/*.spec.ts`，功能流程）與 `visual`（`tests/e2e/visual/*.visual.ts`，截圖比對）。`pnpm test:e2e` 只跑 `e2e`，不會因像素差異失敗；截圖比對另用 `pnpm test:visual`，見下一節。
+- 測試規格分三個 Playwright project：`e2e`（`tests/e2e/*.spec.ts`，功能流程）、`visual`（`tests/e2e/visual/*.visual.ts`，截圖比對）與 `sync`（`tests/e2e/v3-sync.spec.ts`，V3 同步雙裝置）。`pnpm test:e2e` 只跑 `e2e`，不會因像素差異失敗；截圖比對另用 `pnpm test:visual`、雙裝置同步另用 `pnpm test:e2e:sync`，見下兩節。
 - `tests/e2e/tauri-mock.ts` 在 Node 端使用真實 `node:sqlite`（記憶體資料庫）與暫存目錄隔離每個測試的檔案系統、Store、Tauri Event 匯流排、AI 請求模擬、虛擬時鐘與本機 MCP 橋接。
 - 寫 E2E 測試時同樣遵守 ARIA role 與可見文字／無障礙名稱定位原則（不寫 CSS selector、`querySelector` 或 `data-testid`），且每支測試必須確保零未捕獲 `pageerror`。
 
 
+
+### V3 同步雙裝置 E2E（ALMNC-95.3）
+
+V3 同步（`src/lib/almanac-sync/`）兩台都改的情況單台測不到，另有一組雙裝置 E2E。
+
+- 執行（一行，不需網路、帳號或伺服器）：
+  ```bash
+  pnpm test:e2e:sync
+  ```
+  共用 `pnpm test:e2e` 的伺服器設定（靜態版 `out/`、`E2E_SKIP_BUILD`、`E2E_PORT` 都一樣用）。
+- 範圍：`tests/e2e/v3-sync.spec.ts`，獨立成 Playwright `sync` project（單支測試時限 180 秒）。`pnpm test:e2e` 不跑它，所以不會變慢；改到 `src/lib/almanac-sync/`、同步佇列（`src/lib/sync/auto-data-sync-queue.ts`）或雲端資料夾同步時要另外跑。
+- 做法：一支測試開兩個 browser context＝A、B 兩台，各配一個 `setupTauriMock`（`note.db`、`store.json`、筆記庫都分開，`hostname` 分別是 `Mac-A`、`Mac-B`）。同步方式設成「雲端資料夾」，兩台的 `cloudFolderSyncConfig.path` 指到同一個暫存資料夾；mock 用 Node 實作桌面版的 `test_cloud_folder_sync`、`write/read/delete_cloud_folder_sync_file`、`list_cloud_folder_sync_files`（檔案放在 `<資料夾>/.notegen/sync-v1/`，同 Rust 版）。記錄、設定、對話的自動同步關掉，只跑 almanac 領域。
+- 同步怎麼觸發：都走 App 真的流程。V3 同步從「設定 → 同步設定 → 同步選項 → V3 跨裝置同步」打開；本機寫入後 almanac 領域自己排隊上傳；另一台用 `visibilitychange`（`setWindowVisible(page, true)`，等於切回 App 視窗）觸發遠端檢查。另一台的上傳可能還沒寫完，所以用 `syncUntil(device, check)` 反覆切回前景直到畫面出現結果；要確認某台的上傳已落地，用 `waitForRemote(同步檔路徑, 文字)` 直接讀共用資料夾。
+- 情境：資料源與 RSS 已讀（假 feed 用 `mock.setHttpHandler`，不碰真實網路）、夥伴本名與 Scott 的偏好、MOC（`mock.writeVaultFileExternally` 模擬 Obsidian 編輯與 iCloud 搬檔，需要 `fsWatch: true`）、兩台同時改（`setWindowVisible(page, false)` 讓 B 不自己拉、`setClockOffsetMs` 讓 B 時鐘慢 5 分鐘）。
+- 除錯：失敗時報告附上兩台的 console 警告與共用資料夾的檔案清單；加 `E2E_SYNC_DEBUG=1` 另外印出 `meta.json`、兩台 store 裡的同步狀態與資料源表。
+- 測試除了零 `pageerror`，也要求零 `MISSING_MESSAGE`（同步狀態列會顯示 almanac 領域名稱）。
 
 ### 截圖比對（Playwright visual regression，ALMNC-94.5）
 

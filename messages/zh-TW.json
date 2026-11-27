@@ -7855,6 +7855,7 @@
     "records": "記錄",
     "settings": "設定",
     "conversations": "對話",
+    "almanac": "V3 資料",
     "notConfigured": "尚未設定同步",
     "configurationFailed": "同步設定讀取失敗",
     "missingRepository": "尚未關聯版本庫",

@@ -3,6 +3,8 @@
 // Git 類（GitHub、Gitee、GitLab、Gitea）、S3、WebDAV、雲端資料夾都重用 remote-library 既有的讀寫函式；
 // 自架同步走物件模型，另見 self-hosted.ts。
 
+import type { CloudFolderConfig } from '@/types/sync'
+
 export type AlmanacSyncLayer = 'account' | 'library'
 
 export const ALMANAC_ACCOUNT_ROOT = '.data/almanac'
@@ -53,6 +55,24 @@ function isNotFound(error: unknown): boolean {
 }
 
 /**
+ * 遠端讀寫用哪個範圍：帳號層一律是資料同步庫（'data'），筆記庫層原則上是筆記庫遠端（'workspace'）。
+ *
+ * 例外（ALMNC-95.3 E2E 抓到）：桌面版的雲端資料夾（非 OneDrive、非 Android）沒有「筆記庫遠端」——筆記庫本身就放在雲端資料夾裡，
+ * 由 iCloud Drive 這類 App 外的同步搬檔，remote-library 的 'workspace' 讀寫在這裡一律失敗（「云盘文件夹上传失败」），
+ * 整輪 V3 同步因此在 ops 表中斷，連帶 meta.json 不更新、另一台收不到。這種情況筆記庫層改放在同步資料夾裡
+ * （<資料夾>/.notegen/sync-v1/.almanac/v3/，跟 .data/ 同一層、不在筆記庫裡），一個雲端資料夾只對應一個筆記庫，不會混到別的筆記庫。
+ */
+export async function resolveAlmanacRemoteScope(
+  layer: AlmanacSyncLayer,
+  cloudFolder: CloudFolderConfig | null,
+): Promise<'data' | 'workspace'> {
+  if (layer === 'account') return 'data'
+  if (!cloudFolder) return 'workspace'
+  const { supportsCloudFolderWorkspace } = await import('@/lib/sync/cloud-folder')
+  return supportsCloudFolderWorkspace(cloudFolder) ? 'workspace' : 'data'
+}
+
+/**
  * 依目前的同步方式建立遠端轉接。帳號層用資料同步庫（scope 'data'），筆記庫層用筆記庫遠端（scope 'workspace'）。
  * 條件寫入：Git 類用 sha、S3／WebDAV 用 etag、雲端資料夾只有 OneDrive 支援；不支援時退回一般寫入
  * （雲端資料夾本來就是單一使用者的同步資料夾，覆寫風險跟現有記錄同步相同）。
@@ -64,10 +84,10 @@ export async function createRemoteLibraryAlmanacRemote(layer: AlmanacSyncLayer):
   if (platform === 'local' || platform === 'selfHosted') {
     throw new Error(`almanac sync: ${platform} has no file remote`)
   }
-  const scope = layer === 'account' ? 'data' : 'workspace'
   const cloudFolder = platform === 'cloudFolder'
-    ? await store.get<{ provider?: string }>('cloudFolderSyncConfig')
+    ? await store.get<CloudFolderConfig>('cloudFolderSyncConfig') ?? null
     : null
+  const scope = await resolveAlmanacRemoteScope(layer, cloudFolder)
   const supportsCondition = platform !== 'cloudFolder' || cloudFolder?.provider === 'oneDrive'
   const remoteLibrary = await import('@/lib/sync/remote-library')
 
