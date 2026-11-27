@@ -125,3 +125,99 @@ test('超過 8 張後最久沒看的那篇先卸載，再切回來時回到原�
   await openNote(page, '長文')
   await expect(page.getByText('第 160 段：一段用來捲動的內容。')).toBeInViewport()
 })
+
+test('wikilink 建議框出現在游標範圍內', async ({ page }) => {
+  for (const name of ['原子習慣', '番茄鐘']) await openNote(page, name)
+  await page.getByText('番茄鐘的內容。').click()
+  await page.keyboard.press('End')
+  await page.keyboard.press('Enter')
+  await page.keyboard.type('[[原子')
+  const option = page.getByRole('option', { name: /原子習慣/ })
+  await expect(option).toBeVisible()
+  const optionBox = (await option.boundingBox())!
+  const lineBox = (await page.getByText('番茄鐘的內容。').boundingBox())!
+  expect(optionBox.x).toBeGreaterThanOrEqual(lineBox.x - 8)
+  // 建議框貼著輸入位置（「[[原子」之後）；容器有 transform 時會整個偏掉約一個編輯區左緣的距離
+  expect(optionBox.x).toBeLessThanOrEqual(lineBox.x + 120)
+  expect(Math.abs(optionBox.y - lineBox.y)).toBeLessThan(288 + 60)
+  await page.keyboard.press('Escape')
+})
+
+test('樣式 B 切換時內容從左淡入，結束後容器不留 transform', async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 900 })
+  for (const name of ['原子習慣', '番茄鐘']) await openNote(page, name)
+  await page.getByRole('tablist', { name: '已開啟的文件' }).getByRole('tab', { name: /原子習慣/ }).click()
+  const fading = await page.evaluate(() => document.getAnimations().some(animation => {
+    const effect = animation.effect as KeyframeEffect | null
+    return Boolean(effect?.getKeyframes().some(frame => String(frame.transform).includes('translateX(-16px)')))
+  }))
+  expect(fading).toBe(true)
+  await page.waitForTimeout(500)
+  const leftover = await page.evaluate(() => document.getAnimations().filter(animation => {
+    const effect = animation.effect as KeyframeEffect | null
+    return Boolean(effect?.getKeyframes().some(frame => String(frame.transform).includes('translateX(-16px)')))
+  }).length)
+  expect(leftover).toBe(0)
+})
+
+for (const style of ['stack', 'fan'] as const) {
+  test(`減少動態效果（${style}）：展開疊卡沒有過場動畫`, async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.evaluate(value => localStorage.setItem('almanac:doc-switcher-style', value), style)
+    await page.reload()
+    await waitForMainBoot(page)
+    for (const name of ['原子習慣', '番茄鐘']) await openNote(page, name)
+    await page.getByRole('button', { name: '展開疊卡' }).click()
+    const back = page.getByRole('button', { name: /^原子習慣，第 \d+ 張/ })
+    await expect(back).toBeVisible()
+    expect(await back.evaluate(el => (el as HTMLElement).style.transition)).toBe('none')
+  })
+}
+
+test('右鍵選單項目完整：B 的標籤與 A 的後面的卡', async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 900 })
+  for (const name of ['原子習慣', '番茄鐘']) await openNote(page, name)
+  const expectItems = async () => {
+    for (const label of ['關閉', '關閉其他', '關閉全部', '固定分頁', '移動到新視窗']) {
+      await expect(page.getByRole('menuitem', { name: label, exact: true })).toBeVisible()
+    }
+    await page.keyboard.press('Escape')
+  }
+  await page.getByRole('tablist', { name: '已開啟的文件' }).getByRole('tab', { name: /原子習慣/ }).click({ button: 'right' })
+  await expectItems()
+
+  await page.evaluate(() => localStorage.setItem('almanac:doc-switcher-style', 'stack'))
+  await page.reload()
+  await waitForMainBoot(page)
+  await openNote(page, '番茄鐘')
+  await page.getByRole('button', { name: '展開疊卡' }).click()
+  await page.getByRole('button', { name: /^原子習慣，第 \d+ 張/ }).click({ button: 'right', position: { x: 80, y: 12 } })
+  await expectItems()
+})
+
+test('暗色主題下三種樣式截圖', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'dark' })
+  await page.evaluate(() => localStorage.setItem('theme', 'dark'))
+  for (const style of ['folder', 'stack', 'fan'] as const) {
+    await page.evaluate(value => localStorage.setItem('almanac:doc-switcher-style', value), style)
+    await page.reload()
+    await waitForMainBoot(page)
+    for (const name of ['原子習慣', '番茄鐘', '卡片盒']) await openNote(page, name)
+    if (style !== 'folder') await page.getByRole('button', { name: '展開疊卡' }).click()
+    await page.waitForTimeout(400)
+    await page.screenshot({ path: test.info().outputPath(`dark-${style}.png`) })
+  }
+})
+
+test('切回 classic 介面：沒有文件切換器，回到上游分頁列', async ({ page }) => {
+  for (const name of ['原子習慣', '番茄鐘']) await openNote(page, name)
+  await page.getByRole('button', { name: '設定', exact: true }).click()
+  const settings = page.getByRole('dialog', { name: '設定' })
+  await settings.getByRole('tab', { name: '常規設定', exact: true }).click()
+  await settings.getByRole('switch', { name: '新介面（V3）' }).click()
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('tablist', { name: '已開啟的文件' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: '展開疊卡' })).toHaveCount(0)
+  await page.waitForTimeout(400)
+  await page.screenshot({ path: test.info().outputPath('classic.png') })
+})
