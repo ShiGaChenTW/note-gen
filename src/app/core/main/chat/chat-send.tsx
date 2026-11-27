@@ -28,6 +28,7 @@ import useThreadsStore from '@/stores/threads'
 import { chooseRoute, planSidebarRoute, routeNote, restoreSidebarRoute, savePreferenceLine, shouldRouteSidebarMessage, type SidebarRoutePlan } from '@/lib/router/sidebar'
 import type { RosterEntry, RouteDecision } from '@/lib/router/router'
 import { listProjects, projectOf, threadKey } from '@/lib/threads/projects'
+import { archivedNames } from '@/lib/projects/archive'
 import useRouterStore, { type RouterAnswer } from '@/stores/router'
 import { toast } from '@/hooks/use-toast'
 import { useChatV3 } from './chat-v3'
@@ -504,9 +505,12 @@ export const ChatSend = forwardRef<ChatSendHandle, ChatSendProps>(({
     })
     // Fork（almanac ALMNC-87）：秘書新增任務可掛的現有專案（對話頁的專案分組）與這段對話所屬的專案。
     await useThreadsStore.getState().loadProjects().catch(() => undefined)
-    const { projectMap } = useThreadsStore.getState()
-    const projects = listProjects(useChatStore.getState().conversations, projectMap)
-    const conversationProject = conversation ? projectOf(projectMap, conversation) : ''
+    const { projectMap, archivedProjects } = useThreadsStore.getState()
+    // Fork（almanac ALMNC-89）：已結束（封存）的專案不再掛任務。
+    const archived = archivedNames(archivedProjects)
+    const projects = listProjects(useChatStore.getState().conversations, projectMap, archived)
+    const ownProject = conversation ? projectOf(projectMap, conversation) : ''
+    const conversationProject = archived.has(ownProject) ? '' : ownProject
     return prepareSidebarCommanderRun({
       conversationId: placeholder.conversationId ?? undefined,
       projects,
