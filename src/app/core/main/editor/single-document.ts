@@ -1,6 +1,5 @@
-// Fork（almanac ALMNC-54.17）：V3 一次只開一篇。V3 不顯示分頁列，也不分割；
-// 編輯器版面只留「使用中的那個群組裡、使用中的那一頁」，其餘分頁從版面拿掉，交給呼叫端從 openTabs 移除。
-// 開新檔時沿用原本的流程（加一頁），再由這裡把舊的那頁收掉，等於「取代目前這篇」。
+// Fork（almanac ALMNC-97.1，取代 ALMNC-54.17 的單篇模式）：V3 可以同時開多篇，用文件切換器切換；
+// 但仍然只有一個編輯群組，不分割。這裡把分割的窗格收成一個群組，所有分頁都留下來。
 import {
   getEditorGroupIds,
   type EditorGroupNode,
@@ -18,40 +17,33 @@ function findGroupNode(node: EditorLayoutNode, groupId: string): EditorGroupNode
 }
 
 /**
- * 把版面收成單一群組、單一分頁。
- * keepTabId：要留下的分頁（通常是 store 的 activeTabId）；不在版面裡時改留使用中群組的使用中分頁。
- * 已經是單一群組且最多一頁時原樣回傳（同一個物件），removedTabIds 為空。
+ * 把版面收成單一群組，保留所有分頁。
+ * keepTabId：收完後的使用中分頁（通常是 store 的 activeTabId）；不在版面裡時沿用使用中群組的使用中分頁。
+ * 分頁順序：留下的群組在前，其他群組的分頁依群組順序接在後面（重複的去掉）。
+ * 已經是單一群組、沒有最大化時原樣回傳（同一個物件），不去改使用中分頁——切換分頁時版面會先更新、
+ * store 的 activeTabId 稍後才跟上，這時不能拿舊的 activeTabId 把版面改回去。
  */
-export function collapseToSingleDocument(
+export function collapseToSingleGroup(
   layout: EditorWorkspaceLayout,
   keepTabId?: string,
-): { layout: EditorWorkspaceLayout, removedTabIds: string[] } {
+): EditorWorkspaceLayout {
   const groupIds = getEditorGroupIds(layout.root).filter(id => layout.groups[id])
-  if (groupIds.length === 0) return { layout, removedTabIds: [] }
+  if (groupIds.length === 0) return layout
+  if (groupIds.length === 1 && !layout.maximizedGroupId) return layout
   const keepGroupId = (keepTabId && groupIds.find(id => layout.groups[id].tabIds.includes(keepTabId)))
     || (layout.groups[layout.activeGroupId] && groupIds.includes(layout.activeGroupId) ? layout.activeGroupId : groupIds[0])
   const keepGroup = layout.groups[keepGroupId]
-  const keep = keepTabId && keepGroup.tabIds.includes(keepTabId)
+  const tabIds = [...new Set([keepGroupId, ...groupIds.filter(id => id !== keepGroupId)].flatMap(id => layout.groups[id].tabIds))]
+  const activeTabId = keepTabId && tabIds.includes(keepTabId)
     ? keepTabId
-    : keepGroup.tabIds.includes(keepGroup.activeTabId) ? keepGroup.activeTabId : keepGroup.tabIds.at(-1) ?? ''
-
-  const allTabIds = groupIds.flatMap(id => layout.groups[id].tabIds)
-  const removedTabIds = [...new Set(allTabIds.filter(id => id !== keep))]
-  const alreadySingle = groupIds.length === 1
-    && keepGroup.tabIds.length <= 1
-    && keepGroup.activeTabId === keep
-    && !layout.maximizedGroupId
-  if (alreadySingle) return { layout, removedTabIds: [] }
+    : tabIds.includes(keepGroup.activeTabId) ? keepGroup.activeTabId : tabIds.at(-1) ?? ''
 
   const node = findGroupNode(layout.root, keepGroupId)
   return {
-    layout: {
-      ...layout,
-      root: { type: 'group', id: node?.id ?? `editor-node-${keepGroupId}`, groupId: keepGroupId },
-      groups: { [keepGroupId]: { ...keepGroup, tabIds: keep ? [keep] : [], activeTabId: keep } },
-      activeGroupId: keepGroupId,
-      maximizedGroupId: undefined,
-    },
-    removedTabIds,
+    ...layout,
+    root: { type: 'group', id: node?.id ?? `editor-node-${keepGroupId}`, groupId: keepGroupId },
+    groups: { [keepGroupId]: { ...keepGroup, tabIds, activeTabId } },
+    activeGroupId: keepGroupId,
+    maximizedGroupId: undefined,
   }
 }

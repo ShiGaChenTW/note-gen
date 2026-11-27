@@ -1,50 +1,48 @@
-// almanac ALMNC-54.17：V3 一次只開一篇——版面收成單一群組、單一分頁。
+// almanac ALMNC-97.1：V3 可同時開多篇，但只有一個編輯群組——分割的窗格收成一個，分頁全部留下。
 import { describe, expect, it } from 'vitest'
 import type { OpenTabInfo } from '@/stores/article'
 import { createEditorWorkspaceLayout, getEditorGroupIds, splitEditorGroup } from './editor-group-layout'
-import { collapseToSingleDocument } from './single-document'
+import { collapseToSingleGroup } from './single-document'
 
 const tab = (id: string): OpenTabInfo => ({ id, path: `${id}.md`, name: id, isFolder: false, kind: 'file' })
 
-describe('collapseToSingleDocument', () => {
-  it('leaves a single-tab layout untouched', () => {
-    const layout = createEditorWorkspaceLayout([tab('a')])
-    const result = collapseToSingleDocument(layout, 'a')
-    expect(result.layout).toBe(layout)
-    expect(result.removedTabIds).toEqual([])
+describe('collapseToSingleGroup', () => {
+  it('leaves a single-group layout untouched', () => {
+    const layout = createEditorWorkspaceLayout([tab('a'), tab('b')])
+    expect(collapseToSingleGroup(layout, 'b')).toBe(layout)
   })
 
   it('leaves an empty layout untouched', () => {
     const layout = createEditorWorkspaceLayout([])
-    expect(collapseToSingleDocument(layout, '').layout).toBe(layout)
+    expect(collapseToSingleGroup(layout, '')).toBe(layout)
   })
 
-  it('replaces the previous document: keeps the newly opened tab, drops the rest', () => {
-    // 開新檔時新分頁加在最後並成為使用中，舊的那頁要被收掉
+  it('keeps every tab when a new document is opened (no longer replaces the previous one)', () => {
     const layout = createEditorWorkspaceLayout([tab('old'), tab('new')])
-    const result = collapseToSingleDocument(layout, 'new')
-    const group = result.layout.groups[result.layout.activeGroupId]
-    expect(group.tabIds).toEqual(['new'])
-    expect(group.activeTabId).toBe('new')
-    expect(result.removedTabIds).toEqual(['old'])
+    const result = collapseToSingleGroup(layout, 'old')
+    expect(result).toBe(layout)
+    expect(result.groups[result.activeGroupId].tabIds).toEqual(['old', 'new'])
   })
 
-  it('collapses split panes into the group holding the kept tab', () => {
+  it('merges split panes into one group, keeping all tabs and clearing maximize', () => {
     const base = createEditorWorkspaceLayout([tab('a'), tab('b'), tab('c')])
     const split = splitEditorGroup(base, base.activeGroupId, 'right', 'c', { moveFromGroupId: base.activeGroupId })
     expect(getEditorGroupIds(split.root)).toHaveLength(2)
-    const result = collapseToSingleDocument({ ...split, maximizedGroupId: split.activeGroupId }, 'a')
-    expect(getEditorGroupIds(result.layout.root)).toHaveLength(1)
-    const group = result.layout.groups[result.layout.activeGroupId]
-    expect(group.tabIds).toEqual(['a'])
-    expect(result.layout.maximizedGroupId).toBeUndefined()
-    expect(result.removedTabIds.sort()).toEqual(['b', 'c'])
+    const result = collapseToSingleGroup({ ...split, maximizedGroupId: split.activeGroupId }, 'a')
+    expect(getEditorGroupIds(result.root)).toHaveLength(1)
+    const group = result.groups[result.activeGroupId]
+    expect([...group.tabIds].sort()).toEqual(['a', 'b', 'c'])
+    expect(group.tabIds[0]).toBe('a')
+    expect(group.activeTabId).toBe('a')
+    expect(result.maximizedGroupId).toBeUndefined()
   })
 
   it('falls back to the active group tab when the kept id is unknown', () => {
-    const layout = createEditorWorkspaceLayout([tab('a'), tab('b')])
-    const result = collapseToSingleDocument(layout, 'missing')
-    expect(result.layout.groups[result.layout.activeGroupId].tabIds).toEqual(['b'])
-    expect(result.removedTabIds).toEqual(['a'])
+    const base = createEditorWorkspaceLayout([tab('a'), tab('b'), tab('c')])
+    const split = splitEditorGroup(base, base.activeGroupId, 'right', 'c', { moveFromGroupId: base.activeGroupId })
+    const result = collapseToSingleGroup(split, 'missing')
+    const group = result.groups[result.activeGroupId]
+    expect([...group.tabIds].sort()).toEqual(['a', 'b', 'c'])
+    expect(group.activeTabId).toBe(split.groups[split.activeGroupId].activeTabId)
   })
 })
