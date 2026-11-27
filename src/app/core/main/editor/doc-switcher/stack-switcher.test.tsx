@@ -33,7 +33,7 @@ afterEach(async () => {
 async function render(tabs: TabInfo[], activeTabId: string, variant: 'stack' | 'fan' = 'stack', onSwitch = vi.fn()) {
   await act(async () => root.render(
     <NextIntlClientProvider locale="zh-TW" messages={zhTW} timeZone="Asia/Taipei">
-      <StackSwitcher variant={variant} tabs={tabs} activeTabId={activeTabId} onSwitch={onSwitch} onClose={vi.fn()} onPin={vi.fn()} onUnpin={vi.fn()} cycleTargetId={null} onWheel={vi.fn()}>
+      <StackSwitcher variant={variant} tabs={tabs} activeTabId={activeTabId} onSwitch={onSwitch} onClose={vi.fn()} onPin={vi.fn()} onUnpin={vi.fn()} onCloseOthers={vi.fn()} onCloseAll={vi.fn()} onMoveToNewWindow={vi.fn()} cycleTargetId={null} onWheel={vi.fn()}>
         <div>content</div>
       </StackSwitcher>
     </NextIntlClientProvider>,

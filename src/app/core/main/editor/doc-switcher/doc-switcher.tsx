@@ -16,6 +16,10 @@ export interface DocSwitcherActions {
   onClose: (tabId: string) => void
   onPin: (tabId: string) => void
   onUnpin: (tabId: string) => void
+  /** 右鍵選單（ALMNC-97.7）：關閉其他／全部都不會關掉固定的分頁。 */
+  onCloseOthers: (tabId: string) => void
+  onCloseAll: () => void
+  onMoveToNewWindow: (tabId: string) => void
 }
 
 export interface DocSwitcherViewProps extends DocSwitcherActions {

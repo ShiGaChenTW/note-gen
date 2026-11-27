@@ -304,6 +304,9 @@ function EditorGroupPane({
           onClose={tabId => onCloseTab(group.id, tabId)}
           onPin={onPinTab}
           onUnpin={onUnpinTab}
+          onCloseOthers={tabId => onKeepTabs(group.id, [tabId])}
+          onCloseAll={() => onKeepTabs(group.id, [])}
+          onMoveToNewWindow={tabId => onMoveToNewWindow(group.id, tabId)}
         >
           <EditorNoteToolbar
             activeTab={activeTab}
@@ -1828,7 +1831,8 @@ export const EditorLayout = memo(function EditorLayout() {
       }
       const modifier = event.metaKey || event.ctrlKey
       if (!modifier) return
-      if (event.key === '\\') {
+      // Fork（almanac ALMNC-97.7）：V3 只有一個編輯群組，不提供分割（decision-1）。
+      if (event.key === '\\' && !isV3Ref.current) {
         const group = layoutRef.current.groups[layoutRef.current.activeGroupId]
         if (!group?.activeTabId) return
         event.preventDefault()

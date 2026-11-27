@@ -16,14 +16,16 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import type { TabInfo } from '../tab-bar'
-import type { DocSwitcherViewProps } from './doc-switcher'
+import type { DocSwitcherActions, DocSwitcherViewProps } from './doc-switcher'
 import { ensureShown, folderTabCapacity, splitVisibleTabs } from './recency'
 import { tabIcon, tabTitle } from './tab-meta'
+import { TabContextMenu } from './tab-context-menu'
 import { prefersReducedMotion, SWITCH_MS } from './motion'
 
 const LIFT = 'translateY(-6px) scale(1.04)'
 
-export function FolderTabsSwitcher({ tabs, activeTabId, cycleTargetId, onWheel, onSwitch, onClose, children }: DocSwitcherViewProps) {
+export function FolderTabsSwitcher({ tabs, activeTabId, cycleTargetId, onWheel, children, ...actions }: DocSwitcherViewProps) {
+  const { onSwitch, onClose } = actions
   const t = useTranslations('editor.docSwitcher')
   const rowRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
@@ -100,6 +102,7 @@ export function FolderTabsSwitcher({ tabs, activeTabId, cycleTargetId, onWheel, 
           {visible.map((tab, index) => (
             <FolderTab
               key={tab.id}
+              actions={actions}
               tab={tab}
               index={index}
               total={tabs.length}
@@ -145,8 +148,9 @@ export function FolderTabsSwitcher({ tabs, activeTabId, cycleTargetId, onWheel, 
   )
 }
 
-function FolderTab({ tab, index, total, active, targeted, register, onSwitch, onClose }: {
+function FolderTab({ tab, index, total, active, targeted, register, onSwitch, onClose, actions }: {
   tab: TabInfo
+  actions: DocSwitcherActions
   index: number
   total: number
   active: boolean
@@ -159,6 +163,7 @@ function FolderTab({ tab, index, total, active, targeted, register, onSwitch, on
   const Icon = tabIcon(tab)
   const title = tabTitle(tab)
   return (
+    <TabContextMenu tab={tab} actions={actions}>
     <div
       ref={register}
       role="tab"
@@ -200,5 +205,6 @@ function FolderTab({ tab, index, total, active, targeted, register, onSwitch, on
           </button>
         )}
     </div>
+    </TabContextMenu>
   )
 }

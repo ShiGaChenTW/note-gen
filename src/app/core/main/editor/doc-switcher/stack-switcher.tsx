@@ -20,16 +20,18 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useDocSwitcherStore } from '@/stores/doc-switcher'
 import type { TabInfo } from '../tab-bar'
-import type { DocSwitcherViewProps } from './doc-switcher'
+import type { DocSwitcherActions, DocSwitcherViewProps } from './doc-switcher'
 import { ensureShown, splitStackTabs } from './recency'
 import { tabIcon, tabTitle } from './tab-meta'
+import { TabContextMenu } from './tab-context-menu'
 import { prefersReducedMotion, SWITCH_MS } from './motion'
 
 /** 每張後面的卡露出的高度／寬度（px）。 */
 const STEP_Y = 24
 const STEP_X = 28
 
-export function StackSwitcher({ tabs, activeTabId, cycleTargetId, onWheel, onSwitch, onClose, children, variant }: DocSwitcherViewProps & { variant: 'stack' | 'fan' }) {
+export function StackSwitcher({ tabs, activeTabId, cycleTargetId, onWheel, children, variant, ...actions }: DocSwitcherViewProps & { variant: 'stack' | 'fan' }) {
+  const { onSwitch, onClose } = actions
   const t = useTranslations('editor.docSwitcher')
   const recency = useDocSwitcherStore(state => state.recency)
   const expanded = useDocSwitcherStore(state => state.expanded)
@@ -105,6 +107,7 @@ export function StackSwitcher({ tabs, activeTabId, cycleTargetId, onWheel, onSwi
         return (
           <BackCard
             key={tab.id}
+            actions={actions}
             tab={tab}
             depth={d}
             total={tabs.length}
@@ -120,6 +123,7 @@ export function StackSwitcher({ tabs, activeTabId, cycleTargetId, onWheel, onSwi
         className={cn('absolute bottom-0 right-0 z-10 flex min-h-0 min-w-0 flex-col overflow-hidden bg-card', open && 'rounded-t-[10px] border border-b-0 border-border shadow-lg')}
         style={{ top: offsetY, left: offsetX, transition }}
       >
+        <TabContextMenu tab={active} actions={actions}>
         <div className="flex h-8 shrink-0 items-center gap-1.5 border-b border-border px-3 text-xs text-foreground" data-doc-switcher-head>
           <ActiveIcon className="size-3.5 shrink-0" aria-hidden />
           <span className={cn('min-w-0 flex-1 truncate', active.preview && 'italic')} title={active.path || activeTitle}>{activeTitle}</span>
@@ -173,14 +177,16 @@ export function StackSwitcher({ tabs, activeTabId, cycleTargetId, onWheel, onSwi
               </button>
             )}
         </div>
+        </TabContextMenu>
         <div ref={contentRef} className="relative flex min-h-0 min-w-0 flex-1 flex-col">{children}</div>
       </div>
     </div>
   )
 }
 
-function BackCard({ tab, depth, total, open, targeted, style, onHover, onChoose }: {
+function BackCard({ tab, actions, depth, total, open, targeted, style, onHover, onChoose }: {
   tab: TabInfo
+  actions: DocSwitcherActions
   depth: number
   total: number
   open: boolean
@@ -193,6 +199,7 @@ function BackCard({ tab, depth, total, open, targeted, style, onHover, onChoose 
   const Icon = tabIcon(tab)
   const title = tabTitle(tab)
   return (
+    <TabContextMenu tab={tab} actions={actions}>
     <button
       type="button"
       tabIndex={open ? 0 : -1}
@@ -221,5 +228,6 @@ function BackCard({ tab, depth, total, open, targeted, style, onHover, onChoose 
         {tab.pinned && <Pin className="size-3 shrink-0 text-primary" aria-hidden />}
       </span>
     </button>
+    </TabContextMenu>
   )
 }

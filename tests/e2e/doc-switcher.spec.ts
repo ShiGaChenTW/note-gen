@@ -127,3 +127,25 @@ test('按住 ⌃ 連按 Tab 選卡，放開才切換；途中 Esc 取消', async
   await page.keyboard.up('Control')
   await expect(title).toHaveValue('原子習慣')
 })
+
+test('右鍵選單：固定一張後「關閉其他」，固定的留著；沒有分割畫面', async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 900 })
+  for (const name of ['原子習慣', '番茄鐘', '卡片盒']) await openNote(page, name)
+  const tabs = page.getByRole('tablist', { name: '已開啟的文件' })
+
+  await tabs.getByRole('tab', { name: /原子習慣/ }).click({ button: 'right' })
+  await page.getByRole('menuitem', { name: '固定分頁' }).click()
+  await expect(tabs.getByRole('tab').first()).toHaveAccessibleName(/原子習慣/)
+
+  await tabs.getByRole('tab', { name: /卡片盒/ }).click({ button: 'right' })
+  await expect(page.getByRole('menuitem', { name: /拆分/ })).toHaveCount(0)
+  await page.getByRole('menuitem', { name: '關閉其他' }).click()
+  await expect(tabs.getByRole('tab', { name: /番茄鐘/ })).toHaveCount(0)
+  await expect(tabs.getByRole('tab', { name: /原子習慣/ })).toBeVisible()
+  await expect(tabs.getByRole('tab', { name: /卡片盒/ })).toBeVisible()
+
+  await tabs.getByRole('tab', { name: /卡片盒/ }).click({ button: 'right' })
+  await page.getByRole('menuitem', { name: '關閉全部' }).click()
+  await expect(tabs.getByRole('tab', { name: /卡片盒/ })).toHaveCount(0)
+  await expect(tabs.getByRole('tab', { name: /原子習慣/ })).toBeVisible()
+})
