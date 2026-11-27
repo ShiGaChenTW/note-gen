@@ -9777,6 +9777,13 @@
         "conclusions": "重點結論",
         "open": "待釐清"
       }
+    },
+    "reviewPack": {
+      "summary": "{name} 回顧「{domain}」：{count, number} 則零散片段，建議你親手整理",
+      "notes": "這群筆記",
+      "toast": {
+        "done": "已整理好「{title}」"
+      }
     }
   },
   "cleanup": {

@@ -330,3 +330,59 @@ it('persists a weekly sibling proposal and an evidence-based page split, and ski
   expect(restored[0].proposals.map(item => item.mocBranch)).toEqual(items.map(item => item.mocBranch))
   expect((await runWeeklyMocs(NOW, arrange(true).deps)).filter(item => item.mocBranch)).toEqual([])
 })
+
+// Fork（almanac ALMNC-88）：專家回顧領域時，同一主題零散片段過多 → 產生「建議你親手整理」卡（AI 用固定回應）。
+describe('weekly MOC review → 建議你親手整理', () => {
+  function withHandwork(output: object, options: { threshold?: number, existing?: string[][] } = {}) {
+    const ctx = setup(output)
+    const added: Array<{ domainId: string, domainName: string, topic: string, reason: string, paths: string[], agentId?: string }> = []
+    ctx.deps.handwork = {
+      threshold: vi.fn(async () => options.threshold ?? 5),
+      existing: vi.fn(async () => (options.existing ?? []).map(paths => ({ paths }))),
+      add: vi.fn(async pack => { added.push(pack) }),
+    }
+    return { ...ctx, added }
+  }
+  const fragments = [{ topic: '時段切法', reason: '六則都只有一兩句、彼此重複', notes: [0, 1, 2, 3, 4, 5] }]
+
+  it('片段數達門檻時產生一張卡，列出那群筆記與領域', async () => {
+    const { deps, added, ask } = withHandwork({ fragments })
+    await runWeeklyMocs(NOW, deps)
+    expect(ask.mock.calls[0][0]).toContain('fragments:')
+    expect(added).toEqual([{
+      domainId: ID, domainName: '時間管理', topic: '時段切法', reason: '六則都只有一兩句、彼此重複',
+      paths: [0, 1, 2, 3, 4, 5].map(notePath),
+    }])
+  })
+
+  it('門檻可調：門檻高於片段數時不產生，也不在提示詞裡要求', async () => {
+    const { deps, added, ask } = withHandwork({ fragments }, { threshold: 7 })
+    await runWeeklyMocs(NOW, deps)
+    expect(added).toEqual([])
+    expect(ask.mock.calls[0][0]).not.toContain('fragments:')
+  })
+
+  it('同一群筆記已有未處理卡就不重複產生', async () => {
+    const { deps, added } = withHandwork({ fragments }, { existing: [[0, 1, 2, 3, 4, 5].map(notePath)] })
+    await runWeeklyMocs(NOW, deps)
+    expect(added).toEqual([])
+  })
+
+  it('不影響同一次回顧的其他整理提案；沒接 handwork 時照舊', async () => {
+    const output = { fragments, open: [{ text: '還需要例子嗎？', kind: 'gap', notes: [1] }] }
+    const { deps, added } = withHandwork(output)
+    expect(await runWeeklyMocs(NOW, deps)).toHaveLength(1)
+    expect(added).toHaveLength(1)
+    const plain = setup(output)
+    expect(await runWeeklyMocs(NOW, plain.deps)).toHaveLength(1)
+    expect(plain.ask.mock.calls[0][0]).not.toContain('fragments:')
+  })
+
+  it('寫入失敗只記錯誤，不擋其他提案', async () => {
+    const { deps } = withHandwork({ fragments, open: [{ text: '還需要例子嗎？', kind: 'gap', notes: [1] }] })
+    deps.handwork!.add = vi.fn(async () => { throw new Error('db down') })
+    const errors: string[] = []
+    expect(await runWeeklyMocs(NOW, deps, [], errors)).toHaveLength(1)
+    expect(errors.join('\n')).toContain('db down')
+  })
+})

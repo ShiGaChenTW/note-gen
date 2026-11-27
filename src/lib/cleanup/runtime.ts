@@ -5,6 +5,7 @@ import { createTranslator, type AbstractIntlMessages } from 'next-intl'
 import { DEFAULT_LOCALE, LANGUAGE_STORAGE_KEY, loadMessagesWithFallback, normalizeLocale } from '@/i18n/config'
 import type { RosterAgent } from '@/lib/commander/types'
 import type { CheckDeps } from './check'
+import { DEFAULT_FRAGMENT_THRESHOLD, FRAGMENT_COOLDOWN_DAYS, parseFragmentThreshold } from './fragments'
 import { intervalsByDomain, type ReconfirmInterval } from './interval'
 import type { CleanupLabels } from './plan'
 import { storeQueue, type CleanupQueue } from './queue'
@@ -225,6 +226,25 @@ export async function createWeeklyMocDeps(check: CheckDeps, ask: WeeklyMocDeps['
     noteId: path => {
       const id = vault.notes.get(path)?.frontmatter?.id
       return typeof id === 'string' && id.trim() ? id.trim() : undefined
+    },
+    // Fork（almanac ALMNC-88）：同一主題零散片段太多 → 「建議你親手整理」卡。門檻讀專家 rules.md（沒寫用預設 5 則）。
+    handwork: {
+      threshold: async agentId => {
+        if (!agentId) return DEFAULT_FRAGMENT_THRESHOLD
+        const [agents, memory] = await Promise.all([roster(), import('@/db/agent-memory')])
+        const agent = agents.find(item => item.id === agentId)
+        return (agent && parseFragmentThreshold((await memory.getAgentMemory(agent)).rules.content)) || DEFAULT_FRAGMENT_THRESHOLD
+      },
+      existing: async () => (await import('@/db/v3-review-packs')).listReviewPacksForDedup(Date.now() - FRAGMENT_COOLDOWN_DAYS * 86_400_000),
+      add: async ({ agentId, ...pack }) => {
+        verifyWorkspace()
+        const [packsDb, { newOpId }, agents, { refreshReviewPacks }] = await Promise.all([
+          import('@/db/v3-review-packs'), import('@/lib/ops/ids'), roster().catch(() => [] as RosterAgent[]), import('@/lib/workbench/actions'),
+        ])
+        const by = (agentId && agents.find(item => item.id === agentId)?.name) || check.commanderName
+        await packsDb.addReviewPack({ ...pack, id: newOpId().replace(/^op-/, 'rp-'), ...(by ? { by } : {}), createdAt: Date.now() })
+        await refreshReviewPacks()
+      },
     },
     labels: {
       start: t('moc.start'),

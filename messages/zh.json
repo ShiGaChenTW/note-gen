@@ -9711,6 +9711,13 @@
         "conclusions": "重点结论",
         "open": "待厘清"
       }
+    },
+    "reviewPack": {
+      "summary": "{name} 回顾「{domain}」：{count, number} 则零散片段，建议你亲手整理",
+      "notes": "这组笔记",
+      "toast": {
+        "done": "已整理好「{title}」"
+      }
     }
   },
   "cleanup": {

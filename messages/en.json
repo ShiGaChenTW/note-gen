@@ -9711,6 +9711,13 @@
         "conclusions": "Key conclusions",
         "open": "Open questions"
       }
+    },
+    "reviewPack": {
+      "summary": "{name} reviewed “{domain}”: {count, number} scattered fragments — consider consolidating them by hand",
+      "notes": "These notes",
+      "toast": {
+        "done": "Marked “{title}” as organized"
+      }
     }
   },
   "cleanup": {
