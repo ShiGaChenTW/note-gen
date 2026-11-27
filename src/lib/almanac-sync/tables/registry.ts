@@ -13,6 +13,8 @@ export interface AlmanacTableContext {
   now(): number
   /** 這次是不是這台裝置第一次 V3 同步（M10：先拉、再合併、再推） */
   firstSync: boolean
+  /** Fork（almanac ALMNC-85.3）：目前的筆記庫（本機路徑）。筆記庫層的表（ops）寫入本機時填進 workspace 欄位（設計 1.6）。 */
+  libraryScope: string
 }
 
 export interface LocalSyncRow<V extends SyncValue> {
@@ -66,6 +68,11 @@ export interface AlmanacAppendTable<E extends AppendEntry = AppendEntry> {
   readOwn(context: AlmanacTableContext): Promise<E[]>
   /** 收進來的紀錄（含自己以前寫、但本機遺失的）；呼叫端保證依時間排序，實作要以 uid 去重 */
   applyRemote(context: AlmanacTableContext, entries: E[]): Promise<void>
+  /**
+   * Fork（almanac ALMNC-85.3）：還要不要留著這筆（例如 ops 超過 30 天就不能復原、本機也會清掉）。
+   * 沒給＝永遠留（活動紀錄）。不留的紀錄不上傳、不收、也不算「本機遺失要救回」。
+   */
+  retain?(entry: E, now: number): boolean
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -9,6 +9,7 @@ import {
   type RulesChangeProposal, type SavedSharedContext, type SharedContext, type SoulTemplateAgent,
 } from '@/lib/agent-memory'
 import { ACTIVITY_OP_COLUMN, ACTIVITY_OP_TRIGGER, AGENT_MEMORY_SCHEMA, migrateActivityLog } from '@/lib/agent-memory/schema'
+import { notifyAlmanacLocalChange } from '@/lib/almanac-sync/notify'
 
 export const MEMORY_CONTENT_MAX = 20000
 
@@ -105,6 +106,8 @@ export async function writeAgentMemory(
      on conflict(agent_id, kind) do update set content = excluded.content, updated_at = excluded.updated_at, updated_by = excluded.updated_by`,
     [agent.id, kind, content, now, actorLabel(actor)],
   )
+  // Fork（almanac ALMNC-85.3）：夥伴記憶跟著 V3 同步（crew.json）；同步關著時不做事。
+  notifyAlmanacLocalChange('agent-memory')
   return { status: 'saved' }
 }
 
@@ -125,7 +128,10 @@ export async function appendAgentWorkNotes(actor: MemoryActor, agent: MemoryAgen
        where agent_memory.content = $5 and $6 is not null`,
       [agent.id, content, Date.now(), actorLabel(actor), workNotes.content, workNotes.updatedAt],
     )
-    if (result.rowsAffected) return
+    if (result.rowsAffected) {
+      notifyAlmanacLocalChange('agent-work-notes')
+      return
+    }
   }
   throw new Error('WORK_NOTES_CHANGED')
 }
@@ -163,6 +169,7 @@ export async function saveSharedContext(actor: MemoryActor, context: SharedConte
       JSON.stringify(result.context.people), now, actorLabel(actor),
     ],
   )
+  notifyAlmanacLocalChange('shared-context')
 }
 
 /** 只補入新的脈絡，不覆蓋 Scott 在設定頁寫的標題、連結或清單順序。 */
@@ -190,7 +197,10 @@ export async function mergeSharedContext(actor: MemoryActor, additions: SharedCo
       [JSON.stringify(projects), JSON.stringify(weeklyFocus), JSON.stringify(people),
         Math.max(Date.now(), (current.updatedAt ?? 0) + 1), actorLabel(actor), current.updatedAt, current.updatedBy],
     )
-    if (result.rowsAffected) return
+    if (result.rowsAffected) {
+      notifyAlmanacLocalChange('shared-context')
+      return
+    }
   }
   throw new Error('SHARED_CONTEXT_CHANGED')
 }
@@ -199,6 +209,7 @@ interface ActivityRow {
   id: number, at: number, actorId: string, actorRole: ActivityEntry['actorRole'], action: string, targetLink: string
   sourceKind: ActivityEntry['source']['kind'], sourceRef: string, note: string, correctsId: number | null, archivedAt: number | null
   opId: string | null
+  originDevice?: string | null
 }
 
 const SELECT_ACTIVITY = `select id, at, actor_id as actorId, actor_role as actorRole, action, target_link as targetLink,
@@ -207,8 +218,44 @@ const SELECT_ACTIVITY = `select id, at, actor_id as actorId, actor_role as actor
 
 function activityFromRow(row: ActivityRow): ActivityEntry | undefined {
   if (!isActivityAction(row.action)) return undefined
-  const { sourceKind, sourceRef, ...rest } = row
-  return { ...rest, action: row.action, source: { kind: sourceKind, ref: sourceRef } }
+  const { sourceKind, sourceRef, originDevice, ...rest } = row
+  return { ...rest, action: row.action, source: { kind: sourceKind, ref: sourceRef }, ...(originDevice ? { originDevice } : {}) }
+}
+
+/**
+ * Fork（almanac ALMNC-85.3）：V3 同步開過（M1 補了欄位）才有的資訊——寫這筆的裝置、更正晚到時用 corrects_uid 找回被更正的那筆；
+ * 發起者 id 是另一台的單例夥伴時，查別名表換成這台那位（actor_id 只能新增、不能改，設計 1.3）。
+ */
+async function withSyncInfo(db: Awaited<ReturnType<typeof memoryDb>>, rows: ActivityRow[]): Promise<ActivityRow[]> {
+  if (!rows.length) return rows
+  const columns = await db.select<Array<{ name: string }>>('pragma table_info(activity_log)')
+  if (!columns.some(column => column.name === 'uid')) return rows
+  const ids = rows.map(row => row.id)
+  const extra = await db.select<Array<{ id: number, originDevice: string | null, correctsUid: string | null }>>(
+    `select id, origin_device as originDevice, corrects_uid as correctsUid from activity_log where id in (${ids.map((_, index) => `$${index + 1}`).join(', ')})`,
+    ids,
+  )
+  const byId = new Map(extra.map(row => [Number(row.id), row]))
+  const aliases = new Map<string, string>()
+  try {
+    const aliasRows = await db.select<Array<{ aliasId: string, canonicalId: string }>>(
+      "select alias_id as aliasId, canonical_id as canonicalId from almanac_sync_aliases where table_name = 'agents'",
+    )
+    for (const row of aliasRows) aliases.set(row.aliasId, row.canonicalId)
+  } catch {
+    // 沒開過 V3 同步：沒有別名表。
+  }
+  const result: ActivityRow[] = []
+  for (const row of rows) {
+    const info = byId.get(row.id)
+    let correctsId = row.correctsId
+    if (correctsId === null && info?.correctsUid) {
+      const [target] = await db.select<Array<{ id: number }>>('select id from activity_log where uid = $1', [info.correctsUid])
+      correctsId = target ? Number(target.id) : null
+    }
+    result.push({ ...row, actorId: aliases.get(row.actorId) ?? row.actorId, correctsId, originDevice: info?.originDevice ?? null })
+  }
+  return result
 }
 
 /** 系統寫一筆活動紀錄，回傳新編號。時間由系統填。 */
@@ -227,6 +274,7 @@ export async function appendActivity(actor: MemoryActor, input: ActivityEntryInp
      values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
     [now, entry.actorId, entry.actorRole, entry.action, entry.targetLink, entry.sourceKind, entry.sourceRef, entry.note, entry.correctsId, entry.opId],
   )
+  notifyAlmanacLocalChange('activity')
   if (typeof inserted.lastInsertId === 'number') return inserted.lastInsertId
   const [row] = await db.select<Array<{ id: number }>>('select max(id) as id from activity_log')
   return row.id
@@ -261,7 +309,7 @@ export async function listActivity(options: { limit?: number, includeArchived?: 
     `${SELECT_ACTIVITY} ${where.length ? `where ${where.join(' and ')}` : ''} order by at desc, id desc limit $1`,
     options.actorId ? [limit, options.actorId] : [limit],
   )
-  return rows.flatMap(row => activityFromRow(row) ?? [])
+  return (await withSyncInfo(db, rows)).flatMap(row => activityFromRow(row) ?? [])
 }
 
 /** Fork（almanac ALMNC-71）：還沒封存的紀錄裡出現過的發起者（最近有紀錄的在前），給設定頁的篩選選單用。 */
@@ -296,6 +344,7 @@ export async function saveScottPreferences(actor: MemoryActor, content: string, 
      on conflict(id) do update set content = excluded.content, updated_at = excluded.updated_at`,
     [content, now],
   )
+  notifyAlmanacLocalChange('scott-preferences')
 }
 
 /** 給 runner 用：這個 agent 的 soul、rules、工作筆記，加上 Scott 的偏好和目前脈絡標題。 */

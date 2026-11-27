@@ -70,6 +70,8 @@ export interface ActivityEntry extends Omit<ActivityEntryInput, 'note' | 'correc
   archivedAt: number | null
   /** 舊紀錄沒有。 */
   opId?: string | null
+  /** Fork（almanac ALMNC-85.3）：寫這筆的裝置（V3 同步開過才有；跟這台不同＝另一台的紀錄）。 */
+  originDevice?: string | null
 }
 
 export type ActivityValidationError =

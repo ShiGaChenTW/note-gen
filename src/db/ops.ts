@@ -5,6 +5,7 @@
 import { getDb } from './index'
 import type { OpsStore } from '@/lib/ops/service'
 import { OP_KINDS, type OpActor, type OpKind, type OpRecord, type OpSpec } from '@/lib/ops/types'
+import { OPS_SCHEMA } from '@/lib/ops/schema'
 
 interface OpRow {
   id: string
@@ -24,31 +25,37 @@ interface OpRow {
 const COLUMNS = `id, rowid as seq, at, actor, actor_id as actorId, kind, payload, inverse, proposal_id as proposalId,
   batch_id as batchId, base_versions as baseVersions, undone_at as undoneAt`
 
-let initialized: Promise<void> | null = null
+export interface OpsSqlDb {
+  execute(sql: string, values?: unknown[]): Promise<{ rowsAffected?: number } | unknown>
+  select<T>(sql: string, values?: unknown[]): Promise<T>
+}
 
-export function initOpsDb(): Promise<void> {
+let initialized: Promise<void> | null = null
+const initializedOther = new WeakMap<OpsSqlDb, Promise<void>>()
+
+async function createOpsTable(db: OpsSqlDb): Promise<void> {
+  for (const sql of OPS_SCHEMA) await db.execute(sql)
+}
+
+/** 建 ops 表。database：預設是 App 的 note.db；Fork（almanac ALMNC-85.3）雙裝置測試另給 node:sqlite。 */
+export function initOpsDb(database?: () => Promise<OpsSqlDb>): Promise<void> {
+  if (database) {
+    return (async () => {
+      const db = await database()
+      let ready = initializedOther.get(db)
+      if (!ready) {
+        ready = createOpsTable(db).catch(error => {
+          initializedOther.delete(db)
+          throw error
+        })
+        initializedOther.set(db, ready)
+      }
+      await ready
+    })()
+  }
   if (!initialized) {
     initialized = (async () => {
-      const db = await getDb()
-      await db.execute(`
-        create table if not exists ops (
-          id text primary key,
-          workspace text not null default '',
-          at integer not null,
-          actor text not null,
-          actor_id text,
-          kind text not null,
-          payload text not null,
-          inverse text not null,
-          proposal_id text,
-          batch_id text,
-          base_versions text not null default '{}',
-          undone_at integer
-        )
-      `)
-      await db.execute('create index if not exists idx_ops_at on ops(at)')
-      await db.execute('create index if not exists idx_ops_batch on ops(batch_id)')
-      await db.execute('create index if not exists idx_ops_workspace_at on ops(workspace, at)')
+      await createOpsTable(await getDb() as unknown as OpsSqlDb)
     })().catch(error => {
       initialized = null
       throw error
@@ -94,10 +101,20 @@ async function currentWorkspace(): Promise<string> {
 }
 
 /** ops 表的存取；workspace 決定看得到哪些紀錄（App 用目前的筆記庫，測試給固定值）。 */
-export function createOpsDbStore(workspace: () => Promise<string> | string = currentWorkspace): OpsStore {
+export function createOpsDbStore(
+  workspace: () => Promise<string> | string = currentWorkspace,
+  database?: () => Promise<OpsSqlDb>,
+): OpsStore {
+  const open = async () => {
+    await initOpsDb(database)
+    return (database ? await database() : await getDb()) as OpsSqlDb
+  }
+  const notify = () => {
+    // Fork（almanac ALMNC-85.3）：ops 也跟著 V3 同步（設計 2.13），寫入或復原後排一次 almanac 同步（沒開就不做）。
+    if (!database) void import('@/lib/almanac-sync/notify').then(({ notifyAlmanacLocalChange }) => notifyAlmanacLocalChange('ops')).catch(() => undefined)
+  }
   async function select(where: string, values: unknown[]): Promise<OpRecord[]> {
-    await initOpsDb()
-    const db = await getDb()
+    const db = await open()
     const scope = await workspace()
     const rows = await db.select<OpRow[]>(
       `select ${COLUMNS} from ops where workspace = $${values.length + 1} and (${where}) order by at, rowid`,
@@ -110,8 +127,7 @@ export function createOpsDbStore(workspace: () => Promise<string> | string = cur
   return {
     insert: async (records, options) => {
       if (!records.length) return []
-      await initOpsDb()
-      const db = await getDb()
+      const db = await open()
       const scope = await workspace()
       const values = (record: typeof records[number]) => [
         record.id, scope, record.at, record.actor, record.actorId ?? null, record.kind, JSON.stringify(record.payload), JSON.stringify(record.inverse),
@@ -121,9 +137,11 @@ export function createOpsDbStore(workspace: () => Promise<string> | string = cur
       if (options?.atomic) {
         const tuples = records.map((_, index) => `(${placeholders(12, index * 12)})`).join(', ')
         const rows = await db.select<OpRow[]>(`${insert} values ${tuples} returning ${COLUMNS}`, records.flatMap(values))
+        notify()
         return rows.sort((a, b) => a.seq - b.seq).flatMap(row => opFromRow(row) ?? [])
       }
       for (const record of records) await db.execute(`${insert} values (${placeholders(12)})`, values(record))
+      notify()
       return select(`id in (${placeholders(records.length)})`, records.map(record => record.id))
     },
     get: async id => (await select('id = $1', [id]))[0] ?? null,
@@ -131,15 +149,14 @@ export function createOpsDbStore(workspace: () => Promise<string> | string = cur
     getMany: async ids => ids.length ? select(`id in (${placeholders(ids.length)})`, [...ids]) : [],
     markUndone: async (ids, at) => {
       if (!ids.length) return
-      await initOpsDb()
-      const db = await getDb()
+      const db = await open()
       await db.execute(`update ops set undone_at = $1 where id in (${placeholders(ids.length, 1)})`, [at, ...ids])
+      notify()
     },
     // 7 天外的紀錄不分工作區都清掉（不再提供復原）。
     prune: async before => {
-      await initOpsDb()
-      const db = await getDb()
-      const result = await db.execute('delete from ops where at < $1', [before])
+      const db = await open()
+      const result = await db.execute('delete from ops where at < $1', [before]) as { rowsAffected?: number }
       return result.rowsAffected ?? 0
     },
   }

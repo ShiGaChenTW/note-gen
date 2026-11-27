@@ -31,6 +31,8 @@ interface Events {
   'almanac-sync-state-changed': undefined;
   /** Fork（almanac ALMNC-84.8）：待 Scott 確認的遠端同步刪除項目變動。 */
   'pending-sync-deletions-changed': undefined;
+  // Fork（almanac ALMNC-85.3）：V3 同步的確認卡（Scott 的偏好、soul、rules 同段衝突）有變動。
+  'almanac-sync-conflicts-changed': undefined;
   /** Fork（almanac ALMNC-69.3）：收起所有蓋在編輯器上的全頁畫面（從新增資料源對話框開新文件時）。 */
   'show-editor': undefined;
   'searchAndScroll': string;

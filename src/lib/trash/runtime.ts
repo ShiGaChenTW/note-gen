@@ -278,6 +278,15 @@ function createAppEntityHandlers(): TrashEntityHandlers {
     async purgeRssFeed() {
       // 訂閱確認刪除時已從清單移除，快照只在 trash_items.metadata。
     },
+
+    // Fork（almanac ALMNC-85.3）：別台刪掉、Scott 確認的專家放回來（救回算一次修改，下一輪 V3 同步推回另一台）。
+    async restoreAgent(_entityId, item) {
+      const { restoreCrewAgentSnapshot } = await import('@/lib/almanac-sync/pending-record-actions')
+      await restoreCrewAgentSnapshot(item.metadata ?? {})
+    },
+    async purgeAgent() {
+      // 專家確認刪除時已從本機移除，快照只在 trash_items.metadata。
+    },
   }
 }
 

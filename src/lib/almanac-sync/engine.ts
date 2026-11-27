@@ -63,7 +63,7 @@ function joinPath(layer: AlmanacSyncLayer, ...parts: string[]) {
 }
 
 function tableContext(context: AlmanacSyncContext): AlmanacTableContext {
-  return { db: context.db, deviceId: context.deviceId, now: context.now, firstSync: Boolean(context.firstSync) }
+  return { db: context.db, deviceId: context.deviceId, now: context.now, firstSync: Boolean(context.firstSync), libraryScope: context.libraryScope }
 }
 
 async function withConflictRetry<T>(run: () => Promise<T>): Promise<T> {
@@ -306,7 +306,9 @@ async function syncAppendTable(
   const deviceDir = (deviceId: string, ...parts: string[]) => joinPath(table.layer, table.dir, deviceId, ...parts)
 
   // 1. 傳出這台自己的紀錄：只有這台會寫這些檔，所以不會有寫入衝突。
-  const own = await table.readOwn(ctx)
+  const startedAt = context.now()
+  const keep = <E extends AppendEntry>(entries: E[]) => (table.retain ? entries.filter(entry => table.retain?.(entry, startedAt)) : entries)
+  const own = keep(await table.readOwn(ctx))
   const byMonth = new Map<string, AppendEntry[]>()
   for (const entry of own) {
     const month = monthKey(entry.at)
@@ -327,7 +329,7 @@ async function syncAppendTable(
     // 本機資料庫還原過時，遠端可能有這台以前寫、本機已遺失的紀錄：讀回來聯集。
     const current = await remote.read(path)
     const remoteFile = parseAppendJson<AppendFile<AppendEntry>>(current?.content ?? null, table.name, path)
-    const remoteEntries = remoteFile?.entries ?? []
+    const remoteEntries = keep(remoteFile?.entries ?? [])
     const localUids = new Set(localEntries.map(entry => entry.uid))
     recovered.push(...remoteEntries.filter(entry => !localUids.has(entry.uid)))
     const merged = mergeAppendEntries(localEntries, remoteEntries)
@@ -373,13 +375,15 @@ async function syncAppendTable(
       const current = await remote.read(path)
       const file = parseAppendJson<AppendFile<AppendEntry>>(current?.content ?? null, table.name, path)
       if (!file) continue
-      const entries = mergeAppendEntries(file.entries)
+      const all = mergeAppendEntries(file.entries)
+      const entries = keep(all)
       if (entries.length) {
         await table.applyRemote(ctx, entries)
         report.appliedRows += entries.length
         changedLocally = true
       }
-      await setFileState(context.db, scope, path, { hash: hashString(stableStringify(entries)), version: current?.version ?? null }, context.now())
+      // 記檔案本身的雜湊（跟那台 index.json 的一致），過期而沒收的紀錄不會讓下一輪又重讀一次。
+      await setFileState(context.db, scope, path, { hash: hashString(stableStringify(all)), version: current?.version ?? null }, context.now())
     }
   }
   return changedLocally

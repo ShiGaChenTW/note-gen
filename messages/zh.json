@@ -110,7 +110,11 @@
         "relink": "按新文件名改了 {links} 个链接",
         "clock": "时钟可能有误，请检查系统时间",
         "held": "有 {count} 个笔记没有身份编号，数量较多所以没有自动补，请用迁移工具预览后应用"
-      }
+      },
+      "fromDevice": "来自 {name}",
+      "otherDevice": "另一台设备",
+      "pendingConversation": "另一台的对话（尚未同步）",
+      "waitSync": "另一台的操作，等同步完成再撤销"
     }
   },
   "agentDiffNavigation": {
@@ -4242,7 +4246,8 @@
         "memory": "记忆",
         "tag": "标签",
         "source": "数据源",
-        "rss-feed": "RSS 订阅"
+        "rss-feed": "RSS 订阅",
+        "agent": "伙伴"
       },
       "actors": {
         "scott": "Scott",
@@ -4313,7 +4318,8 @@
         "recordGroup": "设置与伙伴",
         "rssFeedBadge": "RSS 订阅",
         "keepRecord": "保留",
-        "keptToast": "已保留“{title}”"
+        "keptToast": "已保留“{title}”",
+        "agentBadge": "伙伴"
       }
     },
     "navigationGroups": {
@@ -9736,6 +9742,25 @@
       "toast": {
         "done": "已整理好「{title}」"
       }
+    },
+    "syncConflict": {
+      "title": "同步确认：{subject}",
+      "subject": {
+        "preferences": "Scott 的偏好",
+        "soul": "{name} 的 soul.md",
+        "rules": "{name} 的 rules.md"
+      },
+      "unknownAgent": "伙伴",
+      "hint": "两台设备都改了同一段。这台的版本先保留，另一台的版本也存着，选一个：",
+      "local": "这台的版本",
+      "remote": "另一台的版本",
+      "useLocal": "用这台的",
+      "useRemote": "用另一台的",
+      "merge": "自己合并",
+      "mergedLabel": "合并后的内容",
+      "saveMerged": "存成这个版本",
+      "cancel": "取消",
+      "failed": "没有处理成功，两版都还在，可以再试一次。"
     }
   },
   "cleanup": {

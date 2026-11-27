@@ -17,6 +17,8 @@ export type TrashEntityType =
   | 'source'
   /** Fork（almanac ALMNC-85.2）：別台刪掉、Scott 確認的 RSS 訂閱（快照在 metadata.feed）。 */
   | 'rss-feed'
+  /** Fork（almanac ALMNC-85.3）：別台刪掉、Scott 確認的專家（快照在 metadata.agent、metadata.memory）。 */
+  | 'agent'
 
 export type TrashActor = 'scott' | 'partner' | 'advisor' | 'system' | 'sync'
 

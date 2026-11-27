@@ -85,8 +85,29 @@ export function AgentMemorySettings({ agents, onAgentsChanged }: { agents: Saved
   const [opStates, setOpStates] = useState<Map<string, OpUiState>>(new Map())
   const [undoing, setUndoing] = useState<number | null>(null)
   const [compare, setCompare] = useState<{ target: UndoTarget, files: CompareFile[], prior?: DomainPrior } | null>(null)
+  /** Fork（almanac ALMNC-85.3）：V3 同步的這台裝置與裝置名稱（標出另一台寫的紀錄）；同步沒開時是 null。 */
+  const [devices, setDevices] = useState<{ deviceId: string, names: Record<string, string> } | null>(null)
 
   const agent = agents.find(item => item.id === selectedId) ?? agents[0]
+
+  useEffect(() => {
+    let active = true
+    import('@/lib/almanac-sync/runtime')
+      .then(({ getAlmanacSyncStatus }) => getAlmanacSyncStatus())
+      .then(status => {
+        if (!active || !status?.enabled) return
+        const names = Object.fromEntries(Object.entries(status.devices?.devices ?? {}).map(([id, info]) => [id, info.name]))
+        setDevices({ deviceId: status.deviceId, names })
+      })
+      .catch(err => console.debug('[agents] sync status unavailable', err))
+    return () => { active = false }
+  }, [])
+
+  /** 另一台寫的紀錄 → 那台的名稱；這台寫的（或同步沒開）→ null。 */
+  const otherDevice = (entry: ActivityEntry): string | null => {
+    if (!entry.originDevice || !devices || entry.originDevice === devices.deviceId) return null
+    return devices.names[entry.originDevice] || t('otherDevice')
+  }
 
   useEffect(() => {
     let active = true
@@ -353,6 +374,9 @@ export function AgentMemorySettings({ agents, onAgentsChanged }: { agents: Saved
                   {shownActivity.map(entry => {
                     const target = undoTargetOf(entry)
                     const undone = entry.opId && opStates.get(entry.opId)?.state === 'undone' && entry.action !== 'undone'
+                    const fromDevice = otherDevice(entry)
+                    // Fork（almanac ALMNC-85.3）：另一台的操作在這台還找不到（ops 還沒同步到）：提示等同步完成再復原。
+                    const waitSync = Boolean(fromDevice && entry.opId && entry.action !== 'undone' && !opStates.has(entry.opId))
                     const repair = entry.source.kind === 'system' ? parseRepairRef(entry.source.ref) : null
                     return (
                     <li key={entry.id} className="space-y-0.5 px-3 py-2 text-xs">
@@ -366,6 +390,7 @@ export function AgentMemorySettings({ agents, onAgentsChanged }: { agents: Saved
                         {repair && <span>{t(`repair.${repair.kind}`, repair.values)}</span>}
                         <span className="break-all">{displayTarget(entry.targetLink)}</span>
                         {entry.correctsId !== null && <span className="text-muted-foreground">{t('correctsEntry', { id: entry.correctsId })}</span>}
+                        {fromDevice && <span className="text-muted-foreground">{t('fromDevice', { name: fromDevice })}</span>}
                       </div>
                       <div className="flex flex-wrap items-center gap-x-2 text-muted-foreground">
                         <span>
@@ -375,7 +400,9 @@ export function AgentMemorySettings({ agents, onAgentsChanged }: { agents: Saved
                               <>
                                 {entry.source.ref.startsWith('op:')
                                   ? t('sourceDirect')
-                                  : t(
+                                  : entry.source.kind === 'conversation' && entry.source.ref.startsWith('conv:')
+                                    ? t('pendingConversation')
+                                    : t(
                                     entry.source.kind === 'proposal'
                                       ? 'sourceProposal'
                                       : entry.source.kind === 'mcp'
@@ -388,6 +415,7 @@ export function AgentMemorySettings({ agents, onAgentsChanged }: { agents: Saved
                             )}
                         </span>
                         {undone && <span>{t('undoneMark')}</span>}
+                        {waitSync && <span>{t('waitSync')}</span>}
                         {target && (
                           <Button
                             type="button" size="sm" variant="outline" className="h-6 px-2 text-xs"

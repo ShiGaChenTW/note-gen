@@ -110,7 +110,11 @@
         "relink": "依新檔名改了 {links} 個連結",
         "clock": "時鐘可能有誤，請檢查系統時間",
         "held": "有 {count} 個筆記沒有身分編號，數量多所以沒有自動補，請用遷移工具預覽後套用"
-      }
+      },
+      "fromDevice": "來自 {name}",
+      "otherDevice": "另一台裝置",
+      "pendingConversation": "另一台的對話（尚未同步）",
+      "waitSync": "另一台的操作，等同步完成再復原"
     }
   },
   "agentDiffNavigation": {
@@ -4308,7 +4312,8 @@
         "memory": "記憶",
         "tag": "標籤",
         "source": "資料源",
-        "rss-feed": "RSS 訂閱"
+        "rss-feed": "RSS 訂閱",
+        "agent": "夥伴"
       },
       "actors": {
         "scott": "Scott",
@@ -4379,7 +4384,8 @@
         "recordGroup": "設定與夥伴",
         "rssFeedBadge": "RSS 訂閱",
         "keepRecord": "保留",
-        "keptToast": "已保留「{title}」"
+        "keptToast": "已保留「{title}」",
+        "agentBadge": "夥伴"
       }
     },
     "navigationGroups": {
@@ -9802,6 +9808,25 @@
       "toast": {
         "done": "已整理好「{title}」"
       }
+    },
+    "syncConflict": {
+      "title": "同步確認：{subject}",
+      "subject": {
+        "preferences": "Scott 的偏好",
+        "soul": "{name} 的 soul.md",
+        "rules": "{name} 的 rules.md"
+      },
+      "unknownAgent": "夥伴",
+      "hint": "兩台裝置都改了同一段。這台的版本先留著，另一台的版本也存著，挑一個：",
+      "local": "這台的版本",
+      "remote": "另一台的版本",
+      "useLocal": "用這台的",
+      "useRemote": "用另一台的",
+      "merge": "自己合併",
+      "mergedLabel": "合併後的內容",
+      "saveMerged": "存成這個版本",
+      "cancel": "取消",
+      "failed": "沒有處理成功，兩版都還在，可以再試一次。"
     }
   },
   "cleanup": {

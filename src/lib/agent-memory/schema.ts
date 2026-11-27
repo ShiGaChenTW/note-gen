@@ -6,7 +6,7 @@
  * source_kind 加 'system' 與 'mcp'，op_id（ALMNC-69.9）直接放進表裡；舊資料庫靠 migrateActivityLog 放寬限制。
  * corrects_id 指向自己這張表：重建時先用 activity_log_v2 的名字建，改名時 SQLite 會一起改掉這個參照。
  */
-export const ACTIVITY_LOG_TABLE_SQL = (name: string) => `create table if not exists ${name} (
+export const ACTIVITY_LOG_TABLE_SQL = (name: string, extraColumns = '') => `create table if not exists ${name} (
     id integer primary key,
     at integer not null,
     actor_id text not null check (length(trim(actor_id)) > 0),
@@ -18,7 +18,7 @@ export const ACTIVITY_LOG_TABLE_SQL = (name: string) => `create table if not exi
     note text not null default '' check (length(note) <= 60),
     corrects_id integer references ${name}(id),
     archived_at integer,
-    op_id text default null
+    op_id text default null${extraColumns}
   )`
 
 /** activity_log 的索引與「只能新增」觸發器（表重建後要重新建立）。 */
@@ -113,6 +113,80 @@ export async function migrateActivityLog(
     { sql: 'alter table activity_log_v2 rename to activity_log', values: [] },
     ...ACTIVITY_LOG_EXTRAS.map(sql => ({ sql, values: [] })),
     { sql: ACTIVITY_OP_TRIGGER, values: [] },
+  ])
+  return true
+}
+
+// ---------- Fork（almanac ALMNC-85.3）：M1 活動紀錄跨裝置同步的欄位 ----------
+
+/**
+ * M1：uid（<deviceId>:<本機 id>，跨裝置不變）、corrects_uid（更正哪一筆的 uid）、origin_device（這筆是哪台寫的）。
+ * 只有第一次開 V3 同步時才重建（同步表的 ensureSchema 呼叫），沒開同步的裝置不受影響。
+ */
+const ACTIVITY_SYNC_COLUMNS = `,
+    uid text default null,
+    corrects_uid text default null,
+    origin_device text default null`
+
+export const ACTIVITY_LOG_SYNC_TABLE_SQL = (name: string) => ACTIVITY_LOG_TABLE_SQL(name, ACTIVITY_SYNC_COLUMNS)
+
+/**
+ * 重建後的觸發器：不准刪除；原本的欄位一律不能改；archived_at 只能從空的標成封存；
+ * 三個同步欄位只能從空的補一次（舊版 App 插入的紀錄這三欄是 null，下一輪同步時由這台補上），補上之後也不能改。
+ */
+export const ACTIVITY_LOG_SYNC_EXTRAS = [
+  'create index if not exists idx_activity_log_at on activity_log(at desc, id desc)',
+  'create unique index if not exists idx_activity_log_uid on activity_log(uid)',
+  `create trigger if not exists activity_log_no_delete before delete on activity_log
+    begin select raise(abort, 'ACTIVITY_LOG_APPEND_ONLY'); end`,
+  `create trigger if not exists activity_log_archive_only before update on activity_log
+    when new.id is not old.id or new.at is not old.at or new.actor_id is not old.actor_id
+      or new.actor_role is not old.actor_role or new.action is not old.action
+      or new.target_link is not old.target_link or new.source_kind is not old.source_kind
+      or new.source_ref is not old.source_ref or new.note is not old.note
+      or new.corrects_id is not old.corrects_id
+      or (new.archived_at is not old.archived_at and (old.archived_at is not null or new.archived_at is null))
+      or (old.uid is not null and new.uid is not old.uid)
+      or (old.corrects_uid is not null and new.corrects_uid is not old.corrects_uid)
+      or (old.origin_device is not null and new.origin_device is not old.origin_device)
+    begin select raise(abort, 'ACTIVITY_LOG_APPEND_ONLY'); end`,
+  ACTIVITY_OP_TRIGGER,
+]
+
+/** 已有 uid 欄位就不必重建。 */
+export function hasActivitySyncColumns(columns: ReadonlyArray<{ name: string }>): boolean {
+  return columns.some(column => column.name === 'uid')
+}
+
+/**
+ * Fork（almanac ALMNC-85.3，M1）：activity_log 加 uid、corrects_uid、origin_device。
+ * 表有「只能新增」觸發器，update 補值會被擋，所以照 migrateActivityLog 的做法重建：建新表 → 整批複製並補
+ * uid = <本機 deviceId>:<id>、corrects_uid、origin_device → 筆數必須相符 → 刪舊表改名 → 重建索引與觸發器（觸發器也保護新欄位），
+ * 整段一個交易，失敗整批還原。已重建過就不做，可以重複呼叫。
+ * 回滾：舊版 App 讀寫多三欄的表不受影響（插入時新欄位是 null，唯一索引允許多個 null）。
+ */
+export async function migrateActivitySyncColumns(
+  db: ActivityMigrationDb,
+  runTransaction: (statements: ActivityMigrationStatement[]) => Promise<void>,
+  deviceId: string,
+): Promise<boolean> {
+  const columns = await db.select<Array<{ name: string }>>('pragma table_info(activity_log)')
+  if (!columns.length || hasActivitySyncColumns(columns)) return false
+  const source = columns.some(column => column.name === 'op_id') ? ACTIVITY_COLUMNS : ACTIVITY_COLUMNS.replace(/op_id$/, 'null')
+  const [{ count }] = await db.select<Array<{ count: number }>>('select count(*) as count from activity_log')
+  await runTransaction([
+    { sql: 'drop table if exists activity_log_v2', values: [] },
+    { sql: ACTIVITY_LOG_SYNC_TABLE_SQL('activity_log_v2'), values: [] },
+    {
+      sql: `insert into activity_log_v2 (${ACTIVITY_COLUMNS}, uid, corrects_uid, origin_device)
+        select ${source}, $1 || ':' || id, case when corrects_id is null then null else $1 || ':' || corrects_id end, $1
+        from activity_log order by id`,
+      values: [deviceId],
+      expectedRows: Number(count),
+    },
+    { sql: 'drop table activity_log', values: [] },
+    { sql: 'alter table activity_log_v2 rename to activity_log', values: [] },
+    ...ACTIVITY_LOG_SYNC_EXTRAS.map(sql => ({ sql, values: [] })),
   ])
   return true
 }
