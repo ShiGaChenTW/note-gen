@@ -25,6 +25,10 @@ interface Events {
   'plugin-records-changed': undefined;
   /** Fork（almanac ALMNC-84.4）：最近刪除項目變動（移入、還原、永久刪除、過期清理）。 */
   'trash-changed': undefined;
+  /** Fork（almanac ALMNC-85.2）：V3 同步把遠端資料寫進本機（畫面上的 store 要重新載入，設計 6 風險 6）。 */
+  'almanac-sync-applied': { tables: string[] };
+  /** Fork（almanac ALMNC-85.2）：V3 同步狀態（開關、主力裝置、首次同步）變動。 */
+  'almanac-sync-state-changed': undefined;
   /** Fork（almanac ALMNC-84.8）：待 Scott 確認的遠端同步刪除項目變動。 */
   'pending-sync-deletions-changed': undefined;
   /** Fork（almanac ALMNC-69.3）：收起所有蓋在編輯器上的全頁畫面（從新增資料源對話框開新文件時）。 */

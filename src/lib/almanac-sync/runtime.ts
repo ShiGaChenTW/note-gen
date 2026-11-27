@@ -1,0 +1,223 @@
+// Fork（almanac ALMNC-85.2 骨架）：V3 同步接進 App（auto-data-sync-queue 的 almanac 領域、開關、首次同步、主力裝置）。
+// 核心流程在 engine.ts（不綁 Tauri）；這裡負責組 context：note.db、目前同步方式的遠端、裝置編號、筆記庫路徑、註冊的表。
+//
+// 開關 almanacV3Sync 是裝置層級設定，UAT 通過前預設關（設計第 4 節整體回滾）。
+// 第一次開（M8～M10）：先做一次受管備份 → 建同步表 → 排 almanac 任務（先拉、再合併、再推；本機只有預設值的列讓位給遠端）。
+// 首次上傳成功後，註冊的表接手的 store key 才加進設定同步排除清單（M9）；關掉 V3 同步就恢復原狀。
+'use client'
+
+import { Store } from '@tauri-apps/plugin-store'
+import emitter from '@/lib/emitter'
+import { getOrCreateSyncDeviceId } from '@/lib/sync/deletion-tombstones'
+import { setAlmanacLaneExcludedFields } from '@/config/sync-exclusions'
+import { runAlmanacSync, type AlmanacSyncReport } from './engine'
+import { createRemoteLibraryAlmanacRemote, type AlmanacRemote } from './remote'
+import { getAlmanacSyncStoreKeys, getAlmanacSyncTables } from './tables/registry'
+import { initAlmanacSyncTables } from './sql'
+import { isPrimaryDevice, isPrimaryStale, type AlmanacDevicesDoc, type PrimaryDeviceRequest } from './devices'
+
+export const ALMANAC_V3_SYNC_KEY = 'almanacV3Sync'
+export const ALMANAC_V3_SYNC_FIRST_COMPLETED_KEY = 'almanacV3SyncFirstCompletedAt'
+export const ALMANAC_V3_SYNC_LANE_KEYS_KEY = 'almanacV3SyncLaneKeys'
+export const ALMANAC_PRIMARY_REQUEST_KEY = 'almanacPrimaryDeviceRequest'
+export const ALMANAC_DEVICES_CACHE_KEY = 'almanacDevicesCache'
+
+const FILE_SYNC_PLATFORMS = new Set(['github', 'gitee', 'gitlab', 'gitea', 's3', 'webdav', 'cloudFolder'])
+
+async function loadStore() {
+  return Store.load('store.json')
+}
+
+export async function isAlmanacV3SyncEnabled(): Promise<boolean> {
+  return await (await loadStore()).get<boolean>(ALMANAC_V3_SYNC_KEY) === true
+}
+
+async function resolveDeviceName(): Promise<string> {
+  try {
+    const os = await import('@tauri-apps/plugin-os')
+    return (await os.hostname()) || os.platform()
+  } catch {
+    return 'NoteGen'
+  }
+}
+
+async function resolveAppVersion(): Promise<string | undefined> {
+  try {
+    const { getVersion } = await import('@tauri-apps/api/app')
+    return await getVersion()
+  } catch {
+    return undefined
+  }
+}
+
+async function createLibraryRemote(): Promise<AlmanacRemote | null> {
+  try {
+    return await createRemoteLibraryAlmanacRemote('library')
+  } catch {
+    return null
+  }
+}
+
+/** 啟動時恢復 M9 的設定排除（只有 V3 同步開著且首次上傳成功過才排除） */
+export async function applyAlmanacLaneExclusionsFromStore(): Promise<void> {
+  const store = await loadStore()
+  const enabled = await store.get<boolean>(ALMANAC_V3_SYNC_KEY) === true
+  const firstCompletedAt = await store.get<number>(ALMANAC_V3_SYNC_FIRST_COMPLETED_KEY)
+  const laneKeys = await store.get<string[]>(ALMANAC_V3_SYNC_LANE_KEYS_KEY)
+  setAlmanacLaneExcludedFields(enabled && firstCompletedAt && Array.isArray(laneKeys) ? laneKeys : [])
+}
+
+export interface AlmanacSyncTaskResult {
+  /** false：這次沒做（V3 同步關著、同步方式不支援） */
+  ran: boolean
+  /** 有寫到遠端：呼叫端才更新 meta.json 的 almanac 領域狀態 */
+  uploaded: boolean
+}
+
+/**
+ * auto-data-sync-queue 的 almanac 任務。錯誤直接丟出，交給佇列的重試與 failed 狀態。
+ */
+export async function runAlmanacSyncTask(reason: string): Promise<AlmanacSyncTaskResult> {
+  const skipped = { ran: false, uploaded: false }
+  const store = await loadStore()
+  if (await store.get<boolean>(ALMANAC_V3_SYNC_KEY) !== true) return skipped
+  const platform = await store.get<string>('primaryBackupMethod') || 'github'
+  if (!FILE_SYNC_PLATFORMS.has(platform)) return skipped
+
+  const { getDb } = await import('@/db/index')
+  const db = await getDb()
+  await initAlmanacSyncTables(db)
+  const firstSync = !await store.get<number>(ALMANAC_V3_SYNC_FIRST_COMPLETED_KEY)
+  const primaryRequest = await store.get<PrimaryDeviceRequest>(ALMANAC_PRIMARY_REQUEST_KEY) ?? null
+  const tables = getAlmanacSyncTables()
+
+  const report: AlmanacSyncReport = await runAlmanacSync({
+    db,
+    deviceId: await getOrCreateSyncDeviceId(),
+    deviceName: await resolveDeviceName(),
+    appVersion: await resolveAppVersion(),
+    now: () => Date.now(),
+    remotes: { account: await createRemoteLibraryAlmanacRemote('account'), library: await createLibraryRemote() },
+    libraryScope: await store.get<string>('workspacePath') || '',
+    tables,
+    firstSync,
+    primaryRequest,
+  })
+
+  if (report.devices) await store.set(ALMANAC_DEVICES_CACHE_KEY, report.devices)
+  if (primaryRequest && report.devices && report.devices.primaryChangedAt >= primaryRequest.at) {
+    await store.delete(ALMANAC_PRIMARY_REQUEST_KEY)
+  }
+  if (firstSync) await store.set(ALMANAC_V3_SYNC_FIRST_COMPLETED_KEY, Date.now())
+  const laneKeys = getAlmanacSyncStoreKeys(tables)
+  await store.set(ALMANAC_V3_SYNC_LANE_KEYS_KEY, laneKeys)
+  await store.save()
+  setAlmanacLaneExcludedFields(laneKeys)
+
+  if (report.changedLocally) {
+    emitter.emit('almanac-sync-applied', { tables: report.tables.filter(table => table.appliedRows || table.deletedRows).map(table => table.table) })
+  }
+  emitter.emit('almanac-sync-state-changed', undefined)
+  void reason
+  return { ran: true, uploaded: report.uploadedFiles.length > 0 || report.devicesWritten }
+}
+
+export interface EnableAlmanacV3SyncResult {
+  ok: boolean
+  error?: string
+}
+
+/**
+ * 打開 V3 同步（M8～M10）。第一次開之前先做一次受管備份（含 note.db 快照）；備份失敗就不開，
+ * 因為首次合併會改寫本機資料，沒有備份就沒有完整退路。
+ */
+export async function enableAlmanacV3Sync(options: { createBackup?: () => Promise<unknown> } = {}): Promise<EnableAlmanacV3SyncResult> {
+  const store = await loadStore()
+  const alreadyCompleted = Boolean(await store.get<number>(ALMANAC_V3_SYNC_FIRST_COMPLETED_KEY))
+  if (!alreadyCompleted) {
+    try {
+      if (options.createBackup) await options.createBackup()
+      else {
+        const { createManagedBackup } = await import('@/lib/backup/managed-backup')
+        await createManagedBackup('pre-v3-sync')
+      }
+    } catch (error) {
+      return { ok: false, error: error instanceof Error ? error.message : String(error) }
+    }
+  }
+  const { getDb } = await import('@/db/index')
+  await initAlmanacSyncTables(await getDb())
+  await store.set(ALMANAC_V3_SYNC_KEY, true)
+  await store.save()
+  emitter.emit('almanac-sync-state-changed', undefined)
+  const { enqueueAutoDataSync } = await import('@/lib/sync/auto-data-sync-queue')
+  enqueueAutoDataSync('almanac', alreadyCompleted ? 'almanac-enabled' : 'almanac-first-sync', 'manual')
+  return { ok: true }
+}
+
+/**
+ * 關掉 V3 同步：停止讀寫 .data/almanac/、.almanac/v3/，設定排除恢復原狀（這些 key 回到設定同步）。
+ * 基準表留著；下次再開時只要遠端沒換，就接著用。
+ */
+export async function disableAlmanacV3Sync(): Promise<void> {
+  const store = await loadStore()
+  await store.set(ALMANAC_V3_SYNC_KEY, false)
+  await store.save()
+  setAlmanacLaneExcludedFields([])
+  emitter.emit('almanac-sync-state-changed', undefined)
+}
+
+export async function getCachedAlmanacDevices(): Promise<AlmanacDevicesDoc | null> {
+  return await (await loadStore()).get<AlmanacDevicesDoc>(ALMANAC_DEVICES_CACHE_KEY) ?? null
+}
+
+/** 指定主力裝置（預設這台）；下一輪 almanac 同步寫進 devices.json，兩台同時改時較晚的贏。 */
+export async function requestAlmanacPrimaryDevice(deviceId?: string): Promise<void> {
+  const store = await loadStore()
+  const request: PrimaryDeviceRequest = { deviceId: deviceId ?? await getOrCreateSyncDeviceId(), at: Date.now() }
+  await store.set(ALMANAC_PRIMARY_REQUEST_KEY, request)
+  // 先在本機快取反映，畫面與背景工作判斷立即生效；同步失敗時下一輪重送。
+  const cached = await store.get<AlmanacDevicesDoc>(ALMANAC_DEVICES_CACHE_KEY)
+  if (cached) {
+    await store.set(ALMANAC_DEVICES_CACHE_KEY, { ...cached, primaryDeviceId: request.deviceId, primaryChangedAt: request.at })
+  }
+  await store.save()
+  emitter.emit('almanac-sync-state-changed', undefined)
+  if (await store.get<boolean>(ALMANAC_V3_SYNC_KEY) === true) {
+    const { enqueueAutoDataSync } = await import('@/lib/sync/auto-data-sync-queue')
+    enqueueAutoDataSync('almanac', 'almanac-primary-device', 'manual')
+  }
+}
+
+/**
+ * 背景工作（RSS 自動抓、指揮官自動分析、每週整理、研究員）跑之前問這個（第 8 節 1A）。
+ * V3 同步沒開時一律 true（只有這一台）。85.2 起各背景工作接上這個判斷。
+ */
+export async function isThisDeviceAlmanacPrimary(): Promise<boolean> {
+  if (!await isAlmanacV3SyncEnabled()) return true
+  return isPrimaryDevice(await getCachedAlmanacDevices(), await getOrCreateSyncDeviceId())
+}
+
+export interface AlmanacSyncStatus {
+  enabled: boolean
+  firstCompletedAt: number | null
+  deviceId: string
+  devices: AlmanacDevicesDoc | null
+  isPrimary: boolean
+  primaryStale: boolean
+}
+
+export async function getAlmanacSyncStatus(now = Date.now()): Promise<AlmanacSyncStatus> {
+  const store = await loadStore()
+  const enabled = await store.get<boolean>(ALMANAC_V3_SYNC_KEY) === true
+  const deviceId = await getOrCreateSyncDeviceId()
+  const devices = await store.get<AlmanacDevicesDoc>(ALMANAC_DEVICES_CACHE_KEY) ?? null
+  return {
+    enabled,
+    firstCompletedAt: await store.get<number>(ALMANAC_V3_SYNC_FIRST_COMPLETED_KEY) ?? null,
+    deviceId,
+    devices,
+    isPrimary: !enabled || isPrimaryDevice(devices, deviceId),
+    primaryStale: enabled && isPrimaryStale(devices, deviceId, now),
+  }
+}

@@ -169,6 +169,12 @@ export const ALWAYS_SYNC_EXCLUDED_FIELDS: string[] = [
   'einkReadLater',
   // Fork（almanac ALMNC-47）：今日簡報的回顧卡出現紀錄與知識報告送出紀錄
   'einkBriefingLog',
+  // Fork（almanac ALMNC-85.2）：V3 同步開關、首次同步狀態、主力裝置的本機請求與快取都是裝置層級（設計 M9、M10、1.8）。
+  'almanacV3Sync',
+  'almanacV3SyncFirstCompletedAt',
+  'almanacV3SyncLaneKeys',
+  'almanacPrimaryDeviceRequest',
+  'almanacDevicesCache',
   'syncedFileShas',
   'lastSyncTimes',
   'lastRestoreTimes',
@@ -275,12 +281,25 @@ function matchesSyncField(fieldName: string, field: string): boolean {
   return fieldName === field || fieldName.startsWith(`${field}:`)
 }
 
+// Fork（almanac ALMNC-85.2，設計 M9）：V3 同步接手的 store key（almanacRssFeeds、collectItems…）。
+// 只有在 V3 同步開著、而且首次上傳成功後才由 almanac-sync runtime 設定；關掉 V3 同步就清空，這些 key 回到設定同步。
+let almanacLaneExcludedFields: string[] = []
+
+export function setAlmanacLaneExcludedFields(fields: string[]): void {
+  almanacLaneExcludedFields = [...new Set(fields)]
+}
+
+export function getAlmanacLaneExcludedFields(): string[] {
+  return [...almanacLaneExcludedFields]
+}
+
 // 检查字段是否应该被排除在同步之外
 export function shouldExcludeFromSync(fieldName: string, options: SyncExclusionOptions = {}): boolean {
   const normalizedFieldName = fieldName.toLowerCase()
   const excludeSensitiveConfig = options.excludeSensitiveConfig !== false
 
   if (ALWAYS_SYNC_EXCLUDED_FIELDS.some(field => matchesSyncField(fieldName, field))
+    || almanacLaneExcludedFields.some(field => matchesSyncField(fieldName, field))
     || ALWAYS_SYNC_EXCLUDED_FIELD_PATTERNS.some(pattern => pattern.test(fieldName))) {
     return true
   }
