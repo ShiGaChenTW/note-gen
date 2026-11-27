@@ -83,3 +83,11 @@ it('展開時最多 4 張後面的卡，其餘收進「更多」', async () => {
   expect(backCards()).toHaveLength(4)
   expect(host.textContent).toContain('更多 1')
 })
+
+it('滑過後面的卡會浮起 4px', async () => {
+  await render([tab('a'), tab('b')], 'a')
+  await act(async () => toggle().click())
+  const card = backCards()[0]
+  await act(async () => { card.dispatchEvent(new MouseEvent('mouseover', { bubbles: true })) })
+  expect(card.style.transform).toBe('translateY(-28px) scaleX(0.98)')
+})

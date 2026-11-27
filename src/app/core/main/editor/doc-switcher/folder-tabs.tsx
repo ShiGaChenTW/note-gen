@@ -98,6 +98,21 @@ export function FolderTabsSwitcher({ tabs, activeTabId, cycleTargetId, onWheel, 
           aria-label={t('label')}
           className="flex min-w-0 flex-1 items-end pl-3 pt-1"
           data-doc-switcher="folder"
+          onKeyDown={(event) => {
+            // 標籤之間用方向鍵移動焦點（WAI-ARIA tabs），Enter／空白鍵切換
+            const keys: Record<string, number> = { ArrowRight: 1, ArrowLeft: -1 }
+            const step = keys[event.key]
+            const ids = visible.map(tab => tab.id)
+            const current = ids.findIndex(id => tabRefs.current.get(id) === document.activeElement)
+            if (current < 0) return
+            let target = -1
+            if (step) target = (current + step + ids.length) % ids.length
+            else if (event.key === 'Home') target = 0
+            else if (event.key === 'End') target = ids.length - 1
+            if (target < 0) return
+            event.preventDefault()
+            tabRefs.current.get(ids[target])?.focus()
+          }}
         >
           {visible.map((tab, index) => (
             <FolderTab

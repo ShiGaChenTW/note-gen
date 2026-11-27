@@ -74,3 +74,17 @@ it('標籤的無障礙名稱含位置；固定的分頁沒有關閉鈕', async (
   expect(first.getAttribute('aria-label')).toBe('p，第 1 張，共 2 張')
   expect(first.querySelector('button')).toBeNull()
 })
+
+it('標籤之間用方向鍵移動焦點，Enter 切換', async () => {
+  rowWidth = 2000
+  const onSwitch = await render([tab('a'), tab('b'), tab('c')], 'a')
+  const tabs = [...host.querySelectorAll<HTMLElement>('[role="tab"]')]
+  tabs[0].focus()
+  await act(async () => { tabs[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })) })
+  expect(document.activeElement).toBe(tabs[1])
+  await act(async () => { tabs[1].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true })) })
+  await act(async () => { tabs[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true })) })
+  expect(document.activeElement).toBe(tabs[2])
+  await act(async () => { tabs[2].dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })) })
+  expect(onSwitch).toHaveBeenCalledWith('c')
+})
