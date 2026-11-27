@@ -17,6 +17,9 @@ interface DocSwitcherState {
   touch: (id: string) => void
   style: DocSwitcherStyle
   setStyle: (style: DocSwitcherStyle) => void
+  /** 樣式 A、C 的疊卡是否展開（ALMNC-97.4）。只在這次啟動有效，不存檔。 */
+  expanded: boolean
+  setExpanded: (expanded: boolean) => void
 }
 
 const RECENCY_KEY = 'almanac:doc-switcher-recency'
@@ -52,7 +55,9 @@ export const useDocSwitcherStore = create<DocSwitcherState>(set => ({
   recency: readRecency(),
   touch: (id) => set(state => ({ recency: touchRecency(state.recency, id) })),
   style: readStyle(),
-  setStyle: (style) => set({ style }),
+  setStyle: (style) => set({ style, expanded: false }),
+  expanded: false,
+  setExpanded: (expanded) => set({ expanded }),
 }))
 
 useDocSwitcherStore.subscribe((state, prev) => {

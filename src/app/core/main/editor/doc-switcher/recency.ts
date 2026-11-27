@@ -117,3 +117,16 @@ export function splitVisibleTabs<T extends RecencyTab>(
   const shown = new Set(visible.map(tab => tab.id))
   return { visible, hidden: ordered.filter(tab => !shown.has(tab.id)) }
 }
+
+/** 樣式 A、C 展開時最多顯示幾張後面的卡（加上前面那張共 5 張）。 */
+export const STACK_BACK_LIMIT = 4
+
+/** 樣式 A、C：目前這張以外，依顯示順序取前幾張當後面的卡（第 1 張在最靠近前面那張的位置），其餘收進「更多」。 */
+export function splitStackTabs<T extends RecencyTab>(
+  ordered: readonly T[],
+  activeId: string | undefined,
+  limit = STACK_BACK_LIMIT,
+): { back: T[], hidden: T[] } {
+  const others = ordered.filter(tab => tab.id !== activeId)
+  return { back: others.slice(0, limit), hidden: others.slice(limit) }
+}

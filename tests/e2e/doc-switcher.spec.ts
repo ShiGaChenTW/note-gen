@@ -76,3 +76,32 @@ test('樣式 B：放不下的分頁收進「更多」，從選單選的那張移
   await expect(tabs.getByRole('tab').first()).toHaveAttribute('aria-selected', 'true')
   await page.screenshot({ path: test.info().outputPath('folder-tabs-more.png') })
 })
+
+for (const [style, label] of [['stack', 'A 上方疊列'], ['fan', 'C 斜向錯開']] as const) {
+  test(`樣式 ${label}：平常收合，按疊卡鈕展開，點後面的卡切換後自動收合`, async ({ page }) => {
+    await page.evaluate(value => localStorage.setItem('almanac:doc-switcher-style', value), style)
+    await page.reload()
+    await waitForMainBoot(page)
+    for (const name of ['原子習慣', '番茄鐘', '卡片盒']) await openNote(page, name)
+
+    const toggle = page.getByRole('button', { name: '展開疊卡' })
+    await expect(toggle).toBeVisible()
+    await expect(page.getByRole('button', { name: '番茄鐘', exact: true })).toBeHidden()
+    await page.screenshot({ path: test.info().outputPath(`${style}-collapsed.png`) })
+
+    await toggle.click()
+    await expect(page.getByRole('button', { name: '收合疊卡' })).toHaveAttribute('aria-expanded', 'true')
+    const back = page.getByRole('button', { name: '番茄鐘', exact: true })
+    await expect(back).toBeVisible()
+    await page.waitForTimeout(350)
+    await page.screenshot({ path: test.info().outputPath(`${style}-expanded.png`) })
+
+    await back.click({ position: { x: 80, y: 12 } }) // 後面的卡只露出上方 24px 標題列，中央被前面那張蓋住
+    await expect(page.getByRole('textbox', { name: '標題', exact: true })).toHaveValue('番茄鐘')
+    await expect(page.getByRole('button', { name: '展開疊卡' })).toHaveAttribute('aria-expanded', 'false')
+
+    await page.getByRole('button', { name: '展開疊卡' }).click()
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('button', { name: '展開疊卡' })).toHaveAttribute('aria-expanded', 'false')
+  })
+}

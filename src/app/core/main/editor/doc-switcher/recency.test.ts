@@ -5,6 +5,7 @@ import {
   pickFallbackAfterClose,
   pickMountedTabIds,
   reconcileRecency,
+  splitStackTabs,
   splitVisibleTabs,
   touchRecency,
 } from './recency'
@@ -104,5 +105,17 @@ describe('splitVisibleTabs', () => {
     const { visible, hidden } = splitVisibleTabs(ordered, 'c', 2)
     expect(visible.map(tab => tab.id)).toEqual(['p', 'c'])
     expect(hidden.map(tab => tab.id)).toEqual(['a', 'b'])
+  })
+})
+
+describe('splitStackTabs', () => {
+  const ordered = ['p', 'a', 'b', 'c', 'd', 'e', 'f'].map(id => ({ id }))
+  it('目前這張以外取前 4 張當後面的卡，其餘收進更多', () => {
+    const { back, hidden } = splitStackTabs(ordered, 'a')
+    expect(back.map(tab => tab.id)).toEqual(['p', 'b', 'c', 'd'])
+    expect(hidden.map(tab => tab.id)).toEqual(['e', 'f'])
+  })
+  it('只有一張時沒有後面的卡', () => {
+    expect(splitStackTabs([{ id: 'a' }], 'a')).toEqual({ back: [], hidden: [] })
   })
 })
