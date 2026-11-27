@@ -12,6 +12,8 @@ export interface AlmanacDeviceInfo {
   name: string
   lastSeenAt: number
   appVersion?: string
+  /** 這台認得的 V3 同步格式版本（envelope 的 ALMANAC_SYNC_VERSION，ALMNC-85.5）；沒有這欄的是 85.5 以前的版本，當成 1 */
+  syncVersion?: number
 }
 
 export interface AlmanacDevicesDoc {
@@ -48,7 +50,12 @@ export function parseDevicesDoc(content: string | null): AlmanacDevicesDoc {
   const devices: Record<string, AlmanacDeviceInfo> = {}
   for (const [id, info] of Object.entries(data.devices ?? {})) {
     if (!info || typeof info !== 'object' || typeof info.lastSeenAt !== 'number') continue
-    devices[id] = { name: typeof info.name === 'string' ? info.name : id, lastSeenAt: info.lastSeenAt, ...(typeof info.appVersion === 'string' ? { appVersion: info.appVersion } : {}) }
+    devices[id] = {
+      name: typeof info.name === 'string' ? info.name : id,
+      lastSeenAt: info.lastSeenAt,
+      ...(typeof info.appVersion === 'string' ? { appVersion: info.appVersion } : {}),
+      ...(typeof info.syncVersion === 'number' && Number.isFinite(info.syncVersion) ? { syncVersion: info.syncVersion } : {}),
+    }
   }
   return {
     format: ALMANAC_DEVICES_FORMAT,
@@ -62,7 +69,7 @@ export function parseDevicesDoc(content: string | null): AlmanacDevicesDoc {
 
 export interface MergeDevicesInput {
   remote: AlmanacDevicesDoc
-  self: { deviceId: string; name: string; appVersion?: string }
+  self: { deviceId: string; name: string; appVersion?: string; syncVersion?: number }
   now: number
   /** 這台在設定頁按了「設為主力裝置」（或改指定別台），尚未傳出去 */
   primaryRequest?: PrimaryDeviceRequest | null
@@ -80,8 +87,14 @@ export function mergeDevicesDoc(input: MergeDevicesInput): AlmanacDevicesDoc {
     || now - known.lastSeenAt >= LAST_SEEN_REFRESH_MS
     || known.name !== self.name
     || (self.appVersion !== undefined && known.appVersion !== self.appVersion)
+    || (self.syncVersion !== undefined && known.syncVersion !== self.syncVersion)
   if (needsRefresh) {
-    next.devices[self.deviceId] = { name: self.name, lastSeenAt: now, ...(self.appVersion ? { appVersion: self.appVersion } : {}) }
+    next.devices[self.deviceId] = {
+      name: self.name,
+      lastSeenAt: now,
+      ...(self.appVersion ? { appVersion: self.appVersion } : {}),
+      ...(self.syncVersion !== undefined ? { syncVersion: self.syncVersion } : {}),
+    }
   }
 
   if (primaryRequest) {
@@ -116,4 +129,60 @@ export function isPrimaryStale(doc: AlmanacDevicesDoc | null, deviceId: string, 
 export function serializeDevicesDoc(doc: AlmanacDevicesDoc): string {
   const devices = Object.fromEntries(Object.keys(doc.devices).sort().map(id => [id, doc.devices[id]]))
   return `${JSON.stringify({ ...doc, devices }, null, 2)}\n`
+}
+
+// ---------- 舊版裝置提示（設計第 4 節「版本一致性」，ALMNC-85.5） ----------
+
+/** 比較 App 版本（x.y.z，忽略 -beta 這類後綴）；格式看不懂時回 null，不拿來判斷 */
+export function compareAppVersions(left: string, right: string): number | null {
+  const parse = (value: string) => {
+    const match = /^v?(\d+(?:\.\d+)*)/.exec(value.trim())
+    return match ? match[1].split('.').map(Number) : null
+  }
+  const a = parse(left)
+  const b = parse(right)
+  if (!a || !b) return null
+  for (let index = 0; index < Math.max(a.length, b.length); index++) {
+    const diff = (a[index] ?? 0) - (b[index] ?? 0)
+    if (diff !== 0) return diff < 0 ? -1 : 1
+  }
+  return 0
+}
+
+export interface OutdatedDevice {
+  deviceId: string
+  name: string
+  appVersion?: string
+}
+
+export interface DeviceVersionCheck {
+  /** 版本比這台舊的其他裝置：可能不認得這台寫的 V3 資料，應先升級 */
+  outdated: OutdatedDevice[]
+  /** 有別台比這台新：這台可能讀不懂別台寫的新格式 */
+  selfOutdated: boolean
+}
+
+/**
+ * 判斷方式：
+ * 1. 同步格式版本（syncVersion，沒寫的當成 1）比這台低 → 那台不認得這台寫的 V3 資料，一定提示。
+ * 2. 格式版本一樣但 App 版本比這台舊 → 也提示（設計要求每台都升到同一版再開 V3 同步；舊版還會透過設定同步寫已換跑道的 key）。
+ * 反過來別台的格式或 App 版本比這台新 → selfOutdated（請升級這台）。App 版本看不懂或沒寫時不拿來判斷。
+ */
+export function checkDeviceVersions(
+  doc: AlmanacDevicesDoc | null,
+  self: { deviceId: string; appVersion?: string; syncVersion: number },
+): DeviceVersionCheck {
+  const result: DeviceVersionCheck = { outdated: [], selfOutdated: false }
+  if (!doc) return result
+  for (const [deviceId, info] of Object.entries(doc.devices).sort(([left], [right]) => left.localeCompare(right))) {
+    if (deviceId === self.deviceId) continue
+    const syncVersion = info.syncVersion ?? 1
+    const appOrder = info.appVersion && self.appVersion ? compareAppVersions(info.appVersion, self.appVersion) : null
+    if (syncVersion < self.syncVersion || (syncVersion === self.syncVersion && appOrder === -1)) {
+      result.outdated.push({ deviceId, name: info.name, ...(info.appVersion ? { appVersion: info.appVersion } : {}) })
+    } else if (syncVersion > self.syncVersion || appOrder === 1) {
+      result.selfOutdated = true
+    }
+  }
+  return result
 }

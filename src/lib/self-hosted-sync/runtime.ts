@@ -1586,6 +1586,13 @@ async function applyRemoteEventRaw(binding: Binding, event: SyncEvent, beforeStr
        kind = excluded.kind, revision = excluded.revision, payload = excluded.payload, updated_at = excluded.updated_at`,
     [binding.workspaceId, event.objectId, kind, String(event.metadata.revision ?? '0'), JSON.stringify(payload), Date.now()]
   )
+  // Fork（almanac ALMNC-85.5）：V3 同步的物件（payload.domain = 'almanac'）不在這裡套用，只留在上面的快取；
+  // 收到別台寫的就排一輪 V3 同步（拉 → 合併 → 推），由 almanac-sync 讀快取合併。
+  if (payload.domain === 'almanac') {
+    void import('@/lib/almanac-sync/runtime')
+      .then(({ scheduleSelfHostedAlmanacSync }) => scheduleSelfHostedAlmanacSync('self-hosted-remote'))
+      .catch(error => console.warn('[self-hosted-sync] Unable to schedule almanac sync', error))
+  }
 }
 
 async function shouldApplyPersonalEvent(binding: Binding, event: SyncEvent) {

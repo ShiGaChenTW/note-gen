@@ -10,11 +10,12 @@ import { Store } from '@tauri-apps/plugin-store'
 import emitter from '@/lib/emitter'
 import { getOrCreateSyncDeviceId } from '@/lib/sync/deletion-tombstones'
 import { setAlmanacLaneExcludedFields } from '@/config/sync-exclusions'
-import { runAlmanacSync, type AlmanacSyncReport } from './engine'
+import { runAlmanacSync, type AlmanacSyncContext, type AlmanacSyncReport } from './engine'
 import { createRemoteLibraryAlmanacRemote, type AlmanacRemote } from './remote'
 import { getAlmanacSyncStoreKeys, getAlmanacSyncTables } from './tables/registry'
 import { initAlmanacSyncTables } from './sql'
-import { isPrimaryDevice, isPrimaryStale, type AlmanacDevicesDoc, type PrimaryDeviceRequest } from './devices'
+import { checkDeviceVersions, isPrimaryDevice, isPrimaryStale, type AlmanacDevicesDoc, type OutdatedDevice, type PrimaryDeviceRequest } from './devices'
+import { ALMANAC_SYNC_VERSION } from './envelope'
 
 export const ALMANAC_V3_SYNC_KEY = 'almanacV3Sync'
 export const ALMANAC_V3_SYNC_FIRST_COMPLETED_KEY = 'almanacV3SyncFirstCompletedAt'
@@ -23,6 +24,8 @@ export const ALMANAC_PRIMARY_REQUEST_KEY = 'almanacPrimaryDeviceRequest'
 export const ALMANAC_DEVICES_CACHE_KEY = 'almanacDevicesCache'
 
 const FILE_SYNC_PLATFORMS = new Set(['github', 'gitee', 'gitlab', 'gitea', 's3', 'webdav', 'cloudFolder'])
+/** ALMNC-85.5：自架同步也支援 V3 同步（一個同步檔＝一個 setting 物件，見 self-hosted-remote.ts） */
+const ALMANAC_SYNC_PLATFORMS = new Set([...FILE_SYNC_PLATFORMS, 'selfHosted'])
 
 async function loadStore() {
   return Store.load('store.json')
@@ -82,7 +85,18 @@ export async function runAlmanacSyncTask(reason: string): Promise<AlmanacSyncTas
   const store = await loadStore()
   if (await store.get<boolean>(ALMANAC_V3_SYNC_KEY) !== true) return skipped
   const platform = await store.get<string>('primaryBackupMethod') || 'github'
-  if (!FILE_SYNC_PLATFORMS.has(platform)) return skipped
+  if (!ALMANAC_SYNC_PLATFORMS.has(platform)) return skipped
+
+  let remotes: AlmanacSyncContext['remotes']
+  if (platform === 'selfHosted') {
+    // 先讓自架 runtime 收件一次，快取裡才有別台最新寫的 almanac 物件；沒有綁定個人資料工作區（還沒連線）就不跑。
+    const { createSelfHostedAlmanacRemotes, refreshSelfHostedRemoteObjects } = await import('./self-hosted-transport')
+    await refreshSelfHostedRemoteObjects()
+    remotes = await createSelfHostedAlmanacRemotes()
+    if (!remotes.account) return skipped
+  } else {
+    remotes = { account: await createRemoteLibraryAlmanacRemote('account'), library: await createLibraryRemote() }
+  }
 
   const { getDb } = await import('@/db/index')
   const db = await getDb()
@@ -101,7 +115,7 @@ export async function runAlmanacSyncTask(reason: string): Promise<AlmanacSyncTas
     deviceName: await resolveDeviceName(),
     appVersion: await resolveAppVersion(),
     now: () => Date.now(),
-    remotes: { account: await createRemoteLibraryAlmanacRemote('account'), library: await createLibraryRemote() },
+    remotes,
     libraryScope: await store.get<string>('workspacePath') || '',
     tables,
     firstSync,
@@ -124,6 +138,57 @@ export async function runAlmanacSyncTask(reason: string): Promise<AlmanacSyncTas
   emitter.emit('almanac-sync-state-changed', undefined)
   void reason
   return { ran: true, uploaded: report.uploadedFiles.length > 0 || report.devicesWritten }
+}
+
+// ---------- 自架模式的排程（ALMNC-85.5） ----------
+// 自架同步不走 auto-data-sync-queue（佇列在自架模式一律交給自架 runtime），所以 almanac 領域另有一個小排程：
+// 本機改了、別台的 almanac 物件收到了、App 啟動，都排一輪；同時間只跑一輪，跑的時候又有人排就再跑一次。
+
+const SELF_HOSTED_ALMANAC_DEBOUNCE_MS = 500
+let selfHostedTimer: ReturnType<typeof setTimeout> | null = null
+let selfHostedRunning: Promise<void> | null = null
+let selfHostedRerun = false
+let selfHostedLastError: string | null = null
+
+export function getSelfHostedAlmanacSyncError(): string | null {
+  return selfHostedLastError
+}
+
+async function runSelfHostedAlmanacRound(reason: string) {
+  do {
+    selfHostedRerun = false
+    try {
+      await runAlmanacSyncTask(reason)
+      selfHostedLastError = null
+    } catch (error) {
+      selfHostedLastError = error instanceof Error ? error.message : String(error)
+      console.warn('[almanac-sync] self-hosted round failed', { reason, error: selfHostedLastError })
+      emitter.emit('almanac-sync-state-changed', undefined)
+    }
+  } while (selfHostedRerun)
+}
+
+/** 自架模式下排一輪 V3 同步（防抖 500ms）。V3 同步沒開或不是自架模式時 runAlmanacSyncTask 自己會略過。 */
+export function scheduleSelfHostedAlmanacSync(reason: string, delayMs = SELF_HOSTED_ALMANAC_DEBOUNCE_MS): void {
+  if (selfHostedTimer) clearTimeout(selfHostedTimer)
+  selfHostedTimer = setTimeout(() => {
+    selfHostedTimer = null
+    if (selfHostedRunning) {
+      selfHostedRerun = true
+      return
+    }
+    selfHostedRunning = runSelfHostedAlmanacRound(reason).finally(() => { selfHostedRunning = null })
+  }, delayMs)
+}
+
+/** 測試用：等目前排定與執行中的一輪結束 */
+export async function flushSelfHostedAlmanacSyncForTest(): Promise<void> {
+  if (selfHostedTimer) {
+    clearTimeout(selfHostedTimer)
+    selfHostedTimer = null
+    selfHostedRunning ??= runSelfHostedAlmanacRound('flush').finally(() => { selfHostedRunning = null })
+  }
+  await selfHostedRunning
 }
 
 export interface EnableAlmanacV3SyncResult {
@@ -209,6 +274,10 @@ export interface AlmanacSyncStatus {
   devices: AlmanacDevicesDoc | null
   isPrimary: boolean
   primaryStale: boolean
+  /** 版本比這台舊的其他裝置（可能不認得 V3 資料，ALMNC-85.5）；舊的 status 物件可能沒有這欄 */
+  outdatedDevices?: OutdatedDevice[]
+  /** 有別台比這台新：這台該升級 */
+  selfOutdated?: boolean
 }
 
 export async function getAlmanacSyncStatus(now = Date.now()): Promise<AlmanacSyncStatus> {
@@ -216,6 +285,7 @@ export async function getAlmanacSyncStatus(now = Date.now()): Promise<AlmanacSyn
   const enabled = await store.get<boolean>(ALMANAC_V3_SYNC_KEY) === true
   const deviceId = await getOrCreateSyncDeviceId()
   const devices = await store.get<AlmanacDevicesDoc>(ALMANAC_DEVICES_CACHE_KEY) ?? null
+  const versions = checkDeviceVersions(enabled ? devices : null, { deviceId, appVersion: await resolveAppVersion(), syncVersion: ALMANAC_SYNC_VERSION })
   return {
     enabled,
     firstCompletedAt: await store.get<number>(ALMANAC_V3_SYNC_FIRST_COMPLETED_KEY) ?? null,
@@ -223,5 +293,7 @@ export async function getAlmanacSyncStatus(now = Date.now()): Promise<AlmanacSyn
     devices,
     isPrimary: !enabled || isPrimaryDevice(devices, deviceId),
     primaryStale: enabled && isPrimaryStale(devices, deviceId, now),
+    outdatedDevices: versions.outdated,
+    selfOutdated: versions.selfOutdated,
   }
 }
