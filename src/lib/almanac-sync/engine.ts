@@ -90,7 +90,7 @@ export async function syncDevices(context: AlmanacSyncContext): Promise<{ doc: A
     const remoteDoc = parseDevicesDoc(current?.content ?? null)
     const next = mergeDevicesDoc({
       remote: remoteDoc,
-      self: { deviceId: context.deviceId, name: context.deviceName, appVersion: context.appVersion },
+      self: { deviceId: context.deviceId, name: context.deviceName, appVersion: context.appVersion, syncVersion: ALMANAC_SYNC_VERSION },
       now: context.now(),
       primaryRequest: context.primaryRequest,
     })

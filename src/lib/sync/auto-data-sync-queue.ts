@@ -496,8 +496,11 @@ export function enqueueAutoDataSync(domain: AutoDataSyncDomain, reason = 'change
   }
 
   if (useSettingStore.getState().primaryBackupMethod === 'selfHosted') {
-    // V3 同步的自架物件格式已定（almanac-sync/self-hosted.ts），但還沒接進自架 runtime。
-    if (domain === 'almanac') return
+    // ALMNC-85.5：V3 同步在自架模式走自己的小排程（almanac-sync/runtime.ts），一個同步檔＝一個 setting 物件。
+    if (domain === 'almanac') {
+      void import('@/lib/almanac-sync/runtime').then(({ scheduleSelfHostedAlmanacSync }) => scheduleSelfHostedAlmanacSync(reason))
+      return
+    }
     const wakeSelfHosted = async () => {
       if (domain === 'settings' && !reason.startsWith('memory:')) {
         const { enqueueSelfHostedSettingChange } = await import('@/db/self-hosted-sync')
@@ -1272,7 +1275,19 @@ export async function initAutoDataSyncRuntime(): Promise<void> {
 
   try {
     const store = await Store.load('store.json')
-    if (['selfHosted', 'local'].includes(await store.get<string>('primaryBackupMethod') || '')) {
+    const method = await store.get<string>('primaryBackupMethod') || ''
+    if (method === 'selfHosted') {
+      // ALMNC-85.5：自架模式也要恢復 M9 的設定排除，並在 V3 同步開著時排一輪（補上次關 App 前沒送出的本機修改）。
+      try {
+        const { applyAlmanacLaneExclusionsFromStore, isAlmanacV3SyncEnabled, scheduleSelfHostedAlmanacSync } = await import('@/lib/almanac-sync/runtime')
+        await applyAlmanacLaneExclusionsFromStore()
+        if (await isAlmanacV3SyncEnabled()) scheduleSelfHostedAlmanacSync('startup', 3_000)
+      } catch (error) {
+        warnAutoDataSync('failed to start self-hosted almanac sync', { message: getAutoDataSyncErrorMessage(error, 'unknown error') })
+      }
+      return
+    }
+    if (method === 'local') {
       return
     }
     const lastCompletedAt = await getAutoDataSyncLastCompletedAt(store)

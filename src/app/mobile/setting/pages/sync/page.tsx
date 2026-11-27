@@ -19,6 +19,7 @@ import { restorePlatformSwitchRecovery, usePlatformSwitchStore } from '@/stores/
 import { PlatformSwitchProgress } from '@/app/core/setting/sync/components/platform-switch-progress'
 import { WorkspaceRepoMapping } from '@/app/core/setting/sync/components/workspace-repo-mapping'
 import { DataSyncOverview } from '@/app/core/setting/sync/components/data-sync-overview'
+import { AlmanacV3SyncSlot } from '@/app/core/setting/sync/components/almanac-v3-sync-panel'
 import { MobileSelectDrawer } from '@/app/mobile/components/mobile-select-drawer'
 import { OneDriveCloudFolderSync } from '@/app/mobile/setting/pages/sync/android-cloud-folder-sync'
 import { ICloudFolderSync } from '@/app/mobile/setting/pages/sync/ios-cloud-folder-sync'
@@ -427,6 +428,8 @@ export default function SyncPage() {
         onSensitiveConfigChange={handleExcludeSensitiveConfigChange}
       /> : null}
       {tab !== 'local' && tab !== 'selfHosted' && autoRecordSyncEnabled ? <RecordSyncStatusBanner showWaitingProvider /> : null}
+      {/* Fork（almanac ALMNC-85.5）：V3 跨裝置同步開關與主力裝置，沿用桌面元件。 */}
+      <AlmanacV3SyncSlot platform={selectedSyncPlatform} />
     </div>
   )
 }

@@ -3271,7 +3271,10 @@
         "primaryDesc": "RSS 自動抓取、指揮官自動分析、每週整理只在主力裝置跑；其他裝置照樣可以手動操作。",
         "primaryStale": "主力裝置超過 3 天沒有同步，可以改由這台跑背景工作。",
         "makePrimary": "改由這台跑背景工作",
-        "firstSyncPending": "第一次同步進行中：先拉、再合併、再推。"
+        "firstSyncPending": "第一次同步進行中：先拉、再合併、再推。",
+        "deviceWithVersion": "{name}（{version}）",
+        "outdatedDevices": "{devices}的 App 版本比這台舊，可能不認得 V3 資料。請先把那台升到最新版。",
+        "selfOutdated": "有其他裝置的 App 版本比這台新，這台可能讀不懂新的 V3 資料，請先把這台升到最新版。"
       }
     },
     "imageHosting": {
