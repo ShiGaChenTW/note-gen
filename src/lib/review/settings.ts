@@ -92,7 +92,16 @@ export function keyValueSettingsStore(store: { get: (key: string) => Promise<unk
 /** App 用的存檔（Tauri store.json）。 */
 export async function defaultReviewSettingsStore(): Promise<ReviewSettingsStore> {
   const { appStore } = await import('@/lib/cleanup/runtime')
-  return keyValueSettingsStore(await appStore())
+  const store = keyValueSettingsStore(await appStore())
+  return {
+    ...store,
+    // Fork（almanac ALMNC-85.4）：回顧設定是帳號層級，寫入後排設定同步；上次執行時間是裝置層級（排除，不排）。
+    save: async settings => {
+      await store.save(settings)
+      const { notifyStoreKeyWritten } = await import('@/lib/almanac-sync/notify')
+      notifyStoreKeyWritten(REVIEW_SETTINGS_KEY)
+    },
+  }
 }
 
 // ── 時期 ──────────────────────────────────────────────────────

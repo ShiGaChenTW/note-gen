@@ -182,13 +182,27 @@ export async function createDefaultReviewDeps(): Promise<ReviewRunDeps> {
 
 let active = false
 
-/** App 定期叫這個：頻率到了才跑一輪（同一時間只跑一輪）。 */
-export async function runScheduledReview(): Promise<void> {
+/**
+ * Fork（almanac ALMNC-85.4，第 8 節 1A）：每週整理（含研究員）是背景工作，V3 同步開著時只在主力裝置跑。
+ * 上次執行時間改成各台分開（almanacReviewLastRun 不同步），不擋的話兩台會各跑一輪、出兩張整理卡。讀不到時照跑（只有這一台）。
+ */
+export async function isReviewDevice(): Promise<boolean> {
+  try {
+    const { isThisDeviceAlmanacPrimary } = await import('@/lib/almanac-sync/runtime')
+    return await isThisDeviceAlmanacPrimary()
+  } catch {
+    return true
+  }
+}
+
+/** App 定期叫這個：頻率到了才跑一輪（同一時間只跑一輪）。「現在執行一次」（runReviewNow）每台都能按。 */
+export async function runScheduledReview(createDeps: () => Promise<ReviewRunDeps> = createDefaultReviewDeps): Promise<void> {
   if (active) return
+  if (!await isReviewDevice()) return
   active = true
   try {
     const { maybeRunReview } = await import('./runner')
-    const summary = await maybeRunReview(await createDefaultReviewDeps())
+    const summary = await maybeRunReview(await createDeps())
     if (summary.errors.length) console.warn('[review] finished with errors:', summary.errors)
   } catch (error) {
     console.warn('[review] scheduled review skipped:', error)
@@ -198,12 +212,12 @@ export async function runScheduledReview(): Promise<void> {
 }
 
 /** Agent 設定區的「現在執行一次」。 */
-export async function runReviewNow(): Promise<void> {
+export async function runReviewNow(createDeps: () => Promise<ReviewRunDeps> = createDefaultReviewDeps): Promise<void> {
   if (active) return
   active = true
   try {
     const { runReview } = await import('./runner')
-    await runReview(await createDefaultReviewDeps())
+    await runReview(await createDeps())
   } finally {
     active = false
   }

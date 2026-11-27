@@ -2,6 +2,7 @@
 // 先放著的卡片預設隱藏，提醒日期到了才回到清單（第四節「排序與先放著」）。入口在審核分頁右上角，顯示「先放著 N 件」（v14）。
 // 只記「哪張卡、放到哪天」，存在 store.json 的 workbenchAside；卡片本身仍由來源投影，來源處理掉了這筆記錄就沒有作用。
 import type { WorkbenchCard } from './cards'
+import { notifyStoreKeyWritten } from '@/lib/almanac-sync/notify'
 
 export const PUT_ASIDE_KEY = 'workbenchAside'
 
@@ -101,4 +102,6 @@ export async function saveAside(map: AsideMap, storage?: Storage): Promise<void>
   const store = storage ?? await defaultStorage()
   await store.set(PUT_ASIDE_KEY, map)
   await store.save()
+  // Fork（almanac ALMNC-85.4）：V3 同步開著時改由 proposals.json 的 aside: 區逐筆合併（設計 2.16），否則照舊走設定同步。
+  if (!storage) notifyStoreKeyWritten(PUT_ASIDE_KEY)
 }

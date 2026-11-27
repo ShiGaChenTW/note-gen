@@ -20,8 +20,8 @@ import useVaultIndexStore from '@/stores/vault-index'
 import { takeAppWrites } from './app-writes'
 import { parseMoc } from './parse'
 import {
-  applyAppWrites, diffToOpSpec, isEffectiveDiff, planReconcile, reconcileMoc, revertDiffs,
-  type MocBaseline, type MocFileNow, type NoteRefOf, type PlannedMoc, type ReconcileDiff, type ReconcileOptions,
+  adoptSyncedBaselines, applyAppWrites, diffToOpSpec, isEffectiveDiff, planReconcile, reconcileMoc, revertDiffs,
+  type MocBaseline, type MocFileNow, type NoteRefOf, type PlannedMoc, type ReconcileDiff, type ReconcileOptions, type SyncedMocBaseline,
 } from './reconcile'
 import { setMocOverrides } from './runtime'
 import { blockPinsFromEdit, pinsFromDiffs, recordScottPins } from './scott-pins'
@@ -66,6 +66,16 @@ async function loadState() {
 async function saveBaselines(entries: ReadonlyMap<string, MocBaseline | null>): Promise<void> {
   const { mocSnapshotStore } = await import('@/db/moc-snapshots')
   await mocSnapshotStore.save(entries)
+}
+
+/** Fork（almanac ALMNC-85.4）：別台經 V3 同步傳來的上次已知狀態；V3 同步沒開或讀不到時是空的（照原本的比對）。 */
+async function syncedBaselines(workspace: string): Promise<SyncedMocBaseline[]> {
+  try {
+    const [{ getDb }, { listSyncedMocBaselines }] = await Promise.all([import('@/db/index'), import('@/lib/almanac-sync/tables/moc')])
+    return await listSyncedMocBaselines(await getDb(), workspace)
+  } catch {
+    return []
+  }
 }
 
 function isMocNote(note: IndexedNote): boolean {
@@ -198,6 +208,10 @@ export async function runMocReconcile(): Promise<ReconcileRunResult> {
   for (const path of applyAppWrites(current.baselines, takeAppWrites(), mocIdOf)) dirty.set(path, current.baselines.get(path) ?? null)
 
   const files = await readMocFiles(vault.notes)
+  // Fork（almanac ALMNC-85.4）：檔案內容等於別台傳來的上次已知狀態 → 同步來的，不當成手動編輯（設計 2.11 第二層）。
+  if (current.initialized && files.some(file => current.baselines.get(file.path)?.content !== file.raw)) {
+    for (const [path, baseline] of adoptSyncedBaselines(current.baselines, files, await syncedBaselines(current.workspace), mocIdOf)) dirty.set(path, baseline)
+  }
   const differs = current.initialized && files.some(file => current.baselines.get(file.path)?.content !== file.raw)
   const context = await linkContext(vault.notes, differs)
   const plan = planReconcile({ files, baselines: current.baselines, initialized: current.initialized, ...context })

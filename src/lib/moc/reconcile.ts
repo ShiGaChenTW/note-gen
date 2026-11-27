@@ -539,6 +539,47 @@ export interface MocFileNow {
   raw: string
 }
 
+/** Fork（almanac ALMNC-85.4）：別台經 V3 同步傳來的 MOC 上次已知狀態（lib/almanac-sync/tables/moc.ts）。 */
+export interface SyncedMocBaseline {
+  path: string
+  mocId?: string
+  content: string
+}
+
+/**
+ * Fork（almanac ALMNC-85.4，設計 2.11 第二層）：筆記庫放在 iCloud、Obsidian Sync 這類 App 外同步時，同步來的 MOC 看起來跟手動編輯一樣。
+ * 現在的檔案內容等於別台傳來的上次已知狀態（同一個 M 編號，沒有編號的看路徑）→ 當成同步來的：上次已知狀態直接換成它，不比對、
+ * 不記 ops 與 Scott 指定（那些在 A 台已記過，經 ops／scott-pins 同步過來）。M 編號相同但路徑換了（別台改名或搬家）時，舊路徑那一列拿掉。
+ * 回傳要寫回的上次已知狀態（null＝刪掉那一列）。
+ */
+export function adoptSyncedBaselines(
+  baselines: Map<string, MocBaseline>,
+  files: readonly MocFileNow[],
+  synced: readonly SyncedMocBaseline[],
+  mocIdOf: (raw: string) => string | undefined = () => undefined,
+): Map<string, MocBaseline | null> {
+  const dirty = new Map<string, MocBaseline | null>()
+  if (!synced.length) return dirty
+  const present = new Set(files.map(file => file.path))
+  for (const file of files) {
+    if (baselines.get(file.path)?.content === file.raw) continue
+    const mocId = mocIdOf(file.raw)
+    const match = synced.find(entry => entry.content === file.raw && (mocId ? entry.mocId === mocId : entry.path === file.path))
+    if (!match) continue
+    const baseline: MocBaseline = { content: file.raw, ...(mocId ? { mocId } : {}) }
+    baselines.set(file.path, baseline)
+    dirty.set(file.path, baseline)
+    if (!mocId) continue
+    for (const [path, known] of [...baselines]) {
+      if (path !== file.path && known.mocId === mocId && !present.has(path)) {
+        baselines.delete(path)
+        dirty.set(path, null)
+      }
+    }
+  }
+  return dirty
+}
+
 export interface PlannedMoc {
   path: string
   /** 上次已知狀態（null＝系統沒看過）。 */

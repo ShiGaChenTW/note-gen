@@ -3,6 +3,7 @@
 // 用 syncId 當 key，因為它跨裝置同步後不變（id 是本機自增）；沒有 syncId 的舊資料退回 `id:<id>`。
 // 沒有對照的對話屬於「未分組」（專案名為空字串）。
 import type { Conversation } from '@/db/conversations'
+import { notifyStoreKeyWritten } from '@/lib/almanac-sync/notify'
 
 export const THREAD_PROJECTS_KEY = 'threadProjects'
 export const MAX_PROJECT_NAME = 40
@@ -162,6 +163,8 @@ export async function saveProjectMap(map: ThreadProjectMap, storage?: ProjectSto
     const store = storage ?? await defaultStorage()
     await store.set(THREAD_PROJECTS_KEY, map)
     await store.save()
+    // Fork（almanac ALMNC-85.4）：帳號層級，寫入後排設定同步（設計 2.16）。
+    if (!storage) notifyStoreKeyWritten(THREAD_PROJECTS_KEY)
     return true
   } catch {
     return false

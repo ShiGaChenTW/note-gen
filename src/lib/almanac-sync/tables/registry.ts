@@ -55,6 +55,11 @@ export interface AlmanacRowsTable<V extends SyncValue = SyncValue> {
    * 回傳 true＝本機資料有改動（畫面要重新載入）。
    */
   afterMerge?(context: AlmanacTableContext): Promise<boolean | void>
+  /**
+   * Fork（almanac ALMNC-85.4）：這列還要不要留著（例如 Scott 指定 90 天、提案建立的專家 30 天後各台自己清）。
+   * 沒給＝永遠留。不留的列兩邊都當成不存在：不上傳、不收，也不發墓碑（設計 2.14、2.15）。
+   */
+  retain?(key: string, value: V, now: number): boolean
 }
 
 /** 只能新增的表（C 型）：每台只寫自己的 <dir>/<deviceId>/<YYYY-MM>.json。 */

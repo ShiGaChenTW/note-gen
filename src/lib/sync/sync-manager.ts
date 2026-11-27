@@ -25,6 +25,7 @@ import { getFilePathOptions, getWorkspacePath } from '@/lib/workspace'
 import { decodeSyncText, isBinaryFilePath, sameFileBytes, syncContentBytes } from './file-content'
 import { shouldExclude } from '@/config/sync-exclusions'
 import emitter from '@/lib/emitter'
+import { noteSyncWrite } from '@/lib/moc/app-writes'
 import {
   getEditorPathMutationRevision,
   prepareActiveEditorDeactivation,
@@ -383,6 +384,8 @@ export class SyncManager {
         if (!pullAccepted) {
           return { success: false, action: 'none', error: '本地内容在拉取期间发生变化' }
         }
+        // Fork（almanac ALMNC-85.4）：同步來的 MOC 記成 App 寫入，不當成 Obsidian 手動編輯（設計 2.11 第一層）。
+        noteSyncWrite(path, remoteFile.content)
 
         // Metadata does not participate in the content transaction. Finish it
         // in the background so there is no extra await window between the

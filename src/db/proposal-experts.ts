@@ -4,6 +4,8 @@
 import { executeRecordTransaction, getDb } from './index'
 import type { ExpertSnapshot, ProposalExpert } from '@/lib/ops/domain-undo'
 import { UNDO_WINDOW_MS } from '@/lib/ops/types'
+import { PROPOSAL_EXPERTS_SCHEMA } from '@/lib/moc/schema'
+import { notifyAlmanacLocalChange } from '@/lib/almanac-sync/notify'
 
 interface Row {
   batchId: string
@@ -23,17 +25,7 @@ export function initProposalExpertsDb(): Promise<void> {
   if (!initialized) {
     initialized = (async () => {
       const db = await getDb()
-      await db.execute(`
-        create table if not exists proposal_experts (
-          batch_id text primary key,
-          proposal_id text,
-          agent_id text not null,
-          name text not null,
-          domain text not null,
-          created_at integer not null,
-          removed_at integer
-        )
-      `)
+      await db.execute(PROPOSAL_EXPERTS_SCHEMA)
     })().catch(error => {
       initialized = null
       throw error
@@ -64,6 +56,8 @@ export async function recordProposalExpert(expert: ProposalExpert, now = Date.no
        domain = excluded.domain, created_at = excluded.created_at, removed_at = null`,
     [expert.batchId, expert.proposalId ?? null, expert.agentId, expert.name, expert.domain, expert.at],
   )
+  // Fork（almanac ALMNC-85.4）：提案建立的專家也同步（設計 2.14），另一台才能一起撤回。
+  notifyAlmanacLocalChange('proposal-experts')
 }
 
 export async function getProposalExpert(batchId: string): Promise<ProposalExpert | null> {
@@ -77,6 +71,7 @@ export async function markProposalExpertRemoved(batchId: string, at: number): Pr
   await initProposalExpertsDb()
   const db = await getDb()
   await db.execute('update proposal_experts set removed_at = $2 where batch_id = $1', [batchId, at])
+  notifyAlmanacLocalChange('proposal-experts')
 }
 
 /** 判斷能不能撤回用的現況：專家設定、存過的記憶、活動紀錄與任務筆數。domainNames 由呼叫端給（撤回 MOC 後仍存在的領域）。 */

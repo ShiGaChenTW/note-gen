@@ -5,6 +5,8 @@
 import { getDb } from './index'
 import { isPinActive, pinKey, SCOTT_PIN_TTL_MS, type ScottPin, type ScottPinKind } from '@/lib/moc/scott-pins'
 import type { MocBlockKey } from '@/lib/moc/parse'
+import { SCOTT_PINS_SCHEMA } from '@/lib/moc/schema'
+import { notifyAlmanacLocalChange } from '@/lib/almanac-sync/notify'
 
 const KINDS: readonly ScottPinKind[] = ['relation', 'position', 'chapter-title', 'block']
 
@@ -27,23 +29,7 @@ export function initScottPinsDb(): Promise<void> {
   if (!initialized) {
     initialized = (async () => {
       const db = await getDb()
-      await db.execute(`
-        create table if not exists scott_pins (
-          workspace text not null default '',
-          pin_key text not null,
-          kind text not null,
-          moc_id text,
-          moc_path text not null default '',
-          moc_name text not null default '',
-          note_id text,
-          note_path text,
-          chapter_id text,
-          block text,
-          op_id text,
-          pinned_at integer not null,
-          primary key (workspace, pin_key)
-        )
-      `)
+      await db.execute(SCOTT_PINS_SCHEMA)
     })().catch(error => {
       initialized = null
       throw error
@@ -98,6 +84,8 @@ export function createScottPinStore(workspace: () => Promise<string> | string = 
             pin.chapterId ?? null, pin.block ?? null, pin.opId ?? null, pin.at],
         )
       }
+      // Fork（almanac ALMNC-85.4）：Scott 指定也同步（設計 2.15）。
+      notifyAlmanacLocalChange('scott-pins')
     },
     active: async (now = Date.now()) => {
       await initScottPinsDb()

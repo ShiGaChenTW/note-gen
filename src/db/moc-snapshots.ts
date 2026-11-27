@@ -4,6 +4,8 @@
 // 流程在 src/lib/moc/reconcile-runtime.ts，判斷在 src/lib/moc/reconcile.ts。
 import { getDb } from './index'
 import type { MocBaseline } from '@/lib/moc/reconcile'
+import { MOC_SNAPSHOTS_SCHEMA } from '@/lib/moc/schema'
+import { notifyAlmanacLocalChange } from '@/lib/almanac-sync/notify'
 
 let initialized: Promise<void> | null = null
 
@@ -11,16 +13,7 @@ export function initMocSnapshotsDb(): Promise<void> {
   if (!initialized) {
     initialized = (async () => {
       const db = await getDb()
-      await db.execute(`
-        create table if not exists moc_snapshots (
-          workspace text not null default '',
-          path text not null,
-          moc_id text,
-          content text not null,
-          updated_at integer not null,
-          primary key (workspace, path)
-        )
-      `)
+      await db.execute(MOC_SNAPSHOTS_SCHEMA)
     })().catch(error => {
       initialized = null
       throw error
@@ -67,6 +60,8 @@ export function createMocSnapshotStore(workspace: () => Promise<string> | string
         if (baseline === null) await db.execute('delete from moc_snapshots where workspace = $1 and path = $2', [scope, path])
         else await db.execute(upsert, [scope, path, baseline.mocId ?? null, baseline.content, now])
       }
+      // Fork（almanac ALMNC-85.4）：上次已知狀態也同步（設計 2.11），另一台才不會把同步來的 MOC 當成手動編輯。
+      if ([...entries.keys()].some(Boolean)) notifyAlmanacLocalChange('moc-baselines')
     },
   }
 }

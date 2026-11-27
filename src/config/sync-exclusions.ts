@@ -175,6 +175,16 @@ export const ALWAYS_SYNC_EXCLUDED_FIELDS: string[] = [
   'almanacV3SyncLaneKeys',
   'almanacPrimaryDeviceRequest',
   'almanacDevicesCache',
+  // Fork（almanac ALMNC-85.4，設計 2.16、第 8 節 4A）：裝置層級的 V3 設定各台分開。新／舊介面開關（一台切換不能把其他台也切過去）、
+  // 側欄收合、開工卡（本機的任務）、每週整理的上次執行時間與研究員本週用量（背景工作只在主力裝置跑，1A）。
+  'almanacUiMode',
+  'almanacSidebarVaultCollapsed',
+  'almanacSidebarAgentsCollapsed',
+  'almanacJobCardsV1',
+  'almanacReviewLastRun',
+  'almanacExplorationResearchUsage',
+  // 另一台的「等你回話」、這台還沒有那段對話時的暫存（V3 同步的本機簿記）。
+  'almanacAwaitingRemote',
   'syncedFileShas',
   'lastSyncTimes',
   'lastRestoreTimes',

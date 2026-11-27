@@ -143,8 +143,19 @@ async function syncRowsTable(context: AlmanacSyncContext, table: AlmanacRowsTabl
   let changedLocally = false
 
   await withConflictRetry(async () => {
-    const localRows = await table.read(ctx)
-    const bases = await loadBases(context.db, scope, table.name)
+    const startedAt = context.now()
+    // 85.4：過期的列（retain＝false）兩邊都當成不存在，基準也一起拿掉，所以不會被推斷成「本機刪了」而發墓碑。
+    const expired = new Set<string>()
+    const keepRows = <R extends { v: SyncValue }>(rows: Record<string, R>): Record<string, R> => {
+      if (!table.retain) return rows
+      return Object.fromEntries(Object.entries(rows).filter(([key, row]) => {
+        if (table.retain?.(key, row.v, startedAt)) return true
+        expired.add(key)
+        return false
+      }))
+    }
+    const localRows = keepRows(await table.read(ctx))
+    const allBases = await loadBases(context.db, scope, table.name)
     const localDeleted = await table.localDeleted?.(ctx) ?? {}
 
     const files: Array<{ path: string; bucket?: string; keys: (key: string) => boolean }> = table.storage.type === 'file'
@@ -168,20 +179,22 @@ async function syncRowsTable(context: AlmanacSyncContext, table: AlmanacRowsTabl
     for (const file of files) {
       const keyOf = (record: Record<string, unknown>) => Object.keys(record).filter(file.keys)
       const fileLocalKeys = keyOf(localRows)
-      const fileBaseKeys = keyOf(bases)
+      const fileBaseKeys = keyOf(allBases)
 
       if (index && file.bucket) {
         // 分桶：遠端這桶沒變、本機這桶也沒變 → 不下載（設計 1.2「下載時只抓變了的桶」）。
         const state = await getFileState(context.db, scope, file.path)
         const remoteHash = index.buckets[file.bucket]?.hash ?? null
-        const localDirty = fileLocalKeys.some(key => rowChangedSinceBase(localRows[key], bases[key]))
+        const localDirty = fileLocalKeys.some(key => rowChangedSinceBase(localRows[key], allBases[key]))
           || fileBaseKeys.some(key => !localRows[key])
           || keyOf(localDeleted).length > 0
         if (!localDirty && (remoteHash ?? null) === (state?.hash ?? null)) continue
       }
 
       const current = await remote.read(file.path)
-      const remoteEnvelope = parseEnvelope(current?.content ?? null, table.name, file.path)
+      const parsedEnvelope = parseEnvelope(current?.content ?? null, table.name, file.path)
+      const remoteEnvelope = table.retain ? { ...parsedEnvelope, rows: keepRows(parsedEnvelope.rows) } : parsedEnvelope
+      const bases = expired.size ? Object.fromEntries(Object.entries(allBases).filter(([key]) => !expired.has(key))) : allBases
       const pick = <T>(record: Record<string, T>) => Object.fromEntries(Object.entries(record).filter(([key]) => file.keys(key)))
       const result = mergeTable({
         local: toSyncRows(pick(localRows), context.deviceId),

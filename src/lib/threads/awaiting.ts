@@ -5,6 +5,7 @@
 // Scott 在那段對話送出下一則訊息就算回話了，這一筆跟著拿掉。一段對話最多一筆（後問的蓋掉先問的）。
 // 存在 store.json 的 awaitingReplies（同對話標籤），關掉 App 再開還在。純函式，方便測試。
 import type { ReplyLike } from '@/lib/workbench/cards'
+import { notifyStoreKeyWritten } from '@/lib/almanac-sync/notify'
 
 export const AWAITING_REPLIES_KEY = 'awaitingReplies'
 /** 問題一行最多幾個字（卡片標題）。 */
@@ -151,6 +152,8 @@ export async function saveAwaiting(map: AwaitingMap, storage?: AwaitingStorage):
     const store = storage ?? await defaultStorage()
     await store.set(AWAITING_REPLIES_KEY, map)
     await store.save()
+    // Fork（almanac ALMNC-85.4）：V3 同步開著時改由 proposals.json 的 awaiting: 區逐筆合併（設計 2.16），否則照舊走設定同步。
+    if (!storage) notifyStoreKeyWritten(AWAITING_REPLIES_KEY)
     return true
   } catch {
     return false
