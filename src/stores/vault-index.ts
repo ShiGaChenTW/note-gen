@@ -100,6 +100,28 @@ const useVaultIndexStore = create<VaultIndexState>((set, get) => ({
   setRescan: (rescan) => set({ rescan }),
 }))
 
+const isSettled = (status: VaultIndexStatus) => status === 'ready' || status === 'error'
+
+/**
+ * 等索引掃完（ready 或 error）再查。啟動後索引還在掃時就按下的動作（例如結束專案找專案筆記）
+ * 用它，免得拿到還是空的索引。逾時就用手上現有的索引，不會一直卡住。
+ */
+export function waitForVaultIndexSettled(timeoutMs = 10_000): Promise<void> {
+  if (isSettled(useVaultIndexStore.getState().status)) return Promise.resolve()
+  return new Promise(resolve => {
+    let unsubscribe: () => void = () => undefined
+    const timer = setTimeout(done, timeoutMs)
+    unsubscribe = useVaultIndexStore.subscribe(state => {
+      if (isSettled(state.status)) done()
+    })
+    function done() {
+      clearTimeout(timer)
+      unsubscribe()
+      resolve()
+    }
+  })
+}
+
 let taskCache: { revision: number, tasks: TaskRef[] } | null = null
 
 /** 全 vault 的任務（依路徑、行號排序）；同一個 revision 只算一次。 */

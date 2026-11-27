@@ -7,8 +7,10 @@ let pageErrors: Error[] = []
 
 const PROJECT_PATH = '40 專案/電子紙.md'
 const KNOWLEDGE_PATH = '知識/墨水屏刷新.md'
-const PROJECT_NOTE = '---\ntype: project\ntitle: 電子紙\n---\n# 電子紙\n\n目標：做出電子紙簡報。\n'
-const KNOWLEDGE_NOTE = '---\ntype: knowledge\ntitle: 墨水屏刷新\ndomains: [D-hardware]\nproject: 電子紙\n---\n局部刷新會殘影。參考 [[電子紙]]。\n'
+// 筆記都帶合法 id：沒有 id 的 V3 筆記會在索引就緒 1.5 秒後被補號掃描（id-scan-service）改寫，
+// 斷言整份內容是否原封不動時就會看時序。
+const PROJECT_NOTE = '---\nid: N-20261101-090000-EP01\ntype: project\ntitle: 電子紙\n---\n# 電子紙\n\n目標：做出電子紙簡報。\n'
+const KNOWLEDGE_NOTE = '---\nid: N-20261101-090000-KN01\ntype: knowledge\ntitle: 墨水屏刷新\ndomains: [D-hardware]\nproject: 電子紙\n---\n局部刷新會殘影。參考 [[電子紙]]。\n'
 
 async function waitForMainBoot(page: Page) {
   await expect(page.getByRole('navigation', { name: '主要導覽' })).toBeVisible()
@@ -35,18 +37,25 @@ test('結束專案：專案筆記封存、知識筆記不動、從進行中清�
 
   await page.goto('/core/main')
   await waitForMainBoot(page)
+  // conversations 的欄位是啟動時一個一個 alter 上去的：等最後一個欄位出現才插資料，免得插到一半的 schema。
   await expect.poll(() =>
-    mock.querySql<{ name: string }>("SELECT name FROM pragma_table_info('conversations') WHERE name = 'syncId'").length,
-  ).toBe(1)
+    mock.querySql<{ name: string }>(
+      "SELECT name FROM pragma_table_info('conversations') WHERE name IN ('syncId', 'syncUpdatedAt', 'deletedAt')",
+    ).length,
+  ).toBe(3)
   const now = Date.now()
+  // 搬家清單較新：重新載入後對話面板會自動切到最新的一段，讓「目前對話」固定落在別的專案。
+  // 目前對話本來就會留在清單上（groupThreads keepId），不固定的話，結束專案後電子紙那段是否還在要看啟動時序。
   mock.execSql(
     'INSERT INTO conversations (syncId, syncUpdatedAt, title, createdAt, updatedAt, messageCount, isPinned) VALUES (?, ?, ?, ?, ?, ?, 0)',
-    ['e2e-s1', now, '電子紙排版討論', now, now, 2],
+    ['e2e-s1', now - 1000, '電子紙排版討論', now - 1000, now - 1000, 2],
   )
   mock.execSql(
     'INSERT INTO conversations (syncId, syncUpdatedAt, title, createdAt, updatedAt, messageCount, isPinned) VALUES (?, ?, ?, ?, ?, ?, 0)',
-    ['e2e-s2', now - 1000, '搬家清單', now - 1000, now - 1000, 2],
+    ['e2e-s2', now, '搬家清單', now, now, 2],
   )
+  await page.reload()
+  await waitForMainBoot(page)
 
   await page.getByRole('navigation', { name: '主要導覽' }).getByRole('button', { name: '對話', exact: true }).click()
   const list = page.getByRole('list', { name: '對話串' })
@@ -86,7 +95,7 @@ test('結束專案：專案筆記封存、知識筆記不動、從進行中清�
 
 test('只有專案筆記、沒有對話分組的專案：從編輯器工具列結束與取消封存', async ({ page }) => {
   const path = '讀書會.md'
-  const note = '---\ntype: project\ntitle: 讀書會\n---\n# 讀書會\n\n每月一本。\n'
+  const note = '---\nid: N-20261101-090000-BC01\ntype: project\ntitle: 讀書會\n---\n# 讀書會\n\n每月一本。\n'
   mock.writeVaultFile(path, note)
   mock.writeVaultFile(KNOWLEDGE_PATH, KNOWLEDGE_NOTE)
 

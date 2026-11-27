@@ -37,7 +37,9 @@ export function createProjectArchiveDeps(): ProjectArchiveDeps {
   return {
     now: () => Date.now(),
     findProjectNotes: async name => {
-      const { default: useVaultIndexStore } = await import('@/stores/vault-index')
+      const { default: useVaultIndexStore, waitForVaultIndexSettled } = await import('@/stores/vault-index')
+      // 剛啟動、索引還沒掃完就結束專案：等它掃完，否則會找不到專案筆記、一篇都沒封存。
+      await waitForVaultIndexSettled()
       return findProjectNotes(useVaultIndexStore.getState().notes.values(), name)
     },
     rewriteNote: async (path, rewrite) => {

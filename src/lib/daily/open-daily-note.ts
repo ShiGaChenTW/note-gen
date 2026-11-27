@@ -40,10 +40,24 @@ export async function ensureDailyNote(now: Date = new Date()): Promise<OpenDaily
   return { path, created: true }
 }
 
+export interface OpenDailyNoteOptions {
+  /**
+   * 切換分頁前再問一次是否還要打開。啟動時自動打開用它：準備日記期間使用者已經自己點開別的筆記，
+   * 就只建立日記、不搶走焦點。
+   */
+  shouldActivate?: () => boolean
+}
+
 /** 打開指定日期（預設今天）的日記；檔案不存在時才建立。 */
-export async function openDailyNote(now: Date = new Date()): Promise<OpenDailyNoteResult> {
+export async function openDailyNote(
+  now: Date = new Date(),
+  options: OpenDailyNoteOptions = {},
+): Promise<OpenDailyNoteResult> {
+  const shouldActivate = options.shouldActivate ?? (() => true)
   const result = await ensureDailyNote(now)
+  if (!shouldActivate()) return result
   if (!result.created) await revealInFileTree(result.path)
+  if (!shouldActivate()) return result
   await useArticleStore.getState().setActiveFilePath(result.path)
   return result
 }
