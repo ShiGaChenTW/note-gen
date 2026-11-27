@@ -15,6 +15,7 @@ import { splitFrontmatter } from '@/lib/markdown/frontmatter-split'
 import { noteTitle, parseV3Note } from '@/lib/v3-model/note'
 import { buildDeskContext } from './desk-context'
 import { newBatchId } from '@/lib/ops/ids'
+import { hasPendingProposalsFor, routeRecordExtract, type RecordExtractOutcome } from './record-extract'
 import { bridgeInput, planHandToCommander, type SourceListRow } from './sources-tab'
 import { attachmentKind, ingestSource, judgeSource, newSourceType, type SourceJudgement } from './judgement'
 import { conversationConclusionSource, dailyEntrySource, externalAudioSource, recordAttachmentSource, noteSource, recordTextSource, researchFindingSource, routeAutoSource, routeVersionedSource, voiceMemoSource, type AutoRouteResult, type AutoSourceInput, type RecordAttachment, type ResearchFindingLike, type VersionedRouteResult } from './auto-route'
@@ -624,6 +625,27 @@ export async function sendNoteToCommander(note: { path: string, content: string,
       await refreshSources()
     }
   }
+  return result.outcome
+}
+
+/**
+ * Fork（almanac ALMNC-90）：紀錄筆記的「送給指揮官萃取」——送成萃取資料源，指揮官只萃取知識筆記提案。
+ * Scott 手動按的：不擋行動版，失敗丟錯給按鈕顯示。去重規則見 record-extract.ts（已有未處理提案、萃取中、內容沒變都不送）。
+ */
+export async function sendRecordForExtraction(note: { path: string, content: string }): Promise<RecordExtractOutcome> {
+  const db = await import('@/db/v3-sources')
+  const result = await routeRecordExtract(note, {
+    chain: rootId => db.listVersionChain(rootId),
+    hasPendingProposals: async sourceIds => {
+      const collect = useCollectStore.getState()
+      await collect.hydrate()
+      return hasPendingProposalsFor(useCollectStore.getState().items, sourceIds)
+    },
+    addIfAbsent: ({ sourceType, ...rest }) => db.addSourceIfAbsent({ ...rest, sourceType }),
+    edit: (id, content) => db.editSource(id, content),
+    kick: kickCommander,
+  })
+  if (result.source) await refreshSources()
   return result.outcome
 }
 

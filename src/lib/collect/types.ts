@@ -47,6 +47,8 @@ export interface Proposal {
   // Fork（almanac ALMNC-54.6）：指揮官分析資料源產生的提案才有下面這些欄位。
   /** 來源資料源 id；接受後才寫進 source_outputs 連結表與筆記 frontmatter 的 sources。 */
   sourceIds?: string[]
+  /** Fork（almanac ALMNC-90）：相關筆記（[[標題]]）；接受後寫進筆記 frontmatter 的 related（紀錄筆記萃取時連回紀錄筆記）。 */
+  related?: string[]
   /** 筆記類型（知識／紀錄／專案）；只有 note 會有。 */
   noteType?: NoteType
   /** 所屬領域 id；只有 note 會有。 */

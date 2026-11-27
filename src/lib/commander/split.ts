@@ -44,6 +44,11 @@ export interface SplitContext {
   hint?: string
   /** Fork（almanac ALMNC-69.3）：這則資料源已經帶日誌標籤（Scott 貼的）：不產日誌筆記，只找知識片段。 */
   journalTagged?: boolean
+  /**
+   * Fork（almanac ALMNC-90）：紀錄筆記按「送給指揮官萃取」送來的：原文是日誌筆記、留在原處，
+   * 只萃取知識片段（不拆日誌、任務、行程、專案，不判斷整則是不是日誌）。模型失敗時不退回保底片段，丟錯讓分析退回待分析。
+   */
+  extractKnowledge?: boolean
 }
 
 /** Fork（almanac ALMNC-69.3）：拆片段的結果，加上對整則資料源「是不是日誌」的判斷（已帶標籤或模型沒說就沒有）。 */
@@ -71,19 +76,23 @@ export function buildFragmentPrompt(text: string, context: SplitContext): string
     `最多 ${MAX_FRAGMENTS} 個片段。`,
   ]
   // Fork（almanac ALMNC-69.3）：日誌標籤。Scott 貼了標籤就照辦；沒貼時指揮官判斷整則是不是 Scott 親手寫的事件記錄，只能提議。
-  if (context.journalTagged) {
+  if (context.extractKnowledge) {
+    lines.push('這則資料源是一篇紀錄筆記（會議紀錄或日誌），Scott 請你從裡面萃取知識筆記：原文留在原處，不要拆成日誌筆記，也不要輸出要做的事、行程或專案。只找出裡面一年後仍成立的知識片段（kind 一律 note、noteType 一律 knowledge），title 寫成一句主張。沒有就輸出空的 fragments。')
+  } else if (context.journalTagged) {
     lines.push('這則資料源帶「日誌」標籤（Scott 親手寫的事件記錄）：原文就是日誌，不要拆成日誌筆記（不要輸出 noteType log）；只找出裡面一年後仍成立的知識片段，和要做的事。沒有就輸出空的 fragments。')
   } else {
     lines.push('另外判斷整則資料源是不是日誌：Scott 自己寫的整篇事件記錄（做了什麼、發生什麼、當時的感受和反思），原文不拆不搬。是的話 journal.verdict 填 true，這時不要再把它拆成日誌筆記，只找知識片段；附 confidence（high／low）與一行 reason。')
   }
   lines.push(
     '只輸出 JSON，不要任何說明或程式碼框：',
-    context.journalTagged
+    context.extractKnowledge
+      ? '{"fragments":[{"kind":"note","noteType":"knowledge","title":"","body":"","people":[],"domainHint":"","tags":[],"reason":"","confidence":"high|low"}]}'
+      : context.journalTagged
       ? '{"fragments":[{"kind":"event|task|note|reject","noteType":"knowledge|project","title":"","body":"","date":"","time":"","people":[],"project":"","domainHint":"","tags":[],"reason":"","confidence":"high|low"}]}'
       : '{"journal":{"verdict":false,"confidence":"high|low","reason":""},"fragments":[{"kind":"event|task|note|reject","noteType":"knowledge|log|project","title":"","body":"","date":"","time":"","people":[],"project":"","domainHint":"","tags":[],"reason":"","confidence":"high|low"}]}',
   )
   // Fork（almanac ALMNC-57.3）：會議逐字稿要抽出決議、待辦與負責人。
-  if (context.sourceKind === 'meeting') {
+  if (context.sourceKind === 'meeting' && !context.extractKnowledge) {
     lines.push(
       '這則資料源是一場會議的逐字稿（每段開頭是「講者：」）。不要逐句摘要，請抽出：',
       '- 決議：會議裡決定的事，每一項拆成一個 note（noteType 用 log，date 填會議日期，people 填參與決定的人）。',
@@ -212,6 +221,7 @@ export function fallbackFragment(text: string, title?: string): Fragment {
  * 其他情況照舊：模型失敗、輸出壞掉或一個片段都沒有時退回保底片段。
  */
 export async function splitSource(text: string, ask: AskModel, context: SplitContext): Promise<SplitResult> {
+  if (context.extractKnowledge) return extractKnowledge(text, ask, context)
   if (!text.trim()) return { fragments: context.journalTagged ? [] : [fallbackFragment(text, context.origin)] }
   try {
     const raw = await ask(buildFragmentPrompt(text, context))
@@ -224,6 +234,24 @@ export async function splitSource(text: string, ask: AskModel, context: SplitCon
     console.warn('[commander] split failed, using fallback fragment:', error)
   }
   return { fragments: [fallbackFragment(text, context.origin)] }
+}
+
+/** Fork（almanac ALMNC-90）：只留知識筆記片段（萃取模式）。 */
+export function keepKnowledgeFragments(fragments: readonly Fragment[]): Fragment[] {
+  return fragments
+    .filter(fragment => fragment.kind === 'note' && fragment.noteType === 'knowledge')
+    .map((fragment, index) => ({ ...fragment, index }))
+}
+
+/**
+ * Fork（almanac ALMNC-90）：萃取模式。一個知識片段都沒有是正常的（讀過沒有可萃取的）；
+ * 模型失敗或輸出壞掉就丟錯，不退回保底片段——保底片段會把整篇紀錄筆記再提案一次。
+ */
+async function extractKnowledge(text: string, ask: AskModel, context: SplitContext): Promise<SplitResult> {
+  if (!text.trim()) return { fragments: [] }
+  const raw = await ask(buildFragmentPrompt(text, context))
+  if (extractJson(raw) === null) throw new Error('commander: knowledge extraction returned no JSON')
+  return { fragments: keepKnowledgeFragments(parseFragments(raw)) }
 }
 
 /** 主入口：問模型拆開並判斷；模型失敗、輸出壞掉或一個片段都沒有時退回保底片段。 */
