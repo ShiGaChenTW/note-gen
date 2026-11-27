@@ -45,6 +45,59 @@ export function remoteRootFor(layer: AlmanacSyncLayer): string {
   return layer === 'account' ? ALMANAC_ACCOUNT_ROOT : ALMANAC_LIBRARY_ROOT
 }
 
+// ---------- 不支援條件寫入的遠端：寫前比對＋寫後重讀（ALMNC-85.5） ----------
+
+export const VERIFIED_WRITE_SETTLE_MS = 150
+
+export interface VerifiedWriteOptions {
+  /** 寫入後等多久再讀回比對；涵蓋「兩台在約 100ms 內寫同一檔」 */
+  settleMs?: number
+  sleep?: (ms: number) => Promise<void>
+}
+
+/**
+ * 雲端資料夾（OneDrive 以外）沒有條件寫入：兩台在同一輪各自讀到舊版、各自寫回時，後寫的會整份蓋掉先寫的。
+ * 先寫那台已經把基準更新成自己寫的內容，下一輪看到遠端少了自己的修改，會當成「別台改回去」而採用遠端——修改就永久不見了
+ * （engine.test 的雲端資料夾競態測試重現過）。
+ *
+ * 這裡在 TS 端模擬條件寫入，不改 Rust：
+ * 1. 寫前比對：重讀一次，內容跟這台上次讀到的不同 → 丟 AlmanacRemoteConflictError（engine 會重拉重合併，基準還沒動）。
+ * 2. 寫後重讀：等 settleMs 再讀回，內容不是自己寫的（別台在這段時間寫了）→ 一樣丟衝突，下一次重試會把對方的版本合併進來再寫。
+ * 寫後重讀失敗時 engine 還沒更新基準，重試會把自己的修改連同對方的一起再寫一次。
+ * 剩下的窗口：別台通過寫前比對之後、真正寫入之前（一次本機檔案寫入的時間），這台要完成「寫入＋等 settleMs＋讀回」整段，
+ * 兩台在 100ms 內交錯寫的情況都落在上面兩道檢查裡；要完全關閉只能靠真正的條件寫入（需要 Rust 端 etag 比對）。
+ */
+export function withVerifiedWrites(remote: AlmanacRemote, options: VerifiedWriteOptions = {}): AlmanacRemote {
+  const settleMs = options.settleMs ?? VERIFIED_WRITE_SETTLE_MS
+  const sleep = options.sleep ?? ((ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms)))
+  /** 這台最近一次讀到的內容（null＝檔案不存在），寫前比對用 */
+  const lastSeen = new Map<string, string | null>()
+  return {
+    async read(path) {
+      const result = await remote.read(path)
+      lastSeen.set(path, result?.content ?? null)
+      return result
+    },
+    async write(path, content, guard) {
+      const before = await remote.read(path)
+      const expected = lastSeen.has(path) ? lastSeen.get(path) ?? null : undefined
+      const changed = expected === undefined
+        ? (before?.version ?? null) !== guard.version
+        : (before?.content ?? null) !== expected
+      if (changed) {
+        lastSeen.set(path, before?.content ?? null)
+        throw new AlmanacRemoteConflictError(path)
+      }
+      const written = await remote.write(path, content, guard)
+      if (settleMs > 0) await sleep(settleMs)
+      const after = await remote.read(path)
+      lastSeen.set(path, after?.content ?? null)
+      if ((after?.content ?? null) !== content) throw new AlmanacRemoteConflictError(path)
+      return { version: after?.version ?? written.version }
+    },
+  }
+}
+
 // ---------- 正式轉接：重用 remote-library ----------
 
 type Platform = 'github' | 'gitee' | 'gitlab' | 'gitea' | 's3' | 'webdav' | 'cloudFolder'
@@ -74,8 +127,8 @@ export async function resolveAlmanacRemoteScope(
 
 /**
  * 依目前的同步方式建立遠端轉接。帳號層用資料同步庫（scope 'data'），筆記庫層用筆記庫遠端（scope 'workspace'）。
- * 條件寫入：Git 類用 sha、S3／WebDAV 用 etag、雲端資料夾只有 OneDrive 支援；不支援時退回一般寫入
- * （雲端資料夾本來就是單一使用者的同步資料夾，覆寫風險跟現有記錄同步相同）。
+ * 條件寫入：Git 類用 sha、S3／WebDAV 用 etag、雲端資料夾只有 OneDrive 支援；不支援時用 withVerifiedWrites
+ * 在 TS 端做寫前比對＋寫後重讀（ALMNC-85.5），避免兩台幾乎同時寫同一檔時後寫的永久蓋掉先寫的。
  */
 export async function createRemoteLibraryAlmanacRemote(layer: AlmanacSyncLayer): Promise<AlmanacRemote> {
   const { Store } = await import('@tauri-apps/plugin-store')
@@ -91,7 +144,7 @@ export async function createRemoteLibraryAlmanacRemote(layer: AlmanacSyncLayer):
   const supportsCondition = platform !== 'cloudFolder' || cloudFolder?.provider === 'oneDrive'
   const remoteLibrary = await import('@/lib/sync/remote-library')
 
-  return {
+  const base: AlmanacRemote = {
     async read(path) {
       try {
         const metadata = await remoteLibrary.getRemoteFileMetadata(path, scope, platform)
@@ -121,4 +174,5 @@ export async function createRemoteLibraryAlmanacRemote(layer: AlmanacSyncLayer):
       }
     },
   }
+  return supportsCondition ? base : withVerifiedWrites(base)
 }
