@@ -27,7 +27,7 @@ import useThreadsStore from '@/stores/threads'
 // Fork（almanac ALMNC-54.11）：路由器三層（規則、本機模型、問 Scott）。
 import { chooseRoute, planSidebarRoute, routeNote, restoreSidebarRoute, savePreferenceLine, shouldRouteSidebarMessage, type SidebarRoutePlan } from '@/lib/router/sidebar'
 import type { RosterEntry, RouteDecision } from '@/lib/router/router'
-import { threadKey } from '@/lib/threads/projects'
+import { listProjects, projectOf, threadKey } from '@/lib/threads/projects'
 import useRouterStore, { type RouterAnswer } from '@/stores/router'
 import { toast } from '@/hooks/use-toast'
 import { useChatV3 } from './chat-v3'
@@ -502,8 +502,15 @@ export const ChatSend = forwardRef<ChatSendHandle, ChatSendProps>(({
       roleLabel: (key, values) => t(`agents.roles.${key}` as Parameters<typeof t>[0], values),
       originLabel: agent => t('record.chat.v3.commander.origin', { agent }),
     })
+    // Fork（almanac ALMNC-87）：秘書新增任務可掛的現有專案（對話頁的專案分組）與這段對話所屬的專案。
+    await useThreadsStore.getState().loadProjects().catch(() => undefined)
+    const { projectMap } = useThreadsStore.getState()
+    const projects = listProjects(useChatStore.getState().conversations, projectMap)
+    const conversationProject = conversation ? projectOf(projectMap, conversation) : ''
     return prepareSidebarCommanderRun({
       conversationId: placeholder.conversationId ?? undefined,
+      projects,
+      conversationProject,
       chatId: placeholder.id,
       scottMessages,
       readOnly,

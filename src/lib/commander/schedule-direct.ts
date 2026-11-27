@@ -10,6 +10,7 @@
 import type { AgentTool, AgentToolResult } from '@/lib/agent/types'
 import { extractSchedule, isValidYmd, newProposalId, normalizeTime } from '@/lib/collect/split'
 import type { Proposal } from '@/lib/collect/types'
+import { projectTag } from './consolidate'
 
 export const SCHEDULE_TOOL_NAMES = ['schedule_add_task', 'schedule_add_event'] as const
 export type ScheduleToolName = typeof SCHEDULE_TOOL_NAMES[number]
@@ -103,6 +104,36 @@ export interface ScheduleDeps {
   propose: (proposal: Proposal) => void | Promise<void>
   /** 這次執行裡 Scott 是否已經在對話裡選過（ask_user_question 有回答）。 */
   choiceAnswered: () => boolean
+  /**
+   * Fork（almanac ALMNC-87）：現有的專案名稱（對話頁的專案分組，lib/threads/projects）。
+   * 任務只會掛到這裡面的專案；沒給就當作沒有專案，一律不掛。
+   */
+  projects?: () => readonly string[]
+  /** Fork（almanac ALMNC-87）：這段對話所屬的專案（沒有為空）；模型沒指定專案時預設帶入。 */
+  conversationProject?: () => string
+}
+
+function projectKey(name: string): string {
+  return name.replace(/[\s-]+/g, ' ').trim().toLowerCase()
+}
+
+/**
+ * Fork（almanac ALMNC-87）：決定任務要掛哪個專案。
+ * - 模型有指定（Scott 提到的專案）：只在對得到現有專案時掛，回傳現有的寫法；對不到就不掛（不猜、不建立新專案），也不退回對話的專案。
+ * - 沒指定：對話屬於某個現有專案就帶入。
+ */
+export function resolveTaskProject(requested: string, known: readonly string[], conversationProject = ''): { project?: string, unmatched?: string } {
+  const find = (name: string) => {
+    const key = projectKey(name)
+    return key ? known.find(project => projectKey(project) === key) : undefined
+  }
+  const wanted = requested.trim()
+  if (wanted) {
+    const project = find(wanted)
+    return project ? { project } : { unmatched: wanted }
+  }
+  const project = find(conversationProject)
+  return project ? { project } : {}
 }
 
 function str(value: unknown): string {
@@ -130,13 +161,22 @@ async function runSchedule(kind: 'task' | 'event', input: Record<string, unknown
   if (rawDate && !date) return { ok: false, error: 'INVALID_DATE', message: 'Use a local date in YYYY-MM-DD format.' }
   if (rawTime && !time) return { ok: false, error: 'INVALID_TIME', message: 'Use a 24-hour time in HH:mm format.' }
 
-  const proposal: Proposal = { id: newProposalId(), kind, title, body: '', due: date, time: kind === 'event' ? time : '', tags: [] }
+  // 掛專案的方式與指揮官產生的任務一致（consolidate.ts draftToProposal）：project 欄位＋專案標籤。
+  const { project, unmatched } = kind === 'task'
+    ? resolveTaskProject(str(input.project), deps.projects?.() ?? [], deps.conversationProject?.() ?? '')
+    : {}
+  const tag = projectTag(project)
+  const proposal: Proposal = {
+    id: newProposalId(), kind, title, body: '', due: date, time: kind === 'event' ? time : '', tags: tag ? [tag] : [],
+    ...(project ? { project } : {}),
+  }
+  const projectNote = unmatched ? ` No existing project is named "${unmatched}", so no project was attached; do not create one.` : ''
   const explicit = quotedFromScott(quote, messages) && looksLikeScheduleInstruction(quote)
   if (!explicit) {
     await deps.propose({ ...proposal, drafter: { role: 'secretary' } })
     return {
       ok: true,
-      message: 'Scott did not explicitly ask for this in his own words, so it became a proposal on the workbench. Nothing was written. Tell Scott in one line that you proposed it.',
+      message: `Scott did not explicitly ask for this in his own words, so it became a proposal on the workbench. Nothing was written. Tell Scott in one line that you proposed it.${projectNote}`,
       data: { proposed: true },
     }
   }
@@ -157,11 +197,19 @@ async function runSchedule(kind: 'task' | 'event', input: Record<string, unknown
 
   const edit = await deps.write(proposal)
   await deps.onDirectEdit(edit)
-  return { ok: true, message: `Added directly: ${describeDirectEdit(edit.proposal)}. A one-line confirmation with an undo button is already shown to Scott; reply with at most one short line.`, data: { direct: true } }
+  return {
+    ok: true,
+    message: `Added directly: ${describeDirectEdit(edit.proposal)}${project ? ` (project: ${project})` : ''}. A one-line confirmation with an undo button is already shown to Scott; reply with at most one short line.${projectNote}`,
+    data: { direct: true, ...(project ? { project } : {}) },
+  }
 }
 
 const DATE_PROP = { type: 'string', description: 'Local date YYYY-MM-DD.' }
 const TIME_PROP = { type: 'string', description: '24-hour time HH:mm.' }
+const PROJECT_PROP = {
+  type: 'string',
+  description: 'Optional. The existing project this task belongs to, only when Scott named it. Leave it out otherwise: the conversation\'s project (if any) is used. A name that matches no existing project is ignored; never invent or create a project.',
+}
 
 /** 秘書的兩個工具：只能加任務或時段，不能碰筆記。 */
 export function buildScheduleTools(deps: ScheduleDeps): AgentTool[] {
@@ -175,7 +223,7 @@ export function buildScheduleTools(deps: ScheduleDeps): AgentTool[] {
       risk: 'medium',
       inputSchema: {
         type: 'object',
-        properties: { title: { type: 'string' }, date: DATE_PROP, quote: { type: 'string', description: QUOTE_DESCRIPTION } },
+        properties: { title: { type: 'string' }, date: DATE_PROP, project: PROJECT_PROP, quote: { type: 'string', description: QUOTE_DESCRIPTION } },
         required: ['title', 'quote'],
         additionalProperties: false,
       },

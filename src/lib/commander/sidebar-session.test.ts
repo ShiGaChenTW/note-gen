@@ -151,6 +151,28 @@ describe('sidebar commander changes', () => {
   })
 })
 
+// Fork（almanac ALMNC-87）：對話所屬的專案與現有專案名單從右側欄的一次執行帶給秘書的工具與提示詞。
+describe('secretary tasks and projects', () => {
+  it('defaults a task Scott asked for to the conversation\'s project and tells the model the existing projects', async () => {
+    const { deps } = fakeDeps()
+    const run = await prepareSidebarCommanderRun({ conversationId: 7, chatId: 70, scottMessages: ['新增任務：明天打給房東'], projects: ['搬家', 'Almanac'], conversationProject: '搬家' }, deps)
+    expect(run.rolePrompt).toContain('Existing projects: "搬家", "Almanac".')
+    expect(run.rolePrompt).toContain('This conversation belongs to the project "搬家"')
+    await tool(run, 'schedule_add_task').execute({ title: '打給房東', date: '2026-11-20', quote: '新增任務：明天打給房東' }, context)
+    expect(deps.writeSchedule).toHaveBeenCalledWith(expect.objectContaining({ kind: 'task', project: '搬家', tags: ['搬家'] }))
+  })
+
+  it('attaches nothing and says nothing about projects when none exist', async () => {
+    const { deps } = fakeDeps()
+    const run = await prepareSidebarCommanderRun({ conversationId: 7, chatId: 70, scottMessages: ['新增任務：明天打給房東'] }, deps)
+    expect(run.rolePrompt).not.toContain('Existing projects')
+    await tool(run, 'schedule_add_task').execute({ title: '打給房東', date: '2026-11-20', project: '搬家', quote: '新增任務：明天打給房東' }, context)
+    const written = vi.mocked(deps.writeSchedule).mock.calls[0][0]
+    expect(written.project).toBeUndefined()
+    expect(written.tags).toEqual([])
+  })
+})
+
 // Fork（almanac ALMNC-54.21 AC#2）：秘書在對話裡問 Scott 的問題記到工作台「等你回話」——明確標記，不從文字猜。
 describe('secretary waiting for Scott\'s reply', () => {
   function awaitingDeps() {
