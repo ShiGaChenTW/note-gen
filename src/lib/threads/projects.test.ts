@@ -77,6 +77,31 @@ describe('threads/projects', () => {
     expect(projectOf(map, list[2])).toBe('')
   })
 
+  // Fork（almanac ALMNC-89）：已結束（封存）的專案
+  it('groupThreads：封存的專案依專案分組時不列，搜尋時列在進行中的專案後面並標成封存', () => {
+    const list = [conv(1), conv(2), conv(3), conv(4)]
+    const map = { s1: 'A', s2: 'B', s3: 'B' }
+    const archived = new Set(['B'])
+    const groups = groupThreads(list, map, { mode: 'project', archived })
+    expect(groups.map(g => g.project)).toEqual(['A', ''])
+    expect(groups.some(g => g.archived)).toBe(false)
+
+    const searched = groupThreads(list, map, { mode: 'project', archived, query: '對話' })
+    expect(searched.map(g => [g.project, !!g.archived])).toEqual([['A', false], ['B', true], ['', false]])
+    // 專案名也搜得到
+    expect(groupThreads(list, map, { mode: 'project', archived, query: 'b' }).map(g => g.project)).toEqual(['B'])
+    // 最近模式是對話時間軸，不是專案清單：對話照列
+    expect(groupThreads(list, map, { mode: 'recent', archived })[0].threads.map(t => t.id)).toEqual([4, 3, 2, 1])
+    // 目前打開的對話就算屬於封存專案也列出來
+    expect(groupThreads(list, map, { mode: 'project', archived, keepId: 2 }).find(g => g.project === 'B')?.threads.map(t => t.id)).toEqual([2])
+  })
+
+  it('listProjects：封存的專案不在進行中清單', () => {
+    const list = [conv(1), conv(2)]
+    const map = { s1: 'A', s2: 'B', gone: 'C' }
+    expect(listProjects(list, map, new Set(['B', 'C']))).toEqual(['A'])
+  })
+
   it('讀寫 store.json：壞資料與失敗都不丟錯', async () => {
     const data: Record<string, unknown> = {}
     const storage = {

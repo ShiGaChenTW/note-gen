@@ -394,3 +394,26 @@ it('switches the editor width between narrow, wider and widest from the toolbar'
   await act(async () => { items[1].click() })
   expect(useSettingStore.getState().editorContentWidth).toBe('wide')
 })
+
+// Fork（almanac ALMNC-89）：專案筆記才有「結束專案…」，放在第二組（收藏之後）。
+it('shows the end-project action only for project notes', async () => {
+  const { within } = await import('@testing-library/react')
+  const project = makeEditor({ type: 'doc', content: [
+    { type: 'frontmatter', attrs: { raw: '---\ntype: project\ntitle: 電子紙\n---\n' } },
+    { type: 'heading', attrs: { level: 1 }, content: [{ type: 'text', text: '電子紙' }] },
+  ] })
+  useActiveNoteEditorStore.getState().register({ editor: project as never, path: 'work/a.md', outlineOpen: false, toggleOutline: () => {} })
+  await render()
+  const toolbar = within(host).getByRole('toolbar')
+  expect(within(toolbar).getByRole('button', { name: '結束專案…' })).toBeTruthy()
+  const names = within(toolbar).getAllByRole('button').map(item => item.getAttribute('aria-label'))
+  expect(names.indexOf('結束專案…')).toBe(names.findIndex(name => name?.startsWith('收藏')) + 1)
+
+  const knowledge = makeEditor({ type: 'doc', content: [
+    { type: 'frontmatter', attrs: { raw: '---\ntype: knowledge\ntitle: 墨水屏\n---\n' } },
+    { type: 'paragraph', content: [{ type: 'text', text: 'x' }] },
+  ] })
+  // 換成另一篇（新的編輯器實例）：按鈕跟著消失
+  await act(async () => { useActiveNoteEditorStore.getState().register({ editor: knowledge as never, path: 'work/a.md', outlineOpen: false, toggleOutline: () => {} }) })
+  expect(within(toolbar).queryByRole('button', { name: '結束專案…' })).toBeNull()
+})

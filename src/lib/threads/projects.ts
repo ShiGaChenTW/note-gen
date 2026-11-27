@@ -70,6 +70,8 @@ export interface ThreadGroup<T extends ThreadConversation = ThreadConversation> 
   /** 空字串＝未分組。 */
   project: string
   threads: T[]
+  /** Fork（almanac ALMNC-89）：已結束（封存）的專案；只有搜尋時才會出現。 */
+  archived?: boolean
 }
 
 export type ThreadGroupMode = 'project' | 'recent'
@@ -79,6 +81,8 @@ export interface GroupOptions {
   query?: string
   /** 目前打開的對話：就算還沒有訊息也要列出來。 */
   keepId?: number | null
+  /** Fork（almanac ALMNC-89）：已結束（封存）的專案名。依專案分組時不列出，搜尋時才列出（排在進行中的專案後面）。 */
+  archived?: ReadonlySet<string>
 }
 
 /**
@@ -88,12 +92,13 @@ export interface GroupOptions {
 export function groupThreads<T extends ThreadConversation>(
   conversations: T[],
   map: ThreadProjectMap,
-  { mode, query = '', keepId = null }: GroupOptions,
+  { mode, query = '', keepId = null, archived }: GroupOptions,
 ): ThreadGroup<T>[] {
   const needle = query.trim().toLowerCase()
+  const isArchived = (project: string) => !!project && !!archived?.has(project)
   const visible = conversations.filter(conversation => {
     if (conversation.messageCount <= 0 && conversation.id !== keepId) return false
-    if (!needle) return true
+    if (!needle) return mode !== 'project' || conversation.id === keepId || !isArchived(projectOf(map, conversation))
     return conversation.title.toLowerCase().includes(needle) || projectOf(map, conversation).toLowerCase().includes(needle)
   })
   if (visible.length === 0) return []
@@ -104,16 +109,22 @@ export function groupThreads<T extends ThreadConversation>(
     const project = projectOf(map, conversation)
     byProject.set(project, [...(byProject.get(project) ?? []), conversation])
   }
-  const groups = [...byProject.entries()].map(([project, threads]) => ({ project, threads: sortThreads(threads) }))
+  const groups = [...byProject.entries()].map(([project, threads]) => ({
+    project, threads: sortThreads(threads), ...(isArchived(project) ? { archived: true } : {}),
+  }))
   const newest = (group: ThreadGroup<T>) => Math.max(...group.threads.map(thread => thread.updatedAt))
   return groups.sort((a, b) => {
     if (!a.project !== !b.project) return a.project ? -1 : 1
+    if (!a.archived !== !b.archived) return a.archived ? 1 : -1
     return newest(b) - newest(a)
   })
 }
 
-/** 目前有哪些專案（供「移到專案」選單），依最新動態排序。 */
-export function listProjects(conversations: ThreadConversation[], map: ThreadProjectMap): string[] {
+/**
+ * 目前進行中的專案（供「移到專案」選單與秘書掛任務），依最新動態排序。
+ * Fork（almanac ALMNC-89）：已結束（封存）的專案不列。
+ */
+export function listProjects(conversations: ThreadConversation[], map: ThreadProjectMap, archived?: ReadonlySet<string>): string[] {
   const latest = new Map<string, number>()
   for (const conversation of conversations) {
     const project = projectOf(map, conversation)
@@ -121,7 +132,9 @@ export function listProjects(conversations: ThreadConversation[], map: ThreadPro
   }
   // 專案裡的對話都被刪掉時，對照表可能還留著名字；補進來避免選單少一個
   for (const project of Object.values(map)) if (!latest.has(project)) latest.set(project, 0)
-  return [...latest.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([project]) => project)
+  return [...latest.entries()]
+    .filter(([project]) => !archived?.has(project))
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([project]) => project)
 }
 
 interface ProjectStorage {

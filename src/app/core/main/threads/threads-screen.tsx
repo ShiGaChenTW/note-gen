@@ -6,7 +6,7 @@
 import { Segmented } from '@/components/v3/segmented'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { Check, ChevronDown, FolderInput, Hash, MessageSquarePlus, MessagesSquare, Pin, Search } from 'lucide-react'
+import { Archive, ArchiveRestore, Check, ChevronDown, Ellipsis, FolderInput, Hash, MessageSquarePlus, MessagesSquare, Pin, Search } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { V3_BUTTON_SHAPE } from '@/components/v3/button-shape'
@@ -15,6 +15,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Input } from '@/components/ui/input'
 import { useUiV3 } from '@/lib/fork-ui'
 import { groupThreads, listProjects, projectOf, threadKey, type ThreadConversation, type ThreadGroupMode } from '@/lib/threads/projects'
+import { archivedNames, listArchivedProjects } from '@/lib/projects/archive'
 import { cn } from '@/lib/utils'
 import useChatStore from '@/stores/chat'
 import useCollectStore from '@/stores/collect'
@@ -28,6 +29,7 @@ import { EmptyState } from '@/components/v3/empty-state'
 import { SectionLabel } from '@/components/v3/section-label'
 import { PageHeader, PageSurface } from '../page-ui'
 import { PendingProposalsNote, ThreadTagPrefix } from './thread-status'
+import { EndProjectDialog, useProjectArchiveActions } from './end-project-dialog'
 import { usePendingCounts } from '@/lib/decide/use-decisions'
 import { tagOf, type ThreadTag } from '@/lib/threads/tags'
 import { SELECTED_RAISED } from '../sidebar-row'
@@ -107,7 +109,102 @@ export function ThreadRow({ thread, tag, pending, project, projects, current, no
   )
 }
 
-function ThreadList() {
+/**
+ * Fork（almanac ALMNC-89）：專案分組的標題列——收合鈕＋專案動作（結束專案／取消封存）。
+ * 未分組沒有動作。
+ */
+function ProjectGroupHeader({ project, count, closed, archived, onToggle, onEnd, onReopen }: {
+  project: string
+  count: number
+  closed: boolean
+  archived: boolean
+  onToggle: () => void
+  onEnd: () => void
+  onReopen: () => void
+}) {
+  const t = useTranslations('threads')
+  return (
+    <div className="group/header flex items-center rounded-(--r-kbd) hover:bg-hover">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={!closed}
+        className="flex min-w-0 flex-1 items-center gap-1.5 rounded-(--r-kbd) px-2 py-1 text-left text-muted-ink outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring"
+      >
+        <ChevronDown aria-hidden className={cn('size-3 motion-safe:transition-transform', closed && '-rotate-90')} />
+        {project ? <Hash aria-hidden className="size-3" /> : null}
+        <SectionLabel as="span" className="flex-1" trailing={<Count value={count} />}>
+          <span className="flex min-w-0 items-center gap-1.5">
+            <span className="block truncate">{project || t('ungrouped')}</span>
+            {archived && <span className="shrink-0 rounded-(--r-kbd) bg-hover px-1.5 py-px text-xs font-normal normal-case">{t('archivedBadge')}</span>}
+          </span>
+        </SectionLabel>
+      </button>
+      {project && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label={t('projectActions', { name: project })}
+              title={t('projectActions', { name: project })}
+              className="mr-1 shrink-0 text-muted-ink opacity-0 focus-visible:opacity-100 group-hover/header:opacity-100 data-[state=open]:opacity-100"
+            >
+              <Ellipsis aria-hidden />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-44">
+            {archived
+              ? <DropdownMenuItem onSelect={onReopen}><ArchiveRestore aria-hidden />{t('reopenProject')}</DropdownMenuItem>
+              : <DropdownMenuItem onSelect={onEnd}><Archive aria-hidden />{t('endProject')}</DropdownMenuItem>}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
+    </div>
+  )
+}
+
+/** Fork（almanac ALMNC-89）：清單最下面的「已封存的專案」，預設收合；每個專案可以取消封存。 */
+function ArchivedProjectsSection({ projects, onReopen }: { projects: string[], onReopen: (project: string) => void }) {
+  const t = useTranslations('threads')
+  const [open, setOpen] = useState(false)
+  if (projects.length === 0) return null
+  return (
+    <section className="mt-3 border-t border-line pt-1.5">
+      <button
+        type="button"
+        onClick={() => setOpen(value => !value)}
+        aria-expanded={open}
+        className="flex w-full items-center gap-1.5 rounded-(--r-kbd) px-2 py-1 text-left text-muted-ink outline-none hover:bg-hover focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring"
+      >
+        <ChevronDown aria-hidden className={cn('size-3 motion-safe:transition-transform', !open && '-rotate-90')} />
+        <Archive aria-hidden className="size-3" />
+        <SectionLabel as="span" className="flex-1" trailing={<Count value={projects.length} />}>{t('archivedProjects')}</SectionLabel>
+      </button>
+      {open && (
+        <ul className="mt-0.5">
+          {projects.map(project => (
+            <li key={project} className="flex items-center gap-1.5 rounded-(--r-kbd) py-1 pr-1 pl-7 text-ui-compact text-muted-ink hover:bg-hover">
+              <span className="min-w-0 flex-1 truncate">{project}</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 shrink-0 px-2 text-xs"
+                aria-label={t('reopenProjectNamed', { name: project })}
+                onClick={() => onReopen(project)}
+              >
+                {t('reopenProject')}
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  )
+}
+
+/** 匯出給測試（ALMNC-89 結束專案）。 */
+export function ThreadList() {
   const t = useTranslations('threads')
   const conversations = useChatStore(state => state.conversations)
   const currentId = useChatStore(state => state.currentConversationId)
@@ -119,13 +216,18 @@ function ThreadList() {
   const query = useThreadsStore(state => state.query)
   const setQuery = useThreadsStore(state => state.setQuery)
   const moveToProject = useThreadsStore(state => state.moveToProject)
+  const archivedProjects = useThreadsStore(state => state.archivedProjects)
+  const archiveActions = useProjectArchiveActions()
+  const [ending, setEnding] = useState<string | null>(null)
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
   const [naming, setNaming] = useState<ThreadConversation | null>(null)
   const [name, setName] = useState('')
   const [now] = useState(() => Date.now())
 
-  const groups = useMemo(() => groupThreads(conversations, projectMap, { mode, query, keepId: currentId }), [conversations, projectMap, mode, query, currentId])
-  const projects = useMemo(() => listProjects(conversations, projectMap), [conversations, projectMap])
+  const archived = useMemo(() => archivedNames(archivedProjects), [archivedProjects])
+  const archivedList = useMemo(() => listArchivedProjects(archivedProjects).map(record => record.name), [archivedProjects])
+  const groups = useMemo(() => groupThreads(conversations, projectMap, { mode, query, keepId: currentId, archived }), [conversations, projectMap, mode, query, currentId, archived])
+  const projects = useMemo(() => listProjects(conversations, projectMap, archived), [conversations, projectMap, archived])
   const total = groups.reduce((sum, group) => sum + group.threads.length, 0)
 
   function toggle(project: string) {
@@ -135,6 +237,15 @@ function ThreadList() {
       else next.add(project)
       return next
     })
+  }
+
+  function confirmEnd(project: string) {
+    setEnding(null)
+    void archiveActions.end(project)
+  }
+
+  function onReopen(project: string) {
+    return archiveActions.reopen(project)
   }
 
   function onMove(thread: ThreadConversation, project: string | null) {
@@ -163,18 +274,15 @@ function ThreadList() {
           return (
             <section key={key || '__none'} className="mt-1.5" data-project={key || undefined}>
               {showHeader && (
-                <button
-                  type="button"
-                  onClick={() => toggle(key)}
-                  aria-expanded={!closed}
-                  className="flex w-full items-center gap-1.5 rounded-(--r-kbd) px-2 py-1 text-left text-muted-ink outline-none hover:bg-hover focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring"
-                >
-                  <ChevronDown aria-hidden className={cn('size-3 motion-safe:transition-transform', closed && '-rotate-90')} />
-                  {key ? <Hash aria-hidden className="size-3" /> : null}
-                  <SectionLabel as="span" className="flex-1" trailing={<Count value={group.threads.length} />}>
-                    <span className="block truncate">{key || t('ungrouped')}</span>
-                  </SectionLabel>
-                </button>
+                <ProjectGroupHeader
+                  project={key}
+                  count={group.threads.length}
+                  closed={closed}
+                  archived={!!group.archived}
+                  onToggle={() => toggle(key)}
+                  onEnd={() => setEnding(key)}
+                  onReopen={() => void onReopen(key)}
+                />
               )}
               {!closed && group.threads.map(thread => (
                 <ThreadRow
@@ -193,7 +301,10 @@ function ThreadList() {
             </section>
           )
         })}
+        {mode === 'project' && !query.trim() && <ArchivedProjectsSection projects={archivedList} onReopen={project => void onReopen(project)} />}
       </div>
+
+      <EndProjectDialog project={ending} onConfirm={confirmEnd} onCancel={() => setEnding(null)} />
 
       <Dialog open={naming !== null} onOpenChange={open => { if (!open) setNaming(null) }}>
         <DialogContent className="sm:max-w-sm">
