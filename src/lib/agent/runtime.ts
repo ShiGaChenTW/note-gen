@@ -1,6 +1,7 @@
 import { buildEditorTextEdits, EDITOR_EDIT_SKIPPED, EditorEditSkipped } from './editor-adapter'
 import type OpenAI from 'openai'
 import { takeToolDisplayTitle } from './tool-display'
+import { resolveConversationSystemPrompt } from '@/lib/prompt-library/effective'
 import { createAssistantToolCallMessage, createChatCompletionStreamWithToolChoiceFallback, createOpenAIClient, getAISettings, getChatTokenLimitParams, getSystemPromptContent, handleAIError, validateAIService, withFastAiRequestOptions } from '@/lib/ai/utils'
 import { estimateTokens } from '@/lib/ai/token-counter'
 import { AgentContextManager } from './context-manager'
@@ -840,7 +841,8 @@ export class AgentRuntime {
     const allTools = input.transformTools ? input.transformTools(baseTools) : baseTools // Fork #30
     const toolMap = new Map(allTools.map((tool) => [tool.name, tool]))
     let tools = selectToolsForContext(context, allTools, input.permissionMode)
-    const customSystemPrompt = input.systemPromptOverride?.trim() || await getSystemPromptContent()
+    // ALMNC-86：提示詞功能關閉時，對話提示詞與 Agent 自訂指引都不生效
+    const customSystemPrompt = resolveConversationSystemPrompt(input.systemPromptOverride) || await getSystemPromptContent()
     let memoryContext = input.useMemories === false
       ? {
           memories: [],
