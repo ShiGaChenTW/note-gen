@@ -6,6 +6,7 @@ import type { BlueprintProposal } from '@/lib/commander/blueprint'
 import type { DecideItem } from '@/lib/decide/project'
 import { PROPOSAL_STALE_DAYS, DAY_MS } from '@/lib/proposals/trail'
 import type { TaskRef } from '@/lib/vault-index/index-core'
+import type { ReviewHandPack } from '@/lib/cleanup/fragments'
 import { batchProposals } from './batch'
 
 /** Fork（almanac ALMNC-54.14）：舊筆記批次卡的鍵（也是先放著的鍵）。 */
@@ -133,6 +134,10 @@ export interface WorkbenchCard {
   legacy?: LegacyBatchLike
   /** Fork（almanac ALMNC-54.14）：判斷不出來的那一包（批次 id）。 */
   packId?: string
+  /** Fork（almanac ALMNC-88）：專家回顧產生的「建議你親手整理」那一包（review_hand_packs.id）。 */
+  reviewPackId?: string
+  /** Fork（almanac ALMNC-88）：展開後的一段說明（專家的理由）。 */
+  detail?: string
   /** Fork（almanac ALMNC-65.2）：批次卡裡的每一則新知識筆記（依原順序）。 */
   batch?: readonly DecideItem[]
 }
@@ -179,6 +184,30 @@ export interface HandLike {
   notePaths?: readonly string[]
   /** Fork（almanac ALMNC-54.14）：舊筆記判斷不出來的那一包；有的話多一個「整理好了」。 */
   packId?: string
+  /** Fork（almanac ALMNC-88）：專家回顧產生的包；有的話也多一個「整理好了」。 */
+  reviewPackId?: string
+  detail?: string
+}
+
+/** Fork（almanac ALMNC-88）：專家回顧產生的親手整理卡的鍵（也是先放著的鍵）。 */
+export function reviewPackKey(id: string): string {
+  return `review-pack:${id}`
+}
+
+/** Fork（almanac ALMNC-88）：專家回顧產生的一包 → 親手整理卡（知識・整理）。summary 由畫面依語系組好。 */
+export function reviewPackHand(pack: ReviewHandPack, summary: string): HandLike {
+  return {
+    key: reviewPackKey(pack.id),
+    label: 'knowledge',
+    title: pack.topic,
+    more: pack.paths.length > 1 ? pack.paths.length - 1 : undefined,
+    summary,
+    by: pack.by,
+    at: pack.createdAt,
+    notePaths: pack.paths,
+    reviewPackId: pack.id,
+    ...(pack.reason ? { detail: pack.reason } : {}),
+  }
 }
 
 /** Fork（almanac ALMNC-54.14）：舊筆記批次（R3）。total＝已標記＋還沒標記的舊筆記；processed＝已分析或不採用。 */
@@ -456,8 +485,10 @@ export function buildReviewCards(input: ReviewInput): WorkbenchCard[] {
     cards.push({
       key: hand.key, kind: 'hand', group: 'hand', label: hand.label, verb: 'organize',
       title: hand.title, more: hand.more, summary: hand.summary, by: hand.by, at: hand.at,
-      actions: hand.packId ? PACK_ACTIONS : ACTIONS_BY_KIND.hand, notePaths: hand.notePaths,
+      actions: hand.packId || hand.reviewPackId ? PACK_ACTIONS : ACTIONS_BY_KIND.hand, notePaths: hand.notePaths,
       ...(hand.packId ? { packId: hand.packId } : {}),
+      ...(hand.reviewPackId ? { reviewPackId: hand.reviewPackId } : {}),
+      ...(hand.detail ? { detail: hand.detail } : {}),
     })
   }
   // Fork（almanac ALMNC-54.14）：舊筆記合成一張卡（v14：要你親手整理・資料源・整理・系統）。標題與進度字由畫面依語系組（legacy 欄位）。

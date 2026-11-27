@@ -224,9 +224,11 @@ function CardBody({ card, onAction }: { card: WorkbenchCard, onAction: (action: 
   if (card.notePaths?.length) {
     return (
       <div className="space-y-2">
-        <div className="flex flex-wrap gap-1.5">
+        {/* Fork（almanac ALMNC-88）：專家回顧的親手整理卡：專家的理由＋那群筆記。 */}
+        {card.detail && <p className="text-ui-compact leading-6 text-muted-ink">{card.detail}</p>}
+        <div className="flex flex-wrap gap-1.5" role={card.reviewPackId ? 'list' : undefined} aria-label={card.reviewPackId ? t('reviewPack.notes') : undefined}>
           {card.notePaths.map(path => (
-            <span key={path} title={path} className="rounded-(--r-kbd) bg-hover px-2 py-0.5 text-xs text-muted-ink">{(path.split('/').pop() ?? path).replace(/\.md$/i, '')}</span>
+            <span key={path} title={path} role={card.reviewPackId ? 'listitem' : undefined} className="rounded-(--r-kbd) bg-hover px-2 py-0.5 text-xs text-muted-ink">{(path.split('/').pop() ?? path).replace(/\.md$/i, '')}</span>
           ))}
         </div>
         {card.domainProposalId && card.domainExpertName && <DomainExpertOption id={card.domainProposalId} name={card.domainExpertName} />}

@@ -4,7 +4,7 @@ import type { DecideItem } from '@/lib/decide/project'
 import type { TaskRef } from '@/lib/vault-index/index-core'
 import {
   ACTIONS_BY_KIND, actionLabelKey, sourceCardActions, CARD_LABELS, CARD_VERBS, actionForKey, ageParts, buildReviewCards, filterCards, groupCards, labelCounts, nextCursor,
-  proposalLabel, proposalVerb, LEGACY_BATCH_KEY, legacyCardActions, PACK_ACTIONS,
+  proposalLabel, proposalVerb, LEGACY_BATCH_KEY, legacyCardActions, PACK_ACTIONS, reviewPackHand, reviewPackKey,
 } from './cards'
 
 const DAY = 86_400_000
@@ -234,6 +234,34 @@ describe('legacy batch and pack cards', () => {
     expect(PACK_ACTIONS).toEqual(['desk', 'packDone'])
     expect(actionForKey(card!, 't')).toBe('desk')
     expect(actionForKey(card!, 'c')).toBe('packDone')
+  })
+})
+
+// Fork（almanac ALMNC-88）：專家回顧領域時產生的「建議你親手整理」卡。
+describe('review hand-work cards', () => {
+  const pack = {
+    id: 'rp1', domainId: 'M-1', domainName: '時間管理', topic: '時段切法', reason: '六則都只有一兩句',
+    paths: ['notes/時段 A.md', 'notes/時段 B.md', 'notes/時段 C.md', 'notes/時段 D.md', 'notes/時段 E.md'], by: 'Leo', createdAt: NOW - DAY,
+  }
+
+  it('一包變成一張知識・整理卡：標題是主題、等 N 則、列出那群筆記、理由在展開內容', () => {
+    const hand = reviewPackHand(pack, 'Leo 回顧「時間管理」：5 則零散片段，建議你親手整理')
+    const [card] = buildReviewCards({ now: NOW, proposals: [], hand: [hand] })
+    expect(card).toMatchObject({
+      key: reviewPackKey('rp1'), kind: 'hand', group: 'hand', label: 'knowledge', verb: 'organize',
+      title: '時段切法', more: 4, by: 'Leo', at: NOW - DAY, reviewPackId: 'rp1', detail: '六則都只有一兩句',
+      summary: 'Leo 回顧「時間管理」：5 則零散片段，建議你親手整理', actions: PACK_ACTIONS,
+    })
+    expect(card!.notePaths).toEqual(pack.paths)
+    expect(card!.packId).toBeUndefined()
+  })
+
+  it('排在「要你親手整理」一組，和舊筆記的包同組', () => {
+    const cards = buildReviewCards({
+      now: NOW, proposals: [proposal('p', NOW)],
+      hand: [reviewPackHand(pack, ''), { key: 'legacy-pack:b1', label: 'source', title: '週報', summary: '', at: NOW, notePaths: ['a.md'], packId: 'b1' }],
+    })
+    expect(cards.map(card => card.group)).toEqual(['proposal', 'hand', 'hand'])
   })
 })
 

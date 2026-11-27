@@ -64,6 +64,7 @@ export async function refreshSources(): Promise<void> {
     }
   }
   await refreshLegacy()
+  await refreshReviewPacks()
   // Fork（almanac ALMNC-54.10）：初步判斷另外讀；讀不到卡片照樣出現（AC#4）。
   try {
     const { listSourceJudgements } = await import('@/db/v3-source-judgements')
@@ -89,6 +90,27 @@ export async function refreshLegacy(): Promise<void> {
     })
   } catch (error) {
     console.debug('[workbench] legacy notes unavailable:', error)
+  }
+}
+
+/** Fork（almanac ALMNC-88）：重讀專家回顧產生、還沒整理好的「建議你親手整理」包。 */
+export async function refreshReviewPacks(): Promise<void> {
+  try {
+    const packsDb = await import('@/db/v3-review-packs')
+    useWorkbenchStore.getState().setReviewPacks(await packsDb.listOpenReviewPacks())
+  } catch (error) {
+    console.debug('[workbench] review packs unavailable:', error)
+  }
+}
+
+/** Fork（almanac ALMNC-88）：「整理好了」——只記整理好的時間（可復原），不動筆記檔。 */
+export async function resolveReviewPack(id: string): Promise<Undo> {
+  const packsDb = await import('@/db/v3-review-packs')
+  await packsDb.setReviewPackResolved(id, true)
+  await refreshReviewPacks()
+  return async () => {
+    await packsDb.setReviewPackResolved(id, false)
+    await refreshReviewPacks()
   }
 }
 

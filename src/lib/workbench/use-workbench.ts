@@ -26,7 +26,7 @@ import { MAX_DOMAINS } from '@/lib/moc/membership'
 import useDailySettingsStore from '@/stores/daily-settings'
 import { DEFAULT_LEGACY_BATCH_SIZE, legacyPackKey, packsToShow, unmarkedLegacyNotes } from '@/lib/migration/legacy'
 import type { IndexedNote } from '@/lib/vault-index/index-note'
-import { buildReviewCards, type DomainLike, type DomainLimitLike, type HandLike, type LegacyBatchLike, type MocBatchLike, type ReplyLike, type WorkbenchCard } from './cards'
+import { buildReviewCards, reviewPackHand, type DomainLike, type DomainLimitLike, type HandLike, type LegacyBatchLike, type MocBatchLike, type ReplyLike, type WorkbenchCard } from './cards'
 import useMocReconcileStore from '@/stores/moc-reconcile'
 import { computeDomainProposals, confirmNotesFromIndex, knowledgeNotesFromIndex } from './domain-cards'
 import { hiddenCards, isHidden, visibleCards } from './put-aside'
@@ -142,6 +142,17 @@ function useLegacyInputs(noteList: readonly IndexedNote[], now: number, commande
   }, [legacy, unmarked, aside, now, commander, t, roles])
 }
 
+/** Fork（almanac ALMNC-88）：專家回顧領域時產生的「建議你親手整理」卡（每包一張，排在「要你親手整理」）。 */
+function useReviewPackHands(commander: string | undefined): HandLike[] {
+  const t = useTranslations('workbench.reviewPack')
+  const roles = useTranslations('agents.roles')
+  const packs = useWorkbenchStore(state => state.reviewPacks)
+  return useMemo(() => packs.map(pack => reviewPackHand(
+    { ...pack, by: pack.by || commander },
+    t('summary', { name: pack.by || commander || roles('commander'), domain: pack.domainName, count: pack.paths.length }),
+  )), [packs, commander, t, roles])
+}
+
 /**
  * Fork（almanac ALMNC-54.21）：「等你回話」——秘書在對話裡問你、還在等你回的問題（lib/threads/awaiting.ts）。
  * 你在那段對話送出訊息後自動消失；刪掉的對話不列。
@@ -229,6 +240,7 @@ export function useReviewData(): ReviewData {
   const intervals = useReconfirmIntervals(domains, roster)
   const confirm = useMemo(() => confirmNotesFromIndex(noteList, now, intervals), [noteList, now, intervals])
   const legacyInputs = useLegacyInputs(noteList, now, commander)
+  const reviewHands = useReviewPackHands(commander)
   const replies = useReplies()
   const domainLimits = useDomainLimits(notes)
   const mocBatch = useMocBatch()
@@ -257,10 +269,10 @@ export function useReviewData(): ReviewData {
     domainLimits,
     mocBatch,
     confirm,
-    hand: legacyInputs.hand,
+    hand: [...legacyInputs.hand, ...reviewHands],
     legacy: legacyInputs.legacy,
     now,
-  }), [proposals, replies, tasks, sources, judgements, domainCards, blueprints, commander, domainLimits, mocBatch, confirm, legacyInputs, now, t])
+  }), [proposals, replies, tasks, sources, judgements, domainCards, blueprints, commander, domainLimits, mocBatch, confirm, legacyInputs, reviewHands, now, t])
 
   return useMemo(() => ({ all, visible: visibleCards(all, aside, now), aside: hiddenCards(all, aside, now), now }), [all, aside, now])
 }

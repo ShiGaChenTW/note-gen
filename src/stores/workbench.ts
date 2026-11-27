@@ -9,6 +9,7 @@ import type { DeskMaterial } from '@/lib/workbench/desk'
 import type { Source } from '@/lib/v3-model/source'
 import type { SourceJudgement } from '@/lib/workbench/judgement'
 import type { LegacyPack } from '@/lib/migration/legacy'
+import type { ReviewHandPack } from '@/lib/cleanup/fragments'
 
 /** Fork（almanac ALMNC-54.14）：舊筆記批次（R3）的現況，從資料源表與 legacy_undecided 讀來。 */
 export interface LegacyState {
@@ -102,6 +103,9 @@ interface WorkbenchState {
   /** Fork（almanac ALMNC-54.14）：舊筆記批次。 */
   legacy: LegacyState
   setLegacy: (patch: Partial<LegacyState>) => void
+  /** Fork（almanac ALMNC-88）：專家回顧產生、還沒整理好的「建議你親手整理」包。 */
+  reviewPacks: ReviewHandPack[]
+  setReviewPacks: (packs: ReviewHandPack[]) => void
 
   // —— 檯面 ——
   desk: DeskState
@@ -183,6 +187,8 @@ const useWorkbenchStore = create<WorkbenchState>((set, get) => ({
   setJudgements: judgements => set({ judgements }),
   legacy: EMPTY_LEGACY,
   setLegacy: patch => set(state => ({ legacy: { ...state.legacy, ...patch } })),
+  reviewPacks: [],
+  setReviewPacks: reviewPacks => set({ reviewPacks }),
 
   desk: CLOSED_DESK,
   openDesk: (materials, cardKey) => set({ desk: { open: true, materials, ...(cardKey ? { cardKey } : {}) } }),

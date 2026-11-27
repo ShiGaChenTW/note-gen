@@ -15,7 +15,7 @@ import type { CardAction, WorkbenchCard } from '@/lib/workbench/cards'
 import { memberCard, nextCursor } from '@/lib/workbench/cards'
 import {
   acceptBatchCard, acceptCard, completeTask, confirmStillValid, removeDomainChoice, confirmToCommander, deleteFailedSource, dropCard, pauseLegacy, processSource, rejectSource,
-  resolveLegacyPack, retryCapture, scheduleCardTask, startLegacy, type Undo,
+  resolveLegacyPack, resolveReviewPack, retryCapture, scheduleCardTask, startLegacy, type Undo,
 } from '@/lib/workbench/actions'
 import { currentUnmarkedLegacy } from '@/lib/workbench/use-workbench'
 import type { DeskMaterial } from '@/lib/workbench/desk'
@@ -266,6 +266,8 @@ export function useCardActions({ visible, commanderName }: { visible: readonly W
         toast(t('legacy.toast.pausing'))
         return
       case 'packDone':
+        // Fork（almanac ALMNC-88）：專家回顧產生的親手整理卡。
+        if (card.reviewPackId) return settle(card, () => resolveReviewPack(card.reviewPackId!), t('reviewPack.toast.done', { title }))
         if (!card.packId) return
         return settle(card, () => resolveLegacyPack(card.packId!), t('legacy.toast.packDone', { title }))
       case 'pick':
