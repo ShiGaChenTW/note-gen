@@ -3205,7 +3205,10 @@
         "primaryDesc": "RSS 自动抓取、指挥官自动分析、每周整理只在主力设备运行；其他设备仍可手动操作。",
         "primaryStale": "主力设备超过 3 天没有同步，可以改由这台运行后台任务。",
         "makePrimary": "改由这台运行后台任务",
-        "firstSyncPending": "第一次同步进行中：先拉取、再合并、再推送。"
+        "firstSyncPending": "第一次同步进行中：先拉取、再合并、再推送。",
+        "deviceWithVersion": "{name}（{version}）",
+        "outdatedDevices": "{devices}的 App 版本比这台旧，可能不认识 V3 数据。请先把那台升级到最新版。",
+        "selfOutdated": "有其他设备的 App 版本比这台新，这台可能读不懂新的 V3 数据，请先把这台升级到最新版。"
       }
     },
     "imageHosting": {
