@@ -53,6 +53,7 @@ export interface TauriMockController {
     args: Record<string, unknown>,
     connection?: { id?: string; name?: string }
   ) => Promise<{ ok: boolean; result?: unknown; error?: unknown }>
+  isLocalMcpReady: () => boolean
   getUnhandledCommands: () => string[]
   dispose: () => void
 }
@@ -342,6 +343,7 @@ export async function setupTauriMock(page: Page): Promise<TauriMockController> {
   let nextStoreRid = 100
   let nextWatcherRid = 5000
   let clockOffsetMs = 0
+  let localMcpReady = false
   let aiHandler: AiRequestHandler = createDefaultAiHandler()
   const unhandledCommands = new Set<string>()
   const pendingMcpRequests = new Map<string, PendingMcpResolver>()
@@ -671,6 +673,7 @@ export async function setupTauriMock(page: Page): Promise<TauriMockController> {
       return null
     }
     if (cmd === 'set_local_mcp_ready') {
+      localMcpReady = Boolean(payload.ready)
       return null
     }
     if (cmd === 'get_local_mcp_status') {
@@ -1030,6 +1033,9 @@ export async function setupTauriMock(page: Page): Promise<TauriMockController> {
         connection,
       })
       return await waitForResult
+    },
+    isLocalMcpReady() {
+      return localMcpReady
     },
     getUnhandledCommands() {
       return [...unhandledCommands]

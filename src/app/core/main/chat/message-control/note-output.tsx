@@ -28,6 +28,12 @@ import { useIsMobile } from "@/hooks/use-mobile"
 
 type CheckedState = boolean | "indeterminate"
 
+export function buildNoteOutputPath(folderPath: string, title: string): string {
+  const sanitizedTitle = title.trim().replace(/\s+/g, '_')
+  const trimmedFolder = folderPath.trim().replace(/^\/+|\/+$/g, '')
+  return trimmedFolder ? `${trimmedFolder}/${sanitizedTitle}` : sanitizedTitle
+}
+
 export function NoteOutput({chat}: {chat: Chat}) {
   const { deleteTag, currentTagId } = useTagStore()
   const { loadFileTree } = useArticleStore()
@@ -43,8 +49,7 @@ export function NoteOutput({chat}: {chat: Chat}) {
   async function handleTransform() {
     const content = chat?.content || ''
     // 统一处理：将空格替换为下划线，确保本地和远程文件名一致
-    const sanitizedTitle = title.replace(/\s+/g, '_')
-    const writePath = `${path}/${sanitizedTitle}`
+    const writePath = buildNoteOutputPath(path, title)
     
     // Use workspace functions instead of directly using BaseDirectory.AppData
     const pathOptions = await getFilePathOptions(writePath)
@@ -56,9 +61,10 @@ export function NoteOutput({chat}: {chat: Chat}) {
     }
     
     const store = await Store.load('store.json');
-    await store.set('activeFilePath', title)
+    await store.set('activeFilePath', writePath)
     if (isRemove) {
-      deleteTag(currentTagId)
+      // Delete the tag this chat belongs to; the store's currentTagId can be stale in V3 views.
+      await deleteTag(chat?.tagId ?? currentTagId)
     }
     setOpen(false)
     await loadFileTree()
