@@ -9,9 +9,11 @@ const useDevServer = process.env.E2E_DEV === '1'
 const port = Number(process.env.E2E_PORT || 3456)
 const baseURL = `http://localhost:${port}`
 
+// 截圖比對（ALMNC-94.5）：tests/e2e/visual/*.visual.ts，獨立成 `visual` project，用 `pnpm test:visual` 跑；
+// `pnpm test:e2e` 只跑 `e2e` project，功能 E2E 不會因像素差異失敗。
+// 基準檔放 tests/e2e/visual/__screenshots__/<平台>/，以 macOS（darwin）產生；其他平台沒有基準，不會拿 macOS 的圖誤判。
 export default defineConfig({
   testDir: './tests/e2e',
-  testMatch: '**/*.spec.ts',
   // Dev mode only: compiles the main surfaces once before the first test (see global-setup.ts).
   globalSetup: useDevServer ? './tests/e2e/global-setup.ts' : undefined,
   fullyParallel: false,
@@ -28,6 +30,28 @@ export default defineConfig({
     viewport: { width: 1280, height: 860 },
     trace: 'retain-on-failure',
   },
+  projects: [
+    {
+      name: 'e2e',
+      testMatch: '**/*.spec.ts',
+    },
+    {
+      name: 'visual',
+      testMatch: 'visual/**/*.visual.ts',
+      snapshotPathTemplate: '{testDir}/visual/__screenshots__/{platform}/{arg}{ext}',
+      use: {
+        timezoneId: 'Asia/Taipei',
+        deviceScaleFactor: 1,
+      },
+      expect: {
+        toHaveScreenshot: {
+          animations: 'disabled',
+          caret: 'hide',
+          scale: 'css',
+        },
+      },
+    },
+  ],
   webServer: useDevServer
     ? {
         // PORT 讓 next.config.ts 的 dev assetPrefix 跟著埠走。
