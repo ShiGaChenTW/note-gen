@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { Folder, FileText, Trash2, ShieldCheck } from 'lucide-react'
+import { Folder, FileText, Rss, Trash2, ShieldCheck } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { listPendingSyncDeletions, type PendingSyncDeletion } from '@/db/sync-deletions'
@@ -12,6 +12,12 @@ import {
   rejectAllPendingSyncDeletions,
   rejectPendingSyncDeletion,
 } from '@/lib/sync/deletion-tombstones'
+import {
+  confirmPendingRecordDeletion,
+  listPendingRecordDeletionsForUi,
+  rejectPendingRecordDeletion,
+} from '@/lib/almanac-sync/pending-record-actions'
+import type { PendingRecordDeletion } from '@/lib/almanac-sync/tables/pending-records'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -98,6 +104,107 @@ function PendingSyncDeletionList({
   )
 }
 
+/**
+ * Fork（almanac ALMNC-85.2，第 8 節 2A）：別台刪掉的資料庫列（RSS 訂閱）。跟檔案刪除放在同一份清單，多一個「設定與夥伴」分組。
+ */
+function PendingRecordDeletionGroup({
+  items,
+  busyId,
+  batchBusy,
+  onConfirm,
+  onReject,
+}: {
+  items: PendingRecordDeletion[]
+  busyId: string | null
+  batchBusy: boolean
+  onConfirm: (item: PendingRecordDeletion) => void
+  onReject: (item: PendingRecordDeletion) => void
+}) {
+  const t = useTranslations('settings.trash.syncDeletions')
+  if (items.length === 0) return null
+  const disabled = busyId !== null || batchBusy
+  const groupLabel = t('recordGroup')
+
+  return (
+    <div role="group" aria-label={groupLabel} className="flex flex-col gap-2">
+      <h4 className="text-xs font-medium text-muted-foreground">{groupLabel}</h4>
+      <ul className="flex flex-col gap-2">
+        {items.map(item => (
+          <li
+            key={`${item.tableName}:${item.syncKey}`}
+            aria-label={item.title}
+            className="flex flex-col gap-2.5 rounded-md border bg-background/80 p-2.5 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+              <Rss className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+              <span className="truncate text-sm font-medium">{item.title}</span>
+              <Badge variant="outline" className="text-[11px]">{t('rssFeedBadge')}</Badge>
+            </div>
+            <div className="flex shrink-0 items-center justify-end gap-2">
+              <Button type="button" variant="outline" size="sm" disabled={disabled} onClick={() => onReject(item)}>
+                <ShieldCheck data-icon="inline-start" />
+                {t('keepRecord')}
+              </Button>
+              <Button type="button" variant="destructive" size="sm" disabled={disabled} onClick={() => onConfirm(item)}>
+                <Trash2 data-icon="inline-start" />
+                {t('confirm')}
+              </Button>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+const recordId = (item: PendingRecordDeletion) => `record:${item.tableName}:${item.syncKey}`
+
+async function loadRecordDeletions(): Promise<PendingRecordDeletion[]> {
+  try {
+    return await listPendingRecordDeletionsForUi()
+  } catch {
+    return []
+  }
+}
+
+/** 單筆與批次處理別台刪掉的資料庫列（Panel、Prompt 共用）。 */
+function useRecordDeletionActions(reload: () => Promise<void>, setBusyId: (id: string | null) => void) {
+  const t = useTranslations('settings.trash.syncDeletions')
+  const confirmRecord = async (item: PendingRecordDeletion) => {
+    setBusyId(recordId(item))
+    try {
+      await confirmPendingRecordDeletion(item.tableName, item.syncKey)
+      toast.success(t('confirmedToast', { path: item.title }))
+      await reload()
+    } catch {
+      toast.error(t('actionFailed'))
+    } finally {
+      setBusyId(null)
+    }
+  }
+  const rejectRecord = async (item: PendingRecordDeletion) => {
+    setBusyId(recordId(item))
+    try {
+      await rejectPendingRecordDeletion(item.tableName, item.syncKey)
+      toast.success(t('keptToast', { title: item.title }))
+      await reload()
+    } catch {
+      toast.error(t('actionFailed'))
+    } finally {
+      setBusyId(null)
+    }
+  }
+  return { confirmRecord, rejectRecord }
+}
+
+async function confirmAllRecords(items: PendingRecordDeletion[]) {
+  for (const item of items) await confirmPendingRecordDeletion(item.tableName, item.syncKey)
+}
+
+async function rejectAllRecords(items: PendingRecordDeletion[]) {
+  for (const item of items) await rejectPendingRecordDeletion(item.tableName, item.syncKey)
+}
+
 export function PendingSyncDeletionsPanel({
   onTrashUpdated,
 }: {
@@ -105,6 +212,7 @@ export function PendingSyncDeletionsPanel({
 }) {
   const t = useTranslations('settings.trash.syncDeletions')
   const [items, setItems] = useState<PendingSyncDeletion[]>([])
+  const [records, setRecords] = useState<PendingRecordDeletion[]>([])
   const [busyId, setBusyId] = useState<string | null>(null)
   const [batchBusy, setBatchBusy] = useState(false)
 
@@ -114,7 +222,9 @@ export function PendingSyncDeletionsPanel({
     } catch {
       setItems([])
     }
+    setRecords(await loadRecordDeletions())
   }, [])
+  const { confirmRecord, rejectRecord } = useRecordDeletionActions(refresh, setBusyId)
 
   useEffect(() => {
     void refresh()
@@ -125,7 +235,7 @@ export function PendingSyncDeletionsPanel({
     }
   }, [refresh])
 
-  if (items.length === 0) return null
+  if (items.length === 0 && records.length === 0) return null
 
   const handleConfirm = async (item: PendingSyncDeletion) => {
     setBusyId(item.id)
@@ -158,6 +268,7 @@ export function PendingSyncDeletionsPanel({
     setBatchBusy(true)
     try {
       await confirmAllPendingSyncDeletions()
+      await confirmAllRecords(records)
       await refresh()
       onTrashUpdated?.()
     } catch {
@@ -171,6 +282,7 @@ export function PendingSyncDeletionsPanel({
     setBatchBusy(true)
     try {
       await rejectAllPendingSyncDeletions()
+      await rejectAllRecords(records)
       await refresh()
     } catch {
       toast.error(t('actionFailed'))
@@ -218,6 +330,13 @@ export function PendingSyncDeletionsPanel({
         onConfirm={item => void handleConfirm(item)}
         onReject={item => void handleReject(item)}
       />
+      <PendingRecordDeletionGroup
+        items={records}
+        busyId={busyId}
+        batchBusy={batchBusy}
+        onConfirm={item => void confirmRecord(item).then(() => onTrashUpdated?.())}
+        onReject={item => void rejectRecord(item)}
+      />
     </section>
   )
 }
@@ -226,20 +345,25 @@ export function PendingSyncDeletionsPrompt() {
   const t = useTranslations('settings.trash.syncDeletions')
   const isMobile = useIsMobile() || checkIsMobileDevice()
   const [items, setItems] = useState<PendingSyncDeletion[]>([])
+  const [records, setRecords] = useState<PendingRecordDeletion[]>([])
   const [open, setOpen] = useState(false)
   const [busyId, setBusyId] = useState<string | null>(null)
   const [batchBusy, setBatchBusy] = useState(false)
 
   const reload = useCallback(async (openIfPending: boolean) => {
     try {
-      const next = await listPendingSyncDeletions()
+      const next = await listPendingSyncDeletions().catch(() => [] as PendingSyncDeletion[])
+      const nextRecords = await loadRecordDeletions()
       setItems(next)
-      if (next.length === 0) setOpen(false)
+      setRecords(nextRecords)
+      if (next.length === 0 && nextRecords.length === 0) setOpen(false)
       else if (openIfPending) setOpen(true)
     } catch {
       // DB might not be ready before initial bootstrap.
     }
   }, [])
+  const reloadQuietly = useCallback(() => reload(false), [reload])
+  const { confirmRecord, rejectRecord } = useRecordDeletionActions(reloadQuietly, setBusyId)
 
   useEffect(() => {
     void reload(true)
@@ -280,6 +404,7 @@ export function PendingSyncDeletionsPrompt() {
     setBatchBusy(true)
     try {
       await confirmAllPendingSyncDeletions()
+      await confirmAllRecords(records)
       await reload(false)
     } catch {
       toast.error(t('actionFailed'))
@@ -292,6 +417,7 @@ export function PendingSyncDeletionsPrompt() {
     setBatchBusy(true)
     try {
       await rejectAllPendingSyncDeletions()
+      await rejectAllRecords(records)
       await reload(false)
     } catch {
       toast.error(t('actionFailed'))
@@ -300,16 +426,25 @@ export function PendingSyncDeletionsPrompt() {
     }
   }
 
-  if (items.length === 0 && !open) return null
+  if (items.length === 0 && records.length === 0 && !open) return null
 
   const listNode = (
-    <PendingSyncDeletionList
-      items={items}
-      busyId={busyId}
-      batchBusy={batchBusy}
-      onConfirm={item => void handleConfirm(item)}
-      onReject={item => void handleReject(item)}
-    />
+    <div className="flex flex-col gap-3">
+      <PendingSyncDeletionList
+        items={items}
+        busyId={busyId}
+        batchBusy={batchBusy}
+        onConfirm={item => void handleConfirm(item)}
+        onReject={item => void handleReject(item)}
+      />
+      <PendingRecordDeletionGroup
+        items={records}
+        busyId={busyId}
+        batchBusy={batchBusy}
+        onConfirm={item => void confirmRecord(item)}
+        onReject={item => void rejectRecord(item)}
+      />
+    </div>
   )
 
   if (isMobile) {

@@ -46,6 +46,9 @@ function persist(feeds: readonly RssFeed[]): Promise<void> {
     const store = await Store.load('store.json')
     await store.set(KEY, feeds)
     await store.save()
+    // Fork（almanac ALMNC-85.2）：開了 V3 同步時排一次 almanac 同步（RSS 訂閱已從設定同步移出）。
+    const { notifyAlmanacLocalChange } = await import('@/lib/almanac-sync/notify')
+    notifyAlmanacLocalChange('rss-feeds')
   })
   saving = run.catch(error => console.warn('[rss] subscriptions not saved:', error))
   return run
@@ -68,6 +71,13 @@ interface RssState {
   refreshNow: (ids?: readonly string[]) => Promise<RefreshResult[]>
   /** 給排程用：以最新的值改一個訂閱並存檔。 */
   updateFeed: (id: string, update: (feed: RssFeed) => RssFeed) => Promise<void>
+  /**
+   * Fork（almanac ALMNC-85.2）：V3 同步套用遠端的訂閱。記憶體裡的清單是唯一的寫入者：同步改的也經過這裡，
+   * 畫面立即更新，之後排程或改名存檔也不會把下載前的舊值寫回去（設計 6 風險 6）。
+   */
+  applySync: (mutator: (feeds: RssFeed[]) => RssFeed[]) => Promise<void>
+  /** Fork（almanac ALMNC-85.2）：別台刪了、Scott 選「保留」：記下時間，下一輪同步把訂閱推回去。 */
+  keep: (id: string) => Promise<void>
 }
 
 const useRssStore = create<RssState>((set, get) => ({
@@ -100,11 +110,11 @@ const useRssStore = create<RssState>((set, get) => ({
   rename: async (id, name) => {
     const trimmed = name.trim()
     if (!trimmed) return
-    await get().updateFeed(id, feed => ({ ...feed, name: trimmed, named: true }))
+    await get().updateFeed(id, feed => ({ ...feed, name: trimmed, named: true, updatedAt: Date.now() }))
   },
   setPaused: async (id, paused) => {
     try {
-      await get().updateFeed(id, feed => ({ ...feed, paused }))
+      await get().updateFeed(id, feed => ({ ...feed, paused, updatedAt: Date.now() }))
     } catch (error) {
       // 沒存到就把畫面上的狀態改回來（ALMNC-56 重跑稽核）
       set({ feeds: get().feeds.map(feed => (feed.id === id ? { ...feed, paused: !paused } : feed)) })
@@ -133,7 +143,8 @@ const useRssStore = create<RssState>((set, get) => ({
   restore: async (feed, index) => {
     if (get().feeds.some(entry => entry.id === feed.id)) return
     const feeds = [...get().feeds]
-    feeds.splice(Math.min(Math.max(index, 0), feeds.length), 0, feed)
+    // Fork（almanac ALMNC-85.2）：救回算一次修改（晚於刪除），V3 同步時不會被自己的刪除墓碑擋下。
+    feeds.splice(Math.min(Math.max(index, 0), feeds.length), 0, { ...feed, updatedAt: Date.now() })
     set({ feeds })
     await persist(feeds)
   },
@@ -151,6 +162,16 @@ const useRssStore = create<RssState>((set, get) => ({
     const feeds = get().feeds.map(feed => (feed.id === id ? update(feed) : feed))
     set({ feeds })
     await persist(feeds)
+  },
+  applySync: async mutator => {
+    await get().load()
+    const feeds = mutator(get().feeds)
+    set({ feeds })
+    await persist(feeds)
+  },
+  keep: async id => {
+    const now = Date.now()
+    await get().updateFeed(id, feed => ({ ...feed, keptAt: now, updatedAt: now }))
   },
 }))
 

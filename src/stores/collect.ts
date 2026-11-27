@@ -3,7 +3,7 @@
 // 收下的東西寫進筆記檔與今日日誌，不另開資料表。
 import { create } from 'zustand'
 import { askCollectModel } from '@/lib/collect/ai'
-import { loadItems, mergeItems, saveItems } from '@/lib/collect/persist'
+import { loadItems, mergeItems, saveItems, type PersistedItem } from '@/lib/collect/persist'
 import { splitInput } from '@/lib/collect/split'
 import { acceptProposal, undoAccepted, type AcceptResult } from '@/lib/collect/write'
 import { collectLinkCandidate } from '@/lib/workbench/auto-accept-sources'
@@ -71,6 +71,12 @@ interface CollectState {
   /** Fork（almanac ALMNC-69.9）：寫入已由 ops 復原，把提案改回等你決定。 */
   reopen: (itemId: string, proposalId: string) => void
   remove: (itemId: string) => void
+  /**
+   * Fork（almanac ALMNC-85.2）：V3 同步套用別台的收集項目。記憶體裡的清單是唯一的寫入者（存檔照常由訂閱延遲寫回），
+   * 畫面立即更新，之後本機操作存檔也不會把下載前的舊值寫回去（設計 6 風險 6）。
+   * 本機已接受的提案保留它的接受結果（含復原資料），只要寫入的路徑跟遠端一樣。
+   */
+  applySync: (change: { upserts: readonly PersistedItem[], deletes: readonly string[] }) => Promise<void>
 }
 
 let itemCounter = 0
@@ -118,7 +124,12 @@ const useCollectStore = create<CollectState>((set, get) => ({
   persist: () => {
     if (!persistReady) return Promise.reject(new Error('Collect store is not loaded'))
     clearTimeout(persistTimer)
-    const saved = pendingSave.then(() => saveItems(get().items))
+    const saved = pendingSave.then(async () => {
+      await saveItems(get().items)
+      // Fork（almanac ALMNC-85.2）：開了 V3 同步時排一次 almanac 同步（collectItems 已從設定同步移出）。
+      const { notifyAlmanacLocalChange } = await import('@/lib/almanac-sync/notify')
+      notifyAlmanacLocalChange('collect-items')
+    })
     pendingSave = saved.catch(() => undefined)
     return saved
   },
@@ -250,6 +261,34 @@ const useCollectStore = create<CollectState>((set, get) => ({
   reopen: (itemId, proposalId) => set(state => ({ items: patchProposal(state.items, itemId, proposalId, { status: 'wait', result: undefined }) })),
 
   remove: itemId => set(state => ({ items: state.items.filter(item => item.id !== itemId) })),
+
+  applySync: async change => {
+    await get().hydrate()
+    if (!persistReady) throw new Error('Collect store is not loaded')
+    if (!change.upserts.length && !change.deletes.length) return
+    set(state => {
+      const removed = new Set(change.deletes)
+      const incoming = new Map(change.upserts.map(item => [item.id, item]))
+      const items = state.items.filter(item => !removed.has(item.id)).map(item => {
+        const next = incoming.get(item.id)
+        if (!next) return item
+        incoming.delete(item.id)
+        const localProposals = new Map(item.proposals.map(proposal => [proposal.id, proposal]))
+        return {
+          ...item,
+          ...next,
+          state: 'ready' as const,
+          proposals: next.proposals.map(proposal => {
+            const local = localProposals.get(proposal.id)
+            const result = local?.result && proposal.result?.path === local.result.path ? local.result : proposal.result as AcceptResult | undefined
+            return { ...proposal, ...(result ? { result } : { result: undefined }) } as CaptureProposal
+          }),
+        }
+      })
+      const added = [...incoming.values()].map(item => ({ ...item, state: 'ready' as const, proposals: item.proposals as CaptureProposal[] }))
+      return { items: mergeItems(items, added) }
+    })
+  },
 }))
 
 // 項目有變動就存檔（延遲 300 ms 合併連續變動）。

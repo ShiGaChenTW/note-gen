@@ -33,6 +33,10 @@ export interface RssFeed {
   lastErrorAt?: number
   /** 看過的文章去重鍵（新的在前）。 */
   seen: string[]
+  /** Fork（almanac ALMNC-85.2）：Scott 最後一次改這個訂閱（改名、暫停、從垃圾桶救回）的時間；V3 同步「較晚的贏」用。抓取不算。 */
+  updatedAt?: number
+  /** Fork（almanac ALMNC-85.2）：別台刪了、Scott 選「保留」的時間；同步時這筆修改晚於刪除，訂閱會推回去。 */
+  keptAt?: number
 }
 
 /** 使用者貼的網址 → 可以抓的 http(s) 網址；feed:// 改成 https://，沒有 scheme 的補 https://。不合法回傳 undefined。 */
@@ -156,7 +160,7 @@ export function parseStoredFeeds(value: unknown): RssFeed[] {
       createdAt: optionalNumber(record.createdAt) ?? 0,
       seen: Array.isArray(record.seen) ? record.seen.filter((key): key is string => typeof key === 'string') : [],
     }
-    const numbers = ['lastFetchedAt', 'lastSuccessAt', 'lastAdded', 'lastErrorAt'] as const
+    const numbers = ['lastFetchedAt', 'lastSuccessAt', 'lastAdded', 'lastErrorAt', 'updatedAt', 'keptAt'] as const
     for (const key of numbers) {
       const number = optionalNumber(record[key])
       if (number !== undefined) feed[key] = number

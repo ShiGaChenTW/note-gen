@@ -2,6 +2,7 @@
 import { act, screen, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { PendingSyncDeletion } from '@/db/sync-deletions'
+import type { PendingRecordDeletion } from '@/lib/almanac-sync/tables/pending-records'
 import emitter from '@/lib/emitter'
 import { renderV3 } from '@/test/render-v3'
 
@@ -16,6 +17,15 @@ const mocks = vi.hoisted(() => ({
     error: vi.fn(),
   }),
   isMobile: false,
+  listPendingRecordDeletionsForUi: vi.fn<() => Promise<PendingRecordDeletion[]>>(async () => []),
+  confirmPendingRecordDeletion: vi.fn<(table: string, key: string) => Promise<boolean>>(async () => true),
+  rejectPendingRecordDeletion: vi.fn<(table: string, key: string) => Promise<boolean>>(async () => true),
+}))
+
+vi.mock('@/lib/almanac-sync/pending-record-actions', () => ({
+  listPendingRecordDeletionsForUi: mocks.listPendingRecordDeletionsForUi,
+  confirmPendingRecordDeletion: mocks.confirmPendingRecordDeletion,
+  rejectPendingRecordDeletion: mocks.rejectPendingRecordDeletion,
 }))
 
 vi.mock('@/db/sync-deletions', () => ({
@@ -157,5 +167,62 @@ describe('PendingSyncDeletions UI (ALMNC-84.8)', () => {
     expect(mocks.confirmPendingSyncDeletion).not.toHaveBeenCalled()
     expect(mocks.rejectPendingSyncDeletion).not.toHaveBeenCalled()
     expect(state).toHaveLength(2)
+  })
+})
+
+// Fork（almanac ALMNC-85.2，第 8 節 2A）：別台刪了 RSS 訂閱：併進同一份待確認清單，多一個「設定與夥伴」分組。
+describe('PendingSyncDeletions UI：設定與夥伴分組（ALMNC-85.2）', () => {
+  let records: PendingRecordDeletion[]
+  const makeRecords = (): PendingRecordDeletion[] => [{
+    tableName: 'feeds', syncKey: 'rss_1', title: 'Example Blog', snapshot: { id: 'rss_1' },
+    deletedAt: 1_700_000_000_000, deviceId: 'remote-mac', status: 'pending', resolvedAt: null, createdAt: 1_700_000_001_000,
+  }]
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mocks.isMobile = false
+    records = makeRecords()
+    mocks.listPendingSyncDeletions.mockImplementation(async () => [])
+    mocks.listPendingRecordDeletionsForUi.mockImplementation(async () => records)
+    mocks.confirmPendingRecordDeletion.mockImplementation(async (_table: string, key: string) => {
+      records = records.filter(item => item.syncKey !== key)
+      return true
+    })
+    mocks.rejectPendingRecordDeletion.mockImplementation(async (_table: string, key: string) => {
+      records = records.filter(item => item.syncKey !== key)
+      return true
+    })
+  })
+
+  it('別台刪的 RSS 訂閱列在「設定與夥伴」分組，可以移至最近刪除', async () => {
+    const { user } = renderV3(<PendingSyncDeletionsPanel />)
+    const group = await screen.findByRole('group', { name: '設定與夥伴' })
+    const row = within(group).getByRole('listitem', { name: 'Example Blog' })
+    expect(within(row).getByText('RSS 訂閱')).toBeInTheDocument()
+    await user.click(within(row).getByRole('button', { name: '移至最近刪除' }))
+    expect(mocks.confirmPendingRecordDeletion).toHaveBeenCalledWith('feeds', 'rss_1')
+    expect(screen.queryByRole('group', { name: '設定與夥伴' })).not.toBeInTheDocument()
+  })
+
+  it('選「保留」：保留這台的訂閱（之後推回另一台）', async () => {
+    const { user } = renderV3(<PendingSyncDeletionsPanel />)
+    const row = await screen.findByRole('listitem', { name: 'Example Blog' })
+    await user.click(within(row).getByRole('button', { name: '保留' }))
+    expect(mocks.rejectPendingRecordDeletion).toHaveBeenCalledWith('feeds', 'rss_1')
+    expect(mocks.confirmPendingRecordDeletion).not.toHaveBeenCalled()
+  })
+
+  it('只有別台刪的訂閱時也會跳出確認對話框；全部移至最近刪除會一起處理', async () => {
+    records = []
+    const { user } = renderV3(<PendingSyncDeletionsPrompt />)
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    records = makeRecords()
+    await act(async () => {
+      emitter.emit('pending-sync-deletions-changed')
+    })
+    const dialog = await screen.findByRole('dialog', { name: '遠端同步刪除確認' })
+    expect(within(dialog).getByRole('group', { name: '設定與夥伴' })).toBeInTheDocument()
+    await user.click(within(dialog).getByRole('button', { name: '全部移至最近刪除' }))
+    expect(mocks.confirmPendingRecordDeletion).toHaveBeenCalledWith('feeds', 'rss_1')
   })
 })

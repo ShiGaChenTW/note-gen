@@ -69,3 +69,19 @@ export function storeQueue(store: { get: (key: string) => Promise<unknown>, set:
     }),
   }
 }
+
+/**
+ * Fork（almanac ALMNC-85.2）：V3 同步套用別台的衝突觀察（新增或確認掉的）。跟其他背景比對走同一條讀改寫順序，不會互相蓋掉。
+ */
+export function applySyncedQueue(
+  store: { get: (key: string) => Promise<unknown>, set: (key: string, value: unknown) => Promise<void> },
+  change: { upserts: readonly ConflictObservation[], deletes: readonly string[] },
+  key = CLEANUP_QUEUE_KEY,
+): Promise<void> {
+  if (!change.upserts.length && !change.deletes.length) return Promise.resolve()
+  return serialize(async () => {
+    const removed = new Set(change.deletes)
+    const current = sanitizeQueued(await store.get(key)).filter(item => !removed.has(queuedKey(item)))
+    await store.set(key, mergeQueued(current, sanitizeQueued(change.upserts)))
+  })
+}

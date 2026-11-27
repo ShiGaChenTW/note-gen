@@ -47,6 +47,12 @@ export interface AlmanacRowsTable<V extends SyncValue = SyncValue> {
   localDeleted?(context: AlmanacTableContext): Promise<Record<string, SyncTombstone>>
   onPendingDeletes?(context: AlmanacTableContext, pending: Array<PendingRemoteDeletion<V>>): Promise<void>
   onConflicts?(context: AlmanacTableContext, conflicts: FieldConflict[]): Promise<void>
+  /**
+   * Fork（almanac ALMNC-85.2）：這張表所有檔都合併、寫回本機之後呼叫一次（不論有沒有變動）。
+   * 給合併時順帶發現、但不改本機這列的事用：例如資料源兩台 id 不同時記別名、content 兩邊都改時另存落敗的那份。
+   * 回傳 true＝本機資料有改動（畫面要重新載入）。
+   */
+  afterMerge?(context: AlmanacTableContext): Promise<boolean | void>
 }
 
 /** 只能新增的表（C 型）：每台只寫自己的 <dir>/<deviceId>/<YYYY-MM>.json。 */

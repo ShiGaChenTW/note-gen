@@ -6,6 +6,11 @@ import type { LegacyPack } from '@/lib/migration/legacy'
 
 let initialized: Promise<void> | null = null
 
+/** Fork（almanac ALMNC-85.2）：資料源群組寫入後，開了 V3 同步就排一次 almanac 同步。 */
+function changed(): void {
+  void import('@/lib/almanac-sync/notify').then(({ notifyAlmanacLocalChange }) => notifyAlmanacLocalChange('legacy-packs')).catch(() => undefined)
+}
+
 export function initLegacyPackDb(): Promise<void> {
   if (!initialized) {
     initialized = (async () => {
@@ -40,6 +45,7 @@ export async function addLegacyPack(batchId: string, items: ReadonlyArray<{ sour
       [item.sourceId, item.path, batchId, now]
     )
   }
+  changed()
 }
 
 /** 還沒整理好的包，舊的在前。 */
@@ -63,4 +69,5 @@ export async function setLegacyPackResolved(batchId: string, resolved: boolean, 
   await initLegacyPackDb()
   const db = await getDb()
   await db.execute('update legacy_undecided set resolved_at = $2 where batch_id = $1', [batchId, resolved ? now : null])
+  changed()
 }

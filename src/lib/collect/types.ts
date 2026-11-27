@@ -35,6 +35,8 @@ export interface Proposal {
   slot?: SlotTarget
   /** Fork（almanac ALMNC-54.5）：產生這則提案的對話 id；收集頁直接拆出來的沒有。 */
   conversationId?: number
+  /** Fork（almanac ALMNC-85.2）：V3 同步帶來的跨裝置對話編號（M2）；本機還沒有這段對話時只有它。 */
+  conversationSyncId?: string
   /** Fork（almanac ALMNC-54.21）：新增筆記要存的資料夾（Scott 在工作台卡片上改的）；沒有就是收件資料夾，'' 是筆記庫最上層。 */
   folder?: string
   /**

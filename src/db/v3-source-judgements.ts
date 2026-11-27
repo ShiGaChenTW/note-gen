@@ -22,6 +22,11 @@ const STATUSES: readonly JudgementStatus[] = ['ready', 'unavailable', 'capture_f
 
 let initialized: Promise<void> | null = null
 
+/** Fork（almanac ALMNC-85.2）：資料源群組寫入後，開了 V3 同步就排一次 almanac 同步。 */
+function changed(): void {
+  void import('@/lib/almanac-sync/notify').then(({ notifyAlmanacLocalChange }) => notifyAlmanacLocalChange('source-judgements')).catch(() => undefined)
+}
+
 export function initSourceJudgementDb(): Promise<void> {
   if (!initialized) {
     initialized = (async () => {
@@ -76,6 +81,7 @@ export async function saveSourceJudgement(judgement: SourceJudgement): Promise<v
       judgement.createdAt, judgement.updatedAt,
     ],
   )
+  changed()
 }
 
 export async function getSourceJudgement(sourceId: string): Promise<SourceJudgement | undefined> {
@@ -102,6 +108,7 @@ export async function setFollowSuggestion(sourceId: string, on: boolean, now = D
   await initSourceJudgementDb()
   const db = await getDb()
   await db.execute('update source_judgements set follow_suggestion = $2, updated_at = $3 where source_id = $1', [sourceId, on ? 1 : 0, now])
+  changed()
 }
 
 export async function deleteSourceJudgement(sourceId: string): Promise<void> {

@@ -254,6 +254,7 @@ async function syncRowsTable(context: AlmanacSyncContext, table: AlmanacRowsTabl
       indexVersion = written.version
       report.uploadedFiles.push(indexPath)
     }
+    if (await table.afterMerge?.(ctx)) changedLocally = true
   })
   return changedLocally
 }

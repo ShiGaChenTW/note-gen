@@ -48,7 +48,7 @@ function matchesCategory(entityType: TrashEntityType, category: TrashCategory): 
     case 'canvas':
       return entityType === 'canvas'
     case 'records':
-      return entityType === 'mark' || entityType === 'tag' || entityType === 'source'
+      return entityType === 'mark' || entityType === 'tag' || entityType === 'source' || entityType === 'rss-feed'
     case 'conversations':
       return entityType === 'conversation'
     case 'memories':

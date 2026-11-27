@@ -16,6 +16,7 @@ import { ConversationSummaryDialog } from './conversation-summary/summary-dialog
 import { OrganizeService } from './organize/organize-service'
 import { AnywhereService } from './anywhere/anywhere-service'
 import { RssService } from './rss/rss-service'
+import { AlmanacSyncReloadService } from './almanac-sync-reload-service'
 import { SourceArchiveService } from './decide/source-archive-service'
 import { IdScanService } from './id-scan/id-scan-service'
 import { ExploreService } from './moc/explore-service'
@@ -56,6 +57,7 @@ export function ForkServices() {
       <ConversationSummaryDialog />
       <AnywhereService />
       <RssService />
+      <AlmanacSyncReloadService />
       <SourceArchiveService />
       <IdScanService />
       <MocRebuildService />

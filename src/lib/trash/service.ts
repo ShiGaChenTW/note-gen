@@ -47,6 +47,9 @@ export interface TrashEntityHandlers {
   purgeTag(entityId: string, item: TrashItem): Promise<void>
   restoreSource(entityId: string, item: TrashItem): Promise<void>
   purgeSource(entityId: string, item: TrashItem): Promise<void>
+  /** Fork（almanac ALMNC-85.2）：RSS 訂閱（V3 同步確認別台的刪除後進垃圾桶）。沒實作就當成不支援。 */
+  restoreRssFeed?(entityId: string, item: TrashItem): Promise<void>
+  purgeRssFeed?(entityId: string, item: TrashItem): Promise<void>
 }
 
 export interface TrashServiceDeps {
@@ -176,6 +179,11 @@ async function runEntityAction(
       return action === 'restore'
         ? entities.restoreSource(item.entityId, item)
         : entities.purgeSource(item.entityId, item)
+    case 'rss-feed': {
+      const handler = action === 'restore' ? entities.restoreRssFeed : entities.purgeRssFeed
+      if (!handler) throw new Error(`Unsupported DB trash entity type: ${item.entityType}`)
+      return handler(item.entityId, item)
+    }
     default:
       throw new Error(`Unsupported DB trash entity type: ${item.entityType}`)
   }
