@@ -168,6 +168,40 @@ function makeCompletion(content: string) {
   }
 }
 
+/**
+ * ai_chat_completion_stream（右側 AI 對話、agent runtime 用的串流請求）回傳給 Channel 的事件。
+ * AI handler 回傳一般的 chat.completion 就切成一個串流 chunk（內容＋tool_calls＋finish_reason）；
+ * 回傳陣列就當作已經切好的 chunk 依序送出。handler 丟錯就送 error 事件。
+ */
+function toStreamEvents(result: unknown): unknown[] {
+  if (Array.isArray(result)) return [...result.map(data => ({ type: 'chunk', data })), { type: 'done' }]
+  const completion = result as {
+    id?: string
+    model?: string
+    choices?: Array<{ message?: { content?: string | null; tool_calls?: Array<{ id: string; type?: string; function: { name: string; arguments: string } }> }; finish_reason?: string | null }>
+  } | undefined
+  const choice = completion?.choices?.[0]
+  const message = choice?.message
+  const delta: Record<string, unknown> = { role: 'assistant' }
+  if (typeof message?.content === 'string' && message.content) delta.content = message.content
+  if (message?.tool_calls?.length) {
+    delta.tool_calls = message.tool_calls.map((call, index) => ({
+      index,
+      id: call.id,
+      type: 'function',
+      function: { name: call.function.name, arguments: call.function.arguments },
+    }))
+  }
+  const chunk = {
+    id: completion?.id ?? `chatcmpl-e2e-${Date.now()}`,
+    object: 'chat.completion.chunk',
+    created: Math.floor(Date.now() / 1000),
+    model: completion?.model ?? 'e2e-chat',
+    choices: [{ index: 0, delta, finish_reason: choice?.finish_reason ?? 'stop' }],
+  }
+  return [{ type: 'chunk', data: chunk }, { type: 'done' }]
+}
+
 function createDefaultAiHandler(): AiRequestHandler {
   return (req: AiRequestInput) => {
     if (req.path === '/models') {
@@ -338,7 +372,15 @@ export async function waitForMainBoot(page: Page) {
   await expect(page.getByRole('textbox', { name: '標題', exact: true })).not.toHaveValue('')
 }
 
-export async function setupTauriMock(page: Page): Promise<TauriMockController> {
+export interface TauriMockOptions {
+  /**
+   * 模擬 Tauri 檔案監看（plugin:fs|watch）：App 經 fs plugin 寫入、刪除、搬移、建立資料夾時，送事件給監看那個路徑的 watcher，
+   * 讓筆記庫索引（vault-index）像正式版一樣跟著更新。預設關閉，既有測試的時序不變；要驗證「寫入後索引畫面跟著變」的測試才打開。
+   */
+  fsWatch?: boolean
+}
+
+export async function setupTauriMock(page: Page, options: TauriMockOptions = {}): Promise<TauriMockController> {
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'almanac-e2e-'))
   const appDataDir = path.join(tempRoot, 'appData')
   const vaultDir = path.join(appDataDir, 'article')
@@ -434,6 +476,18 @@ export async function setupTauriMock(page: Page): Promise<TauriMockController> {
       throw new Error(`Path escapes tempRoot: ${rawPath}`)
     }
     return resolved
+  }
+
+  /** 檔案監看事件（notify 的 EventKind 形狀）；fsWatch 關閉時不送。 */
+  const notifyFsChange = (paths: string[], type: unknown) => {
+    if (!options.fsWatch) return
+    void page.evaluate(
+      ({ changed, kind }: { changed: string[]; kind: unknown }) => {
+        const emit = (window as unknown as { __E2E_FS_WATCH_EMIT__?: (paths: string[], type: unknown) => void }).__E2E_FS_WATCH_EMIT__
+        emit?.(changed, kind)
+      },
+      { changed: paths, kind: type }
+    ).catch(() => undefined)
   }
 
   const handleTauriInvoke = async (cmd: string, args: unknown): Promise<unknown> => {
@@ -549,7 +603,9 @@ export async function setupTauriMock(page: Page): Promise<TauriMockController> {
     if (cmd === 'plugin:fs|mkdir') {
       const options = payload.options as { baseDir?: number; dir?: number; recursive?: boolean } | undefined
       const target = resolveFsPath(String(payload.path || ''), options?.baseDir ?? options?.dir)
+      const existed = fs.existsSync(target)
       fs.mkdirSync(target, { recursive: Boolean(options?.recursive) })
+      if (!existed) notifyFsChange([target], { create: { kind: 'folder' } })
       return null
     }
     if (cmd === 'plugin:fs|read_dir') {
@@ -576,6 +632,7 @@ export async function setupTauriMock(page: Page): Promise<TauriMockController> {
         writePayload.options?.baseDir ?? writePayload.options?.dir
       )
       const buf = Buffer.from(writePayload.bytesBase64 || '', 'base64')
+      const existed = fs.existsSync(target)
       if (writePayload.options?.append) {
         fs.appendFileSync(target, buf)
       } else if (writePayload.options?.createNew) {
@@ -583,12 +640,14 @@ export async function setupTauriMock(page: Page): Promise<TauriMockController> {
       } else {
         fs.writeFileSync(target, buf)
       }
+      notifyFsChange([target], existed ? { modify: { kind: 'data', mode: 'content' } } : { create: { kind: 'file' } })
       return null
     }
     if (cmd === 'plugin:fs|remove') {
       const options = payload.options as { baseDir?: number; dir?: number; recursive?: boolean } | undefined
       const target = resolveFsPath(String(payload.path || ''), options?.baseDir ?? options?.dir)
       fs.rmSync(target, { recursive: Boolean(options?.recursive), force: false })
+      notifyFsChange([target], { remove: { kind: 'any' } })
       return null
     }
     if (cmd === 'plugin:fs|rename') {
@@ -601,6 +660,7 @@ export async function setupTauriMock(page: Page): Promise<TauriMockController> {
       const newTarget = resolveFsPath(String(payload.newPath || ''), options?.newPathBaseDir ?? options?.baseDir)
       fs.mkdirSync(path.dirname(newTarget), { recursive: true })
       fs.renameSync(oldTarget, newTarget)
+      notifyFsChange([oldTarget, newTarget], { modify: { kind: 'rename', mode: 'both' } })
       return null
     }
     if (cmd === 'plugin:fs|copy_file') {
@@ -611,7 +671,9 @@ export async function setupTauriMock(page: Page): Promise<TauriMockController> {
       const fromTarget = resolveFsPath(String(payload.fromPath || ''), options?.fromPathBaseDir)
       const toTarget = resolveFsPath(String(payload.toPath || ''), options?.toPathBaseDir)
       fs.mkdirSync(path.dirname(toTarget), { recursive: true })
+      const existed = fs.existsSync(toTarget)
       fs.copyFileSync(fromTarget, toTarget)
+      notifyFsChange([toTarget], existed ? { modify: { kind: 'data', mode: 'content' } } : { create: { kind: 'file' } })
       return null
     }
     if (cmd === 'plugin:fs|stat' || cmd === 'plugin:fs|lstat') {
@@ -624,6 +686,7 @@ export async function setupTauriMock(page: Page): Promise<TauriMockController> {
       const options = payload.options as { baseDir?: number; dir?: number } | undefined
       const target = resolveFsPath(String(payload.path || ''), options?.baseDir ?? options?.dir)
       fs.truncateSync(target, Number(payload.len || 0))
+      notifyFsChange([target], { modify: { kind: 'data', mode: 'content' } })
       return null
     }
     if (cmd === 'plugin:fs|size') {
@@ -666,6 +729,15 @@ export async function setupTauriMock(page: Page): Promise<TauriMockController> {
     if (cmd === 'ai_json_request') {
       const req = payload.request as AiRequestInput
       return await aiHandler(req)
+    }
+    if (cmd === 'ai_chat_completion_stream') {
+      // 瀏覽器端（init script）把 Channel 換掉，只送 request 過來；這裡回傳整串事件，由瀏覽器端依序送進 Channel。
+      const request = (payload.request || {}) as { config?: unknown; body?: unknown }
+      try {
+        return toStreamEvents(await aiHandler({ config: request.config, path: '/chat/completions', method: 'POST', body: request.body }))
+      } catch (error) {
+        return [{ type: 'error', data: error instanceof Error ? error.message : String(error) }]
+      }
     }
     if (cmd === 'cancel_ai_request') {
       return null
@@ -842,6 +914,15 @@ export async function setupTauriMock(page: Page): Promise<TauriMockController> {
       callbacks.delete(id)
     }
 
+    const watchers = new Map<number, { channelId: number; paths: string[]; nextIndex: number }>()
+    const emitFsWatch = (paths: string[], type: unknown) => {
+      for (const watcher of watchers.values()) {
+        const watched = paths.filter(changed => watcher.paths.some(root => changed === root || changed.startsWith(`${root.replace(/\/+$/, '')}/`)))
+        if (watched.length === 0) continue
+        runCallback(watcher.channelId, { index: watcher.nextIndex++, message: { type, paths: watched, attrs: {} } })
+      }
+    }
+
     const dispatchEvent = (eventName: string, payload?: unknown) => {
       const set = listeners.get(eventName)
       if (!set) return
@@ -893,6 +974,33 @@ export async function setupTauriMock(page: Page): Promise<TauriMockController> {
           return null
         }
 
+        if (cmd === 'plugin:fs|watch') {
+          // 記下 watcher 的 Channel 與監看路徑；Node 端（fsWatch 開啟時）寫入檔案後呼叫 __E2E_FS_WATCH_EMIT__ 送事件。
+          const watchArgs = (args || {}) as { paths?: string[]; onEvent?: { id?: number } }
+          const rid = (await invokeFn(cmd, { paths: watchArgs.paths })) as number
+          if (typeof watchArgs.onEvent?.id === 'number') {
+            watchers.set(rid, { channelId: watchArgs.onEvent.id, paths: watchArgs.paths ?? [], nextIndex: 0 })
+          }
+          return rid
+        }
+        if (cmd === 'plugin:fs|unwatch') {
+          const unwatchArgs = (args || {}) as { rid?: number }
+          if (typeof unwatchArgs.rid === 'number') watchers.delete(unwatchArgs.rid)
+          return null
+        }
+
+        if (cmd === 'ai_chat_completion_stream') {
+          // Channel 物件不能直接傳到 Node 端：先取出 callback id，拿到整串事件後照 Tauri Channel 的格式（index／end）逐一送回。
+          const streamArgs = (args || {}) as { request?: unknown; onEvent?: { id?: number } }
+          const channelId = streamArgs.onEvent?.id
+          const events = (await invokeFn(cmd, { request: streamArgs.request })) as unknown[]
+          if (typeof channelId === 'number') {
+            events.forEach((message, index) => runCallback(channelId, { index, message }))
+            runCallback(channelId, { index: events.length, end: true })
+          }
+          return null
+        }
+
         if (cmd === 'plugin:fs|write_file' || cmd === 'plugin:fs|write_text_file') {
           const headers = options?.headers || {}
           const decodedPath = decodeURIComponent(headers.path || '')
@@ -941,6 +1049,11 @@ export async function setupTauriMock(page: Page): Promise<TauriMockController> {
         arch: 'aarch64',
         exe_extension: '',
       },
+      configurable: true,
+      writable: true,
+    })
+    Object.defineProperty(window, '__E2E_FS_WATCH_EMIT__', {
+      value: emitFsWatch,
       configurable: true,
       writable: true,
     })
