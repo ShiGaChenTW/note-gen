@@ -11,6 +11,7 @@ const NOTES = [
   ['知識/卡片盒.md', '# 卡片盒\n\n一張卡一個想法。\n'],
   ['知識/間隔重複.md', '# 間隔重複\n\n隔一段時間再複習。\n'],
   ['知識/費曼學習法.md', '# 費曼學習法\n\n用自己的話講給別人聽。\n'],
+  ['知識/心流.md', '# 心流\n\n專注到忘了時間。\n'],
 ] as const
 
 async function openNote(page: Page, name: string) {
@@ -149,3 +150,71 @@ test('右鍵選單：固定一張後「關閉其他」，固定的留著；沒�
   await expect(tabs.getByRole('tab', { name: /卡片盒/ })).toHaveCount(0)
   await expect(tabs.getByRole('tab', { name: /原子習慣/ })).toBeVisible()
 })
+
+// ALMNC-97.8：三種樣式的完整流程——開 6 篇、切換、更多選單、關閉、固定、按住 ⌃Tab 選卡，重開後順序與固定卡還在。
+for (const style of ['folder', 'stack', 'fan'] as const) {
+  test(`完整流程（${style}）：開多篇、切換、更多、關閉、固定、⌃Tab，重開後還在`, async ({ page }) => {
+    await page.evaluate(value => localStorage.setItem('almanac:doc-switcher-style', value), style)
+    await page.reload()
+    await waitForMainBoot(page)
+    const title = page.getByRole('textbox', { name: '標題', exact: true })
+    const tabs = page.getByRole('tablist', { name: '已開啟的文件' })
+    const expand = page.getByRole('button', { name: '展開疊卡' })
+
+    for (const name of ['原子習慣', '番茄鐘', '卡片盒', '費曼學習法', '心流', '間隔重複']) await openNote(page, name)
+
+    // 切換到上一篇（心流）
+    if (style === 'folder') {
+      await tabs.getByRole('tab', { name: /心流/ }).click()
+    } else {
+      await expand.click()
+      await page.getByRole('button', { name: /^心流，第 \d+ 張/ }).click({ position: { x: 80, y: 12 } })
+    }
+    await expect(title).toHaveValue('心流')
+
+    // 從「更多」選最久沒看的原子習慣
+    if (style !== 'folder') await page.getByRole('button', { name: '展開疊卡' }).click()
+    await page.getByRole('button', { name: /^更多 \d+/ }).click()
+    await page.getByRole('menuitem', { name: /原子習慣/ }).click()
+    await expect(title).toHaveValue('原子習慣')
+
+    // 固定原子習慣（右鍵目前這篇的標題）
+    if (style === 'folder') await tabs.getByRole('tab', { name: /原子習慣/ }).click({ button: 'right' })
+    else await page.getByRole('button', { name: '關閉「原子習慣」' }).click({ button: 'right' }) // 右鍵冒泡到目前這篇的標題列
+    await page.getByRole('menuitem', { name: '固定分頁' }).click()
+
+    // 按住 ⌃ 按一下 Tab 放開：回到上一篇（心流）
+    await page.keyboard.down('Control')
+    await page.keyboard.press('Tab')
+    await page.keyboard.up('Control')
+    await expect(title).toHaveValue('心流')
+
+    // 關閉目前這篇：切到最近使用的上一篇（原子習慣）
+    await page.getByRole('button', { name: '關閉「心流」' }).click()
+    await expect(title).toHaveValue('原子習慣')
+
+    // 重開：固定的原子習慣還在，最近使用順序（費曼學習法比卡片盒新）還在
+    await page.reload()
+    await waitForMainBoot(page)
+    if (style === 'folder') {
+      await page.setViewportSize({ width: 1800, height: 900 })
+      await expect(tabs.getByRole('tab').first()).toHaveAccessibleName(/原子習慣/)
+      await expect(tabs.getByRole('tab', { name: /原子習慣/ }).getByLabel('已固定')).toBeVisible()
+      const names = await tabs.getByRole('tab').evaluateAll(els => els.map(el => el.getAttribute('aria-label') ?? ''))
+      const feynman = names.findIndex(name => name.startsWith('費曼學習法'))
+      const cards = names.findIndex(name => name.startsWith('卡片盒'))
+      expect(feynman).toBeGreaterThan(-1)
+      expect(feynman).toBeLessThan(cards)
+    } else {
+      // 重開後 App 會先停在「今天」頁蓋住編輯區（編輯區變成 inert），這裡不點，直接讀後面的卡（收合時是 aria-hidden）。
+      // 開機會自動打開今天日記成為目前這篇，等它落定後，原子習慣（重開前的目前這篇）會在後面的卡裡。
+      const backNames = () => page.getByRole('button', { name: /，第 \d+ 張，共 \d+ 張$/, includeHidden: true }).evaluateAll(els => els.map(el => el.getAttribute('aria-label') ?? ''))
+      await expect.poll(async () => (await backNames()).some(name => name.startsWith('原子習慣'))).toBe(true)
+      const names = await backNames()
+      const feynman = names.findIndex(name => name.startsWith('費曼學習法'))
+      const cards = names.findIndex(name => name.startsWith('卡片盒'))
+      expect(feynman).toBeGreaterThan(-1)
+      expect(cards === -1 || feynman < cards).toBe(true)
+    }
+  })
+}

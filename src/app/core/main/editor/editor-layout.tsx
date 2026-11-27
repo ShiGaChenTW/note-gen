@@ -1137,12 +1137,28 @@ export const EditorLayout = memo(function EditorLayout() {
   const isV3 = useUiV3()
   const isV3Ref = useRef(isV3)
   isV3Ref.current = isV3
+  const v3ActivationAttemptRef = useRef('')
   useEffect(() => {
     if (!isV3 || !layoutReady) return
     const current = layoutRef.current
     const next = collapseToSingleGroup(current, activeTabId)
-    if (next !== current) setLayout(next)
-  }, [activeTabId, isV3, layout, layoutReady, setLayout])
+    if (next !== current) {
+      setLayout(next)
+      return
+    }
+    // 直接 addTab 的記錄／畫布／外掛／瀏覽器分頁不會改 activeFilePath（還指著舊檔），
+    // 上面同步版面的 effect 因此略過它們；這裡補切過去（沿用 ALMNC-54.17 的做法，但不再收掉其他分頁）。
+    // 同一個狀態只試一次，切換被擋下（路徑鎖定、換工作區中）時不會一直重試。
+    const group = next.groups[next.activeGroupId]
+    const storeTab = openTabs.find(tab => tab.id === activeTabId)
+    if (!group || !storeTab || !activeFilePath || group.activeTabId === activeTabId || !group.tabIds.includes(activeTabId)) return
+    const usesEmptyPath = isBlankEditorTab(storeTab) || isRecordEditorTab(storeTab) || isCanvasEditorTab(storeTab) || isPluginEditorTab(storeTab) || isBrowserEditorTab(storeTab)
+    if (!usesEmptyPath) return
+    const attempt = `${activeTabId}\n${activeFilePath}`
+    if (v3ActivationAttemptRef.current === attempt) return
+    v3ActivationAttemptRef.current = attempt
+    void activateTab(group.id, storeTab, { deactivationAlreadyPrepared: true })
+  }, [activateTab, activeFilePath, activeTabId, isBlankEditorTab, isBrowserEditorTab, isCanvasEditorTab, isPluginEditorTab, isRecordEditorTab, isV3, layout, layoutReady, openTabs, setLayout])
 
   const handleCloseTab = useCallback((groupId: string, tabId: string) => {
     const group = layoutRef.current.groups[groupId]
