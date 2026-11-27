@@ -101,7 +101,31 @@ Do not edit Backlog task, draft, document, decision, or milestone markdown files
   ```
 - 測試規格位置：`tests/e2e/*.spec.ts`，伺服器由 `playwright.config.ts` 自動啟動，不會與 `vitest run`（僅掃描 `*.test.ts(x)`）衝突。
 - 測試不能依賴 dev server 的慢速掩蓋時序：靜態版載入快，啟動時的非同步動作（例如自動打開今天的日記會收起覆蓋層）可能在測試第一步之後才發生。每支測試 `page.goto('/core/main')` 之後先 `await waitForMainBoot(page)`（`tests/e2e/tauri-mock.ts`），等啟動落定再操作。
+- 測試規格分兩個 Playwright project：`e2e`（`tests/e2e/*.spec.ts`，功能流程）與 `visual`（`tests/e2e/visual/*.visual.ts`，截圖比對）。`pnpm test:e2e` 只跑 `e2e`，不會因像素差異失敗；截圖比對另用 `pnpm test:visual`，見下一節。
 - `tests/e2e/tauri-mock.ts` 在 Node 端使用真實 `node:sqlite`（記憶體資料庫）與暫存目錄隔離每個測試的檔案系統、Store、Tauri Event 匯流排、AI 請求模擬、虛擬時鐘與本機 MCP 橋接。
 - 寫 E2E 測試時同樣遵守 ARIA role 與可見文字／無障礙名稱定位原則（不寫 CSS selector、`querySelector` 或 `data-testid`），且每支測試必須確保零未捕獲 `pageerror`。
 
 
+
+### 截圖比對（Playwright visual regression，ALMNC-94.5）
+
+視覺規範（顏色、間距、深色模式）jsdom 測不到，改用 Playwright 對主要畫面截圖、和 repo 裡的基準圖比對。
+
+- 執行：
+  ```bash
+  pnpm test:visual
+  ```
+  共用 `pnpm test:e2e` 的伺服器設定（靜態版 `out/`、`E2E_SKIP_BUILD`、`E2E_PORT` 都一樣用）。
+- 範圍：`tests/e2e/visual/main-flows.visual.ts`，8 個畫面（今天、工作台、整理的畫布與標籤分頁、對話頁、命令面板、設定視窗、最近刪除）× 淺色／深色，共 16 張。深淺色用 Playwright 的 `colorScheme`，測試會確認 `<html>` 真的套上（或拿掉）`dark` class。
+- 基準檔：`tests/e2e/visual/__screenshots__/<平台>/<畫面>-<light|dark>.png`，**以 macOS（darwin）產生並 commit**。路徑帶平台，Linux／Windows 上跑不會拿 macOS 的圖誤判（那些平台沒有基準，會直接報缺基準）。字型渲染跟機器有關，基準只在 macOS 上產生、更新。
+- 穩定化做法（新增畫面時照做）：視窗固定 1280×860、`deviceScaleFactor: 1`、時區 `Asia/Taipei`；`page.clock.setFixedTime` 把時間固定在 2026-03-12 10:30；config 預設 `animations: 'disabled'`、`caret: 'hide'`；截圖前等主題與字型（`document.fonts`）落定、把滑鼠移開避免 hover 樣式；toast 與相對時間（「剛剛」）用 `mask` 遮住；非同步出現的內容（例如工作台「1 件」徽章）先等它出現再截。
+- 什麼時候要更新基準：
+  - **刻意改了畫面**（顏色 token、間距、字級、版面、文案、圖示、這 8 個畫面上的元件）→ 更新。
+  - 新增或刪除截圖畫面 → 產生新基準、刪掉不用的舊基準檔。
+  - **沒有打算改畫面卻失敗** → 不要更新，先看 `test-results/` 裡的 `*-diff.png`、`*-actual.png`、`*-expected.png` 找出原因（多半是意外的樣式回歸，或測試沒等到非同步內容）。
+- 更新指令（只在 macOS 上跑；可加 `-g <畫面名>` 只更新特定畫面）：
+  ```bash
+  pnpm test:visual --update-snapshots
+  ```
+  更新後再跑一次 `pnpm test:visual` 確認全過，並用 `git status` 確認只動到預期的 png。
+- PR 要附差異說明：有更新基準的 PR，內文列出改了哪幾張基準、為什麼改（對應哪個畫面調整），並附改前／改後截圖或 `*-diff.png`；沒有說明的基準更新不要合併。
