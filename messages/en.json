@@ -7789,6 +7789,7 @@
     "records": "Records",
     "settings": "Settings",
     "conversations": "Conversations",
+    "almanac": "V3 data",
     "notConfigured": "Sync not configured",
     "configurationFailed": "Could not load sync settings",
     "missingRepository": "No repository linked",

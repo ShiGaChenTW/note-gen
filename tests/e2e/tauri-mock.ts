@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
@@ -12,6 +13,21 @@ export interface AiRequestInput {
 }
 
 export type AiRequestHandler = (req: AiRequestInput) => unknown | Promise<unknown>
+
+export interface HttpRequestInput {
+  method: string
+  url: string
+  headers: Array<[string, string]>
+}
+
+export interface HttpResponseInit {
+  status?: number
+  headers?: Record<string, string>
+  body: string | Uint8Array
+}
+
+/** 回傳 null／undefined＝這個網址不處理，照預設丟「Network disabled」。 */
+export type HttpRequestHandler = (req: HttpRequestInput) => HttpResponseInit | null | undefined | Promise<HttpResponseInit | null | undefined>
 
 interface PendingMcpResolver {
   resolve: (value: { ok: boolean; result?: unknown; error?: unknown }) => void
@@ -34,12 +50,19 @@ export interface TauriMockController {
   readonly appDataDir: string
   readonly vaultDir: string
   setAiHandler: (handler: AiRequestHandler) => void
+  /** 模擬 Tauri http 外掛（plugin:http|fetch…）：測試只對自己準備的網址回應，其他照舊丟錯，不碰真實網路。 */
+  setHttpHandler: (handler: HttpRequestHandler | null) => void
   resetAiHandler: () => void
   querySql: <T extends Record<string, unknown>>(sql: string, values?: unknown[], dbName?: string) => T[]
   execSql: (sql: string, values?: unknown[], dbName?: string) => { changes: number; lastInsertRowid: number }
   fileExists: (relPath: string, base?: 'vault' | 'appData') => boolean
   readVaultFile: (relPath: string) => string
   writeVaultFile: (relPath: string, content: string) => void
+  /**
+   * 模擬 App 外（Obsidian、iCloud 同步）改了筆記庫檔案：寫入後送檔案監看事件（需要 fsWatch: true），
+   * 讓筆記庫索引與 MOC 比對像正式版一樣跟著跑。
+   */
+  writeVaultFileExternally: (relPath: string, content: string) => void
   listVaultDir: (relPath?: string) => string[]
   listVaultFiles: (options?: { includeHidden?: boolean }) => string[]
   setStoreKey: (key: string, value: unknown, storePath?: string) => void
@@ -378,6 +401,8 @@ export interface TauriMockOptions {
    * 讓筆記庫索引（vault-index）像正式版一樣跟著更新。預設關閉，既有測試的時序不變；要驗證「寫入後索引畫面跟著變」的測試才打開。
    */
   fsWatch?: boolean
+  /** plugin:os|hostname 的回傳值（V3 同步的裝置名稱）；預設 e2e-mac。雙裝置測試用來分辨 A、B。 */
+  hostname?: string
 }
 
 export async function setupTauriMock(page: Page, options: TauriMockOptions = {}): Promise<TauriMockController> {
@@ -398,6 +423,10 @@ export async function setupTauriMock(page: Page, options: TauriMockOptions = {})
   let clockOffsetMs = 0
   let localMcpReady = false
   let aiHandler: AiRequestHandler = createDefaultAiHandler()
+  let httpHandler: HttpRequestHandler | null = null
+  const httpRequests = new Map<number, HttpRequestInput>()
+  const httpResponses = new Map<number, Uint8Array>()
+  let nextHttpRid = 9000
   const unhandledCommands = new Set<string>()
   const pendingMcpRequests = new Map<string, PendingMcpResolver>()
 
@@ -488,6 +517,85 @@ export async function setupTauriMock(page: Page, options: TauriMockOptions = {})
       },
       { changed: paths, kind: type }
     ).catch(() => undefined)
+  }
+
+  const cloudSyncBase = (root: unknown, create: boolean): string => {
+    const rootPath = String(root || '')
+    if (!path.isAbsolute(rootPath)) throw new Error('Cloud folder must be an absolute path')
+    if (!fs.existsSync(rootPath)) throw new Error('Cloud folder does not exist')
+    const base = path.join(rootPath, '.notegen', 'sync-v1')
+    if (create) fs.mkdirSync(base, { recursive: true })
+    return base
+  }
+  const cloudSyncKey = (key: unknown): string => {
+    const raw = String(key || '').replace(/\\/g, '/')
+    const parts = raw.split('/').filter(Boolean)
+    if (!raw.trim() || raw.startsWith('/') || parts.some(part => part === '.' || part === '..')) {
+      throw new Error('Cloud sync key must be a non-empty relative path')
+    }
+    return parts.join('/')
+  }
+  const cloudFileInfo = (base: string, file: string) => {
+    const bytes = fs.readFileSync(file)
+    const stats = fs.statSync(file)
+    return {
+      key: path.relative(base, file).split(path.sep).join('/'),
+      size: stats.size,
+      modifiedAt: Math.floor(stats.mtimeMs),
+      etag: createHash('sha256').update(bytes).digest('hex'),
+    }
+  }
+  const handleCloudFolderCommand = (cmd: string, payload: Record<string, unknown>): unknown => {
+    if (cmd === 'test_cloud_folder_sync') {
+      const base = cloudSyncBase(payload.root, true)
+      const manifest = path.join(base, 'provider.json')
+      if (!fs.existsSync(manifest)) {
+        fs.writeFileSync(manifest, '{\n  "format": "notegen-cloud-folder-sync",\n  "version": 1\n}\n')
+      }
+      return true
+    }
+    if (cmd === 'write_cloud_folder_sync_file') {
+      const base = cloudSyncBase(payload.root, true)
+      const key = cloudSyncKey(payload.key)
+      const target = path.join(base, key)
+      fs.mkdirSync(path.dirname(target), { recursive: true })
+      // 先寫暫存檔再改名（同 Rust 的 atomic_write），另一台同時讀不會讀到寫一半的內容。
+      const temp = `${target}.tmp-${process.pid}-${Math.random().toString(36).slice(2)}`
+      fs.writeFileSync(temp, Buffer.from(String(payload.contentBase64 || ''), 'base64'))
+      fs.renameSync(temp, target)
+      return cloudFileInfo(base, target)
+    }
+    if (cmd === 'read_cloud_folder_sync_file') {
+      const base = cloudSyncBase(payload.root, false)
+      const target = path.join(base, cloudSyncKey(payload.key))
+      if (!fs.existsSync(target)) return null
+      const info = cloudFileInfo(base, target)
+      return { contentBase64: fs.readFileSync(target).toString('base64'), size: info.size, modifiedAt: info.modifiedAt, etag: info.etag }
+    }
+    if (cmd === 'delete_cloud_folder_sync_file') {
+      const base = cloudSyncBase(payload.root, false)
+      const target = path.join(base, cloudSyncKey(payload.key))
+      if (fs.existsSync(target)) fs.rmSync(target)
+      return true
+    }
+    // list_cloud_folder_sync_files：prefix 是檔案就只回那一個；是資料夾就遞迴列出（略過 .almanac-trash 與寫到一半的暫存檔）。
+    const base = cloudSyncBase(payload.root, false)
+    if (!fs.existsSync(base)) return []
+    const prefix = typeof payload.prefix === 'string' && payload.prefix.trim() ? cloudSyncKey(payload.prefix) : ''
+    const start = prefix ? path.join(base, prefix) : base
+    if (!fs.existsSync(start)) return []
+    if (fs.statSync(start).isFile()) return [cloudFileInfo(base, start)]
+    const files: Array<ReturnType<typeof cloudFileInfo>> = []
+    const walk = (dir: string) => {
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        if (entry.name === '.almanac-trash' || entry.name.includes('.tmp-')) continue
+        const full = path.join(dir, entry.name)
+        if (entry.isDirectory()) walk(full)
+        else if (entry.isFile()) files.push(cloudFileInfo(base, full))
+      }
+    }
+    walk(start)
+    return files.sort((left, right) => left.key.localeCompare(right.key))
   }
 
   const handleTauriInvoke = async (cmd: string, args: unknown): Promise<unknown> => {
@@ -725,6 +833,56 @@ export async function setupTauriMock(page: Page, options: TauriMockOptions = {})
       return path.posix.isAbsolute(String(payload.path || ''))
     }
 
+    // 雲端資料夾同步（src-tauri/src/cloud_folder_sync.rs 的桌面版指令）：檔案放在 <root>/.notegen/sync-v1/<key>，
+    // etag＝內容的 SHA-256。root 由測試指定（雙裝置測試讓 A、B 指到同一個暫存資料夾），所以不限制在 tempRoot 底下。
+    if (
+      cmd === 'test_cloud_folder_sync'
+      || cmd === 'write_cloud_folder_sync_file'
+      || cmd === 'read_cloud_folder_sync_file'
+      || cmd === 'delete_cloud_folder_sync_file'
+      || cmd === 'list_cloud_folder_sync_files'
+    ) {
+      return handleCloudFolderCommand(cmd, payload)
+    }
+
+    // HTTP 外掛：只有 setHttpHandler 認得的網址有回應。
+    if (cmd === 'plugin:http|fetch') {
+      const config = (payload.clientConfig || {}) as { method?: string; url?: string; headers?: Array<[string, string]> }
+      const request: HttpRequestInput = { method: String(config.method || 'GET'), url: String(config.url || ''), headers: config.headers || [] }
+      if (!httpHandler) throw new Error('Network disabled in E2E mock')
+      const rid = ++nextHttpRid
+      httpRequests.set(rid, request)
+      return rid
+    }
+    if (cmd === 'plugin:http|fetch_send') {
+      const rid = Number(payload.rid)
+      const request = httpRequests.get(rid)
+      httpRequests.delete(rid)
+      const response = request && httpHandler ? await httpHandler(request) : null
+      if (!request || !response) throw new Error('Network disabled in E2E mock')
+      const body = typeof response.body === 'string' ? new TextEncoder().encode(response.body) : response.body
+      const responseRid = ++nextHttpRid
+      httpResponses.set(responseRid, body)
+      const status = response.status ?? 200
+      return {
+        status,
+        statusText: status === 200 ? 'OK' : String(status),
+        url: request.url,
+        headers: Object.entries(response.headers ?? {}),
+        rid: responseRid,
+      }
+    }
+    if (cmd === 'plugin:http|fetch_read_body') {
+      const rid = Number(payload.rid)
+      const body = httpResponses.get(rid) ?? new Uint8Array(0)
+      httpResponses.delete(rid)
+      return Array.from(body)
+    }
+    if (cmd === 'plugin:http|fetch_cancel') {
+      httpRequests.delete(Number(payload.rid))
+      return null
+    }
+
     // AI commands
     if (cmd === 'ai_json_request') {
       const req = payload.request as AiRequestInput
@@ -785,7 +943,7 @@ export async function setupTauriMock(page: Page, options: TauriMockOptions = {})
     if (cmd === 'plugin:app|identifier') return 'com.almanac.notes'
     if (cmd === 'plugin:app|tauri_version') return '2.0.0'
     if (cmd === 'plugin:os|locale') return 'zh-TW'
-    if (cmd === 'plugin:os|hostname') return 'e2e-mac'
+    if (cmd === 'plugin:os|hostname') return options.hostname ?? 'e2e-mac'
     if (cmd === 'get_app_storefront_country_code') return 'TW'
     if (cmd === 'calendar_events' || cmd === 'calendar_request_access' || cmd === 'calendar_week') {
       return { access: 'unavailable', events: [] }
@@ -814,9 +972,6 @@ export async function setupTauriMock(page: Page, options: TauriMockOptions = {})
     }
     if (cmd === 'plugin:dialog|ask' || cmd === 'plugin:dialog|confirm') return true
     if (cmd === 'plugin:updater|check') return null
-    if (cmd === 'plugin:http|fetch') {
-      throw new Error('Network disabled in E2E mock')
-    }
     if (
       cmd === 'update_tray_record_toolbar_config' ||
       cmd === 'set_web_clipper_ready' ||
@@ -1074,6 +1229,9 @@ export async function setupTauriMock(page: Page, options: TauriMockOptions = {})
     resetAiHandler() {
       aiHandler = createDefaultAiHandler()
     },
+    setHttpHandler(handler: HttpRequestHandler | null) {
+      httpHandler = handler
+    },
     querySql<T extends Record<string, unknown>>(sql: string, values: unknown[] = [], dbName = 'sqlite:note.db'): T[] {
       return bindAndRun(getDb(dbName), 'select', sql, values) as T[]
     },
@@ -1092,6 +1250,13 @@ export async function setupTauriMock(page: Page, options: TauriMockOptions = {})
       const full = path.resolve(vaultDir, relPath)
       fs.mkdirSync(path.dirname(full), { recursive: true })
       fs.writeFileSync(full, content, 'utf8')
+    },
+    writeVaultFileExternally(relPath: string, content: string): void {
+      const full = path.resolve(vaultDir, relPath)
+      const existed = fs.existsSync(full)
+      fs.mkdirSync(path.dirname(full), { recursive: true })
+      fs.writeFileSync(full, content, 'utf8')
+      notifyFsChange([full], existed ? { modify: { kind: 'data', mode: 'content' } } : { create: { kind: 'file' } })
     },
     listVaultDir(relPath = ''): string[] {
       const full = path.resolve(vaultDir, relPath)

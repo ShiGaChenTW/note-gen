@@ -11,6 +11,7 @@ const baseURL = `http://localhost:${port}`
 
 // 截圖比對（ALMNC-94.5）：tests/e2e/visual/*.visual.ts，獨立成 `visual` project，用 `pnpm test:visual` 跑；
 // `pnpm test:e2e` 只跑 `e2e` project，功能 E2E 不會因像素差異失敗。
+// V3 同步雙裝置（ALMNC-95.3）：tests/e2e/v3-sync.spec.ts，獨立成 `sync` project，用 `pnpm test:e2e:sync` 跑。
 // 基準檔放 tests/e2e/visual/__screenshots__/<平台>/，以 macOS（darwin）產生；其他平台沒有基準，不會拿 macOS 的圖誤判。
 export default defineConfig({
   testDir: './tests/e2e',
@@ -34,6 +35,14 @@ export default defineConfig({
     {
       name: 'e2e',
       testMatch: '**/*.spec.ts',
+      // 雙裝置同步另成 `sync` project（`pnpm test:e2e:sync`），不拖慢 `pnpm test:e2e`。
+      testIgnore: '**/v3-sync.spec.ts',
+    },
+    {
+      // ALMNC-95.3：V3 同步雙裝置 E2E。兩個 browser context 指到同一個暫存「雲端資料夾」來回同步，一支測試要跑完幾輪同步，給較長的時限。
+      name: 'sync',
+      testMatch: '**/v3-sync.spec.ts',
+      timeout: 180_000,
     },
     {
       name: 'visual',

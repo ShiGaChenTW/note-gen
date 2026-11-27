@@ -13,6 +13,7 @@
     "lint": "next lint",
     "test": "vitest run",
     "test:e2e": "playwright test --project=e2e",
+    "test:e2e:sync": "playwright test --project=sync",
     "test:visual": "playwright test --project=visual",
     "migrate:ids": "node scripts/migrate-ids.mjs",
     "migrate:domains": "node scripts/migrate-domains.mjs",

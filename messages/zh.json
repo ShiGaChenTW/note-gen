@@ -7789,6 +7789,7 @@
     "records": "记录",
     "settings": "设置",
     "conversations": "对话",
+    "almanac": "V3 数据",
     "notConfigured": "未配置同步",
     "configurationFailed": "同步配置读取失败",
     "missingRepository": "未关联仓库",
