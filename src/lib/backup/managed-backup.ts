@@ -99,7 +99,7 @@ async function updateBackupResult(successAt: number | null, error: string | null
 }
 
 export async function createManagedBackup(
-  reason: 'manual' | 'scheduled' | 'pre-restore',
+  reason: 'manual' | 'scheduled' | 'pre-restore' | 'pre-v3-sync',
   settings?: ManagedBackupSettings,
 ): Promise<ManagedBackupInfo> {
   if (backupInProgress) {

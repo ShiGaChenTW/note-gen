@@ -3191,6 +3191,17 @@
         "nativeLocalSnapshotPending": "服务器已接受本地修改，但本机副本尚未恢复完整，正在等待重试；请保留现有备份。",
         "nativeTagIdentityMissing": "此标签缺少本地同步身份，已暂停相关条目。请重启 Almanac Notes 完成本地数据初始化后重试。",
         "nativeStorageBudgetExceeded": "实例或账号存储预算已用尽。请联系管理员调整预算或清理保留数据后重试。"
+      },
+      "almanacV3": {
+        "title": "V3 跨设备同步",
+        "desc": "数据源、伙伴、MOC 状态等新界面数据也一起同步（测试中）。第一次开启前会先做一次备份；每台设备都要先升级到同一版本再开启。",
+        "primary": "主力设备：{name}",
+        "primarySelf": "主力设备：{name}（这台）",
+        "primaryUnknown": "主力设备：同步完成后显示",
+        "primaryDesc": "RSS 自动抓取、指挥官自动分析、每周整理只在主力设备运行；其他设备仍可手动操作。",
+        "primaryStale": "主力设备超过 3 天没有同步，可以改由这台运行后台任务。",
+        "makePrimary": "改由这台运行后台任务",
+        "firstSyncPending": "第一次同步进行中：先拉取、再合并、再推送。"
       }
     },
     "imageHosting": {

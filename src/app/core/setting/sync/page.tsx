@@ -38,6 +38,7 @@ import { restorePlatformSwitchRecovery, usePlatformSwitchStore } from '@/stores/
 import { PlatformSwitchProgress } from './components/platform-switch-progress'
 import { WorkspaceRepoMapping } from './components/workspace-repo-mapping'
 import { DataSyncOverview } from './components/data-sync-overview'
+import { AlmanacV3SyncSection } from './components/almanac-v3-sync-panel'
 import { SettingType } from '../components/setting-base'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -579,6 +580,9 @@ export default function SyncPage() {
                   onSensitiveConfigChange={handleExcludeSensitiveConfigChange}
                 />
               )}
+
+              {/* Fork（almanac ALMNC-85.2）：V3 跨裝置同步（檔案類同步方式；自架另走物件模型，尚未接上）。 */}
+              {platform !== 'selfHosted' && <AlmanacV3SyncSection />}
 
             </TabsContent>
           </Tabs>}

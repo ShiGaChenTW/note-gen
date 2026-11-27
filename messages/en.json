@@ -3191,6 +3191,17 @@
         "nativeLocalSnapshotPending": "The server accepted local changes, but the local copy still needs restoration. It will be retried; retain existing backups.",
         "nativeTagIdentityMissing": "This tag has no local sync identity. Restart Almanac Notes to finish local data initialization, then retry.",
         "nativeStorageBudgetExceeded": "The account or instance storage budget is exhausted. Ask the administrator to adjust it or clear retained data before retrying."
+      },
+      "almanacV3": {
+        "title": "V3 cross-device sync",
+        "desc": "Also syncs new-interface data such as sources, crew, and MOC state (beta). A backup is made before the first run; update every device to the same version first.",
+        "primary": "Primary device: {name}",
+        "primarySelf": "Primary device: {name} (this device)",
+        "primaryUnknown": "Primary device: shown after the first sync",
+        "primaryDesc": "RSS fetching, automatic commander analysis, and weekly review run only on the primary device; other devices can still do them manually.",
+        "primaryStale": "The primary device has not synced for more than 3 days. You can run background work on this device instead.",
+        "makePrimary": "Run background work on this device",
+        "firstSyncPending": "First sync in progress: pull, merge, then push."
       }
     },
     "imageHosting": {

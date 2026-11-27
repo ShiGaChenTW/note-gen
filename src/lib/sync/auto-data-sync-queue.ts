@@ -42,7 +42,9 @@ import {
 } from '@/lib/sync/conversation-sync'
 import useSettingStore from '@/stores/setting'
 
-export type AutoDataSyncDomain = 'records' | 'settings' | 'conversations'
+// Fork（almanac ALMNC-85.2）：almanac＝V3 同步領域（資料源、夥伴、MOC…，設計 1.9）。一律走列層級合併（pull → merge → push），
+// 不走既有領域的「遠端較新就整份拉下來蓋掉」；檔案在 .data/almanac/、.almanac/v3/，流程見 src/lib/almanac-sync。
+export type AutoDataSyncDomain = 'records' | 'settings' | 'conversations' | 'almanac'
 type AutoDataSyncProvider = 'github' | 'gitee' | 'gitlab' | 'gitea' | 's3' | 'webdav' | 'cloudFolder'
 export type AutoDataSyncPhase =
   | 'idle'
@@ -148,6 +150,8 @@ const AUTO_DATA_SYNC_MARKS_PATH = '.data/marks.json'
 const AUTO_DATA_SYNC_MEMORIES_PATH = '.data/memories.json'
 const AUTO_DATA_SYNC_SETTINGS_PATH = '.data/settings.json'
 const AUTO_DATA_SYNC_DOMAINS: AutoDataSyncDomain[] = ['records', 'settings', 'conversations']
+/** 佇列與 meta.json 領域狀態認得的領域；almanac 不走 AUTO_DATA_SYNC_DOMAINS 的整份下載／合併路徑。 */
+const AUTO_DATA_SYNC_QUEUE_DOMAINS: AutoDataSyncDomain[] = [...AUTO_DATA_SYNC_DOMAINS, 'almanac']
 const AUTO_DATA_SYNC_DIRTY_DOMAINS_KEY = 'autoDataSyncDirtyDomains'
 const AUTO_DATA_SYNC_LAST_LOCAL_UPLOAD_META_MS_KEY = 'autoDataSyncLastLocalUploadMetaUpdatedAtMs'
 const AUTO_DATA_SYNC_LAST_APPLIED_REMOTE_META_MS_KEY = 'autoDataSyncLastAppliedRemoteMetaUpdatedAtMs'
@@ -492,6 +496,8 @@ export function enqueueAutoDataSync(domain: AutoDataSyncDomain, reason = 'change
   }
 
   if (useSettingStore.getState().primaryBackupMethod === 'selfHosted') {
+    // V3 同步的自架物件格式已定（almanac-sync/self-hosted.ts），但還沒接進自架 runtime。
+    if (domain === 'almanac') return
     const wakeSelfHosted = async () => {
       if (domain === 'settings' && !reason.startsWith('memory:')) {
         const { enqueueSelfHostedSettingChange } = await import('@/db/self-hosted-sync')
@@ -555,6 +561,10 @@ export function enqueueAllAutoDataSync(reason = 'manual-sync', mode: 'auto' | 'm
   enqueueAutoDataSync('records', reason, mode)
   enqueueAutoDataSync('settings', reason, mode)
   enqueueAutoDataSync('conversations', reason, mode)
+  // 手動任務會略過「領域有沒有開」的過濾，所以 almanac 只在 V3 同步開著時才排。
+  void isAutoDataSyncDomainEnabled('almanac').then(enabled => {
+    if (enabled) enqueueAutoDataSync('almanac', reason, mode)
+  }).catch(() => undefined)
 }
 
 export async function flushAutoDataSyncNow(): Promise<void> {
@@ -1270,8 +1280,14 @@ export async function initAutoDataSyncRuntime(): Promise<void> {
       updateState({ lastCompletedAt })
     }
     await initializeMissingAutoDataSyncBaselineFingerprints(store)
+    try {
+      const { applyAlmanacLaneExclusionsFromStore } = await import('@/lib/almanac-sync/runtime')
+      await applyAlmanacLaneExclusionsFromStore()
+    } catch (error) {
+      warnAutoDataSync('failed to restore almanac lane exclusions', { message: getAutoDataSyncErrorMessage(error, 'unknown error') })
+    }
 
-    if ((await getEnabledAutoDataSyncDomains()).length === 0) {
+    if ((await getEnabledQueueDomains()).length === 0) {
       updateState({
         isSyncing: false,
         phase: 'idle',
@@ -1355,6 +1371,8 @@ async function waitForConversationSyncIdle() {
 
 async function isAutoDataSyncDomainEnabled(domain: AutoDataSyncDomain): Promise<boolean> {
   const store = await Store.load('store.json')
+  // V3 同步開關是裝置層級設定（UAT 通過前預設關，設計第 4 節整體回滾）。
+  if (domain === 'almanac') return await store.get<boolean>('almanacV3Sync') === true
   const key = domain === 'records'
     ? 'autoRecordSyncEnabled'
     : domain === 'settings'
@@ -1375,6 +1393,12 @@ async function getEnabledAutoDataSyncDomains() {
     enabled: await isAutoDataSyncDomainEnabled(domain),
   })))
   return enabled.filter(item => item.enabled).map(item => item.domain)
+}
+
+/** 佇列用：既有領域＋開著的 almanac。遠端檢查與整份下載仍只看 getEnabledAutoDataSyncDomains。 */
+async function getEnabledQueueDomains() {
+  const enabled = await getEnabledAutoDataSyncDomains()
+  return await isAutoDataSyncDomainEnabled('almanac') ? [...enabled, 'almanac' as const] : enabled
 }
 
 export async function isAutoDataSyncProviderConfigured(): Promise<boolean> {
@@ -1561,7 +1585,7 @@ async function processQueue() {
     return
   }
 
-  const enabledDomains = await getEnabledAutoDataSyncDomains()
+  const enabledDomains = await getEnabledQueueDomains()
   queue = queue.filter(task => task.mode === 'manual' || enabledDomains.includes(task.domain))
   if (queue.length === 0) {
     updateState({
@@ -1645,6 +1669,38 @@ async function processQueue() {
         status: 'syncing',
         lastError: null,
       })
+
+      if (task.domain === 'almanac') {
+        // 列層級合併：拉、合併、寫回、推都在 runAlmanacSyncTask 裡；成功後只更新 meta.json 的 almanac 領域狀態。
+        updateState({
+          isSyncing: true,
+          phase: 'uploading',
+          currentDomain: task.domain,
+          syncMode: task.mode,
+          status: 'syncing',
+          lastError: null,
+        })
+        const { runAlmanacSyncTask } = await import('@/lib/almanac-sync/runtime')
+        const result = await runAlmanacSyncTask(task.reason)
+        if (result.uploaded) {
+          // 只有真的改了遠端才更新 meta.json；否則兩台會因為對方的 meta 一直互相觸發同步。
+          await uploadAutoDataSyncMeta(['almanac'])
+        } else if (result.ran) {
+          await markAlmanacRemoteMetaApplied()
+        }
+        dropRedundantFrontTasks(task.domain, taskStartedAt)
+        if (!queue.some(item => item.domain === task.domain)) {
+          await clearAutoDataSyncDirtyDomain(task.domain)
+        }
+        recordSyncTiming('syncTask', taskStartedAt, {
+          domain: task.domain,
+          mode: task.mode,
+          reason: task.reason,
+          retryCount: task.retryCount,
+          success: true,
+        })
+        continue
+      }
 
       const store = await Store.load('store.json')
       const provider = await getAutoDataSyncProvider(store)
@@ -1768,13 +1824,7 @@ async function processQueue() {
     })
     return
   }
-  const failedDomain = failedTasks.records
-    ? 'records'
-    : failedTasks.settings
-      ? 'settings'
-      : failedTasks.conversations
-        ? 'conversations'
-        : null
+  const failedDomain = AUTO_DATA_SYNC_QUEUE_DOMAINS.find(domain => Boolean(failedTasks[domain])) ?? null
   if (failedDomain) {
     updateState({
       isSyncing: false,
@@ -1782,9 +1832,9 @@ async function processQueue() {
       currentDomain: null,
       syncMode: null,
       status: 'failed',
-      lastError: AUTO_DATA_SYNC_DOMAINS.flatMap(domain => failedTasks[domain] ? [failedTaskErrors[domain] || `${domain}: Auto data sync failed`] : []).join('\n'),
+      lastError: AUTO_DATA_SYNC_QUEUE_DOMAINS.flatMap(domain => failedTasks[domain] ? [failedTaskErrors[domain] || `${domain}: Auto data sync failed`] : []).join('\n'),
       lastFailedAt: Date.now(),
-      affectedDomains: AUTO_DATA_SYNC_DOMAINS.filter(domain => Boolean(failedTasks[domain])),
+      affectedDomains: AUTO_DATA_SYNC_QUEUE_DOMAINS.filter(domain => Boolean(failedTasks[domain])),
     })
     return
   }
@@ -1975,7 +2025,7 @@ async function uploadAutoDataSyncMeta(uploadedDomains: AutoDataSyncDomain[], wri
     )
   }
   await store.save()
-  await storeAutoDataSyncBaselineFingerprints(store, uploadedDomains)
+  await storeAutoDataSyncBaselineFingerprints(store, uploadedDomains.filter(domain => domain !== 'almanac'))
   recordSyncTiming('metaUpload', startedAt, {
     provider,
     domains: uploadedDomains,
@@ -2049,10 +2099,13 @@ async function checkRemoteAutoDataSync(
   if (await (await Store.load('store.json')).get('platformSwitchRecovery')) return
   const startedAt = Date.now()
   let enabledDomains: AutoDataSyncDomain[] = []
+  let almanacEnabled = false
+  let almanacRemoteNewer = false
 
   try {
     enabledDomains = await getEnabledAutoDataSyncDomains()
-    if (enabledDomains.length === 0) {
+    almanacEnabled = await isAutoDataSyncDomainEnabled('almanac')
+    if (enabledDomains.length === 0 && !almanacEnabled) {
       return
     }
 
@@ -2096,6 +2149,10 @@ async function checkRemoteAutoDataSync(
     }
 
     const currentDeviceId = await getAutoDataSyncDeviceId()
+    // almanac 領域：遠端較新就排一次 pull → merge → push（在 finally 才排，不跟下面既有領域的下載搶）。
+    if (almanacEnabled && remoteMeta.domainStates.almanac) {
+      almanacRemoteNewer = (await getRemoteNewerDomains(store, remoteMeta, ['almanac'], currentDeviceId)).length > 0
+    }
     const candidateRemoteDomains = remoteMeta.hasExplicitDomainStates
       ? AUTO_DATA_SYNC_DOMAINS.filter(domain => remoteMeta.domainStates[domain])
       : remoteMeta.domains.length > 0
@@ -2227,6 +2284,7 @@ async function checkRemoteAutoDataSync(
       status: state.status,
       enabledDomains,
     })
+    if (almanacRemoteNewer) enqueueAutoDataSync('almanac', `${reason}-remote-newer`)
   }
 }
 
@@ -3038,7 +3096,7 @@ function normalizeAutoDataSyncDomainStates(
   const result: AutoDataSyncRemoteMeta['domainStates'] = {}
   if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
     const entries = value as Record<string, unknown>
-    for (const domain of AUTO_DATA_SYNC_DOMAINS) {
+    for (const domain of AUTO_DATA_SYNC_QUEUE_DOMAINS) {
       const stateValue = entries[domain]
       if (typeof stateValue !== 'object' || stateValue === null || Array.isArray(stateValue)) continue
       const stateRecord = stateValue as Record<string, unknown>
@@ -3070,7 +3128,7 @@ function normalizeAutoDataSyncDomains(value: unknown): AutoDataSyncDomain[] {
 }
 
 function isAutoDataSyncDomain(value: unknown): value is AutoDataSyncDomain {
-  return value === 'records' || value === 'settings' || value === 'conversations'
+  return value === 'records' || value === 'settings' || value === 'conversations' || value === 'almanac'
 }
 
 async function getAutoDataSyncProvider(store: Store): Promise<AutoDataSyncProvider> {
@@ -3211,6 +3269,16 @@ async function markAutoDataSyncRemoteMetaApplied(
   if (domains.includes('settings')) {
     await store.set(await getAutoDataSyncStateKey(AUTO_DATA_SYNC_MEMORY_SETTINGS_MIGRATED_KEY), true)
   }
+  await store.save()
+}
+
+/** almanac 這輪沒有上傳：把遠端目前的 almanac 領域狀態記成已套用，避免定期檢查一直重排同一輪。 */
+async function markAlmanacRemoteMetaApplied() {
+  const store = await Store.load('store.json')
+  const remoteMeta = await downloadAutoDataSyncMeta(store, await getAutoDataSyncProvider(store)).catch(() => null)
+  const updatedAtMs = remoteMeta?.domainStates.almanac?.updatedAtMs
+  if (!updatedAtMs) return
+  await store.set(await getAutoDataSyncStateKey(`${AUTO_DATA_SYNC_LAST_APPLIED_REMOTE_META_MS_KEY}:almanac`), updatedAtMs)
   await store.save()
 }
 
