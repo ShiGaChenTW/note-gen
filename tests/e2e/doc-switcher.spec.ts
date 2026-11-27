@@ -9,6 +9,8 @@ const NOTES = [
   ['知識/原子習慣.md', '# 原子習慣\n\n每天進步 1%。\n'],
   ['知識/番茄鐘.md', '# 番茄鐘\n\n一次 25 分鐘。\n'],
   ['知識/卡片盒.md', '# 卡片盒\n\n一張卡一個想法。\n'],
+  ['知識/間隔重複.md', '# 間隔重複\n\n隔一段時間再複習。\n'],
+  ['知識/費曼學習法.md', '# 費曼學習法\n\n用自己的話講給別人聽。\n'],
 ] as const
 
 async function openNote(page: Page, name: string) {
@@ -37,6 +39,7 @@ test.afterEach(() => {
 })
 
 test('預設樣式 B：開三篇都留著，最近開的排前面，點標籤切回去', async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 900 })
   await openNote(page, '原子習慣')
   await openNote(page, '番茄鐘')
   await openNote(page, '卡片盒')
@@ -50,4 +53,26 @@ test('預設樣式 B：開三篇都留著，最近開的排前面，點標籤切
   await tabs.getByRole('tab', { name: /原子習慣/ }).click()
   await expect(page.getByRole('textbox', { name: '標題', exact: true })).toHaveValue('原子習慣')
   await expect(tabs.getByRole('tab', { name: /原子習慣/ })).toHaveAttribute('aria-selected', 'true')
+})
+
+test('樣式 B：放不下的分頁收進「更多」，從選單選的那張移到最前面', async ({ page }) => {
+  for (const name of ['原子習慣', '番茄鐘', '卡片盒', '間隔重複', '費曼學習法']) await openNote(page, name)
+
+  const tabs = page.getByRole('tablist', { name: '已開啟的文件' })
+  await expect(tabs.getByRole('tab', { name: /費曼學習法/ })).toHaveAttribute('aria-selected', 'true')
+  const more = page.getByRole('button', { name: /^更多 \d+/ })
+  await expect(more).toBeVisible()
+  await expect(tabs.getByRole('tab', { name: /原子習慣/ })).toHaveCount(0)
+
+  // 標籤切換的中途截圖：選到的那張浮起、滑向最前面
+  await tabs.getByRole('tab').nth(1).click()
+  await page.waitForTimeout(120)
+  await page.screenshot({ path: test.info().outputPath('folder-tabs-switching.png'), clip: { x: 500, y: 30, width: 420, height: 80 } })
+
+  await more.click()
+  await page.getByRole('menuitem', { name: /原子習慣/ }).click()
+  await expect(page.getByRole('textbox', { name: '標題', exact: true })).toHaveValue('原子習慣')
+  await expect(tabs.getByRole('tab').first()).toHaveAccessibleName(/原子習慣/)
+  await expect(tabs.getByRole('tab').first()).toHaveAttribute('aria-selected', 'true')
+  await page.screenshot({ path: test.info().outputPath('folder-tabs-more.png') })
 })

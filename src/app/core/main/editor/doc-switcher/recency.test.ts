@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import {
+  folderTabCapacity,
   orderTabsByRecency,
   pickFallbackAfterClose,
   pickMountedTabIds,
   reconcileRecency,
+  splitVisibleTabs,
   touchRecency,
 } from './recency'
 
@@ -75,5 +77,32 @@ describe('pickFallbackAfterClose', () => {
   })
   it('沒有剩下的分頁時回傳 undefined', () => {
     expect(pickFallbackAfterClose(['a'], 'a', [])).toBeUndefined()
+  })
+})
+
+describe('folderTabCapacity', () => {
+  it('全部放得下時回傳總張數', () => {
+    expect(folderTabCapacity(1000, 3)).toBe(3)
+  })
+  it('放不下時扣掉「更多」按鈕的位置', () => {
+    // (400 - 20 + 8 - 76) / 142 = 2.19 → 2 張
+    expect(folderTabCapacity(400, 6)).toBe(2)
+  })
+  it('再窄也至少一張', () => {
+    expect(folderTabCapacity(80, 6)).toBe(1)
+  })
+})
+
+describe('splitVisibleTabs', () => {
+  const ordered = [{ id: 'p', pinned: true }, { id: 'a' }, { id: 'b' }, { id: 'c' }]
+  it('依容量切開，最久沒看的收進更多', () => {
+    const { visible, hidden } = splitVisibleTabs(ordered, 'a', 2)
+    expect(visible.map(tab => tab.id)).toEqual(['p', 'a'])
+    expect(hidden.map(tab => tab.id)).toEqual(['b', 'c'])
+  })
+  it('目前這張被擠出去時換掉最後一張看得到的', () => {
+    const { visible, hidden } = splitVisibleTabs(ordered, 'c', 2)
+    expect(visible.map(tab => tab.id)).toEqual(['p', 'c'])
+    expect(hidden.map(tab => tab.id)).toEqual(['a', 'b'])
   })
 })

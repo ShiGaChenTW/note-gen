@@ -87,3 +87,33 @@ export function pickFallbackAfterClose(
   const remaining = new Set(remainingIds)
   return recency.find(id => id !== closedId && remaining.has(id)) ?? remainingIds.find(id => id !== closedId)
 }
+
+/** 樣式 B 的標籤尺寸（px）：每張寬度、彼此重疊、列的左右留白、「更多」按鈕寬度。 */
+export const FOLDER_TAB = { width: 150, overlap: 8, padding: 20, more: 76 } as const
+
+/** 標籤列寬度放得下幾張標籤（至少 1 張）。全部放得下就不留「更多」的位置。 */
+export function folderTabCapacity(rowWidth: number, total: number): number {
+  const step = FOLDER_TAB.width - FOLDER_TAB.overlap
+  const usable = rowWidth - FOLDER_TAB.padding + FOLDER_TAB.overlap
+  if (total * step <= usable) return total
+  return Math.max(1, Math.floor((usable - FOLDER_TAB.more) / step))
+}
+
+/**
+ * 依容量分成看得到的標籤與收進「更多」的標籤（ordered 已經是顯示順序）。
+ * 目前這張一定看得到：被擠出去時（例如固定的分頁太多）換掉最後一張看得到的。
+ */
+export function splitVisibleTabs<T extends RecencyTab>(
+  ordered: readonly T[],
+  activeId: string | undefined,
+  capacity: number,
+): { visible: T[], hidden: T[] } {
+  if (ordered.length <= capacity) return { visible: [...ordered], hidden: [] }
+  const visible = ordered.slice(0, capacity)
+  if (activeId && !visible.some(tab => tab.id === activeId)) {
+    const active = ordered.find(tab => tab.id === activeId)
+    if (active) visible[visible.length - 1] = active
+  }
+  const shown = new Set(visible.map(tab => tab.id))
+  return { visible, hidden: ordered.filter(tab => !shown.has(tab.id)) }
+}
