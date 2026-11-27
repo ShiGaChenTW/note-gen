@@ -9,7 +9,7 @@ import {
   assignTag, claimDraftTag, loadTagMap, saveTagMap, tagAfterCommanderJoins, tagOf, type ThreadTag, type ThreadTagMap,
 } from '@/lib/threads/tags'
 import { threadKey as keyOf } from '@/lib/threads/projects'
-import { archiveProject, restoreProject, type ArchivedProjectMap } from '@/lib/projects/archive'
+import { archiveProject, findArchivedProject, restoreProject, type ArchivedProjectMap } from '@/lib/projects/archive'
 import { createProjectArchiveDeps, loadArchivedProjects, saveArchivedProjects } from '@/lib/projects/archive-io'
 import type { Conversation } from '@/db/conversations'
 import useCollectStore from './collect'
@@ -33,9 +33,12 @@ interface ThreadsState {
   /** Fork（almanac ALMNC-89）：已結束（封存）的專案。 */
   archivedProjects: ArchivedProjectMap
   /** 結束專案：封存同名專案筆記、從進行中清單與目前脈絡移走；對話與分組留著。回傳封存了幾則專案筆記。 */
-  endProject: (project: string) => Promise<{ notes: number, failed: string[] }>
-  /** 取消封存：專案筆記改回原本的狀態、回到進行中清單。 */
-  reopenProject: (project: string) => Promise<{ failed: string[] }>
+  endProject: (project: string, options?: { notePath?: string }) => Promise<{ notes: number, failed: string[] }>
+  /**
+   * 取消封存：專案筆記改回原本的狀態、回到進行中清單。
+   * 沒有封存紀錄（例如在屬性面板手動改成 archived）但給了 notePath：只把那篇的 archived 拿掉。
+   */
+  reopenProject: (project: string, options?: { notePath?: string }) => Promise<{ failed: string[] }>
 
   /** Fork（almanac ALMNC-54.4）：對話 key → 查詢／處理／日程。沒有的就是預設「處理」（lib/threads/tags.ts）。 */
   tagMap: ThreadTagMap
@@ -113,21 +116,24 @@ const useThreadsStore = create<ThreadsState>((set, get) => {
     removeProject: async project => persist(dropProject(get().projectMap, project)),
 
     archivedProjects: {},
-    endProject: async project => {
+    endProject: async (project, options) => {
       // 先確定封存清單讀回來了，免得只用這一筆蓋掉 store.json 裡的整張表。
       await get().loadProjects()
-      const { record, failed } = await archiveProject(project, createProjectArchiveDeps())
+      const { record, failed } = await archiveProject(project, createProjectArchiveDeps(), options?.notePath ? [options.notePath] : [])
       const next = { ...get().archivedProjects, [record.name]: record }
       set({ archivedProjects: next })
       await saveArchivedProjects(next)
       return { notes: record.notes.length, failed }
     },
-    reopenProject: async project => {
+    reopenProject: async (project, options) => {
       await get().loadProjects()
-      const record = get().archivedProjects[project]
-      if (!record) return { failed: [] }
+      const record = findArchivedProject(get().archivedProjects, project)
+      if (!record) {
+        if (!options?.notePath) return { failed: [] }
+        return restoreProject({ name: project, archivedAt: 0, notes: [{ path: options.notePath, previousStatus: null }], context: [] }, createProjectArchiveDeps())
+      }
       const next = { ...get().archivedProjects }
-      delete next[project]
+      delete next[record.name]
       set({ archivedProjects: next })
       await saveArchivedProjects(next)
       return restoreProject(record, createProjectArchiveDeps())

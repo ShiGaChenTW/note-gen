@@ -6,7 +6,6 @@
 import { Segmented } from '@/components/v3/segmented'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { toast } from 'sonner'
 import { Archive, ArchiveRestore, Check, ChevronDown, Ellipsis, FolderInput, Hash, MessageSquarePlus, MessagesSquare, Pin, Search } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -30,6 +29,7 @@ import { EmptyState } from '@/components/v3/empty-state'
 import { SectionLabel } from '@/components/v3/section-label'
 import { PageHeader, PageSurface } from '../page-ui'
 import { PendingProposalsNote, ThreadTagPrefix } from './thread-status'
+import { EndProjectDialog, useProjectArchiveActions } from './end-project-dialog'
 import { usePendingCounts } from '@/lib/decide/use-decisions'
 import { tagOf, type ThreadTag } from '@/lib/threads/tags'
 import { SELECTED_RAISED } from '../sidebar-row'
@@ -217,8 +217,7 @@ export function ThreadList() {
   const setQuery = useThreadsStore(state => state.setQuery)
   const moveToProject = useThreadsStore(state => state.moveToProject)
   const archivedProjects = useThreadsStore(state => state.archivedProjects)
-  const endProject = useThreadsStore(state => state.endProject)
-  const reopenProject = useThreadsStore(state => state.reopenProject)
+  const archiveActions = useProjectArchiveActions()
   const [ending, setEnding] = useState<string | null>(null)
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
   const [naming, setNaming] = useState<ThreadConversation | null>(null)
@@ -240,25 +239,13 @@ export function ThreadList() {
     })
   }
 
-  async function confirmEnd(project: string) {
+  function confirmEnd(project: string) {
     setEnding(null)
-    try {
-      const { notes, failed } = await endProject(project)
-      toast.success(t('endProjectDone', { name: project, count: notes }))
-      if (failed.length > 0) toast.error(t('endProjectFailed', { count: failed.length }))
-    } catch (error) {
-      console.error('[project-archive] 結束專案失敗：', error)
-      toast.error(t('endProjectFailed', { count: 1 }))
-    }
+    void archiveActions.end(project)
   }
 
-  async function onReopen(project: string) {
-    try {
-      await reopenProject(project)
-      toast.success(t('reopenProjectDone', { name: project }))
-    } catch (error) {
-      console.error('[project-archive] 取消封存失敗：', error)
-    }
+  function onReopen(project: string) {
+    return archiveActions.reopen(project)
   }
 
   function onMove(thread: ThreadConversation, project: string | null) {
@@ -317,18 +304,7 @@ export function ThreadList() {
         {mode === 'project' && !query.trim() && <ArchivedProjectsSection projects={archivedList} onReopen={project => void onReopen(project)} />}
       </div>
 
-      <Dialog open={ending !== null} onOpenChange={open => { if (!open) setEnding(null) }}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>{t('endProjectTitle', { name: ending ?? '' })}</DialogTitle>
-            <DialogDescription>{t('endProjectHint')}</DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEnding(null)}>{t('cancel')}</Button>
-            <Button onClick={() => { if (ending) void confirmEnd(ending) }}>{t('endProjectConfirm')}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <EndProjectDialog project={ending} onConfirm={confirmEnd} onCancel={() => setEnding(null)} />
 
       <Dialog open={naming !== null} onOpenChange={open => { if (!open) setNaming(null) }}>
         <DialogContent className="sm:max-w-sm">

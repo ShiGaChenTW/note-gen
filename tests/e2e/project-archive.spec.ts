@@ -83,3 +83,34 @@ test('結束專案：專案筆記封存、知識筆記不動、從進行中清�
   expect(mock.readVaultFile(KNOWLEDGE_PATH)).toBe(KNOWLEDGE_NOTE)
   expect(mock.getStoreKey('archivedProjects')).toEqual({})
 })
+
+test('只有專案筆記、沒有對話分組的專案：從編輯器工具列結束與取消封存', async ({ page }) => {
+  const path = '讀書會.md'
+  const note = '---\ntype: project\ntitle: 讀書會\n---\n# 讀書會\n\n每月一本。\n'
+  mock.writeVaultFile(path, note)
+  mock.writeVaultFile(KNOWLEDGE_PATH, KNOWLEDGE_NOTE)
+
+  await page.goto('/core/main')
+  await waitForMainBoot(page)
+  const tree = page.getByRole('tree', { name: '工作區檔案' })
+  const expand = page.getByRole('button', { name: '展開我的筆記', exact: true })
+  await expect(tree.or(expand)).toBeVisible()
+  if (await expand.isVisible()) await expand.click()
+  await tree.getByRole('treeitem', { name: /讀書會/ }).click()
+
+  const toolbar = page.getByRole('toolbar', { name: '筆記工具列' })
+  await toolbar.getByRole('button', { name: '結束專案…' }).click()
+  const dialog = page.getByRole('dialog', { name: '結束專案「讀書會」？' })
+  await dialog.getByRole('button', { name: '結束並封存' }).click()
+  await expect(page.getByText('已結束專案「讀書會」，封存 1 則專案筆記')).toBeVisible()
+  await expect.poll(() => mock.readVaultFile(path)).toContain('status: archived')
+  expect(mock.readVaultFile(path)).toContain('每月一本。')
+  expect(mock.readVaultFile(KNOWLEDGE_PATH)).toBe(KNOWLEDGE_NOTE)
+  expect(mock.getStoreKey<Record<string, unknown>>('archivedProjects')).toHaveProperty('讀書會')
+
+  await toolbar.getByRole('button', { name: '取消封存' }).click()
+  await expect(page.getByText('專案「讀書會」回到進行中')).toBeVisible()
+  await expect.poll(() => mock.readVaultFile(path)).toBe(note)
+  expect(mock.getStoreKey('archivedProjects')).toEqual({})
+  await expect(toolbar.getByRole('button', { name: '結束專案…' })).toBeVisible()
+})

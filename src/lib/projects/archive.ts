@@ -45,7 +45,12 @@ export function sameProjectName(a: string, b: string): boolean {
 }
 
 export function isProjectArchived(map: ArchivedProjectMap, name: string): boolean {
-  return Object.keys(map).some(key => sameProjectName(key, name))
+  return findArchivedProject(map, name) !== undefined
+}
+
+/** 依專案名找封存紀錄（不分大小寫）。 */
+export function findArchivedProject(map: ArchivedProjectMap, name: string): ArchivedProject | undefined {
+  return map[name] ?? Object.values(map).find(record => sameProjectName(record.name, name))
 }
 
 /** 已封存的專案名（給 groupThreads／listProjects 用）。 */
@@ -186,13 +191,17 @@ export interface ArchiveOutcome {
   failed: string[]
 }
 
-/** 結束專案：封存同名專案筆記、從脈絡拿掉，回傳封存紀錄（由呼叫端存進 archivedProjects）。 */
-export async function archiveProject(name: string, deps: ProjectArchiveDeps): Promise<ArchiveOutcome> {
+/**
+ * 結束專案：封存同名專案筆記、從脈絡拿掉，回傳封存紀錄（由呼叫端存進 archivedProjects）。
+ * include：從專案筆記本身按「結束專案」時，那篇一定算進去（筆記索引可能還沒跟上）。
+ */
+export async function archiveProject(name: string, deps: ProjectArchiveDeps, include: readonly string[] = []): Promise<ArchiveOutcome> {
   const project = normalizeProjectName(name)
   if (!project) throw new Error('專案名不能是空的')
   const notes: ArchivedProjectNote[] = []
   const failed: string[] = []
-  for (const path of await deps.findProjectNotes(project)) {
+  const paths = Array.from(new Set([...await deps.findProjectNotes(project), ...include])).sort()
+  for (const path of paths) {
     try {
       const before = await deps.rewriteNote(path, archiveNoteRaw)
       if (before !== null) notes.push({ path, previousStatus: statusOf(before) ?? null })
