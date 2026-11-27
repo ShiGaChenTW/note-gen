@@ -12,6 +12,7 @@
 // ALMNC-54.20：第二組最後加「送給指揮官」——先存檔再把畫面上這篇筆記送成自己寫的資料源（id 由路徑決定，重送不重複建立，內容改了接新版）。
 // 第二組不會收進「⋯」，所以窄版也一直看得到。
 // ALMNC-89：專案筆記（type: project）在第二組多一顆「結束專案…／取消封存」（project-archive-button.tsx）。
+// ALMNC-90：紀錄筆記（type: log／record）在第二組多一顆「送給指揮官萃取」（record-extract-button.tsx）。
 // ALMNC-69.3（Q9）：從新增資料源對話框「新增文件」打開的那篇，這顆換成「完成」——存檔不送，按「完成」才交給指揮官（勾了日誌就帶日誌標籤），
 // 之後這篇回到一般筆記的「送給指揮官」。
 import { useEffect, useMemo, useRef, useState, type ReactNode, type Ref } from 'react'
@@ -53,6 +54,7 @@ import { formatShortcutLabel } from './markdown/bottom-format-toolbar-items'
 import { WIKI_METADATA_NODE_NAME } from './markdown/wiki-metadata-tokenizer'
 import { useEditorUndoRedo } from './editor-undo-redo'
 import { ProjectArchiveButton } from './project-archive-button'
+import { RecordExtractButton } from './record-extract-button'
 import type { TabInfo } from './tab-bar'
 import { useVaultName } from '../sidebar-v3/use-vault-name'
 
@@ -282,6 +284,7 @@ export function EditorNoteToolbar({ activeTab, isActiveGroup, canGoBack, canGoFo
               <ToolbarButton label={labels.pin} icon={<ArrowUpToLine />} pressed={pinned} onClick={() => toggleMark('pinned')} />
               <ToolbarButton label={labels.favorite} icon={<Heart />} pressed={favorite} onClick={() => toggleMark('favorites')} />
               <ProjectArchiveItem key={editorKey(noteEditor?.editor ?? null)} editor={noteEditor?.editor ?? null} notePath={notePath} />
+              <RecordExtractItem key={`extract-${editorKey(noteEditor?.editor ?? null)}`} editor={noteEditor?.editor ?? null} notePath={notePath} />
               {pendingDone ? (
                 <DoneButton label={t('done')} hint={t('doneHint')} disabled={sending} onClick={() => void sendToCommander()} />
               ) : (
@@ -403,6 +406,13 @@ function ProjectArchiveItem({ editor, notePath }: { editor: Editor | null, noteP
   })
   if (!notePath || !state?.raw) return null
   return <ProjectArchiveButton notePath={notePath} raw={state.raw} heading={state.heading} />
+}
+
+/** Fork（almanac ALMNC-90）：紀錄筆記（type: log／record）才出現的「送給指揮官萃取」；從編輯器讀 frontmatter。 */
+function RecordExtractItem({ editor, notePath }: { editor: Editor | null, notePath: string }) {
+  const raw = useEditorState({ editor, selector: ctx => frontmatterRawOf(ctx.editor) })
+  if (!notePath || !raw) return null
+  return <RecordExtractButton notePath={notePath} raw={raw} />
 }
 
 function frontmatterRawOf(editor: Editor | null): string | null {
