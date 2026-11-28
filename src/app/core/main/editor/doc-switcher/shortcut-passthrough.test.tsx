@@ -124,7 +124,8 @@ describe('文件切換器不攔 ⇧⌘7/8/9 與 ⌘1–⌘9', () => {
       ],
       content: '<p>卡片盒的內容。</p>',
     })
-    editor.commands.focus('end')
+    // 不用 focus()：它會 scrollIntoView，jsdom 沒有 getClientRects。keymap 只看 keydown，不需要真的取得焦點。
+    editor.commands.setTextSelection(3)
     // prosemirror-keymap 在 jsdom（navigator.platform 不是 Mac）把 Mod 當 Ctrl；macOS 上就是 ⌘。
     const isMac = /Mac|iP(hone|[oa]d)/.test(navigator.platform)
     const mod = isMac ? { metaKey: true } : { ctrlKey: true }
