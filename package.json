@@ -18,7 +18,7 @@
     "migrate:ids": "node scripts/migrate-ids.mjs",
     "migrate:domains": "node scripts/migrate-domains.mjs",
     "tauri": "tauri",
-    "tauri:dev": "tauri dev --config src-tauri/tauri.dev.conf.json",
+    "tauri:dev": "node scripts/tauri-dev.mjs",
     "docs:build": "npm --prefix ./docs run build",
     "sync-version": "./scripts/sync-version.sh",
     "sync:self-hosted-schema": "pnpm dlx openapi-typescript@7.13.0 ${NOTEGEN_SERVER_OPENAPI_URL:-http://localhost:3000/openapi.json} -o src/lib/self-hosted-sync/generated/openapi.ts",

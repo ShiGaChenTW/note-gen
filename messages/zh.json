@@ -718,6 +718,15 @@
         "uiMode": {
           "title": "新界面（V3）",
           "desc": "开启时使用 almanac V3 的单色外观与新页面；关闭则回到原本的外观，新页面隐藏。"
+        },
+        "docSwitcher": {
+          "title": "文档切换样式",
+          "desc": "同时打开多篇文档时，用哪种方式切换。",
+          "options": {
+            "folder": "文件夹标签",
+            "stack": "上方叠列",
+            "fan": "斜向错开"
+          }
         }
       },
       "tools": {
@@ -7658,6 +7667,16 @@
       "focusBlurMedium": "中",
       "focusBlurStrong": "重",
       "focusHint": "按 Esc 或 {shortcut} 退出"
+    },
+    "docSwitcher": {
+      "label": "已打开的文档",
+      "close": "关闭“{name}”",
+      "pinned": "已固定",
+      "more": "更多 {count}",
+      "moreHeading": "较久没看的标签页",
+      "expand": "展开叠卡",
+      "collapse": "收起叠卡",
+      "position": "第 {index} 张，共 {total} 张"
     }
   },
   "editorWindow": {

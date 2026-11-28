@@ -2,7 +2,7 @@
 
 import useInboxStore from '@/stores/inbox'
 import { PluginEmbeddedViews } from '@/components/plugins/plugin-embedded-views'
-import { Fragment, memo, useCallback, useEffect, useRef, useState } from 'react'
+import { Fragment, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import {
   DndContext,
@@ -45,7 +45,10 @@ import { MdEditor } from './markdown/md-editor-wrapper'
 import { TabBar, type TabInfo } from './tab-bar'
 import { useUiV3 } from '@/lib/fork-ui'
 import { EditorNoteToolbar } from './editor-note-toolbar'
-import { collapseToSingleDocument } from './single-document'
+import { collapseToSingleGroup } from './single-document'
+import { pickFallbackAfterClose, pickMountedTabIds } from './doc-switcher/recency'
+import { useDocSwitcherStore } from '@/stores/doc-switcher'
+import { DocSwitcher } from './doc-switcher/doc-switcher'
 import { BrowserPanel } from './browser-panel'
 import { ImageEditor } from './image/image-editor'
 import { EmptyState } from './empty-state'
@@ -255,71 +258,102 @@ function EditorGroupPane({
     .filter((tab): tab is TabInfo => Boolean(tab))
   const activeTab = groupTabs.find(tab => tab.id === group.activeTabId)
   const isActiveGroup = activeLayout.activeGroupId === group.id
-  // Fork（almanac ALMNC-54.17）：V3 一次只開一篇，不顯示分頁列；編輯區右上角改放筆記工具列（返回／前進、筆記操作、復原／重做）。
+  // Fork（almanac ALMNC-54.17）：V3 不顯示上游分頁列；編輯區右上角改放筆記工具列（返回／前進、筆記操作、復原／重做）。
   const isV3 = useUiV3()
+  // Fork（almanac ALMNC-97.1）：V3 可同時開多篇，只掛載最近使用的幾張（MOUNTED_TAB_LIMIT），其餘保留分頁但先卸載內容，
+  // 再切回來時重新讀檔，捲動位置照 editorViewStates 還原。
+  const recency = useDocSwitcherStore(state => state.recency)
+  const mountedTabIds = useMemo(
+    () => isV3 ? pickMountedTabIds(groupTabs, recency, activeTab?.id) : null,
+    [activeTab?.id, groupTabs, isV3, recency],
+  )
+
+  const content = (
+    <div className="relative flex min-h-0 flex-1" onPointerDownCapture={() => onActivateGroup(group.id, group.activeTabId)}>
+      {groupTabs.map(tab => (
+        <div
+          key={`${tab.id}:${tab.path}`}
+          className="min-h-0 min-w-0 w-full flex-1 overflow-hidden"
+          style={{ display: tab.id === activeTab?.id ? 'flex' : 'none' }}
+        >
+          {tab.kind !== 'blank'
+            && (!mountedTabIds || mountedTabIds.has(tab.id))
+            && renderActiveContent(tab, isActiveGroup && tab.id === activeTab?.id, group.id)}
+          {tab.kind === 'blank' && tab.id === activeTab?.id
+            && (isTodayTab(tab) ? <TodayMovedNotice /> : renderEmpty('new-tab', isActiveGroup))}
+        </div>
+      ))}
+      {!activeTab && renderEmpty(groupTabs.length > 0 ? 'new-tab' : 'empty-group', isActiveGroup)}
+      <EditorDropZone groupId={group.id} direction="left" visible={dragging} className="inset-y-0 left-0 z-20 w-1/4" />
+      <EditorDropZone groupId={group.id} direction="right" visible={dragging} className="inset-y-0 right-0 z-20 w-1/4" />
+      <EditorDropZone groupId={group.id} direction="up" visible={dragging} className="inset-x-1/4 top-0 z-20 h-1/4" />
+      <EditorDropZone groupId={group.id} direction="down" visible={dragging} className="inset-x-1/4 bottom-0 z-20 h-1/4" />
+      <EditorDropZone groupId={group.id} direction="center" visible={dragging} className="inset-1/4 z-10" />
+    </div>
+  )
 
   return (
     <section
       className={cn('relative flex h-full w-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background', isActiveGroup && 'editor-group-active')}
     >
-      {isV3 ? <EditorNoteToolbar
-        activeTab={activeTab}
-        isActiveGroup={isActiveGroup}
-        canGoBack={Boolean(getEditorBackNavigationTarget(activeLayout))}
-        canGoForward={Boolean(getEditorForwardNavigationTarget(activeLayout))}
-        onNavigate={onNavigateHistory}
-      /> : <TabBar
-        groupId={group.id}
-        tabs={groupTabs}
-        activeTabId={group.activeTabId}
-        isActiveGroup={isActiveGroup}
-        isMaximized={activeLayout.maximizedGroupId === group.id}
-        onTabSwitch={tabId => onActivateGroup(group.id, tabId)}
-        onNewTab={() => onNewTab(group.id)}
-        onNewBrowser={() => onNewBrowser(group.id)}
-        onNewNote={() => { void setLeftSidebarTab('files').then(() => newFile()) }}
-        onNewRecord={() => emitter.emit('quickRecordTextHandler')}
-        onNewCanvas={() => { void createProject('blank', tCanvas('templates.blank')).then(project => { if (project) void addTab(createCanvasTab(project)) }) }}
-        onCloseTab={tabId => onCloseTab(group.id, tabId)}
-        onCloseOtherTabs={tabId => onKeepTabs(group.id, [tabId])}
-        onCloseAllTabs={() => onKeepTabs(group.id, [])}
-        onCloseLeftTabs={tabId => {
-          const index = group.tabIds.indexOf(tabId)
-          onKeepTabs(group.id, group.tabIds.slice(index))
-        }}
-        onCloseRightTabs={tabId => {
-          const index = group.tabIds.indexOf(tabId)
-          onKeepTabs(group.id, group.tabIds.slice(0, index + 1))
-        }}
-        onSplitTab={(tabId, direction) => onSplitTab(group.id, tabId, direction)}
-        onMoveToNewWindow={tabId => onMoveToNewWindow(group.id, tabId)}
-        onPinTab={onPinTab}
-        onUnpinTab={onUnpinTab}
-        onRestartPluginTab={onRestartPluginTab}
-        onToggleMaximize={() => onToggleMaximize(group.id)}
-        canCloseGroup={!groupTabs.some(tab => tab.pinned)}
-        onCloseGroup={() => onCloseGroup(group.id)}
-      />}
-      <div className="relative flex min-h-0 flex-1" onPointerDownCapture={() => onActivateGroup(group.id, group.activeTabId)}>
-        {groupTabs.map(tab => (
-          <div
-            key={`${tab.id}:${tab.path}`}
-            className="min-h-0 min-w-0 w-full flex-1 overflow-hidden"
-            style={{ display: tab.id === activeTab?.id ? 'flex' : 'none' }}
-          >
-            {tab.kind !== 'blank'
-              && renderActiveContent(tab, isActiveGroup && tab.id === activeTab?.id, group.id)}
-            {tab.kind === 'blank' && tab.id === activeTab?.id
-              && (isTodayTab(tab) ? <TodayMovedNotice /> : renderEmpty('new-tab', isActiveGroup))}
-          </div>
-        ))}
-        {!activeTab && renderEmpty(groupTabs.length > 0 ? 'new-tab' : 'empty-group', isActiveGroup)}
-        <EditorDropZone groupId={group.id} direction="left" visible={dragging} className="inset-y-0 left-0 z-20 w-1/4" />
-        <EditorDropZone groupId={group.id} direction="right" visible={dragging} className="inset-y-0 right-0 z-20 w-1/4" />
-        <EditorDropZone groupId={group.id} direction="up" visible={dragging} className="inset-x-1/4 top-0 z-20 h-1/4" />
-        <EditorDropZone groupId={group.id} direction="down" visible={dragging} className="inset-x-1/4 bottom-0 z-20 h-1/4" />
-        <EditorDropZone groupId={group.id} direction="center" visible={dragging} className="inset-1/4 z-10" />
-      </div>
+      {isV3 ? (
+        <DocSwitcher
+          tabs={groupTabs}
+          activeTabId={activeTab?.id ?? ''}
+          onSwitch={tabId => onActivateGroup(group.id, tabId)}
+          onClose={tabId => onCloseTab(group.id, tabId)}
+          onPin={onPinTab}
+          onUnpin={onUnpinTab}
+          onCloseOthers={tabId => onKeepTabs(group.id, [tabId])}
+          onCloseAll={() => onKeepTabs(group.id, [])}
+          onMoveToNewWindow={tabId => onMoveToNewWindow(group.id, tabId)}
+        >
+          <EditorNoteToolbar
+            activeTab={activeTab}
+            isActiveGroup={isActiveGroup}
+            canGoBack={Boolean(getEditorBackNavigationTarget(activeLayout))}
+            canGoForward={Boolean(getEditorForwardNavigationTarget(activeLayout))}
+            onNavigate={onNavigateHistory}
+          />
+          {content}
+        </DocSwitcher>
+      ) : (
+        <>
+          <TabBar
+            groupId={group.id}
+            tabs={groupTabs}
+            activeTabId={group.activeTabId}
+            isActiveGroup={isActiveGroup}
+            isMaximized={activeLayout.maximizedGroupId === group.id}
+            onTabSwitch={tabId => onActivateGroup(group.id, tabId)}
+            onNewTab={() => onNewTab(group.id)}
+            onNewBrowser={() => onNewBrowser(group.id)}
+            onNewNote={() => { void setLeftSidebarTab('files').then(() => newFile()) }}
+            onNewRecord={() => emitter.emit('quickRecordTextHandler')}
+            onNewCanvas={() => { void createProject('blank', tCanvas('templates.blank')).then(project => { if (project) void addTab(createCanvasTab(project)) }) }}
+            onCloseTab={tabId => onCloseTab(group.id, tabId)}
+            onCloseOtherTabs={tabId => onKeepTabs(group.id, [tabId])}
+            onCloseAllTabs={() => onKeepTabs(group.id, [])}
+            onCloseLeftTabs={tabId => {
+              const index = group.tabIds.indexOf(tabId)
+              onKeepTabs(group.id, group.tabIds.slice(index))
+            }}
+            onCloseRightTabs={tabId => {
+              const index = group.tabIds.indexOf(tabId)
+              onKeepTabs(group.id, group.tabIds.slice(0, index + 1))
+            }}
+            onSplitTab={(tabId, direction) => onSplitTab(group.id, tabId, direction)}
+            onMoveToNewWindow={tabId => onMoveToNewWindow(group.id, tabId)}
+            onPinTab={onPinTab}
+            onUnpinTab={onUnpinTab}
+            onRestartPluginTab={onRestartPluginTab}
+            onToggleMaximize={() => onToggleMaximize(group.id)}
+            canCloseGroup={!groupTabs.some(tab => tab.pinned)}
+            onCloseGroup={() => onCloseGroup(group.id)}
+          />
+          {content}
+        </>
+      )}
     </section>
   )
 }
@@ -1098,43 +1132,33 @@ export const EditorLayout = memo(function EditorLayout() {
     }
   }, [openTabs, removeTab])
 
-  // Fork（almanac ALMNC-54.17）：V3 一次只開一篇。開新檔仍走原本「加一頁」的流程，這裡再把其他分頁收掉，
-  // 等於取代目前這篇；剛切到 V3 時留下的舊分頁、分割窗格也一併收成一個。被收掉的都是背景分頁——
-  // 切走時已經過 prepareActiveEditorDeactivation 存檔，保險起見再把它們還沒寫完的存檔推出去（存檔佇列與分頁無關，關分頁不會丟）。
+  // Fork（almanac ALMNC-97.1，取代 ALMNC-54.17 的單篇模式）：V3 可以同時開多篇，用文件切換器切換，
+  // 但仍然只有一個編輯群組：剛切到 V3 時留下的分割窗格收成一個，分頁全部留下。
   const isV3 = useUiV3()
-  const singleDocumentActivationRef = useRef('')
+  const isV3Ref = useRef(isV3)
+  isV3Ref.current = isV3
+  const v3ActivationAttemptRef = useRef('')
   useEffect(() => {
     if (!isV3 || !layoutReady) return
     const current = layoutRef.current
-    const { layout: next, removedTabIds } = collapseToSingleDocument(current, activeTabId)
-    if (next === current) return
-    // 先等 activeFilePath 跟留下的那頁一致再收：
-    // - 剛開檔、新分頁還沒加進來（activeFilePath 沒有對應分頁）→ 等開檔流程加完。
-    // - 直接 addTab 的記錄／畫布分頁不會改 activeFilePath，它還指著舊檔 → 先切到留下的那頁，
-    //   否則舊檔分頁一收，開檔流程會因為 activeFilePath 沒分頁而把它加回來，反把新分頁擠掉。
-    const keptGroup = next.groups[next.activeGroupId]
-    const keptTab = openTabs.find(tab => tab.id === keptGroup?.activeTabId)
-    if (keptTab) {
-      const keptPath = isBlankEditorTab(keptTab) || isRecordEditorTab(keptTab) || isCanvasEditorTab(keptTab) || isPluginEditorTab(keptTab) || isBrowserEditorTab(keptTab)
-        ? ''
-        : keptTab.path
-      if (activeFilePath !== keptPath) {
-        if (activeFilePath && !openTabs.some(tab => tab.path === activeFilePath)) return
-        // 同一個狀態只試一次，切換被擋下（路徑鎖定、換工作區中）時不會一直重試。
-        const attempt = `${keptTab.id}\n${activeFilePath}`
-        if (singleDocumentActivationRef.current === attempt) return
-        singleDocumentActivationRef.current = attempt
-        void activateTab(next.activeGroupId, keptTab, { deactivationAlreadyPrepared: true })
-        return
-      }
+    const next = collapseToSingleGroup(current, activeTabId)
+    if (next !== current) {
+      setLayout(next)
+      return
     }
-    setLayout(next)
-    if (removedTabIds.length === 0) return
-    const removed = new Set(removedTabIds)
-    const paths = openTabs.filter(tab => removed.has(tab.id) && tab.path).map(tab => tab.path)
-    if (paths.length) void useArticleStore.getState().flushPendingArticleSavesForPaths(paths).catch(() => undefined)
-    removedTabIds.forEach(tabId => removeGlobalTabIfUnused(next, tabId))
-  }, [activateTab, activeFilePath, activeTabId, isBlankEditorTab, isBrowserEditorTab, isCanvasEditorTab, isPluginEditorTab, isRecordEditorTab, isV3, layout, layoutReady, openTabs, removeGlobalTabIfUnused, setLayout])
+    // 直接 addTab 的記錄／畫布／外掛／瀏覽器分頁不會改 activeFilePath（還指著舊檔），
+    // 上面同步版面的 effect 因此略過它們；這裡補切過去（沿用 ALMNC-54.17 的做法，但不再收掉其他分頁）。
+    // 同一個狀態只試一次，切換被擋下（路徑鎖定、換工作區中）時不會一直重試。
+    const group = next.groups[next.activeGroupId]
+    const storeTab = openTabs.find(tab => tab.id === activeTabId)
+    if (!group || !storeTab || !activeFilePath || group.activeTabId === activeTabId || !group.tabIds.includes(activeTabId)) return
+    const usesEmptyPath = isBlankEditorTab(storeTab) || isRecordEditorTab(storeTab) || isCanvasEditorTab(storeTab) || isPluginEditorTab(storeTab) || isBrowserEditorTab(storeTab)
+    if (!usesEmptyPath) return
+    const attempt = `${activeTabId}\n${activeFilePath}`
+    if (v3ActivationAttemptRef.current === attempt) return
+    v3ActivationAttemptRef.current = attempt
+    void activateTab(group.id, storeTab, { deactivationAlreadyPrepared: true })
+  }, [activateTab, activeFilePath, activeTabId, isBlankEditorTab, isBrowserEditorTab, isCanvasEditorTab, isPluginEditorTab, isRecordEditorTab, isV3, layout, layoutReady, openTabs, setLayout])
 
   const handleCloseTab = useCallback((groupId: string, tabId: string) => {
     const group = layoutRef.current.groups[groupId]
@@ -1149,6 +1173,14 @@ export const EditorLayout = memo(function EditorLayout() {
     const wasActiveGroup = layoutRef.current.activeGroupId === groupId
     if (group.activeTabId === tabId && layoutRef.current.activeGroupId === groupId && !canDeactivateActiveEditor()) return
     let next = removeTabFromEditorGroup(layoutRef.current, groupId, tabId)
+    // Fork（almanac ALMNC-97.1）：V3 關掉目前這張時，切到最近使用的上一張，而不是旁邊那張。
+    const remainingGroup = next.groups[groupId]
+    if (isV3 && remainingGroup && group.activeTabId === tabId) {
+      const fallback = pickFallbackAfterClose(useDocSwitcherStore.getState().recency, tabId, remainingGroup.tabIds)
+      if (fallback && fallback !== remainingGroup.activeTabId) {
+        next = { ...next, groups: { ...next.groups, [groupId]: { ...remainingGroup, activeTabId: fallback } } }
+      }
+    }
     if (next.groups[groupId]?.tabIds.length === 0 && getEditorGroupIds(next.root).length > 1) {
       next = closeEditorGroup(next, groupId)
     }
@@ -1159,7 +1191,7 @@ export const EditorLayout = memo(function EditorLayout() {
     if (wasActiveGroup || activeTabId === tabId) {
       void activateTab(next.activeGroupId, nextTab)
     }
-  }, [activateTab, activeTabId, canDeactivateActiveEditor, openTabs, removeGlobalTabIfUnused, setLayout])
+  }, [activateTab, activeTabId, canDeactivateActiveEditor, isV3, openTabs, removeGlobalTabIfUnused, setLayout])
 
   const handleCloseTabRef = useRef(handleCloseTab)
   handleCloseTabRef.current = handleCloseTab
@@ -1802,7 +1834,8 @@ export const EditorLayout = memo(function EditorLayout() {
         void handleNavigateHistory(navigationDirection)
         return
       }
-      if (event.ctrlKey && event.key === 'Tab') {
+      // Fork（almanac ALMNC-97.5）：V3 的 ⌃Tab 交給文件切換器（按住 ⌃ 選卡、依最近使用），這裡不處理。
+      if (event.ctrlKey && event.key === 'Tab' && !isV3Ref.current) {
         const group = layoutRef.current.groups[layoutRef.current.activeGroupId]
         if (!group || group.tabIds.length < 2) return
         const currentIndex = group.tabIds.indexOf(group.activeTabId)
@@ -1814,7 +1847,8 @@ export const EditorLayout = memo(function EditorLayout() {
       }
       const modifier = event.metaKey || event.ctrlKey
       if (!modifier) return
-      if (event.key === '\\') {
+      // Fork（almanac ALMNC-97.7）：V3 只有一個編輯群組，不提供分割（decision-1）。
+      if (event.key === '\\' && !isV3Ref.current) {
         const group = layoutRef.current.groups[layoutRef.current.activeGroupId]
         if (!group?.activeTabId) return
         event.preventDefault()

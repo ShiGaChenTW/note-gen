@@ -1,0 +1,44 @@
+name: E2E
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [dev]
+permissions:
+  contents: read
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      pnpm_config_verify_deps_before_run: 'false'
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 9
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+      # Build the static export once here (instead of inside Playwright's webServer timeout), then serve out/ as-is.
+      - name: Build static export
+        run: pnpm build
+      - name: Run E2E (e2e project only; sync and visual are separate)
+        run: pnpm test:e2e --reporter=list,html
+        env:
+          E2E_SKIP_BUILD: '1'
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14

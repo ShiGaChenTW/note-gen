@@ -11,15 +11,19 @@ import { RecordTextSizeSettings } from './record-text-size'
 import { CustomThemeSettings } from './custom-theme'
 import { CustomCssSettings } from './custom-css'
 import { UiModeSettings } from '@/components/fork/ui-mode'
+import { useUiV3 } from '@/lib/fork-ui'
+import { DocSwitcherStyleSettings } from './doc-switcher-style'
 
 export function InterfaceSettings({ mobile = false }: { mobile?: boolean }) {
   const t = useTranslations('settings.general.interface')
+  const v3 = useUiV3()
 
   return (
     <>
       <SettingSection title={t('appearance.title')} desc={t('appearance.desc')}>
         <div className="flex flex-col gap-3">
           <UiModeSettings />
+          {v3 && !mobile && <DocSwitcherStyleSettings />}
           <ThemeSettings />
           <LanguageSettings mobile={mobile} />
           <FontFamilySettings />

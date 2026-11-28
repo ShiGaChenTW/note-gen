@@ -718,6 +718,15 @@
         "uiMode": {
           "title": "新介面（V3）",
           "desc": "開啟時使用 almanac V3 的單色外觀與新頁面；關閉則回到原本的外觀，新頁面隱藏。"
+        },
+        "docSwitcher": {
+          "title": "文件切換樣式",
+          "desc": "同時開多篇文件時，用哪種方式切換。",
+          "options": {
+            "folder": "資料夾標籤",
+            "stack": "上方疊列",
+            "fan": "斜向錯開"
+          }
         }
       },
       "tools": {
@@ -7724,6 +7733,16 @@
       "focusBlurMedium": "中",
       "focusBlurStrong": "重",
       "focusHint": "按 Esc 或 {shortcut} 退出"
+    },
+    "docSwitcher": {
+      "label": "已開啟的文件",
+      "close": "關閉「{name}」",
+      "pinned": "已固定",
+      "more": "更多 {count}",
+      "moreHeading": "較久沒看的分頁",
+      "expand": "展開疊卡",
+      "collapse": "收合疊卡",
+      "position": "第 {index} 張，共 {total} 張"
     }
   },
   "editorWindow": {

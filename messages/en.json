@@ -718,6 +718,15 @@
         "uiMode": {
           "title": "New interface (V3)",
           "desc": "Use the almanac V3 monochrome look and new pages. Turn off to return to the previous look and hide the new pages."
+        },
+        "docSwitcher": {
+          "title": "Document switcher style",
+          "desc": "How to switch between documents when several are open.",
+          "options": {
+            "folder": "Folder tabs",
+            "stack": "Top stack",
+            "fan": "Diagonal stack"
+          }
         }
       },
       "tools": {
@@ -7658,6 +7667,16 @@
       "focusBlurMedium": "Medium",
       "focusBlurStrong": "Strong",
       "focusHint": "Press Esc or {shortcut} to exit"
+    },
+    "docSwitcher": {
+      "label": "Open documents",
+      "close": "Close “{name}”",
+      "pinned": "Pinned",
+      "more": "{count} more",
+      "moreHeading": "Less recently viewed",
+      "expand": "Show stack",
+      "collapse": "Hide stack",
+      "position": "{index} of {total}"
     }
   },
   "editorWindow": {
