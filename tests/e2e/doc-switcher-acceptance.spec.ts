@@ -221,3 +221,112 @@ test('切回 classic 介面：沒有文件切換器，回到上游分頁列', as
   await page.waitForTimeout(400)
   await page.screenshot({ path: test.info().outputPath('classic.png') })
 })
+
+// ALMNC-97.2 AC#3：選取文字的浮動選單（bubble menu）在最前面那張卡內位置正確。
+// 浮動選單用 position: fixed＋視口座標；包住編輯器的任何祖先若有 transform 或 contain，fixed 會改以那個祖先為基準，
+// 選單會整個偏掉約「編輯區左上角」的距離（水平數百 px、垂直上百 px），下面的容差抓得到。
+for (const style of ['stack', 'folder', 'fan'] as const) {
+  test(`選取文字的浮動選單落在選取範圍旁（${style}），編輯器的祖先沒有 transform 和 contain`, async ({ page }) => {
+    await page.evaluate(value => localStorage.setItem('almanac:doc-switcher-style', value), style)
+    await page.reload()
+    await waitForMainBoot(page)
+    for (const name of ['原子習慣', '番茄鐘', '卡片盒']) await openNote(page, name)
+    if (style === 'folder') await expect(page.getByRole('tablist', { name: '已開啟的文件' })).toBeVisible()
+    else await expect(page.getByRole('button', { name: '展開疊卡' })).toBeVisible()
+
+    const line = page.getByText('卡片盒的內容。', { exact: true })
+    await expect(line).toBeVisible()
+    // 等切換的淡入動畫跑完再量 computed style（動畫中內容會短暫 translateX）。
+    await page.waitForFunction(() => document.getAnimations().every(animation => animation.playState !== 'running'))
+    const offenders = await line.evaluate(el => {
+      const found: string[] = []
+      for (let node = el.parentElement; node && node !== document.documentElement; node = node.parentElement) {
+        const computed = getComputedStyle(node)
+        if (computed.transform !== 'none' || computed.contain !== 'none') {
+          found.push(`${node.tagName.toLowerCase()}.${node.className}: transform=${computed.transform} contain=${computed.contain}`)
+        }
+      }
+      return found
+    })
+    expect(offenders, offenders.join('\n')).toEqual([])
+
+    // 用滑鼠從行首拖到行尾選取（macOS 的 Home／End 不移動游標，鍵盤選取在各平台不一致）。
+    const dragBox = (await line.boundingBox())!
+    const midY = dragBox.y + dragBox.height / 2
+    await page.mouse.move(dragBox.x + 1, midY)
+    await page.mouse.down()
+    await page.mouse.move(dragBox.x + dragBox.width / 2, midY, { steps: 4 })
+    await page.mouse.move(dragBox.x + dragBox.width - 1, midY, { steps: 4 })
+    await page.mouse.up()
+    const bold = page.getByRole('button', { name: '粗體', exact: true })
+    await expect(bold).toBeVisible()
+    // 選單有 150ms 的 transform 過場（第一次從 0,0 移過來），等位置穩定。
+    let boldBox = (await bold.boundingBox())!
+    await expect.poll(async () => {
+      const previous = boldBox
+      boldBox = (await bold.boundingBox())!
+      return Math.abs(previous.x - boldBox.x) + Math.abs(previous.y - boldBox.y)
+    }).toBe(0)
+    const lineBox = (await line.boundingBox())!
+
+    // 選單左緣對齊選取起點（行首），粗體在選單前段；容器有 transform 時會往右偏掉一個側欄寬（約 250px 以上）。
+    expect(boldBox.x).toBeGreaterThanOrEqual(lineBox.x - 8)
+    expect(boldBox.x).toBeLessThanOrEqual(lineBox.x + 160)
+    // 垂直：放在選取範圍正上方（空間不夠時翻到下方），間距 8px，選單本身約 40px 高。
+    const gapAbove = lineBox.y - (boldBox.y + boldBox.height)
+    const gapBelow = boldBox.y - (lineBox.y + lineBox.height)
+    const nearAbove = gapAbove >= 0 && gapAbove <= 40
+    const nearBelow = gapBelow >= 0 && gapBelow <= 40
+    expect(nearAbove || nearBelow, `bold=${JSON.stringify(boldBox)} line=${JSON.stringify(lineBox)}`).toBe(true)
+    // 也不能蓋到切換器上（疊卡／標籤列）
+    const switcher = style === 'folder'
+      ? page.getByRole('tablist', { name: '已開啟的文件' })
+      : page.getByRole('button', { name: '展開疊卡' })
+    const switcherBox = (await switcher.boundingBox())!
+    expect(boldBox.y).toBeGreaterThanOrEqual(switcherBox.y + switcherBox.height - 1)
+  })
+}
+
+// ALMNC-97.5 AC#4：開著多篇（切換器在）時，⇧⌘7／8／9（編號清單／項目清單／待辦清單）照常作用、不會切換文件。
+// 用實體鍵位（Digit7…）按，瀏覽器送出的 key 是 & * (，和真的鍵盤一樣；TipTap 依 keyCode 對回 Mod-Shift-7/8/9。
+test('⇧⌘7／8／9 照常切換清單格式，不會切換文件', async ({ page }) => {
+  for (const name of ['原子習慣', '番茄鐘', '卡片盒']) await openNote(page, name)
+  const title = page.getByRole('textbox', { name: '標題', exact: true })
+  const activeTab = page.getByRole('tablist', { name: '已開啟的文件' }).getByRole('tab', { name: /卡片盒/ })
+  // TipTap 的 Mod 在 macOS 是 ⌘、其他平台是 Ctrl（CI 跑在 Linux）。
+  const mod = process.platform === 'darwin' ? 'Meta' : 'Control'
+  const shortcut = async (code: string) => {
+    await page.keyboard.down(mod)
+    await page.keyboard.down('Shift')
+    await page.keyboard.press(code)
+    await page.keyboard.up('Shift')
+    await page.keyboard.up(mod)
+  }
+  const saved = () => mock.readVaultFile('知識/卡片盒.md')
+
+  // 第一次點擊只讓編輯器取得焦點（游標落在文件開頭，只開一篇時也一樣），再點一次才把游標放到這一段。
+  const body = page.getByText('卡片盒的內容。', { exact: true })
+  await body.click()
+  await body.click()
+  for (const [code, markdown] of [['Digit7', '1. 卡片盒的內容。'], ['Digit8', '- 卡片盒的內容。'], ['Digit9', '- [ ] 卡片盒的內容。']] as const) {
+    await shortcut(code)
+    await expect.poll(saved, { message: `${code} 之後存檔` }).toContain(markdown)
+    await expect(title).toHaveValue('卡片盒')
+    await expect(activeTab).toHaveAttribute('aria-selected', 'true')
+    // 再按一次切回一般段落，下一個快捷鍵從段落開始
+    await shortcut(code)
+    await expect.poll(saved, { message: `${code} 再按一次之後存檔` }).not.toContain(markdown)
+  }
+})
+
+test('⌘1～⌘9 都不會切到對應位置的分頁', async ({ page }) => {
+  for (const name of ['原子習慣', '番茄鐘', '卡片盒']) await openNote(page, name)
+  const title = page.getByRole('textbox', { name: '標題', exact: true })
+  await page.getByText('卡片盒的內容。', { exact: true }).click()
+  for (let digit = 1; digit <= 9; digit++) {
+    await page.keyboard.press(`ControlOrMeta+${digit}`)
+    await page.waitForTimeout(100)
+    await expect(title).toHaveValue('卡片盒')
+  }
+  await expect(page.getByRole('tablist', { name: '已開啟的文件' }).getByRole('tab', { name: /卡片盒/ })).toHaveAttribute('aria-selected', 'true')
+})
